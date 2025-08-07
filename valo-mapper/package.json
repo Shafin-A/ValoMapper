@@ -11,14 +11,18 @@
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-slot": "^1.2.3",
+    "canvas": "^3.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "konva": "^9.3.22",
     "lucide-react": "^0.536.0",
     "next": "15.4.6",
     "next-themes": "^0.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "tailwind-merge": "^3.3.1"
+    "react-konva": "^19.0.7",
+    "tailwind-merge": "^3.3.1",
+    "use-image": "^1.1.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
