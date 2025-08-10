@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import AgentsSidebar, { Agent } from "@/components/agents-sidebar";
 import { Stage, Layer, Image as KonvaImage } from "react-konva";
 import AgentIcon from "@/components/agent-icon";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import useImage from "use-image";
 import type { KonvaEventObject } from "konva/lib/Node";
+import Konva from "konva";
 
 const ascentMap = "/maps/ascent.svg";
 
@@ -52,6 +53,42 @@ const Home = () => {
   const [agents, setAgents] = useState<
     Array<{ name: string; src: string; x: number; y: number }>
   >([]);
+
+  const stageRef = useRef<Konva.Stage | null>(null);
+
+  // wheel example from konva docs
+  const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
+    e.evt.preventDefault();
+
+    const stage = stageRef.current;
+    const oldScale = stage!.scaleX();
+    const pointer = stage!.getPointerPosition()!;
+
+    const mousePointTo = {
+      x: (pointer.x - stage!.x()) / oldScale,
+      y: (pointer.y - stage!.y()) / oldScale,
+    };
+
+    // how to scale? Zoom in? Or zoom out?
+    let direction = e.evt.deltaY > 0 ? 1 : -1;
+
+    // when we zoom on trackpad, e.evt.ctrlKey is true
+    // in that case lets revert direction
+    if (e.evt.ctrlKey) {
+      direction = -direction;
+    }
+
+    const scaleBy = 1.5;
+    const newScale = direction < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+    stage!.scale({ x: newScale, y: newScale });
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    stage!.position(newPos);
+  };
 
   const handleDragStart = (
     e: React.DragEvent<HTMLImageElement>,
@@ -113,7 +150,13 @@ const Home = () => {
               onDrop={handleStageDrop}
               onDragOver={handleStageDragOver}
             >
-              <Stage width={800} height={800}>
+              <Stage
+                width={800}
+                height={800}
+                ref={stageRef}
+                onWheel={handleWheel}
+                draggable
+              >
                 <Layer>
                   {mapImage && (
                     <KonvaImage image={mapImage} width={800} height={800} />
