@@ -55,105 +55,105 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
       : agentIcons.filter((agent) => agent.role === selectedRole);
 
   return (
-    <aside className="h-full flex flex-col items-center justify-center p-4 bg-background">
-      <SidebarProvider
-        defaultOpen
-        style={{
-          ["--sidebar-width" as keyof React.CSSProperties]: "20rem",
-          ["--sidebar-width-mobile" as keyof React.CSSProperties]: "20rem",
-        }}
-      >
-        <SidebarTrigger className="ml-auto rotate-180" />
-        <Sidebar collapsible="offcanvas" side="right">
-          <SidebarHeader>
-            <div className="flex flex-col gap-3 p-2">
-              <span className="text-base font-semibold">Agents</span>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    className="data-[state=checked]:bg-[#18636c] data-[state=unchecked]:!bg-[#FF4655]"
-                    checked={isAlly}
-                    onCheckedChange={setIsAlly}
-                  />
-                  <span className="text-sm">{isAlly ? "Ally" : "Enemy"}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={onMap}
-                    onCheckedChange={(checked) => setOnMap(!!checked)}
-                  />
-                  <span className="text-sm">On map</span>
-                </div>
+    <SidebarProvider
+      defaultOpen
+      style={{
+        ["--sidebar-width" as keyof React.CSSProperties]: "20rem",
+        ["--sidebar-width-mobile" as keyof React.CSSProperties]: "20rem",
+      }}
+    >
+      <header className="bg-background sticky top-0 flex h-14 shrink-0 items-center ml-auto">
+        <SidebarTrigger className="mr-2 rotate-180" />
+      </header>
+      <Sidebar collapsible="offcanvas" side="right">
+        <SidebarHeader>
+          <div className="flex flex-col gap-3 p-2">
+            <span className="text-base font-semibold">Agents</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Switch
+                  className="data-[state=checked]:bg-[#18636c] data-[state=unchecked]:!bg-[#FF4655]"
+                  checked={isAlly}
+                  onCheckedChange={setIsAlly}
+                />
+                <span className="text-sm">{isAlly ? "Ally" : "Enemy"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={onMap}
+                  onCheckedChange={(checked) => setOnMap(!!checked)}
+                />
+                <span className="text-sm">On map</span>
               </div>
             </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <Tabs
-              value={selectedRole}
-              onValueChange={setSelectedRole}
-              className="w-full"
-            >
-              <TabsList className="flex justify-between gap-2 mb-4 w-full">
-                {roleTabs.map((tab) => {
-                  const isSelected = tab.value === selectedRole;
-                  let icon: React.ReactNode;
-                  if (tab.value === "All") {
-                    icon = (
-                      <Grid3x3
-                        className="!size-6.5"
-                        strokeWidth={2.5}
-                        style={{ opacity: isSelected ? 1 : 0.5 }}
-                      />
-                    );
-                  } else {
-                    const src = roleIcons[tab.value];
-                    icon = src ? (
-                      <Image
-                        src={src}
-                        alt={tab.value}
-                        width={24}
-                        height={24}
-                        style={{ opacity: isSelected ? 1 : 0.5 }}
-                      />
-                    ) : (
-                      <span className="w-8 h-8 bg-gray-300 rounded" />
-                    );
-                  }
-                  return (
-                    <TabsTrigger key={tab.value} value={tab.value} asChild>
-                      <Button
-                        variant="ghost"
-                        className="flex flex-col items-center gap-1 p-2 transition-all hover:scale-105"
-                      >
-                        {icon}
-                      </Button>
-                    </TabsTrigger>
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <Tabs
+            value={selectedRole}
+            onValueChange={setSelectedRole}
+            className="w-full"
+          >
+            <TabsList className="flex justify-between gap-2 mb-4 w-full">
+              {roleTabs.map((tab) => {
+                const isSelected = tab.value === selectedRole;
+                let icon: React.ReactNode;
+                if (tab.value === "All") {
+                  icon = (
+                    <Grid3x3
+                      className="!size-6.5"
+                      strokeWidth={2.5}
+                      style={{ opacity: isSelected ? 1 : 0.5 }}
+                    />
                   );
-                })}
-              </TabsList>
-              <TabsContent value={selectedRole} className="h-[320px]">
-                <ScrollArea className="h-full w-full">
-                  <div className="grid grid-cols-4 gap-4 p-2">
-                    {filteredAgents.map((agent) => (
-                      <Image
-                        key={agent.name}
-                        src={agent.src}
-                        alt={agent.name}
-                        width={50}
-                        height={50}
-                        draggable
-                        style={{ cursor: "grab" }}
-                        onDragStart={(e) => handleDragStart(e, agent)}
-                      />
-                    ))}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
-          </SidebarContent>
-        </Sidebar>
-      </SidebarProvider>
-    </aside>
+                } else {
+                  const src = roleIcons[tab.value];
+                  icon = src ? (
+                    <Image
+                      src={src}
+                      alt={tab.value}
+                      width={24}
+                      height={24}
+                      style={{ opacity: isSelected ? 1 : 0.5 }}
+                    />
+                  ) : (
+                    <span className="w-8 h-8 bg-gray-300 rounded" />
+                  );
+                }
+                return (
+                  <TabsTrigger key={tab.value} value={tab.value} asChild>
+                    <Button
+                      variant="ghost"
+                      className="flex flex-col items-center gap-1 p-2 transition-all hover:scale-105"
+                    >
+                      {icon}
+                    </Button>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+            <TabsContent value={selectedRole} className="h-[320px]">
+              <ScrollArea className="h-full w-full">
+                <div className="grid grid-cols-4 gap-4 p-2">
+                  {filteredAgents.map((agent) => (
+                    <Image
+                      key={agent.name}
+                      src={agent.src}
+                      alt={agent.name}
+                      width={50}
+                      height={50}
+                      draggable
+                      style={{ cursor: "grab" }}
+                      onDragStart={(e) => handleDragStart(e, agent)}
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
+        </SidebarContent>
+      </Sidebar>
+    </SidebarProvider>
   );
 };
 

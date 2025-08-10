@@ -10,7 +10,6 @@ import {
   SidebarTrigger,
   SidebarProvider,
   SidebarHeader,
-  SidebarInset,
 } from "@/components/ui/sidebar";
 import useImage from "use-image";
 import type { KonvaEventObject } from "konva/lib/Node";
@@ -127,8 +126,13 @@ const Home = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-screen">
+    <div className="flex h-screen w-screen">
+      <SidebarProvider
+        style={{
+          ["--sidebar-width" as keyof React.CSSProperties]: "20rem",
+          ["--sidebar-width-mobile" as keyof React.CSSProperties]: "20rem",
+        }}
+      >
         <Sidebar collapsible="offcanvas" side="left">
           <SidebarHeader>Tools</SidebarHeader>
           <SidebarContent>
@@ -136,53 +140,52 @@ const Home = () => {
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset>
-          <header className="bg-background sticky top-0 flex h-14 shrink-0 items-center gap-2">
-            <div className="flex flex-1 items-center gap-2 px-3">
-              <SidebarTrigger />
-              <span className="font-semibold">Valorant Mapper</span>
-            </div>
-          </header>
-          <div className="flex flex-1 flex-col gap-4 p-4 items-center justify-center">
-            <div
-              id="valo-stage"
-              style={{ position: "relative" }}
-              onDrop={handleStageDrop}
-              onDragOver={handleStageDragOver}
-            >
-              <Stage
-                width={800}
-                height={800}
-                ref={stageRef}
-                onWheel={handleWheel}
-                draggable
-              >
-                <Layer>
-                  {mapImage && (
-                    <KonvaImage image={mapImage} width={800} height={800} />
-                  )}
-                  {agents.map((agent, idx) => (
-                    <AgentIcon
-                      key={idx}
-                      x={agent.x}
-                      y={agent.y}
-                      src={agent.src}
-                      draggable
-                      onDragEnd={(e) => handleAgentDragEnd(idx, e)}
-                    />
-                  ))}
-                </Layer>
-              </Stage>
-            </div>
+        <header className="bg-background sticky top-0 flex h-14 shrink-0 items-center gap-2">
+          <div className="flex flex-1 items-center gap-2 px-3">
+            <SidebarTrigger />
+            <span className="font-semibold">Valorant Mapper</span>
           </div>
-        </SidebarInset>
+        </header>
+      </SidebarProvider>
 
-        <AgentsSidebar
-          agentIcons={agentIcons}
-          handleDragStart={handleDragStart}
-        />
+      <div className="flex flex-1 flex-col gap-4 p-4 items-center justify-center">
+        <div
+          id="valo-stage"
+          style={{ position: "relative" }}
+          onDrop={handleStageDrop}
+          onDragOver={handleStageDragOver}
+        >
+          <Stage
+            width={800}
+            height={800}
+            ref={stageRef}
+            onWheel={handleWheel}
+            draggable
+          >
+            <Layer>
+              {mapImage && (
+                <KonvaImage image={mapImage} width={800} height={800} />
+              )}
+              {agents.map((agent, idx) => (
+                <AgentIcon
+                  key={idx}
+                  x={agent.x}
+                  y={agent.y}
+                  src={agent.src}
+                  draggable
+                  onDragEnd={(e) => handleAgentDragEnd(idx, e)}
+                />
+              ))}
+            </Layer>
+          </Stage>
+        </div>
       </div>
-    </SidebarProvider>
+
+      <AgentsSidebar
+        agentIcons={agentIcons}
+        handleDragStart={handleDragStart}
+      />
+    </div>
   );
 };
 
