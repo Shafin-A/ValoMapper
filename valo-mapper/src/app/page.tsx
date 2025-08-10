@@ -10,6 +10,7 @@ import {
   SidebarTrigger,
   SidebarProvider,
   SidebarHeader,
+  SidebarInset,
 } from "@/components/ui/sidebar";
 import useImage from "use-image";
 import type { KonvaEventObject } from "konva/lib/Node";
@@ -89,50 +90,56 @@ const Home = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen">
-      <SidebarProvider defaultOpen>
+    <SidebarProvider>
+      <div className="flex h-screen w-screen">
         <Sidebar collapsible="offcanvas" side="left">
           <SidebarHeader>Tools</SidebarHeader>
           <SidebarContent>
             <span>Tools</span>
           </SidebarContent>
         </Sidebar>
-        <SidebarTrigger />
-      </SidebarProvider>
 
-      <div className="flex-1 flex items-center justify-center">
-        <div
-          id="valo-stage"
-          style={{ position: "relative" }}
-          onDrop={handleStageDrop}
-          onDragOver={handleStageDragOver}
-        >
-          <Stage width={800} height={800}>
-            <Layer>
-              {mapImage && (
-                <KonvaImage image={mapImage} width={800} height={800} />
-              )}
+        <SidebarInset>
+          <header className="bg-background sticky top-0 flex h-14 shrink-0 items-center gap-2">
+            <div className="flex flex-1 items-center gap-2 px-3">
+              <SidebarTrigger />
+              <span className="font-semibold">Valorant Mapper</span>
+            </div>
+          </header>
+          <div className="flex flex-1 flex-col gap-4 p-4 items-center justify-center">
+            <div
+              id="valo-stage"
+              style={{ position: "relative" }}
+              onDrop={handleStageDrop}
+              onDragOver={handleStageDragOver}
+            >
+              <Stage width={800} height={800}>
+                <Layer>
+                  {mapImage && (
+                    <KonvaImage image={mapImage} width={800} height={800} />
+                  )}
+                  {agents.map((agent, idx) => (
+                    <AgentIcon
+                      key={idx}
+                      x={agent.x}
+                      y={agent.y}
+                      src={agent.src}
+                      draggable
+                      onDragEnd={(e) => handleAgentDragEnd(idx, e)}
+                    />
+                  ))}
+                </Layer>
+              </Stage>
+            </div>
+          </div>
+        </SidebarInset>
 
-              {agents.map((agent, idx) => (
-                <AgentIcon
-                  key={idx}
-                  x={agent.x}
-                  y={agent.y}
-                  src={agent.src}
-                  draggable
-                  onDragEnd={(e) => handleAgentDragEnd(idx, e)}
-                />
-              ))}
-            </Layer>
-          </Stage>
-        </div>
+        <AgentsSidebar
+          agentIcons={agentIcons}
+          handleDragStart={handleDragStart}
+        />
       </div>
-
-      <AgentsSidebar
-        agentIcons={agentIcons}
-        handleDragStart={handleDragStart}
-      />
-    </div>
+    </SidebarProvider>
   );
 };
 
