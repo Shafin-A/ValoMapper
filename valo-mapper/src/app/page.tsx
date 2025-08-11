@@ -1,19 +1,19 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AgentsSidebar, { Agent } from "@/components/agents-sidebar";
 import { Stage, Layer, Image as KonvaImage } from "react-konva";
 import AgentIcon from "@/components/agent-icon";
 import {
   Sidebar,
   SidebarContent,
-  SidebarTrigger,
   SidebarProvider,
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import useImage from "use-image";
 import type { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
+import { SiteHeader } from "@/components/site-header";
 
 const ascentMap = "/maps/ascent.svg";
 
@@ -52,6 +52,24 @@ const Home = () => {
   const [agents, setAgents] = useState<
     Array<{ name: string; src: string; x: number; y: number }>
   >([]);
+
+  const divRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    if (divRef.current?.offsetHeight && divRef.current?.offsetWidth) {
+      setDimensions({
+        width: divRef.current.offsetWidth,
+        height: divRef.current.offsetHeight,
+      });
+    }
+  }, []);
 
   const stageRef = useRef<Konva.Stage | null>(null);
 
@@ -126,45 +144,49 @@ const Home = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen">
+    <div className="[--header-height:calc(--spacing(14))]">
+      <SiteHeader
+        leftSidebarOpen={leftSidebarOpen}
+        setLeftSidebarOpen={setLeftSidebarOpen}
+        rightSidebarOpen={rightSidebarOpen}
+        setRightSidebarOpen={setRightSidebarOpen}
+      />
+
       <SidebarProvider
         style={{
           ["--sidebar-width" as keyof React.CSSProperties]: "20rem",
           ["--sidebar-width-mobile" as keyof React.CSSProperties]: "20rem",
         }}
+        open={leftSidebarOpen}
       >
-        <Sidebar collapsible="offcanvas" side="left">
+        <Sidebar
+          className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+          collapsible="offcanvas"
+          side="left"
+        >
           <SidebarHeader>Tools</SidebarHeader>
           <SidebarContent>
             <span>Tools</span>
           </SidebarContent>
         </Sidebar>
-
-        <header className="bg-background sticky top-0 flex h-14 shrink-0 items-center gap-2">
-          <div className="flex flex-1 items-center gap-2 px-3">
-            <SidebarTrigger />
-            <span className="font-semibold">Valorant Mapper</span>
-          </div>
-        </header>
       </SidebarProvider>
 
-      <div className="flex flex-1 flex-col gap-4 p-4 items-center justify-center">
+      <div className="flex h-screen" ref={divRef}>
         <div
           id="valo-stage"
-          style={{ position: "relative" }}
           onDrop={handleStageDrop}
           onDragOver={handleStageDragOver}
         >
           <Stage
-            width={800}
-            height={800}
+            width={dimensions.width}
+            height={dimensions.height}
             ref={stageRef}
             onWheel={handleWheel}
             draggable
           >
             <Layer>
               {mapImage && (
-                <KonvaImage image={mapImage} width={800} height={800} />
+                <KonvaImage image={mapImage} width={1000} height={1000} />
               )}
               {agents.map((agent, idx) => (
                 <AgentIcon
@@ -180,10 +202,10 @@ const Home = () => {
           </Stage>
         </div>
       </div>
-
       <AgentsSidebar
         agentIcons={agentIcons}
         handleDragStart={handleDragStart}
+        sidebarOpen={rightSidebarOpen}
       />
     </div>
   );

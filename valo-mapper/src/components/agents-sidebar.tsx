@@ -3,7 +3,6 @@ import {
   SidebarContent,
   SidebarHeader,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 import React, { useState } from "react";
@@ -19,6 +18,7 @@ export type Agent = {
 interface AgentsSidebarProps {
   agentIcons: Agent[];
   handleDragStart: (e: React.DragEvent<HTMLImageElement>, agent: Agent) => void;
+  sidebarOpen: boolean;
 }
 
 const roleTabs = [
@@ -44,6 +44,7 @@ const roleIcons: Record<string, string> = {
 const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   agentIcons,
   handleDragStart,
+  sidebarOpen,
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [isAlly, setIsAlly] = useState(true);
@@ -56,16 +57,17 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
 
   return (
     <SidebarProvider
-      defaultOpen
+      open={sidebarOpen}
       style={{
         ["--sidebar-width" as keyof React.CSSProperties]: "20rem",
         ["--sidebar-width-mobile" as keyof React.CSSProperties]: "20rem",
       }}
     >
-      <header className="bg-background sticky top-0 flex h-14 shrink-0 items-center ml-auto">
-        <SidebarTrigger className="mr-2 rotate-180" />
-      </header>
-      <Sidebar collapsible="offcanvas" side="right">
+      <Sidebar
+        className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+        collapsible="offcanvas"
+        side="right"
+      >
         <SidebarHeader>
           <div className="flex flex-col gap-3 p-2">
             <span className="text-base font-semibold">Agents</span>
