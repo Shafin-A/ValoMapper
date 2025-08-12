@@ -58,7 +58,7 @@ export type AgentCanvas = {
 
 const Home = () => {
   const [mapImage] = useImage(ascentMap);
-  const [agents, setAgents] = useState<AgentCanvas[]>([]);
+  const [agentsOnCanvas, setAgentsOnCanvas] = useState<AgentCanvas[]>([]);
 
   const divRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({
@@ -135,7 +135,7 @@ const Home = () => {
     const x = (pointer.x - stagePos.x) / scale;
     const y = (pointer.y - stagePos.y) / scale;
 
-    setAgents((prev) => [...prev, { ...agent, x, y }]);
+    setAgentsOnCanvas((prev) => [...prev, { ...agent, x, y }]);
   };
 
   const handleStageDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -144,7 +144,7 @@ const Home = () => {
 
   const handleAgentDragEnd = (idx: number, e: KonvaEventObject<DragEvent>) => {
     const { x, y } = e.target.position();
-    setAgents((prev) => {
+    setAgentsOnCanvas((prev) => {
       const copy = [...prev];
       copy[idx] = { ...copy[idx], x, y };
       return copy;
@@ -192,7 +192,7 @@ const Home = () => {
               {mapImage && (
                 <KonvaImage image={mapImage} width={1000} height={1000} />
               )}
-              {agents.map((agent, idx) => (
+              {agentsOnCanvas.map((agent, idx) => (
                 <AgentIcon
                   key={idx}
                   isAlly={agent.isAlly}
@@ -207,7 +207,11 @@ const Home = () => {
           </Stage>
         </div>
       </div>
-      <AgentsSidebar agentIcons={agentIcons} sidebarOpen={rightSidebarOpen} />
+      <AgentsSidebar
+        agentIcons={agentIcons}
+        sidebarOpen={rightSidebarOpen}
+        agentsOnCanvas={agentsOnCanvas}
+      />
     </div>
   );
 };

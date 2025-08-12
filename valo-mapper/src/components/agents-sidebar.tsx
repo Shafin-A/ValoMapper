@@ -18,6 +18,7 @@ export type Agent = {
 interface AgentsSidebarProps {
   agentIcons: Agent[];
   sidebarOpen: boolean;
+  agentsOnCanvas: AgentCanvas[];
 }
 
 const roleTabs = [
@@ -44,12 +45,13 @@ const roleIcons: Record<string, string> = {
 const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   agentIcons,
   sidebarOpen,
+  agentsOnCanvas,
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [isAlly, setIsAlly] = useState(true);
   const [onMap, setOnMap] = useState(false);
 
-  const filteredAgents =
+  const agentsByRole =
     selectedRole === "All"
       ? agentIcons
       : agentIcons.filter((agent) => agent.role === selectedRole);
@@ -85,6 +87,9 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
     const agentCanvas: AgentCanvas = { ...agent, isAlly, x: 0, y: 0 };
     e.dataTransfer.setData("agent", JSON.stringify(agentCanvas));
   };
+
+  console.log(agentsOnCanvas);
+  console.log(agentsByRole);
 
   return (
     <SidebarProvider
@@ -168,18 +173,26 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
             <TabsContent value={selectedRole} className="h-[320px]">
               <ScrollArea className="h-full w-full">
                 <div className="grid grid-cols-4 gap-4 p-2">
-                  {filteredAgents.map((agent) => (
-                    <Image
-                      key={agent.name}
-                      src={agent.src}
-                      alt={agent.name}
-                      width={50}
-                      height={50}
-                      draggable
-                      style={{ cursor: "grab" }}
-                      onDragStart={(e) => handleDragStart(e, agent, isAlly)}
-                    />
-                  ))}
+                  {agentsByRole
+                    .filter((agent) =>
+                      onMap
+                        ? agentsOnCanvas.some(
+                            (canvasAgent) => canvasAgent.name === agent.name
+                          )
+                        : true
+                    )
+                    .map((agent) => (
+                      <Image
+                        key={agent.name}
+                        src={agent.src}
+                        alt={agent.name}
+                        width={50}
+                        height={50}
+                        draggable
+                        style={{ cursor: "grab" }}
+                        onDragStart={(e) => handleDragStart(e, agent, isAlly)}
+                      />
+                    ))}
                 </div>
               </ScrollArea>
             </TabsContent>
