@@ -190,7 +190,13 @@ const Home = () => {
           >
             <Layer>
               {mapImage && (
-                <KonvaImage image={mapImage} width={1000} height={1000} />
+                <KonvaImage
+                  image={mapImage}
+                  width={1000}
+                  height={1000}
+                  x={(dimensions.width - 1000) / 2}
+                  y={(dimensions.height - 1000) / 2}
+                />
               )}
               {agentsOnCanvas.map((agent, idx) => (
                 <AgentIcon
