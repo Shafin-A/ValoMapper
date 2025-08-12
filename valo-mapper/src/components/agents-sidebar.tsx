@@ -17,7 +17,6 @@ export type Agent = {
 
 interface AgentsSidebarProps {
   agentIcons: Agent[];
-  handleDragStart: (e: React.DragEvent<HTMLImageElement>, agent: Agent) => void;
   sidebarOpen: boolean;
 }
 
@@ -33,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Grid3x3 } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Checkbox } from "./ui/checkbox";
+import { AgentCanvas } from "@/app/page";
 
 const roleIcons: Record<string, string> = {
   Controller: "/roles/controller.png",
@@ -43,7 +43,6 @@ const roleIcons: Record<string, string> = {
 
 const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   agentIcons,
-  handleDragStart,
   sidebarOpen,
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>("All");
@@ -54,6 +53,38 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
     selectedRole === "All"
       ? agentIcons
       : agentIcons.filter((agent) => agent.role === selectedRole);
+
+  const handleDragStart = (
+    e: React.DragEvent<HTMLImageElement>,
+    agent: Agent,
+    isAlly: boolean
+  ) => {
+    const dragPreview = document.createElement("div");
+
+    dragPreview.style.width = "50px";
+    dragPreview.style.height = "50px";
+    dragPreview.style.backgroundColor = isAlly ? "#18636c" : "#FF4655";
+    dragPreview.style.display = "flex";
+    dragPreview.style.alignItems = "center";
+    dragPreview.style.justifyContent = "center";
+    dragPreview.style.borderRadius = "8px";
+    dragPreview.style.position = "absolute";
+    dragPreview.style.top = "-9999px";
+
+    const clonedImg = e.currentTarget.cloneNode(true) as HTMLImageElement;
+    clonedImg.draggable = false;
+    dragPreview.appendChild(clonedImg);
+
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 25, 25);
+
+    setTimeout(() => {
+      document.body.removeChild(dragPreview);
+    }, 0);
+
+    const agentCanvas: AgentCanvas = { ...agent, isAlly, x: 0, y: 0 };
+    e.dataTransfer.setData("agent", JSON.stringify(agentCanvas));
+  };
 
   return (
     <SidebarProvider
@@ -146,7 +177,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                       height={50}
                       draggable
                       style={{ cursor: "grab" }}
-                      onDragStart={(e) => handleDragStart(e, agent)}
+                      onDragStart={(e) => handleDragStart(e, agent, isAlly)}
                     />
                   ))}
                 </div>

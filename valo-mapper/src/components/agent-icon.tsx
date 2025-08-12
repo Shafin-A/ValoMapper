@@ -1,8 +1,9 @@
-import { Image as KonvaImage } from "react-konva";
+import { Group, Image as KonvaImage, Rect } from "react-konva";
 import useImage from "use-image";
 import type { KonvaEventObject } from "konva/lib/Node";
 
 interface AgentIconProps {
+  isAlly: boolean;
   x: number;
   y: number;
   src: string;
@@ -11,6 +12,7 @@ interface AgentIconProps {
 }
 
 const AgentIcon = ({
+  isAlly,
   x,
   y,
   src,
@@ -18,16 +20,17 @@ const AgentIcon = ({
   onDragEnd,
 }: AgentIconProps) => {
   const [image] = useImage(src);
+
   return (
-    <KonvaImage
-      image={image}
-      x={x}
-      y={y}
-      width={50}
-      height={50}
-      draggable={draggable}
-      onDragEnd={onDragEnd}
-    />
+    <Group x={x} y={y} draggable={draggable} onDragEnd={onDragEnd}>
+      <Rect
+        width={50}
+        height={50}
+        fill={isAlly ? "#18636c" : "#FF4655"}
+        cornerRadius={8}
+      />
+      <KonvaImage image={image} width={50} height={50} />
+    </Group>
   );
 };
 

@@ -47,11 +47,18 @@ const agentIcons: Agent[] = [
   { name: "Yoru", src: "/agents/yoru.png", role: "Duelist" },
 ];
 
+export type AgentCanvas = {
+  name: string;
+  src: string;
+  role: "Duelist" | "Controller" | "Initiator" | "Sentinel";
+  isAlly: boolean;
+  x: number;
+  y: number;
+};
+
 const Home = () => {
   const [mapImage] = useImage(ascentMap);
-  const [agents, setAgents] = useState<
-    Array<{ name: string; src: string; x: number; y: number }>
-  >([]);
+  const [agents, setAgents] = useState<AgentCanvas[]>([]);
 
   const divRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({
@@ -107,25 +114,26 @@ const Home = () => {
     stage!.position(newPos);
   };
 
-  const handleDragStart = (
-    e: React.DragEvent<HTMLImageElement>,
-    agent: { name: string; src: string }
-  ) => {
-    e.dataTransfer.setData("agent", JSON.stringify(agent));
-  };
-
   const handleStageDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
 
     const agent = JSON.parse(e.dataTransfer.getData("agent"));
-    const stage = document.getElementById("valo-stage");
+    const stage = stageRef.current;
 
     if (!stage) return;
 
-    const rect = stage.getBoundingClientRect();
+    const rect = stage.container().getBoundingClientRect();
 
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const pointer = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+
+    const scale = stage.scaleX();
+    const stagePos = stage.position();
+
+    const x = (pointer.x - stagePos.x) / scale;
+    const y = (pointer.y - stagePos.y) / scale;
 
     setAgents((prev) => [...prev, { ...agent, x, y }]);
   };
@@ -172,11 +180,7 @@ const Home = () => {
       </SidebarProvider>
 
       <div className="flex h-screen" ref={divRef}>
-        <div
-          id="valo-stage"
-          onDrop={handleStageDrop}
-          onDragOver={handleStageDragOver}
-        >
+        <div onDrop={handleStageDrop} onDragOver={handleStageDragOver}>
           <Stage
             width={dimensions.width}
             height={dimensions.height}
@@ -191,6 +195,7 @@ const Home = () => {
               {agents.map((agent, idx) => (
                 <AgentIcon
                   key={idx}
+                  isAlly={agent.isAlly}
                   x={agent.x}
                   y={agent.y}
                   src={agent.src}
@@ -202,11 +207,7 @@ const Home = () => {
           </Stage>
         </div>
       </div>
-      <AgentsSidebar
-        agentIcons={agentIcons}
-        handleDragStart={handleDragStart}
-        sidebarOpen={rightSidebarOpen}
-      />
+      <AgentsSidebar agentIcons={agentIcons} sidebarOpen={rightSidebarOpen} />
     </div>
   );
 };
