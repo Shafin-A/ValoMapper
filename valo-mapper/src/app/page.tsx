@@ -102,7 +102,7 @@ const Home = () => {
       direction = -direction;
     }
 
-    const scaleBy = 1.5;
+    const scaleBy = 1.25;
     const newScale = direction < 0 ? oldScale * scaleBy : oldScale / scaleBy;
 
     stage!.scale({ x: newScale, y: newScale });
