@@ -166,5 +166,11 @@
 
   body {
     @apply bg-background text-foreground;
+
+    --d: 2px;
+
+    background: radial-gradient(circle at var(--d) var(--d),
+        var(--foreground) calc(var(--d) - 1px),
+        var(--background) var(--d)) 0 0 / 50px 50px;
   }
 }
