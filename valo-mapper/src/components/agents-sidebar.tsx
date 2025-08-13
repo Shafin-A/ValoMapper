@@ -1,22 +1,23 @@
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AGENTS, ROLE_ICONS } from "@/lib/consts";
+import { Agent, AgentCanvas } from "@/lib/types";
+import { debounce } from "@/lib/utils";
+import { Grid3x3 } from "lucide-react";
 import Image from "next/image";
 import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-export type Agent = {
-  name: string;
-  src: string;
-  role: "Duelist" | "Controller" | "Initiator" | "Sentinel";
-};
+import { Checkbox } from "./ui/checkbox";
+import { Slider } from "./ui/slider";
+import { Switch } from "./ui/switch";
 
 interface AgentsSidebarProps {
-  agentIcons: Agent[];
   sidebarOpen: boolean;
   agentsOnCanvas: AgentCanvas[];
   agentsScale: number;
@@ -39,23 +40,7 @@ const roleTabs = [
   { value: "Sentinel", label: "Sentinel" },
 ];
 
-import { Button } from "@/components/ui/button";
-import { Grid3x3 } from "lucide-react";
-import { Switch } from "./ui/switch";
-import { Checkbox } from "./ui/checkbox";
-import { AgentCanvas } from "@/app/page";
-import { Slider } from "./ui/slider";
-import { debounce } from "@/lib/utils";
-
-const roleIcons: Record<string, string> = {
-  Controller: "/roles/controller.png",
-  Duelist: "/roles/duelist.png",
-  Initiator: "/roles/initiator.png",
-  Sentinel: "/roles/sentinel.png",
-};
-
 const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
-  agentIcons,
   sidebarOpen,
   agentsOnCanvas,
   agentsScale,
@@ -85,8 +70,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
 
   const agentsByRole =
     selectedRole === "All"
-      ? agentIcons
-      : agentIcons.filter((agent) => agent.role === selectedRole);
+      ? AGENTS
+      : AGENTS.filter((agent) => agent.role === selectedRole);
 
   const handleDragStart = (
     e: React.DragEvent<HTMLImageElement>,
@@ -192,7 +177,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                     </div>
                   );
                 } else {
-                  const src = roleIcons[tab.value];
+                  const src = ROLE_ICONS[tab.value];
                   icon = src ? (
                     <div className="w-7 h-7 flex items-center justify-center">
                       <Image

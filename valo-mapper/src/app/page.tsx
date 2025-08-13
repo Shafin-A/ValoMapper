@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import AgentsSidebar, { Agent } from "@/components/agents-sidebar";
+import AgentsSidebar from "@/components/agents-sidebar";
 import { Stage, Layer, Image as KonvaImage } from "react-konva";
 import AgentIcon from "@/components/agent-icon";
 import {
@@ -14,47 +14,9 @@ import useImage from "use-image";
 import type { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
 import { SiteHeader } from "@/components/site-header";
+import { AgentCanvas } from "@/lib/types";
 
 const ascentMap = "/maps/ascent.svg";
-
-const agentIcons: Agent[] = [
-  { name: "Astra", src: "/agents/astra.png", role: "Controller" },
-  { name: "Breach", src: "/agents/breach.png", role: "Initiator" },
-  { name: "Brimstone", src: "/agents/brimstone.png", role: "Controller" },
-  { name: "Chamber", src: "/agents/chamber.png", role: "Sentinel" },
-  { name: "Clove", src: "/agents/clove.png", role: "Controller" },
-  { name: "Cypher", src: "/agents/cypher.png", role: "Sentinel" },
-  { name: "Deadlock", src: "/agents/deadlock.png", role: "Sentinel" },
-  { name: "Fade", src: "/agents/fade.png", role: "Initiator" },
-  { name: "Gekko", src: "/agents/gekko.png", role: "Initiator" },
-  { name: "Harbor", src: "/agents/harbor.png", role: "Controller" },
-  { name: "Iso", src: "/agents/iso.png", role: "Duelist" },
-  { name: "Jett", src: "/agents/jett.png", role: "Duelist" },
-  { name: "KAY/O", src: "/agents/kayo.png", role: "Initiator" },
-  { name: "Killjoy", src: "/agents/killjoy.png", role: "Sentinel" },
-  { name: "Neon", src: "/agents/neon.png", role: "Duelist" },
-  { name: "Omen", src: "/agents/omen.png", role: "Controller" },
-  { name: "Phoenix", src: "/agents/phoenix.png", role: "Duelist" },
-  { name: "Raze", src: "/agents/raze.png", role: "Duelist" },
-  { name: "Reyna", src: "/agents/reyna.png", role: "Duelist" },
-  { name: "Sage", src: "/agents/sage.png", role: "Sentinel" },
-  { name: "Skye", src: "/agents/skye.png", role: "Initiator" },
-  { name: "Sova", src: "/agents/sova.png", role: "Initiator" },
-  { name: "Tejo", src: "/agents/tejo.png", role: "Initiator" },
-  { name: "Viper", src: "/agents/viper.png", role: "Controller" },
-  { name: "Vyse", src: "/agents/vyse.png", role: "Sentinel" },
-  { name: "Waylay", src: "/agents/waylay.png", role: "Duelist" },
-  { name: "Yoru", src: "/agents/yoru.png", role: "Duelist" },
-];
-
-export type AgentCanvas = {
-  name: string;
-  src: string;
-  role: "Duelist" | "Controller" | "Initiator" | "Sentinel";
-  isAlly: boolean;
-  x: number;
-  y: number;
-};
 
 const Home = () => {
   const [mapImage] = useImage(ascentMap);
@@ -228,7 +190,6 @@ const Home = () => {
         </div>
       </div>
       <AgentsSidebar
-        agentIcons={agentIcons}
         sidebarOpen={rightSidebarOpen}
         agentsOnCanvas={agentsOnCanvas}
         agentsScale={agentsScale}
