@@ -9,6 +9,8 @@ interface AgentIconProps {
   src: string;
   draggable?: boolean;
   onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
+  width: number;
+  height: number;
 }
 
 const AgentIcon = ({
@@ -18,18 +20,20 @@ const AgentIcon = ({
   src,
   draggable = true,
   onDragEnd,
+  width,
+  height,
 }: AgentIconProps) => {
   const [image] = useImage(src);
 
   return (
     <Group x={x} y={y} draggable={draggable} onDragEnd={onDragEnd}>
       <Rect
-        width={50}
-        height={50}
+        width={width}
+        height={height}
         fill={isAlly ? "#18636c" : "#FF4655"}
         cornerRadius={8}
       />
-      <KonvaImage image={image} width={50} height={50} />
+      <KonvaImage image={image} width={width} height={height} />
     </Group>
   );
 };

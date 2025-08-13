@@ -5,7 +5,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -19,6 +19,8 @@ interface AgentsSidebarProps {
   agentIcons: Agent[];
   sidebarOpen: boolean;
   agentsOnCanvas: AgentCanvas[];
+  agentsScale: number;
+  setAgentsScale: Dispatch<SetStateAction<number>>;
 }
 
 const roleTabs = [
@@ -34,6 +36,7 @@ import { Grid3x3 } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Checkbox } from "./ui/checkbox";
 import { AgentCanvas } from "@/app/page";
+import { Slider } from "./ui/slider";
 
 const roleIcons: Record<string, string> = {
   Controller: "/roles/controller.png",
@@ -46,6 +49,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   agentIcons,
   sidebarOpen,
   agentsOnCanvas,
+  agentsScale,
+  setAgentsScale,
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [isAlly, setIsAlly] = useState(true);
@@ -63,8 +68,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   ) => {
     const dragPreview = document.createElement("div");
 
-    dragPreview.style.width = "50px";
-    dragPreview.style.height = "50px";
+    dragPreview.style.width = `${agentsScale}px`;
+    dragPreview.style.height = `${agentsScale}px`;
     dragPreview.style.backgroundColor = isAlly ? "#18636c" : "#FF4655";
     dragPreview.style.display = "flex";
     dragPreview.style.alignItems = "center";
@@ -74,11 +79,13 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
     dragPreview.style.top = "-9999px";
 
     const clonedImg = e.currentTarget.cloneNode(true) as HTMLImageElement;
+    clonedImg.style.width = `${agentsScale}px`;
+    clonedImg.style.height = `${agentsScale}px`;
     clonedImg.draggable = false;
     dragPreview.appendChild(clonedImg);
 
     document.body.appendChild(dragPreview);
-    e.dataTransfer.setDragImage(dragPreview, 25, 25);
+    e.dataTransfer.setDragImage(dragPreview, 0, 0);
 
     setTimeout(() => {
       document.body.removeChild(dragPreview);
@@ -87,9 +94,6 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
     const agentCanvas: AgentCanvas = { ...agent, isAlly, x: 0, y: 0 };
     e.dataTransfer.setData("agent", JSON.stringify(agentCanvas));
   };
-
-  console.log(agentsOnCanvas);
-  console.log(agentsByRole);
 
   return (
     <SidebarProvider
@@ -197,6 +201,17 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
               </ScrollArea>
             </TabsContent>
           </Tabs>
+          <div className="flex items-center gap-6 p-2">
+            <span className="text-sm font-medium">Scale</span>
+            <Slider
+              value={[agentsScale]}
+              onValueChange={(value) => setAgentsScale(value[0])}
+              min={25}
+              max={100}
+              step={1}
+              className="flex-1"
+            />
+          </div>
         </SidebarContent>
       </Sidebar>
     </SidebarProvider>

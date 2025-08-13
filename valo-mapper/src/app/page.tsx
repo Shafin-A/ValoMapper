@@ -69,6 +69,8 @@ const Home = () => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
+  const [agentsScale, setAgentsScale] = useState(50);
+
   useEffect(() => {
     if (divRef.current?.offsetHeight && divRef.current?.offsetWidth) {
       setDimensions({
@@ -207,6 +209,8 @@ const Home = () => {
                   src={agent.src}
                   draggable
                   onDragEnd={(e) => handleAgentDragEnd(idx, e)}
+                  width={agentsScale}
+                  height={agentsScale}
                 />
               ))}
             </Layer>
@@ -217,6 +221,8 @@ const Home = () => {
         agentIcons={agentIcons}
         sidebarOpen={rightSidebarOpen}
         agentsOnCanvas={agentsOnCanvas}
+        agentsScale={agentsScale}
+        setAgentsScale={setAgentsScale}
       />
     </div>
   );
