@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import AgentsSidebar from "@/components/agents-sidebar";
-import { Stage, Layer, Image as KonvaImage } from "react-konva";
 import AgentIcon from "@/components/agent-icon";
+import AgentsSidebar from "@/components/agents-sidebar";
+import { SiteHeader } from "@/components/site-header";
 import {
   Sidebar,
   SidebarContent,
-  SidebarProvider,
   SidebarHeader,
+  SidebarProvider,
 } from "@/components/ui/sidebar";
-import useImage from "use-image";
-import type { KonvaEventObject } from "konva/lib/Node";
+import { AgentCanvas, AgentsSettings } from "@/lib/types";
 import Konva from "konva";
-import { SiteHeader } from "@/components/site-header";
-import { AgentCanvas } from "@/lib/types";
+import type { KonvaEventObject } from "konva/lib/Node";
+import { useEffect, useRef, useState } from "react";
+import { Image as KonvaImage, Layer, Stage } from "react-konva";
+import useImage from "use-image";
 
 const ascentMap = "/maps/ascent.svg";
 
@@ -31,13 +31,13 @@ const Home = () => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
-  const [agentsScale, setAgentsScale] = useState(50);
-  const [agentsBoxOpacity, setAgentsBoxOpacity] = useState(1);
-
-  const [agentsRadius, setAgentsRadius] = useState(8);
-
-  const [allyColor, setAllyColor] = useState("#18636c");
-  const [enemyColor, setEnemyColor] = useState("#FF4655");
+  const [agentsSettings, setAgentsSettings] = useState<AgentsSettings>({
+    scale: 50,
+    boxOpacity: 1,
+    radius: 8,
+    allyColor: "#18636c",
+    enemyColor: "#FF4655",
+  });
 
   useEffect(() => {
     if (divRef.current?.offsetHeight && divRef.current?.offsetWidth) {
@@ -177,12 +177,12 @@ const Home = () => {
                   src={agent.src}
                   draggable
                   onDragEnd={(e) => handleAgentDragEnd(idx, e)}
-                  width={agentsScale}
-                  height={agentsScale}
-                  radius={agentsRadius}
-                  opacity={agentsBoxOpacity}
-                  allyColor={allyColor}
-                  enemyColor={enemyColor}
+                  width={agentsSettings.scale}
+                  height={agentsSettings.scale}
+                  radius={agentsSettings.radius}
+                  opacity={agentsSettings.boxOpacity}
+                  allyColor={agentsSettings.allyColor}
+                  enemyColor={agentsSettings.enemyColor}
                 />
               ))}
             </Layer>
@@ -192,16 +192,8 @@ const Home = () => {
       <AgentsSidebar
         sidebarOpen={rightSidebarOpen}
         agentsOnCanvas={agentsOnCanvas}
-        agentsScale={agentsScale}
-        setAgentsScale={setAgentsScale}
-        agentsBoxOpacity={agentsBoxOpacity}
-        setAgentsBoxOpacity={setAgentsBoxOpacity}
-        agentsRadius={agentsRadius}
-        setAgentsRadius={setAgentsRadius}
-        allyColor={allyColor}
-        setAllyColor={setAllyColor}
-        enemyColor={enemyColor}
-        setEnemyColor={setEnemyColor}
+        agentsSettings={agentsSettings}
+        setAgentsSettings={setAgentsSettings}
       />
     </div>
   );

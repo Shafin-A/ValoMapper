@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AGENTS, ROLE_ICONS } from "@/lib/consts";
-import { Agent, AgentCanvas } from "@/lib/types";
+import { Agent, AgentCanvas, AgentsSettings } from "@/lib/types";
 import { debounce } from "@/lib/utils";
 import { Grid3x3 } from "lucide-react";
 import Image from "next/image";
@@ -20,16 +20,8 @@ import { Switch } from "./ui/switch";
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
   agentsOnCanvas: AgentCanvas[];
-  agentsScale: number;
-  setAgentsScale: Dispatch<SetStateAction<number>>;
-  agentsBoxOpacity: number;
-  setAgentsBoxOpacity: Dispatch<SetStateAction<number>>;
-  agentsRadius: number;
-  setAgentsRadius: Dispatch<SetStateAction<number>>;
-  allyColor: string;
-  setAllyColor: Dispatch<SetStateAction<string>>;
-  enemyColor: string;
-  setEnemyColor: Dispatch<SetStateAction<string>>;
+  agentsSettings: AgentsSettings;
+  setAgentsSettings: Dispatch<SetStateAction<AgentsSettings>>;
 }
 
 const roleTabs = [
@@ -43,29 +35,31 @@ const roleTabs = [
 const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   sidebarOpen,
   agentsOnCanvas,
-  agentsScale,
-  setAgentsScale,
-  agentsBoxOpacity,
-  setAgentsBoxOpacity,
-  agentsRadius,
-  setAgentsRadius,
-  allyColor,
-  setAllyColor,
-  enemyColor,
-  setEnemyColor,
+  agentsSettings,
+  setAgentsSettings,
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [isAlly, setIsAlly] = useState(true);
   const [onMap, setOnMap] = useState(false);
 
   const debouncedSetAllyColor = useMemo(
-    () => debounce((color: string) => setAllyColor(color), 16),
-    [setAllyColor]
+    () =>
+      debounce(
+        (color: string) =>
+          setAgentsSettings({ ...agentsSettings, allyColor: color }),
+        16
+      ),
+    [agentsSettings, setAgentsSettings]
   );
 
   const debouncedSetEnemyColor = useMemo(
-    () => debounce((color: string) => setEnemyColor(color), 16),
-    [setEnemyColor]
+    () =>
+      debounce(
+        (color: string) =>
+          setAgentsSettings({ ...agentsSettings, enemyColor: color }),
+        16
+      ),
+    [agentsSettings, setAgentsSettings]
   );
 
   const agentsByRole =
@@ -82,10 +76,10 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   ) => {
     const dragPreview = document.createElement("div");
 
-    dragPreview.style.width = `${agentsScale}px`;
-    dragPreview.style.height = `${agentsScale}px`;
+    dragPreview.style.width = `${agentsSettings.scale}px`;
+    dragPreview.style.height = `${agentsSettings.scale}px`;
 
-    const alphaHex = Math.round(agentsBoxOpacity * 255)
+    const alphaHex = Math.round(agentsSettings.boxOpacity * 255)
       .toString(16)
       .padStart(2, "0");
 
@@ -96,14 +90,14 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
     dragPreview.style.display = "flex";
     dragPreview.style.alignItems = "center";
     dragPreview.style.justifyContent = "center";
-    dragPreview.style.borderRadius = `${agentsRadius}px`;
+    dragPreview.style.borderRadius = `${agentsSettings.radius}px`;
     dragPreview.style.position = "absolute";
     dragPreview.style.top = "-9999px";
 
     const clonedImg = e.currentTarget.cloneNode(true) as HTMLImageElement;
-    clonedImg.style.width = `${agentsScale}px`;
-    clonedImg.style.height = `${agentsScale}px`;
-    clonedImg.style.borderRadius = `${agentsRadius}px`;
+    clonedImg.style.width = `${agentsSettings.scale}px`;
+    clonedImg.style.height = `${agentsSettings.scale}px`;
+    clonedImg.style.borderRadius = `${agentsSettings.radius}px`;
     clonedImg.draggable = false;
 
     dragPreview.appendChild(clonedImg);
@@ -139,7 +133,9 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
               <div className="flex items-center gap-2">
                 <Switch
                   style={{
-                    backgroundColor: isAlly ? allyColor : enemyColor,
+                    backgroundColor: isAlly
+                      ? agentsSettings.allyColor
+                      : agentsSettings.enemyColor,
                   }}
                   checked={isAlly}
                   onCheckedChange={setIsAlly}
@@ -229,8 +225,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                             e,
                             agent,
                             isAlly,
-                            allyColor,
-                            enemyColor
+                            agentsSettings.allyColor,
+                            agentsSettings.enemyColor
                           )
                         }
                       />
@@ -242,8 +238,10 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
           <div className="flex items-center gap-6 p-2">
             <span className="text-sm font-medium w-20">Scale</span>
             <Slider
-              value={[agentsScale]}
-              onValueChange={(value) => setAgentsScale(value[0])}
+              value={[agentsSettings.scale]}
+              onValueChange={(value) =>
+                setAgentsSettings({ ...agentsSettings, scale: value[0] })
+              }
               min={25}
               max={100}
               step={1}
@@ -253,8 +251,10 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
           <div className="flex items-center gap-6 p-2">
             <span className="text-sm font-medium w-20">Color Opacity</span>
             <Slider
-              value={[agentsBoxOpacity]}
-              onValueChange={(value) => setAgentsBoxOpacity(value[0])}
+              value={[agentsSettings.boxOpacity]}
+              onValueChange={(value) =>
+                setAgentsSettings({ ...agentsSettings, boxOpacity: value[0] })
+              }
               min={0}
               max={1}
               step={0.1}
@@ -264,8 +264,10 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
           <div className="flex items-center gap-6 p-2">
             <span className="text-sm font-medium w-20">Radius</span>
             <Slider
-              value={[agentsRadius]}
-              onValueChange={(value) => setAgentsRadius(value[0])}
+              value={[agentsSettings.radius]}
+              onValueChange={(value) =>
+                setAgentsSettings({ ...agentsSettings, radius: value[0] })
+              }
               min={1}
               max={50}
               step={1}
@@ -276,7 +278,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
             <span className="text-sm font-medium w-20">Ally Color</span>
             <input
               type="color"
-              value={allyColor}
+              value={agentsSettings.allyColor}
               onChange={(e) => debouncedSetAllyColor(e.target.value)}
               className="h-6 w-6 cursor-pointer rounded"
             />
@@ -285,7 +287,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
             <span className="text-sm font-medium w-20">Enemy Color</span>
             <input
               type="color"
-              value={enemyColor}
+              value={agentsSettings.enemyColor}
               onChange={(e) => debouncedSetEnemyColor(e.target.value)}
               className="h-6 w-6 cursor-pointer rounded"
             />
