@@ -136,28 +136,32 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
             onValueChange={setSelectedRole}
             className="w-full"
           >
-            <TabsList className="flex justify-between gap-2 mb-4 w-full">
+            <TabsList className="flex justify-between gap-2 mb-4 w-full rounded-none">
               {roleTabs.map((tab) => {
                 const isSelected = tab.value === selectedRole;
                 let icon: React.ReactNode;
                 if (tab.value === "All") {
                   icon = (
-                    <Grid3x3
-                      className="!size-6.5"
-                      strokeWidth={2.5}
-                      style={{ opacity: isSelected ? 1 : 0.5 }}
-                    />
+                    <div className="w-7 h-7 flex items-center justify-center">
+                      <Grid3x3
+                        className="!size-6.5"
+                        strokeWidth={2.5}
+                        style={{ opacity: isSelected ? 1 : 0.5 }}
+                      />
+                    </div>
                   );
                 } else {
                   const src = roleIcons[tab.value];
                   icon = src ? (
-                    <Image
-                      src={src}
-                      alt={tab.value}
-                      width={24}
-                      height={24}
-                      style={{ opacity: isSelected ? 1 : 0.5 }}
-                    />
+                    <div className="w-7 h-7 flex items-center justify-center">
+                      <Image
+                        src={src}
+                        alt={tab.value}
+                        width={24}
+                        height={24}
+                        style={{ opacity: isSelected ? 1 : 0.5 }}
+                      />
+                    </div>
                   ) : (
                     <span className="w-8 h-8 bg-gray-300 rounded" />
                   );
