@@ -249,19 +249,6 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
             />
           </div>
           <div className="flex items-center gap-6 p-2">
-            <span className="text-sm font-medium w-20">Color Opacity</span>
-            <Slider
-              value={[agentsSettings.boxOpacity]}
-              onValueChange={(value) =>
-                setAgentsSettings({ ...agentsSettings, boxOpacity: value[0] })
-              }
-              min={0}
-              max={1}
-              step={0.1}
-              className="flex-1"
-            />
-          </div>
-          <div className="flex items-center gap-6 p-2">
             <span className="text-sm font-medium w-20">Radius</span>
             <Slider
               value={[agentsSettings.radius]}
@@ -271,6 +258,19 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
               min={1}
               max={50}
               step={1}
+              className="flex-1"
+            />
+          </div>
+          <div className="flex items-center gap-6 p-2">
+            <span className="text-sm font-medium w-20">Color Opacity</span>
+            <Slider
+              value={[agentsSettings.boxOpacity]}
+              onValueChange={(value) =>
+                setAgentsSettings({ ...agentsSettings, boxOpacity: value[0] })
+              }
+              min={0}
+              max={1}
+              step={0.1}
               className="flex-1"
             />
           </div>
