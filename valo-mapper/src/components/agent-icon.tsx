@@ -13,6 +13,8 @@ interface AgentIconProps {
   height: number;
   opacity: number;
   radius: number;
+  allyColor: string;
+  enemyColor: string;
 }
 
 const AgentIcon = ({
@@ -26,6 +28,8 @@ const AgentIcon = ({
   height,
   radius,
   opacity,
+  allyColor,
+  enemyColor,
 }: AgentIconProps) => {
   const [image] = useImage(src);
 
@@ -34,7 +38,7 @@ const AgentIcon = ({
       <Rect
         width={width}
         height={height}
-        fill={isAlly ? "#18636c" : "#FF4655"}
+        fill={isAlly ? allyColor : enemyColor}
         cornerRadius={radius}
         opacity={opacity}
       />

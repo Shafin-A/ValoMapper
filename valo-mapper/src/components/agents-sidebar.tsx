@@ -5,7 +5,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -25,6 +25,10 @@ interface AgentsSidebarProps {
   setAgentsBoxOpacity: Dispatch<SetStateAction<number>>;
   agentsRadius: number;
   setAgentsRadius: Dispatch<SetStateAction<number>>;
+  allyColor: string;
+  setAllyColor: Dispatch<SetStateAction<string>>;
+  enemyColor: string;
+  setEnemyColor: Dispatch<SetStateAction<string>>;
 }
 
 const roleTabs = [
@@ -41,6 +45,7 @@ import { Switch } from "./ui/switch";
 import { Checkbox } from "./ui/checkbox";
 import { AgentCanvas } from "@/app/page";
 import { Slider } from "./ui/slider";
+import { debounce } from "@/lib/utils";
 
 const roleIcons: Record<string, string> = {
   Controller: "/roles/controller.png",
@@ -59,10 +64,24 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   setAgentsBoxOpacity,
   agentsRadius,
   setAgentsRadius,
+  allyColor,
+  setAllyColor,
+  enemyColor,
+  setEnemyColor,
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [isAlly, setIsAlly] = useState(true);
   const [onMap, setOnMap] = useState(false);
+
+  const debouncedSetAllyColor = useMemo(
+    () => debounce((color: string) => setAllyColor(color), 16),
+    [setAllyColor]
+  );
+
+  const debouncedSetEnemyColor = useMemo(
+    () => debounce((color: string) => setEnemyColor(color), 16),
+    [setEnemyColor]
+  );
 
   const agentsByRole =
     selectedRole === "All"
@@ -72,7 +91,9 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   const handleDragStart = (
     e: React.DragEvent<HTMLImageElement>,
     agent: Agent,
-    isAlly: boolean
+    isAlly: boolean,
+    allyColor: string,
+    enemyColor: string
   ) => {
     const dragPreview = document.createElement("div");
 
@@ -84,8 +105,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
       .padStart(2, "0");
 
     dragPreview.style.backgroundColor = isAlly
-      ? `#18636c${alphaHex}`
-      : `#FF4655${alphaHex}`;
+      ? `${allyColor}${alphaHex}`
+      : `${enemyColor}${alphaHex}`;
 
     dragPreview.style.display = "flex";
     dragPreview.style.alignItems = "center";
@@ -132,7 +153,9 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Switch
-                  className="data-[state=checked]:bg-[#18636c] data-[state=unchecked]:!bg-[#FF4655]"
+                  style={{
+                    backgroundColor: isAlly ? allyColor : enemyColor,
+                  }}
                   checked={isAlly}
                   onCheckedChange={setIsAlly}
                 />
@@ -216,7 +239,15 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                         height={50}
                         draggable
                         style={{ cursor: "grab" }}
-                        onDragStart={(e) => handleDragStart(e, agent, isAlly)}
+                        onDragStart={(e) =>
+                          handleDragStart(
+                            e,
+                            agent,
+                            isAlly,
+                            allyColor,
+                            enemyColor
+                          )
+                        }
                       />
                     ))}
                 </div>
@@ -254,6 +285,24 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
               max={50}
               step={1}
               className="flex-1"
+            />
+          </div>
+          <div className="flex items-center gap-6 p-2">
+            <span className="text-sm font-medium w-20">Ally Color</span>
+            <input
+              type="color"
+              value={allyColor}
+              onChange={(e) => debouncedSetAllyColor(e.target.value)}
+              className="h-6 w-6 cursor-pointer rounded"
+            />
+          </div>
+          <div className="flex items-center gap-6 p-2">
+            <span className="text-sm font-medium w-20">Enemy Color</span>
+            <input
+              type="color"
+              value={enemyColor}
+              onChange={(e) => debouncedSetEnemyColor(e.target.value)}
+              className="h-6 w-6 cursor-pointer rounded"
             />
           </div>
         </SidebarContent>

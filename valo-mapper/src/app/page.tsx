@@ -74,6 +74,9 @@ const Home = () => {
 
   const [agentsRadius, setAgentsRadius] = useState(8);
 
+  const [allyColor, setAllyColor] = useState("#18636c");
+  const [enemyColor, setEnemyColor] = useState("#FF4655");
+
   useEffect(() => {
     if (divRef.current?.offsetHeight && divRef.current?.offsetWidth) {
       setDimensions({
@@ -216,6 +219,8 @@ const Home = () => {
                   height={agentsScale}
                   radius={agentsRadius}
                   opacity={agentsBoxOpacity}
+                  allyColor={allyColor}
+                  enemyColor={enemyColor}
                 />
               ))}
             </Layer>
@@ -232,6 +237,10 @@ const Home = () => {
         setAgentsBoxOpacity={setAgentsBoxOpacity}
         agentsRadius={agentsRadius}
         setAgentsRadius={setAgentsRadius}
+        allyColor={allyColor}
+        setAllyColor={setAllyColor}
+        enemyColor={enemyColor}
+        setEnemyColor={setEnemyColor}
       />
     </div>
   );
