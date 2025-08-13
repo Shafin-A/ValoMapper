@@ -23,6 +23,8 @@ interface AgentsSidebarProps {
   setAgentsScale: Dispatch<SetStateAction<number>>;
   agentsBoxOpacity: number;
   setAgentsBoxOpacity: Dispatch<SetStateAction<number>>;
+  agentsRadius: number;
+  setAgentsRadius: Dispatch<SetStateAction<number>>;
 }
 
 const roleTabs = [
@@ -55,6 +57,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   setAgentsScale,
   agentsBoxOpacity,
   setAgentsBoxOpacity,
+  agentsRadius,
+  setAgentsRadius,
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [isAlly, setIsAlly] = useState(true);
@@ -74,18 +78,28 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
 
     dragPreview.style.width = `${agentsScale}px`;
     dragPreview.style.height = `${agentsScale}px`;
-    dragPreview.style.backgroundColor = isAlly ? "#18636c" : "#FF4655";
+
+    const alphaHex = Math.round(agentsBoxOpacity * 255)
+      .toString(16)
+      .padStart(2, "0");
+
+    dragPreview.style.backgroundColor = isAlly
+      ? `#18636c${alphaHex}`
+      : `#FF4655${alphaHex}`;
+
     dragPreview.style.display = "flex";
     dragPreview.style.alignItems = "center";
     dragPreview.style.justifyContent = "center";
-    dragPreview.style.borderRadius = "8px";
+    dragPreview.style.borderRadius = `${agentsRadius}px`;
     dragPreview.style.position = "absolute";
     dragPreview.style.top = "-9999px";
 
     const clonedImg = e.currentTarget.cloneNode(true) as HTMLImageElement;
     clonedImg.style.width = `${agentsScale}px`;
     clonedImg.style.height = `${agentsScale}px`;
+    clonedImg.style.borderRadius = `${agentsRadius}px`;
     clonedImg.draggable = false;
+
     dragPreview.appendChild(clonedImg);
 
     document.body.appendChild(dragPreview);
@@ -221,13 +235,24 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
             />
           </div>
           <div className="flex items-center gap-6 p-2">
-            <span className="text-sm font-medium w-20">Box Opacity</span>
+            <span className="text-sm font-medium w-20">Color Opacity</span>
             <Slider
               value={[agentsBoxOpacity]}
               onValueChange={(value) => setAgentsBoxOpacity(value[0])}
               min={0}
               max={1}
               step={0.1}
+              className="flex-1"
+            />
+          </div>
+          <div className="flex items-center gap-6 p-2">
+            <span className="text-sm font-medium w-20">Radius</span>
+            <Slider
+              value={[agentsRadius]}
+              onValueChange={(value) => setAgentsRadius(value[0])}
+              min={1}
+              max={50}
+              step={1}
               className="flex-1"
             />
           </div>

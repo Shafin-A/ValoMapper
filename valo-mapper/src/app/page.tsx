@@ -72,6 +72,8 @@ const Home = () => {
   const [agentsScale, setAgentsScale] = useState(50);
   const [agentsBoxOpacity, setAgentsBoxOpacity] = useState(1);
 
+  const [agentsRadius, setAgentsRadius] = useState(8);
+
   useEffect(() => {
     if (divRef.current?.offsetHeight && divRef.current?.offsetWidth) {
       setDimensions({
@@ -212,6 +214,7 @@ const Home = () => {
                   onDragEnd={(e) => handleAgentDragEnd(idx, e)}
                   width={agentsScale}
                   height={agentsScale}
+                  radius={agentsRadius}
                   opacity={agentsBoxOpacity}
                 />
               ))}
@@ -227,6 +230,8 @@ const Home = () => {
         setAgentsScale={setAgentsScale}
         agentsBoxOpacity={agentsBoxOpacity}
         setAgentsBoxOpacity={setAgentsBoxOpacity}
+        agentsRadius={agentsRadius}
+        setAgentsRadius={setAgentsRadius}
       />
     </div>
   );

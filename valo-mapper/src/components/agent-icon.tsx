@@ -12,6 +12,7 @@ interface AgentIconProps {
   width: number;
   height: number;
   opacity: number;
+  radius: number;
 }
 
 const AgentIcon = ({
@@ -23,6 +24,7 @@ const AgentIcon = ({
   onDragEnd,
   width,
   height,
+  radius,
   opacity,
 }: AgentIconProps) => {
   const [image] = useImage(src);
@@ -33,10 +35,15 @@ const AgentIcon = ({
         width={width}
         height={height}
         fill={isAlly ? "#18636c" : "#FF4655"}
-        cornerRadius={8}
+        cornerRadius={radius}
         opacity={opacity}
       />
-      <KonvaImage image={image} width={width} height={height} />
+      <KonvaImage
+        image={image}
+        width={width}
+        height={height}
+        cornerRadius={radius}
+      />
     </Group>
   );
 };
