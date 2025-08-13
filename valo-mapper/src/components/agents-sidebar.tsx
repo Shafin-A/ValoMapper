@@ -21,6 +21,8 @@ interface AgentsSidebarProps {
   agentsOnCanvas: AgentCanvas[];
   agentsScale: number;
   setAgentsScale: Dispatch<SetStateAction<number>>;
+  agentsBoxOpacity: number;
+  setAgentsBoxOpacity: Dispatch<SetStateAction<number>>;
 }
 
 const roleTabs = [
@@ -51,6 +53,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   agentsOnCanvas,
   agentsScale,
   setAgentsScale,
+  agentsBoxOpacity,
+  setAgentsBoxOpacity,
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [isAlly, setIsAlly] = useState(true);
@@ -206,13 +210,24 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
             </TabsContent>
           </Tabs>
           <div className="flex items-center gap-6 p-2">
-            <span className="text-sm font-medium">Scale</span>
+            <span className="text-sm font-medium w-20">Scale</span>
             <Slider
               value={[agentsScale]}
               onValueChange={(value) => setAgentsScale(value[0])}
               min={25}
               max={100}
               step={1}
+              className="flex-1"
+            />
+          </div>
+          <div className="flex items-center gap-6 p-2">
+            <span className="text-sm font-medium w-20">Box Opacity</span>
+            <Slider
+              value={[agentsBoxOpacity]}
+              onValueChange={(value) => setAgentsBoxOpacity(value[0])}
+              min={0}
+              max={1}
+              step={0.1}
               className="flex-1"
             />
           </div>

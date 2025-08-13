@@ -70,6 +70,7 @@ const Home = () => {
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
   const [agentsScale, setAgentsScale] = useState(50);
+  const [agentsBoxOpacity, setAgentsBoxOpacity] = useState(1);
 
   useEffect(() => {
     if (divRef.current?.offsetHeight && divRef.current?.offsetWidth) {
@@ -211,6 +212,7 @@ const Home = () => {
                   onDragEnd={(e) => handleAgentDragEnd(idx, e)}
                   width={agentsScale}
                   height={agentsScale}
+                  opacity={agentsBoxOpacity}
                 />
               ))}
             </Layer>
@@ -223,6 +225,8 @@ const Home = () => {
         agentsOnCanvas={agentsOnCanvas}
         agentsScale={agentsScale}
         setAgentsScale={setAgentsScale}
+        agentsBoxOpacity={agentsBoxOpacity}
+        setAgentsBoxOpacity={setAgentsBoxOpacity}
       />
     </div>
   );
