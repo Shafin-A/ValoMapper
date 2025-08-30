@@ -2,7 +2,7 @@ import { Group, Image as KonvaImage, Rect } from "react-konva";
 import useImage from "use-image";
 import type { KonvaEventObject } from "konva/lib/Node";
 
-interface AgentIconProps {
+interface DraggableIconProps {
   isAlly: boolean;
   x: number;
   y: number;
@@ -30,7 +30,7 @@ const DraggableIcon = ({
   opacity,
   allyColor,
   enemyColor,
-}: AgentIconProps) => {
+}: DraggableIconProps) => {
   const [image] = useImage(src);
 
   return (
