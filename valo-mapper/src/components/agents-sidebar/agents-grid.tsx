@@ -1,14 +1,14 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AGENTS } from "@/lib/consts";
 import Image from "next/image";
-import { AgentCanvas, Agent, IconSettings, AgentRole } from "@/lib/types";
+import { AgentCanvas, Agent, AgentRole } from "@/lib/types";
 import { setupDragPreviewImage } from "@/lib/utils";
+import { useSettings } from "@/contexts/settings-context";
 
 interface AgentsGridProps {
   selectedRole: AgentRole | "All";
   onMap: boolean;
   agentsOnCanvas: AgentCanvas[];
-  agentsSettings: IconSettings;
   isAlly: boolean;
   onAgentClick: (agent: Agent | null) => void;
 }
@@ -17,10 +17,11 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
   selectedRole,
   onMap,
   agentsOnCanvas,
-  agentsSettings,
   isAlly,
   onAgentClick,
 }) => {
+  const { agentsSettings } = useSettings();
+
   const handleDragStart = (
     e: React.DragEvent<HTMLImageElement>,
     agent: Agent

@@ -9,13 +9,14 @@ import {
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { AbilityCanvas, AgentCanvas, IconSettings } from "@/lib/types";
+import { AbilityCanvas, AgentCanvas } from "@/lib/types";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useEffect, useRef, useState } from "react";
 import { Image as KonvaImage, Layer, Stage } from "react-konva";
 import useImage from "use-image";
 import AbilityIcon from "@/components/ability-icon";
+import { useSettings } from "@/contexts/settings-context";
 
 const ascentMap = "/maps/ascent.svg";
 
@@ -35,21 +36,7 @@ const Home = () => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
-  const [agentsSettings, setAgentsSettings] = useState<IconSettings>({
-    scale: 50,
-    boxOpacity: 1,
-    radius: 8,
-    allyColor: "#18636c",
-    enemyColor: "#FF4655",
-  });
-
-  const [abilitiesSettings, setAbilitiesSettings] = useState<IconSettings>({
-    scale: 50,
-    boxOpacity: 1,
-    radius: 8,
-    allyColor: "#18636c",
-    enemyColor: "#FF4655",
-  });
+  const { agentsSettings, abilitiesSettings } = useSettings();
 
   useEffect(() => {
     if (divRef.current?.offsetHeight && divRef.current?.offsetWidth) {
@@ -243,11 +230,7 @@ const Home = () => {
       <AgentsSidebar
         sidebarOpen={rightSidebarOpen}
         agentsOnCanvas={agentsOnCanvas}
-        agentsSettings={agentsSettings}
-        setAgentsSettings={setAgentsSettings}
         abilitiesOnCanvas={abilitiesOnCanvas}
-        abilitiesSettings={abilitiesSettings}
-        setAbilitiesSettings={setAbilitiesSettings}
       />
     </div>
   );

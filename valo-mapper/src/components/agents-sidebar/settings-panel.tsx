@@ -1,11 +1,11 @@
 import { Slider } from "@/components/ui/slider";
 import { IconSettings } from "@/lib/types";
 import { debounce } from "@/lib/utils";
-import { Dispatch, SetStateAction, useMemo } from "react";
+import { useMemo } from "react";
 
 interface SettingsPanelProps {
   settings: IconSettings;
-  onSettingsChange: Dispatch<SetStateAction<IconSettings>>;
+  onSettingsChange: (newSettings: Partial<IconSettings>) => void;
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -14,20 +14,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 }) => {
   const debouncedSetAllyColor = useMemo(
     () =>
-      debounce(
-        (color: string) => onSettingsChange({ ...settings, allyColor: color }),
-        16
-      ),
-    [settings, onSettingsChange]
+      debounce((color: string) => onSettingsChange({ allyColor: color }), 16),
+    [onSettingsChange]
   );
 
   const debouncedSetEnemyColor = useMemo(
     () =>
-      debounce(
-        (color: string) => onSettingsChange({ ...settings, enemyColor: color }),
-        16
-      ),
-    [settings, onSettingsChange]
+      debounce((color: string) => onSettingsChange({ enemyColor: color }), 16),
+    [onSettingsChange]
   );
 
   return (
@@ -36,9 +30,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <span className="text-sm font-medium w-20">Scale</span>
         <Slider
           value={[settings.scale]}
-          onValueChange={(value) =>
-            onSettingsChange({ ...settings, scale: value[0] })
-          }
+          onValueChange={(value) => onSettingsChange({ scale: value[0] })}
           min={25}
           max={100}
           step={1}

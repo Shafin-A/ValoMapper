@@ -1,15 +1,15 @@
-import { AbilityCanvas, Agent, AgentIconItem, IconSettings } from "@/lib/types";
+import { AbilityCanvas, Agent, AgentIconItem } from "@/lib/types";
 import { AGENT_ICON_CONFIGS } from "@/lib/consts";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { setupDragPreviewImage } from "@/lib/utils";
+import { useSettings } from "@/contexts/settings-context";
 
 interface AgentAbilitiesProps {
   agent: Agent | null;
   sidebarOpen: boolean;
   abilitiesOnCanvas: AbilityCanvas[];
-  abilitiesSettings: IconSettings;
   isAlly: boolean;
   onClose: () => void;
 }
@@ -18,10 +18,11 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   agent,
   sidebarOpen,
   abilitiesOnCanvas,
-  abilitiesSettings,
   isAlly,
   onClose,
 }) => {
+  const { abilitiesSettings } = useSettings();
+
   if (!agent || !sidebarOpen) return null;
 
   const handleDragStart = (

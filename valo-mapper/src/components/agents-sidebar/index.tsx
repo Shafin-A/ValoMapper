@@ -14,14 +14,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Dispatch, SetStateAction, useState } from "react";
-import {
-  AbilityCanvas,
-  Agent,
-  AgentCanvas,
-  AgentRole,
-  IconSettings,
-} from "@/lib/types";
+import { useState } from "react";
+import { AbilityCanvas, Agent, AgentCanvas, AgentRole } from "@/lib/types";
+import { useSettings } from "@/contexts/settings-context";
 import { RoleTabs } from "./role-tabs";
 import { SettingsPanel } from "./settings-panel";
 import { AgentsGrid } from "./agents-grid";
@@ -30,22 +25,21 @@ import AgentAbilities from "./agent-abilities";
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
   agentsOnCanvas: AgentCanvas[];
-  agentsSettings: IconSettings;
-  setAgentsSettings: Dispatch<SetStateAction<IconSettings>>;
   abilitiesOnCanvas: AbilityCanvas[];
-  abilitiesSettings: IconSettings;
-  setAbilitiesSettings: Dispatch<SetStateAction<IconSettings>>;
 }
 
 const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   sidebarOpen,
   agentsOnCanvas,
-  agentsSettings,
-  setAgentsSettings,
   abilitiesOnCanvas,
-  abilitiesSettings,
-  setAbilitiesSettings,
 }) => {
+  const {
+    agentsSettings,
+    abilitiesSettings,
+    updateAgentsSettings,
+    updateAbilitiesSettings,
+  } = useSettings();
+
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
   const [isAlly, setIsAlly] = useState(true);
   const [onMap, setOnMap] = useState(false);
@@ -104,7 +98,6 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                 selectedRole={selectedRole}
                 onMap={onMap}
                 agentsOnCanvas={agentsOnCanvas}
-                agentsSettings={agentsSettings}
                 isAlly={isAlly}
                 onAgentClick={(agent) =>
                   setSelectedAgent(
@@ -123,7 +116,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
               <AccordionContent>
                 <SettingsPanel
                   settings={agentsSettings}
-                  onSettingsChange={setAgentsSettings}
+                  onSettingsChange={updateAgentsSettings}
                 />
               </AccordionContent>
             </AccordionItem>
@@ -135,7 +128,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
               <AccordionContent>
                 <SettingsPanel
                   settings={abilitiesSettings}
-                  onSettingsChange={setAbilitiesSettings}
+                  onSettingsChange={updateAbilitiesSettings}
                 />
               </AccordionContent>
             </AccordionItem>
@@ -146,7 +139,6 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
         agent={selectedAgent}
         sidebarOpen={sidebarOpen}
         abilitiesOnCanvas={abilitiesOnCanvas}
-        abilitiesSettings={abilitiesSettings}
         isAlly={isAlly}
         onClose={() => setSelectedAgent(null)}
       />
