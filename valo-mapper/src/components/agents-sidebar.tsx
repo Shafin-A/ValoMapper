@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AGENTS, ROLE_ICONS } from "@/lib/consts";
-import { Agent, AgentCanvas, AgentsSettings } from "@/lib/types";
+import { AbilityCanvas, Agent, AgentCanvas, IconSettings } from "@/lib/types";
 import { debounce } from "@/lib/utils";
 import { Grid3x3 } from "lucide-react";
 import Image from "next/image";
@@ -21,8 +21,11 @@ import AgentAbilities from "./agent-abilities";
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
   agentsOnCanvas: AgentCanvas[];
-  agentsSettings: AgentsSettings;
-  setAgentsSettings: Dispatch<SetStateAction<AgentsSettings>>;
+  agentsSettings: IconSettings;
+  setAgentsSettings: Dispatch<SetStateAction<IconSettings>>;
+  abilitiesOnCanvas: AbilityCanvas[];
+  abilitiesSettings: IconSettings;
+  setAbilitiesSettings: Dispatch<SetStateAction<IconSettings>>;
 }
 
 const roleTabs = [
@@ -38,6 +41,9 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   agentsOnCanvas,
   agentsSettings,
   setAgentsSettings,
+  abilitiesOnCanvas,
+  abilitiesSettings,
+  setAbilitiesSettings,
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [isAlly, setIsAlly] = useState(true);
@@ -311,6 +317,9 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
       <AgentAbilities
         agent={selectedAgent}
         sidebarOpen={sidebarOpen}
+        abilitiesOnCanvas={abilitiesOnCanvas}
+        abilitiesSettings={abilitiesSettings}
+        isAlly={isAlly}
         onClose={() => setSelectedAgent(null)}
       />
     </SidebarProvider>

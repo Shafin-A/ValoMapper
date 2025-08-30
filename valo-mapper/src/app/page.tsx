@@ -9,18 +9,22 @@ import {
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { AgentCanvas, AgentsSettings } from "@/lib/types";
+import { AbilityCanvas, AgentCanvas, IconSettings } from "@/lib/types";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useEffect, useRef, useState } from "react";
 import { Image as KonvaImage, Layer, Stage } from "react-konva";
 import useImage from "use-image";
+import AbilityIcon from "@/components/ability-icon";
 
 const ascentMap = "/maps/ascent.svg";
 
 const Home = () => {
   const [mapImage] = useImage(ascentMap);
   const [agentsOnCanvas, setAgentsOnCanvas] = useState<AgentCanvas[]>([]);
+  const [abilitiesOnCanvas, setAbilitiesOnCanvas] = useState<AbilityCanvas[]>(
+    []
+  );
 
   const divRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({
@@ -31,7 +35,15 @@ const Home = () => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
-  const [agentsSettings, setAgentsSettings] = useState<AgentsSettings>({
+  const [agentsSettings, setAgentsSettings] = useState<IconSettings>({
+    scale: 50,
+    boxOpacity: 1,
+    radius: 8,
+    allyColor: "#18636c",
+    enemyColor: "#FF4655",
+  });
+
+  const [abilitiesSettings, setAbilitiesSettings] = useState<IconSettings>({
     scale: 50,
     boxOpacity: 1,
     radius: 8,
@@ -87,13 +99,10 @@ const Home = () => {
   const handleStageDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
 
-    const agent = JSON.parse(e.dataTransfer.getData("agent"));
     const stage = stageRef.current;
-
     if (!stage) return;
 
     const rect = stage.container().getBoundingClientRect();
-
     const pointer = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
@@ -105,18 +114,31 @@ const Home = () => {
     const x = (pointer.x - stagePos.x) / scale;
     const y = (pointer.y - stagePos.y) / scale;
 
-    setAgentsOnCanvas((prev) => [...prev, { ...agent, x, y }]);
+    const agentData = e.dataTransfer.getData("agent");
+    const abilityData = e.dataTransfer.getData("ability");
+
+    if (agentData) {
+      const agent = JSON.parse(agentData);
+      setAgentsOnCanvas((prev) => [...prev, { ...agent, x, y }]);
+    } else if (abilityData) {
+      const ability = JSON.parse(abilityData);
+      setAbilitiesOnCanvas((prev) => [...prev, { ...ability, x, y }]);
+    }
   };
 
   const handleStageDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
 
-  const handleAgentDragEnd = (idx: number, e: KonvaEventObject<DragEvent>) => {
+  const handleDragEnd = <T extends { x: number; y: number }>(
+    id: number,
+    e: KonvaEventObject<DragEvent>,
+    setState: React.Dispatch<React.SetStateAction<T[]>>
+  ) => {
     const { x, y } = e.target.position();
-    setAgentsOnCanvas((prev) => {
+    setState((prev) => {
       const copy = [...prev];
-      copy[idx] = { ...copy[idx], x, y };
+      copy[id] = { ...copy[id], x, y };
       return copy;
     });
   };
@@ -168,7 +190,9 @@ const Home = () => {
                   y={(dimensions.height - 1000) / 2}
                 />
               )}
-              {agentsOnCanvas.map((agent, idx) => (
+            </Layer>
+            <Layer>
+              {agentsOnCanvas.map((agent) => (
                 <DraggableIcon
                   key={agent.id}
                   isAlly={agent.isAlly}
@@ -176,13 +200,37 @@ const Home = () => {
                   y={agent.y}
                   src={agent.src}
                   draggable
-                  onDragEnd={(e) => handleAgentDragEnd(idx, e)}
+                  onDragEnd={(e) =>
+                    handleDragEnd(agent.id, e, setAgentsOnCanvas)
+                  }
                   width={agentsSettings.scale}
                   height={agentsSettings.scale}
                   radius={agentsSettings.radius}
                   opacity={agentsSettings.boxOpacity}
                   allyColor={agentsSettings.allyColor}
                   enemyColor={agentsSettings.enemyColor}
+                />
+              ))}
+            </Layer>
+            <Layer>
+              {abilitiesOnCanvas.map((ability) => (
+                <AbilityIcon
+                  key={ability.id}
+                  action={ability.action}
+                  isAlly={ability.isAlly}
+                  x={ability.x}
+                  y={ability.y}
+                  src={ability.src}
+                  draggable
+                  onDragEnd={(e) =>
+                    handleDragEnd(ability.id, e, setAbilitiesOnCanvas)
+                  }
+                  width={abilitiesSettings.scale}
+                  height={abilitiesSettings.scale}
+                  radius={abilitiesSettings.radius}
+                  opacity={abilitiesSettings.boxOpacity}
+                  allyColor={abilitiesSettings.allyColor}
+                  enemyColor={abilitiesSettings.enemyColor}
                 />
               ))}
             </Layer>
@@ -194,6 +242,9 @@ const Home = () => {
         agentsOnCanvas={agentsOnCanvas}
         agentsSettings={agentsSettings}
         setAgentsSettings={setAgentsSettings}
+        abilitiesOnCanvas={abilitiesOnCanvas}
+        abilitiesSettings={abilitiesSettings}
+        setAbilitiesSettings={setAbilitiesSettings}
       />
     </div>
   );

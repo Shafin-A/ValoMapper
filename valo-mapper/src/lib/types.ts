@@ -4,19 +4,28 @@ export type Agent = {
   role: AgentRole;
 };
 
-export type AgentCanvas = {
+export type AbilityAction = "draggable" | "static" | "animated" | "interactive";
+
+export type CanvasItem = {
   id: number;
   name: string;
   src: string;
-  role: AgentRole;
   isAlly: boolean;
   x: number;
   y: number;
 };
 
+export type AgentCanvas = CanvasItem & {
+  role: AgentRole;
+};
+
+export type AbilityCanvas = CanvasItem & {
+  action: AbilityAction;
+};
+
 export type AgentRole = "Duelist" | "Controller" | "Initiator" | "Sentinel";
 
-export type AgentsSettings = {
+export type IconSettings = {
   scale: number;
   boxOpacity: number;
   radius: number;
@@ -24,9 +33,11 @@ export type AgentsSettings = {
   enemyColor: string;
 };
 
-export type AgentIconConfig = {
+export type AgentIconItem = {
   id: string;
   icon: string;
   label: string;
-  action: string;
-}[];
+  action: AbilityAction;
+};
+
+export type AgentIconConfig = AgentIconItem[];

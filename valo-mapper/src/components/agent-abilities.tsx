@@ -1,4 +1,4 @@
-import { Agent } from "@/lib/types";
+import { AbilityCanvas, Agent, AgentIconItem, IconSettings } from "@/lib/types";
 import { AGENT_ICON_CONFIGS } from "@/lib/consts";
 import Image from "next/image";
 import { X } from "lucide-react";
@@ -7,29 +7,75 @@ import { Button } from "@/components/ui/button";
 interface AgentAbilitiesProps {
   agent: Agent | null;
   sidebarOpen: boolean;
+  abilitiesOnCanvas: AbilityCanvas[];
+  abilitiesSettings: IconSettings;
+  isAlly: boolean;
   onClose: () => void;
 }
 
 const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   agent,
   sidebarOpen,
+  abilitiesOnCanvas,
+  abilitiesSettings,
+  isAlly,
   onClose,
 }) => {
   if (!agent || !sidebarOpen) return null;
 
   const handleDragStart = (
-    e: React.DragEvent<HTMLDivElement>,
-    iconConfig: { id: string; icon: string; label: string; action: string }
+    e: React.DragEvent<HTMLImageElement>,
+    iconConfig: AgentIconItem,
+    isAlly: boolean,
+    allyColor: string,
+    enemyColor: string
   ) => {
-    const abilityData = {
-      name: agent.name,
+    const dragPreview = document.createElement("div");
+
+    dragPreview.style.width = `${abilitiesSettings.scale}px`;
+    dragPreview.style.height = `${abilitiesSettings.scale}px`;
+
+    const alphaHex = Math.round(abilitiesSettings.boxOpacity * 255)
+      .toString(16)
+      .padStart(2, "0");
+
+    dragPreview.style.backgroundColor = isAlly
+      ? `${allyColor}${alphaHex}`
+      : `${enemyColor}${alphaHex}`;
+
+    dragPreview.style.display = "flex";
+    dragPreview.style.alignItems = "center";
+    dragPreview.style.justifyContent = "center";
+    dragPreview.style.borderRadius = `${abilitiesSettings.radius}px`;
+    dragPreview.style.position = "absolute";
+    dragPreview.style.top = "-9999px";
+
+    const clonedImg = e.currentTarget.cloneNode(true) as HTMLImageElement;
+    clonedImg.style.width = `${abilitiesSettings.scale}px`;
+    clonedImg.style.height = `${abilitiesSettings.scale}px`;
+    clonedImg.style.borderRadius = `${abilitiesSettings.radius}px`;
+    clonedImg.draggable = false;
+
+    dragPreview.appendChild(clonedImg);
+
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 0, 0);
+
+    setTimeout(() => {
+      document.body.removeChild(dragPreview);
+    }, 0);
+
+    const abilityCanvas: AbilityCanvas = {
+      id: abilitiesOnCanvas.length,
+      name: iconConfig.label,
       src: iconConfig.icon,
-      role: agent.role,
-      isAlly: true,
-      isAbility: true,
-      abilityLabel: iconConfig.label,
+      action: iconConfig.action,
+      isAlly,
+      x: 0,
+      y: 0,
     };
-    e.dataTransfer.setData("agent", JSON.stringify(abilityData));
+
+    e.dataTransfer.setData("ability", JSON.stringify(abilityCanvas));
   };
 
   return (
@@ -45,17 +91,21 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
       </Button>
       <div className="flex flex-col items-center gap-6">
         {AGENT_ICON_CONFIGS[agent.name]?.map((iconConfig) => (
-          <div
-            key={iconConfig.id}
-            title={iconConfig.label}
-            draggable
-            onDragStart={(e) => handleDragStart(e, iconConfig)}
-          >
+          <div key={iconConfig.id} title={iconConfig.label} draggable>
             <Image
               src={iconConfig.icon}
               alt={iconConfig.label}
               width={50}
               height={50}
+              onDragStart={(e) =>
+                handleDragStart(
+                  e,
+                  iconConfig,
+                  isAlly,
+                  abilitiesSettings.allyColor,
+                  abilitiesSettings.enemyColor
+                )
+              }
             />
           </div>
         ))}
