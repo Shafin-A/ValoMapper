@@ -13,9 +13,9 @@ import { debounce } from "@/lib/utils";
 import { Grid3x3 } from "lucide-react";
 import Image from "next/image";
 import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
-import { Checkbox } from "./ui/checkbox";
-import { Slider } from "./ui/slider";
-import { Switch } from "./ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components//ui/switch";
 import AgentAbilities from "./agent-abilities";
 
 interface AgentsSidebarProps {
