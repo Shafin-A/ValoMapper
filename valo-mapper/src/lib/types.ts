@@ -22,3 +22,10 @@ export type AgentsSettings = {
   allyColor: string;
   enemyColor: string;
 };
+
+export type AgentIconConfig = {
+  id: string;
+  icon: string;
+  label: string;
+  action: string;
+}[];

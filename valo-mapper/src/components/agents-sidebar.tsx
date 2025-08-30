@@ -16,6 +16,7 @@ import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { Checkbox } from "./ui/checkbox";
 import { Slider } from "./ui/slider";
 import { Switch } from "./ui/switch";
+import AgentAbilities from "./agent-abilities";
 
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
@@ -41,6 +42,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   const [selectedRole, setSelectedRole] = useState<string>("All");
   const [isAlly, setIsAlly] = useState(true);
   const [onMap, setOnMap] = useState(false);
+
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
   const debouncedSetAllyColor = useMemo(
     () =>
@@ -220,6 +223,11 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                         height={50}
                         draggable
                         style={{ cursor: "grab" }}
+                        onClick={() =>
+                          setSelectedAgent(
+                            selectedAgent?.name === agent.name ? null : agent
+                          )
+                        }
                         onDragStart={(e) =>
                           handleDragStart(
                             e,
@@ -294,6 +302,11 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
           </div>
         </SidebarContent>
       </Sidebar>
+      <AgentAbilities
+        agent={selectedAgent}
+        sidebarOpen={sidebarOpen}
+        onClose={() => setSelectedAgent(null)}
+      />
     </SidebarProvider>
   );
 };
