@@ -91,23 +91,25 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
       </Button>
       <div className="flex flex-col items-center gap-6">
         {AGENT_ICON_CONFIGS[agent.name]?.map((iconConfig) => (
-          <div key={iconConfig.id} title={iconConfig.label} draggable>
-            <Image
-              src={iconConfig.icon}
-              alt={iconConfig.label}
-              width={50}
-              height={50}
-              onDragStart={(e) =>
-                handleDragStart(
-                  e,
-                  iconConfig,
-                  isAlly,
-                  abilitiesSettings.allyColor,
-                  abilitiesSettings.enemyColor
-                )
-              }
-            />
-          </div>
+          <Image
+            key={iconConfig.label}
+            title={iconConfig.label}
+            src={iconConfig.icon}
+            alt={iconConfig.label}
+            width={50}
+            height={50}
+            draggable
+            style={{ cursor: "grab" }}
+            onDragStart={(e) =>
+              handleDragStart(
+                e,
+                iconConfig,
+                isAlly,
+                abilitiesSettings.allyColor,
+                abilitiesSettings.enemyColor
+              )
+            }
+          />
         ))}
       </div>
     </div>

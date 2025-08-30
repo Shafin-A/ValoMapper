@@ -16,6 +16,13 @@ import React, { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components//ui/switch";
+import { Separator } from "@/components/ui/separator";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import AgentAbilities from "./agent-abilities";
 
 interface AgentsSidebarProps {
@@ -51,7 +58,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
 
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
-  const debouncedSetAllyColor = useMemo(
+  const debouncedSetAgentAllyColor = useMemo(
     () =>
       debounce(
         (color: string) =>
@@ -61,7 +68,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
     [agentsSettings, setAgentsSettings]
   );
 
-  const debouncedSetEnemyColor = useMemo(
+  const debouncedSetAgentEnemyColor = useMemo(
     () =>
       debounce(
         (color: string) =>
@@ -69,6 +76,26 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
         16
       ),
     [agentsSettings, setAgentsSettings]
+  );
+
+  const debouncedSetAbilityAllyColor = useMemo(
+    () =>
+      debounce(
+        (color: string) =>
+          setAbilitiesSettings({ ...abilitiesSettings, allyColor: color }),
+        16
+      ),
+    [abilitiesSettings, setAbilitiesSettings]
+  );
+
+  const debouncedSetAbilityEnemyColor = useMemo(
+    () =>
+      debounce(
+        (color: string) =>
+          setAbilitiesSettings({ ...abilitiesSettings, enemyColor: color }),
+        16
+      ),
+    [abilitiesSettings, setAbilitiesSettings]
   );
 
   const agentsByRole =
@@ -229,6 +256,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                     .map((agent) => (
                       <Image
                         key={agent.name}
+                        title={agent.name}
                         src={agent.src}
                         alt={agent.name}
                         width={50}
@@ -255,63 +283,160 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
               </ScrollArea>
             </TabsContent>
           </Tabs>
-          <div className="flex items-center gap-6 p-2">
-            <span className="text-sm font-medium w-20">Scale</span>
-            <Slider
-              value={[agentsSettings.scale]}
-              onValueChange={(value) =>
-                setAgentsSettings({ ...agentsSettings, scale: value[0] })
-              }
-              min={25}
-              max={100}
-              step={1}
-              className="flex-1"
-            />
-          </div>
-          <div className="flex items-center gap-6 p-2">
-            <span className="text-sm font-medium w-20">Radius</span>
-            <Slider
-              value={[agentsSettings.radius]}
-              onValueChange={(value) =>
-                setAgentsSettings({ ...agentsSettings, radius: value[0] })
-              }
-              min={1}
-              max={50}
-              step={1}
-              className="flex-1"
-            />
-          </div>
-          <div className="flex items-center gap-6 p-2">
-            <span className="text-sm font-medium w-20">Color Opacity</span>
-            <Slider
-              value={[agentsSettings.boxOpacity]}
-              onValueChange={(value) =>
-                setAgentsSettings({ ...agentsSettings, boxOpacity: value[0] })
-              }
-              min={0}
-              max={1}
-              step={0.1}
-              className="flex-1"
-            />
-          </div>
-          <div className="flex items-center gap-6 p-2">
-            <span className="text-sm font-medium w-20">Ally Color</span>
-            <input
-              type="color"
-              value={agentsSettings.allyColor}
-              onChange={(e) => debouncedSetAllyColor(e.target.value)}
-              className="h-6 w-6 cursor-pointer rounded"
-            />
-          </div>
-          <div className="flex items-center gap-6 p-2">
-            <span className="text-sm font-medium w-20">Enemy Color</span>
-            <input
-              type="color"
-              value={agentsSettings.enemyColor}
-              onChange={(e) => debouncedSetEnemyColor(e.target.value)}
-              className="h-6 w-6 cursor-pointer rounded"
-            />
-          </div>
+          <Separator />
+          <Accordion type="multiple" className="w-full">
+            <AccordionItem value="agents-settings">
+              <AccordionTrigger className="px-2">
+                Agents Settings
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">Scale</span>
+                  <Slider
+                    value={[agentsSettings.scale]}
+                    onValueChange={(value) =>
+                      setAgentsSettings({ ...agentsSettings, scale: value[0] })
+                    }
+                    min={25}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">Radius</span>
+                  <Slider
+                    value={[agentsSettings.radius]}
+                    onValueChange={(value) =>
+                      setAgentsSettings({ ...agentsSettings, radius: value[0] })
+                    }
+                    min={1}
+                    max={50}
+                    step={1}
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">
+                    Color Opacity
+                  </span>
+                  <Slider
+                    value={[agentsSettings.boxOpacity]}
+                    onValueChange={(value) =>
+                      setAgentsSettings({
+                        ...agentsSettings,
+                        boxOpacity: value[0],
+                      })
+                    }
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">Ally Color</span>
+                  <input
+                    type="color"
+                    value={agentsSettings.allyColor}
+                    onChange={(e) => debouncedSetAgentAllyColor(e.target.value)}
+                    className="h-6 w-6 cursor-pointer rounded"
+                  />
+                </div>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">Enemy Color</span>
+                  <input
+                    type="color"
+                    value={agentsSettings.enemyColor}
+                    onChange={(e) =>
+                      debouncedSetAgentEnemyColor(e.target.value)
+                    }
+                    className="h-6 w-6 cursor-pointer rounded"
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="abilities-settings">
+              <AccordionTrigger className="px-2">
+                Abilities Settings
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">Scale</span>
+                  <Slider
+                    value={[abilitiesSettings.scale]}
+                    onValueChange={(value) =>
+                      setAbilitiesSettings({
+                        ...abilitiesSettings,
+                        scale: value[0],
+                      })
+                    }
+                    min={25}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">Radius</span>
+                  <Slider
+                    value={[abilitiesSettings.radius]}
+                    onValueChange={(value) =>
+                      setAbilitiesSettings({
+                        ...abilitiesSettings,
+                        radius: value[0],
+                      })
+                    }
+                    min={1}
+                    max={50}
+                    step={1}
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">
+                    Color Opacity
+                  </span>
+                  <Slider
+                    value={[abilitiesSettings.boxOpacity]}
+                    onValueChange={(value) =>
+                      setAbilitiesSettings({
+                        ...abilitiesSettings,
+                        boxOpacity: value[0],
+                      })
+                    }
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">Ally Color</span>
+                  <input
+                    type="color"
+                    value={abilitiesSettings.allyColor}
+                    onChange={(e) =>
+                      debouncedSetAbilityAllyColor(e.target.value)
+                    }
+                    className="h-6 w-6 cursor-pointer rounded"
+                  />
+                </div>
+                <div className="flex items-center gap-6 p-2">
+                  <span className="text-sm font-medium w-20">Enemy Color</span>
+                  <input
+                    type="color"
+                    value={abilitiesSettings.enemyColor}
+                    onChange={(e) =>
+                      debouncedSetAbilityEnemyColor(e.target.value)
+                    }
+                    className="h-6 w-6 cursor-pointer rounded"
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </SidebarContent>
       </Sidebar>
       <AgentAbilities

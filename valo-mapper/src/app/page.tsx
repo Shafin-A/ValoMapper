@@ -171,7 +171,10 @@ const Home = () => {
         </Sidebar>
       </SidebarProvider>
 
-      <div className="flex h-screen" ref={divRef}>
+      <div
+        className="flex h-[calc(100svh-1px-var(--header-height))]!"
+        ref={divRef}
+      >
         <div onDrop={handleStageDrop} onDragOver={handleStageDragOver}>
           <Stage
             width={dimensions.width}
