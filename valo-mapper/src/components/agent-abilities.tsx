@@ -3,6 +3,7 @@ import { AGENT_ICON_CONFIGS } from "@/lib/consts";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { setupDragPreviewImage } from "@/lib/utils";
 
 interface AgentAbilitiesProps {
   agent: Agent | null;
@@ -26,44 +27,14 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   const handleDragStart = (
     e: React.DragEvent<HTMLImageElement>,
     iconConfig: AgentIconItem,
-    isAlly: boolean,
-    allyColor: string,
-    enemyColor: string
+    isAlly: boolean
   ) => {
-    const dragPreview = document.createElement("div");
-
-    dragPreview.style.width = `${abilitiesSettings.scale}px`;
-    dragPreview.style.height = `${abilitiesSettings.scale}px`;
-
-    const alphaHex = Math.round(abilitiesSettings.boxOpacity * 255)
-      .toString(16)
-      .padStart(2, "0");
-
-    dragPreview.style.backgroundColor = isAlly
-      ? `${allyColor}${alphaHex}`
-      : `${enemyColor}${alphaHex}`;
-
-    dragPreview.style.display = "flex";
-    dragPreview.style.alignItems = "center";
-    dragPreview.style.justifyContent = "center";
-    dragPreview.style.borderRadius = `${abilitiesSettings.radius}px`;
-    dragPreview.style.position = "absolute";
-    dragPreview.style.top = "-9999px";
-
-    const clonedImg = e.currentTarget.cloneNode(true) as HTMLImageElement;
-    clonedImg.style.width = `${abilitiesSettings.scale}px`;
-    clonedImg.style.height = `${abilitiesSettings.scale}px`;
-    clonedImg.style.borderRadius = `${abilitiesSettings.radius}px`;
-    clonedImg.draggable = false;
-
-    dragPreview.appendChild(clonedImg);
-
-    document.body.appendChild(dragPreview);
-    e.dataTransfer.setDragImage(dragPreview, 0, 0);
-
-    setTimeout(() => {
-      document.body.removeChild(dragPreview);
-    }, 0);
+    setupDragPreviewImage(
+      e as unknown as DragEvent,
+      e.currentTarget,
+      abilitiesSettings,
+      isAlly
+    );
 
     const abilityCanvas: AbilityCanvas = {
       id: abilitiesOnCanvas.length,
@@ -100,15 +71,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
             height={50}
             draggable
             style={{ cursor: "grab" }}
-            onDragStart={(e) =>
-              handleDragStart(
-                e,
-                iconConfig,
-                isAlly,
-                abilitiesSettings.allyColor,
-                abilitiesSettings.enemyColor
-              )
-            }
+            onDragStart={(e) => handleDragStart(e, iconConfig, isAlly)}
           />
         ))}
       </div>
