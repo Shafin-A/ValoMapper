@@ -25,7 +25,7 @@ import {
 import { RoleTabs } from "./role-tabs";
 import { SettingsPanel } from "./settings-panel";
 import { AgentsGrid } from "./agents-grid";
-import AgentAbilities from "../agent-abilities";
+import AgentAbilities from "./agent-abilities";
 
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
