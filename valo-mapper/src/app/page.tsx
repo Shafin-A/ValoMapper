@@ -1,6 +1,6 @@
 "use client";
 
-import AgentIcon from "@/components/agent-icon";
+import DraggableIcon from "@/components/agent-icon";
 import AgentsSidebar from "@/components/agents-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -169,7 +169,7 @@ const Home = () => {
                 />
               )}
               {agentsOnCanvas.map((agent, idx) => (
-                <AgentIcon
+                <DraggableIcon
                   key={idx}
                   isAlly={agent.isAlly}
                   x={agent.x}

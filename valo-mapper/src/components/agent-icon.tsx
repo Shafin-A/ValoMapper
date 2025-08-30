@@ -17,7 +17,7 @@ interface AgentIconProps {
   enemyColor: string;
 }
 
-const AgentIcon = ({
+const DraggableIcon = ({
   isAlly,
   x,
   y,
@@ -52,4 +52,4 @@ const AgentIcon = ({
   );
 };
 
-export default AgentIcon;
+export default DraggableIcon;

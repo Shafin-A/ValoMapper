@@ -112,7 +112,13 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
       document.body.removeChild(dragPreview);
     }, 0);
 
-    const agentCanvas: AgentCanvas = { ...agent, isAlly, x: 0, y: 0 };
+    const agentCanvas: AgentCanvas = {
+      ...agent,
+      id: agentsOnCanvas.length,
+      isAlly,
+      x: 0,
+      y: 0,
+    };
     e.dataTransfer.setData("agent", JSON.stringify(agentCanvas));
   };
 

@@ -5,6 +5,7 @@ export type Agent = {
 };
 
 export type AgentCanvas = {
+  id: number;
   name: string;
   src: string;
   role: AgentRole;
