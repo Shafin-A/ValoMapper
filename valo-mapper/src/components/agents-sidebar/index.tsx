@@ -26,12 +26,14 @@ interface AgentsSidebarProps {
   sidebarOpen: boolean;
   agentsOnCanvas: AgentCanvas[];
   abilitiesOnCanvas: AbilityCanvas[];
+  stageScale: number;
 }
 
 const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   sidebarOpen,
   agentsOnCanvas,
   abilitiesOnCanvas,
+  stageScale,
 }) => {
   const {
     agentsSettings,
@@ -99,6 +101,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                 onMap={onMap}
                 agentsOnCanvas={agentsOnCanvas}
                 isAlly={isAlly}
+                stageScale={stageScale}
                 onAgentClick={(agent) =>
                   setSelectedAgent(
                     selectedAgent?.name === agent?.name ? null : agent
@@ -140,6 +143,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
         sidebarOpen={sidebarOpen}
         abilitiesOnCanvas={abilitiesOnCanvas}
         isAlly={isAlly}
+        stageScale={stageScale}
         onClose={() => setSelectedAgent(null)}
       />
     </SidebarProvider>

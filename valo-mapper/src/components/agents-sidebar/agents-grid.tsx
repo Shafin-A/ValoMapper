@@ -10,6 +10,7 @@ interface AgentsGridProps {
   onMap: boolean;
   agentsOnCanvas: AgentCanvas[];
   isAlly: boolean;
+  stageScale: number;
   onAgentClick: (agent: Agent | null) => void;
 }
 
@@ -18,6 +19,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
   onMap,
   agentsOnCanvas,
   isAlly,
+  stageScale,
   onAgentClick,
 }) => {
   const { agentsSettings } = useSettings();
@@ -26,12 +28,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
     e: React.DragEvent<HTMLImageElement>,
     agent: Agent
   ) => {
-    setupDragPreviewImage(
-      e as unknown as DragEvent,
-      e.currentTarget,
-      agentsSettings,
-      isAlly
-    );
+    setupDragPreviewImage(e, agentsSettings, isAlly, stageScale);
 
     const agentCanvas: AgentCanvas = {
       ...agent,

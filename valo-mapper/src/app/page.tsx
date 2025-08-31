@@ -37,6 +37,7 @@ const Home = () => {
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
   const { agentsSettings, abilitiesSettings } = useSettings();
+  const [stageScale, setStageScale] = useState(1);
 
   useEffect(() => {
     if (divRef.current?.offsetHeight && divRef.current?.offsetWidth) {
@@ -75,6 +76,7 @@ const Home = () => {
     const newScale = direction < 0 ? oldScale * scaleBy : oldScale / scaleBy;
 
     stage!.scale({ x: newScale, y: newScale });
+    setStageScale(newScale);
 
     const newPos = {
       x: pointer.x - mousePointTo.x * newScale,
@@ -231,6 +233,7 @@ const Home = () => {
         sidebarOpen={rightSidebarOpen}
         agentsOnCanvas={agentsOnCanvas}
         abilitiesOnCanvas={abilitiesOnCanvas}
+        stageScale={stageScale}
       />
     </div>
   );

@@ -18,10 +18,15 @@ export const debounce = <Args extends unknown[], Return>(
   };
 };
 
-export const createDragPreview = (isAlly: boolean, settings: IconSettings) => {
+export const createDragPreview = (
+  isAlly: boolean,
+  settings: IconSettings,
+  stageScale: number
+) => {
   const dragPreview = document.createElement("div");
-  dragPreview.style.width = `${settings.scale}px`;
-  dragPreview.style.height = `${settings.scale}px`;
+  const scaledSize = settings.scale * stageScale;
+  dragPreview.style.width = `${scaledSize}px`;
+  dragPreview.style.height = `${scaledSize}px`;
 
   const alphaHex = Math.round(settings.boxOpacity * 255)
     .toString(16)
@@ -34,7 +39,7 @@ export const createDragPreview = (isAlly: boolean, settings: IconSettings) => {
   dragPreview.style.display = "flex";
   dragPreview.style.alignItems = "center";
   dragPreview.style.justifyContent = "center";
-  dragPreview.style.borderRadius = `${settings.radius}px`;
+  dragPreview.style.borderRadius = `${settings.radius * stageScale}px`;
   dragPreview.style.position = "absolute";
   dragPreview.style.top = "-9999px";
 
@@ -42,20 +47,22 @@ export const createDragPreview = (isAlly: boolean, settings: IconSettings) => {
 };
 
 export const setupDragPreviewImage = (
-  e: DragEvent,
-  element: HTMLElement,
+  e: React.DragEvent<HTMLImageElement>,
   settings: IconSettings,
-  isAlly: boolean
+  isAlly: boolean,
+  stageScale: number
 ) => {
-  const clonedElement = element.cloneNode(true) as HTMLElement;
-  clonedElement.style.width = `${settings.scale}px`;
-  clonedElement.style.height = `${settings.scale}px`;
-  clonedElement.style.borderRadius = `${settings.radius}px`;
+  const clonedElement = e.currentTarget.cloneNode(true) as HTMLElement;
+  const scaledSize = settings.scale * stageScale;
+  clonedElement.style.width = `${scaledSize}px`;
+  clonedElement.style.height = `${scaledSize}px`;
+  clonedElement.style.borderRadius = `${settings.radius * stageScale}px`;
+
   if ("draggable" in clonedElement) {
     clonedElement.draggable = false;
   }
 
-  const dragPreview = createDragPreview(isAlly, settings);
+  const dragPreview = createDragPreview(isAlly, settings, stageScale);
   dragPreview.appendChild(clonedElement);
   document.body.appendChild(dragPreview);
   e.dataTransfer?.setDragImage(dragPreview, 0, 0);

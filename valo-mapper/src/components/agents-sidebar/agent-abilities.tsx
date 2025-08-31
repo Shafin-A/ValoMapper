@@ -11,6 +11,7 @@ interface AgentAbilitiesProps {
   sidebarOpen: boolean;
   abilitiesOnCanvas: AbilityCanvas[];
   isAlly: boolean;
+  stageScale: number;
   onClose: () => void;
 }
 
@@ -19,6 +20,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   sidebarOpen,
   abilitiesOnCanvas,
   isAlly,
+  stageScale,
   onClose,
 }) => {
   const { abilitiesSettings } = useSettings();
@@ -30,12 +32,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
     iconConfig: AgentIconItem,
     isAlly: boolean
   ) => {
-    setupDragPreviewImage(
-      e as unknown as DragEvent,
-      e.currentTarget,
-      abilitiesSettings,
-      isAlly
-    );
+    setupDragPreviewImage(e, abilitiesSettings, isAlly, stageScale);
 
     const abilityCanvas: AbilityCanvas = {
       id: abilitiesOnCanvas.length,
