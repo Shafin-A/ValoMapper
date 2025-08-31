@@ -2,6 +2,8 @@ import { KonvaEventObject } from "konva/lib/Node";
 import DraggableIcon from "./draggable-icon";
 import { ReactNode } from "react";
 import { AbilityAction } from "@/lib/types";
+import DraggableCircleIcon from "./draggable-circle-icon";
+import { mToPixels } from "@/lib/utils";
 
 interface AbilityIconProps {
   action: AbilityAction;
@@ -26,9 +28,14 @@ const actionRenderers: Record<
   (props: ActionRendererProps) => ReactNode
 > = {
   draggable: (props) => <DraggableIcon {...props} />,
-  static: () => null, // To be implemented
-  animated: () => null, // To be implemented
-  interactive: () => null, // To be implemented
+  harbor_cove: (props) => (
+    <DraggableCircleIcon
+      circleRadius={mToPixels(4.5)}
+      stroke="#f2d6a3"
+      fill="#136c6b80"
+      {...props}
+    />
+  ),
 };
 
 const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {

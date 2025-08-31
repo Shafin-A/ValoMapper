@@ -4,7 +4,7 @@ export type Agent = {
   role: AgentRole;
 };
 
-export type AbilityAction = "draggable" | "static" | "animated" | "interactive";
+export type AbilityAction = "draggable" | "harbor_cove";
 
 export type CanvasItem = {
   id: number;

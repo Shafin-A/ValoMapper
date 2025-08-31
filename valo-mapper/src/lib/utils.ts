@@ -71,3 +71,8 @@ export const setupDragPreviewImage = (
     document.body.removeChild(dragPreview);
   }, 0);
 };
+
+export const mToPixels = (meters: number): number => {
+  const PIXELS_PER_METER = 30.5 / 4.5;
+  return meters * PIXELS_PER_METER;
+};

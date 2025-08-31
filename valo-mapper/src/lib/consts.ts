@@ -293,7 +293,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
       id: "cove",
       icon: "/agents/harbor/cove.png",
       label: "Cove",
-      action: "draggable",
+      action: "harbor_cove",
     },
     {
       id: "high_tide",
