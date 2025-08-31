@@ -32,7 +32,13 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
     iconConfig: AgentIconItem,
     isAlly: boolean
   ) => {
-    setupDragPreviewImage(e, abilitiesSettings, isAlly, stageScale);
+    setupDragPreviewImage(
+      e,
+      abilitiesSettings,
+      isAlly,
+      stageScale,
+      iconConfig.action
+    );
 
     const abilityCanvas: AbilityCanvas = {
       id: abilitiesOnCanvas.length,

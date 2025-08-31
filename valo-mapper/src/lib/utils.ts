@@ -1,6 +1,11 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { IconSettings } from "./types";
+import { AbilityAction, DragPreviewOptions, IconSettings } from "./types";
+import {
+  PIXELS_PER_METER,
+  HARBOR_COVE_CIRCLE_RADIUS,
+  HARBOR_COVE_COLORS,
+} from "./consts";
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -18,51 +23,105 @@ export const debounce = <Args extends unknown[], Return>(
   };
 };
 
-export const createDragPreview = (
-  isAlly: boolean,
-  settings: IconSettings,
-  stageScale: number
-) => {
-  const dragPreview = document.createElement("div");
-  const scaledSize = settings.scale * stageScale;
-  dragPreview.style.width = `${scaledSize}px`;
-  dragPreview.style.height = `${scaledSize}px`;
+export const mToPixels = (meters: number): number => {
+  return meters * PIXELS_PER_METER;
+};
 
-  const alphaHex = Math.round(settings.boxOpacity * 255)
-    .toString(16)
-    .padStart(2, "0");
+const DragPreviewUtils = {
+  createBasicPreview: (options: DragPreviewOptions) => {
+    const { isAlly, settings, stageScale } = options;
+    const dragPreview = document.createElement("div");
+    const scaledSize = settings.scale * stageScale;
 
-  dragPreview.style.backgroundColor = isAlly
-    ? `${settings.allyColor}${alphaHex}`
-    : `${settings.enemyColor}${alphaHex}`;
+    const alphaHex = Math.round(settings.boxOpacity * 255)
+      .toString(16)
+      .padStart(2, "0");
 
-  dragPreview.style.display = "flex";
-  dragPreview.style.alignItems = "center";
-  dragPreview.style.justifyContent = "center";
-  dragPreview.style.borderRadius = `${settings.radius * stageScale}px`;
-  dragPreview.style.position = "absolute";
-  dragPreview.style.top = "-9999px";
+    Object.assign(dragPreview.style, {
+      width: `${scaledSize}px`,
+      height: `${scaledSize}px`,
+      backgroundColor: isAlly
+        ? `${settings.allyColor}${alphaHex}`
+        : `${settings.enemyColor}${alphaHex}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: `${settings.radius * stageScale}px`,
+      position: "absolute",
+      top: "-9999px",
+    });
 
-  return dragPreview;
+    return dragPreview;
+  },
+
+  createCirclePreview: (
+    circleRadius: number,
+    border: string,
+    backgroundColor: string,
+    stageScale: number
+  ) => {
+    const dragPreview = document.createElement("div");
+    const circleSize = mToPixels(circleRadius) * 2 * stageScale;
+
+    Object.assign(dragPreview.style, {
+      width: `${circleSize}px`,
+      height: `${circleSize}px`,
+      border: `3px solid ${border}`,
+      backgroundColor: backgroundColor,
+      borderRadius: "50%",
+      position: "absolute",
+      top: "-9999px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    });
+
+    return dragPreview;
+  },
+
+  createDragPreview: (options: DragPreviewOptions) => {
+    const { action, stageScale } = options;
+    return action === "harbor_cove"
+      ? DragPreviewUtils.createCirclePreview(
+          HARBOR_COVE_CIRCLE_RADIUS,
+          HARBOR_COVE_COLORS.border,
+          HARBOR_COVE_COLORS.background,
+          stageScale
+        )
+      : DragPreviewUtils.createBasicPreview(options);
+  },
 };
 
 export const setupDragPreviewImage = (
   e: React.DragEvent<HTMLImageElement>,
   settings: IconSettings,
   isAlly: boolean,
-  stageScale: number
+  stageScale: number,
+  action: AbilityAction = "draggable"
 ) => {
   const clonedElement = e.currentTarget.cloneNode(true) as HTMLElement;
-  const scaledSize = settings.scale * stageScale;
-  clonedElement.style.width = `${scaledSize}px`;
-  clonedElement.style.height = `${scaledSize}px`;
-  clonedElement.style.borderRadius = `${settings.radius * stageScale}px`;
 
-  if ("draggable" in clonedElement) {
-    clonedElement.draggable = false;
+  if (action === "harbor_cove") {
+    Object.assign(clonedElement.style, {
+      width: `${25 * stageScale}px`,
+      height: `${25 * stageScale}px`,
+    });
+  } else {
+    const scaledSize = settings.scale * stageScale;
+    Object.assign(clonedElement.style, {
+      width: `${scaledSize}px`,
+      height: `${scaledSize}px`,
+      borderRadius: `${settings.radius * stageScale}px`,
+    });
   }
 
-  const dragPreview = createDragPreview(isAlly, settings, stageScale);
+  const dragPreview = DragPreviewUtils.createDragPreview({
+    isAlly,
+    settings,
+    stageScale,
+    action,
+  });
+
   dragPreview.appendChild(clonedElement);
   document.body.appendChild(dragPreview);
   e.dataTransfer?.setDragImage(dragPreview, 0, 0);
@@ -70,9 +129,4 @@ export const setupDragPreviewImage = (
   setTimeout(() => {
     document.body.removeChild(dragPreview);
   }, 0);
-};
-
-export const mToPixels = (meters: number): number => {
-  const PIXELS_PER_METER = 30.5 / 4.5;
-  return meters * PIXELS_PER_METER;
 };

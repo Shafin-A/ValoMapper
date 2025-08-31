@@ -41,3 +41,10 @@ export type AgentIconItem = {
 };
 
 export type AgentIconConfig = AgentIconItem[];
+
+export type DragPreviewOptions = {
+  isAlly: boolean;
+  settings: IconSettings;
+  stageScale: number;
+  action: AbilityAction;
+};
