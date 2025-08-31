@@ -39,7 +39,14 @@ const DraggableCircleIcon = ({
   const outerRadius = circleRadius;
 
   return (
-    <Group x={x} y={y} draggable={draggable} onDragEnd={onDragEnd}>
+    <Group
+      x={x}
+      y={y}
+      draggable={draggable}
+      onDragEnd={onDragEnd}
+      offsetX={12.5}
+      offsetY={12.5}
+    >
       <Circle
         radius={outerRadius}
         strokeWidth={strokeWidth}

@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { AbilityAction } from "@/lib/types";
 import DraggableCircleIcon from "./draggable-circle-icon";
 import { mToPixels } from "@/lib/utils";
+import { HARBOR_COVE_CIRCLE_RADIUS } from "@/lib/consts";
 
 interface AbilityIconProps {
   action: AbilityAction;
@@ -30,7 +31,7 @@ const actionRenderers: Record<
   draggable: (props) => <DraggableIcon {...props} />,
   harbor_cove: (props) => (
     <DraggableCircleIcon
-      circleRadius={mToPixels(4.5)}
+      circleRadius={mToPixels(HARBOR_COVE_CIRCLE_RADIUS)}
       stroke="#f2d6a3"
       fill="#136c6b80"
       {...props}

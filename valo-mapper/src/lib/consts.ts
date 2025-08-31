@@ -752,7 +752,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
   ],
 };
 
-export const PIXELS_PER_METER = 30.5 / 4.5;
+export const PIXELS_PER_METER = 30.75 / 4.15;
 export const HARBOR_COVE_CIRCLE_RADIUS = 4.5;
 export const HARBOR_COVE_COLORS = {
   border: "#f2d6a3",

@@ -61,12 +61,12 @@ const DragPreviewUtils = {
     stageScale: number
   ) => {
     const dragPreview = document.createElement("div");
-    const circleSize = mToPixels(circleRadius) * 2 * stageScale;
+    const circleSize = mToPixels(circleRadius) * 2.05 * stageScale;
 
     Object.assign(dragPreview.style, {
       width: `${circleSize}px`,
       height: `${circleSize}px`,
-      border: `3px solid ${border}`,
+      border: `${2 * stageScale}px solid ${border}`,
       backgroundColor: backgroundColor,
       borderRadius: "50%",
       position: "absolute",
@@ -102,9 +102,17 @@ export const setupDragPreviewImage = (
   const clonedElement = e.currentTarget.cloneNode(true) as HTMLElement;
 
   if (action === "harbor_cove") {
+    const alphaHex = Math.round(settings.boxOpacity * 255)
+      .toString(16)
+      .padStart(2, "0");
+
     Object.assign(clonedElement.style, {
       width: `${25 * stageScale}px`,
       height: `${25 * stageScale}px`,
+      borderRadius: `${settings.radius * stageScale}px`,
+      backgroundColor: isAlly
+        ? `${settings.allyColor}${alphaHex}`
+        : `${settings.enemyColor}${alphaHex}`,
     });
   } else {
     const scaledSize = settings.scale * stageScale;
@@ -124,7 +132,16 @@ export const setupDragPreviewImage = (
 
   dragPreview.appendChild(clonedElement);
   document.body.appendChild(dragPreview);
-  e.dataTransfer?.setDragImage(dragPreview, 0, 0);
+
+  if (action === "harbor_cove") {
+    e.dataTransfer?.setDragImage(
+      dragPreview,
+      34.5 * stageScale,
+      34.5 * stageScale
+    );
+  } else {
+    e.dataTransfer?.setDragImage(dragPreview, 0, 0);
+  }
 
   setTimeout(() => {
     document.body.removeChild(dragPreview);
