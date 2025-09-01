@@ -50,11 +50,14 @@ const actionRenderers: Record<
   (props: AbilityIconProps) => ReactNode
 > = {
   draggable: (props) => <DraggableIcon {...props} />,
-  harbor_cove: renderCircleAbility,
+  astra_stun: renderCircleAbility,
+  astra_suck: renderCircleAbility,
+  astra_smoke: renderCircleAbility,
   brim_smoke: renderCircleAbility,
   brim_stim: renderCircleAbility,
   brim_molly: renderCircleAbility,
   brim_ult: renderCircleAbility,
+  harbor_cove: renderCircleAbility,
 };
 
 const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {

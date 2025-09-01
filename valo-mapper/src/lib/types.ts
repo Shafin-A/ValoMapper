@@ -4,14 +4,6 @@ export type Agent = {
   role: AgentRole;
 };
 
-export type AbilityAction =
-  | "draggable"
-  | "brim_smoke"
-  | "brim_stim"
-  | "brim_molly"
-  | "brim_ult"
-  | "harbor_cove";
-
 export type CanvasItem = {
   id: number;
   name: string;
@@ -55,7 +47,25 @@ export type DragPreviewOptions = {
   action: AbilityAction;
 };
 
+export type AbilityAction =
+  | "draggable"
+  | "astra_stun"
+  | "astra_suck"
+  | "astra_smoke"
+  | "brim_smoke"
+  | "brim_stim"
+  | "brim_molly"
+  | "brim_ult"
+  | "harbor_cove";
+
 export type CircleAbility = Extract<
   AbilityAction,
-  "brim_smoke" | "brim_stim" | "brim_molly" | "brim_ult" | "harbor_cove"
+  | "astra_stun"
+  | "astra_suck"
+  | "astra_smoke"
+  | "brim_smoke"
+  | "brim_stim"
+  | "brim_molly"
+  | "brim_ult"
+  | "harbor_cove"
 >;

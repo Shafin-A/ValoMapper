@@ -47,19 +47,19 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
       id: "nova_pulse",
       icon: "/agents/astra/nova_pulse.png",
       label: "Nova Pulse",
-      action: "draggable",
+      action: "astra_stun",
     },
     {
       id: "gravity_well",
       icon: "/agents/astra/gravity_well.png",
       label: "Gravity Well",
-      action: "draggable",
+      action: "astra_suck",
     },
     {
       id: "nebula__dissipate",
       icon: "/agents/astra/nebula___dissipate.png",
       label: "Nebula / Dissipate",
-      action: "draggable",
+      action: "astra_smoke",
     },
     {
       id: "cosmic_divide",
@@ -758,6 +758,18 @@ export const CIRCLE_ABILITY_CONFIG: Record<
   CircleAbility,
   { radius: number; colors: { stroke: string; fill: string } }
 > = {
+  astra_stun: {
+    radius: 4.75,
+    colors: { stroke: "#ffe17a", fill: "#4f007680" },
+  },
+  astra_suck: {
+    radius: 4.75,
+    colors: { stroke: "#ffe17a", fill: "#4f007680" },
+  },
+  astra_smoke: {
+    radius: 4.75,
+    colors: { stroke: "#ffe17a", fill: "#4f007680" },
+  },
   brim_smoke: {
     radius: 4.15,
     colors: { stroke: "#fffe1a", fill: "#eb953f80" },
