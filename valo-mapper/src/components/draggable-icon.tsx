@@ -50,6 +50,8 @@ const DraggableIcon = ({
       onDragEnd={onDragEnd}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
+      offsetX={25}
+      offsetY={25}
     >
       <Rect
         width={width}

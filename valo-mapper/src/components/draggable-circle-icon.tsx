@@ -45,8 +45,8 @@ const DraggableCircleIcon = ({
       x={x}
       y={y}
       draggable={draggable}
-      offsetX={12.5}
-      offsetY={12.5}
+      offsetX={-12.5}
+      offsetY={-12.5}
       onMouseDown={(e) => {
         if (!groupRef.current) return;
         const className = e.target.getClassName();
@@ -68,8 +68,8 @@ const DraggableCircleIcon = ({
         strokeWidth={strokeWidth}
         fill={fill}
         stroke={stroke}
-        offsetX={-12.5}
-        offsetY={-12.5}
+        offsetX={12.5}
+        offsetY={12.5}
       />
       <DraggableIcon
         isAlly={isAlly}

@@ -138,7 +138,7 @@ export const setupDragPreviewImage = (
     const offset = getCircleDragOffset(action, stageScale);
     e.dataTransfer?.setDragImage(dragPreview, offset, offset);
   } else {
-    e.dataTransfer?.setDragImage(dragPreview, 0, 0);
+    e.dataTransfer?.setDragImage(dragPreview, 25 * stageScale, 25 * stageScale);
   }
 
   setTimeout(() => {
