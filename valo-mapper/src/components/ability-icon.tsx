@@ -37,7 +37,7 @@ const renderCircleAbility = (props: AbilityIconProps) => {
   const { radius, colors } = getCircleConfig(props.action);
   return (
     <DraggableCircleIcon
-      circleRadius={mToPixels(radius)}
+      outerRadius={mToPixels(radius)}
       stroke={colors.stroke}
       fill={colors.fill}
       {...props}

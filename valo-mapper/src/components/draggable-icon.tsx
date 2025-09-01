@@ -1,6 +1,7 @@
 import { Group, Image as KonvaImage, Rect } from "react-konva";
 import useImage from "use-image";
 import type { KonvaEventObject } from "konva/lib/Node";
+import Konva from "konva";
 
 interface DraggableIconProps {
   isAlly: boolean;
@@ -16,6 +17,14 @@ interface DraggableIconProps {
   allyColor: string;
   enemyColor: string;
 }
+
+const handleMouseOver = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  e.target.getStage()!.container().style.cursor = "grab";
+};
+
+const handleMouseOut = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  e.target.getStage()!.container().style.cursor = "default";
+};
 
 const DraggableIcon = ({
   isAlly,
@@ -34,7 +43,14 @@ const DraggableIcon = ({
   const [image] = useImage(src);
 
   return (
-    <Group x={x} y={y} draggable={draggable} onDragEnd={onDragEnd}>
+    <Group
+      x={x}
+      y={y}
+      draggable={draggable}
+      onDragEnd={onDragEnd}
+      onMouseOver={handleMouseOver}
+      onMouseOut={handleMouseOut}
+    >
       <Rect
         width={width}
         height={height}

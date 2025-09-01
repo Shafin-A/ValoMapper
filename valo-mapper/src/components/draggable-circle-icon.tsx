@@ -1,6 +1,8 @@
-import { Group, Image as KonvaImage, Circle, Rect } from "react-konva";
-import useImage from "use-image";
+import { Group, Circle } from "react-konva";
 import type { KonvaEventObject } from "konva/lib/Node";
+import { useRef } from "react";
+import Konva from "konva";
+import DraggableIcon from "./draggable-icon";
 
 interface DraggableCircleIconProps {
   isAlly: boolean;
@@ -11,7 +13,7 @@ interface DraggableCircleIconProps {
   onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
   opacity: number;
   radius: number;
-  circleRadius: number;
+  outerRadius: number;
   allyColor: string;
   enemyColor: string;
   strokeWidth?: number;
@@ -28,24 +30,38 @@ const DraggableCircleIcon = ({
   onDragEnd,
   opacity,
   radius,
-  circleRadius,
+  outerRadius,
   allyColor,
   enemyColor,
   strokeWidth = 2,
   stroke,
   fill,
 }: DraggableCircleIconProps) => {
-  const [image] = useImage(src);
-  const outerRadius = circleRadius;
+  const groupRef = useRef<Konva.Group>(null);
 
   return (
     <Group
+      ref={groupRef}
       x={x}
       y={y}
       draggable={draggable}
-      onDragEnd={onDragEnd}
       offsetX={12.5}
       offsetY={12.5}
+      onMouseDown={(e) => {
+        if (!groupRef.current) return;
+        const className = e.target.getClassName();
+        if (className === "Rect" || className === "Image") {
+          groupRef.current.draggable(true);
+        } else {
+          groupRef.current.draggable(false);
+        }
+      }}
+      onDragEnd={(e) => {
+        if (groupRef.current) {
+          groupRef.current.draggable(draggable);
+        }
+        onDragEnd?.(e);
+      }}
     >
       <Circle
         radius={outerRadius}
@@ -55,14 +71,20 @@ const DraggableCircleIcon = ({
         offsetX={-12.5}
         offsetY={-12.5}
       />
-      <Rect
+      <DraggableIcon
+        isAlly={isAlly}
+        x={0}
+        y={0}
+        src={src}
+        draggable={false}
+        onDragEnd={() => {}}
         width={25}
         height={25}
-        fill={isAlly ? allyColor : enemyColor}
-        cornerRadius={radius}
+        radius={radius}
         opacity={opacity}
+        allyColor={allyColor}
+        enemyColor={enemyColor}
       />
-      <KonvaImage image={image} width={25} height={25} cornerRadius={radius} />
     </Group>
   );
 };
