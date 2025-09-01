@@ -1,11 +1,12 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { AbilityAction, DragPreviewOptions, IconSettings } from "./types";
 import {
-  PIXELS_PER_METER,
-  HARBOR_COVE_CIRCLE_RADIUS,
-  HARBOR_COVE_COLORS,
-} from "./consts";
+  AbilityAction,
+  DragPreviewOptions,
+  IconSettings,
+  CircleAbility,
+} from "./types";
+import { CIRCLE_ABILITY_CONFIG, PIXELS_PER_METER } from "./consts";
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -81,11 +82,11 @@ const DragPreviewUtils = {
 
   createDragPreview: (options: DragPreviewOptions) => {
     const { action, stageScale } = options;
-    return action === "harbor_cove"
+    return isCircleAbility(action)
       ? DragPreviewUtils.createCirclePreview(
-          HARBOR_COVE_CIRCLE_RADIUS,
-          HARBOR_COVE_COLORS.border,
-          HARBOR_COVE_COLORS.background,
+          CIRCLE_ABILITY_CONFIG[action].radius,
+          CIRCLE_ABILITY_CONFIG[action].colors.stroke,
+          CIRCLE_ABILITY_CONFIG[action].colors.fill,
           stageScale
         )
       : DragPreviewUtils.createBasicPreview(options);
@@ -101,7 +102,7 @@ export const setupDragPreviewImage = (
 ) => {
   const clonedElement = e.currentTarget.cloneNode(true) as HTMLElement;
 
-  if (action === "harbor_cove") {
+  if (isCircleAbility(action)) {
     const alphaHex = Math.round(settings.boxOpacity * 255)
       .toString(16)
       .padStart(2, "0");
@@ -133,12 +134,9 @@ export const setupDragPreviewImage = (
   dragPreview.appendChild(clonedElement);
   document.body.appendChild(dragPreview);
 
-  if (action === "harbor_cove") {
-    e.dataTransfer?.setDragImage(
-      dragPreview,
-      34.5 * stageScale,
-      34.5 * stageScale
-    );
+  if (isCircleAbility(action)) {
+    const offset = getCircleDragOffset(action, stageScale);
+    e.dataTransfer?.setDragImage(dragPreview, offset, offset);
   } else {
     e.dataTransfer?.setDragImage(dragPreview, 0, 0);
   }
@@ -146,4 +144,25 @@ export const setupDragPreviewImage = (
   setTimeout(() => {
     document.body.removeChild(dragPreview);
   }, 0);
+};
+
+export const isCircleAbility = (
+  action: AbilityAction
+): action is CircleAbility => {
+  return action in CIRCLE_ABILITY_CONFIG;
+};
+
+export const getCircleDragOffset = (
+  action: CircleAbility,
+  stageScale: number
+) => {
+  const radiusInMeters = CIRCLE_ABILITY_CONFIG[action].radius;
+
+  if (radiusInMeters) {
+    const radiusInPixels = radiusInMeters * PIXELS_PER_METER;
+
+    return (radiusInPixels + 1) * stageScale;
+  }
+
+  return 0;
 };

@@ -4,7 +4,7 @@ export type Agent = {
   role: AgentRole;
 };
 
-export type AbilityAction = "draggable" | "harbor_cove";
+export type AbilityAction = "draggable" | "harbor_cove" | "brim_smoke";
 
 export type CanvasItem = {
   id: number;
@@ -48,3 +48,5 @@ export type DragPreviewOptions = {
   stageScale: number;
   action: AbilityAction;
 };
+
+export type CircleAbility = "brim_smoke" | "harbor_cove";

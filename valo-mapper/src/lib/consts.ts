@@ -1,4 +1,4 @@
-import { Agent, AgentIconConfig } from "./types";
+import { Agent, AgentIconConfig, CircleAbility } from "./types";
 
 export const AGENTS: Agent[] = [
   { name: "Astra", src: "/agents/astra/astra.png", role: "Controller" },
@@ -111,7 +111,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
       id: "sky_smoke",
       icon: "/agents/brimstone/sky_smoke.png",
       label: "Sky Smoke",
-      action: "draggable",
+      action: "brim_smoke",
     },
     {
       id: "stim_beacon",
@@ -753,8 +753,17 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
 };
 
 export const PIXELS_PER_METER = 30.75 / 4.15;
-export const HARBOR_COVE_CIRCLE_RADIUS = 4.5;
-export const HARBOR_COVE_COLORS = {
-  border: "#f2d6a3",
-  background: "#136c6b80",
-} as const;
+
+export const CIRCLE_ABILITY_CONFIG: Record<
+  CircleAbility,
+  { radius: number; colors: { stroke: string; fill: string } }
+> = {
+  brim_smoke: {
+    radius: 4.15,
+    colors: { stroke: "#fffe1a", fill: "#eb953f80" },
+  },
+  harbor_cove: {
+    radius: 4.5,
+    colors: { stroke: "#f2d6a3", fill: "#136c6b80" },
+  },
+};

@@ -3,8 +3,8 @@ import DraggableIcon from "./draggable-icon";
 import { ReactNode } from "react";
 import { AbilityAction } from "@/lib/types";
 import DraggableCircleIcon from "./draggable-circle-icon";
-import { mToPixels } from "@/lib/utils";
-import { HARBOR_COVE_CIRCLE_RADIUS } from "@/lib/consts";
+import { isCircleAbility, mToPixels } from "@/lib/utils";
+import { CIRCLE_ABILITY_CONFIG } from "@/lib/consts";
 
 interface AbilityIconProps {
   action: AbilityAction;
@@ -22,21 +22,36 @@ interface AbilityIconProps {
   enemyColor: string;
 }
 
-type ActionRendererProps = Omit<AbilityIconProps, "action">;
+const getCircleConfig = (action: AbilityAction) => {
+  if (isCircleAbility(action)) {
+    return {
+      radius: CIRCLE_ABILITY_CONFIG[action].radius,
+      colors: CIRCLE_ABILITY_CONFIG[action].colors,
+    };
+  }
+
+  throw new Error(`${action} is not a circle ability`);
+};
+
+const renderCircleAbility = (props: AbilityIconProps) => {
+  const { radius, colors } = getCircleConfig(props.action);
+  return (
+    <DraggableCircleIcon
+      circleRadius={mToPixels(radius)}
+      stroke={colors.stroke}
+      fill={colors.fill}
+      {...props}
+    />
+  );
+};
 
 const actionRenderers: Record<
   AbilityAction,
-  (props: ActionRendererProps) => ReactNode
+  (props: AbilityIconProps) => ReactNode
 > = {
   draggable: (props) => <DraggableIcon {...props} />,
-  harbor_cove: (props) => (
-    <DraggableCircleIcon
-      circleRadius={mToPixels(HARBOR_COVE_CIRCLE_RADIUS)}
-      stroke="#f2d6a3"
-      fill="#136c6b80"
-      {...props}
-    />
-  ),
+  harbor_cove: renderCircleAbility,
+  brim_smoke: renderCircleAbility,
 };
 
 const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {
@@ -47,7 +62,7 @@ const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {
     return null;
   }
 
-  return renderAction(props);
+  return renderAction({ action, ...props });
 };
 
 export default AbilityIcon;
