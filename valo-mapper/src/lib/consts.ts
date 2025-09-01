@@ -105,7 +105,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
       id: "incendiary",
       icon: "/agents/brimstone/incendiary.png",
       label: "Incendiary",
-      action: "draggable",
+      action: "brim_molly",
     },
     {
       id: "sky_smoke",
@@ -117,13 +117,13 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
       id: "stim_beacon",
       icon: "/agents/brimstone/stim_beacon.png",
       label: "Stim Beacon",
-      action: "draggable",
+      action: "brim_stim",
     },
     {
       id: "orbital_strike",
       icon: "/agents/brimstone/orbital_strike.png",
       label: "Orbital Strike",
-      action: "draggable",
+      action: "brim_ult",
     },
   ],
   Chamber: [
@@ -761,6 +761,18 @@ export const CIRCLE_ABILITY_CONFIG: Record<
   brim_smoke: {
     radius: 4.15,
     colors: { stroke: "#fffe1a", fill: "#eb953f80" },
+  },
+  brim_stim: {
+    radius: 6,
+    colors: { stroke: "#7bddc3", fill: "#eb953f80" },
+  },
+  brim_molly: {
+    radius: 4.5,
+    colors: { stroke: "#e0392d", fill: "#57205780" },
+  },
+  brim_ult: {
+    radius: 9,
+    colors: { stroke: "#e0392d", fill: "#eb953f80" },
   },
   harbor_cove: {
     radius: 4.5,

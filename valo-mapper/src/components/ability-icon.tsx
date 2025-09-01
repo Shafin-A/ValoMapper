@@ -52,6 +52,9 @@ const actionRenderers: Record<
   draggable: (props) => <DraggableIcon {...props} />,
   harbor_cove: renderCircleAbility,
   brim_smoke: renderCircleAbility,
+  brim_stim: renderCircleAbility,
+  brim_molly: renderCircleAbility,
+  brim_ult: renderCircleAbility,
 };
 
 const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {
