@@ -57,6 +57,11 @@ const actionRenderers: Record<
   brim_stim: renderCircleAbility,
   brim_molly: renderCircleAbility,
   brim_ult: renderCircleAbility,
+  chamber_trip: renderCircleAbility,
+  chamber_tp: renderCircleAbility,
+  clove_meddle: renderCircleAbility,
+  clove_smoke: renderCircleAbility,
+  cypher_cage: renderCircleAbility,
   harbor_cove: renderCircleAbility,
 };
 

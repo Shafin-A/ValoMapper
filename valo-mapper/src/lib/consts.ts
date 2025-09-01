@@ -137,13 +137,13 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
       id: "rendezvous",
       icon: "/agents/chamber/rendezvous.png",
       label: "Rendezvous",
-      action: "draggable",
+      action: "chamber_tp",
     },
     {
       id: "trademark",
       icon: "/agents/chamber/trademark.png",
       label: "Trademark",
-      action: "draggable",
+      action: "chamber_trip",
     },
     {
       id: "tour_de_force",
@@ -157,7 +157,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
       id: "meddle",
       icon: "/agents/clove/meddle.png",
       label: "Meddle",
-      action: "draggable",
+      action: "clove_meddle",
     },
     {
       id: "not_dead_yet",
@@ -175,7 +175,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
       id: "ruse",
       icon: "/agents/clove/ruse.png",
       label: "Ruse",
-      action: "draggable",
+      action: "clove_smoke",
     },
   ],
   Cypher: [
@@ -183,7 +183,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AgentIconConfig> = {
       id: "cyber_cage",
       icon: "/agents/cypher/cyber_cage.png",
       label: "Cyber Cage",
-      action: "draggable",
+      action: "cypher_cage",
     },
     {
       id: "spycam",
@@ -785,6 +785,26 @@ export const CIRCLE_ABILITY_CONFIG: Record<
   brim_ult: {
     radius: 9,
     colors: { stroke: "#e0392d", fill: "#eb953f80" },
+  },
+  chamber_trip: {
+    radius: 10,
+    colors: { stroke: "#d37c48", fill: "#d37c4880" },
+  },
+  chamber_tp: {
+    radius: 18,
+    colors: { stroke: "#fcbf07", fill: "#fcbf0780" },
+  },
+  clove_meddle: {
+    radius: 6,
+    colors: { stroke: "#f674ff", fill: "#fbd7ff80" },
+  },
+  clove_smoke: {
+    radius: 4,
+    colors: { stroke: "#c9d3eb", fill: "#f674ff80" },
+  },
+  cypher_cage: {
+    radius: 3.72,
+    colors: { stroke: "#def4ff", fill: "#9a9da580" },
   },
   harbor_cove: {
     radius: 4.5,

@@ -56,6 +56,11 @@ export type AbilityAction =
   | "brim_stim"
   | "brim_molly"
   | "brim_ult"
+  | "chamber_trip"
+  | "chamber_tp"
+  | "clove_meddle"
+  | "clove_smoke"
+  | "cypher_cage"
   | "harbor_cove";
 
 export type CircleAbility = Extract<
@@ -67,5 +72,10 @@ export type CircleAbility = Extract<
   | "brim_stim"
   | "brim_molly"
   | "brim_ult"
+  | "chamber_trip"
+  | "chamber_tp"
+  | "clove_meddle"
+  | "clove_smoke"
+  | "cypher_cage"
   | "harbor_cove"
 >;
