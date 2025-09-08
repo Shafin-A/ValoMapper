@@ -54,13 +54,15 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
   const [onMap, setOnMap] = useState(false);
+  const [selectedAgentAbilities, setSelectedAgentAbilities] =
+    useState<Agent | null>(null);
 
   const handleAgentClick = (agent: Agent | null) => {
     if (!agent) return;
 
-    const isSameAgent = agentsOnCanvas.some(
-      (icon) => icon.id === -1 && icon.name === agent.name
-    );
+    setSelectedAgentAbilities(null);
+
+    const isSameAgent = selectedAgent?.name === agent.name;
 
     if (isSameAgent) {
       setAgentsOnCanvas((prev) => {
@@ -141,7 +143,10 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                 agentsOnCanvas={agentsOnCanvas}
                 isAlly={isAlly}
                 selectedAgent={selectedAgent}
+                setSelectedAgent={setSelectedAgent}
                 onAgentClick={handleAgentClick}
+                selectedAgentAbilities={selectedAgentAbilities}
+                setSelectedAgentAbilities={setSelectedAgentAbilities}
               />
             </TabsContent>
           </Tabs>
@@ -174,12 +179,12 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
         </SidebarContent>
       </Sidebar>
       <AgentAbilities
-        agent={selectedAgent}
+        agent={selectedAgentAbilities}
         sidebarOpen={sidebarOpen}
         abilitiesOnCanvas={abilitiesOnCanvas}
         isAlly={isAlly}
         stageScale={stageScale}
-        onClose={() => setSelectedAgent(null)}
+        onClose={() => setSelectedAgentAbilities(null)}
       />
     </SidebarProvider>
   );
