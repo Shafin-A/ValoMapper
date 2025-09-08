@@ -2,8 +2,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AGENTS } from "@/lib/consts";
 import Image from "next/image";
 import { AgentCanvas, Agent, AgentRole } from "@/lib/types";
-import { setupDragPreviewImage } from "@/lib/utils";
-import { useSettings } from "@/contexts/settings-context";
 
 interface AgentsGridProps {
   selectedRole: AgentRole | "All";
@@ -18,28 +16,8 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
   selectedRole,
   onMap,
   agentsOnCanvas,
-  isAlly,
-  stageScale,
   onAgentClick,
 }) => {
-  const { agentsSettings } = useSettings();
-
-  const handleDragStart = (
-    e: React.DragEvent<HTMLImageElement>,
-    agent: Agent
-  ) => {
-    setupDragPreviewImage(e, agentsSettings, isAlly, stageScale);
-
-    const agentCanvas: AgentCanvas = {
-      ...agent,
-      id: agentsOnCanvas.length,
-      isAlly,
-      x: 0,
-      y: 0,
-    };
-    e.dataTransfer.setData("agent", JSON.stringify(agentCanvas));
-  };
-
   const agentsByRole =
     selectedRole === "All"
       ? AGENTS
@@ -65,7 +43,6 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
             draggable
             style={{ cursor: "pointer" }}
             onClick={() => onAgentClick(agent)}
-            onDragStart={(e) => handleDragStart(e, agent)}
           />
         ))}
       </div>

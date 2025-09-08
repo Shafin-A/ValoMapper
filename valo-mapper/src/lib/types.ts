@@ -40,13 +40,6 @@ export type AgentIconItem = {
 
 export type AgentIconConfig = AgentIconItem[];
 
-export type DragPreviewOptions = {
-  isAlly: boolean;
-  settings: IconSettings;
-  stageScale: number;
-  action: AbilityAction;
-};
-
 export type AbilityAction =
   | "draggable"
   | "astra_stun"

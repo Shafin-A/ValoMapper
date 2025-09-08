@@ -1,10 +1,8 @@
-import { AbilityCanvas, Agent, AgentIconItem } from "@/lib/types";
+import { AbilityCanvas, Agent } from "@/lib/types";
 import { AGENT_ICON_CONFIGS } from "@/lib/consts";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { setupDragPreviewImage } from "@/lib/utils";
-import { useSettings } from "@/contexts/settings-context";
 
 interface AgentAbilitiesProps {
   agent: Agent | null;
@@ -18,40 +16,9 @@ interface AgentAbilitiesProps {
 const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   agent,
   sidebarOpen,
-  abilitiesOnCanvas,
-  isAlly,
-  stageScale,
   onClose,
 }) => {
-  const { abilitiesSettings } = useSettings();
-
   if (!agent || !sidebarOpen) return null;
-
-  const handleDragStart = (
-    e: React.DragEvent<HTMLImageElement>,
-    iconConfig: AgentIconItem,
-    isAlly: boolean
-  ) => {
-    setupDragPreviewImage(
-      e,
-      abilitiesSettings,
-      isAlly,
-      stageScale,
-      iconConfig.action
-    );
-
-    const abilityCanvas: AbilityCanvas = {
-      id: abilitiesOnCanvas.length,
-      name: iconConfig.label,
-      src: iconConfig.icon,
-      action: iconConfig.action,
-      isAlly,
-      x: 0,
-      y: 0,
-    };
-
-    e.dataTransfer.setData("ability", JSON.stringify(abilityCanvas));
-  };
 
   return (
     <div className="fixed top-[25%] right-[calc(20rem+1rem)] z-50 w-20 rounded-lg border bg-popover p-3 shadow-md">
@@ -75,7 +42,6 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
             height={50}
             draggable
             style={{ cursor: "grab" }}
-            onDragStart={(e) => handleDragStart(e, iconConfig, isAlly)}
           />
         ))}
       </div>
