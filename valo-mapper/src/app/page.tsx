@@ -44,8 +44,6 @@ const Home = () => {
   //   null
   // );
 
-  const [isDragging, setIsDragging] = useState(false);
-
   const [isAlly, setIsAlly] = useState(true);
 
   useEffect(() => {
@@ -95,7 +93,7 @@ const Home = () => {
   };
 
   const handleStageClick = () => {
-    if (!isDragging || !selectedAgent) return;
+    if (!selectedAgent) return;
 
     setAgentsOnCanvas((prev) => {
       const updatedAgent = prev.find((agent) => agent.id === -1);
@@ -106,11 +104,10 @@ const Home = () => {
     });
 
     setSelectedAgent(null);
-    setIsDragging(false);
   };
 
   const handleStageMouseMove = () => {
-    if (!isDragging) return;
+    if (!selectedAgent) return;
 
     const stage = stageRef.current;
     if (!stage) return;
@@ -231,8 +228,6 @@ const Home = () => {
         stageScale={stageScale}
         selectedAgent={selectedAgent}
         setSelectedAgent={setSelectedAgent}
-        isDragging={isDragging}
-        setIsDragging={setIsDragging}
         isAlly={isAlly}
         setIsAlly={setIsAlly}
       />

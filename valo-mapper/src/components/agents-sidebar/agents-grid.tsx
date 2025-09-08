@@ -2,14 +2,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AGENTS } from "@/lib/consts";
 import Image from "next/image";
 import { AgentCanvas, Agent, AgentRole } from "@/lib/types";
+import { useSettings } from "@/contexts/settings-context";
 
 interface AgentsGridProps {
   selectedRole: AgentRole | "All";
   onMap: boolean;
   agentsOnCanvas: AgentCanvas[];
   isAlly: boolean;
-  stageScale: number;
   onAgentClick: (agent: Agent | null) => void;
+  selectedAgent: Agent | null;
 }
 
 export const AgentsGrid: React.FC<AgentsGridProps> = ({
@@ -17,6 +18,8 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
   onMap,
   agentsOnCanvas,
   onAgentClick,
+  isAlly,
+  selectedAgent,
 }) => {
   const agentsByRole =
     selectedRole === "All"
@@ -29,22 +32,38 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
       : true
   );
 
+  const { agentsSettings } = useSettings();
+
+  const allyColor = agentsSettings.allyColor;
+  const enemyColor = agentsSettings.enemyColor;
+
   return (
     <ScrollArea className="h-full w-full">
       <div className="grid grid-cols-4 gap-4 p-2">
-        {filteredAgents.map((agent) => (
-          <Image
-            key={agent.name}
-            title={agent.name}
-            src={agent.src}
-            alt={agent.name}
-            width={50}
-            height={50}
-            draggable
-            style={{ cursor: "pointer" }}
-            onClick={() => onAgentClick(agent)}
-          />
-        ))}
+        {filteredAgents.map((agent) => {
+          const isSelected = selectedAgent?.name === agent.name;
+          const borderColor = isAlly ? allyColor : enemyColor;
+
+          return (
+            <Image
+              key={agent.name}
+              className={`rounded-md transition-transform duration-200 ${
+                isSelected ? `border-2 scale-110 shadow-lg` : "border"
+              }`}
+              style={{
+                borderColor: isSelected ? borderColor : "transparent",
+                cursor: "pointer",
+              }}
+              title={agent.name}
+              src={agent.src}
+              alt={agent.name}
+              width={50}
+              height={50}
+              draggable
+              onClick={() => onAgentClick(agent)}
+            />
+          );
+        })}
       </div>
     </ScrollArea>
   );

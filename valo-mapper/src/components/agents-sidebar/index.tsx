@@ -30,8 +30,6 @@ interface AgentsSidebarProps {
   stageScale: number;
   selectedAgent: Agent | null;
   setSelectedAgent: Dispatch<SetStateAction<Agent | null>>;
-  isDragging: boolean;
-  setIsDragging: Dispatch<SetStateAction<boolean>>;
   isAlly: boolean;
   setIsAlly: Dispatch<SetStateAction<boolean>>;
 }
@@ -44,7 +42,6 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   stageScale,
   selectedAgent,
   setSelectedAgent,
-  setIsDragging,
   isAlly,
   setIsAlly,
 }) => {
@@ -57,6 +54,37 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
   const [onMap, setOnMap] = useState(false);
+
+  const handleAgentClick = (agent: Agent | null) => {
+    if (!agent) return;
+
+    const isSameAgent = agentsOnCanvas.some(
+      (icon) => icon.id === -1 && icon.name === agent.name
+    );
+
+    if (isSameAgent) {
+      setAgentsOnCanvas((prev) => {
+        const withoutDrag = prev.filter((icon) => icon.id !== -1);
+        return withoutDrag;
+      });
+      setSelectedAgent(null);
+    } else {
+      setSelectedAgent(agent);
+
+      const newAgentCanvas: AgentCanvas = {
+        ...agent,
+        id: -1,
+        isAlly: isAlly,
+        x: 0,
+        y: 0,
+      };
+
+      setAgentsOnCanvas((prev) => {
+        const withoutDrag = prev.filter((icon) => icon.id !== -1);
+        return [...withoutDrag, newAgentCanvas];
+      });
+    }
+  };
 
   return (
     <SidebarProvider
@@ -112,27 +140,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                 onMap={onMap}
                 agentsOnCanvas={agentsOnCanvas}
                 isAlly={isAlly}
-                stageScale={stageScale}
-                onAgentClick={(agent) => {
-                  if (!agent) return;
-
-                  setSelectedAgent(agent);
-
-                  const newAgentCanvas: AgentCanvas = {
-                    ...agent,
-                    id: -1,
-                    isAlly: isAlly,
-                    x: 0,
-                    y: 0,
-                  };
-
-                  setAgentsOnCanvas((prev) => {
-                    const withoutDrag = prev.filter((icon) => icon.id !== -1);
-                    return [...withoutDrag, newAgentCanvas];
-                  });
-
-                  setIsDragging(true);
-                }}
+                selectedAgent={selectedAgent}
+                onAgentClick={handleAgentClick}
               />
             </TabsContent>
           </Tabs>
