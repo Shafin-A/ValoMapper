@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { AbilityAction, CircleAbility } from "./types";
+import { AbilityAction, Agent, CircleAbility } from "./types";
 import { CIRCLE_ABILITY_CONFIG, PIXELS_PER_METER } from "./consts";
 
 export const cn = (...inputs: ClassValue[]) => {
@@ -42,4 +42,14 @@ export const getCircleDragOffset = (
   }
 
   return 0;
+};
+
+export const isAgent = (obj: unknown): obj is Agent => {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "src" in obj &&
+    "name" in obj &&
+    "role" in obj
+  );
 };

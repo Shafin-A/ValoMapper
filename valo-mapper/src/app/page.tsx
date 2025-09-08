@@ -9,7 +9,12 @@ import {
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { AbilityCanvas, Agent, AgentCanvas } from "@/lib/types";
+import {
+  AbilityCanvas,
+  AbilityIconItem,
+  Agent,
+  AgentCanvas,
+} from "@/lib/types";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +22,8 @@ import { Image as KonvaImage, Layer, Stage } from "react-konva";
 import useImage from "use-image";
 import AbilityIcon from "@/components/ability-icon";
 import { useSettings } from "@/contexts/settings-context";
+import { isAgent } from "@/lib/utils";
+import { DRAG_ID } from "@/lib/consts";
 
 const ascentMap = "/maps/ascent.svg";
 
@@ -37,12 +44,10 @@ const Home = () => {
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
   const { agentsSettings, abilitiesSettings } = useSettings();
-  const [stageScale, setStageScale] = useState(1);
 
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  // const [selectedAbility, setSelectedAbility] = useState<AbilityCanvas | null>(
-  //   null
-  // );
+  const [selectedCanvasIcon, setSelectedCanvasIcon] = useState<
+    Agent | AbilityIconItem | null
+  >(null);
 
   const [isAlly, setIsAlly] = useState(true);
 
@@ -83,7 +88,6 @@ const Home = () => {
     const newScale = direction < 0 ? oldScale * scaleBy : oldScale / scaleBy;
 
     stage!.scale({ x: newScale, y: newScale });
-    setStageScale(newScale);
 
     const newPos = {
       x: pointer.x - mousePointTo.x * newScale,
@@ -93,21 +97,31 @@ const Home = () => {
   };
 
   const handleStageClick = () => {
-    if (!selectedAgent) return;
+    if (!selectedCanvasIcon) return;
 
-    setAgentsOnCanvas((prev) => {
-      const updatedAgent = prev.find((agent) => agent.id === -1);
-      if (updatedAgent) {
-        updatedAgent.id = agentsOnCanvas.length;
-      }
-      return prev;
-    });
+    if (isAgent(selectedCanvasIcon)) {
+      setAgentsOnCanvas((prev) => {
+        const updatedAgent = prev.find((agent) => agent.id === DRAG_ID);
+        if (updatedAgent) {
+          updatedAgent.id = agentsOnCanvas.length;
+        }
+        return prev;
+      });
+    } else {
+      setAbilitiesOnCanvas((prev) => {
+        const updatedAbility = prev.find((ability) => ability.id === DRAG_ID);
+        if (updatedAbility) {
+          updatedAbility.id = abilitiesOnCanvas.length;
+        }
+        return prev;
+      });
+    }
 
-    setSelectedAgent(null);
+    setSelectedCanvasIcon(null);
   };
 
   const handleStageMouseMove = () => {
-    if (!selectedAgent) return;
+    if (!selectedCanvasIcon) return;
 
     const stage = stageRef.current;
     if (!stage) return;
@@ -121,11 +135,37 @@ const Home = () => {
     const x = (pos.x - stagePos.x) / scale;
     const y = (pos.y - stagePos.y) / scale;
 
-    setAgentsOnCanvas((prev) => {
-      return prev.map((agent) =>
-        agent.id === -1 ? { ...agent, x, y } : agent
-      );
-    });
+    if (isAgent(selectedCanvasIcon)) {
+      setAgentsOnCanvas((prev) => {
+        return prev.map((agent) =>
+          agent.id === DRAG_ID ? { ...agent, x, y } : agent
+        );
+      });
+    } else {
+      setAbilitiesOnCanvas((prev) => {
+        return prev.map((ability) =>
+          ability.id === DRAG_ID ? { ...ability, x, y } : ability
+        );
+      });
+    }
+  };
+
+  const handleStageMouseLeave = () => {
+    if (!selectedCanvasIcon) return;
+
+    if (isAgent(selectedCanvasIcon)) {
+      setAgentsOnCanvas((prev) => {
+        const withoutDrag = prev.filter((icon) => icon.id !== DRAG_ID);
+        return withoutDrag;
+      });
+    } else {
+      setAbilitiesOnCanvas((prev) => {
+        const withoutDrag = prev.filter((icon) => icon.id !== DRAG_ID);
+        return withoutDrag;
+      });
+    }
+
+    setSelectedCanvasIcon(null);
   };
 
   return (
@@ -168,6 +208,7 @@ const Home = () => {
           draggable
           onMouseMove={handleStageMouseMove}
           onMouseDown={handleStageClick}
+          onMouseLeave={handleStageMouseLeave}
         >
           <Layer>
             {mapImage && (
@@ -223,10 +264,9 @@ const Home = () => {
         sidebarOpen={rightSidebarOpen}
         agentsOnCanvas={agentsOnCanvas}
         setAgentsOnCanvas={setAgentsOnCanvas}
-        abilitiesOnCanvas={abilitiesOnCanvas}
-        stageScale={stageScale}
-        selectedAgent={selectedAgent}
-        setSelectedAgent={setSelectedAgent}
+        selectedCanvasIcon={selectedCanvasIcon}
+        setSelectedCanvasIcon={setSelectedCanvasIcon}
+        setAbilitiesOnCanvas={setAbilitiesOnCanvas}
         isAlly={isAlly}
         setIsAlly={setIsAlly}
       />

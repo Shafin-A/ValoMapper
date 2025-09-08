@@ -31,14 +31,14 @@ export type IconSettings = {
   enemyColor: string;
 };
 
-export type AgentIconItem = {
+export type AbilityIconItem = {
   id: string;
-  icon: string;
-  label: string;
+  src: string;
+  name: string;
   action: AbilityAction;
 };
 
-export type AgentIconConfig = AgentIconItem[];
+export type AbilityIconConfig = AbilityIconItem[];
 
 export type AbilityAction =
   | "draggable"

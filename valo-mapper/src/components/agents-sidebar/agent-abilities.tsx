@@ -1,23 +1,32 @@
-import { AbilityCanvas, Agent } from "@/lib/types";
+import { AbilityIconItem, Agent } from "@/lib/types";
 import { AGENT_ICON_CONFIGS } from "@/lib/consts";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSettings } from "@/contexts/settings-context";
 
 interface AgentAbilitiesProps {
   agent: Agent | null;
   sidebarOpen: boolean;
-  abilitiesOnCanvas: AbilityCanvas[];
   isAlly: boolean;
-  stageScale: number;
   onClose: () => void;
+  onAbilityClick: (ability: AbilityIconItem | null) => void;
+  selectedCanvasIcon: AbilityIconItem | null;
 }
 
 const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   agent,
   sidebarOpen,
+  isAlly,
   onClose,
+  onAbilityClick,
+  selectedCanvasIcon,
 }) => {
+  const { agentsSettings } = useSettings();
+
+  const allyColor = agentsSettings.allyColor;
+  const enemyColor = agentsSettings.enemyColor;
+
   if (!agent || !sidebarOpen) return null;
 
   return (
@@ -32,18 +41,30 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
         <span className="sr-only">Close</span>
       </Button>
       <div className="flex flex-col items-center gap-6">
-        {AGENT_ICON_CONFIGS[agent.name]?.map((iconConfig) => (
-          <Image
-            key={iconConfig.label}
-            title={iconConfig.label}
-            src={iconConfig.icon}
-            alt={iconConfig.label}
-            width={50}
-            height={50}
-            draggable
-            style={{ cursor: "grab" }}
-          />
-        ))}
+        {AGENT_ICON_CONFIGS[agent.name]?.map((iconConfig) => {
+          const isSelected = selectedCanvasIcon?.name === iconConfig.name;
+          const borderColor = isAlly ? allyColor : enemyColor;
+
+          return (
+            <Image
+              key={iconConfig.name}
+              className={`rounded-md transition-transform duration-200 ${
+                isSelected ? `border-2 scale-110 shadow-lg` : "border"
+              }`}
+              style={{
+                borderColor: isSelected ? borderColor : "transparent",
+                cursor: "pointer",
+              }}
+              title={iconConfig.name}
+              src={iconConfig.src}
+              alt={iconConfig.name}
+              width={50}
+              height={50}
+              draggable
+              onClick={() => onAbilityClick(iconConfig)}
+            />
+          );
+        })}
       </div>
     </div>
   );

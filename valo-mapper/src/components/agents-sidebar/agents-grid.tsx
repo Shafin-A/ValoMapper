@@ -12,8 +12,8 @@ interface AgentsGridProps {
   agentsOnCanvas: AgentCanvas[];
   isAlly: boolean;
   onAgentClick: (agent: Agent | null) => void;
-  selectedAgent: Agent | null;
-  setSelectedAgent: React.Dispatch<React.SetStateAction<Agent | null>>;
+  selectedCanvasIcon: Agent | null;
+  setSelectedCanvasIcon: React.Dispatch<React.SetStateAction<Agent | null>>;
   selectedAgentAbilities: Agent | null;
   setSelectedAgentAbilities: React.Dispatch<React.SetStateAction<Agent | null>>;
 }
@@ -24,8 +24,8 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
   agentsOnCanvas,
   onAgentClick,
   isAlly,
-  selectedAgent,
-  setSelectedAgent,
+  selectedCanvasIcon,
+  setSelectedCanvasIcon,
   selectedAgentAbilities,
   setSelectedAgentAbilities,
 }) => {
@@ -49,7 +49,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
     <ScrollArea className="h-full w-full">
       <div className="grid grid-cols-4 gap-4 p-2">
         {filteredAgents.map((agent) => {
-          const isSelected = selectedAgent?.name === agent.name;
+          const isSelected = selectedCanvasIcon?.name === agent.name;
           const borderColor = isAlly ? allyColor : enemyColor;
 
           return (
@@ -76,7 +76,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                 className="absolute -top-2 -right-2 rounded-full"
                 pressed={selectedAgentAbilities?.name === agent.name}
                 onClick={() => {
-                  setSelectedAgent(null);
+                  setSelectedCanvasIcon(null);
                   if (selectedAgentAbilities?.name === agent.name) {
                     setSelectedAgentAbilities(null);
                     return;
