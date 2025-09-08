@@ -198,8 +198,7 @@ const Home = () => {
                 enemyColor={agentsSettings.enemyColor}
               />
             ))}
-          </Layer>
-          <Layer>
+
             {abilitiesOnCanvas.map((ability) => (
               <AbilityIcon
                 key={ability.id}
