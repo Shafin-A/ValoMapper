@@ -1,7 +1,7 @@
 import { Group, Image as KonvaImage, Rect } from "react-konva";
 import useImage from "use-image";
-import type { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
+import { KonvaEventObject } from "konva/lib/Node";
 
 interface DraggableIconProps {
   isAlly: boolean;
@@ -9,13 +9,13 @@ interface DraggableIconProps {
   y: number;
   src: string;
   draggable?: boolean;
-  onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
   width: number;
   height: number;
   opacity: number;
   radius: number;
   allyColor: string;
   enemyColor: string;
+  onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
 }
 
 const handleMouseOver = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -31,14 +31,14 @@ const DraggableIcon = ({
   x,
   y,
   src,
-  draggable = true,
-  onDragEnd,
+  draggable,
   width,
   height,
   radius,
   opacity,
   allyColor,
   enemyColor,
+  onDragEnd,
 }: DraggableIconProps) => {
   const [image] = useImage(src);
 
@@ -47,11 +47,11 @@ const DraggableIcon = ({
       x={x}
       y={y}
       draggable={draggable}
-      onDragEnd={onDragEnd}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
       offsetX={25}
       offsetY={25}
+      onDragEnd={onDragEnd}
     >
       <Rect
         width={width}

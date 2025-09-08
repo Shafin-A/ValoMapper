@@ -63,7 +63,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
             width={50}
             height={50}
             draggable
-            style={{ cursor: "grab" }}
+            style={{ cursor: "pointer" }}
             onClick={() => onAgentClick(agent)}
             onDragStart={(e) => handleDragStart(e, agent)}
           />

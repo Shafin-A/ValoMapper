@@ -77,7 +77,6 @@ const DraggableCircleIcon = ({
         y={0}
         src={src}
         draggable={false}
-        onDragEnd={() => {}}
         width={25}
         height={25}
         radius={radius}

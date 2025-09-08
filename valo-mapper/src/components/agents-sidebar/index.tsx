@@ -14,7 +14,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { AbilityCanvas, Agent, AgentCanvas, AgentRole } from "@/lib/types";
 import { useSettings } from "@/contexts/settings-context";
 import { RoleTabs } from "./role-tabs";
@@ -25,15 +25,28 @@ import AgentAbilities from "./agent-abilities";
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
   agentsOnCanvas: AgentCanvas[];
+  setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>;
   abilitiesOnCanvas: AbilityCanvas[];
   stageScale: number;
+  selectedAgent: Agent | null;
+  setSelectedAgent: Dispatch<SetStateAction<Agent | null>>;
+  isDragging: boolean;
+  setIsDragging: Dispatch<SetStateAction<boolean>>;
+  isAlly: boolean;
+  setIsAlly: Dispatch<SetStateAction<boolean>>;
 }
 
 const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   sidebarOpen,
   agentsOnCanvas,
+  setAgentsOnCanvas,
   abilitiesOnCanvas,
   stageScale,
+  selectedAgent,
+  setSelectedAgent,
+  setIsDragging,
+  isAlly,
+  setIsAlly,
 }) => {
   const {
     agentsSettings,
@@ -43,9 +56,7 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
   } = useSettings();
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
-  const [isAlly, setIsAlly] = useState(true);
   const [onMap, setOnMap] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
   return (
     <SidebarProvider
@@ -102,11 +113,26 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
                 agentsOnCanvas={agentsOnCanvas}
                 isAlly={isAlly}
                 stageScale={stageScale}
-                onAgentClick={(agent) =>
-                  setSelectedAgent(
-                    selectedAgent?.name === agent?.name ? null : agent
-                  )
-                }
+                onAgentClick={(agent) => {
+                  if (!agent) return;
+
+                  setSelectedAgent(agent);
+
+                  const newAgentCanvas: AgentCanvas = {
+                    ...agent,
+                    id: -1,
+                    isAlly: isAlly,
+                    x: 0,
+                    y: 0,
+                  };
+
+                  setAgentsOnCanvas((prev) => {
+                    const withoutDrag = prev.filter((icon) => icon.id !== -1);
+                    return [...withoutDrag, newAgentCanvas];
+                  });
+
+                  setIsDragging(true);
+                }}
               />
             </TabsContent>
           </Tabs>
