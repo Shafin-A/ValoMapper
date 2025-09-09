@@ -1,8 +1,7 @@
 "use client";
 
-import { AbilityIcon } from "@/components/ability-icon";
 import AgentsSidebar from "@/components/agents-sidebar";
-import { CanvasIcon } from "@/components/canvas-icon";
+import { AbilityIcon, CanvasIcon } from "@/components/canvas";
 import { SiteHeader } from "@/components/site-header";
 import {
   Sidebar,

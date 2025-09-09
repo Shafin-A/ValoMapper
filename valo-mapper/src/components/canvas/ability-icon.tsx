@@ -1,10 +1,10 @@
 import { KonvaEventObject } from "konva/lib/Node";
-import { CanvasIcon } from "./canvas-icon";
 import { ReactNode } from "react";
 import { AbilityAction } from "@/lib/types";
 import { isCircleAbility, mToPixels } from "@/lib/utils";
 import { CIRCLE_ABILITY_CONFIG } from "@/lib/consts";
 import { CanvasCircleIcon } from "./canvas-circle-icon";
+import { CanvasIcon } from "./canvas-icon";
 
 interface AbilityIconProps {
   isAlly: boolean;
