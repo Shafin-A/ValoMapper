@@ -761,7 +761,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
 
 export const PIXELS_PER_METER = 30.75 / 4.15;
 
-export const CIRCLE_ABILITY_CONFIG: Record<
+export const CIRCLE_ABILITY_CONFIGS: Record<
   CircleAbility,
   { radius: number; colors: { stroke: string; fill: string } }
 > = {

@@ -7,7 +7,7 @@ import {
   AgentCanvas,
   CircleAbility,
 } from "./types";
-import { CIRCLE_ABILITY_CONFIG, PIXELS_PER_METER } from "./consts";
+import { CIRCLE_ABILITY_CONFIGS, PIXELS_PER_METER } from "./consts";
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -32,7 +32,7 @@ export const mToPixels = (meters: number): number => {
 export const isCircleAbility = (
   action: AbilityAction
 ): action is CircleAbility => {
-  return action in CIRCLE_ABILITY_CONFIG;
+  return action in CIRCLE_ABILITY_CONFIGS;
 };
 
 export const isAgent = (obj: unknown): obj is Agent => {
