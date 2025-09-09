@@ -27,7 +27,7 @@ import { RoleTabs } from "./role-tabs";
 import { SettingsPanel } from "./settings-panel";
 import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
-import { DRAG_ID } from "@/lib/consts";
+import { TEMP_DRAG_ID } from "@/lib/consts";
 import { useCanvas } from "@/contexts/canvas-context";
 
 interface AgentsSidebarProps {
@@ -63,21 +63,23 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({ sidebarOpen }) => {
     const isSameIcon = selectedCanvasIcon?.name === icon.name;
 
     if (isSameIcon) {
-      setIconsOnCanvas((prev) => prev.filter((icon) => icon.id !== DRAG_ID));
+      setIconsOnCanvas((prev) =>
+        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
+      );
       setSelectedCanvasIcon(null);
     } else {
       setSelectedCanvasIcon(icon);
 
       const newCanvasIcon = {
         ...icon,
-        id: DRAG_ID,
+        id: TEMP_DRAG_ID,
         isAlly: isAlly,
         x: 0,
         y: 0,
       } as T;
 
       setIconsOnCanvas((prev) => {
-        const withoutDrag = prev.filter((icon) => icon.id !== DRAG_ID);
+        const withoutDrag = prev.filter((icon) => icon.id !== TEMP_DRAG_ID);
         return [...withoutDrag, newCanvasIcon];
       });
     }

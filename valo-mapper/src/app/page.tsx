@@ -16,7 +16,7 @@ import { usePositionScaling } from "@/hooks/use-position-scaling";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
   ASCENT_MAP,
-  DRAG_ID,
+  TEMP_DRAG_ID,
   MAP_SIZE,
   SCALE_FACTOR,
   SIDEBAR_WIDTH,
@@ -103,13 +103,13 @@ const Home = () => {
       if (isAgent(selectedCanvasIcon)) {
         setAgentsOnCanvas((prev) =>
           prev.map((agent) =>
-            agent.id === DRAG_ID ? { ...agent, x, y } : agent
+            agent.id === TEMP_DRAG_ID ? { ...agent, x, y } : agent
           )
         );
       } else {
         setAbilitiesOnCanvas((prev) =>
           prev.map((ability) =>
-            ability.id === DRAG_ID ? { ...ability, x, y } : ability
+            ability.id === TEMP_DRAG_ID ? { ...ability, x, y } : ability
           )
         );
       }
@@ -117,31 +117,28 @@ const Home = () => {
     [selectedCanvasIcon, setAbilitiesOnCanvas, setAgentsOnCanvas]
   );
 
+  const getNextId = (current: AgentCanvas[] | AbilityCanvas[]) =>
+    current.length === 0 ? 1 : Math.max(...current.map((a) => a.id)) + 1;
+
   const handleStageClick = useCallback(() => {
     if (!selectedCanvasIcon) return;
 
     if (isAgent(selectedCanvasIcon)) {
       setAgentsOnCanvas((prev) => {
-        const updatedAgent = prev.find((agent) => agent.id === DRAG_ID);
-        if (updatedAgent) {
-          updatedAgent.id = agentsOnCanvas.length;
-        }
-        return prev;
+        return prev.map((agent) =>
+          agent.id === TEMP_DRAG_ID ? { ...agent, id: getNextId(prev) } : agent
+        );
       });
     } else {
       setAbilitiesOnCanvas((prev) => {
-        const updatedAbility = prev.find((ability) => ability.id === DRAG_ID);
-        if (updatedAbility) {
-          updatedAbility.id = abilitiesOnCanvas.length;
-        }
-        return prev;
+        return prev.map((agent) =>
+          agent.id === TEMP_DRAG_ID ? { ...agent, id: getNextId(prev) } : agent
+        );
       });
     }
 
     setSelectedCanvasIcon(null);
   }, [
-    abilitiesOnCanvas.length,
-    agentsOnCanvas.length,
     selectedCanvasIcon,
     setAbilitiesOnCanvas,
     setAgentsOnCanvas,
@@ -170,10 +167,12 @@ const Home = () => {
     if (!selectedCanvasIcon) return;
 
     if (isAgent(selectedCanvasIcon)) {
-      setAgentsOnCanvas((prev) => prev.filter((icon) => icon.id !== DRAG_ID));
+      setAgentsOnCanvas((prev) =>
+        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
+      );
     } else {
       setAbilitiesOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== DRAG_ID)
+        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
       );
     }
 
@@ -187,7 +186,7 @@ const Home = () => {
 
   const handleDragEnd = <T extends AgentCanvas | AbilityCanvas>(
     e: Konva.KonvaEventObject<DragEvent>,
-    icon: AgentCanvas | AbilityCanvas,
+    icon: T,
     setIconsOnCanvas: Dispatch<SetStateAction<T[]>>
   ) => {
     const newX = e.target.x();
