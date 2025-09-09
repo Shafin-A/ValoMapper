@@ -1,7 +1,8 @@
 "use client";
 
-import DraggableIcon from "@/components/draggable-icon";
+import AbilityIcon from "@/components/ability-icon";
 import AgentsSidebar from "@/components/agents-sidebar";
+import DraggableIcon from "@/components/draggable-icon";
 import { SiteHeader } from "@/components/site-header";
 import {
   Sidebar,
@@ -9,94 +10,110 @@ import {
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { useSettings } from "@/contexts/settings-context";
+import { useCanvasState } from "@/hooks/use-canvas-state";
+import { useDimensions } from "@/hooks/use-dimensions";
+import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
-  AbilityCanvas,
-  AbilityIconItem,
-  Agent,
-  AgentCanvas,
-} from "@/lib/types";
+  ASCENT_MAP,
+  DRAG_ID,
+  MAP_SIZE,
+  SCALE_FACTOR,
+  SIDEBAR_WIDTH,
+} from "@/lib/consts";
+import { isAgent } from "@/lib/utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import { useEffect, useRef, useState } from "react";
+import { Vector2d } from "konva/lib/types";
+import { useCallback, useRef, useState } from "react";
 import { Image as KonvaImage, Layer, Stage } from "react-konva";
 import useImage from "use-image";
-import AbilityIcon from "@/components/ability-icon";
-import { useSettings } from "@/contexts/settings-context";
-import { isAgent } from "@/lib/utils";
-import { DRAG_ID } from "@/lib/consts";
-
-const ascentMap = "/maps/ascent.svg";
 
 const Home = () => {
-  const [mapImage] = useImage(ascentMap);
-  const [agentsOnCanvas, setAgentsOnCanvas] = useState<AgentCanvas[]>([]);
-  const [abilitiesOnCanvas, setAbilitiesOnCanvas] = useState<AbilityCanvas[]>(
-    []
-  );
-
-  const divRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({
-    width: 0,
-    height: 0,
-  });
-
-  const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
-
-  const { agentsSettings, abilitiesSettings } = useSettings();
-
-  const [selectedCanvasIcon, setSelectedCanvasIcon] = useState<
-    Agent | AbilityIconItem | null
-  >(null);
-
+  const [mapImage] = useImage(ASCENT_MAP);
   const [isAlly, setIsAlly] = useState(true);
 
-  useEffect(() => {
-    if (divRef.current?.offsetHeight && divRef.current?.offsetWidth) {
-      setDimensions({
-        width: divRef.current.offsetWidth,
-        height: divRef.current.offsetHeight,
-      });
-    }
-  }, []);
-
+  const divRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
 
-  // wheel example from konva docs
-  const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
+  const dimensions = useDimensions(divRef);
+  const { agentsSettings, abilitiesSettings } = useSettings();
+  const sidebarState = useSidebarState();
+  const canvasState = useCanvasState();
+
+  const mapPosition = {
+    x: (dimensions.width - MAP_SIZE) / 2,
+    y: (dimensions.height - MAP_SIZE) / 2,
+  };
+
+  const handleWheel = useCallback((e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
 
     const stage = stageRef.current;
-    const oldScale = stage!.scaleX();
-    const pointer = stage!.getPointerPosition()!;
+    if (!stage) return;
 
-    const mousePointTo = {
-      x: (pointer.x - stage!.x()) / oldScale,
-      y: (pointer.y - stage!.y()) / oldScale,
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
+
+    const mousePointTo: Vector2d = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
     };
 
-    // how to scale? Zoom in? Or zoom out?
+    // Determine zoom direction
     let direction = e.evt.deltaY > 0 ? 1 : -1;
-
-    // when we zoom on trackpad, e.evt.ctrlKey is true
-    // in that case lets revert direction
     if (e.evt.ctrlKey) {
       direction = -direction;
     }
 
-    const scaleBy = 1.25;
-    const newScale = direction < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    const newScale =
+      direction < 0 ? oldScale * SCALE_FACTOR : oldScale / SCALE_FACTOR;
 
-    stage!.scale({ x: newScale, y: newScale });
+    stage.scale({ x: newScale, y: newScale });
 
-    const newPos = {
+    const newPos: Vector2d = {
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale,
     };
-    stage!.position(newPos);
-  };
 
-  const handleStageClick = () => {
+    stage.position(newPos);
+  }, []);
+
+  const updateIconPosition = useCallback(
+    (x: number, y: number) => {
+      const { selectedCanvasIcon, setAgentsOnCanvas, setAbilitiesOnCanvas } =
+        canvasState;
+
+      if (!selectedCanvasIcon) return;
+
+      if (isAgent(selectedCanvasIcon)) {
+        setAgentsOnCanvas((prev) =>
+          prev.map((agent) =>
+            agent.id === DRAG_ID ? { ...agent, x, y } : agent
+          )
+        );
+      } else {
+        setAbilitiesOnCanvas((prev) =>
+          prev.map((ability) =>
+            ability.id === DRAG_ID ? { ...ability, x, y } : ability
+          )
+        );
+      }
+    },
+    [canvasState]
+  );
+
+  const handleStageClick = useCallback(() => {
+    const {
+      selectedCanvasIcon,
+      setSelectedCanvasIcon,
+      setAgentsOnCanvas,
+      setAbilitiesOnCanvas,
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+    } = canvasState;
+
     if (!selectedCanvasIcon) return;
 
     if (isAgent(selectedCanvasIcon)) {
@@ -118,10 +135,10 @@ const Home = () => {
     }
 
     setSelectedCanvasIcon(null);
-  };
+  }, [canvasState]);
 
-  const handleStageMouseMove = () => {
-    if (!selectedCanvasIcon) return;
+  const handleStageMouseMove = useCallback(() => {
+    if (!canvasState.selectedCanvasIcon) return;
 
     const stage = stageRef.current;
     if (!stage) return;
@@ -130,59 +147,80 @@ const Home = () => {
     if (!pos) return;
 
     const stagePos = stage.position();
-
     const scale = stage.scaleX();
+
     const x = (pos.x - stagePos.x) / scale;
     const y = (pos.y - stagePos.y) / scale;
 
-    if (isAgent(selectedCanvasIcon)) {
-      setAgentsOnCanvas((prev) => {
-        return prev.map((agent) =>
-          agent.id === DRAG_ID ? { ...agent, x, y } : agent
-        );
-      });
-    } else {
-      setAbilitiesOnCanvas((prev) => {
-        return prev.map((ability) =>
-          ability.id === DRAG_ID ? { ...ability, x, y } : ability
-        );
-      });
-    }
-  };
+    updateIconPosition(x, y);
+  }, [canvasState.selectedCanvasIcon, updateIconPosition]);
 
-  const handleStageMouseLeave = () => {
+  const handleStageMouseLeave = useCallback(() => {
+    const {
+      selectedCanvasIcon,
+      setSelectedCanvasIcon,
+      setAgentsOnCanvas,
+      setAbilitiesOnCanvas,
+    } = canvasState;
+
     if (!selectedCanvasIcon) return;
 
     if (isAgent(selectedCanvasIcon)) {
-      setAgentsOnCanvas((prev) => {
-        const withoutDrag = prev.filter((icon) => icon.id !== DRAG_ID);
-        return withoutDrag;
-      });
+      setAgentsOnCanvas((prev) => prev.filter((icon) => icon.id !== DRAG_ID));
     } else {
-      setAbilitiesOnCanvas((prev) => {
-        const withoutDrag = prev.filter((icon) => icon.id !== DRAG_ID);
-        return withoutDrag;
-      });
+      setAbilitiesOnCanvas((prev) =>
+        prev.filter((icon) => icon.id !== DRAG_ID)
+      );
     }
 
     setSelectedCanvasIcon(null);
-  };
+  }, [canvasState]);
+
+  const renderAgents = () =>
+    canvasState.agentsOnCanvas.map((agent) => (
+      <DraggableIcon
+        key={agent.id}
+        isAlly={agent.isAlly}
+        x={agent.x}
+        y={agent.y}
+        src={agent.src}
+        draggable
+        onDragEnd={() => {}}
+        {...agentsSettings}
+        width={agentsSettings.scale}
+        height={agentsSettings.scale}
+        opacity={agentsSettings.boxOpacity}
+      />
+    ));
+
+  const renderAbilities = () =>
+    canvasState.abilitiesOnCanvas.map((ability) => (
+      <AbilityIcon
+        key={ability.id}
+        action={ability.action}
+        isAlly={ability.isAlly}
+        x={ability.x}
+        y={ability.y}
+        src={ability.src}
+        draggable
+        {...abilitiesSettings}
+        width={abilitiesSettings.scale}
+        height={abilitiesSettings.scale}
+        opacity={abilitiesSettings.boxOpacity}
+      />
+    ));
 
   return (
     <div className="[--header-height:calc(--spacing(14))]">
-      <SiteHeader
-        leftSidebarOpen={leftSidebarOpen}
-        setLeftSidebarOpen={setLeftSidebarOpen}
-        rightSidebarOpen={rightSidebarOpen}
-        setRightSidebarOpen={setRightSidebarOpen}
-      />
+      <SiteHeader {...sidebarState} />
 
       <SidebarProvider
         style={{
-          ["--sidebar-width" as keyof React.CSSProperties]: "20rem",
-          ["--sidebar-width-mobile" as keyof React.CSSProperties]: "20rem",
+          ["--sidebar-width" as keyof React.CSSProperties]: SIDEBAR_WIDTH,
+          ["--sidebar-width-mobile" as keyof React.CSSProperties]:
+            SIDEBAR_WIDTH,
         }}
-        open={leftSidebarOpen}
+        open={sidebarState.leftSidebarOpen}
       >
         <Sidebar
           className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
@@ -214,59 +252,23 @@ const Home = () => {
             {mapImage && (
               <KonvaImage
                 image={mapImage}
-                width={1000}
-                height={1000}
-                x={(dimensions.width - 1000) / 2}
-                y={(dimensions.height - 1000) / 2}
+                width={MAP_SIZE}
+                height={MAP_SIZE}
+                x={mapPosition.x}
+                y={mapPosition.y}
               />
             )}
           </Layer>
           <Layer>
-            {agentsOnCanvas.map((agent) => (
-              <DraggableIcon
-                key={agent.id}
-                isAlly={agent.isAlly}
-                x={agent.x}
-                y={agent.y}
-                src={agent.src}
-                draggable
-                onDragEnd={() => {}}
-                width={agentsSettings.scale}
-                height={agentsSettings.scale}
-                radius={agentsSettings.radius}
-                opacity={agentsSettings.boxOpacity}
-                allyColor={agentsSettings.allyColor}
-                enemyColor={agentsSettings.enemyColor}
-              />
-            ))}
-
-            {abilitiesOnCanvas.map((ability) => (
-              <AbilityIcon
-                key={ability.id}
-                action={ability.action}
-                isAlly={ability.isAlly}
-                x={ability.x}
-                y={ability.y}
-                src={ability.src}
-                draggable
-                width={abilitiesSettings.scale}
-                height={abilitiesSettings.scale}
-                radius={abilitiesSettings.radius}
-                opacity={abilitiesSettings.boxOpacity}
-                allyColor={abilitiesSettings.allyColor}
-                enemyColor={abilitiesSettings.enemyColor}
-              />
-            ))}
+            {renderAgents()}
+            {renderAbilities()}
           </Layer>
         </Stage>
       </div>
+
       <AgentsSidebar
-        sidebarOpen={rightSidebarOpen}
-        agentsOnCanvas={agentsOnCanvas}
-        setAgentsOnCanvas={setAgentsOnCanvas}
-        selectedCanvasIcon={selectedCanvasIcon}
-        setSelectedCanvasIcon={setSelectedCanvasIcon}
-        setAbilitiesOnCanvas={setAbilitiesOnCanvas}
+        {...canvasState}
+        sidebarOpen={sidebarState.rightSidebarOpen}
         isAlly={isAlly}
         setIsAlly={setIsAlly}
       />

@@ -2,6 +2,11 @@ import { Agent, AbilityIconConfig, CircleAbility } from "./types";
 
 export const DRAG_ID = -1;
 
+export const ASCENT_MAP = "/maps/ascent.svg";
+export const SIDEBAR_WIDTH = "20rem";
+export const SCALE_FACTOR = 1.25;
+export const MAP_SIZE = 1000;
+
 export const AGENTS: Agent[] = [
   { name: "Astra", src: "/agents/astra/astra.png", role: "Controller" },
   { name: "Breach", src: "/agents/breach/breach.png", role: "Initiator" },
