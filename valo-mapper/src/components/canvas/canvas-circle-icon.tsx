@@ -39,6 +39,23 @@ export const CanvasCircleIcon = ({
 }: CanvasCircleIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
 
+  const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
+    if (!groupRef.current) return;
+    const className = e.target.getClassName();
+    if (className === "Rect" || className === "Image") {
+      groupRef.current.draggable(true);
+    } else {
+      groupRef.current.draggable(false);
+    }
+  };
+
+  const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
+    if (groupRef.current) {
+      groupRef.current.draggable(draggable);
+    }
+    onDragEnd?.(e);
+  };
+
   return (
     <Group
       ref={groupRef}
@@ -47,7 +64,8 @@ export const CanvasCircleIcon = ({
       draggable={draggable}
       offsetX={-12.5}
       offsetY={-12.5}
-      onDragEnd={onDragEnd}
+      onMouseDown={handleMouseDown}
+      onDragEnd={handleDragEnd}
     >
       <Circle
         radius={outerRadius}
