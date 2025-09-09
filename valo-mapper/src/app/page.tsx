@@ -10,8 +10,8 @@ import {
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
-import { useCanvasState } from "@/hooks/use-canvas-state";
 import { useDimensions } from "@/hooks/use-dimensions";
 import { usePositionScaling } from "@/hooks/use-position-scaling";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
@@ -26,13 +26,12 @@ import { isAgent } from "@/lib/utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { Image as KonvaImage, Layer, Stage } from "react-konva";
 import useImage from "use-image";
 
 const Home = () => {
   const [mapImage] = useImage(ASCENT_MAP);
-  const [isAlly, setIsAlly] = useState(true);
 
   const divRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
@@ -40,7 +39,7 @@ const Home = () => {
   const { dimensions, previousDimensions } = useDimensions(divRef);
   const { agentsSettings, abilitiesSettings } = useSettings();
   const sidebarState = useSidebarState();
-  const canvasState = useCanvasState();
+  const canvasState = useCanvas();
 
   usePositionScaling(
     dimensions,
@@ -190,7 +189,6 @@ const Home = () => {
     canvasState.agentsOnCanvas.map((agent) => (
       <DraggableIcon
         key={agent.id}
-        isAlly={agent.isAlly}
         x={agent.x}
         y={agent.y}
         src={agent.src}
@@ -208,7 +206,6 @@ const Home = () => {
       <AbilityIcon
         key={ability.id}
         action={ability.action}
-        isAlly={ability.isAlly}
         x={ability.x}
         y={ability.y}
         src={ability.src}
@@ -276,12 +273,7 @@ const Home = () => {
         </Stage>
       </div>
 
-      <AgentsSidebar
-        {...canvasState}
-        sidebarOpen={sidebarState.rightSidebarOpen}
-        isAlly={isAlly}
-        setIsAlly={setIsAlly}
-      />
+      <AgentsSidebar sidebarOpen={sidebarState.rightSidebarOpen} />
     </div>
   );
 };

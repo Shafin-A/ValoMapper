@@ -8,7 +8,6 @@ import { CIRCLE_ABILITY_CONFIG } from "@/lib/consts";
 
 interface AbilityIconProps {
   action: AbilityAction;
-  isAlly: boolean;
   x: number;
   y: number;
   src: string;
@@ -35,6 +34,7 @@ const getCircleConfig = (action: AbilityAction) => {
 
 const renderCircleAbility = (props: AbilityIconProps) => {
   const { radius, colors } = getCircleConfig(props.action);
+
   return (
     <DraggableCircleIcon
       outerRadius={mToPixels(radius)}

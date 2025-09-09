@@ -15,11 +15,15 @@ export const useCanvasState = () => {
     Agent | AbilityIconItem | null
   >(null);
 
+  const [isAlly, setIsAlly] = useState(true);
+
   return {
     agentsOnCanvas,
     setAgentsOnCanvas,
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
+    isAlly,
+    setIsAlly,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
   };

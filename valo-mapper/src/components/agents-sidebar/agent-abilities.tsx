@@ -4,25 +4,24 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/settings-context";
+import { useCanvas } from "@/contexts/canvas-context";
 
 interface AgentAbilitiesProps {
   agent: Agent | null;
   sidebarOpen: boolean;
-  isAlly: boolean;
   onClose: () => void;
   onAbilityClick: (ability: AbilityIconItem | null) => void;
-  selectedCanvasIcon: AbilityIconItem | null;
 }
 
 const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   agent,
   sidebarOpen,
-  isAlly,
   onClose,
   onAbilityClick,
-  selectedCanvasIcon,
 }) => {
   const { agentsSettings } = useSettings();
+
+  const { isAlly, selectedCanvasIcon } = useCanvas();
 
   const allyColor = agentsSettings.allyColor;
   const enemyColor = agentsSettings.enemyColor;

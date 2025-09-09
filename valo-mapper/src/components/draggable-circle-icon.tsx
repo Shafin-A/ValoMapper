@@ -5,7 +5,6 @@ import Konva from "konva";
 import DraggableIcon from "./draggable-icon";
 
 interface DraggableCircleIconProps {
-  isAlly: boolean;
   x: number;
   y: number;
   src: string;
@@ -22,7 +21,6 @@ interface DraggableCircleIconProps {
 }
 
 const DraggableCircleIcon = ({
-  isAlly,
   x,
   y,
   src,
@@ -72,7 +70,6 @@ const DraggableCircleIcon = ({
         offsetY={12.5}
       />
       <DraggableIcon
-        isAlly={isAlly}
         x={0}
         y={0}
         src={src}

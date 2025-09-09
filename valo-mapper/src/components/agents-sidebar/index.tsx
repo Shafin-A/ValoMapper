@@ -28,36 +28,28 @@ import { SettingsPanel } from "./settings-panel";
 import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
 import { DRAG_ID } from "@/lib/consts";
+import { useCanvas } from "@/contexts/canvas-context";
 
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
-  agentsOnCanvas: AgentCanvas[];
-  setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>;
-  setAbilitiesOnCanvas: Dispatch<SetStateAction<AbilityCanvas[]>>;
-  selectedCanvasIcon: Agent | AbilityIconItem | null;
-  setSelectedCanvasIcon: Dispatch<
-    SetStateAction<Agent | AbilityIconItem | null>
-  >;
-  isAlly: boolean;
-  setIsAlly: Dispatch<SetStateAction<boolean>>;
 }
 
-const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
-  sidebarOpen,
-  agentsOnCanvas,
-  setAgentsOnCanvas,
-  setAbilitiesOnCanvas,
-  selectedCanvasIcon,
-  setSelectedCanvasIcon,
-  isAlly,
-  setIsAlly,
-}) => {
+const AgentsSidebar: React.FC<AgentsSidebarProps> = ({ sidebarOpen }) => {
   const {
     agentsSettings,
     abilitiesSettings,
     updateAgentsSettings,
     updateAbilitiesSettings,
   } = useSettings();
+
+  const {
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    selectedCanvasIcon,
+    setSelectedCanvasIcon,
+    isAlly,
+    setIsAlly,
+  } = useCanvas();
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
   const [onMap, setOnMap] = useState(false);
@@ -154,14 +146,6 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
               <AgentsGrid
                 selectedRole={selectedRole}
                 onMap={onMap}
-                agentsOnCanvas={agentsOnCanvas}
-                isAlly={isAlly}
-                selectedCanvasIcon={selectedCanvasIcon as Agent | null}
-                setSelectedCanvasIcon={
-                  setSelectedCanvasIcon as Dispatch<
-                    SetStateAction<Agent | null>
-                  >
-                }
                 onAgentClick={handleAgentClick}
                 selectedAgentAbilities={selectedAgentAbilities}
                 setSelectedAgentAbilities={setSelectedAgentAbilities}
@@ -199,10 +183,8 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({
       <AgentAbilities
         agent={selectedAgentAbilities}
         sidebarOpen={sidebarOpen}
-        isAlly={isAlly}
         onClose={() => setSelectedAgentAbilities(null)}
         onAbilityClick={handleAbilityClick}
-        selectedCanvasIcon={selectedCanvasIcon as AbilityIconItem | null}
       />
     </SidebarProvider>
   );

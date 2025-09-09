@@ -1,19 +1,16 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AGENTS } from "@/lib/consts";
 import Image from "next/image";
-import { AgentCanvas, Agent, AgentRole } from "@/lib/types";
+import { Agent, AgentRole } from "@/lib/types";
 import { useSettings } from "@/contexts/settings-context";
 import { EllipsisVertical } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
+import { useCanvas } from "@/contexts/canvas-context";
 
 interface AgentsGridProps {
   selectedRole: AgentRole | "All";
   onMap: boolean;
-  agentsOnCanvas: AgentCanvas[];
-  isAlly: boolean;
   onAgentClick: (agent: Agent | null) => void;
-  selectedCanvasIcon: Agent | null;
-  setSelectedCanvasIcon: React.Dispatch<React.SetStateAction<Agent | null>>;
   selectedAgentAbilities: Agent | null;
   setSelectedAgentAbilities: React.Dispatch<React.SetStateAction<Agent | null>>;
 }
@@ -21,11 +18,7 @@ interface AgentsGridProps {
 export const AgentsGrid: React.FC<AgentsGridProps> = ({
   selectedRole,
   onMap,
-  agentsOnCanvas,
   onAgentClick,
-  isAlly,
-  selectedCanvasIcon,
-  setSelectedCanvasIcon,
   selectedAgentAbilities,
   setSelectedAgentAbilities,
 }) => {
@@ -41,6 +34,9 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
   );
 
   const { agentsSettings } = useSettings();
+
+  const { agentsOnCanvas, isAlly, selectedCanvasIcon, setSelectedCanvasIcon } =
+    useCanvas();
 
   const allyColor = agentsSettings.allyColor;
   const enemyColor = agentsSettings.enemyColor;
