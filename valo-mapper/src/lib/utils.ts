@@ -29,21 +29,6 @@ export const isCircleAbility = (
   return action in CIRCLE_ABILITY_CONFIG;
 };
 
-export const getCircleDragOffset = (
-  action: CircleAbility,
-  stageScale: number
-) => {
-  const radiusInMeters = CIRCLE_ABILITY_CONFIG[action].radius;
-
-  if (radiusInMeters) {
-    const radiusInPixels = radiusInMeters * PIXELS_PER_METER;
-
-    return (radiusInPixels + 1) * stageScale;
-  }
-
-  return 0;
-};
-
 export const isAgent = (obj: unknown): obj is Agent => {
   return (
     typeof obj === "object" &&
