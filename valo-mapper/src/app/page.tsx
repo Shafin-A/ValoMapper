@@ -185,7 +185,7 @@ const Home = () => {
     setSelectedCanvasIcon,
   ]);
 
-  const handleEndDrag = <T extends AgentCanvas | AbilityCanvas>(
+  const handleDragEnd = <T extends AgentCanvas | AbilityCanvas>(
     e: Konva.KonvaEventObject<DragEvent>,
     icon: AgentCanvas | AbilityCanvas,
     setIconsOnCanvas: Dispatch<SetStateAction<T[]>>
@@ -202,18 +202,6 @@ const Home = () => {
     );
   };
 
-  const handleAgentDragEnd = (
-    e: KonvaEventObject<DragEvent>,
-    agent: AgentCanvas,
-    setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>
-  ) => handleEndDrag(e, agent, setAgentsOnCanvas);
-
-  const handleAbilityDragEnd = (
-    e: KonvaEventObject<DragEvent>,
-    ability: AbilityCanvas,
-    setAbilitiesOnCanvas: Dispatch<SetStateAction<AbilityCanvas[]>>
-  ) => handleEndDrag(e, ability, setAbilitiesOnCanvas);
-
   const renderAgents = () =>
     agentsOnCanvas.map((agent) => (
       <CanvasIcon
@@ -223,7 +211,7 @@ const Home = () => {
         y={agent.y}
         src={agent.src}
         draggable
-        onDragEnd={(e) => handleAgentDragEnd(e, agent, setAgentsOnCanvas)}
+        onDragEnd={(e) => handleDragEnd(e, agent, setAgentsOnCanvas)}
         {...agentsSettings}
         width={agentsSettings.scale}
         height={agentsSettings.scale}
@@ -241,9 +229,7 @@ const Home = () => {
         y={ability.y}
         src={ability.src}
         draggable
-        onDragEnd={(e) =>
-          handleAbilityDragEnd(e, ability, setAbilitiesOnCanvas)
-        }
+        onDragEnd={(e) => handleDragEnd(e, ability, setAbilitiesOnCanvas)}
         {...abilitiesSettings}
         width={abilitiesSettings.scale}
         height={abilitiesSettings.scale}
