@@ -1,12 +1,13 @@
 import { KonvaEventObject } from "konva/lib/Node";
-import DraggableIcon from "./draggable-icon";
+import { CanvasIcon } from "./canvas-icon";
 import { ReactNode } from "react";
 import { AbilityAction } from "@/lib/types";
-import DraggableCircleIcon from "./draggable-circle-icon";
 import { isCircleAbility, mToPixels } from "@/lib/utils";
 import { CIRCLE_ABILITY_CONFIG } from "@/lib/consts";
+import { CanvasCircleIcon } from "./canvas-circle-icon";
 
 interface AbilityIconProps {
+  isAlly: boolean;
   action: AbilityAction;
   x: number;
   y: number;
@@ -36,7 +37,7 @@ const renderCircleAbility = (props: AbilityIconProps) => {
   const { radius, colors } = getCircleConfig(props.action);
 
   return (
-    <DraggableCircleIcon
+    <CanvasCircleIcon
       outerRadius={mToPixels(radius)}
       stroke={colors.stroke}
       fill={colors.fill}
@@ -49,7 +50,7 @@ const actionRenderers: Record<
   AbilityAction,
   (props: AbilityIconProps) => ReactNode
 > = {
-  draggable: (props) => <DraggableIcon {...props} />,
+  draggable: (props) => <CanvasIcon {...props} />,
   astra_stun: renderCircleAbility,
   astra_suck: renderCircleAbility,
   astra_smoke: renderCircleAbility,
@@ -65,7 +66,7 @@ const actionRenderers: Record<
   harbor_cove: renderCircleAbility,
 };
 
-const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {
+export const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {
   const renderAction = actionRenderers[action];
 
   if (!renderAction) {
@@ -75,5 +76,3 @@ const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {
 
   return renderAction({ action, ...props });
 };
-
-export default AbilityIcon;

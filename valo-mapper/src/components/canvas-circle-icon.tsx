@@ -2,9 +2,10 @@ import { Group, Circle } from "react-konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useRef } from "react";
 import Konva from "konva";
-import DraggableIcon from "./draggable-icon";
+import { CanvasIcon } from "./canvas-icon";
 
-interface DraggableCircleIconProps {
+interface CanvasCircleIconProps {
+  isAlly: boolean;
   x: number;
   y: number;
   src: string;
@@ -20,7 +21,8 @@ interface DraggableCircleIconProps {
   fill: string;
 }
 
-const DraggableCircleIcon = ({
+export const CanvasCircleIcon = ({
+  isAlly,
   x,
   y,
   src,
@@ -34,7 +36,7 @@ const DraggableCircleIcon = ({
   strokeWidth = 2,
   stroke,
   fill,
-}: DraggableCircleIconProps) => {
+}: CanvasCircleIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
 
   return (
@@ -45,21 +47,7 @@ const DraggableCircleIcon = ({
       draggable={draggable}
       offsetX={-12.5}
       offsetY={-12.5}
-      onMouseDown={(e) => {
-        if (!groupRef.current) return;
-        const className = e.target.getClassName();
-        if (className === "Rect" || className === "Image") {
-          groupRef.current.draggable(true);
-        } else {
-          groupRef.current.draggable(false);
-        }
-      }}
-      onDragEnd={(e) => {
-        if (groupRef.current) {
-          groupRef.current.draggable(draggable);
-        }
-        onDragEnd?.(e);
-      }}
+      onDragEnd={onDragEnd}
     >
       <Circle
         radius={outerRadius}
@@ -69,7 +57,8 @@ const DraggableCircleIcon = ({
         offsetX={12.5}
         offsetY={12.5}
       />
-      <DraggableIcon
+      <CanvasIcon
+        isAlly={isAlly}
         x={0}
         y={0}
         src={src}
@@ -84,5 +73,3 @@ const DraggableCircleIcon = ({
     </Group>
   );
 };
-
-export default DraggableCircleIcon;

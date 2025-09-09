@@ -2,9 +2,9 @@ import { Group, Image as KonvaImage, Rect } from "react-konva";
 import useImage from "use-image";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import { useCanvas } from "@/contexts/canvas-context";
 
-interface DraggableIconProps {
+interface CanvasIconProps {
+  isAlly: boolean;
   x: number;
   y: number;
   src: string;
@@ -26,7 +26,8 @@ const handleMouseOut = (e: Konva.KonvaEventObject<MouseEvent>) => {
   e.target.getStage()!.container().style.cursor = "default";
 };
 
-const DraggableIcon = ({
+export const CanvasIcon = ({
+  isAlly,
   x,
   y,
   src,
@@ -38,10 +39,8 @@ const DraggableIcon = ({
   allyColor,
   enemyColor,
   onDragEnd,
-}: DraggableIconProps) => {
+}: CanvasIconProps) => {
   const [image] = useImage(src);
-
-  const { isAlly } = useCanvas();
 
   return (
     <Group
@@ -70,5 +69,3 @@ const DraggableIcon = ({
     </Group>
   );
 };
-
-export default DraggableIcon;

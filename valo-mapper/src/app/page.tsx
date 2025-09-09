@@ -1,8 +1,8 @@
 "use client";
 
-import AbilityIcon from "@/components/ability-icon";
+import { AbilityIcon } from "@/components/ability-icon";
 import AgentsSidebar from "@/components/agents-sidebar";
-import DraggableIcon from "@/components/draggable-icon";
+import { CanvasIcon } from "@/components/canvas-icon";
 import { SiteHeader } from "@/components/site-header";
 import {
   Sidebar,
@@ -187,8 +187,9 @@ const Home = () => {
 
   const renderAgents = () =>
     canvasState.agentsOnCanvas.map((agent) => (
-      <DraggableIcon
+      <CanvasIcon
         key={agent.id}
+        isAlly={agent.isAlly}
         x={agent.x}
         y={agent.y}
         src={agent.src}
@@ -205,6 +206,7 @@ const Home = () => {
     canvasState.abilitiesOnCanvas.map((ability) => (
       <AbilityIcon
         key={ability.id}
+        isAlly={ability.isAlly}
         action={ability.action}
         x={ability.x}
         y={ability.y}
