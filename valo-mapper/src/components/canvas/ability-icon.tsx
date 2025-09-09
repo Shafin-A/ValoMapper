@@ -2,7 +2,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { ReactNode } from "react";
 import { AbilityAction } from "@/lib/types";
 import { isCircleAbility, mToPixels } from "@/lib/utils";
-import { CIRCLE_ABILITY_CONFIG } from "@/lib/consts";
+import { CIRCLE_ABILITY_CONFIGS } from "@/lib/consts";
 import { CanvasCircleIcon } from "./canvas-circle-icon";
 import { CanvasIcon } from "./canvas-icon";
 
@@ -25,8 +25,8 @@ interface AbilityIconProps {
 const getCircleConfig = (action: AbilityAction) => {
   if (isCircleAbility(action)) {
     return {
-      radius: CIRCLE_ABILITY_CONFIG[action].radius,
-      colors: CIRCLE_ABILITY_CONFIG[action].colors,
+      radius: CIRCLE_ABILITY_CONFIGS[action].radius,
+      colors: CIRCLE_ABILITY_CONFIGS[action].colors,
     };
   }
 
