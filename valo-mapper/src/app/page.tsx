@@ -13,6 +13,7 @@ import {
 import { useSettings } from "@/contexts/settings-context";
 import { useCanvasState } from "@/hooks/use-canvas-state";
 import { useDimensions } from "@/hooks/use-dimensions";
+import { usePositionScaling } from "@/hooks/use-position-scaling";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
   ASCENT_MAP,
@@ -36,10 +37,20 @@ const Home = () => {
   const divRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
 
-  const dimensions = useDimensions(divRef);
+  const { dimensions, previousDimensions } = useDimensions(divRef);
   const { agentsSettings, abilitiesSettings } = useSettings();
   const sidebarState = useSidebarState();
   const canvasState = useCanvasState();
+
+  usePositionScaling(
+    dimensions,
+    previousDimensions,
+    canvasState.agentsOnCanvas,
+    canvasState.setAgentsOnCanvas,
+    canvasState.abilitiesOnCanvas,
+    canvasState.setAbilitiesOnCanvas,
+    MAP_SIZE
+  );
 
   const mapPosition = {
     x: (dimensions.width - MAP_SIZE) / 2,
@@ -61,7 +72,6 @@ const Home = () => {
       y: (pointer.y - stage.y()) / oldScale,
     };
 
-    // Determine zoom direction
     let direction = e.evt.deltaY > 0 ? 1 : -1;
     if (e.evt.ctrlKey) {
       direction = -direction;
