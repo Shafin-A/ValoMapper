@@ -49,8 +49,8 @@ export const CanvasIcon = ({
       draggable={draggable}
       onMouseOver={handleMouseOver}
       onMouseOut={handleMouseOut}
-      offsetX={25}
-      offsetY={25}
+      offsetX={width / 2}
+      offsetY={height / 2}
       onDragEnd={onDragEnd}
     >
       <Rect

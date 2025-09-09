@@ -19,6 +19,8 @@ interface CanvasCircleIconProps {
   strokeWidth?: number;
   stroke: string;
   fill: string;
+  width: number;
+  height: number;
 }
 
 export const CanvasCircleIcon = ({
@@ -36,6 +38,8 @@ export const CanvasCircleIcon = ({
   strokeWidth = 2,
   stroke,
   fill,
+  width,
+  height,
 }: CanvasCircleIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
 
@@ -62,8 +66,6 @@ export const CanvasCircleIcon = ({
       x={x}
       y={y}
       draggable={draggable}
-      offsetX={-12.5}
-      offsetY={-12.5}
       onMouseDown={handleMouseDown}
       onDragEnd={handleDragEnd}
     >
@@ -72,8 +74,6 @@ export const CanvasCircleIcon = ({
         strokeWidth={strokeWidth}
         fill={fill}
         stroke={stroke}
-        offsetX={12.5}
-        offsetY={12.5}
       />
       <CanvasIcon
         isAlly={isAlly}
@@ -81,8 +81,8 @@ export const CanvasCircleIcon = ({
         y={0}
         src={src}
         draggable={false}
-        width={25}
-        height={25}
+        width={width}
+        height={height}
         radius={radius}
         opacity={opacity}
         allyColor={allyColor}
