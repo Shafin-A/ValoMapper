@@ -20,7 +20,7 @@ interface SettingsProviderProps {
 
 export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   const [agentsSettings, setAgentsSettings] = useState<IconSettings>({
-    scale: 50,
+    scale: 35,
     boxOpacity: 1,
     radius: 8,
     allyColor: "#18636c",
@@ -28,7 +28,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
   });
 
   const [abilitiesSettings, setAbilitiesSettings] = useState<IconSettings>({
-    scale: 50,
+    scale: 35,
     boxOpacity: 1,
     radius: 8,
     allyColor: "#18636c",
