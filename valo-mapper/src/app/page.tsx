@@ -21,11 +21,12 @@ import {
   SCALE_FACTOR,
   SIDEBAR_WIDTH,
 } from "@/lib/consts";
+import { AbilityCanvas, AgentCanvas } from "@/lib/types";
 import { isAgent } from "@/lib/utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
-import { useCallback, useRef } from "react";
+import { Dispatch, SetStateAction, useCallback, useRef } from "react";
 import { Image as KonvaImage, Layer, Stage } from "react-konva";
 import useImage from "use-image";
 
@@ -38,15 +39,22 @@ const Home = () => {
   const { dimensions, previousDimensions } = useDimensions(divRef);
   const { agentsSettings, abilitiesSettings } = useSettings();
   const sidebarState = useSidebarState();
-  const canvasState = useCanvas();
+  const {
+    agentsOnCanvas,
+    setAgentsOnCanvas,
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
+    selectedCanvasIcon,
+    setSelectedCanvasIcon,
+  } = useCanvas();
 
   usePositionScaling(
     dimensions,
     previousDimensions,
-    canvasState.agentsOnCanvas,
-    canvasState.setAgentsOnCanvas,
-    canvasState.abilitiesOnCanvas,
-    canvasState.setAbilitiesOnCanvas,
+    agentsOnCanvas,
+    setAgentsOnCanvas,
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
     MAP_SIZE
   );
 
@@ -90,9 +98,6 @@ const Home = () => {
 
   const updateIconPosition = useCallback(
     (x: number, y: number) => {
-      const { selectedCanvasIcon, setAgentsOnCanvas, setAbilitiesOnCanvas } =
-        canvasState;
-
       if (!selectedCanvasIcon) return;
 
       if (isAgent(selectedCanvasIcon)) {
@@ -109,19 +114,10 @@ const Home = () => {
         );
       }
     },
-    [canvasState]
+    [selectedCanvasIcon, setAbilitiesOnCanvas, setAgentsOnCanvas]
   );
 
   const handleStageClick = useCallback(() => {
-    const {
-      selectedCanvasIcon,
-      setSelectedCanvasIcon,
-      setAgentsOnCanvas,
-      setAbilitiesOnCanvas,
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-    } = canvasState;
-
     if (!selectedCanvasIcon) return;
 
     if (isAgent(selectedCanvasIcon)) {
@@ -143,10 +139,17 @@ const Home = () => {
     }
 
     setSelectedCanvasIcon(null);
-  }, [canvasState]);
+  }, [
+    abilitiesOnCanvas.length,
+    agentsOnCanvas.length,
+    selectedCanvasIcon,
+    setAbilitiesOnCanvas,
+    setAgentsOnCanvas,
+    setSelectedCanvasIcon,
+  ]);
 
   const handleStageMouseMove = useCallback(() => {
-    if (!canvasState.selectedCanvasIcon) return;
+    if (!selectedCanvasIcon) return;
 
     const stage = stageRef.current;
     if (!stage) return;
@@ -161,16 +164,9 @@ const Home = () => {
     const y = (pos.y - stagePos.y) / scale;
 
     updateIconPosition(x, y);
-  }, [canvasState.selectedCanvasIcon, updateIconPosition]);
+  }, [selectedCanvasIcon, updateIconPosition]);
 
   const handleStageMouseLeave = useCallback(() => {
-    const {
-      selectedCanvasIcon,
-      setSelectedCanvasIcon,
-      setAgentsOnCanvas,
-      setAbilitiesOnCanvas,
-    } = canvasState;
-
     if (!selectedCanvasIcon) return;
 
     if (isAgent(selectedCanvasIcon)) {
@@ -182,10 +178,44 @@ const Home = () => {
     }
 
     setSelectedCanvasIcon(null);
-  }, [canvasState]);
+  }, [
+    selectedCanvasIcon,
+    setAbilitiesOnCanvas,
+    setAgentsOnCanvas,
+    setSelectedCanvasIcon,
+  ]);
+
+  const handleEndDrag = <T extends AgentCanvas | AbilityCanvas>(
+    e: Konva.KonvaEventObject<DragEvent>,
+    icon: AgentCanvas | AbilityCanvas,
+    setIconsOnCanvas: Dispatch<SetStateAction<T[]>>
+  ) => {
+    const newX = e.target.x();
+    const newY = e.target.y();
+
+    setIconsOnCanvas((prev) =>
+      prev.map((agentInCanvas) =>
+        agentInCanvas.id === icon.id
+          ? { ...agentInCanvas, x: newX, y: newY }
+          : agentInCanvas
+      )
+    );
+  };
+
+  const handleAgentDragEnd = (
+    e: KonvaEventObject<DragEvent>,
+    agent: AgentCanvas,
+    setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>
+  ) => handleEndDrag(e, agent, setAgentsOnCanvas);
+
+  const handleAbilityDragEnd = (
+    e: KonvaEventObject<DragEvent>,
+    ability: AbilityCanvas,
+    setAbilitiesOnCanvas: Dispatch<SetStateAction<AbilityCanvas[]>>
+  ) => handleEndDrag(e, ability, setAbilitiesOnCanvas);
 
   const renderAgents = () =>
-    canvasState.agentsOnCanvas.map((agent) => (
+    agentsOnCanvas.map((agent) => (
       <CanvasIcon
         key={agent.id}
         isAlly={agent.isAlly}
@@ -193,7 +223,7 @@ const Home = () => {
         y={agent.y}
         src={agent.src}
         draggable
-        onDragEnd={() => {}}
+        onDragEnd={(e) => handleAgentDragEnd(e, agent, setAgentsOnCanvas)}
         {...agentsSettings}
         width={agentsSettings.scale}
         height={agentsSettings.scale}
@@ -202,7 +232,7 @@ const Home = () => {
     ));
 
   const renderAbilities = () =>
-    canvasState.abilitiesOnCanvas.map((ability) => (
+    abilitiesOnCanvas.map((ability) => (
       <AbilityIcon
         key={ability.id}
         isAlly={ability.isAlly}
@@ -211,6 +241,9 @@ const Home = () => {
         y={ability.y}
         src={ability.src}
         draggable
+        onDragEnd={(e) =>
+          handleAbilityDragEnd(e, ability, setAbilitiesOnCanvas)
+        }
         {...abilitiesSettings}
         width={abilitiesSettings.scale}
         height={abilitiesSettings.scale}
