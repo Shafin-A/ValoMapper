@@ -6,6 +6,11 @@ import { useSettings } from "@/contexts/settings-context";
 import { EllipsisVertical } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { useCanvas } from "@/contexts/canvas-context";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AgentsGridProps {
   selectedRole: AgentRole | "All";
@@ -50,22 +55,26 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
 
           return (
             <div key={agent.name} className="relative inline-block">
-              <Image
-                className={`rounded-md transition-transform duration-200 ${
-                  isSelected ? `border-2 scale-110 shadow-lg` : "border"
-                }`}
-                style={{
-                  borderColor: isSelected ? borderColor : "transparent",
-                  cursor: "pointer",
-                }}
-                title={agent.name}
-                src={agent.src}
-                alt={agent.name}
-                width={50}
-                height={50}
-                draggable
-                onClick={() => onAgentClick(agent)}
-              />
+              <Tooltip delayDuration={700}>
+                <TooltipTrigger>
+                  <Image
+                    className={`rounded-md transition-transform duration-200 ${
+                      isSelected ? `border-2 scale-110 shadow-lg` : "border"
+                    }`}
+                    style={{
+                      borderColor: isSelected ? borderColor : "transparent",
+                      cursor: "pointer",
+                    }}
+                    src={agent.src}
+                    alt={agent.name}
+                    width={50}
+                    height={50}
+                    draggable
+                    onClick={() => onAgentClick(agent)}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>{agent.name}</TooltipContent>
+              </Tooltip>
 
               <Toggle
                 size="icon"

@@ -5,6 +5,11 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/settings-context";
 import { useCanvas } from "@/contexts/canvas-context";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AgentAbilitiesProps {
   agent: Agent | null;
@@ -45,23 +50,26 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
           const borderColor = isAlly ? allyColor : enemyColor;
 
           return (
-            <Image
-              key={iconConfig.name}
-              className={`rounded-md transition-transform duration-200 ${
-                isSelected ? `border-2 scale-110 shadow-lg` : "border"
-              }`}
-              style={{
-                borderColor: isSelected ? borderColor : "transparent",
-                cursor: "pointer",
-              }}
-              title={iconConfig.name}
-              src={iconConfig.src}
-              alt={iconConfig.name}
-              width={50}
-              height={50}
-              draggable
-              onClick={() => onAbilityClick(iconConfig)}
-            />
+            <Tooltip key={iconConfig.name}>
+              <TooltipTrigger asChild>
+                <Image
+                  className={`rounded-md transition-transform duration-200 ${
+                    isSelected ? `border-2 scale-110 shadow-lg` : "border"
+                  }`}
+                  style={{
+                    borderColor: isSelected ? borderColor : "transparent",
+                    cursor: "pointer",
+                  }}
+                  src={iconConfig.src}
+                  alt={iconConfig.name}
+                  width={50}
+                  height={50}
+                  draggable
+                  onClick={() => onAbilityClick(iconConfig)}
+                />
+              </TooltipTrigger>
+              <TooltipContent side="left">{iconConfig.name}</TooltipContent>
+            </Tooltip>
           );
         })}
       </div>

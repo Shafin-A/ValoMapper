@@ -7,6 +7,8 @@ import {
 import { AbilityCanvas, AgentCanvas } from "@/lib/types";
 import { Copy, Heart, HeartCrack, Trash2 } from "lucide-react";
 import { Separator } from "./ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { useEffect, useState } from "react";
 
 interface ContextMenuPopoverProps {
   open: boolean;
@@ -20,6 +22,24 @@ interface ContextMenuPopoverProps {
   onDelete: () => void;
 }
 
+const ConditionalTooltip = ({
+  children,
+  content,
+  enabled,
+}: {
+  children: React.ReactNode;
+  content: string;
+  enabled: boolean;
+}) =>
+  enabled ? (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="top">{content}</TooltipContent>
+    </Tooltip>
+  ) : (
+    <>{children}</>
+  );
+
 export const ContextMenuPopover = ({
   open,
   x,
@@ -31,6 +51,19 @@ export const ContextMenuPopover = ({
   onToggleAlly,
   onDelete,
 }: ContextMenuPopoverProps) => {
+  const [allowTooltips, setAllowTooltips] = useState(false);
+  const [initialIsAlly, setInitialIsAlly] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      // Popover closing has animation but currentItem becomes null immediately so isAlly becomes false as default leading to flickering icon
+      setInitialIsAlly(currentItem?.isAlly ?? false);
+      setAllowTooltips(false); // Tooltip opens on its own after opening popover for some reason so need to delay it
+      const timer = setTimeout(() => setAllowTooltips(true), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [currentItem?.isAlly, open]);
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
@@ -45,45 +78,44 @@ export const ContextMenuPopover = ({
           }}
         />
       </PopoverTrigger>
-      <PopoverContent
-        className="w-auto p-2"
-        side="top"
-        align="start"
-        sideOffset={4}
-      >
+      <PopoverContent className="w-auto p-2" side="top" align="start">
         <div className="flex items-center space-x-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDuplicate}
-            title={`Duplicate ${itemType === "agent" ? "Agent" : "Ability"}`}
+          <ConditionalTooltip
+            enabled={allowTooltips}
+            content={`Duplicate ${itemType === "agent" ? "Agent" : "Ability"}`}
           >
-            <Copy />
-          </Button>
+            <Button variant="ghost" size="sm" onClick={onDuplicate}>
+              <Copy />
+            </Button>
+          </ConditionalTooltip>
+
           <Separator
             orientation="vertical"
             className="data-[orientation=vertical]:h-6"
           />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleAlly}
-            title={currentItem?.isAlly ? "Toggle Enemy" : "Toggle Ally"}
+
+          <ConditionalTooltip
+            enabled={allowTooltips}
+            content={initialIsAlly ? "Make Enemy" : "Make Ally"}
           >
-            {currentItem?.isAlly ? <HeartCrack /> : <Heart />}
-          </Button>
+            <Button variant="ghost" size="sm" onClick={onToggleAlly}>
+              {initialIsAlly ? <HeartCrack /> : <Heart />}
+            </Button>
+          </ConditionalTooltip>
+
           <Separator
             orientation="vertical"
             className="data-[orientation=vertical]:h-6"
           />
-          <Button
-            variant="destructiveGhost"
-            size="sm"
-            onClick={onDelete}
-            title={`Delete ${itemType === "agent" ? "Agent" : "Ability"}`}
+
+          <ConditionalTooltip
+            enabled={allowTooltips}
+            content={`Delete ${itemType === "agent" ? "Agent" : "Ability"}`}
           >
-            <Trash2 />
-          </Button>
+            <Button variant="destructiveGhost" size="sm" onClick={onDelete}>
+              <Trash2 />
+            </Button>
+          </ConditionalTooltip>
         </div>
       </PopoverContent>
     </Popover>
