@@ -5,6 +5,7 @@ import Konva from "konva";
 import { CanvasIcon } from "./canvas-icon";
 
 interface CanvasCircleIconProps {
+  id: string;
   isAlly: boolean;
   x: number;
   y: number;
@@ -24,6 +25,7 @@ interface CanvasCircleIconProps {
 }
 
 export const CanvasCircleIcon = ({
+  id,
   isAlly,
   x,
   y,
@@ -76,6 +78,7 @@ export const CanvasCircleIcon = ({
         stroke={stroke}
       />
       <CanvasIcon
+        id={id}
         isAlly={isAlly}
         x={0}
         y={0}

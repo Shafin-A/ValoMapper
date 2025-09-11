@@ -1,12 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import {
-  AbilityAction,
-  AbilityCanvas,
-  Agent,
-  AgentCanvas,
-  CircleAbility,
-} from "./types";
+import { AbilityAction, Agent, CircleAbility } from "./types";
 import { CIRCLE_ABILITY_CONFIGS, PIXELS_PER_METER } from "./consts";
 
 export const cn = (...inputs: ClassValue[]) => {
@@ -45,5 +39,7 @@ export const isAgent = (obj: unknown): obj is Agent => {
   );
 };
 
-export const getNextId = (current: AgentCanvas[] | AbilityCanvas[]) =>
-  current.length === 0 ? 1 : Math.max(...current.map((a) => a.id)) + 1;
+export const getNextId = (type: "agent" | "ability") => {
+  const timestamp = Date.now().toString(36);
+  return `${type}-${timestamp}`;
+};

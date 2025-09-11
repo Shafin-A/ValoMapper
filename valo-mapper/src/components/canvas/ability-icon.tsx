@@ -7,6 +7,7 @@ import { CanvasCircleIcon } from "./canvas-circle-icon";
 import { CanvasIcon } from "./canvas-icon";
 
 interface AbilityIconProps {
+  id: string;
   isAlly: boolean;
   action: AbilityAction;
   x: number;

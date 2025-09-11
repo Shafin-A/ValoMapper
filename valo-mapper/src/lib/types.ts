@@ -5,7 +5,7 @@ export type Agent = {
 };
 
 export type CanvasItem = {
-  id: number;
+  id: string;
   name: string;
   src: string;
   isAlly: boolean;

@@ -4,6 +4,7 @@ import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
 interface CanvasIconProps {
+  id: string;
   isAlly: boolean;
   x: number;
   y: number;
@@ -27,6 +28,7 @@ const handleMouseOut = (e: Konva.KonvaEventObject<MouseEvent>) => {
 };
 
 export const CanvasIcon = ({
+  id,
   isAlly,
   x,
   y,
@@ -44,6 +46,7 @@ export const CanvasIcon = ({
 
   return (
     <Group
+      id={id}
       x={x}
       y={y}
       draggable={draggable}

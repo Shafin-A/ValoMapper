@@ -1,4 +1,4 @@
-export const TEMP_DRAG_ID = -1;
+export const TEMP_DRAG_ID = "temp-drag-id";
 
 export const ASCENT_MAP = "/maps/ascent.svg";
 export const SIDEBAR_WIDTH = "20rem";
