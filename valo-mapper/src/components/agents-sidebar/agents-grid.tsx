@@ -22,17 +22,6 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
   selectedAgentAbilities,
   setSelectedAgentAbilities,
 }) => {
-  const agentsByRole =
-    selectedRole === "All"
-      ? AGENTS
-      : AGENTS.filter((agent) => agent.role === selectedRole);
-
-  const filteredAgents = agentsByRole.filter((agent) =>
-    onMap
-      ? agentsOnCanvas.some((canvasAgent) => canvasAgent.name === agent.name)
-      : true
-  );
-
   const { agentsSettings } = useSettings();
 
   const { agentsOnCanvas, isAlly, selectedCanvasIcon, setSelectedCanvasIcon } =
@@ -40,6 +29,17 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
 
   const allyColor = agentsSettings.allyColor;
   const enemyColor = agentsSettings.enemyColor;
+
+  const agentsByRole =
+    selectedRole === "All"
+      ? AGENTS
+      : AGENTS.filter((agent) => agent.role === selectedRole);
+
+  const filteredAgents = onMap
+    ? agentsByRole.filter((agent) =>
+        agentsOnCanvas.some((canvasAgent) => canvasAgent.name === agent.name)
+      )
+    : agentsByRole;
 
   return (
     <ScrollArea className="h-full w-full">
