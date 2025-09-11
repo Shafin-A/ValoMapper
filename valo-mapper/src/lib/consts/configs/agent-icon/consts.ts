@@ -3,16 +3,16 @@ import { AbilityIconConfig } from "@/lib/types";
 export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   Astra: [
     {
-      id: "nova_pulse",
-      src: "/agents/astra/nova_pulse.png",
-      name: "Nova Pulse",
-      action: "astra_stun",
-    },
-    {
       id: "gravity_well",
       src: "/agents/astra/gravity_well.png",
       name: "Gravity Well",
       action: "astra_suck",
+    },
+    {
+      id: "nova_pulse",
+      src: "/agents/astra/nova_pulse.png",
+      name: "Nova Pulse",
+      action: "astra_stun",
     },
     {
       id: "nebula__dissipate",
@@ -41,15 +41,15 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "fault_line",
-      src: "/agents/breach/fault_line.png",
-      name: "Fault Line",
-      action: "draggable",
-    },
-    {
       id: "flashpoint",
       src: "/agents/breach/flashpoint.png",
       name: "Flashpoint",
+      action: "draggable",
+    },
+    {
+      id: "fault_line",
+      src: "/agents/breach/fault_line.png",
+      name: "Fault Line",
       action: "draggable",
     },
     {
@@ -60,6 +60,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Brimstone: [
+    {
+      id: "stim_beacon",
+      src: "/agents/brimstone/stim_beacon.png",
+      name: "Stim Beacon",
+      action: "brim_stim",
+    },
     {
       id: "incendiary",
       src: "/agents/brimstone/incendiary.png",
@@ -73,12 +79,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "brim_smoke",
     },
     {
-      id: "stim_beacon",
-      src: "/agents/brimstone/stim_beacon.png",
-      name: "Stim Beacon",
-      action: "brim_stim",
-    },
-    {
       id: "orbital_strike",
       src: "/agents/brimstone/orbital_strike.png",
       name: "Orbital Strike",
@@ -86,6 +86,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Chamber: [
+    {
+      id: "trademark",
+      src: "/agents/chamber/trademark.png",
+      name: "Trademark",
+      action: "chamber_trip",
+    },
     {
       id: "headhunter",
       src: "/agents/chamber/headhunter.png",
@@ -99,12 +105,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "chamber_tp",
     },
     {
-      id: "trademark",
-      src: "/agents/chamber/trademark.png",
-      name: "Trademark",
-      action: "chamber_trip",
-    },
-    {
       id: "tour_de_force",
       src: "/agents/chamber/tour_de_force.png",
       name: "Tour de Force",
@@ -113,22 +113,16 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   ],
   Clove: [
     {
-      id: "meddle",
-      src: "/agents/clove/meddle.png",
-      name: "Meddle",
-      action: "clove_meddle",
-    },
-    {
-      id: "not_dead_yet",
-      src: "/agents/clove/not_dead_yet.png",
-      name: "Not Dead Yet",
-      action: "draggable",
-    },
-    {
       id: "pick_me_up",
       src: "/agents/clove/pick_me_up.png",
       name: "Pick Me Up",
       action: "draggable",
+    },
+    {
+      id: "meddle",
+      src: "/agents/clove/meddle.png",
+      name: "Meddle",
+      action: "clove_meddle",
     },
     {
       id: "ruse",
@@ -136,8 +130,20 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Ruse",
       action: "clove_smoke",
     },
+    {
+      id: "not_dead_yet",
+      src: "/agents/clove/not_dead_yet.png",
+      name: "Not Dead Yet",
+      action: "draggable",
+    },
   ],
   Cypher: [
+    {
+      id: "trapwire",
+      src: "/agents/cypher/trapwire.png",
+      name: "Trapwire",
+      action: "draggable",
+    },
     {
       id: "cyber_cage",
       src: "/agents/cypher/cyber_cage.png",
@@ -148,12 +154,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "spycam",
       src: "/agents/cypher/spycam.png",
       name: "Spycam",
-      action: "draggable",
-    },
-    {
-      id: "trapwire",
-      src: "/agents/cypher/trapwire.png",
-      name: "Trapwire",
       action: "draggable",
     },
     {
@@ -171,16 +171,16 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "gravnet",
-      src: "/agents/deadlock/gravnet.png",
-      name: "GravNet",
-      action: "deadlock_net",
-    },
-    {
       id: "sonic_sensor",
       src: "/agents/deadlock/sonic_sensor.png",
       name: "Sonic Sensor",
       action: "draggable",
+    },
+    {
+      id: "gravnet",
+      src: "/agents/deadlock/gravnet.png",
+      name: "GravNet",
+      action: "deadlock_net",
     },
     {
       id: "annihilation",
@@ -217,6 +217,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   ],
   Gekko: [
     {
+      id: "mosh_pit",
+      src: "/agents/gekko/mosh_pit.png",
+      name: "Mosh Pit",
+      action: "gekko_molly",
+    },
+    {
       id: "wingman",
       src: "/agents/gekko/wingman.png",
       name: "Wingman",
@@ -227,12 +233,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       src: "/agents/gekko/dizzy.png",
       name: "Dizzy",
       action: "draggable",
-    },
-    {
-      id: "mosh_pit",
-      src: "/agents/gekko/mosh_pit.png",
-      name: "Mosh Pit",
-      action: "gekko_molly",
     },
     {
       id: "thrash",
@@ -269,6 +269,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   ],
   Iso: [
     {
+      id: "contingency",
+      src: "/agents/iso/contingency.png",
+      name: "Contingency",
+      action: "draggable",
+    },
+    {
       id: "undercut",
       src: "/agents/iso/undercut.png",
       name: "Undercut",
@@ -281,12 +287,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "contingency",
-      src: "/agents/iso/contingency.png",
-      name: "Contingency",
-      action: "draggable",
-    },
-    {
       id: "kill_contract",
       src: "/agents/iso/kill_contract.png",
       name: "Kill Contract",
@@ -294,6 +294,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Jett: [
+    {
+      id: "cloudburst",
+      src: "/agents/jett/cloudburst.png",
+      name: "Cloudburst",
+      action: "jett_smoke",
+    },
     {
       id: "updraft",
       src: "/agents/jett/updraft.png",
@@ -305,12 +311,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       src: "/agents/jett/tailwind.png",
       name: "Tailwind",
       action: "draggable",
-    },
-    {
-      id: "cloudburst",
-      src: "/agents/jett/cloudburst.png",
-      name: "Cloudburst",
-      action: "jett_smoke",
     },
     {
       id: "blade_storm",
@@ -347,6 +347,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   ],
   Killjoy: [
     {
+      id: "nanoswarm",
+      src: "/agents/killjoy/nanoswarm.png",
+      name: "Nanoswarm",
+      action: "kj_molly",
+    },
+    {
       id: "alarmbot",
       src: "/agents/killjoy/alarmbot.png",
       name: "Alarmbot",
@@ -359,12 +365,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "nanoswarm",
-      src: "/agents/killjoy/nanoswarm.png",
-      name: "Nanoswarm",
-      action: "kj_molly",
-    },
-    {
       id: "lockdown",
       src: "/agents/killjoy/lockdown.png",
       name: "Lockdown",
@@ -372,6 +372,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Neon: [
+    {
+      id: "fast_lane",
+      src: "/agents/neon/fast_lane.png",
+      name: "Fast Lane",
+      action: "draggable",
+    },
     {
       id: "relay_bolt",
       src: "/agents/neon/relay_bolt.png",
@@ -385,12 +391,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "fast_lane",
-      src: "/agents/neon/fast_lane.png",
-      name: "Fast Lane",
-      action: "draggable",
-    },
-    {
       id: "overdrive",
       src: "/agents/neon/overdrive.png",
       name: "Overdrive",
@@ -398,6 +398,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Omen: [
+    {
+      id: "shrouded_step",
+      src: "/agents/omen/shrouded_step.png",
+      name: "Shrouded Step",
+      action: "draggable",
+    },
     {
       id: "paranoia",
       src: "/agents/omen/paranoia.png",
@@ -411,12 +417,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "omen_smoke",
     },
     {
-      id: "shrouded_step",
-      src: "/agents/omen/shrouded_step.png",
-      name: "Shrouded Step",
-      action: "draggable",
-    },
-    {
       id: "from_the_shadows",
       src: "/agents/omen/from_the_shadows.png",
       name: "From the Shadows",
@@ -425,9 +425,9 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   ],
   Phoenix: [
     {
-      id: "curveball",
-      src: "/agents/phoenix/curveball.png",
-      name: "Curveball",
+      id: "blaze",
+      src: "/agents/phoenix/blaze.png",
+      name: "Blaze",
       action: "draggable",
     },
     {
@@ -437,9 +437,9 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "phoenix_molly",
     },
     {
-      id: "blaze",
-      src: "/agents/phoenix/blaze.png",
-      name: "Blaze",
+      id: "curveball",
+      src: "/agents/phoenix/curveball.png",
+      name: "Curveball",
       action: "draggable",
     },
     {
@@ -450,6 +450,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Raze: [
+    {
+      id: "boom_bot",
+      src: "/agents/raze/boom_bot.png",
+      name: "Boom Bot",
+      action: "draggable",
+    },
     {
       id: "blast_pack",
       src: "/agents/raze/blast_pack.png",
@@ -463,12 +469,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "boom_bot",
-      src: "/agents/raze/boom_bot.png",
-      name: "Boom Bot",
-      action: "draggable",
-    },
-    {
       id: "showstopper",
       src: "/agents/raze/showstopper.png",
       name: "Showstopper",
@@ -476,6 +476,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Reyna: [
+    {
+      id: "leer",
+      src: "/agents/reyna/leer.png",
+      name: "Leer",
+      action: "draggable",
+    },
     {
       id: "devour",
       src: "/agents/reyna/devour.png",
@@ -489,12 +495,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "leer",
-      src: "/agents/reyna/leer.png",
-      name: "Leer",
-      action: "draggable",
-    },
-    {
       id: "empress",
       src: "/agents/reyna/empress.png",
       name: "Empress",
@@ -502,6 +502,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Sage: [
+    {
+      id: "barrier_orb",
+      src: "/agents/sage/barrier_orb.png",
+      name: "Barrier Orb",
+      action: "draggable",
+    },
     {
       id: "slow_orb",
       src: "/agents/sage/slow_orb.png",
@@ -515,12 +521,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "barrier_orb",
-      src: "/agents/sage/barrier_orb.png",
-      name: "Barrier Orb",
-      action: "draggable",
-    },
-    {
       id: "resurrection",
       src: "/agents/sage/resurrection.png",
       name: "Resurrection",
@@ -528,6 +528,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Skye: [
+    {
+      id: "regrowth",
+      src: "/agents/skye/regrowth.png",
+      name: "Regrowth",
+      action: "skye_heal",
+    },
     {
       id: "trailblazer",
       src: "/agents/skye/trailblazer.png",
@@ -541,12 +547,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "regrowth",
-      src: "/agents/skye/regrowth.png",
-      name: "Regrowth",
-      action: "skye_heal",
-    },
-    {
       id: "seekers",
       src: "/agents/skye/seekers.png",
       name: "Seekers",
@@ -554,6 +554,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Sova: [
+    {
+      id: "owl_drone",
+      src: "/agents/sova/owl_drone.png",
+      name: "Owl Drone",
+      action: "draggable",
+    },
     {
       id: "shock_bolt",
       src: "/agents/sova/shock_bolt.png",
@@ -565,12 +571,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       src: "/agents/sova/recon_bolt.png",
       name: "Recon Bolt",
       action: "sova_dart",
-    },
-    {
-      id: "owl_drone",
-      src: "/agents/sova/owl_drone.png",
-      name: "Owl Drone",
-      action: "draggable",
     },
     {
       id: "hunters_fury",
@@ -587,16 +587,16 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "tejo_drone",
     },
     {
-      id: "guided_salvo",
-      src: "/agents/tejo/guided_salvo.png",
-      name: "Guided Salvo",
-      action: "tejo_missile",
-    },
-    {
       id: "special_delivery",
       src: "/agents/tejo/special_delivery.png",
       name: "Special Delivery",
       action: "tejo_stun",
+    },
+    {
+      id: "guided_salvo",
+      src: "/agents/tejo/guided_salvo.png",
+      name: "Guided Salvo",
+      action: "tejo_missile",
     },
     {
       id: "armageddon",
@@ -606,6 +606,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Viper: [
+    {
+      id: "snake_bite",
+      src: "/agents/viper/snake_bite.png",
+      name: "Snake Bite",
+      action: "viper_molly",
+    },
     {
       id: "poison_cloud",
       src: "/agents/viper/poison_cloud.png",
@@ -619,12 +625,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "snake_bite",
-      src: "/agents/viper/snake_bite.png",
-      name: "Snake Bite",
-      action: "viper_molly",
-    },
-    {
       id: "vipers_pit",
       src: "/agents/viper/viper's_pit.png",
       name: "Viper's Pit",
@@ -632,12 +632,6 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
   Vyse: [
-    {
-      id: "arc_rose",
-      src: "/agents/vyse/arc_rose.png",
-      name: "Arc Rose",
-      action: "draggable",
-    },
     {
       id: "razorvine",
       src: "/agents/vyse/razorvine.png",
@@ -648,6 +642,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "shear",
       src: "/agents/vyse/shear.png",
       name: "Shear",
+      action: "draggable",
+    },
+    {
+      id: "arc_rose",
+      src: "/agents/vyse/arc_rose.png",
+      name: "Arc Rose",
       action: "draggable",
     },
     {
@@ -665,15 +665,15 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "waylay_slow",
     },
     {
-      id: "refract",
-      src: "/agents/waylay/refract.png",
-      name: "Refract",
-      action: "draggable",
-    },
-    {
       id: "lightspeed",
       src: "/agents/waylay/lightspeed.png",
       name: "Lightspeed",
+      action: "draggable",
+    },
+    {
+      id: "refract",
+      src: "/agents/waylay/refract.png",
+      name: "Refract",
       action: "draggable",
     },
     {
@@ -691,15 +691,15 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "draggable",
     },
     {
-      id: "gatecrash",
-      src: "/agents/yoru/gatecrash.png",
-      name: "Gatecrash",
-      action: "draggable",
-    },
-    {
       id: "blindside",
       src: "/agents/yoru/blindside.png",
       name: "Blindside",
+      action: "draggable",
+    },
+    {
+      id: "gatecrash",
+      src: "/agents/yoru/gatecrash.png",
+      name: "Gatecrash",
       action: "draggable",
     },
     {
