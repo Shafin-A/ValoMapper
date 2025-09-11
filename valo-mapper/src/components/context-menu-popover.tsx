@@ -55,7 +55,6 @@ export const ContextMenuPopover = ({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
             onClick={onDuplicate}
             title={`Duplicate ${itemType === "agent" ? "Agent" : "Ability"}`}
           >
@@ -68,7 +67,6 @@ export const ContextMenuPopover = ({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
             onClick={onToggleAlly}
             title={currentItem?.isAlly ? "Toggle Enemy" : "Toggle Ally"}
           >
@@ -79,9 +77,8 @@ export const ContextMenuPopover = ({
             className="data-[orientation=vertical]:h-6"
           />
           <Button
-            variant="ghost"
+            variant="destructiveGhost"
             size="sm"
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={onDelete}
             title={`Delete ${itemType === "agent" ? "Agent" : "Ability"}`}
           >
