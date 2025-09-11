@@ -12,7 +12,7 @@ import { Vector2d } from "konva/lib/types";
 import { Copy, Heart, HeartCrack, Trash2 } from "lucide-react";
 import { useRef } from "react";
 import { Image as KonvaImage, Layer, Stage } from "react-konva";
-import { AbilityIcon, CanvasIcon } from "./canvas";
+import { CanvasIcon, AbilityIcon } from "./canvas-icons";
 
 type MapStageProps = {
   width: number;
