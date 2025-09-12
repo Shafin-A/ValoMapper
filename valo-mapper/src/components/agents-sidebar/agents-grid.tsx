@@ -76,22 +76,27 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                 <TooltipContent>{agent.name}</TooltipContent>
               </Tooltip>
 
-              <Toggle
-                size="icon"
-                className="absolute -top-2 -right-2 rounded-full"
-                pressed={selectedAgentAbilities?.name === agent.name}
-                onClick={() => {
-                  setSelectedCanvasIcon(null);
-                  if (selectedAgentAbilities?.name === agent.name) {
-                    setSelectedAgentAbilities(null);
-                    return;
-                  }
-                  setSelectedAgentAbilities(agent);
-                }}
-              >
-                <EllipsisVertical />
-                <span className="sr-only">Abilities</span>
-              </Toggle>
+              <Tooltip delayDuration={700}>
+                <TooltipTrigger asChild>
+                  <Toggle
+                    size="icon"
+                    className="absolute -top-2 -right-2 rounded-full"
+                    pressed={selectedAgentAbilities?.name === agent.name}
+                    onClick={() => {
+                      setSelectedCanvasIcon(null);
+                      if (selectedAgentAbilities?.name === agent.name) {
+                        setSelectedAgentAbilities(null);
+                        return;
+                      }
+                      setSelectedAgentAbilities(agent);
+                    }}
+                  >
+                    <EllipsisVertical />
+                    <span className="sr-only">Abilities</span>
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent>Abilities</TooltipContent>
+              </Tooltip>
             </div>
           );
         })}
