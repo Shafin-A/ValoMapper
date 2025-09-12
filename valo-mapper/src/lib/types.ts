@@ -41,7 +41,7 @@ export type AbilityIconItem = {
 export type AbilityIconConfig = AbilityIconItem[];
 
 export type AbilityAction =
-  | "draggable"
+  | "icon"
   | "astra_stun"
   | "astra_suck"
   | "astra_smoke"

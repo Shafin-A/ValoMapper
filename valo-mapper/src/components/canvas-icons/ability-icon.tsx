@@ -51,7 +51,7 @@ const actionRenderers: Record<
   AbilityAction,
   (props: AbilityIconProps) => ReactNode
 > = {
-  draggable: (props) => <CanvasIcon {...props} />,
+  icon: (props) => <CanvasIcon {...props} />,
   astra_stun: renderCircleAbility,
   astra_suck: renderCircleAbility,
   astra_smoke: renderCircleAbility,
