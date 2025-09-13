@@ -114,8 +114,12 @@ export const MapStage = ({
               image={mapImage}
               width={mapSize}
               height={mapSize}
-              x={mapPosition.x}
-              y={mapPosition.y}
+              x={mapPosition.x + mapSize / 2}
+              y={mapPosition.y + mapSize / 2}
+              // rotation={180}
+              offsetX={mapSize / 2}
+              offsetY={mapSize / 2}
+              scale={{ x: 1.25, y: 1.25 }}
             />
           )}
         </Layer>
