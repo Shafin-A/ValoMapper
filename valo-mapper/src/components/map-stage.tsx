@@ -78,6 +78,7 @@ export const MapStage = ({
         action={ability.action}
         x={ability.x}
         y={ability.y}
+        rotation={ability.currentRotation}
         src={ability.src}
         draggable
         onDragEnd={(e) => handleDragEnd(e, ability, setAbilitiesOnCanvas)}

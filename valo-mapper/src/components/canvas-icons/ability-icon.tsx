@@ -6,11 +6,12 @@ import {
   CanvasIcon,
   CanvasIconProps,
   CanvasCircleIcon,
+  CanvasLineIcon,
 } from "@/components/canvas-icons";
-import { CanvasLineIcon } from "./canvas-line-icon";
 
 interface AbilityIconProps extends CanvasIconProps {
   action: AbilityAction;
+  rotation?: number;
 }
 
 const getCircleConfig = (action: AbilityAction) => {

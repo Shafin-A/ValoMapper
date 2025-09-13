@@ -19,6 +19,7 @@ export type AgentCanvas = CanvasItem & {
 
 export type AbilityCanvas = CanvasItem & {
   action: AbilityAction;
+  currentRotation?: number;
 };
 
 export type AgentRole = "Duelist" | "Controller" | "Initiator" | "Sentinel";

@@ -1,4 +1,5 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
+import { useCanvas } from "@/contexts/canvas-context";
 import {
   handleMouseOutDefaultCursor,
   handleMouseOverGrabCursor,
@@ -14,6 +15,7 @@ interface CanvasLineIconProps extends CanvasIconProps {
   lineLength: number;
   lineStrokeWidth?: number;
   stroke: string;
+  rotation?: number;
   onRotationChange?: (rotation: number) => void;
   showRotationHandle?: boolean;
   rotationHandleRadius?: number;
@@ -40,6 +42,7 @@ export const CanvasLineIcon = ({
   stroke,
   width,
   height,
+  rotation = 0,
   onRotationChange,
   showRotationHandle = true,
   rotationHandleRadius = 12,
@@ -51,7 +54,10 @@ export const CanvasLineIcon = ({
 }: CanvasLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const [isRotating, setIsRotating] = useState(false);
-  const [currentRotation, setCurrentRotation] = useState(0);
+  const [currentRotation, setCurrentRotation] = useState(rotation);
+  const rotationRef = useRef<number>(rotation);
+
+  const { setAbilitiesOnCanvas } = useCanvas();
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
@@ -101,11 +107,27 @@ export const CanvasLineIcon = ({
       const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
 
       setCurrentRotation(angle);
+      rotationRef.current = angle;
       onRotationChange?.(angle);
     };
 
     const handleRotationMouseUp = () => {
       setIsRotating(false);
+
+      if (setAbilitiesOnCanvas) {
+        setAbilitiesOnCanvas((prev) => {
+          const index = prev.findIndex((ability) => ability.id === id);
+          if (index === -1) return prev;
+
+          const copy = prev.slice();
+          const [item] = copy.splice(index, 1);
+          const updatedItem = { ...item, currentRotation: rotationRef.current };
+          copy.push(updatedItem);
+
+          return copy;
+        });
+      }
+
       stage.off("mousemove", handleRotationMouseMove);
       stage.off("mouseup", handleRotationMouseUp);
     };
