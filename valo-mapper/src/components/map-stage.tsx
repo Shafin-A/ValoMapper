@@ -124,8 +124,8 @@ export const MapStage = ({
           )}
         </Layer>
         <Layer>
-          {renderAgents()}
           {renderAbilities()}
+          {renderAgents()}
         </Layer>
       </Stage>
 

@@ -57,9 +57,17 @@ export const CanvasCircleIcon = ({
     }
   };
 
+  const handleDragStart = () => {
+    if (groupRef.current) {
+      groupRef.current.draggable(draggable);
+      groupRef.current.opacity(0.7);
+    }
+  };
+
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
     if (groupRef.current) {
       groupRef.current.draggable(draggable);
+      groupRef.current.opacity(1);
     }
     onDragEnd?.(e);
   };
@@ -71,6 +79,7 @@ export const CanvasCircleIcon = ({
       y={y}
       draggable={draggable}
       onMouseDown={handleMouseDown}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <Circle
@@ -78,6 +87,7 @@ export const CanvasCircleIcon = ({
         strokeWidth={strokeWidth}
         fill={fill}
         stroke={stroke}
+        listening={false}
       />
       {outerCircleRadius && (
         <Circle
@@ -85,6 +95,7 @@ export const CanvasCircleIcon = ({
           strokeWidth={strokeWidth}
           stroke={"white"}
           opacity={0.3}
+          listening={false}
         />
       )}
       <CanvasIcon

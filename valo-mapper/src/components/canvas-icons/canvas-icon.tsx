@@ -2,6 +2,7 @@ import { Group, Image as KonvaImage, Rect } from "react-konva";
 import useImage from "use-image";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
+import { useRef } from "react";
 
 interface CanvasIconProps {
   id: string;
@@ -43,10 +44,21 @@ export const CanvasIcon = ({
   onDragEnd,
 }: CanvasIconProps) => {
   const [image] = useImage(src);
+  const groupRef = useRef<Konva.Group>(null);
+
+  const handleOnDragStart = () => {
+    if (groupRef.current) groupRef.current.opacity(0.5);
+  };
+
+  const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
+    if (groupRef.current) groupRef.current.opacity(1);
+    onDragEnd?.(e);
+  };
 
   return (
     <Group
       id={id}
+      ref={groupRef}
       x={x}
       y={y}
       draggable={draggable}
@@ -54,7 +66,8 @@ export const CanvasIcon = ({
       onMouseOut={handleMouseOut}
       offsetX={width / 2}
       offsetY={height / 2}
-      onDragEnd={onDragEnd}
+      onDragStart={handleOnDragStart}
+      onDragEnd={handleDragEnd}
     >
       <Rect
         width={width}

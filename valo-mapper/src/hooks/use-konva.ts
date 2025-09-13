@@ -171,13 +171,17 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     const newX = e.target.x();
     const newY = e.target.y();
 
-    setIconsOnCanvas((prev) =>
-      prev.map((agentInCanvas) =>
-        agentInCanvas.id === icon.id
-          ? { ...agentInCanvas, x: newX, y: newY }
-          : agentInCanvas
-      )
-    );
+    setIconsOnCanvas((prev) => {
+      const index = prev.findIndex((i) => i.id === icon.id);
+      if (index === -1) return prev;
+
+      const copy = prev.slice();
+      const [item] = copy.splice(index, 1);
+      const updatedItem = { ...item, x: newX, y: newY };
+      copy.push(updatedItem);
+
+      return copy;
+    });
   };
 
   const handleContextMenu = useCallback(
