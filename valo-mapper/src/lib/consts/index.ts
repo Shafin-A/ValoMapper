@@ -10,3 +10,4 @@ export { ROLE_ICONS } from "./misc/consts";
 export { AGENTS } from "./agents/consts";
 export { CIRCLE_ABILITY_CONFIGS } from "./configs/circle-ability/consts";
 export { AGENT_ICON_CONFIGS } from "./configs/agent-icon/consts";
+export { LINE_ABILITY_CONFIGS } from "./configs/line-ability/consts";

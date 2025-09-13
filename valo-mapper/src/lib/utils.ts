@@ -1,7 +1,11 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { AbilityAction, Agent, CircleAbility } from "./types";
-import { CIRCLE_ABILITY_CONFIGS, PIXELS_PER_METER } from "./consts";
+import { AbilityAction, Agent, CircleAbility, LineAbility } from "@/lib/types";
+import {
+  CIRCLE_ABILITY_CONFIGS,
+  LINE_ABILITY_CONFIGS,
+  PIXELS_PER_METER,
+} from "@/lib/consts";
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -27,6 +31,10 @@ export const isCircleAbility = (
   action: AbilityAction
 ): action is CircleAbility => {
   return action in CIRCLE_ABILITY_CONFIGS;
+};
+
+export const isLineAbility = (action: AbilityAction): action is LineAbility => {
+  return action in LINE_ABILITY_CONFIGS;
 };
 
 export const isAgent = (obj: unknown): obj is Agent => {

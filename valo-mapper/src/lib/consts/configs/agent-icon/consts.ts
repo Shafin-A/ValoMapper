@@ -24,7 +24,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "cosmic_divide",
       src: "/agents/astra/cosmic_divide.png",
       name: "Cosmic Divide",
-      action: "icon",
+      action: "astra_ult",
     },
     {
       id: "astra_passive",
@@ -622,7 +622,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "toxic_screen",
       src: "/agents/viper/toxic_screen.png",
       name: "Toxic Screen",
-      action: "icon",
+      action: "viper_wall",
     },
     {
       id: "vipers_pit",

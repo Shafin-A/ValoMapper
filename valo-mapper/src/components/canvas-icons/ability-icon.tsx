@@ -1,26 +1,16 @@
-import { KonvaEventObject } from "konva/lib/Node";
 import { ReactNode } from "react";
 import { AbilityAction } from "@/lib/types";
-import { isCircleAbility, mToPixels } from "@/lib/utils";
-import { CIRCLE_ABILITY_CONFIGS } from "@/lib/consts";
-import { CanvasCircleIcon } from "./canvas-circle-icon";
-import { CanvasIcon } from "./canvas-icon";
+import { isCircleAbility, isLineAbility, mToPixels } from "@/lib/utils";
+import { CIRCLE_ABILITY_CONFIGS, LINE_ABILITY_CONFIGS } from "@/lib/consts";
+import {
+  CanvasIcon,
+  CanvasIconProps,
+  CanvasCircleIcon,
+} from "@/components/canvas-icons";
+import { CanvasLineIcon } from "./canvas-line-icon";
 
-interface AbilityIconProps {
-  id: string;
-  isAlly: boolean;
+interface AbilityIconProps extends CanvasIconProps {
   action: AbilityAction;
-  x: number;
-  y: number;
-  src: string;
-  draggable?: boolean;
-  onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
-  width: number;
-  height: number;
-  opacity: number;
-  radius: number;
-  allyColor: string;
-  enemyColor: string;
 }
 
 const getCircleConfig = (action: AbilityAction) => {
@@ -50,11 +40,41 @@ const renderCircleAbility = (props: AbilityIconProps) => {
   );
 };
 
+const getLineConfig = (action: AbilityAction) => {
+  if (isLineAbility(action)) {
+    return {
+      lineLength: LINE_ABILITY_CONFIGS[action].lineLength,
+      stroke: LINE_ABILITY_CONFIGS[action].stroke,
+      strokeWidth: LINE_ABILITY_CONFIGS[action].strokeWidth,
+      rotation: LINE_ABILITY_CONFIGS[action].rotation,
+    };
+  }
+
+  throw new Error(`${action} is not a line ability`);
+};
+
+const renderLineAbility = (props: AbilityIconProps) => {
+  const { lineLength, stroke, rotation, strokeWidth } = getLineConfig(
+    props.action
+  );
+
+  return (
+    <CanvasLineIcon
+      lineLength={mToPixels(lineLength)}
+      stroke={stroke}
+      rotation={rotation}
+      strokeWidth={strokeWidth}
+      {...props}
+    />
+  );
+};
+
 const actionRenderers: Record<
   AbilityAction,
   (props: AbilityIconProps) => ReactNode
 > = {
   icon: (props) => <CanvasIcon {...props} />,
+  astra_ult: renderLineAbility,
   astra_stun: renderCircleAbility,
   astra_suck: renderCircleAbility,
   astra_smoke: renderCircleAbility,
@@ -91,6 +111,7 @@ const actionRenderers: Record<
   tejo_missile: renderCircleAbility,
   viper_molly: renderCircleAbility,
   viper_smoke: renderCircleAbility,
+  viper_wall: renderLineAbility,
   vyse_slow: renderCircleAbility,
   vyse_ult: renderCircleAbility,
   waylay_slow: renderCircleAbility,

@@ -4,7 +4,7 @@ import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useRef } from "react";
 
-interface CanvasIconProps {
+export interface CanvasIconProps {
   id: string;
   isAlly: boolean;
   x: number;

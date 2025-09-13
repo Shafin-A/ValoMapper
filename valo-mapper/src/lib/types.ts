@@ -45,6 +45,7 @@ export type AbilityAction =
   | "astra_stun"
   | "astra_suck"
   | "astra_smoke"
+  | "astra_ult"
   | "brim_smoke"
   | "brim_stim"
   | "brim_molly"
@@ -78,9 +79,12 @@ export type AbilityAction =
   | "tejo_missile"
   | "viper_molly"
   | "viper_smoke"
+  | "viper_wall"
   | "vyse_slow"
   | "vyse_ult"
   | "waylay_slow";
+
+export type LineAbility = Extract<AbilityAction, "astra_ult" | "viper_wall">;
 
 export type CircleAbility = Extract<
   AbilityAction,

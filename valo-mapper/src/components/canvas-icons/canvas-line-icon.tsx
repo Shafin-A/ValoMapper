@@ -1,19 +1,17 @@
-import { Group, Circle } from "react-konva";
+import { Group, Line } from "react-konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useRef } from "react";
 import Konva from "konva";
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
 
-interface CanvasCircleIconProps extends CanvasIconProps {
-  boxRadius: number;
-  circleRadius: number;
-  outerCircleRadius?: number;
+interface CanvasLineIconProps extends CanvasIconProps {
+  lineLength: number;
   strokeWidth?: number;
   stroke: string;
-  fill: string;
+  rotation?: number;
 }
 
-export const CanvasCircleIcon = ({
+export const CanvasLineIcon = ({
   id,
   isAlly,
   x,
@@ -22,23 +20,22 @@ export const CanvasCircleIcon = ({
   draggable = true,
   onDragEnd,
   opacity,
-  boxRadius,
-  circleRadius,
-  outerCircleRadius,
+  radius,
+  lineLength,
   allyColor,
   enemyColor,
-  strokeWidth = 2,
+  strokeWidth = 6,
   stroke,
-  fill,
   width,
   height,
-}: CanvasCircleIconProps) => {
+  rotation = 0,
+}: CanvasLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
     const className = e.target.getClassName();
-    if (className === "Rect" || className === "Image") {
+    if (className === "Line" || className === "Image") {
       groupRef.current.draggable(true);
     } else {
       groupRef.current.draggable(false);
@@ -60,6 +57,14 @@ export const CanvasCircleIcon = ({
     onDragEnd?.(e);
   };
 
+  const halfLength = lineLength / 2;
+  const radians = (rotation * Math.PI) / 180;
+
+  const startX = -halfLength * Math.cos(radians);
+  const startY = -halfLength * Math.sin(radians);
+  const endX = halfLength * Math.cos(radians);
+  const endY = halfLength * Math.sin(radians);
+
   return (
     <Group
       id={id}
@@ -71,22 +76,12 @@ export const CanvasCircleIcon = ({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <Circle
-        radius={circleRadius}
+      <Line
+        points={[startX, startY, endX, endY]}
         strokeWidth={strokeWidth}
-        fill={fill}
         stroke={stroke}
-        listening={false}
+        listening={true}
       />
-      {outerCircleRadius && (
-        <Circle
-          radius={outerCircleRadius}
-          strokeWidth={strokeWidth}
-          stroke={"white"}
-          opacity={0.3}
-          listening={false}
-        />
-      )}
       <CanvasIcon
         id={id}
         isAlly={isAlly}
@@ -96,7 +91,7 @@ export const CanvasCircleIcon = ({
         draggable={false}
         width={width}
         height={height}
-        radius={boxRadius}
+        radius={radius}
         opacity={opacity}
         allyColor={allyColor}
         enemyColor={enemyColor}
