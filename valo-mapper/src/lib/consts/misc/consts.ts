@@ -4,6 +4,8 @@ export const ASCENT_MAP = "/maps/ascent.webp";
 export const SIDEBAR_WIDTH = "20rem";
 export const SCALE_FACTOR = 1.25;
 export const MAP_SIZE = 1000;
+export const MAX_ZOOM_SCALE = 4;
+export const MIN_ZOOM_SCALE = 1;
 
 export const ROLE_ICONS: Record<string, string> = {
   Controller: "/roles/controller.png",

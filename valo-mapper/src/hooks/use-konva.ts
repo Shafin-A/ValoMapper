@@ -1,5 +1,6 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import { SCALE_FACTOR, TEMP_DRAG_ID } from "@/lib/consts";
+import { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from "@/lib/consts";
 import { AbilityCanvas, AgentCanvas } from "@/lib/types";
 import { getNextId, isAgent } from "@/lib/utils";
 import { KonvaEventObject } from "konva/lib/Node";
@@ -56,11 +57,16 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       const newScale =
         direction < 0 ? oldScale * SCALE_FACTOR : oldScale / SCALE_FACTOR;
 
-      stage.scale({ x: newScale, y: newScale });
+      const clampedNewScale = Math.max(
+        MIN_ZOOM_SCALE,
+        Math.min(MAX_ZOOM_SCALE, newScale)
+      );
+
+      stage.scale({ x: clampedNewScale, y: clampedNewScale });
 
       const newPos: Vector2d = {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
+        x: pointer.x - mousePointTo.x * clampedNewScale,
+        y: pointer.y - mousePointTo.y * clampedNewScale,
       };
 
       stage.position(newPos);
