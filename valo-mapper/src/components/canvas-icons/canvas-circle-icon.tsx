@@ -74,6 +74,7 @@ export const CanvasCircleIcon = ({
 
   return (
     <Group
+      id={id}
       ref={groupRef}
       x={x}
       y={y}

@@ -74,35 +74,23 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     [stageRef]
   );
 
-  const updateIconPosition = useCallback(
-    (x: number, y: number) => {
-      if (!selectedCanvasIcon) return;
-
-      if (isAgent(selectedCanvasIcon)) {
-        setAgentsOnCanvas((prev) =>
-          prev.map((agent) =>
-            agent.id === TEMP_DRAG_ID ? { ...agent, x, y } : agent
-          )
-        );
-      } else {
-        setAbilitiesOnCanvas((prev) =>
-          prev.map((ability) =>
-            ability.id === TEMP_DRAG_ID ? { ...ability, x, y } : ability
-          )
-        );
-      }
-    },
-    [selectedCanvasIcon, setAbilitiesOnCanvas, setAgentsOnCanvas]
-  );
-
   const handleStageClick = useCallback(() => {
     if (!selectedCanvasIcon) return;
+
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const temp_drag_icon = stage.findOne(`#${TEMP_DRAG_ID}`);
+
+    if (!temp_drag_icon) return;
+
+    const pos = temp_drag_icon.position();
 
     if (isAgent(selectedCanvasIcon)) {
       setAgentsOnCanvas((prev) => {
         return prev.map((agent) =>
           agent.id === TEMP_DRAG_ID
-            ? { ...agent, id: getNextId("agent") }
+            ? { ...agent, id: getNextId("agent"), x: pos.x, y: pos.y }
             : agent
         );
       });
@@ -110,7 +98,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       setAbilitiesOnCanvas((prev) => {
         return prev.map((ability) =>
           ability.id === TEMP_DRAG_ID
-            ? { ...ability, id: getNextId("ability") }
+            ? { ...ability, id: getNextId("ability"), x: pos.x, y: pos.y }
             : ability
         );
       });
@@ -122,6 +110,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setAbilitiesOnCanvas,
     setAgentsOnCanvas,
     setSelectedCanvasIcon,
+    stageRef,
   ]);
 
   const handleStageMouseMove = useCallback(() => {
@@ -139,8 +128,12 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     const x = (pos.x - stagePos.x) / scale;
     const y = (pos.y - stagePos.y) / scale;
 
-    updateIconPosition(x, y);
-  }, [selectedCanvasIcon, stageRef, updateIconPosition]);
+    const temp_drag_icon = stage.findOne(`#${TEMP_DRAG_ID}`);
+
+    if (!temp_drag_icon) return;
+
+    temp_drag_icon.position({ x, y });
+  }, [selectedCanvasIcon, stageRef]);
 
   const handleStageMouseLeave = useCallback(() => {
     if (!selectedCanvasIcon) return;
