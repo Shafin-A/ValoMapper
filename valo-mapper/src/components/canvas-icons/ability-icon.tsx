@@ -46,7 +46,7 @@ const getLineConfig = (action: AbilityAction) => {
       lineLength: LINE_ABILITY_CONFIGS[action].lineLength,
       stroke: LINE_ABILITY_CONFIGS[action].stroke,
       strokeWidth: LINE_ABILITY_CONFIGS[action].strokeWidth,
-      rotation: LINE_ABILITY_CONFIGS[action].rotation,
+      iconPosition: LINE_ABILITY_CONFIGS[action].iconPosition,
     };
   }
 
@@ -54,7 +54,7 @@ const getLineConfig = (action: AbilityAction) => {
 };
 
 const renderLineAbility = (props: AbilityIconProps) => {
-  const { lineLength, stroke, rotation, strokeWidth } = getLineConfig(
+  const { lineLength, stroke, iconPosition, strokeWidth } = getLineConfig(
     props.action
   );
 
@@ -62,7 +62,7 @@ const renderLineAbility = (props: AbilityIconProps) => {
     <CanvasLineIcon
       lineLength={mToPixels(lineLength)}
       stroke={stroke}
-      rotation={rotation}
+      iconPosition={iconPosition}
       lineStrokeWidth={strokeWidth}
       {...props}
     />

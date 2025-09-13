@@ -8,17 +8,19 @@ import type { KonvaEventObject } from "konva/lib/Node";
 import { useRef, useState } from "react";
 import { Circle, Group, Line } from "react-konva";
 
+type IconPosition = "middle" | "start";
+
 interface CanvasLineIconProps extends CanvasIconProps {
   lineLength: number;
   lineStrokeWidth?: number;
   stroke: string;
-  rotation?: number;
   onRotationChange?: (rotation: number) => void;
   showRotationHandle?: boolean;
   rotationHandleRadius?: number;
   rotationHandleColor?: string;
   rotationHandleStrokeColor?: string;
   rotationHandleDistance?: number;
+  iconPosition?: IconPosition;
 }
 
 export const CanvasLineIcon = ({
@@ -38,7 +40,6 @@ export const CanvasLineIcon = ({
   stroke,
   width,
   height,
-  rotation = 0,
   onRotationChange,
   showRotationHandle = true,
   rotationHandleRadius = 12,
@@ -46,10 +47,11 @@ export const CanvasLineIcon = ({
   rotationHandleStrokeColor = "#ffffff",
   rotationHandleDistance = 150,
   strokeWidth,
+  iconPosition = "start",
 }: CanvasLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const [isRotating, setIsRotating] = useState(false);
-  const [currentRotation, setCurrentRotation] = useState(rotation);
+  const [currentRotation, setCurrentRotation] = useState(0);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
@@ -115,10 +117,16 @@ export const CanvasLineIcon = ({
   const halfLength = lineLength / 2;
   const radians = (currentRotation * Math.PI) / 180;
 
-  const startX = -halfLength * Math.cos(radians);
-  const startY = -halfLength * Math.sin(radians);
-  const endX = halfLength * Math.cos(radians);
-  const endY = halfLength * Math.sin(radians);
+  const startX = iconPosition === "start" ? 0 : -halfLength * Math.cos(radians);
+  const startY = iconPosition === "start" ? 0 : -halfLength * Math.sin(radians);
+  const endX =
+    iconPosition === "start"
+      ? lineLength * Math.cos(radians)
+      : halfLength * Math.cos(radians);
+  const endY =
+    iconPosition === "start"
+      ? lineLength * Math.sin(radians)
+      : halfLength * Math.sin(radians);
 
   const handleX = rotationHandleDistance * Math.cos(radians);
   const handleY = rotationHandleDistance * Math.sin(radians);
