@@ -1,8 +1,12 @@
-import { Group, Image as KonvaImage, Rect } from "react-konva";
-import useImage from "use-image";
+import {
+  handleMouseOutDefaultCursor,
+  handleMouseOverGrabCursor,
+} from "@/lib/utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useRef } from "react";
+import { Group, Image as KonvaImage, Rect } from "react-konva";
+import useImage from "use-image";
 
 export interface CanvasIconProps {
   id: string;
@@ -19,14 +23,6 @@ export interface CanvasIconProps {
   enemyColor: string;
   onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
 }
-
-const handleMouseOver = (e: Konva.KonvaEventObject<MouseEvent>) => {
-  e.target.getStage()!.container().style.cursor = "grab";
-};
-
-const handleMouseOut = (e: Konva.KonvaEventObject<MouseEvent>) => {
-  e.target.getStage()!.container().style.cursor = "default";
-};
 
 export const CanvasIcon = ({
   id,
@@ -62,8 +58,8 @@ export const CanvasIcon = ({
       x={x}
       y={y}
       draggable={draggable}
-      onMouseOver={handleMouseOver}
-      onMouseOut={handleMouseOut}
+      onMouseOver={handleMouseOverGrabCursor}
+      onMouseOut={handleMouseOutDefaultCursor}
       offsetX={width / 2}
       offsetY={height / 2}
       onDragStart={handleOnDragStart}

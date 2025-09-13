@@ -6,6 +6,7 @@ import {
   LINE_ABILITY_CONFIGS,
   PIXELS_PER_METER,
 } from "@/lib/consts";
+import { KonvaEventObject } from "konva/lib/Node";
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -50,4 +51,14 @@ export const isAgent = (obj: unknown): obj is Agent => {
 export const getNextId = (type: "agent" | "ability") => {
   const timestamp = Date.now().toString(36);
   return `${type}-${timestamp}`;
+};
+
+export const handleMouseOverGrabCursor = (e: KonvaEventObject<MouseEvent>) => {
+  e.target.getStage()!.container().style.cursor = "grab";
+};
+
+export const handleMouseOutDefaultCursor = (
+  e: KonvaEventObject<MouseEvent>
+) => {
+  e.target.getStage()!.container().style.cursor = "default";
 };
