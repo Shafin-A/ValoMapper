@@ -2,7 +2,11 @@ import { CircleAbility } from "@/lib/types";
 
 export const CIRCLE_ABILITY_CONFIGS: Record<
   CircleAbility,
-  { radius: number; colors: { stroke: string; fill: string } }
+  {
+    radius: number;
+    colors: { stroke: string; fill: string };
+    activeRadius?: number; // KJ ability radius proximity to remain active
+  }
 > = {
   astra_stun: {
     radius: 4.75,
@@ -37,7 +41,7 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     colors: { stroke: "#d37c48", fill: "#d37c4880" },
   },
   chamber_tp: {
-    radius: 18,
+    radius: 20,
     colors: { stroke: "#fcbf07", fill: "#fcbf0780" },
   },
   clove_meddle: {
@@ -89,19 +93,20 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     colors: { stroke: "#fe53ff", fill: "#8935af80" },
   },
   kayo_ult: {
-    radius: 42.5,
+    radius: 45,
     colors: { stroke: "#9001f0", fill: "#7cffff80" },
   },
   kj_alarmbot: {
     radius: 5.5,
     colors: { stroke: "#5bffff", fill: "#925ab880" },
+    activeRadius: 42.5,
   },
   kj_molly: {
     radius: 4.5,
     colors: { stroke: "#5bffff", fill: "#925ab880" },
   },
   kj_ult: {
-    radius: 32.5,
+    radius: 34.5,
     colors: { stroke: "#3e8174", fill: "#2d519380" },
   },
   neon_stun: {
@@ -113,11 +118,11 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     colors: { stroke: "#201936", fill: "#20193680" },
   },
   phoenix_molly: {
-    radius: 4.5,
+    radius: 4.75,
     colors: { stroke: "#e25457", fill: "#ff9c7b80" },
   },
   skye_heal: {
-    radius: 18,
+    radius: 20,
     colors: { stroke: "#669835", fill: "#bfd93a80" },
   },
   sova_shock_dart: {
@@ -153,7 +158,7 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     colors: { stroke: "#2c2e58", fill: "#ea8a7d80" },
   },
   vyse_ult: {
-    radius: 32.5,
+    radius: 34.5,
     colors: { stroke: "#2c2e58", fill: "#bfc0d780" },
   },
   waylay_slow: {

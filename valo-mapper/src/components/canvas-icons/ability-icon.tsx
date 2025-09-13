@@ -28,6 +28,7 @@ const getCircleConfig = (action: AbilityAction) => {
     return {
       radius: CIRCLE_ABILITY_CONFIGS[action].radius,
       colors: CIRCLE_ABILITY_CONFIGS[action].colors,
+      activeRadius: CIRCLE_ABILITY_CONFIGS[action].activeRadius,
     };
   }
 
@@ -35,13 +36,15 @@ const getCircleConfig = (action: AbilityAction) => {
 };
 
 const renderCircleAbility = (props: AbilityIconProps) => {
-  const { radius, colors } = getCircleConfig(props.action);
+  const { radius, colors, activeRadius } = getCircleConfig(props.action);
 
   return (
     <CanvasCircleIcon
-      outerRadius={mToPixels(radius)}
+      circleRadius={mToPixels(radius)}
       stroke={colors.stroke}
       fill={colors.fill}
+      boxRadius={props.radius}
+      outerCircleRadius={activeRadius ? mToPixels(activeRadius) : undefined}
       {...props}
     />
   );

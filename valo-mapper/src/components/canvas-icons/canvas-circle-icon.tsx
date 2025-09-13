@@ -13,8 +13,9 @@ interface CanvasCircleIconProps {
   draggable?: boolean;
   onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
   opacity: number;
-  radius: number;
-  outerRadius: number;
+  boxRadius: number;
+  circleRadius: number;
+  outerCircleRadius?: number;
   allyColor: string;
   enemyColor: string;
   strokeWidth?: number;
@@ -33,8 +34,9 @@ export const CanvasCircleIcon = ({
   draggable = true,
   onDragEnd,
   opacity,
-  radius,
-  outerRadius,
+  boxRadius,
+  circleRadius,
+  outerCircleRadius,
   allyColor,
   enemyColor,
   strokeWidth = 2,
@@ -72,11 +74,19 @@ export const CanvasCircleIcon = ({
       onDragEnd={handleDragEnd}
     >
       <Circle
-        radius={outerRadius}
+        radius={circleRadius}
         strokeWidth={strokeWidth}
         fill={fill}
         stroke={stroke}
       />
+      {outerCircleRadius && (
+        <Circle
+          radius={outerCircleRadius}
+          strokeWidth={strokeWidth}
+          stroke={"white"}
+          opacity={0.3}
+        />
+      )}
       <CanvasIcon
         id={id}
         isAlly={isAlly}
@@ -86,7 +96,7 @@ export const CanvasCircleIcon = ({
         draggable={false}
         width={width}
         height={height}
-        radius={radius}
+        radius={boxRadius}
         opacity={opacity}
         allyColor={allyColor}
         enemyColor={enemyColor}
