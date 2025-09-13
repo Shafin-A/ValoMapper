@@ -25,7 +25,8 @@ export type AgentRole = "Duelist" | "Controller" | "Initiator" | "Sentinel";
 
 export type IconSettings = {
   scale: number;
-  boxOpacity: number;
+  borderOpacity: number;
+  borderWidth: number;
   radius: number;
   allyColor: string;
   enemyColor: string;

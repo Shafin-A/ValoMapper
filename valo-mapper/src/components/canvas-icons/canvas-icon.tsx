@@ -5,7 +5,7 @@ import {
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useRef } from "react";
-import { Group, Image as KonvaImage, Rect } from "react-konva";
+import { Group, Image as KonvaImage } from "react-konva";
 import useImage from "use-image";
 
 export interface CanvasIconProps {
@@ -17,10 +17,12 @@ export interface CanvasIconProps {
   draggable?: boolean;
   width: number;
   height: number;
-  opacity: number;
+  borderOpacity: number;
   radius: number;
   allyColor: string;
   enemyColor: string;
+  fill?: string;
+  strokeWidth: number;
   onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
 }
 
@@ -34,9 +36,11 @@ export const CanvasIcon = ({
   width,
   height,
   radius,
-  opacity,
+  borderOpacity,
   allyColor,
   enemyColor,
+  fill = "#1b1b1b",
+  strokeWidth,
   onDragEnd,
 }: CanvasIconProps) => {
   const [image] = useImage(src);
@@ -50,6 +54,10 @@ export const CanvasIcon = ({
     if (groupRef.current) groupRef.current.opacity(1);
     onDragEnd?.(e);
   };
+
+  const alphaHex = Math.round(borderOpacity * 255)
+    .toString(16)
+    .padStart(2, "0");
 
   return (
     <Group
@@ -65,18 +73,14 @@ export const CanvasIcon = ({
       onDragStart={handleOnDragStart}
       onDragEnd={handleDragEnd}
     >
-      <Rect
-        width={width}
-        height={height}
-        fill={isAlly ? allyColor : enemyColor}
-        cornerRadius={radius}
-        opacity={opacity}
-      />
       <KonvaImage
         image={image}
         width={width}
         height={height}
         cornerRadius={radius}
+        stroke={isAlly ? allyColor + alphaHex : enemyColor + alphaHex}
+        strokeWidth={strokeWidth}
+        fill={fill}
       />
     </Group>
   );

@@ -63,7 +63,7 @@ const renderLineAbility = (props: AbilityIconProps) => {
       lineLength={mToPixels(lineLength)}
       stroke={stroke}
       rotation={rotation}
-      strokeWidth={strokeWidth}
+      lineStrokeWidth={strokeWidth}
       {...props}
     />
   );

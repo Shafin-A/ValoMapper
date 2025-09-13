@@ -51,18 +51,34 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         />
       </div>
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Color Opacity</span>
+        <span className="text-sm font-medium w-20">Border Opacity</span>
         <Slider
-          value={[settings.boxOpacity]}
+          value={[settings.borderOpacity]}
           onValueChange={(value) =>
             onSettingsChange({
               ...settings,
-              boxOpacity: value[0],
+              borderOpacity: value[0],
             })
           }
           min={0}
           max={1}
           step={0.1}
+          className="flex-1"
+        />
+      </div>
+      <div className="flex items-center gap-6 p-2">
+        <span className="text-sm font-medium w-20">Border Width</span>
+        <Slider
+          value={[settings.borderWidth]}
+          onValueChange={(value) =>
+            onSettingsChange({
+              ...settings,
+              borderWidth: value[0],
+            })
+          }
+          min={1}
+          max={10}
+          step={1}
           className="flex-1"
         />
       </div>

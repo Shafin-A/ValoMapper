@@ -8,7 +8,7 @@ interface CanvasCircleIconProps extends CanvasIconProps {
   boxRadius: number;
   circleRadius: number;
   outerCircleRadius?: number;
-  strokeWidth?: number;
+  circleStrokeWidth?: number;
   stroke: string;
   fill: string;
 }
@@ -21,13 +21,14 @@ export const CanvasCircleIcon = ({
   src,
   draggable = true,
   onDragEnd,
-  opacity,
+  borderOpacity,
   boxRadius,
   circleRadius,
   outerCircleRadius,
   allyColor,
   enemyColor,
-  strokeWidth = 2,
+  circleStrokeWidth = 2,
+  strokeWidth,
   stroke,
   fill,
   width,
@@ -38,7 +39,7 @@ export const CanvasCircleIcon = ({
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
     const className = e.target.getClassName();
-    if (className === "Rect" || className === "Image") {
+    if (className === "Image") {
       groupRef.current.draggable(true);
     } else {
       groupRef.current.draggable(false);
@@ -73,7 +74,7 @@ export const CanvasCircleIcon = ({
     >
       <Circle
         radius={circleRadius}
-        strokeWidth={strokeWidth}
+        strokeWidth={circleStrokeWidth}
         fill={fill}
         stroke={stroke}
         listening={false}
@@ -81,8 +82,8 @@ export const CanvasCircleIcon = ({
       {outerCircleRadius && (
         <Circle
           radius={outerCircleRadius}
-          strokeWidth={strokeWidth}
-          stroke={"white"}
+          strokeWidth={circleStrokeWidth}
+          stroke={"#ffffff"}
           opacity={0.3}
           listening={false}
         />
@@ -97,9 +98,10 @@ export const CanvasCircleIcon = ({
         width={width}
         height={height}
         radius={boxRadius}
-        opacity={opacity}
+        borderOpacity={borderOpacity}
         allyColor={allyColor}
         enemyColor={enemyColor}
+        strokeWidth={strokeWidth}
       />
     </Group>
   );

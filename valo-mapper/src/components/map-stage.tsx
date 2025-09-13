@@ -61,7 +61,8 @@ export const MapStage = ({
         onDragEnd={(e) => handleDragEnd(e, agent, setAgentsOnCanvas)}
         width={agentsSettings.scale}
         height={agentsSettings.scale}
-        opacity={agentsSettings.boxOpacity}
+        borderOpacity={agentsSettings.borderOpacity}
+        strokeWidth={agentsSettings.borderWidth}
         radius={agentsSettings.radius}
         allyColor={agentsSettings.allyColor}
         enemyColor={agentsSettings.enemyColor}
@@ -82,7 +83,8 @@ export const MapStage = ({
         onDragEnd={(e) => handleDragEnd(e, ability, setAbilitiesOnCanvas)}
         width={abilitiesSettings.scale}
         height={abilitiesSettings.scale}
-        opacity={abilitiesSettings.boxOpacity}
+        borderOpacity={abilitiesSettings.borderOpacity}
+        strokeWidth={abilitiesSettings.borderWidth}
         radius={abilitiesSettings.radius}
         allyColor={abilitiesSettings.allyColor}
         enemyColor={abilitiesSettings.enemyColor}

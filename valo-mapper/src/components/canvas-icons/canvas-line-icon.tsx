@@ -10,7 +10,7 @@ import { Circle, Group, Line } from "react-konva";
 
 interface CanvasLineIconProps extends CanvasIconProps {
   lineLength: number;
-  strokeWidth?: number;
+  lineStrokeWidth?: number;
   stroke: string;
   rotation?: number;
   onRotationChange?: (rotation: number) => void;
@@ -29,22 +29,23 @@ export const CanvasLineIcon = ({
   src,
   draggable = true,
   onDragEnd,
-  opacity,
+  borderOpacity,
   radius,
   lineLength,
   allyColor,
   enemyColor,
-  strokeWidth = 6,
+  lineStrokeWidth = 6,
   stroke,
   width,
   height,
   rotation = 0,
   onRotationChange,
   showRotationHandle = true,
-  rotationHandleRadius = 8,
+  rotationHandleRadius = 12,
   rotationHandleColor = "#e54646",
   rotationHandleStrokeColor = "#ffffff",
   rotationHandleDistance = 150,
+  strokeWidth,
 }: CanvasLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const [isRotating, setIsRotating] = useState(false);
@@ -137,7 +138,7 @@ export const CanvasLineIcon = ({
     >
       <Line
         points={[startX, startY, endX, endY]}
-        strokeWidth={strokeWidth}
+        strokeWidth={lineStrokeWidth}
         stroke={stroke}
       />
 
@@ -164,7 +165,8 @@ export const CanvasLineIcon = ({
         width={width}
         height={height}
         radius={radius}
-        opacity={opacity}
+        borderOpacity={borderOpacity}
+        strokeWidth={strokeWidth}
         allyColor={allyColor}
         enemyColor={enemyColor}
       />
