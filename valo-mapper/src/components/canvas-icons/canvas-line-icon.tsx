@@ -56,6 +56,7 @@ export const CanvasLineIcon = ({
   const [isRotating, setIsRotating] = useState(false);
   const [currentRotation, setCurrentRotation] = useState(rotation);
   const rotationRef = useRef<number>(rotation);
+  const rotationHandleRef = useRef<Konva.Circle>(null);
 
   const { setAbilitiesOnCanvas } = useCanvas();
 
@@ -95,6 +96,8 @@ export const CanvasLineIcon = ({
     if (!stage) return;
 
     const handleRotationMouseMove = () => {
+      if (rotationHandleRef.current) rotationHandleRef.current.opacity(1);
+
       if (!groupRef.current || !stage) return;
 
       const pointer = stage.getPointerPosition();
@@ -112,6 +115,7 @@ export const CanvasLineIcon = ({
     };
 
     const handleRotationMouseUp = () => {
+      if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.6);
       setIsRotating(false);
 
       if (setAbilitiesOnCanvas) {
@@ -134,6 +138,18 @@ export const CanvasLineIcon = ({
 
     stage.on("mousemove", handleRotationMouseMove);
     stage.on("mouseup", handleRotationMouseUp);
+  };
+
+  const handleRotationHandleMouseOver = () => {
+    if (rotationHandleRef.current) {
+      rotationHandleRef.current.opacity(0.8);
+    }
+  };
+
+  const handleRotationHandleMouseOut = () => {
+    if (rotationHandleRef.current) {
+      rotationHandleRef.current.opacity(0.6);
+    }
   };
 
   const halfLength = lineLength / 2;
@@ -174,6 +190,7 @@ export const CanvasLineIcon = ({
 
       {showRotationHandle && (
         <Circle
+          ref={rotationHandleRef}
           x={handleX}
           y={handleY}
           radius={rotationHandleRadius}
@@ -182,6 +199,8 @@ export const CanvasLineIcon = ({
           strokeWidth={2}
           opacity={isRotating ? 0.8 : 0.6}
           onMouseDown={handleRotationMouseDown}
+          onMouseOver={handleRotationHandleMouseOver}
+          onMouseOut={handleRotationHandleMouseOut}
         />
       )}
 
