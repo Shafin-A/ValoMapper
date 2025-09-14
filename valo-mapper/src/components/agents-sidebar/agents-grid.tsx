@@ -81,14 +81,17 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                   <Toggle
                     size="icon"
                     className="absolute -top-2 -right-2 rounded-full"
+                    data-state={
+                      selectedAgentAbilities?.name === agent.name ? "on" : "off"
+                    }
                     pressed={selectedAgentAbilities?.name === agent.name}
-                    onClick={() => {
+                    onPressedChange={(pressed) => {
                       setSelectedCanvasIcon(null);
-                      if (selectedAgentAbilities?.name === agent.name) {
+                      if (pressed) {
+                        setSelectedAgentAbilities(agent);
+                      } else {
                         setSelectedAgentAbilities(null);
-                        return;
                       }
-                      setSelectedAgentAbilities(agent);
                     }}
                   >
                     <EllipsisVertical />
