@@ -60,6 +60,7 @@ export type AbilityAction =
   | "deadlock_net"
   | "fade_eye"
   | "fade_seize"
+  | "fade_ult"
   | "gekko_molly"
   | "harbor_cove"
   | "harbor_ult"
@@ -76,6 +77,7 @@ export type AbilityAction =
   | "skye_heal"
   | "sova_shock_dart"
   | "sova_dart"
+  | "sova_ult"
   | "tejo_drone"
   | "tejo_stun"
   | "tejo_missile"
@@ -86,7 +88,10 @@ export type AbilityAction =
   | "vyse_ult"
   | "waylay_slow";
 
-export type LineAbility = Extract<AbilityAction, "astra_ult" | "viper_wall">;
+export type LineAbility = Extract<
+  AbilityAction,
+  "astra_ult" | "fade_ult" | "sova_ult" | "viper_wall"
+>;
 
 export type CircleAbility = Extract<
   AbilityAction,

@@ -64,7 +64,7 @@ const renderLineAbility = (props: AbilityIconProps) => {
       lineLength={mToPixels(lineLength)}
       stroke={stroke}
       iconPosition={iconPosition}
-      lineStrokeWidth={strokeWidth}
+      lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
       {...props}
     />
   );
@@ -91,6 +91,7 @@ const actionRenderers: Record<
   deadlock_net: renderCircleAbility,
   fade_eye: renderCircleAbility,
   fade_seize: renderCircleAbility,
+  fade_ult: renderLineAbility,
   gekko_molly: renderCircleAbility,
   harbor_cove: renderCircleAbility,
   harbor_ult: renderCircleAbility,
@@ -107,6 +108,7 @@ const actionRenderers: Record<
   skye_heal: renderCircleAbility,
   sova_shock_dart: renderCircleAbility,
   sova_dart: renderCircleAbility,
+  sova_ult: renderLineAbility,
   tejo_drone: renderCircleAbility,
   tejo_stun: renderCircleAbility,
   tejo_missile: renderCircleAbility,

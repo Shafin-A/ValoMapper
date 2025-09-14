@@ -212,7 +212,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "nightfall",
       src: "/agents/fade/nightfall.png",
       name: "Nightfall",
-      action: "icon",
+      action: "fade_ult",
     },
   ],
   Gekko: [
@@ -576,7 +576,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "hunters_fury",
       src: "/agents/sova/hunter's_fury.png",
       name: "Hunter's Fury",
-      action: "icon",
+      action: "sova_ult",
     },
   ],
   Tejo: [
