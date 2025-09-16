@@ -110,7 +110,6 @@ export const CanvasLineIcon = ({
 
       const handleInteractionMouseMove = () => {
         if (!groupRef.current) return;
-        if (rotationHandleRef.current) rotationHandleRef.current.opacity(1);
 
         const pointer = stage.getPointerPosition();
         if (!pointer) return;
@@ -136,9 +135,11 @@ export const CanvasLineIcon = ({
           onRotationChange?.(angle);
         } else {
           const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          const adjustedDistance = Math.max(0, distance - iconLineGap);
+
           const clampedDistance = Math.max(
             minLength,
-            Math.min(maxLength, distance)
+            Math.min(maxLength, adjustedDistance)
           );
 
           rotationRef.current = angle;
@@ -183,9 +184,11 @@ export const CanvasLineIcon = ({
 
       stage.on("mousemove.interaction", handleInteractionMouseMove);
       stage.on("mouseup.interaction", handleInteractionMouseUp);
+      stage.on("mouseleave.interaction", handleInteractionMouseUp);
     },
     [
       handleMode,
+      iconLineGap,
       id,
       maxLength,
       minLength,
@@ -223,7 +226,9 @@ export const CanvasLineIcon = ({
       : halfLength * Math.sin(radians);
 
   const handleDistance =
-    handleMode === "length" ? currentLength : rotationHandleDistance;
+    handleMode === "length"
+      ? currentLength + iconLineGap
+      : rotationHandleDistance;
   const handleX = handleDistance * Math.cos(radians);
   const handleY = handleDistance * Math.sin(radians);
 

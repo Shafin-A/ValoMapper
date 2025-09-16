@@ -49,6 +49,9 @@ export type AbilityAction =
   | "astra_suck"
   | "astra_smoke"
   | "astra_ult"
+  | "breach_aftershock"
+  | "breach_stun"
+  | "breach_ult"
   | "brim_smoke"
   | "brim_stim"
   | "brim_molly"
@@ -101,6 +104,8 @@ export type AbilityAction =
 export type LineAbility = Extract<
   AbilityAction,
   | "astra_ult"
+  | "breach_aftershock"
+  | "breach_ult"
   | "deadlock_trip"
   | "fade_ult"
   | "iso_vuln"
@@ -114,7 +119,10 @@ export type LineAbility = Extract<
   | "waylay_ult"
 >;
 
-export type AdjustableLineAbility = Extract<AbilityAction, "cypher_trip">;
+export type AdjustableLineAbility = Extract<
+  AbilityAction,
+  "breach_stun" | "cypher_trip"
+>;
 
 export type CircleAbility = Extract<
   AbilityAction,

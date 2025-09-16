@@ -12,6 +12,14 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
     iconLineGap?: number;
   }
 > = {
+  breach_stun: {
+    stroke: "#ffde2180",
+    lineLength: 12,
+    strokeWidth: 7.5,
+    minLength: 8,
+    maxLength: 56,
+    iconLineGap: 8,
+  },
   cypher_trip: {
     stroke: "#ffffffb3",
     lineLength: 7,
@@ -36,6 +44,19 @@ export const LINE_ABILITY_CONFIGS: Record<
     lineLength: 200,
     stroke: "#4f0076",
     iconPosition: "middle",
+  },
+  breach_aftershock: {
+    stroke: "#ffde2180",
+    lineLength: 10,
+    strokeWidth: 6,
+    rotationHandleDistance: 80,
+  },
+  breach_ult: {
+    stroke: "#ffde2180",
+    lineLength: 32,
+    strokeWidth: 23,
+    iconLineGap: 8,
+    rotationHandleDistance: 200,
   },
   deadlock_trip: {
     lineLength: 9,

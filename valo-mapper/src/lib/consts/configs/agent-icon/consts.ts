@@ -38,7 +38,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "aftershock",
       src: "/agents/breach/aftershock.png",
       name: "Aftershock",
-      action: "icon",
+      action: "breach_aftershock",
     },
     {
       id: "flashpoint",
@@ -50,13 +50,13 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "fault_line",
       src: "/agents/breach/fault_line.png",
       name: "Fault Line",
-      action: "icon",
+      action: "breach_stun",
     },
     {
       id: "rolling_thunder",
       src: "/agents/breach/rolling_thunder.png",
       name: "Rolling Thunder",
-      action: "icon",
+      action: "breach_ult",
     },
   ],
   Brimstone: [
