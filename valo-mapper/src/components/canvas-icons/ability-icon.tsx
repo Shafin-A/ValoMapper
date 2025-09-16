@@ -1,7 +1,16 @@
 import { ReactNode } from "react";
 import { AbilityAction } from "@/lib/types";
-import { isCircleAbility, isLineAbility, mToPixels } from "@/lib/utils";
-import { CIRCLE_ABILITY_CONFIGS, LINE_ABILITY_CONFIGS } from "@/lib/consts";
+import {
+  isAdjustableLineAbility,
+  isCircleAbility,
+  isLineAbility,
+  mToPixels,
+} from "@/lib/utils";
+import {
+  ADJUSTABLE_LINE_ABILITY_CONFIGS,
+  CIRCLE_ABILITY_CONFIGS,
+  LINE_ABILITY_CONFIGS,
+} from "@/lib/consts";
 import {
   CanvasIcon,
   CanvasIconProps,
@@ -36,6 +45,45 @@ const renderCircleAbility = (props: AbilityIconProps) => {
       fill={colors.fill}
       boxRadius={props.radius}
       outerCircleRadius={activeRadius ? mToPixels(activeRadius) : undefined}
+      {...props}
+    />
+  );
+};
+
+const getAdjustableLineConfig = (action: AbilityAction) => {
+  if (isAdjustableLineAbility(action)) {
+    return {
+      lineLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].lineLength,
+      stroke: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].stroke,
+      strokeWidth: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].strokeWidth,
+      iconPosition: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].iconPosition,
+      minLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].minLength,
+      maxLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].maxLength,
+    };
+  }
+
+  throw new Error(`${action} is not an adjustable line ability`);
+};
+
+const renderAdjustableLineAbility = (props: AbilityIconProps) => {
+  const {
+    lineLength,
+    stroke,
+    iconPosition,
+    strokeWidth,
+    minLength,
+    maxLength,
+  } = getAdjustableLineConfig(props.action);
+
+  return (
+    <CanvasLineIcon
+      handleMode="length"
+      lineLength={mToPixels(lineLength)}
+      stroke={stroke}
+      iconPosition={iconPosition}
+      lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
+      minLength={minLength ? mToPixels(minLength) : undefined}
+      maxLength={mToPixels(maxLength)}
       {...props}
     />
   );
@@ -97,6 +145,7 @@ const actionRenderers: Record<
   clove_meddle: renderCircleAbility,
   clove_smoke: renderCircleAbility,
   cypher_cage: renderCircleAbility,
+  cypher_trip: renderAdjustableLineAbility,
   deadlock_net: renderCircleAbility,
   deadlock_trip: renderLineAbility,
   fade_eye: renderCircleAbility,

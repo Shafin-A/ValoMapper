@@ -20,6 +20,7 @@ export type AgentCanvas = CanvasItem & {
 export type AbilityCanvas = CanvasItem & {
   action: AbilityAction;
   currentRotation?: number;
+  currentLength?: number;
 };
 
 export type AgentRole = "Duelist" | "Controller" | "Initiator" | "Sentinel";
@@ -57,6 +58,7 @@ export type AbilityAction =
   | "clove_meddle"
   | "clove_smoke"
   | "cypher_cage"
+  | "cypher_trip"
   | "deadlock_trip"
   | "deadlock_net"
   | "fade_eye"
@@ -111,6 +113,8 @@ export type LineAbility = Extract<
   | "vyse_wall"
   | "waylay_ult"
 >;
+
+export type AdjustableLineAbility = Extract<AbilityAction, "cypher_trip">;
 
 export type CircleAbility = Extract<
   AbilityAction,

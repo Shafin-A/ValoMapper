@@ -142,7 +142,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "trapwire",
       src: "/agents/cypher/trapwire.png",
       name: "Trapwire",
-      action: "icon",
+      action: "cypher_trip",
     },
     {
       id: "cyber_cage",

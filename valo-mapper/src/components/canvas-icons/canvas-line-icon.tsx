@@ -10,6 +10,7 @@ import { useRef, useState } from "react";
 import { Circle, Group, Line } from "react-konva";
 
 type IconPosition = "middle" | "start";
+type HandleMode = "rotation" | "length";
 
 interface CanvasLineIconProps extends CanvasIconProps {
   lineLength: number;
@@ -17,12 +18,16 @@ interface CanvasLineIconProps extends CanvasIconProps {
   stroke: string;
   rotation?: number;
   onRotationChange?: (rotation: number) => void;
+  onLengthChange?: (length: number) => void;
   showRotationHandle?: boolean;
   rotationHandleRadius?: number;
   rotationHandleColor?: string;
   rotationHandleStrokeColor?: string;
   rotationHandleDistance?: number;
   iconPosition?: IconPosition;
+  handleMode?: HandleMode;
+  minLength?: number;
+  maxLength?: number;
 }
 
 export const CanvasLineIcon = ({
@@ -44,6 +49,7 @@ export const CanvasLineIcon = ({
   height,
   rotation = 0,
   onRotationChange,
+  onLengthChange,
   showRotationHandle = true,
   rotationHandleRadius = 12,
   rotationHandleColor = "#e54646",
@@ -51,11 +57,16 @@ export const CanvasLineIcon = ({
   rotationHandleDistance = 150,
   strokeWidth,
   iconPosition = "start",
+  handleMode = "rotation",
+  minLength = 0,
+  maxLength = 500,
 }: CanvasLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
-  const [isRotating, setIsRotating] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
   const [currentRotation, setCurrentRotation] = useState(rotation);
+  const [currentLength, setCurrentLength] = useState(lineLength);
   const rotationRef = useRef<number>(rotation);
+  const lengthRef = useRef<number>(lineLength);
   const rotationHandleRef = useRef<Konva.Circle>(null);
 
   const { setAbilitiesOnCanvas } = useCanvas();
@@ -66,7 +77,7 @@ export const CanvasLineIcon = ({
     if (className === "Line" || className === "Image") {
       groupRef.current.draggable(true);
     } else if (className === "Circle") {
-      // Disable dragging when interacting with rotation handle
+      // Disable dragging when interacting with handle
       groupRef.current.draggable(false);
     } else {
       groupRef.current.draggable(false);
@@ -88,14 +99,14 @@ export const CanvasLineIcon = ({
     onDragEnd?.(e);
   };
 
-  const handleRotationMouseDown = (e: KonvaEventObject<MouseEvent>) => {
+  const handleInteractionMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true;
-    setIsRotating(true);
+    setIsInteracting(true);
 
     const stage = e.target.getStage();
     if (!stage) return;
 
-    const handleRotationMouseMove = () => {
+    const handleInteractionMouseMove = () => {
       if (rotationHandleRef.current) rotationHandleRef.current.opacity(1);
 
       if (!groupRef.current || !stage) return;
@@ -104,19 +115,39 @@ export const CanvasLineIcon = ({
       if (!pointer) return;
 
       const groupPosition = groupRef.current.getAbsolutePosition();
+      const stageScale = stage.scaleX();
 
-      const deltaX = pointer.x - groupPosition.x;
-      const deltaY = pointer.y - groupPosition.y;
-      const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+      const deltaX = (pointer.x - groupPosition.x) / stageScale;
+      const deltaY = (pointer.y - groupPosition.y) / stageScale;
 
-      setCurrentRotation(angle);
-      rotationRef.current = angle;
-      onRotationChange?.(angle);
+      if (handleMode === "rotation") {
+        // Rotation only mode - change angle, keep fixed distance
+        const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+        setCurrentRotation(angle);
+        rotationRef.current = angle;
+        onRotationChange?.(angle);
+      } else if (handleMode === "length") {
+        // Length mode - change both angle AND distance
+        const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const clampedDistance = Math.max(
+          minLength,
+          Math.min(maxLength, distance)
+        );
+
+        setCurrentRotation(angle);
+        setCurrentLength(clampedDistance);
+        rotationRef.current = angle;
+        lengthRef.current = clampedDistance;
+
+        onRotationChange?.(angle);
+        onLengthChange?.(clampedDistance);
+      }
     };
 
-    const handleRotationMouseUp = () => {
+    const handleInteractionMouseUp = () => {
       if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.6);
-      setIsRotating(false);
+      setIsInteracting(false);
 
       if (setAbilitiesOnCanvas) {
         setAbilitiesOnCanvas((prev) => {
@@ -125,19 +156,23 @@ export const CanvasLineIcon = ({
 
           const copy = prev.slice();
           const [item] = copy.splice(index, 1);
-          const updatedItem = { ...item, currentRotation: rotationRef.current };
+          const updatedItem = {
+            ...item,
+            currentRotation: rotationRef.current,
+            currentLength: lengthRef.current,
+          };
           copy.push(updatedItem);
 
           return copy;
         });
       }
 
-      stage.off("mousemove", handleRotationMouseMove);
-      stage.off("mouseup", handleRotationMouseUp);
+      stage.off("mousemove", handleInteractionMouseMove);
+      stage.off("mouseup", handleInteractionMouseUp);
     };
 
-    stage.on("mousemove", handleRotationMouseMove);
-    stage.on("mouseup", handleRotationMouseUp);
+    stage.on("mousemove", handleInteractionMouseMove);
+    stage.on("mouseup", handleInteractionMouseUp);
   };
 
   const handleRotationHandleMouseOver = () => {
@@ -152,22 +187,29 @@ export const CanvasLineIcon = ({
     }
   };
 
-  const halfLength = lineLength / 2;
-  const radians = (currentRotation * Math.PI) / 180;
+  const activeLength = currentLength;
+  const activeRotation = currentRotation;
+
+  const halfLength = activeLength / 2;
+  const radians = (activeRotation * Math.PI) / 180;
 
   const startX = iconPosition === "start" ? 0 : -halfLength * Math.cos(radians);
   const startY = iconPosition === "start" ? 0 : -halfLength * Math.sin(radians);
   const endX =
     iconPosition === "start"
-      ? lineLength * Math.cos(radians)
+      ? activeLength * Math.cos(radians)
       : halfLength * Math.cos(radians);
   const endY =
     iconPosition === "start"
-      ? lineLength * Math.sin(radians)
+      ? activeLength * Math.sin(radians)
       : halfLength * Math.sin(radians);
 
-  const handleX = rotationHandleDistance * Math.cos(radians);
-  const handleY = rotationHandleDistance * Math.sin(radians);
+  const handleDistance =
+    handleMode === "length" ? activeLength : rotationHandleDistance;
+  const handleX = handleDistance * Math.cos(radians);
+  const handleY = handleDistance * Math.sin(radians);
+
+  const handleColor = handleMode === "length" ? "#46e546" : rotationHandleColor;
 
   return (
     <Group
@@ -194,11 +236,11 @@ export const CanvasLineIcon = ({
           x={handleX}
           y={handleY}
           radius={rotationHandleRadius}
-          fill={rotationHandleColor}
+          fill={handleColor}
           stroke={rotationHandleStrokeColor}
           strokeWidth={2}
-          opacity={isRotating ? 0.8 : 0.6}
-          onMouseDown={handleRotationMouseDown}
+          opacity={isInteracting ? 0.8 : 0.6}
+          onMouseDown={handleInteractionMouseDown}
           onMouseOver={handleRotationHandleMouseOver}
           onMouseOut={handleRotationHandleMouseOut}
         />

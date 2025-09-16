@@ -1,4 +1,24 @@
-import { LineAbility } from "@/lib/types";
+import { AdjustableLineAbility, LineAbility } from "@/lib/types";
+
+export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
+  AdjustableLineAbility,
+  {
+    stroke: string;
+    iconPosition?: "start" | "middle";
+    lineLength: number;
+    strokeWidth: number;
+    minLength?: number;
+    maxLength: number;
+  }
+> = {
+  cypher_trip: {
+    stroke: "#ffffffb3",
+    lineLength: 7,
+    strokeWidth: 0.5,
+    minLength: 1,
+    maxLength: 15,
+  },
+};
 
 export const LINE_ABILITY_CONFIGS: Record<
   LineAbility,

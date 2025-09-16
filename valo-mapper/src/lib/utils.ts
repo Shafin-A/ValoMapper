@@ -1,12 +1,19 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-import { AbilityAction, Agent, CircleAbility, LineAbility } from "@/lib/types";
 import {
+  ADJUSTABLE_LINE_ABILITY_CONFIGS,
   CIRCLE_ABILITY_CONFIGS,
   LINE_ABILITY_CONFIGS,
   PIXELS_PER_METER,
 } from "@/lib/consts";
+import {
+  AbilityAction,
+  AdjustableLineAbility,
+  Agent,
+  CircleAbility,
+  LineAbility,
+} from "@/lib/types";
+import { clsx, type ClassValue } from "clsx";
 import { KonvaEventObject } from "konva/lib/Node";
+import { twMerge } from "tailwind-merge";
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -32,6 +39,12 @@ export const isCircleAbility = (
   action: AbilityAction
 ): action is CircleAbility => {
   return action in CIRCLE_ABILITY_CONFIGS;
+};
+
+export const isAdjustableLineAbility = (
+  action: AbilityAction
+): action is AdjustableLineAbility => {
+  return action in ADJUSTABLE_LINE_ABILITY_CONFIGS;
 };
 
 export const isLineAbility = (action: AbilityAction): action is LineAbility => {
