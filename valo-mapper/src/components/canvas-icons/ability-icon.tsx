@@ -59,6 +59,7 @@ const getAdjustableLineConfig = (action: AbilityAction) => {
       iconPosition: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].iconPosition,
       minLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].minLength,
       maxLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].maxLength,
+      iconLineGap: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].iconLineGap,
     };
   }
 
@@ -73,6 +74,7 @@ const renderAdjustableLineAbility = (props: AbilityIconProps) => {
     strokeWidth,
     minLength,
     maxLength,
+    iconLineGap,
   } = getAdjustableLineConfig(props.action);
 
   return (
@@ -84,6 +86,7 @@ const renderAdjustableLineAbility = (props: AbilityIconProps) => {
       lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
       minLength={minLength ? mToPixels(minLength) : undefined}
       maxLength={mToPixels(maxLength)}
+      iconLineGap={iconLineGap ? mToPixels(iconLineGap) : undefined}
       {...props}
     />
   );
@@ -98,6 +101,7 @@ const getLineConfig = (action: AbilityAction) => {
       iconPosition: LINE_ABILITY_CONFIGS[action].iconPosition,
       rotationHandleDistance:
         LINE_ABILITY_CONFIGS[action].rotationHandleDistance,
+      iconLineGap: LINE_ABILITY_CONFIGS[action].iconLineGap,
     };
   }
 
@@ -111,6 +115,7 @@ const renderLineAbility = (props: AbilityIconProps) => {
     iconPosition,
     strokeWidth,
     rotationHandleDistance,
+    iconLineGap,
   } = getLineConfig(props.action);
 
   return (
@@ -122,6 +127,7 @@ const renderLineAbility = (props: AbilityIconProps) => {
       rotationHandleDistance={
         rotationHandleDistance ? rotationHandleDistance : undefined
       }
+      iconLineGap={iconLineGap ? mToPixels(iconLineGap) : undefined}
       {...props}
     />
   );

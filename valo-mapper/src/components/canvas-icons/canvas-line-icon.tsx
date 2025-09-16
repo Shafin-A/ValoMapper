@@ -28,6 +28,7 @@ interface CanvasLineIconProps extends CanvasIconProps {
   handleMode?: HandleMode;
   minLength?: number;
   maxLength?: number;
+  iconLineGap?: number;
 }
 
 export const CanvasLineIcon = ({
@@ -60,6 +61,7 @@ export const CanvasLineIcon = ({
   handleMode = "rotation",
   minLength = 0,
   maxLength = 500,
+  iconLineGap = 0,
 }: CanvasLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const rotationHandleRef = useRef<Konva.Circle>(null);
@@ -204,15 +206,20 @@ export const CanvasLineIcon = ({
   const halfLength = currentLength / 2;
   const radians = (currentRotation * Math.PI) / 180;
 
-  const startX = iconPosition === "start" ? 0 : -halfLength * Math.cos(radians);
-  const startY = iconPosition === "start" ? 0 : -halfLength * Math.sin(radians);
+  const gapOffsetX = iconLineGap * Math.cos(radians);
+  const gapOffsetY = iconLineGap * Math.sin(radians);
+
+  const startX =
+    iconPosition === "start" ? gapOffsetX : -halfLength * Math.cos(radians);
+  const startY =
+    iconPosition === "start" ? gapOffsetY : -halfLength * Math.sin(radians);
   const endX =
     iconPosition === "start"
-      ? currentLength * Math.cos(radians)
+      ? (currentLength + iconLineGap) * Math.cos(radians)
       : halfLength * Math.cos(radians);
   const endY =
     iconPosition === "start"
-      ? currentLength * Math.sin(radians)
+      ? (currentLength + iconLineGap) * Math.sin(radians)
       : halfLength * Math.sin(radians);
 
   const handleDistance =

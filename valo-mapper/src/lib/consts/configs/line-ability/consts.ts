@@ -9,13 +9,14 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
     strokeWidth: number;
     minLength?: number;
     maxLength: number;
+    iconLineGap?: number;
   }
 > = {
   cypher_trip: {
     stroke: "#ffffffb3",
     lineLength: 7,
     strokeWidth: 0.5,
-    minLength: 1,
+    minLength: 4,
     maxLength: 15,
   },
 };
@@ -28,6 +29,7 @@ export const LINE_ABILITY_CONFIGS: Record<
     stroke: string;
     iconPosition?: "start" | "middle";
     rotationHandleDistance?: number;
+    iconLineGap?: number;
   }
 > = {
   astra_ult: {
