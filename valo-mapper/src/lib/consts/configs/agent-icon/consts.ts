@@ -278,7 +278,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "undercut",
       src: "/agents/iso/undercut.png",
       name: "Undercut",
-      action: "icon",
+      action: "iso_vuln",
     },
     {
       id: "double_tap",
@@ -290,7 +290,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "kill_contract",
       src: "/agents/iso/kill_contract.png",
       name: "Kill Contract",
-      action: "icon",
+      action: "iso_ult",
     },
   ],
   Jett: [

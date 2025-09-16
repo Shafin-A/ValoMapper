@@ -26,6 +26,16 @@ export const LINE_ABILITY_CONFIGS: Record<
     stroke: "#00000080",
     strokeWidth: 24,
   },
+  iso_vuln: {
+    lineLength: 34.875,
+    stroke: "#4d43aa80",
+    strokeWidth: 6,
+  },
+  iso_ult: {
+    lineLength: 48,
+    stroke: "#4d43aa80",
+    strokeWidth: 15,
+  },
   omen_blind: {
     lineLength: 34.5,
     stroke: "#261c4a80",

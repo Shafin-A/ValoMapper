@@ -105,6 +105,8 @@ const actionRenderers: Record<
   gekko_molly: renderCircleAbility,
   harbor_cove: renderCircleAbility,
   harbor_ult: renderCircleAbility,
+  iso_vuln: renderLineAbility,
+  iso_ult: renderLineAbility,
   jett_smoke: renderCircleAbility,
   kayo_molly: renderCircleAbility,
   kayo_knife: renderCircleAbility,
