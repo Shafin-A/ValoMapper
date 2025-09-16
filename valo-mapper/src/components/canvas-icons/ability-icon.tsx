@@ -48,6 +48,8 @@ const getLineConfig = (action: AbilityAction) => {
       stroke: LINE_ABILITY_CONFIGS[action].stroke,
       strokeWidth: LINE_ABILITY_CONFIGS[action].strokeWidth,
       iconPosition: LINE_ABILITY_CONFIGS[action].iconPosition,
+      rotationHandleDistance:
+        LINE_ABILITY_CONFIGS[action].rotationHandleDistance,
     };
   }
 
@@ -55,9 +57,13 @@ const getLineConfig = (action: AbilityAction) => {
 };
 
 const renderLineAbility = (props: AbilityIconProps) => {
-  const { lineLength, stroke, iconPosition, strokeWidth } = getLineConfig(
-    props.action
-  );
+  const {
+    lineLength,
+    stroke,
+    iconPosition,
+    strokeWidth,
+    rotationHandleDistance,
+  } = getLineConfig(props.action);
 
   return (
     <CanvasLineIcon
@@ -65,6 +71,9 @@ const renderLineAbility = (props: AbilityIconProps) => {
       stroke={stroke}
       iconPosition={iconPosition}
       lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
+      rotationHandleDistance={
+        rotationHandleDistance ? rotationHandleDistance : undefined
+      }
       {...props}
     />
   );
@@ -89,6 +98,7 @@ const actionRenderers: Record<
   clove_smoke: renderCircleAbility,
   cypher_cage: renderCircleAbility,
   deadlock_net: renderCircleAbility,
+  deadlock_trip: renderLineAbility,
   fade_eye: renderCircleAbility,
   fade_seize: renderCircleAbility,
   fade_ult: renderLineAbility,
@@ -103,21 +113,26 @@ const actionRenderers: Record<
   kj_molly: renderCircleAbility,
   kj_ult: renderCircleAbility,
   neon_stun: renderCircleAbility,
+  omen_blind: renderLineAbility,
   omen_smoke: renderCircleAbility,
   phoenix_molly: renderCircleAbility,
+  sage_wall: renderLineAbility,
   skye_heal: renderCircleAbility,
   sova_shock_dart: renderCircleAbility,
   sova_dart: renderCircleAbility,
   sova_ult: renderLineAbility,
   tejo_drone: renderCircleAbility,
   tejo_stun: renderCircleAbility,
+  tejo_ult: renderLineAbility,
   tejo_missile: renderCircleAbility,
   viper_molly: renderCircleAbility,
   viper_smoke: renderCircleAbility,
   viper_wall: renderLineAbility,
   vyse_slow: renderCircleAbility,
+  vyse_wall: renderLineAbility,
   vyse_ult: renderCircleAbility,
   waylay_slow: renderCircleAbility,
+  waylay_ult: renderLineAbility,
 };
 
 export const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {

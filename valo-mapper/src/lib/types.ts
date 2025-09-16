@@ -57,6 +57,7 @@ export type AbilityAction =
   | "clove_meddle"
   | "clove_smoke"
   | "cypher_cage"
+  | "deadlock_trip"
   | "deadlock_net"
   | "fade_eye"
   | "fade_seize"
@@ -72,8 +73,10 @@ export type AbilityAction =
   | "kj_molly"
   | "kj_ult"
   | "neon_stun"
+  | "omen_blind"
   | "omen_smoke"
   | "phoenix_molly"
+  | "sage_wall"
   | "skye_heal"
   | "sova_shock_dart"
   | "sova_dart"
@@ -81,16 +84,28 @@ export type AbilityAction =
   | "tejo_drone"
   | "tejo_stun"
   | "tejo_missile"
+  | "tejo_ult"
   | "viper_molly"
   | "viper_smoke"
   | "viper_wall"
   | "vyse_slow"
+  | "vyse_wall"
   | "vyse_ult"
-  | "waylay_slow";
+  | "waylay_slow"
+  | "waylay_ult";
 
 export type LineAbility = Extract<
   AbilityAction,
-  "astra_ult" | "fade_ult" | "sova_ult" | "viper_wall"
+  | "astra_ult"
+  | "deadlock_trip"
+  | "fade_ult"
+  | "omen_blind"
+  | "sage_wall"
+  | "sova_ult"
+  | "tejo_ult"
+  | "viper_wall"
+  | "vyse_wall"
+  | "waylay_ult"
 >;
 
 export type CircleAbility = Extract<

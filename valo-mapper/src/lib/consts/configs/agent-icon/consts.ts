@@ -174,7 +174,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "sonic_sensor",
       src: "/agents/deadlock/sonic_sensor.png",
       name: "Sonic Sensor",
-      action: "icon",
+      action: "deadlock_trip",
     },
     {
       id: "gravnet",
@@ -408,7 +408,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "paranoia",
       src: "/agents/omen/paranoia.png",
       name: "Paranoia",
-      action: "icon",
+      action: "omen_blind",
     },
     {
       id: "dark_cover",
@@ -506,7 +506,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "barrier_orb",
       src: "/agents/sage/barrier_orb.png",
       name: "Barrier Orb",
-      action: "icon",
+      action: "sage_wall",
     },
     {
       id: "slow_orb",
@@ -602,7 +602,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "armageddon",
       src: "/agents/tejo/armageddon.png",
       name: "Armageddon",
-      action: "icon",
+      action: "tejo_ult",
     },
   ],
   Viper: [
@@ -642,7 +642,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "shear",
       src: "/agents/vyse/shear.png",
       name: "Shear",
-      action: "icon",
+      action: "vyse_wall",
     },
     {
       id: "arc_rose",
@@ -680,7 +680,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "convergent_paths",
       src: "/agents/waylay/convergent_paths.png",
       name: "Convergent Paths",
-      action: "icon",
+      action: "waylay_ult",
     },
   ],
   Yoru: [
