@@ -29,6 +29,10 @@ interface CanvasLineIconProps extends CanvasIconProps {
   minLength?: number;
   maxLength?: number;
   iconLineGap?: number;
+  showThickEnd?: boolean;
+  thickEndLength?: number;
+  thickEndWidth?: number;
+  thickEndStroke?: string;
 }
 
 export const CanvasLineIcon = ({
@@ -62,6 +66,10 @@ export const CanvasLineIcon = ({
   minLength = 0,
   maxLength = 500,
   iconLineGap = 0,
+  showThickEnd = false,
+  thickEndLength = 10,
+  thickEndWidth = 0,
+  thickEndStroke = "#ffffff",
 }: CanvasLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const rotationHandleRef = useRef<Konva.Circle>(null);
@@ -252,6 +260,20 @@ export const CanvasLineIcon = ({
         strokeWidth={lineStrokeWidth}
         stroke={stroke}
       />
+
+      {showThickEnd && (
+        <Line
+          points={[
+            endX - thickEndLength * Math.cos(radians),
+            endY - thickEndLength * Math.sin(radians),
+            endX,
+            endY,
+          ]}
+          strokeWidth={lineStrokeWidth + thickEndWidth}
+          stroke={thickEndStroke}
+          opacity={1}
+        />
+      )}
 
       {showRotationHandle && (
         <Circle

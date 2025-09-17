@@ -246,7 +246,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "cascade",
       src: "/agents/harbor/cascade.png",
       name: "Cascade",
-      action: "icon",
+      action: "harbor_cascade_wall",
     },
     {
       id: "cove",
@@ -272,7 +272,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "contingency",
       src: "/agents/iso/contingency.png",
       name: "Contingency",
-      action: "icon",
+      action: "iso_wall",
     },
     {
       id: "undercut",

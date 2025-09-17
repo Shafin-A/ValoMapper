@@ -60,6 +60,10 @@ const getAdjustableLineConfig = (action: AbilityAction) => {
       minLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].minLength,
       maxLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].maxLength,
       iconLineGap: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].iconLineGap,
+      showThickEnd: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].showThickEnd,
+      thickEndLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].thickEndLength,
+      thickEndWidth: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].thickEndWidth,
+      thickEndStroke: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].thickEndStroke,
     };
   }
 
@@ -75,6 +79,10 @@ const renderAdjustableLineAbility = (props: AbilityIconProps) => {
     minLength,
     maxLength,
     iconLineGap,
+    showThickEnd,
+    thickEndLength,
+    thickEndWidth,
+    thickEndStroke,
   } = getAdjustableLineConfig(props.action);
 
   return (
@@ -87,6 +95,10 @@ const renderAdjustableLineAbility = (props: AbilityIconProps) => {
       minLength={minLength ? mToPixels(minLength) : undefined}
       maxLength={mToPixels(maxLength)}
       iconLineGap={iconLineGap ? mToPixels(iconLineGap) : undefined}
+      showThickEnd={showThickEnd}
+      thickEndLength={thickEndLength ? mToPixels(thickEndLength) : undefined}
+      thickEndWidth={thickEndWidth ? mToPixels(thickEndWidth) : undefined}
+      thickEndStroke={thickEndStroke}
       {...props}
     />
   );
@@ -102,6 +114,10 @@ const getLineConfig = (action: AbilityAction) => {
       rotationHandleDistance:
         LINE_ABILITY_CONFIGS[action].rotationHandleDistance,
       iconLineGap: LINE_ABILITY_CONFIGS[action].iconLineGap,
+      showThickEnd: LINE_ABILITY_CONFIGS[action].showThickEnd,
+      thickEndLength: LINE_ABILITY_CONFIGS[action].thickEndLength,
+      thickEndWidth: LINE_ABILITY_CONFIGS[action].thickEndWidth,
+      thickEndStroke: LINE_ABILITY_CONFIGS[action].thickEndStroke,
     };
   }
 
@@ -116,6 +132,10 @@ const renderLineAbility = (props: AbilityIconProps) => {
     strokeWidth,
     rotationHandleDistance,
     iconLineGap,
+    showThickEnd,
+    thickEndLength,
+    thickEndWidth,
+    thickEndStroke,
   } = getLineConfig(props.action);
 
   return (
@@ -128,6 +148,10 @@ const renderLineAbility = (props: AbilityIconProps) => {
         rotationHandleDistance ? rotationHandleDistance : undefined
       }
       iconLineGap={iconLineGap ? mToPixels(iconLineGap) : undefined}
+      showThickEnd={showThickEnd}
+      thickEndLength={thickEndLength ? mToPixels(thickEndLength) : undefined}
+      thickEndWidth={thickEndWidth ? mToPixels(thickEndWidth) : undefined}
+      thickEndStroke={thickEndStroke}
       {...props}
     />
   );
@@ -161,8 +185,10 @@ const actionRenderers: Record<
   fade_seize: renderCircleAbility,
   fade_ult: renderLineAbility,
   gekko_molly: renderCircleAbility,
+  harbor_cascade_wall: renderAdjustableLineAbility,
   harbor_cove: renderCircleAbility,
   harbor_ult: renderCircleAbility,
+  iso_wall: renderLineAbility,
   iso_vuln: renderLineAbility,
   iso_ult: renderLineAbility,
   jett_smoke: renderCircleAbility,

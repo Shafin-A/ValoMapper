@@ -10,6 +10,10 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
     minLength?: number;
     maxLength: number;
     iconLineGap?: number;
+    showThickEnd?: boolean;
+    thickEndLength?: number;
+    thickEndWidth?: number;
+    thickEndStroke?: string;
   }
 > = {
   breach_stun: {
@@ -27,6 +31,17 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
     minLength: 4,
     maxLength: 15,
   },
+  harbor_cascade_wall: {
+    showThickEnd: true,
+    thickEndLength: 1,
+    thickEndStroke: "#5c98a1",
+    stroke: "#5c98a180",
+    lineLength: 12,
+    strokeWidth: 9.75,
+    minLength: 2,
+    maxLength: 35,
+    iconLineGap: 4,
+  },
 };
 
 export const LINE_ABILITY_CONFIGS: Record<
@@ -38,6 +53,10 @@ export const LINE_ABILITY_CONFIGS: Record<
     iconPosition?: "start" | "middle";
     rotationHandleDistance?: number;
     iconLineGap?: number;
+    showThickEnd?: boolean;
+    thickEndLength?: number;
+    thickEndWidth?: number;
+    thickEndStroke?: string;
   }
 > = {
   astra_ult: {
@@ -68,6 +87,15 @@ export const LINE_ABILITY_CONFIGS: Record<
     lineLength: 40,
     stroke: "#00000080",
     strokeWidth: 24,
+  },
+  iso_wall: {
+    lineLength: 27.5,
+    stroke: "#4d43aa80",
+    strokeWidth: 5.25,
+    showThickEnd: true,
+    thickEndLength: 2,
+    thickEndStroke: "#4d43aa",
+    iconLineGap: 5,
   },
   iso_vuln: {
     lineLength: 34.875,
