@@ -82,6 +82,7 @@ export type AbilityAction =
   | "kj_molly"
   | "kj_ult"
   | "neon_stun"
+  | "neon_wall"
   | "omen_blind"
   | "omen_smoke"
   | "phoenix_molly"
@@ -121,6 +122,8 @@ export type LineAbility = Extract<
   | "vyse_wall"
   | "waylay_ult"
 >;
+
+export type DoubleLineAbility = Extract<AbilityAction, "neon_wall">;
 
 export type AdjustableLineAbility = Extract<
   AbilityAction,

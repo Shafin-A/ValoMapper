@@ -1,6 +1,7 @@
 import {
   ADJUSTABLE_LINE_ABILITY_CONFIGS,
   CIRCLE_ABILITY_CONFIGS,
+  DOUBLE_LINE_ABILITY_CONFIGS,
   LINE_ABILITY_CONFIGS,
   PIXELS_PER_METER,
 } from "@/lib/consts";
@@ -9,6 +10,7 @@ import {
   AdjustableLineAbility,
   Agent,
   CircleAbility,
+  DoubleLineAbility,
   LineAbility,
 } from "@/lib/types";
 import { clsx, type ClassValue } from "clsx";
@@ -49,6 +51,12 @@ export const isAdjustableLineAbility = (
 
 export const isLineAbility = (action: AbilityAction): action is LineAbility => {
   return action in LINE_ABILITY_CONFIGS;
+};
+
+export const isDoubleLineAbility = (
+  action: AbilityAction
+): action is DoubleLineAbility => {
+  return action in DOUBLE_LINE_ABILITY_CONFIGS;
 };
 
 export const isAgent = (obj: unknown): obj is Agent => {

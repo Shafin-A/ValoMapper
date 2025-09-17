@@ -1,22 +1,25 @@
-import { ReactNode } from "react";
+import {
+  CanvasCircleIcon,
+  CanvasDoubleLineIcon,
+  CanvasIcon,
+  CanvasIconProps,
+  CanvasLineIcon,
+} from "@/components/canvas-icons";
+import {
+  ADJUSTABLE_LINE_ABILITY_CONFIGS,
+  CIRCLE_ABILITY_CONFIGS,
+  DOUBLE_LINE_ABILITY_CONFIGS,
+  LINE_ABILITY_CONFIGS,
+} from "@/lib/consts";
 import { AbilityAction } from "@/lib/types";
 import {
   isAdjustableLineAbility,
   isCircleAbility,
+  isDoubleLineAbility,
   isLineAbility,
   mToPixels,
 } from "@/lib/utils";
-import {
-  ADJUSTABLE_LINE_ABILITY_CONFIGS,
-  CIRCLE_ABILITY_CONFIGS,
-  LINE_ABILITY_CONFIGS,
-} from "@/lib/consts";
-import {
-  CanvasIcon,
-  CanvasIconProps,
-  CanvasCircleIcon,
-  CanvasLineIcon,
-} from "@/components/canvas-icons";
+import { ReactNode } from "react";
 
 interface AbilityIconProps extends CanvasIconProps {
   action: AbilityAction;
@@ -157,6 +160,63 @@ const renderLineAbility = (props: AbilityIconProps) => {
   );
 };
 
+const getDoubleLineConfig = (action: AbilityAction) => {
+  if (isDoubleLineAbility(action)) {
+    return {
+      lineLength: DOUBLE_LINE_ABILITY_CONFIGS[action].lineLength,
+      stroke: DOUBLE_LINE_ABILITY_CONFIGS[action].stroke,
+      strokeWidth: DOUBLE_LINE_ABILITY_CONFIGS[action].strokeWidth,
+      iconPosition: DOUBLE_LINE_ABILITY_CONFIGS[action].iconPosition,
+      iconLineGap: DOUBLE_LINE_ABILITY_CONFIGS[action].iconLineGap,
+      showThickEnd: DOUBLE_LINE_ABILITY_CONFIGS[action].showThickEnd,
+      thickEndLength: DOUBLE_LINE_ABILITY_CONFIGS[action].thickEndLength,
+      thickEndWidth: DOUBLE_LINE_ABILITY_CONFIGS[action].thickEndWidth,
+      thickEndStroke: DOUBLE_LINE_ABILITY_CONFIGS[action].thickEndStroke,
+      lineGap: DOUBLE_LINE_ABILITY_CONFIGS[action].lineGap,
+      minLength: DOUBLE_LINE_ABILITY_CONFIGS[action].minLength,
+      maxLength: DOUBLE_LINE_ABILITY_CONFIGS[action].maxLength,
+    };
+  }
+
+  throw new Error(`${action} is not a double line ability`);
+};
+
+const renderDoubleLineAbility = (props: AbilityIconProps) => {
+  const {
+    lineLength,
+    stroke,
+    iconPosition,
+    strokeWidth,
+    minLength,
+    maxLength,
+    iconLineGap,
+    showThickEnd,
+    thickEndLength,
+    thickEndWidth,
+    thickEndStroke,
+    lineGap,
+  } = getDoubleLineConfig(props.action);
+
+  return (
+    <CanvasDoubleLineIcon
+      handleMode="length"
+      lineLength={mToPixels(lineLength)}
+      stroke={stroke}
+      iconPosition={iconPosition}
+      lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
+      minLength={minLength ? mToPixels(minLength) : undefined}
+      maxLength={mToPixels(maxLength)}
+      iconLineGap={iconLineGap ? mToPixels(iconLineGap) : undefined}
+      showThickEnd={showThickEnd}
+      thickEndLength={thickEndLength ? mToPixels(thickEndLength) : undefined}
+      thickEndWidth={thickEndWidth ? mToPixels(thickEndWidth) : undefined}
+      thickEndStroke={thickEndStroke}
+      lineGap={lineGap ? mToPixels(lineGap) : undefined}
+      {...props}
+    />
+  );
+};
+
 const actionRenderers: Record<
   AbilityAction,
   (props: AbilityIconProps) => ReactNode
@@ -199,6 +259,7 @@ const actionRenderers: Record<
   kj_molly: renderCircleAbility,
   kj_ult: renderCircleAbility,
   neon_stun: renderCircleAbility,
+  neon_wall: renderDoubleLineAbility,
   omen_blind: renderLineAbility,
   omen_smoke: renderCircleAbility,
   phoenix_molly: renderCircleAbility,

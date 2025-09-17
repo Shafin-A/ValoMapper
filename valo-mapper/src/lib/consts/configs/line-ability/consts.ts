@@ -1,4 +1,34 @@
-import { AdjustableLineAbility, LineAbility } from "@/lib/types";
+import {
+  AdjustableLineAbility,
+  DoubleLineAbility,
+  LineAbility,
+} from "@/lib/types";
+
+export const DOUBLE_LINE_ABILITY_CONFIGS: Record<
+  DoubleLineAbility,
+  {
+    stroke: string;
+    iconPosition?: "start" | "middle";
+    lineLength: number;
+    strokeWidth?: number;
+    minLength?: number;
+    maxLength: number;
+    iconLineGap?: number;
+    showThickEnd?: boolean;
+    thickEndLength?: number;
+    thickEndWidth?: number;
+    thickEndStroke?: string;
+    lineGap?: number;
+  }
+> = {
+  neon_wall: {
+    stroke: "#4eacee",
+    lineLength: 12,
+    minLength: 8,
+    maxLength: 46.5,
+    lineGap: 3.5,
+  },
+};
 
 export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
   AdjustableLineAbility,

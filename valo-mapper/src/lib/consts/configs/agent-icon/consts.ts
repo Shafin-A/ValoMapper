@@ -376,7 +376,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "fast_lane",
       src: "/agents/neon/fast_lane.png",
       name: "Fast Lane",
-      action: "icon",
+      action: "neon_wall",
     },
     {
       id: "relay_bolt",
