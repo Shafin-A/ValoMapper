@@ -29,20 +29,25 @@ interface AbilityIconProps extends CanvasIconProps {
   rotation?: number;
 }
 
-const getCircleConfig = (action: AbilityAction) => {
-  if (isCircleAbility(action)) {
-    return {
-      radius: CIRCLE_ABILITY_CONFIGS[action].radius,
-      colors: CIRCLE_ABILITY_CONFIGS[action].colors,
-      activeRadius: CIRCLE_ABILITY_CONFIGS[action].activeRadius,
-    };
+const getConfig = <T,>(
+  action: AbilityAction,
+  configMap: Record<string, T>,
+  validator: (action: AbilityAction) => boolean,
+  abilityType: string
+): T => {
+  if (!validator(action)) {
+    throw new Error(`${action} is not a ${abilityType} ability`);
   }
-
-  throw new Error(`${action} is not a circle ability`);
+  return configMap[action];
 };
 
-const renderCircleAbility = (props: AbilityIconProps) => {
-  const { radius, colors, activeRadius } = getCircleConfig(props.action);
+const renderCircleAbility = (props: AbilityIconProps): ReactNode => {
+  const { radius, colors, activeRadius } = getConfig(
+    props.action,
+    CIRCLE_ABILITY_CONFIGS,
+    isCircleAbility,
+    "circle"
+  );
 
   return (
     <CanvasCircleIcon
@@ -56,282 +61,256 @@ const renderCircleAbility = (props: AbilityIconProps) => {
   );
 };
 
-const getAdjustableLineConfig = (action: AbilityAction) => {
-  if (isAdjustableLineAbility(action)) {
-    return {
-      lineLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].lineLength,
-      stroke: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].stroke,
-      strokeWidth: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].strokeWidth,
-      iconPosition: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].iconPosition,
-      minLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].minLength,
-      maxLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].maxLength,
-      iconLineGap: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].iconLineGap,
-      showThickEnd: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].showThickEnd,
-      thickEndLength: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].thickEndLength,
-      thickEndWidth: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].thickEndWidth,
-      thickEndStroke: ADJUSTABLE_LINE_ABILITY_CONFIGS[action].thickEndStroke,
-    };
-  }
-
-  throw new Error(`${action} is not an adjustable line ability`);
-};
-
-const renderAdjustableLineAbility = (props: AbilityIconProps) => {
-  const {
-    lineLength,
-    stroke,
-    iconPosition,
-    strokeWidth,
-    minLength,
-    maxLength,
-    iconLineGap,
-    showThickEnd,
-    thickEndLength,
-    thickEndWidth,
-    thickEndStroke,
-  } = getAdjustableLineConfig(props.action);
+const renderAdjustableLineAbility = (props: AbilityIconProps): ReactNode => {
+  const config = getConfig(
+    props.action,
+    ADJUSTABLE_LINE_ABILITY_CONFIGS,
+    isAdjustableLineAbility,
+    "adjustable line"
+  );
 
   return (
     <CanvasLineIcon
       handleMode="length"
-      lineLength={mToPixels(lineLength)}
-      stroke={stroke}
-      iconPosition={iconPosition}
-      lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
-      minLength={minLength ? mToPixels(minLength) : undefined}
-      maxLength={mToPixels(maxLength)}
-      iconLineGap={iconLineGap ? mToPixels(iconLineGap) : undefined}
-      showThickEnd={showThickEnd}
-      thickEndLength={thickEndLength ? mToPixels(thickEndLength) : undefined}
-      thickEndWidth={thickEndWidth ? mToPixels(thickEndWidth) : undefined}
-      thickEndStroke={thickEndStroke}
+      lineLength={mToPixels(config.lineLength)}
+      stroke={config.stroke}
+      iconPosition={config.iconPosition}
+      lineStrokeWidth={
+        config.strokeWidth ? mToPixels(config.strokeWidth) : undefined
+      }
+      minLength={config.minLength ? mToPixels(config.minLength) : undefined}
+      maxLength={mToPixels(config.maxLength)}
+      iconLineGap={
+        config.iconLineGap ? mToPixels(config.iconLineGap) : undefined
+      }
+      showThickEnd={config.showThickEnd}
+      thickEndLength={
+        config.thickEndLength ? mToPixels(config.thickEndLength) : undefined
+      }
+      thickEndWidth={
+        config.thickEndWidth ? mToPixels(config.thickEndWidth) : undefined
+      }
+      thickEndStroke={config.thickEndStroke}
       {...props}
     />
   );
 };
 
-const getLineConfig = (action: AbilityAction) => {
-  if (isLineAbility(action)) {
-    return {
-      lineLength: LINE_ABILITY_CONFIGS[action].lineLength,
-      stroke: LINE_ABILITY_CONFIGS[action].stroke,
-      strokeWidth: LINE_ABILITY_CONFIGS[action].strokeWidth,
-      iconPosition: LINE_ABILITY_CONFIGS[action].iconPosition,
-      rotationHandleDistance:
-        LINE_ABILITY_CONFIGS[action].rotationHandleDistance,
-      iconLineGap: LINE_ABILITY_CONFIGS[action].iconLineGap,
-      showThickEnd: LINE_ABILITY_CONFIGS[action].showThickEnd,
-      thickEndLength: LINE_ABILITY_CONFIGS[action].thickEndLength,
-      thickEndWidth: LINE_ABILITY_CONFIGS[action].thickEndWidth,
-      thickEndStroke: LINE_ABILITY_CONFIGS[action].thickEndStroke,
-    };
-  }
-
-  throw new Error(`${action} is not a line ability`);
-};
-
-const renderLineAbility = (props: AbilityIconProps) => {
-  const {
-    lineLength,
-    stroke,
-    iconPosition,
-    strokeWidth,
-    rotationHandleDistance,
-    iconLineGap,
-    showThickEnd,
-    thickEndLength,
-    thickEndWidth,
-    thickEndStroke,
-  } = getLineConfig(props.action);
+const renderLineAbility = (props: AbilityIconProps): ReactNode => {
+  const config = getConfig(
+    props.action,
+    LINE_ABILITY_CONFIGS,
+    isLineAbility,
+    "line"
+  );
 
   return (
     <CanvasLineIcon
-      lineLength={mToPixels(lineLength)}
-      stroke={stroke}
-      iconPosition={iconPosition}
-      lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
-      rotationHandleDistance={
-        rotationHandleDistance ? rotationHandleDistance : undefined
+      lineLength={mToPixels(config.lineLength)}
+      stroke={config.stroke}
+      iconPosition={config.iconPosition}
+      lineStrokeWidth={
+        config.strokeWidth ? mToPixels(config.strokeWidth) : undefined
       }
-      iconLineGap={iconLineGap ? mToPixels(iconLineGap) : undefined}
-      showThickEnd={showThickEnd}
-      thickEndLength={thickEndLength ? mToPixels(thickEndLength) : undefined}
-      thickEndWidth={thickEndWidth ? mToPixels(thickEndWidth) : undefined}
-      thickEndStroke={thickEndStroke}
+      rotationHandleDistance={config.rotationHandleDistance}
+      iconLineGap={
+        config.iconLineGap ? mToPixels(config.iconLineGap) : undefined
+      }
+      showThickEnd={config.showThickEnd}
+      thickEndLength={
+        config.thickEndLength ? mToPixels(config.thickEndLength) : undefined
+      }
+      thickEndWidth={
+        config.thickEndWidth ? mToPixels(config.thickEndWidth) : undefined
+      }
+      thickEndStroke={config.thickEndStroke}
       {...props}
     />
   );
 };
 
-const getDoubleLineConfig = (action: AbilityAction) => {
-  if (isDoubleLineAbility(action)) {
-    return {
-      lineLength: DOUBLE_LINE_ABILITY_CONFIGS[action].lineLength,
-      stroke: DOUBLE_LINE_ABILITY_CONFIGS[action].stroke,
-      strokeWidth: DOUBLE_LINE_ABILITY_CONFIGS[action].strokeWidth,
-      iconPosition: DOUBLE_LINE_ABILITY_CONFIGS[action].iconPosition,
-      iconLineGap: DOUBLE_LINE_ABILITY_CONFIGS[action].iconLineGap,
-      showThickEnd: DOUBLE_LINE_ABILITY_CONFIGS[action].showThickEnd,
-      thickEndLength: DOUBLE_LINE_ABILITY_CONFIGS[action].thickEndLength,
-      thickEndWidth: DOUBLE_LINE_ABILITY_CONFIGS[action].thickEndWidth,
-      thickEndStroke: DOUBLE_LINE_ABILITY_CONFIGS[action].thickEndStroke,
-      lineGap: DOUBLE_LINE_ABILITY_CONFIGS[action].lineGap,
-      minLength: DOUBLE_LINE_ABILITY_CONFIGS[action].minLength,
-      maxLength: DOUBLE_LINE_ABILITY_CONFIGS[action].maxLength,
-    };
-  }
-
-  throw new Error(`${action} is not a double line ability`);
-};
-
-const renderDoubleLineAbility = (props: AbilityIconProps) => {
-  const {
-    lineLength,
-    stroke,
-    iconPosition,
-    strokeWidth,
-    minLength,
-    maxLength,
-    iconLineGap,
-    showThickEnd,
-    thickEndLength,
-    thickEndWidth,
-    thickEndStroke,
-    lineGap,
-  } = getDoubleLineConfig(props.action);
+const renderDoubleLineAbility = (props: AbilityIconProps): ReactNode => {
+  const config = getConfig(
+    props.action,
+    DOUBLE_LINE_ABILITY_CONFIGS,
+    isDoubleLineAbility,
+    "double line"
+  );
 
   return (
     <CanvasDoubleLineIcon
       handleMode="length"
-      lineLength={mToPixels(lineLength)}
-      stroke={stroke}
-      iconPosition={iconPosition}
-      lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
-      minLength={minLength ? mToPixels(minLength) : undefined}
-      maxLength={mToPixels(maxLength)}
-      iconLineGap={iconLineGap ? mToPixels(iconLineGap) : undefined}
-      showThickEnd={showThickEnd}
-      thickEndLength={thickEndLength ? mToPixels(thickEndLength) : undefined}
-      thickEndWidth={thickEndWidth ? mToPixels(thickEndWidth) : undefined}
-      thickEndStroke={thickEndStroke}
-      lineGap={lineGap ? mToPixels(lineGap) : undefined}
+      lineLength={mToPixels(config.lineLength)}
+      stroke={config.stroke}
+      iconPosition={config.iconPosition}
+      lineStrokeWidth={
+        config.strokeWidth ? mToPixels(config.strokeWidth) : undefined
+      }
+      minLength={config.minLength ? mToPixels(config.minLength) : undefined}
+      maxLength={mToPixels(config.maxLength)}
+      iconLineGap={
+        config.iconLineGap ? mToPixels(config.iconLineGap) : undefined
+      }
+      showThickEnd={config.showThickEnd}
+      thickEndLength={
+        config.thickEndLength ? mToPixels(config.thickEndLength) : undefined
+      }
+      thickEndWidth={
+        config.thickEndWidth ? mToPixels(config.thickEndWidth) : undefined
+      }
+      thickEndStroke={config.thickEndStroke}
+      lineGap={config.lineGap ? mToPixels(config.lineGap) : undefined}
       {...props}
     />
   );
 };
 
-const getXLineConfig = (action: AbilityAction) => {
-  if (isXLineAbility(action)) {
-    return {
-      lineLength: X_LINE_ABILITY_CONFIGS[action].lineLength,
-      stroke: X_LINE_ABILITY_CONFIGS[action].stroke,
-      strokeWidth: X_LINE_ABILITY_CONFIGS[action].strokeWidth,
-      endCircleRadius: X_LINE_ABILITY_CONFIGS[action].endCircleRadius,
-      endCircleColor: X_LINE_ABILITY_CONFIGS[action].endCircleColor,
-      rotationHandleDistance:
-        X_LINE_ABILITY_CONFIGS[action].rotationHandleDistance,
-    };
-  }
-
-  throw new Error(`${action} is not an X line ability`);
-};
-
-const renderXLineAbility = (props: AbilityIconProps) => {
-  const {
-    lineLength,
-    stroke,
-    strokeWidth,
-    endCircleRadius,
-    endCircleColor,
-    rotationHandleDistance,
-  } = getXLineConfig(props.action);
+const renderXLineAbility = (props: AbilityIconProps): ReactNode => {
+  const config = getConfig(
+    props.action,
+    X_LINE_ABILITY_CONFIGS,
+    isXLineAbility,
+    "X line"
+  );
 
   return (
     <CanvasXIcon
-      lineLength={mToPixels(lineLength)}
-      stroke={stroke}
-      lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
-      endCircleRadius={endCircleRadius ? mToPixels(endCircleRadius) : undefined}
-      endCircleColor={endCircleColor}
-      rotationHandleDistance={rotationHandleDistance}
+      lineLength={mToPixels(config.lineLength)}
+      stroke={config.stroke}
+      lineStrokeWidth={
+        config.strokeWidth ? mToPixels(config.strokeWidth) : undefined
+      }
+      endCircleRadius={
+        config.endCircleRadius ? mToPixels(config.endCircleRadius) : undefined
+      }
+      endCircleColor={config.endCircleColor}
+      rotationHandleDistance={config.rotationHandleDistance}
       {...props}
     />
   );
 };
 
-const actionRenderers: Record<
+const ABILITY_RENDERERS: Record<
   AbilityAction,
   (props: AbilityIconProps) => ReactNode
 > = {
   icon: (props) => <CanvasIcon {...props} />,
+
+  // Astra
   astra_ult: renderLineAbility,
   astra_stun: renderCircleAbility,
   astra_suck: renderCircleAbility,
   astra_smoke: renderCircleAbility,
+
+  // Breach
   breach_aftershock: renderLineAbility,
   breach_stun: renderAdjustableLineAbility,
   breach_ult: renderLineAbility,
+
+  // Brimstone
   brim_smoke: renderCircleAbility,
   brim_stim: renderCircleAbility,
   brim_molly: renderCircleAbility,
   brim_ult: renderCircleAbility,
+
+  // Chamber
   chamber_trip: renderCircleAbility,
   chamber_tp: renderCircleAbility,
+
+  // Clove
   clove_meddle: renderCircleAbility,
   clove_smoke: renderCircleAbility,
+
+  // Cypher
   cypher_cage: renderCircleAbility,
   cypher_trip: renderAdjustableLineAbility,
+
+  // Deadlock
   deadlock_net: renderCircleAbility,
   deadlock_trip: renderLineAbility,
   deadlock_wall: renderXLineAbility,
+
+  // Fade
   fade_eye: renderCircleAbility,
   fade_seize: renderCircleAbility,
   fade_ult: renderLineAbility,
+
+  // Gekko
   gekko_molly: renderCircleAbility,
+
+  // Harbor
   harbor_cascade_wall: renderAdjustableLineAbility,
   harbor_cove: renderCircleAbility,
   harbor_ult: renderCircleAbility,
+
+  // Iso
   iso_wall: renderLineAbility,
   iso_vuln: renderLineAbility,
   iso_ult: renderLineAbility,
+
+  // Jett
   jett_smoke: renderCircleAbility,
+
+  // KAY/O
   kayo_molly: renderCircleAbility,
   kayo_knife: renderCircleAbility,
   kayo_ult: renderCircleAbility,
+
+  // Killjoy
   kj_alarmbot: renderCircleAbility,
   kj_molly: renderCircleAbility,
   kj_ult: renderCircleAbility,
+
+  // Neon
   neon_stun: renderCircleAbility,
   neon_wall: renderDoubleLineAbility,
+
+  // Omen
   omen_blind: renderLineAbility,
   omen_smoke: renderCircleAbility,
+
+  // Phoenix
   phoenix_molly: renderCircleAbility,
+
+  // Sage
   sage_wall: renderLineAbility,
+
+  // Skye
   skye_heal: renderCircleAbility,
+
+  // Sova
   sova_shock_dart: renderCircleAbility,
   sova_dart: renderCircleAbility,
   sova_ult: renderLineAbility,
+
+  // Tejo
   tejo_drone: renderCircleAbility,
   tejo_stun: renderCircleAbility,
   tejo_ult: renderLineAbility,
   tejo_missile: renderCircleAbility,
+
+  // Viper
   viper_molly: renderCircleAbility,
   viper_smoke: renderCircleAbility,
   viper_wall: renderLineAbility,
+
+  // Vyse
   vyse_slow: renderCircleAbility,
   vyse_wall: renderLineAbility,
   vyse_ult: renderCircleAbility,
+
+  // Waylay
   waylay_slow: renderCircleAbility,
   waylay_ult: renderLineAbility,
 };
 
 export const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {
-  const renderAction = actionRenderers[action];
+  const renderer = ABILITY_RENDERERS[action];
 
-  if (!renderAction) {
+  if (!renderer) {
     console.warn(`Unknown action: ${action}`);
     return null;
   }
 
-  return renderAction({ action, ...props });
+  return renderer({ action, ...props });
 };
