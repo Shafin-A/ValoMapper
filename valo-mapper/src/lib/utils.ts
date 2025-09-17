@@ -4,6 +4,7 @@ import {
   DOUBLE_LINE_ABILITY_CONFIGS,
   LINE_ABILITY_CONFIGS,
   PIXELS_PER_METER,
+  X_LINE_ABILITY_CONFIGS,
 } from "@/lib/consts";
 import {
   AbilityAction,
@@ -12,6 +13,7 @@ import {
   CircleAbility,
   DoubleLineAbility,
   LineAbility,
+  XLineAbility,
 } from "@/lib/types";
 import { clsx, type ClassValue } from "clsx";
 import { KonvaEventObject } from "konva/lib/Node";
@@ -57,6 +59,12 @@ export const isDoubleLineAbility = (
   action: AbilityAction
 ): action is DoubleLineAbility => {
   return action in DOUBLE_LINE_ABILITY_CONFIGS;
+};
+
+export const isXLineAbility = (
+  action: AbilityAction
+): action is XLineAbility => {
+  return action in X_LINE_ABILITY_CONFIGS;
 };
 
 export const isAgent = (obj: unknown): obj is Agent => {

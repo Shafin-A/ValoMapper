@@ -11,6 +11,7 @@ export { AGENTS } from "./agents/consts";
 export { CIRCLE_ABILITY_CONFIGS } from "./configs/circle-ability/consts";
 export { AGENT_ICON_CONFIGS } from "./configs/agent-icon/consts";
 export {
+  X_LINE_ABILITY_CONFIGS,
   DOUBLE_LINE_ABILITY_CONFIGS,
   LINE_ABILITY_CONFIGS,
   ADJUSTABLE_LINE_ABILITY_CONFIGS,

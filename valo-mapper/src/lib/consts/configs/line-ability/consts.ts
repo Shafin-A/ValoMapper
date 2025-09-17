@@ -2,7 +2,28 @@ import {
   AdjustableLineAbility,
   DoubleLineAbility,
   LineAbility,
+  XLineAbility,
 } from "@/lib/types";
+
+export const X_LINE_ABILITY_CONFIGS: Record<
+  XLineAbility,
+  {
+    stroke: string;
+    lineLength: number;
+    strokeWidth?: number;
+    iconLineGap?: number;
+    endCircleRadius?: number;
+    endCircleColor?: string;
+    rotationHandleDistance?: number;
+  }
+> = {
+  deadlock_wall: {
+    lineLength: 20,
+    stroke: "#60c8ff",
+    endCircleColor: "#60c8ff",
+    rotationHandleDistance: 100,
+  },
+};
 
 export const DOUBLE_LINE_ABILITY_CONFIGS: Record<
   DoubleLineAbility,

@@ -168,7 +168,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "barrier_mesh",
       src: "/agents/deadlock/barrier_mesh.png",
       name: "Barrier Mesh",
-      action: "icon",
+      action: "deadlock_wall",
     },
     {
       id: "sonic_sensor",

@@ -64,6 +64,7 @@ export type AbilityAction =
   | "cypher_trip"
   | "deadlock_trip"
   | "deadlock_net"
+  | "deadlock_wall"
   | "fade_eye"
   | "fade_seize"
   | "fade_ult"
@@ -122,6 +123,8 @@ export type LineAbility = Extract<
   | "vyse_wall"
   | "waylay_ult"
 >;
+
+export type XLineAbility = Extract<AbilityAction, "deadlock_wall">;
 
 export type DoubleLineAbility = Extract<AbilityAction, "neon_wall">;
 

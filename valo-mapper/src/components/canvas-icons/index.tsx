@@ -3,3 +3,4 @@ export { CanvasCircleIcon } from "./canvas-circle-icon";
 export { AbilityIcon } from "./ability-icon";
 export { CanvasLineIcon } from "./canvas-line-icon";
 export { CanvasDoubleLineIcon } from "./canvas-double-line-icon";
+export { CanvasXIcon } from "./canvas-x-icon";

@@ -4,12 +4,14 @@ import {
   CanvasIcon,
   CanvasIconProps,
   CanvasLineIcon,
+  CanvasXIcon,
 } from "@/components/canvas-icons";
 import {
   ADJUSTABLE_LINE_ABILITY_CONFIGS,
   CIRCLE_ABILITY_CONFIGS,
   DOUBLE_LINE_ABILITY_CONFIGS,
   LINE_ABILITY_CONFIGS,
+  X_LINE_ABILITY_CONFIGS,
 } from "@/lib/consts";
 import { AbilityAction } from "@/lib/types";
 import {
@@ -17,6 +19,7 @@ import {
   isCircleAbility,
   isDoubleLineAbility,
   isLineAbility,
+  isXLineAbility,
   mToPixels,
 } from "@/lib/utils";
 import { ReactNode } from "react";
@@ -217,6 +220,45 @@ const renderDoubleLineAbility = (props: AbilityIconProps) => {
   );
 };
 
+const getXLineConfig = (action: AbilityAction) => {
+  if (isXLineAbility(action)) {
+    return {
+      lineLength: X_LINE_ABILITY_CONFIGS[action].lineLength,
+      stroke: X_LINE_ABILITY_CONFIGS[action].stroke,
+      strokeWidth: X_LINE_ABILITY_CONFIGS[action].strokeWidth,
+      endCircleRadius: X_LINE_ABILITY_CONFIGS[action].endCircleRadius,
+      endCircleColor: X_LINE_ABILITY_CONFIGS[action].endCircleColor,
+      rotationHandleDistance:
+        X_LINE_ABILITY_CONFIGS[action].rotationHandleDistance,
+    };
+  }
+
+  throw new Error(`${action} is not an X line ability`);
+};
+
+const renderXLineAbility = (props: AbilityIconProps) => {
+  const {
+    lineLength,
+    stroke,
+    strokeWidth,
+    endCircleRadius,
+    endCircleColor,
+    rotationHandleDistance,
+  } = getXLineConfig(props.action);
+
+  return (
+    <CanvasXIcon
+      lineLength={mToPixels(lineLength)}
+      stroke={stroke}
+      lineStrokeWidth={strokeWidth ? mToPixels(strokeWidth) : undefined}
+      endCircleRadius={endCircleRadius ? mToPixels(endCircleRadius) : undefined}
+      endCircleColor={endCircleColor}
+      rotationHandleDistance={rotationHandleDistance}
+      {...props}
+    />
+  );
+};
+
 const actionRenderers: Record<
   AbilityAction,
   (props: AbilityIconProps) => ReactNode
@@ -241,6 +283,7 @@ const actionRenderers: Record<
   cypher_trip: renderAdjustableLineAbility,
   deadlock_net: renderCircleAbility,
   deadlock_trip: renderLineAbility,
+  deadlock_wall: renderXLineAbility,
   fade_eye: renderCircleAbility,
   fade_seize: renderCircleAbility,
   fade_ult: renderLineAbility,
