@@ -1,6 +1,7 @@
 import {
   ADJUSTABLE_LINE_ABILITY_CONFIGS,
   CIRCLE_ABILITY_CONFIGS,
+  CURVABLE_LINE_ABILITY_CONFIGS,
   DOUBLE_LINE_ABILITY_CONFIGS,
   LINE_ABILITY_CONFIGS,
   PIXELS_PER_METER,
@@ -11,6 +12,7 @@ import {
   AdjustableLineAbility,
   Agent,
   CircleAbility,
+  CurvableLineAbility,
   DoubleLineAbility,
   LineAbility,
   XLineAbility,
@@ -67,6 +69,12 @@ export const isXLineAbility = (
   return action in X_LINE_ABILITY_CONFIGS;
 };
 
+export const isCurvableLineAbility = (
+  action: AbilityAction
+): action is CurvableLineAbility => {
+  return action in CURVABLE_LINE_ABILITY_CONFIGS;
+};
+
 export const isAgent = (obj: unknown): obj is Agent => {
   return (
     typeof obj === "object" &&
@@ -84,6 +92,12 @@ export const getNextId = (type: "agent" | "ability") => {
 
 export const handleMouseOverGrabCursor = (e: KonvaEventObject<MouseEvent>) => {
   e.target.getStage()!.container().style.cursor = "grab";
+};
+
+export const handleMouseOverPointerCursor = (
+  e: KonvaEventObject<MouseEvent>
+) => {
+  e.target.getStage()!.container().style.cursor = "pointer";
 };
 
 export const handleMouseOutDefaultCursor = (

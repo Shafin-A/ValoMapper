@@ -1,6 +1,7 @@
 import {
   CanvasCircleIcon,
   CanvasDoubleLineIcon,
+  CanvasCurvableLineIcon,
   CanvasIcon,
   CanvasIconProps,
   CanvasLineIcon,
@@ -9,6 +10,7 @@ import {
 import {
   ADJUSTABLE_LINE_ABILITY_CONFIGS,
   CIRCLE_ABILITY_CONFIGS,
+  CURVABLE_LINE_ABILITY_CONFIGS,
   DOUBLE_LINE_ABILITY_CONFIGS,
   LINE_ABILITY_CONFIGS,
   X_LINE_ABILITY_CONFIGS,
@@ -17,6 +19,7 @@ import { AbilityAction } from "@/lib/types";
 import {
   isAdjustableLineAbility,
   isCircleAbility,
+  isCurvableLineAbility,
   isDoubleLineAbility,
   isLineAbility,
   isXLineAbility,
@@ -190,6 +193,23 @@ const renderXLineAbility = (props: AbilityIconProps): ReactNode => {
   );
 };
 
+const renderCurvableLineAbility = (props: AbilityIconProps): ReactNode => {
+  const config = getConfig(
+    props.action,
+    CURVABLE_LINE_ABILITY_CONFIGS,
+    isCurvableLineAbility,
+    "curvable line"
+  );
+
+  return (
+    <CanvasCurvableLineIcon
+      maxDistance={mToPixels(config.maxDistance)}
+      stroke={config.stroke}
+      {...props}
+    />
+  );
+};
+
 const ABILITY_RENDERERS: Record<
   AbilityAction,
   (props: AbilityIconProps) => ReactNode
@@ -241,6 +261,7 @@ const ABILITY_RENDERERS: Record<
   // Harbor
   harbor_cascade_wall: renderAdjustableLineAbility,
   harbor_cove: renderCircleAbility,
+  harbor_wall: renderCurvableLineAbility,
   harbor_ult: renderCircleAbility,
 
   // Iso
@@ -271,6 +292,7 @@ const ABILITY_RENDERERS: Record<
 
   // Phoenix
   phoenix_molly: renderCircleAbility,
+  phoenix_wall: renderCurvableLineAbility,
 
   // Sage
   sage_wall: renderLineAbility,

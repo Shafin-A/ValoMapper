@@ -1,3 +1,5 @@
+import { Vector2d } from "konva/lib/types";
+
 export type Agent = {
   name: string;
   src: string;
@@ -21,6 +23,7 @@ export type AbilityCanvas = CanvasItem & {
   action: AbilityAction;
   currentRotation?: number;
   currentLength?: number;
+  currentPath?: Vector2d[];
 };
 
 export type AgentRole = "Duelist" | "Controller" | "Initiator" | "Sentinel";
@@ -71,6 +74,7 @@ export type AbilityAction =
   | "gekko_molly"
   | "harbor_cascade_wall"
   | "harbor_cove"
+  | "harbor_wall"
   | "harbor_ult"
   | "iso_wall"
   | "iso_vuln"
@@ -87,6 +91,7 @@ export type AbilityAction =
   | "omen_blind"
   | "omen_smoke"
   | "phoenix_molly"
+  | "phoenix_wall"
   | "sage_wall"
   | "skye_heal"
   | "sova_shock_dart"
@@ -127,6 +132,11 @@ export type LineAbility = Extract<
 export type XLineAbility = Extract<AbilityAction, "deadlock_wall">;
 
 export type DoubleLineAbility = Extract<AbilityAction, "neon_wall">;
+
+export type CurvableLineAbility = Extract<
+  AbilityAction,
+  "harbor_wall" | "phoenix_wall"
+>;
 
 export type AdjustableLineAbility = Extract<
   AbilityAction,

@@ -258,7 +258,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "high_tide",
       src: "/agents/harbor/high_tide.png",
       name: "High Tide",
-      action: "icon",
+      action: "harbor_wall",
     },
     {
       id: "reckoning",
@@ -428,7 +428,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "blaze",
       src: "/agents/phoenix/blaze.png",
       name: "Blaze",
-      action: "icon",
+      action: "phoenix_wall",
     },
     {
       id: "hot_hands",

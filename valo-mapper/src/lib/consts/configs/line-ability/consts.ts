@@ -1,9 +1,28 @@
 import {
   AdjustableLineAbility,
+  CurvableLineAbility,
   DoubleLineAbility,
   LineAbility,
   XLineAbility,
 } from "@/lib/types";
+
+export const CURVABLE_LINE_ABILITY_CONFIGS: Record<
+  CurvableLineAbility,
+  {
+    maxDistance: number;
+    stroke: string;
+    strokeWidth?: number;
+  }
+> = {
+  harbor_wall: {
+    maxDistance: 50,
+    stroke: "#5c98a1",
+  },
+  phoenix_wall: {
+    maxDistance: 21,
+    stroke: "#d36455",
+  },
+};
 
 export const X_LINE_ABILITY_CONFIGS: Record<
   XLineAbility,
