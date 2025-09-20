@@ -1,16 +1,20 @@
-import { SIDEBAR_WIDTH } from "@/lib/consts";
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
+import { MapSelectButton } from "./map-select-button";
+import { useCanvas } from "@/contexts/canvas-context";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
 }
 
 export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
+  const { setSelectedMap } = useCanvas();
+
   return (
     <SidebarProvider
       style={{
@@ -24,9 +28,18 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
         collapsible="offcanvas"
         side="left"
       >
-        <SidebarHeader>Tools</SidebarHeader>
+        <SidebarHeader>
+          <div className="flex flex-col gap-3 p-2">
+            <span className="text-base font-semibold">Maps</span>
+            <MapSelectButton
+              mapOptions={MAP_OPTIONS}
+              defaultSelectedId="ascent"
+              onMapSelect={setSelectedMap}
+            />
+          </div>
+        </SidebarHeader>
         <SidebarContent>
-          <span>Tools</span>
+          <span className="text-base font-semibold p-4">Tools</span>
         </SidebarContent>
       </Sidebar>
     </SidebarProvider>

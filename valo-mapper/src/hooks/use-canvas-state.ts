@@ -4,7 +4,9 @@ import type {
   AbilityIconItem,
   Agent,
   AgentCanvas,
+  MapOption,
 } from "@/lib/types";
+import { MAP_OPTIONS } from "@/lib/consts";
 
 export const useCanvasState = () => {
   const [agentsOnCanvas, setAgentsOnCanvas] = useState<AgentCanvas[]>([]);
@@ -17,6 +19,8 @@ export const useCanvasState = () => {
 
   const [isAlly, setIsAlly] = useState(true);
 
+  const [selectedMap, setSelectedMap] = useState<MapOption>(MAP_OPTIONS[1]);
+
   return {
     agentsOnCanvas,
     setAgentsOnCanvas,
@@ -26,5 +30,7 @@ export const useCanvasState = () => {
     setIsAlly,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
+    selectedMap,
+    setSelectedMap,
   };
 };

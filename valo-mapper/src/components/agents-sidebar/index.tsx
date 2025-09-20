@@ -27,7 +27,7 @@ import { RoleTabs } from "./role-tabs";
 import { SettingsPanel } from "./settings-panel";
 import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
-import { TEMP_DRAG_ID } from "@/lib/consts";
+import { SIDEBAR_WIDTH, TEMP_DRAG_ID } from "@/lib/consts";
 import { useCanvas } from "@/contexts/canvas-context";
 
 interface AgentsSidebarProps {
@@ -100,8 +100,8 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     <SidebarProvider
       open={sidebarOpen}
       style={{
-        ["--sidebar-width" as keyof React.CSSProperties]: "20rem",
-        ["--sidebar-width-mobile" as keyof React.CSSProperties]: "20rem",
+        ["--sidebar-width" as keyof React.CSSProperties]: SIDEBAR_WIDTH,
+        ["--sidebar-width-mobile" as keyof React.CSSProperties]: SIDEBAR_WIDTH,
       }}
     >
       <Sidebar

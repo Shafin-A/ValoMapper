@@ -7,11 +7,11 @@ import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
 import { useRef } from "react";
 import { Image as KonvaImage, Layer, Stage } from "react-konva";
+import useImage from "use-image";
 
 interface MapStageProps {
   width: number;
   height: number;
-  mapImage: HTMLImageElement | undefined;
   mapPosition: Vector2d;
   mapSize: number;
 }
@@ -19,7 +19,6 @@ interface MapStageProps {
 export const MapStage = ({
   width,
   height,
-  mapImage,
   mapPosition,
   mapSize,
 }: MapStageProps) => {
@@ -28,9 +27,12 @@ export const MapStage = ({
     setAgentsOnCanvas,
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
+    selectedMap,
   } = useCanvas();
 
   const { agentsSettings, abilitiesSettings } = useSettings();
+
+  const [mapImage] = useImage(selectedMap.minimap_src);
 
   const stageRef = useRef<KonvaStage | null>(null);
 

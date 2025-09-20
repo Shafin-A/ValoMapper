@@ -8,17 +8,15 @@ import { useCanvas } from "@/contexts/canvas-context";
 import { useDimensions } from "@/hooks/use-dimensions";
 import { usePositionScaling } from "@/hooks/use-position-scaling";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
-import { ASCENT_MAP, MAP_SIZE } from "@/lib/consts";
+import { MAP_SIZE } from "@/lib/consts";
 import { useRef } from "react";
-import useImage from "use-image";
 
 const Home = () => {
-  const [mapImage] = useImage(ASCENT_MAP);
-
   const divRef = useRef<HTMLDivElement>(null);
 
   const { dimensions, previousDimensions } = useDimensions(divRef);
   const sidebarState = useSidebarState();
+
   const {
     agentsOnCanvas,
     setAgentsOnCanvas,
@@ -54,7 +52,6 @@ const Home = () => {
         <MapStage
           width={dimensions.width}
           height={dimensions.height}
-          mapImage={mapImage}
           mapPosition={mapPosition}
           mapSize={MAP_SIZE}
         />

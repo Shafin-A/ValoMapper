@@ -7,6 +7,7 @@ import type {
   AbilityIconItem,
   Agent,
   AgentCanvas,
+  MapOption,
 } from "@/lib/types";
 
 interface CanvasContextType {
@@ -20,6 +21,8 @@ interface CanvasContextType {
   >;
   isAlly: boolean;
   setIsAlly: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedMap: MapOption;
+  setSelectedMap: React.Dispatch<React.SetStateAction<MapOption>>;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
