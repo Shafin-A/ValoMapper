@@ -7,13 +7,14 @@ import {
 import { MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapSelectButton } from "./map-select-button";
 import { useCanvas } from "@/contexts/canvas-context";
+import { Button } from "@/components/ui/button";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
 }
 
 export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
-  const { setSelectedMap } = useCanvas();
+  const { setSelectedMap, undo, redo, canUndo, canRedo } = useCanvas();
 
   return (
     <SidebarProvider
@@ -40,6 +41,12 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
         </SidebarHeader>
         <SidebarContent>
           <span className="text-base font-semibold p-4">Tools</span>
+          <Button onClick={undo} disabled={!canUndo}>
+            Undo
+          </Button>
+          <Button onClick={redo} disabled={!canRedo}>
+            Redo
+          </Button>
         </SidebarContent>
       </Sidebar>
     </SidebarProvider>

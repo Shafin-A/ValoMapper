@@ -1,7 +1,6 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
-import { useCanvasState } from "@/hooks/use-canvas-state";
+import { UndoableState, useCanvasState } from "@/hooks/use-canvas-state";
 import type {
   AbilityCanvas,
   AbilityIconItem,
@@ -9,6 +8,7 @@ import type {
   AgentCanvas,
   MapOption,
 } from "@/lib/types";
+import React, { createContext, useContext } from "react";
 
 interface CanvasContextType {
   agentsOnCanvas: AgentCanvas[];
@@ -23,6 +23,12 @@ interface CanvasContextType {
   setIsAlly: React.Dispatch<React.SetStateAction<boolean>>;
   selectedMap: MapOption;
   setSelectedMap: React.Dispatch<React.SetStateAction<MapOption>>;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  saveToHistory: () => void;
+  history: UndoableState[];
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
