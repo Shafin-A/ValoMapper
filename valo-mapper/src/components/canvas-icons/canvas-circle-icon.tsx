@@ -86,6 +86,7 @@ export const CanvasCircleIcon = ({
           stroke={"#ffffff"}
           opacity={0.3}
           listening={false}
+          dash={[10, 5]}
         />
       )}
       <CanvasIcon

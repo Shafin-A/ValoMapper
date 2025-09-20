@@ -85,6 +85,7 @@ export type AbilityAction =
   | "kayo_ult"
   | "kj_alarmbot"
   | "kj_molly"
+  | "kj_turret"
   | "kj_ult"
   | "neon_stun"
   | "neon_wall"
@@ -128,6 +129,8 @@ export type LineAbility = Extract<
   | "vyse_wall"
   | "waylay_ult"
 >;
+
+export type ArcAbility = Extract<AbilityAction, "kj_turret">;
 
 export type XLineAbility = Extract<AbilityAction, "deadlock_wall">;
 

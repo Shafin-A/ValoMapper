@@ -362,7 +362,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       id: "turret",
       src: "/agents/killjoy/turret.png",
       name: "Turret",
-      action: "icon",
+      action: "kj_turret",
     },
     {
       id: "lockdown",

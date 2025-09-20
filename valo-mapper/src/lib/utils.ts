@@ -1,5 +1,6 @@
 import {
   ADJUSTABLE_LINE_ABILITY_CONFIGS,
+  ARC_ABILITY_CONFIGS,
   CIRCLE_ABILITY_CONFIGS,
   CURVABLE_LINE_ABILITY_CONFIGS,
   DOUBLE_LINE_ABILITY_CONFIGS,
@@ -11,6 +12,7 @@ import {
   AbilityAction,
   AdjustableLineAbility,
   Agent,
+  ArcAbility,
   CircleAbility,
   CurvableLineAbility,
   DoubleLineAbility,
@@ -73,6 +75,10 @@ export const isCurvableLineAbility = (
   action: AbilityAction
 ): action is CurvableLineAbility => {
   return action in CURVABLE_LINE_ABILITY_CONFIGS;
+};
+
+export const isArcAbility = (action: AbilityAction): action is ArcAbility => {
+  return action in ARC_ABILITY_CONFIGS;
 };
 
 export const isAgent = (obj: unknown): obj is Agent => {

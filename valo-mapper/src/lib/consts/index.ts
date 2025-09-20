@@ -17,3 +17,4 @@ export {
   ADJUSTABLE_LINE_ABILITY_CONFIGS,
   CURVABLE_LINE_ABILITY_CONFIGS,
 } from "./configs/line-ability/consts";
+export { ARC_ABILITY_CONFIGS } from "./configs/arc-icon/consts";

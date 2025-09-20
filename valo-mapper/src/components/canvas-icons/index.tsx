@@ -5,3 +5,4 @@ export { CanvasLineIcon } from "./canvas-line-icon";
 export { CanvasDoubleLineIcon } from "./canvas-double-line-icon";
 export { CanvasXIcon } from "./canvas-x-icon";
 export { CanvasCurvableLineIcon } from "./canvas-curvable-line-icon";
+export { CanvasArcIcon } from "./canvas-arc-icon";

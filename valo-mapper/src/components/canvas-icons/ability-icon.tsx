@@ -1,7 +1,8 @@
 import {
+  CanvasArcIcon,
   CanvasCircleIcon,
-  CanvasDoubleLineIcon,
   CanvasCurvableLineIcon,
+  CanvasDoubleLineIcon,
   CanvasIcon,
   CanvasIconProps,
   CanvasLineIcon,
@@ -9,6 +10,7 @@ import {
 } from "@/components/canvas-icons";
 import {
   ADJUSTABLE_LINE_ABILITY_CONFIGS,
+  ARC_ABILITY_CONFIGS,
   CIRCLE_ABILITY_CONFIGS,
   CURVABLE_LINE_ABILITY_CONFIGS,
   DOUBLE_LINE_ABILITY_CONFIGS,
@@ -18,6 +20,7 @@ import {
 import { AbilityAction } from "@/lib/types";
 import {
   isAdjustableLineAbility,
+  isArcAbility,
   isCircleAbility,
   isCurvableLineAbility,
   isDoubleLineAbility,
@@ -210,6 +213,26 @@ const renderCurvableLineAbility = (props: AbilityIconProps): ReactNode => {
   );
 };
 
+const renderArcAbility = (props: AbilityIconProps): ReactNode => {
+  const config = getConfig(
+    props.action,
+    ARC_ABILITY_CONFIGS,
+    isArcAbility,
+    "arc"
+  );
+
+  return (
+    <CanvasArcIcon
+      boxRadius={props.radius}
+      arcRadius={config.arcRadius}
+      fov={config.fov}
+      fill={props.isAlly ? props.allyColor : props.enemyColor}
+      outerCircleRadius={mToPixels(config.outerCircleRadius)}
+      {...props}
+    />
+  );
+};
+
 const ABILITY_RENDERERS: Record<
   AbilityAction,
   (props: AbilityIconProps) => ReactNode
@@ -280,6 +303,7 @@ const ABILITY_RENDERERS: Record<
   // Killjoy
   kj_alarmbot: renderCircleAbility,
   kj_molly: renderCircleAbility,
+  kj_turret: renderArcAbility,
   kj_ult: renderCircleAbility,
 
   // Neon
