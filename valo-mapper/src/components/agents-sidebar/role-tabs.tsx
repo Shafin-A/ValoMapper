@@ -1,6 +1,10 @@
-import { ROLE_ICONS } from "@/lib/consts";
-import { Button } from "@/components/ui/button";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ROLE_ICONS } from "@/lib/consts";
 import { Grid3x3 } from "lucide-react";
 import Image from "next/image";
 
@@ -54,14 +58,19 @@ export const RoleTabs: React.FC<Pick<RoleTabsProps, "selectedRole">> = ({
         }
 
         return (
-          <TabsTrigger key={tab.value} value={tab.value} asChild>
-            <Button
-              variant="ghost"
-              className="flex flex-col items-center gap-1 p-2 transition-all hover:scale-105"
-            >
-              {icon}
-            </Button>
-          </TabsTrigger>
+          <Tooltip key={tab.value} delayDuration={700}>
+            <TooltipTrigger asChild>
+              <TabsTrigger
+                value={tab.value}
+                className="flex flex-col items-center gap-1 p-2 transition-all hover:scale-105"
+              >
+                {icon}
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              {`${tab.label}${tab.label === "All" ? "" : "s"}`}
+            </TooltipContent>
+          </Tooltip>
         );
       })}
     </TabsList>
