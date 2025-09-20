@@ -34,7 +34,7 @@ interface AgentsSidebarProps {
   sidebarOpen: boolean;
 }
 
-const AgentsSidebar: React.FC<AgentsSidebarProps> = ({ sidebarOpen }) => {
+export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
   const {
     agentsSettings,
     abilitiesSettings,
@@ -191,5 +191,3 @@ const AgentsSidebar: React.FC<AgentsSidebarProps> = ({ sidebarOpen }) => {
     </SidebarProvider>
   );
 };
-
-export default AgentsSidebar;
