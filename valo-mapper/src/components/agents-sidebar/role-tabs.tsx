@@ -36,6 +36,7 @@ export const RoleTabs: React.FC<Pick<RoleTabsProps, "selectedRole">> = ({
               <Grid3x3
                 className="!size-6.5"
                 strokeWidth={2.5}
+                color="#fff"
                 style={{ opacity: isSelected ? 1 : 0.5 }}
               />
             </div>
