@@ -6,7 +6,7 @@ import {
 } from "@/lib/utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle, Group, Line } from "react-konva";
 
 interface CanvasXIconProps extends CanvasIconProps {
@@ -60,6 +60,11 @@ export const CanvasXIcon = ({
 
   const rotationRef = useRef<number>(rotation);
   const frameRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setCurrentRotation(rotation);
+    rotationRef.current = rotation;
+  }, [rotation]);
 
   const { setAbilitiesOnCanvas } = useCanvas();
 

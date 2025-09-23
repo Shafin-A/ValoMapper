@@ -28,11 +28,14 @@ import {
   isXLineAbility,
   mToPixels,
 } from "@/lib/utils";
+import { Vector2d } from "konva/lib/types";
 import { ReactNode } from "react";
 
 interface AbilityIconProps extends CanvasIconProps {
   action: AbilityAction;
   rotation?: number;
+  currentPath?: Vector2d[];
+  currentLength?: number;
 }
 
 const getConfig = <T,>(
@@ -78,7 +81,7 @@ const renderAdjustableLineAbility = (props: AbilityIconProps): ReactNode => {
   return (
     <CanvasLineIcon
       handleMode="length"
-      lineLength={mToPixels(config.lineLength)}
+      lineLength={props.currentLength || mToPixels(config.lineLength)}
       stroke={config.stroke}
       iconPosition={config.iconPosition}
       lineStrokeWidth={
@@ -146,7 +149,7 @@ const renderDoubleLineAbility = (props: AbilityIconProps): ReactNode => {
   return (
     <CanvasDoubleLineIcon
       handleMode="length"
-      lineLength={mToPixels(config.lineLength)}
+      lineLength={props.currentLength || mToPixels(config.lineLength)}
       stroke={config.stroke}
       iconPosition={config.iconPosition}
       lineStrokeWidth={
@@ -208,6 +211,7 @@ const renderCurvableLineAbility = (props: AbilityIconProps): ReactNode => {
     <CanvasCurvableLineIcon
       maxDistance={mToPixels(config.maxDistance)}
       stroke={config.stroke}
+      initialPath={props.currentPath}
       {...props}
     />
   );

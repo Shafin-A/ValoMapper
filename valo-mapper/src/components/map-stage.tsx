@@ -91,6 +91,8 @@ export const MapStage = ({
         radius={abilitiesSettings.radius}
         allyColor={abilitiesSettings.allyColor}
         enemyColor={abilitiesSettings.enemyColor}
+        currentPath={ability.currentPath}
+        currentLength={ability.currentLength}
       />
     ));
 

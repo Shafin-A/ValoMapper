@@ -8,7 +8,7 @@ import {
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Circle, Group, Line } from "react-konva";
 
 interface CanvasCurvableLineIconProps extends CanvasIconProps {
@@ -52,6 +52,8 @@ export const CanvasCurvableLineIcon = ({
   const [path, setPath] = useState<Vector2d[]>(initialPath);
   const [currentDistance, setCurrentDistance] = useState(0);
 
+  const lastInitialPathRef = useRef<string>("");
+
   const { setAbilitiesOnCanvas } = useCanvas();
 
   const calculatePathDistance = useCallback((points: Vector2d[]): number => {
@@ -64,6 +66,15 @@ export const CanvasCurvableLineIcon = ({
     }
     return totalDistance;
   }, []);
+
+  useEffect(() => {
+    const currentSerialized = JSON.stringify(initialPath);
+    if (currentSerialized !== lastInitialPathRef.current) {
+      setPath(initialPath);
+      lastInitialPathRef.current = currentSerialized;
+      setCurrentDistance(calculatePathDistance(initialPath));
+    }
+  }, [calculatePathDistance, initialPath]);
 
   const getLinePoints = (): number[] => {
     const points: number[] = [];
