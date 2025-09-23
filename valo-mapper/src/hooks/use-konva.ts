@@ -30,6 +30,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     isDrawing,
     setDrawLines,
     tool,
+    currentStroke,
+    setCurrentStroke,
   } = useCanvas();
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -128,18 +130,13 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
 
     if (!isDrawing.current) {
       isDrawing.current = true;
-      setDrawLines((prev) => [...prev, { tool, points: [worldPos] }]);
+      setCurrentStroke({ tool, points: [worldPos] });
     } else {
-      setDrawLines((prev) => {
-        const lastLine = prev[prev.length - 1];
-        const updatedLine = {
-          ...lastLine,
-          points: [...lastLine.points, worldPos],
-        };
-        return [...prev.slice(0, -1), updatedLine];
-      });
+      setCurrentStroke((prev) =>
+        prev ? { ...prev, points: [...prev.points, worldPos] } : null
+      );
     }
-  }, [getWorldPointerPosition, isDrawing, setDrawLines, tool]);
+  }, [getWorldPointerPosition, isDrawing, setCurrentStroke, tool]);
 
   const handleIconPlacement = useCallback(() => {
     const stage = stageRef.current;
@@ -215,13 +212,27 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
   ]);
 
   const handleStageMouseLeave = useCallback(() => {
+    if (isDrawing.current && currentStroke) {
+      setDrawLines((prev) => [...prev, currentStroke]);
+      setCurrentStroke(null);
+    }
     isDrawing.current = false;
     removeTempDragIcon();
-  }, [isDrawing, removeTempDragIcon]);
+  }, [
+    isDrawing,
+    currentStroke,
+    removeTempDragIcon,
+    setDrawLines,
+    setCurrentStroke,
+  ]);
 
   const handleMouseUp = useCallback(() => {
+    if (isDrawing.current && currentStroke) {
+      setDrawLines((prev) => [...prev, currentStroke]);
+      setCurrentStroke(null);
+    }
     isDrawing.current = false;
-  }, [isDrawing]);
+  }, [isDrawing, currentStroke, setDrawLines, setCurrentStroke]);
 
   const handleDragEnd = useCallback(
     <T extends CanvasIconItem>(

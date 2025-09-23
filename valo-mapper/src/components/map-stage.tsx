@@ -30,6 +30,7 @@ export const MapStage = ({
     selectedMap,
     drawLines,
     isDrawMode,
+    currentStroke,
   } = useCanvas();
 
   const { agentsSettings, abilitiesSettings } = useSettings();
@@ -140,28 +141,35 @@ export const MapStage = ({
         </Layer>
         <Layer>
           {drawLines.map((line, i) => {
-            const getLinePoints = (): number[] => {
-              const points: number[] = [];
-              line.points.forEach((point) => {
-                points.push(point.x, point.y);
-              });
-              return points;
-            };
             return (
               <Line
                 key={i}
-                points={getLinePoints()}
+                points={line.points.flatMap((point) => [point.x, point.y])}
                 stroke="#df4b26"
                 strokeWidth={5}
-                tension={0.5}
-                lineCap="round"
-                lineJoin="round"
                 globalCompositeOperation={
                   line.tool === "eraser" ? "destination-out" : "source-over"
                 }
               />
             );
           })}
+
+          {currentStroke && currentStroke.points.length > 1 && (
+            <Line
+              points={currentStroke.points.flatMap((point) => [
+                point.x,
+                point.y,
+              ])}
+              stroke={"#df4b26"}
+              strokeWidth={5}
+              opacity={0.8}
+              globalCompositeOperation={
+                currentStroke.tool === "eraser"
+                  ? "destination-out"
+                  : "source-over"
+              }
+            />
+          )}
         </Layer>
       </Stage>
 

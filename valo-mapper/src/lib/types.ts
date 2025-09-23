@@ -196,3 +196,17 @@ export type CircleAbility = Extract<
   | "vyse_ult"
   | "waylay_slow"
 >;
+
+export type Tool = "pencil" | "eraser";
+
+export type DrawLine = {
+  tool: Tool;
+  points: Vector2d[];
+};
+
+export type UndoableState = {
+  agentsOnCanvas: AgentCanvas[];
+  abilitiesOnCanvas: AbilityCanvas[];
+  selectedMap: MapOption;
+  drawLines: DrawLine[];
+};

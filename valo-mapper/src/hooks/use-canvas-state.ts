@@ -4,16 +4,12 @@ import {
   AbilityIconItem,
   Agent,
   AgentCanvas,
+  DrawLine,
   MapOption,
+  Tool,
+  UndoableState,
 } from "@/lib/types";
-import { Vector2d } from "konva/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-export type UndoableState = {
-  agentsOnCanvas: AgentCanvas[];
-  abilitiesOnCanvas: AbilityCanvas[];
-  selectedMap: MapOption;
-};
 
 export const useCanvasState = () => {
   const [isAlly, setIsAlly] = useState(true);
@@ -28,10 +24,9 @@ export const useCanvasState = () => {
 
   const [selectedMap, setSelectedMap] = useState<MapOption>(MAP_OPTIONS[1]); // Default Ascent
 
-  const [tool, setTool] = useState<"pencil" | "eraser">("pencil");
-  const [drawLines, setDrawLines] = useState<
-    { tool: "pencil" | "eraser"; points: Vector2d[] }[]
-  >([]);
+  const [currentStroke, setCurrentStroke] = useState<DrawLine | null>(null);
+  const [tool, setTool] = useState<Tool>("pencil");
+  const [drawLines, setDrawLines] = useState<DrawLine[]>([]);
   const [isDrawMode, setIsDrawMode] = useState(false);
   const isDrawing = useRef(false);
 
@@ -45,8 +40,9 @@ export const useCanvasState = () => {
       agentsOnCanvas,
       abilitiesOnCanvas,
       selectedMap,
+      drawLines,
     }),
-    [agentsOnCanvas, abilitiesOnCanvas, selectedMap]
+    [agentsOnCanvas, abilitiesOnCanvas, selectedMap, drawLines]
   );
 
   useEffect(() => {
@@ -113,6 +109,7 @@ export const useCanvasState = () => {
     setAgentsOnCanvas(state.agentsOnCanvas);
     setAbilitiesOnCanvas(state.abilitiesOnCanvas);
     setSelectedMap(state.selectedMap);
+    setDrawLines(state.drawLines);
 
     setTimeout(() => {
       isUpdatingFromHistory.current = false;
@@ -139,6 +136,7 @@ export const useCanvasState = () => {
     setAgentsOnCanvas([]);
     setAbilitiesOnCanvas([]);
     setSelectedCanvasIcon(null);
+    setDrawLines([]);
   }, []);
 
   const setAgentsOnCanvasWithHistory = useCallback(
@@ -158,6 +156,13 @@ export const useCanvasState = () => {
   const setSelectedMapWithHistory = useCallback(
     (value: MapOption | ((prev: MapOption) => MapOption)) => {
       setSelectedMap(value);
+    },
+    []
+  );
+
+  const setDrawLinesWithHistory = useCallback(
+    (value: DrawLine[] | ((prev: DrawLine[]) => DrawLine[])) => {
+      setDrawLines(value);
     },
     []
   );
@@ -198,7 +203,9 @@ export const useCanvasState = () => {
     tool,
     setTool,
     drawLines,
-    setDrawLines,
+    setDrawLines: setDrawLinesWithHistory,
+    currentStroke,
+    setCurrentStroke,
     isDrawMode,
     setIsDrawMode,
     isDrawing,

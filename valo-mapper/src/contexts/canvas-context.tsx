@@ -1,14 +1,16 @@
 "use client";
 
-import { UndoableState, useCanvasState } from "@/hooks/use-canvas-state";
+import { useCanvasState } from "@/hooks/use-canvas-state";
 import type {
   AbilityCanvas,
   AbilityIconItem,
   Agent,
   AgentCanvas,
+  DrawLine,
   MapOption,
+  Tool,
+  UndoableState,
 } from "@/lib/types";
-import { Vector2d } from "konva/lib/types";
 import React, { createContext, RefObject, useContext } from "react";
 
 interface CanvasContextType {
@@ -24,12 +26,12 @@ interface CanvasContextType {
   setIsAlly: React.Dispatch<React.SetStateAction<boolean>>;
   selectedMap: MapOption;
   setSelectedMap: React.Dispatch<React.SetStateAction<MapOption>>;
-  tool: "pencil" | "eraser";
-  setTool: React.Dispatch<React.SetStateAction<"pencil" | "eraser">>;
-  drawLines: { tool: "pencil" | "eraser"; points: Vector2d[] }[];
-  setDrawLines: React.Dispatch<
-    React.SetStateAction<{ tool: "pencil" | "eraser"; points: Vector2d[] }[]>
-  >;
+  tool: Tool;
+  setTool: React.Dispatch<React.SetStateAction<Tool>>;
+  currentStroke: DrawLine | null;
+  setCurrentStroke: React.Dispatch<React.SetStateAction<DrawLine | null>>;
+  drawLines: DrawLine[];
+  setDrawLines: React.Dispatch<React.SetStateAction<DrawLine[]>>;
   isDrawMode: boolean;
   setIsDrawMode: React.Dispatch<React.SetStateAction<boolean>>;
   isDrawing: RefObject<boolean>;
