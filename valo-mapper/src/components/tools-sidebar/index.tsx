@@ -8,7 +8,7 @@ import { MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapSelectButton } from "./map-select-button";
 import { useCanvas } from "@/contexts/canvas-context";
 import { Button } from "@/components/ui/button";
-import { MapOption } from "@/lib/types";
+import { MapOption, Tool } from "@/lib/types";
 import {
   ALargeSmall,
   Eraser,
@@ -19,6 +19,7 @@ import {
   Undo,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { Toggle } from "../ui/toggle";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -34,12 +35,21 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
     canRedo,
     resetState,
     setIsDrawMode,
+    tool,
     setTool,
+    isDrawMode,
   } = useCanvas();
 
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
     resetState();
+  };
+
+  const handlePressedChange = (pressed: boolean, tool: Tool) => {
+    setIsDrawMode(pressed);
+    if (pressed) {
+      setTool(tool);
+    }
   };
 
   return (
@@ -105,16 +115,16 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
+                  <Toggle
                     size="lg"
-                    onClick={() => {
-                      setIsDrawMode((prev) => !prev);
-                      setTool("pencil");
-                    }}
+                    data-state={isDrawMode && tool === "pencil" ? "on" : "off"}
+                    pressed={isDrawMode && tool === "pencil"}
+                    onPressedChange={(pressed) =>
+                      handlePressedChange(pressed, "pencil")
+                    }
                   >
                     <Pencil />
-                  </Button>
+                  </Toggle>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="center">
                   Draw
@@ -122,16 +132,16 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
+                  <Toggle
                     size="lg"
-                    onClick={() => {
-                      setIsDrawMode((prev) => !prev);
-                      setTool("eraser");
-                    }}
+                    data-state={isDrawMode && tool === "eraser" ? "on" : "off"}
+                    pressed={isDrawMode && tool === "eraser"}
+                    onPressedChange={(pressed) =>
+                      handlePressedChange(pressed, "eraser")
+                    }
                   >
                     <Eraser />
-                  </Button>
+                  </Toggle>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="center">
                   Eraser
