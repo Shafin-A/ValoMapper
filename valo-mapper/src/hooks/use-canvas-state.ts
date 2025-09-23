@@ -25,7 +25,7 @@ export const useCanvasState = () => {
     Agent | AbilityIconItem | null
   >(null);
 
-  const [selectedMap, setSelectedMap] = useState<MapOption>(MAP_OPTIONS[1]);
+  const [selectedMap, setSelectedMap] = useState<MapOption>(MAP_OPTIONS[1]); // Default Ascent
 
   const [history, setHistory] = useState<UndoableState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -127,6 +127,12 @@ export const useCanvasState = () => {
     }
   }, [history, historyIndex, applyHistoryState]);
 
+  const resetState = useCallback(() => {
+    setAgentsOnCanvas([]);
+    setAbilitiesOnCanvas([]);
+    setSelectedCanvasIcon(null);
+  }, []);
+
   const setAgentsOnCanvasWithHistory = useCallback(
     (value: AgentCanvas[] | ((prev: AgentCanvas[]) => AgentCanvas[])) => {
       setAgentsOnCanvas(value);
@@ -184,6 +190,7 @@ export const useCanvasState = () => {
     history,
     undo,
     redo,
+    resetState,
     canUndo: historyIndex > 0,
     canRedo: historyIndex < history.length - 1,
     saveToHistory,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,24 +12,19 @@ import { MapOption } from "@/lib/types";
 
 interface MapSelectButtonProps {
   mapOptions: MapOption[];
-  defaultSelectedId?: string;
   onMapSelect?: (selectedMap: MapOption) => void;
   className?: string;
+  selectedMap: MapOption;
+  setSelectedMap: React.Dispatch<React.SetStateAction<MapOption>>;
 }
 
 export const MapSelectButton = ({
   mapOptions,
-  defaultSelectedId,
   onMapSelect,
   className = "",
+  selectedMap,
+  setSelectedMap,
 }: MapSelectButtonProps) => {
-  const defaultSelected = defaultSelectedId
-    ? mapOptions.find((option) => option.id === defaultSelectedId) ||
-      mapOptions[0]
-    : mapOptions[0];
-
-  const [selectedMap, setSelectedMap] = useState<MapOption>(defaultSelected);
-
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
     onMapSelect?.(option);

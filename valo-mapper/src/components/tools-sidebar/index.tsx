@@ -8,13 +8,27 @@ import { MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapSelectButton } from "./map-select-button";
 import { useCanvas } from "@/contexts/canvas-context";
 import { Button } from "@/components/ui/button";
+import { MapOption } from "@/lib/types";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
 }
 
 export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
-  const { setSelectedMap, undo, redo, canUndo, canRedo } = useCanvas();
+  const {
+    selectedMap,
+    setSelectedMap,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    resetState,
+  } = useCanvas();
+
+  const handleMapSelect = (option: MapOption) => {
+    setSelectedMap(option);
+    resetState();
+  };
 
   return (
     <SidebarProvider
@@ -34,8 +48,9 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
             <span className="text-base font-semibold">Maps</span>
             <MapSelectButton
               mapOptions={MAP_OPTIONS}
-              defaultSelectedId="ascent"
-              onMapSelect={setSelectedMap}
+              selectedMap={selectedMap}
+              setSelectedMap={setSelectedMap}
+              onMapSelect={handleMapSelect}
             />
           </div>
         </SidebarHeader>

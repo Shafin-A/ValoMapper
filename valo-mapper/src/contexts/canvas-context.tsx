@@ -29,6 +29,7 @@ interface CanvasContextType {
   canRedo: boolean;
   saveToHistory: () => void;
   history: UndoableState[];
+  resetState: () => void;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
