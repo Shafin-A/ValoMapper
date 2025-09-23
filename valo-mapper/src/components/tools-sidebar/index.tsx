@@ -9,6 +9,15 @@ import { MapSelectButton } from "./map-select-button";
 import { useCanvas } from "@/contexts/canvas-context";
 import { Button } from "@/components/ui/button";
 import { MapOption } from "@/lib/types";
+import {
+  ALargeSmall,
+  Eraser,
+  Image as ImageIcon,
+  Pencil,
+  Redo,
+  Trash2,
+  Undo,
+} from "lucide-react";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -54,14 +63,46 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
             />
           </div>
         </SidebarHeader>
-        <SidebarContent>
-          <span className="text-base font-semibold p-4">Tools</span>
-          <Button onClick={undo} disabled={!canUndo}>
-            Undo
-          </Button>
-          <Button onClick={redo} disabled={!canRedo}>
-            Redo
-          </Button>
+
+        <SidebarContent className="px-4 pb-4">
+          <div className="space-y-2">
+            <span className="text-base font-semibold block">Tools</span>
+            <div className="grid grid-cols-5 gap-2">
+              <Button
+                onClick={undo}
+                disabled={!canUndo}
+                variant="ghost"
+                size="lg"
+                className="col-start-4" // Push undo button to the right
+              >
+                <Undo />
+              </Button>
+              <Button
+                onClick={redo}
+                disabled={!canRedo}
+                variant="ghost"
+                size="lg"
+              >
+                <Redo />
+              </Button>
+
+              <Button variant="ghost" size="lg">
+                <Pencil />
+              </Button>
+              <Button variant="ghost" size="lg">
+                <Eraser />
+              </Button>
+              <Button variant="destructiveGhost" size="lg">
+                <Trash2 />
+              </Button>
+              <Button variant="ghost" size="lg">
+                <ALargeSmall />
+              </Button>
+              <Button variant="ghost" size="lg">
+                <ImageIcon />
+              </Button>
+            </div>
+          </div>
         </SidebarContent>
       </Sidebar>
     </SidebarProvider>
