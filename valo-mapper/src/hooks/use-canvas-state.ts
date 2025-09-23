@@ -6,6 +6,7 @@ import {
   AgentCanvas,
   MapOption,
 } from "@/lib/types";
+import { Vector2d } from "konva/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type UndoableState = {
@@ -26,6 +27,13 @@ export const useCanvasState = () => {
   >(null);
 
   const [selectedMap, setSelectedMap] = useState<MapOption>(MAP_OPTIONS[1]); // Default Ascent
+
+  const [tool, setTool] = useState<"pencil" | "eraser">("pencil");
+  const [drawLines, setDrawLines] = useState<
+    { tool: "pencil" | "eraser"; points: Vector2d[] }[]
+  >([]);
+  const [isDrawMode, setIsDrawMode] = useState(false);
+  const isDrawing = useRef(false);
 
   const [history, setHistory] = useState<UndoableState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -187,6 +195,13 @@ export const useCanvasState = () => {
     setAbilitiesOnCanvas: setAbilitiesOnCanvasWithHistory,
     setSelectedCanvasIcon,
     setSelectedMap: setSelectedMapWithHistory,
+    tool,
+    setTool,
+    drawLines,
+    setDrawLines,
+    isDrawMode,
+    setIsDrawMode,
+    isDrawing,
     history,
     undo,
     redo,

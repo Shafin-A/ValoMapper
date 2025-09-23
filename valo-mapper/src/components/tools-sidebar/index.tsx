@@ -33,6 +33,8 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
     canUndo,
     canRedo,
     resetState,
+    setIsDrawMode,
+    setTool,
   } = useCanvas();
 
   const handleMapSelect = (option: MapOption) => {
@@ -103,7 +105,14 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="lg">
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => {
+                      setIsDrawMode((prev) => !prev);
+                      setTool("pencil");
+                    }}
+                  >
                     <Pencil />
                   </Button>
                 </TooltipTrigger>
@@ -113,7 +122,14 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="lg">
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => {
+                      setIsDrawMode((prev) => !prev);
+                      setTool("eraser");
+                    }}
+                  >
                     <Eraser />
                   </Button>
                 </TooltipTrigger>

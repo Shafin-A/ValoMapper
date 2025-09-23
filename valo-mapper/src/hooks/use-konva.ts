@@ -15,6 +15,9 @@ interface ContextMenuState {
   itemId: string;
   itemType: "agent" | "ability";
 }
+
+type CanvasIconItem = AgentCanvas | AbilityCanvas;
+
 export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
   const {
     selectedCanvasIcon,
@@ -23,6 +26,10 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setAgentsOnCanvas,
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
+    isDrawMode,
+    isDrawing,
+    setDrawLines,
+    tool,
   } = useCanvas();
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -32,6 +39,47 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     itemId: "",
     itemType: "agent",
   });
+
+  const getWorldPointerPosition = useCallback(() => {
+    const stage = stageRef.current;
+    if (!stage) return null;
+
+    const pos = stage.getPointerPosition();
+    if (!pos) return null;
+
+    const stagePos = stage.position();
+    const scale = stage.scaleX();
+
+    return {
+      x: (pos.x - stagePos.x) / scale,
+      y: (pos.y - stagePos.y) / scale,
+    };
+  }, [stageRef]);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu((prev) => ({ ...prev, open: false }));
+  }, []);
+
+  const removeTempDragIcon = useCallback(() => {
+    if (!selectedCanvasIcon) return;
+
+    if (isAgent(selectedCanvasIcon)) {
+      setAgentsOnCanvas((prev) =>
+        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
+      );
+    } else {
+      setAbilitiesOnCanvas((prev) =>
+        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
+      );
+    }
+
+    setSelectedCanvasIcon(null);
+  }, [
+    selectedCanvasIcon,
+    setAbilitiesOnCanvas,
+    setAgentsOnCanvas,
+    setSelectedCanvasIcon,
+  ]);
 
   const handleWheel = useCallback(
     (e: KonvaEventObject<WheelEvent>) => {
@@ -74,34 +122,51 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     [stageRef]
   );
 
-  const handleStageClick = useCallback(() => {
-    if (!selectedCanvasIcon) return;
+  const handleDrawing = useCallback(() => {
+    const worldPos = getWorldPointerPosition();
+    if (!worldPos) return;
 
+    if (!isDrawing.current) {
+      isDrawing.current = true;
+      setDrawLines((prev) => [...prev, { tool, points: [worldPos] }]);
+    } else {
+      setDrawLines((prev) => {
+        const lastLine = prev[prev.length - 1];
+        const updatedLine = {
+          ...lastLine,
+          points: [...lastLine.points, worldPos],
+        };
+        return [...prev.slice(0, -1), updatedLine];
+      });
+    }
+  }, [getWorldPointerPosition, isDrawing, setDrawLines, tool]);
+
+  const handleIconPlacement = useCallback(() => {
     const stage = stageRef.current;
-    if (!stage) return;
+    if (!stage || !selectedCanvasIcon) return;
 
-    const temp_drag_icon = stage.findOne(`#${TEMP_DRAG_ID}`);
+    const tempDragIcon = stage.findOne(`#${TEMP_DRAG_ID}`);
+    if (!tempDragIcon) return;
 
-    if (!temp_drag_icon) return;
-
-    const pos = temp_drag_icon.position();
+    const pos = tempDragIcon.position();
+    const newId = getNextId(isAgent(selectedCanvasIcon) ? "agent" : "ability");
 
     if (isAgent(selectedCanvasIcon)) {
-      setAgentsOnCanvas((prev) => {
-        return prev.map((agent) =>
+      setAgentsOnCanvas((prev) =>
+        prev.map((agent) =>
           agent.id === TEMP_DRAG_ID
-            ? { ...agent, id: getNextId("agent"), x: pos.x, y: pos.y }
+            ? { ...agent, id: newId, x: pos.x, y: pos.y }
             : agent
-        );
-      });
+        )
+      );
     } else {
-      setAbilitiesOnCanvas((prev) => {
-        return prev.map((ability) =>
+      setAbilitiesOnCanvas((prev) =>
+        prev.map((ability) =>
           ability.id === TEMP_DRAG_ID
-            ? { ...ability, id: getNextId("ability"), x: pos.x, y: pos.y }
+            ? { ...ability, id: newId, x: pos.x, y: pos.y }
             : ability
-        );
-      });
+        )
+      );
     }
 
     setSelectedCanvasIcon(null);
@@ -113,102 +178,101 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     stageRef,
   ]);
 
-  const handleStageMouseMove = useCallback(() => {
-    if (!selectedCanvasIcon) return;
-
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    const pos = stage.getPointerPosition();
-    if (!pos) return;
-
-    const stagePos = stage.position();
-    const scale = stage.scaleX();
-
-    const x = (pos.x - stagePos.x) / scale;
-    const y = (pos.y - stagePos.y) / scale;
-
-    const temp_drag_icon = stage.findOne(`#${TEMP_DRAG_ID}`);
-
-    if (!temp_drag_icon) return;
-
-    temp_drag_icon.position({ x, y });
-  }, [selectedCanvasIcon, stageRef]);
-
-  const handleStageMouseLeave = useCallback(() => {
-    if (!selectedCanvasIcon) return;
-
-    if (isAgent(selectedCanvasIcon)) {
-      setAgentsOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
-      );
-    } else {
-      setAbilitiesOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
-      );
+  const handleStageClick = useCallback(() => {
+    if (isDrawMode) {
+      handleDrawing();
+      return;
     }
 
-    setSelectedCanvasIcon(null);
+    if (selectedCanvasIcon) {
+      handleIconPlacement();
+    }
+  }, [isDrawMode, selectedCanvasIcon, handleDrawing, handleIconPlacement]);
+
+  const handleStageMouseMove = useCallback(() => {
+    const worldPos = getWorldPointerPosition();
+    if (!worldPos) return;
+
+    if (isDrawMode && isDrawing.current) {
+      handleDrawing();
+      return;
+    }
+
+    if (selectedCanvasIcon) {
+      const stage = stageRef.current;
+      const tempDragIcon = stage?.findOne(`#${TEMP_DRAG_ID}`);
+      if (tempDragIcon) {
+        tempDragIcon.position(worldPos);
+      }
+    }
   }, [
+    getWorldPointerPosition,
+    isDrawMode,
+    isDrawing,
     selectedCanvasIcon,
-    setAbilitiesOnCanvas,
-    setAgentsOnCanvas,
-    setSelectedCanvasIcon,
+    handleDrawing,
+    stageRef,
   ]);
 
-  const handleDragEnd = <T extends AgentCanvas | AbilityCanvas>(
-    e: KonvaEventObject<DragEvent>,
-    icon: T,
-    setIconsOnCanvas: Dispatch<SetStateAction<T[]>>
-  ) => {
-    const newX = e.target.x();
-    const newY = e.target.y();
+  const handleStageMouseLeave = useCallback(() => {
+    isDrawing.current = false;
+    removeTempDragIcon();
+  }, [isDrawing, removeTempDragIcon]);
 
-    setIconsOnCanvas((prev) => {
-      const index = prev.findIndex((i) => i.id === icon.id);
-      if (index === -1) return prev;
+  const handleMouseUp = useCallback(() => {
+    isDrawing.current = false;
+  }, [isDrawing]);
 
-      const copy = prev.slice();
-      const [item] = copy.splice(index, 1);
-      const updatedItem = { ...item, x: newX, y: newY };
-      copy.push(updatedItem);
+  const handleDragEnd = useCallback(
+    <T extends CanvasIconItem>(
+      e: KonvaEventObject<DragEvent>,
+      icon: T,
+      setIconsOnCanvas: Dispatch<SetStateAction<T[]>>
+    ) => {
+      const newX = e.target.x();
+      const newY = e.target.y();
 
-      return copy;
-    });
-  };
+      setIconsOnCanvas((prev) => {
+        const index = prev.findIndex((item) => item.id === icon.id);
+        if (index === -1) return prev;
+
+        const updatedItems = [...prev];
+        updatedItems[index] = { ...updatedItems[index], x: newX, y: newY };
+        return updatedItems;
+      });
+    },
+    []
+  );
 
   const handleContextMenu = useCallback(
     (e: KonvaEventObject<PointerEvent>) => {
       e.evt.preventDefault();
 
       const stage = stageRef.current;
-      if (!stage) return;
-
-      if (e.target === stage) return;
+      if (!stage || e.target === stage) return;
 
       const containerRect = stage.container().getBoundingClientRect();
       const pointerPosition = stage.getPointerPosition();
-
       if (!pointerPosition) return;
 
       const targetId = e.target.id() || e.target.parent?.id();
       if (!targetId) return;
 
-      const isAgent = agentsOnCanvas.some(
+      const isAgentItem = agentsOnCanvas.some(
         (agent) => agent.id.toString() === targetId
       );
-      const isAbility = abilitiesOnCanvas.some(
+      const isAbilityItem = abilitiesOnCanvas.some(
         (ability) => ability.id.toString() === targetId
       );
 
-      if (!isAgent && !isAbility) return;
+      if (!isAgentItem && !isAbilityItem) return;
 
       setContextMenu({
         open: true,
         x: containerRect.left + pointerPosition.x,
         y: containerRect.top + pointerPosition.y,
         itemId: targetId,
-        itemType: isAgent ? "agent" : "ability",
+        itemType: isAgentItem ? "agent" : "ability",
       });
 
       e.cancelBubble = true;
@@ -217,10 +281,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
   );
 
   const handlePopoverOpenChange = useCallback((open: boolean) => {
-    setContextMenu((prev) => ({
-      ...prev,
-      open,
-    }));
+    setContextMenu((prev) => ({ ...prev, open }));
   }, []);
 
   const handleDuplicate = useCallback(() => {
@@ -251,13 +312,14 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         setAbilitiesOnCanvas((prev) => [...prev, newAbility]);
       }
     }
-    setContextMenu((prev) => ({ ...prev, open: false }));
+    closeContextMenu();
   }, [
     contextMenu,
     agentsOnCanvas,
     abilitiesOnCanvas,
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
+    closeContextMenu,
   ]);
 
   const handleDelete = useCallback(() => {
@@ -272,8 +334,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         prev.filter((ability) => ability.id !== itemId)
       );
     }
-    setContextMenu((prev) => ({ ...prev, open: false }));
-  }, [contextMenu, setAgentsOnCanvas, setAbilitiesOnCanvas]);
+    closeContextMenu();
+  }, [contextMenu, setAgentsOnCanvas, setAbilitiesOnCanvas, closeContextMenu]);
 
   const handleToggleAlly = useCallback(() => {
     if (!contextMenu.open) return;
@@ -295,14 +357,15 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         )
       );
     }
-    setContextMenu((prev) => ({ ...prev, open: false }));
-  }, [contextMenu, setAgentsOnCanvas, setAbilitiesOnCanvas]);
+    closeContextMenu();
+  }, [contextMenu, setAgentsOnCanvas, setAbilitiesOnCanvas, closeContextMenu]);
 
   return {
     handleWheel,
     handleStageClick,
     handleStageMouseMove,
     handleStageMouseLeave,
+    handleMouseUp,
     handleDragEnd,
     handleContextMenu,
     handlePopoverOpenChange,

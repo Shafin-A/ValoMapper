@@ -8,7 +8,8 @@ import type {
   AgentCanvas,
   MapOption,
 } from "@/lib/types";
-import React, { createContext, useContext } from "react";
+import { Vector2d } from "konva/lib/types";
+import React, { createContext, RefObject, useContext } from "react";
 
 interface CanvasContextType {
   agentsOnCanvas: AgentCanvas[];
@@ -23,6 +24,15 @@ interface CanvasContextType {
   setIsAlly: React.Dispatch<React.SetStateAction<boolean>>;
   selectedMap: MapOption;
   setSelectedMap: React.Dispatch<React.SetStateAction<MapOption>>;
+  tool: "pencil" | "eraser";
+  setTool: React.Dispatch<React.SetStateAction<"pencil" | "eraser">>;
+  drawLines: { tool: "pencil" | "eraser"; points: Vector2d[] }[];
+  setDrawLines: React.Dispatch<
+    React.SetStateAction<{ tool: "pencil" | "eraser"; points: Vector2d[] }[]>
+  >;
+  isDrawMode: boolean;
+  setIsDrawMode: React.Dispatch<React.SetStateAction<boolean>>;
+  isDrawing: RefObject<boolean>;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;

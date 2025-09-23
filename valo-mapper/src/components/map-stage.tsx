@@ -6,7 +6,7 @@ import { useKonva } from "@/hooks/use-konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
 import { useRef } from "react";
-import { Image as KonvaImage, Layer, Stage } from "react-konva";
+import { Image as KonvaImage, Layer, Line, Stage } from "react-konva";
 import useImage from "use-image";
 
 interface MapStageProps {
@@ -28,6 +28,8 @@ export const MapStage = ({
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
     selectedMap,
+    drawLines,
+    isDrawMode,
   } = useCanvas();
 
   const { agentsSettings, abilitiesSettings } = useSettings();
@@ -42,6 +44,7 @@ export const MapStage = ({
     handleStageClick,
     handleStageMouseLeave,
     handleStageMouseMove,
+    handleMouseUp,
     handleContextMenu,
     handleDelete,
     handleDuplicate,
@@ -109,9 +112,10 @@ export const MapStage = ({
         height={height}
         ref={stageRef}
         onWheel={handleWheel}
-        draggable
+        draggable={!isDrawMode}
         onMouseMove={handleStageMouseMove}
         onMouseDown={handleStageClick}
+        onMouseUp={handleMouseUp}
         onMouseLeave={handleStageMouseLeave}
         onContextMenu={handleContextMenu}
       >
@@ -133,6 +137,31 @@ export const MapStage = ({
         <Layer>
           {renderAbilities()}
           {renderAgents()}
+        </Layer>
+        <Layer>
+          {drawLines.map((line, i) => {
+            const getLinePoints = (): number[] => {
+              const points: number[] = [];
+              line.points.forEach((point) => {
+                points.push(point.x, point.y);
+              });
+              return points;
+            };
+            return (
+              <Line
+                key={i}
+                points={getLinePoints()}
+                stroke="#df4b26"
+                strokeWidth={5}
+                tension={0.5}
+                lineCap="round"
+                lineJoin="round"
+                globalCompositeOperation={
+                  line.tool === "eraser" ? "destination-out" : "source-over"
+                }
+              />
+            );
+          })}
         </Layer>
       </Stage>
 
