@@ -18,6 +18,7 @@ import {
   Trash2,
   Undo,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -65,42 +66,91 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
         </SidebarHeader>
 
         <SidebarContent className="px-4 pb-4">
-          <div className="space-y-2">
+          <div className="space-y-2 mt-4">
             <span className="text-base font-semibold block">Tools</span>
             <div className="grid grid-cols-5 gap-2">
-              <Button
-                onClick={undo}
-                disabled={!canUndo}
-                variant="ghost"
-                size="lg"
-                className="col-start-4" // Push undo button to the right
-              >
-                <Undo />
-              </Button>
-              <Button
-                onClick={redo}
-                disabled={!canRedo}
-                variant="ghost"
-                size="lg"
-              >
-                <Redo />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={undo}
+                    disabled={!canUndo}
+                    variant="ghost"
+                    size="lg"
+                    className="col-start-4" // Push undo button to the right
+                  >
+                    <Undo />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="center">
+                  Undo
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={redo}
+                    disabled={!canRedo}
+                    variant="ghost"
+                    size="lg"
+                  >
+                    <Redo />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="center">
+                  Redo
+                </TooltipContent>
+              </Tooltip>
 
-              <Button variant="ghost" size="lg">
-                <Pencil />
-              </Button>
-              <Button variant="ghost" size="lg">
-                <Eraser />
-              </Button>
-              <Button variant="destructiveGhost" size="lg">
-                <Trash2 />
-              </Button>
-              <Button variant="ghost" size="lg">
-                <ALargeSmall />
-              </Button>
-              <Button variant="ghost" size="lg">
-                <ImageIcon />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="lg">
+                    <Pencil />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="center">
+                  Draw
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="lg">
+                    <Eraser />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="center">
+                  Eraser
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="destructiveGhost" size="lg">
+                    <Trash2 />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="center">
+                  Delete
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="lg">
+                    <ALargeSmall />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="center">
+                  Add Text
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="lg">
+                    <ImageIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="center">
+                  Add Image
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </SidebarContent>
