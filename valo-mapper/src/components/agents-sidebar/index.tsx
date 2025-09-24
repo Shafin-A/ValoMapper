@@ -49,6 +49,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     setSelectedCanvasIcon,
     isAlly,
     setIsAlly,
+    setIsDrawMode,
   } = useCanvas();
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
@@ -87,12 +88,14 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
 
   const handleAgentClick = (agent: Agent | null) => {
     if (!agent) return;
+    setIsDrawMode(false);
     setSelectedAgentAbilities(null);
     handleIconClick(agent, setAgentsOnCanvas);
   };
 
   const handleAbilityClick = (ability: AbilityIconItem | null) => {
     if (!ability) return;
+    setIsDrawMode(false);
     handleIconClick(ability, setAbilitiesOnCanvas);
   };
 

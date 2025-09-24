@@ -63,7 +63,7 @@ export const MapStage = ({
         x={agent.x}
         y={agent.y}
         src={agent.src}
-        draggable
+        draggable={!isDrawMode}
         onDragEnd={(e) => handleDragEnd(e, agent, setAgentsOnCanvas)}
         width={agentsSettings.scale}
         height={agentsSettings.scale}
@@ -86,7 +86,7 @@ export const MapStage = ({
         y={ability.y}
         rotation={ability.currentRotation}
         src={ability.src}
-        draggable
+        draggable={!isDrawMode}
         onDragEnd={(e) => handleDragEnd(e, ability, setAbilitiesOnCanvas)}
         width={abilitiesSettings.scale}
         height={abilitiesSettings.scale}
@@ -135,7 +135,7 @@ export const MapStage = ({
             />
           )}
         </Layer>
-        <Layer>
+        <Layer isListening={!isDrawMode}>
           {renderAbilities()}
           {renderAgents()}
         </Layer>
