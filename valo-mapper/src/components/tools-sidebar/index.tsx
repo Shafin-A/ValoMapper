@@ -1,13 +1,19 @@
+import { AnimatedContent } from "@/components/ui/animated-content";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
-import { MapSelectButton } from "./map-select-button";
+import { Toggle } from "@/components/ui/toggle";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
-import { Button } from "@/components/ui/button";
+import { MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapOption, Tool } from "@/lib/types";
 import {
   ALargeSmall,
@@ -18,8 +24,8 @@ import {
   Trash2,
   Undo,
 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { Toggle } from "../ui/toggle";
+import { DrawSettings } from "./draw-settings";
+import { MapSelectButton } from "./map-select-button";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -178,6 +184,9 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
                 </TooltipContent>
               </Tooltip>
             </div>
+            <AnimatedContent show={isDrawMode && tool === "pencil"}>
+              <DrawSettings />
+            </AnimatedContent>
           </div>
         </SidebarContent>
       </Sidebar>
