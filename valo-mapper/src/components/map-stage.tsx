@@ -3,9 +3,10 @@ import { ContextMenuPopover } from "@/components/context-menu-popover";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useKonva } from "@/hooks/use-konva";
+import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useRef } from "react";
+import { Ref, useRef } from "react";
 import { Arrow, Image as KonvaImage, Layer, Line, Stage } from "react-konva";
 import useImage from "use-image";
 
@@ -52,6 +53,7 @@ export const MapStage = ({
     handleToggleAlly,
     handlePopoverOpenChange,
     contextMenu,
+    currentLineRef,
   } = useKonva(stageRef);
 
   const renderAgents = () =>
@@ -141,7 +143,7 @@ export const MapStage = ({
           {renderAbilities()}
           {renderAgents()}
         </Layer>
-        <Layer>
+        <Layer isListening={isDrawMode}>
           {drawLines.map((line, i) => {
             return line.isArrowHead && line.tool !== "eraser" ? (
               <Arrow
@@ -173,9 +175,9 @@ export const MapStage = ({
           })}
 
           {currentStroke &&
-            currentStroke.points.length > 1 &&
             (currentStroke.isArrowHead && currentStroke.tool !== "eraser" ? (
               <Arrow
+                ref={currentLineRef as Ref<Konva.Arrow>}
                 points={currentStroke.points.flatMap((point) => [
                   point.x,
                   point.y,
@@ -190,6 +192,7 @@ export const MapStage = ({
               />
             ) : (
               <Line
+                ref={currentLineRef}
                 points={currentStroke.points.flatMap((point) => [
                   point.x,
                   point.y,
