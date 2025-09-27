@@ -42,6 +42,7 @@ export const CanvasDoubleLineIcon = ({
   x,
   y,
   src,
+  isListening,
   draggable = true,
   onDragEnd,
   borderOpacity,
@@ -122,6 +123,7 @@ export const CanvasDoubleLineIcon = ({
 
   const handleInteractionMouseDown = useCallback(
     (e: KonvaEventObject<MouseEvent>) => {
+      if (!isListening) return;
       e.cancelBubble = true;
       setIsInteracting(true);
 
@@ -206,22 +208,25 @@ export const CanvasDoubleLineIcon = ({
       stage.on("mouseleave.interaction", handleInteractionMouseUp);
     },
     [
+      isListening,
       handleMode,
-      id,
-      maxLength,
-      minLength,
-      onLengthChange,
       onRotationChange,
-      setAbilitiesOnCanvas,
       iconLineGap,
+      minLength,
+      maxLength,
+      onLengthChange,
+      setAbilitiesOnCanvas,
+      id,
     ]
   );
 
   const handleRotationHandleMouseOver = () => {
+    if (!isListening) return;
     if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.8);
   };
 
   const handleRotationHandleMouseOut = () => {
+    if (!isListening) return;
     if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.6);
   };
 
@@ -273,12 +278,13 @@ export const CanvasDoubleLineIcon = ({
       ref={groupRef}
       x={x}
       y={y}
+      isListening={isListening}
       draggable={draggable}
-      onMouseOver={handleMouseOverGrabCursor}
-      onMouseOut={handleMouseOutDefaultCursor}
-      onMouseDown={handleMouseDown}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
+      onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
+      onMouseDown={isListening ? handleMouseDown : undefined}
+      onDragStart={isListening ? handleDragStart : undefined}
+      onDragEnd={isListening ? handleDragEnd : undefined}
     >
       <Line
         points={[line1StartX, line1StartY, line1EndX, line1EndY]}
@@ -322,6 +328,7 @@ export const CanvasDoubleLineIcon = ({
           ref={rotationHandleRef}
           x={handleX}
           y={handleY}
+          isListening={isListening}
           radius={rotationHandleRadius}
           fill={handleColor}
           stroke={rotationHandleStrokeColor}
@@ -339,6 +346,7 @@ export const CanvasDoubleLineIcon = ({
         x={0}
         y={0}
         src={src}
+        isListening={isListening}
         draggable={false}
         width={width}
         height={height}

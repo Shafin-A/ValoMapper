@@ -14,6 +14,7 @@ export interface CanvasIconProps {
   x: number;
   y: number;
   src: string;
+  isListening?: boolean;
   draggable?: boolean;
   width: number;
   height: number;
@@ -32,6 +33,7 @@ export const CanvasIcon = ({
   x,
   y,
   src,
+  isListening,
   draggable,
   width,
   height,
@@ -65,13 +67,14 @@ export const CanvasIcon = ({
       ref={groupRef}
       x={x}
       y={y}
+      listening={isListening}
       draggable={draggable}
-      onMouseOver={handleMouseOverGrabCursor}
-      onMouseOut={handleMouseOutDefaultCursor}
+      onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
+      onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
       offsetX={width / 2}
       offsetY={height / 2}
-      onDragStart={handleOnDragStart}
-      onDragEnd={handleDragEnd}
+      onDragStart={isListening ? handleOnDragStart : undefined}
+      onDragEnd={isListening ? handleDragEnd : undefined}
     >
       <KonvaImage
         image={image}

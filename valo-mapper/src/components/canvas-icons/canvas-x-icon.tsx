@@ -30,6 +30,7 @@ export const CanvasXIcon = ({
   x,
   y,
   src,
+  isListening,
   draggable = true,
   onDragEnd,
   borderOpacity,
@@ -94,6 +95,7 @@ export const CanvasXIcon = ({
 
   const handleInteractionMouseDown = useCallback(
     (e: KonvaEventObject<MouseEvent>) => {
+      if (!isListening) return;
       e.cancelBubble = true;
       setIsInteracting(true);
 
@@ -154,14 +156,16 @@ export const CanvasXIcon = ({
       stage.on("mouseup.interaction", handleInteractionMouseUp);
       stage.on("mouseleave.interaction", handleInteractionMouseUp);
     },
-    [id, onRotationChange, setAbilitiesOnCanvas]
+    [id, isListening, onRotationChange, setAbilitiesOnCanvas]
   );
 
   const handleRotationHandleMouseOver = () => {
+    if (!isListening) return;
     if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.8);
   };
 
   const handleRotationHandleMouseOut = () => {
+    if (!isListening) return;
     if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.6);
   };
 
@@ -190,12 +194,13 @@ export const CanvasXIcon = ({
       ref={groupRef}
       x={x}
       y={y}
+      isListening={isListening}
       draggable={draggable}
-      onMouseOver={handleMouseOverGrabCursor}
-      onMouseOut={handleMouseOutDefaultCursor}
-      onMouseDown={handleMouseDown}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
+      onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
+      onMouseDown={isListening ? handleMouseDown : undefined}
+      onDragStart={isListening ? handleDragStart : undefined}
+      onDragEnd={isListening ? handleDragEnd : undefined}
     >
       <Line
         points={[line1StartX, line1StartY, line1EndX, line1EndY]}
@@ -240,6 +245,7 @@ export const CanvasXIcon = ({
           ref={rotationHandleRef}
           x={handleX}
           y={handleY}
+          isListening={isListening}
           radius={rotationHandleRadius}
           fill={rotationHandleColor}
           stroke={rotationHandleStrokeColor}
@@ -257,6 +263,7 @@ export const CanvasXIcon = ({
         x={0}
         y={0}
         src={src}
+        isListening={isListening}
         draggable={false}
         width={width}
         height={height}

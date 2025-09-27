@@ -19,6 +19,7 @@ export const CanvasCircleIcon = ({
   x,
   y,
   src,
+  isListening,
   draggable = true,
   onDragEnd,
   borderOpacity,
@@ -67,6 +68,7 @@ export const CanvasCircleIcon = ({
       ref={groupRef}
       x={x}
       y={y}
+      listening={isListening}
       draggable={draggable}
       onMouseDown={handleMouseDown}
       onDragStart={handleDragStart}

@@ -41,6 +41,7 @@ export const CanvasLineIcon = ({
   x,
   y,
   src,
+  isListening,
   draggable = true,
   onDragEnd,
   borderOpacity,
@@ -120,6 +121,7 @@ export const CanvasLineIcon = ({
 
   const handleInteractionMouseDown = useCallback(
     (e: KonvaEventObject<MouseEvent>) => {
+      if (!isListening) return;
       e.cancelBubble = true;
       setIsInteracting(true);
 
@@ -208,6 +210,7 @@ export const CanvasLineIcon = ({
       handleMode,
       iconLineGap,
       id,
+      isListening,
       maxLength,
       minLength,
       onLengthChange,
@@ -217,10 +220,12 @@ export const CanvasLineIcon = ({
   );
 
   const handleRotationHandleMouseOver = () => {
+    if (!isListening) return;
     if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.8);
   };
 
   const handleRotationHandleMouseOut = () => {
+    if (!isListening) return;
     if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.6);
   };
 
@@ -258,14 +263,16 @@ export const CanvasLineIcon = ({
       ref={groupRef}
       x={x}
       y={y}
+      isListening={isListening}
       draggable={draggable}
-      onMouseOver={handleMouseOverGrabCursor}
-      onMouseOut={handleMouseOutDefaultCursor}
-      onMouseDown={handleMouseDown}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
+      onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
+      onMouseDown={isListening ? handleMouseDown : undefined}
+      onDragStart={isListening ? handleDragStart : undefined}
+      onDragEnd={isListening ? handleDragEnd : undefined}
     >
       <Line
+        isListening={isListening}
         points={[startX, startY, endX, endY]}
         strokeWidth={lineStrokeWidth}
         stroke={stroke}
@@ -273,6 +280,7 @@ export const CanvasLineIcon = ({
 
       {showThickEnd && (
         <Line
+          isListening={isListening}
           points={[
             endX - thickEndLength * Math.cos(radians),
             endY - thickEndLength * Math.sin(radians),
@@ -290,6 +298,7 @@ export const CanvasLineIcon = ({
           ref={rotationHandleRef}
           x={handleX}
           y={handleY}
+          isListening={isListening}
           radius={rotationHandleRadius}
           fill={handleColor}
           stroke={rotationHandleStrokeColor}
@@ -307,6 +316,7 @@ export const CanvasLineIcon = ({
         x={0}
         y={0}
         src={src}
+        isListening={isListening}
         draggable={false}
         width={width}
         height={height}

@@ -26,6 +26,7 @@ export const CanvasArcIcon = ({
   x,
   y,
   src,
+  isListening,
   draggable = true,
   onDragEnd,
   borderOpacity,
@@ -91,6 +92,7 @@ export const CanvasArcIcon = ({
 
   const handleInteractionMouseDown = useCallback(
     (e: KonvaEventObject<MouseEvent>) => {
+      if (!isListening) return;
       e.cancelBubble = true;
       setIsInteracting(true);
 
@@ -150,7 +152,7 @@ export const CanvasArcIcon = ({
       stage.on("mouseup.interaction", handleInteractionMouseUp);
       stage.on("mouseleave.interaction", handleInteractionMouseUp);
     },
-    [id, setAbilitiesOnCanvas]
+    [id, isListening, setAbilitiesOnCanvas]
   );
 
   const radians = (currentRotation * Math.PI) / 180;
@@ -159,10 +161,12 @@ export const CanvasArcIcon = ({
   const handleY = rotationHandleDistance * Math.sin(radians);
 
   const handleRotationHandleMouseOver = () => {
+    if (!isListening) return;
     if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.8);
   };
 
   const handleRotationHandleMouseOut = () => {
+    if (!isListening) return;
     if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.6);
   };
 
@@ -172,6 +176,7 @@ export const CanvasArcIcon = ({
       ref={groupRef}
       x={x}
       y={y}
+      isListening={isListening}
       draggable={draggable}
       onMouseDown={handleMouseDown}
       onDragStart={handleDragStart}
@@ -229,6 +234,7 @@ export const CanvasArcIcon = ({
         x={0}
         y={0}
         src={src}
+        isListening={isListening}
         draggable={false}
         width={width}
         height={height}

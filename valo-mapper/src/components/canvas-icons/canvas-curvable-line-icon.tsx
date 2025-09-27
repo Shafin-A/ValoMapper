@@ -28,6 +28,7 @@ export const CanvasCurvableLineIcon = ({
   x,
   y,
   src,
+  isListening,
   draggable = true,
   onDragEnd,
   borderOpacity,
@@ -133,6 +134,7 @@ export const CanvasCurvableLineIcon = ({
 
   const handlePathDrawing = useCallback(
     (e: KonvaEventObject<MouseEvent>) => {
+      if (!isListening) return;
       e.cancelBubble = true;
 
       const stage = e.target.getStage();
@@ -213,6 +215,7 @@ export const CanvasCurvableLineIcon = ({
     [
       calculatePathDistance,
       height,
+      isListening,
       maxDistance,
       path,
       updateAbilitiesState,
@@ -221,11 +224,13 @@ export const CanvasCurvableLineIcon = ({
   );
 
   const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {
+    if (!isListening) return;
     e.target.opacity(0.8);
     handleMouseOverPointerCursor(e);
   };
 
   const handleMouseOut = (e: KonvaEventObject<MouseEvent>) => {
+    if (!isListening) return;
     e.target.opacity(0.6);
     handleMouseOutDefaultCursor(e);
   };
@@ -249,15 +254,16 @@ export const CanvasCurvableLineIcon = ({
       ref={groupRef}
       x={x}
       y={y}
+      isListening={isListening}
       draggable={draggable}
-      onMouseOut={handleMouseOutDefaultCursor}
-      onMouseDown={handleMouseDown}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
+      onMouseDown={isListening ? handleMouseDown : undefined}
+      onDragStart={isListening ? handleDragStart : undefined}
+      onDragEnd={isListening ? handleDragEnd : undefined}
     >
       {path.length > 1 && (
         <Line
-          onMouseOver={handleMouseOverGrabCursor}
+          onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
           points={getLinePoints()}
           strokeWidth={lineStrokeWidth}
           stroke={stroke}
@@ -269,6 +275,7 @@ export const CanvasCurvableLineIcon = ({
           ref={handleRef}
           x={endPoint.x}
           y={endPoint.y}
+          isListening={isListening}
           radius={handleRadius}
           fill={stroke}
           stroke={handleStrokeColor}
@@ -284,6 +291,7 @@ export const CanvasCurvableLineIcon = ({
         <Circle
           x={endPoint.x}
           y={endPoint.y - 25}
+          isListening={isListening}
           radius={8}
           onClick={handleReset}
           onMouseOver={handleMouseOver}
@@ -299,6 +307,7 @@ export const CanvasCurvableLineIcon = ({
         x={0}
         y={0}
         src={src}
+        isListening={isListening}
         draggable={false}
         width={width}
         height={height}
