@@ -16,11 +16,13 @@ import {
   CircleAbility,
   CurvableLineAbility,
   DoubleLineAbility,
+  DrawLine,
   LineAbility,
   XLineAbility,
 } from "@/lib/types";
 import { clsx, type ClassValue } from "clsx";
 import { KonvaEventObject } from "konva/lib/Node";
+import { Vector2d } from "konva/lib/types";
 import { twMerge } from "tailwind-merge";
 
 export const cn = (...inputs: ClassValue[]) => {
@@ -110,4 +112,51 @@ export const handleMouseOutDefaultCursor = (
   e: KonvaEventObject<MouseEvent>
 ) => {
   e.target.getStage()!.container().style.cursor = "default";
+};
+
+export const doLinesIntersect = (
+  p1: Vector2d,
+  p2: Vector2d,
+  p3: Vector2d,
+  p4: Vector2d
+) => {
+  const denominator =
+    (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y);
+
+  if (denominator === 0) return false;
+
+  const ua =
+    ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) /
+    denominator;
+  const ub =
+    ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) /
+    denominator;
+
+  return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1;
+};
+
+export const doesEraserIntersect = (
+  eraserPoints: Vector2d[],
+  existingStrokes: DrawLine[]
+) => {
+  const existingPencilStrokes = existingStrokes.filter(
+    (stroke) => stroke.tool === "pencil"
+  );
+
+  for (const stroke of existingPencilStrokes) {
+    for (let i = 0; i < eraserPoints.length - 1; i++) {
+      const eraserP1 = eraserPoints[i];
+      const eraserP2 = eraserPoints[i + 1];
+
+      for (let j = 0; j < stroke.points.length - 1; j++) {
+        const strokeP1 = stroke.points[j];
+        const strokeP2 = stroke.points[j + 1];
+
+        if (doLinesIntersect(eraserP1, eraserP2, strokeP1, strokeP2)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 };

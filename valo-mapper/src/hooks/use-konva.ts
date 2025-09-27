@@ -7,7 +7,7 @@ import {
   TEMP_DRAG_ID,
 } from "@/lib/consts";
 import { AbilityCanvas, AgentCanvas } from "@/lib/types";
-import { getNextId, isAgent } from "@/lib/utils";
+import { doesEraserIntersect, getNextId, isAgent } from "@/lib/utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
@@ -34,9 +34,9 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setAbilitiesOnCanvas,
     isDrawMode,
     isDrawing,
+    drawLines,
     setDrawLines,
     tool,
-    currentStroke,
     setCurrentStroke,
   } = useCanvas();
 
@@ -257,21 +257,6 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     stageRef,
   ]);
 
-  const handleStageMouseLeave = useCallback(() => {
-    if (isDrawing.current && currentStroke) {
-      setDrawLines((prev) => [...prev, currentStroke]);
-      setCurrentStroke(null);
-    }
-    isDrawing.current = false;
-    removeTempDragIcon();
-  }, [
-    isDrawing,
-    currentStroke,
-    removeTempDragIcon,
-    setDrawLines,
-    setCurrentStroke,
-  ]);
-
   const handleMouseUp = useCallback(() => {
     if (isDrawing.current && drawingBufferRef.current.length > 0) {
       const finalStroke = {
@@ -283,12 +268,32 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         isArrowHead: drawSettings.isArrowHead,
       };
 
-      setDrawLines((prev) => [...prev, finalStroke]);
-      setCurrentStroke(null);
+      if (tool === "eraser") {
+        if (doesEraserIntersect(drawingBufferRef.current, drawLines)) {
+          setDrawLines((prev) => [...prev, finalStroke]);
+        }
+        setCurrentStroke(null);
+      } else {
+        setDrawLines((prev) => [...prev, finalStroke]);
+        setCurrentStroke(null);
+      }
+
       drawingBufferRef.current = [];
     }
     isDrawing.current = false;
-  }, [isDrawing, tool, drawSettings, setDrawLines, setCurrentStroke]);
+  }, [
+    isDrawing,
+    tool,
+    drawSettings,
+    drawLines,
+    setCurrentStroke,
+    setDrawLines,
+  ]);
+
+  const handleStageMouseLeave = useCallback(() => {
+    handleMouseUp();
+    removeTempDragIcon();
+  }, [handleMouseUp, removeTempDragIcon]);
 
   const handleDragEnd = useCallback(
     <T extends CanvasIconItem>(
