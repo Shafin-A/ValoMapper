@@ -1,13 +1,15 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
-import { IconSettings } from "@/lib/types";
+import { DrawSettings, IconSettings } from "@/lib/types";
 
 interface SettingsContextType {
   agentsSettings: IconSettings;
   abilitiesSettings: IconSettings;
+  drawSettings: DrawSettings;
   updateAgentsSettings: (settings: Partial<IconSettings>) => void;
   updateAbilitiesSettings: (settings: Partial<IconSettings>) => void;
+  updateDrawSettings: (settings: Partial<DrawSettings>) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -37,6 +39,13 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     enemyColor: "#FF4655",
   });
 
+  const [drawSettings, setDrawSettings] = useState<DrawSettings>({
+    size: 5,
+    color: "#ff0000",
+    isDashed: false,
+    isArrowHead: false,
+  });
+
   const updateAgentsSettings = (newSettings: Partial<IconSettings>) => {
     setAgentsSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -45,13 +54,19 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     setAbilitiesSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
+  const updateDrawSettings = (newSettings: Partial<DrawSettings>) => {
+    setDrawSettings((prev) => ({ ...prev, ...newSettings }));
+  };
+
   return (
     <SettingsContext.Provider
       value={{
         agentsSettings,
         abilitiesSettings,
+        drawSettings,
         updateAgentsSettings,
         updateAbilitiesSettings,
+        updateDrawSettings,
       }}
     >
       {children}

@@ -36,6 +36,13 @@ export type AbilityCanvas = CanvasItem & {
 
 export type AgentRole = "Duelist" | "Controller" | "Initiator" | "Sentinel";
 
+export type DrawSettings = {
+  size: number;
+  color: string;
+  isDashed: boolean;
+  isArrowHead: boolean;
+};
+
 export type IconSettings = {
   scale: number;
   borderOpacity: number;
@@ -202,6 +209,10 @@ export type Tool = "pencil" | "eraser";
 export type DrawLine = {
   tool: Tool;
   points: Vector2d[];
+  color: string;
+  size: number;
+  isDashed: boolean;
+  isArrowHead: boolean;
 };
 
 export type UndoableState = {

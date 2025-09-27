@@ -1,4 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import { useSettings } from "@/contexts/settings-context";
 import { SCALE_FACTOR, TEMP_DRAG_ID } from "@/lib/consts";
 import { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from "@/lib/consts";
 import { AbilityCanvas, AgentCanvas } from "@/lib/types";
@@ -33,6 +34,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     currentStroke,
     setCurrentStroke,
   } = useCanvas();
+
+  const { drawSettings } = useSettings();
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     open: false,
@@ -130,13 +133,26 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
 
     if (!isDrawing.current) {
       isDrawing.current = true;
-      setCurrentStroke({ tool, points: [worldPos] });
+      setCurrentStroke({
+        tool,
+        points: [worldPos],
+        color: drawSettings.color,
+        size: drawSettings.size,
+        isDashed: drawSettings.isDashed,
+        isArrowHead: drawSettings.isArrowHead,
+      });
     } else {
       setCurrentStroke((prev) =>
         prev ? { ...prev, points: [...prev.points, worldPos] } : null
       );
     }
-  }, [getWorldPointerPosition, isDrawing, setCurrentStroke, tool]);
+  }, [
+    drawSettings,
+    getWorldPointerPosition,
+    isDrawing,
+    setCurrentStroke,
+    tool,
+  ]);
 
   const handleIconPlacement = useCallback(() => {
     const stage = stageRef.current;

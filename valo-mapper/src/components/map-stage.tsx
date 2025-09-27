@@ -6,7 +6,7 @@ import { useKonva } from "@/hooks/use-konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
 import { useRef } from "react";
-import { Image as KonvaImage, Layer, Line, Stage } from "react-konva";
+import { Arrow, Image as KonvaImage, Layer, Line, Stage } from "react-konva";
 import useImage from "use-image";
 
 interface MapStageProps {
@@ -141,12 +141,26 @@ export const MapStage = ({
         </Layer>
         <Layer>
           {drawLines.map((line, i) => {
-            return (
+            return line.isArrowHead ? (
+              <Arrow
+                key={i}
+                points={line.points.flatMap((point) => [point.x, point.y])}
+                stroke={line.color}
+                strokeWidth={line.size}
+                dash={line.isDashed ? [15, 10] : []}
+                tension={1}
+                globalCompositeOperation={
+                  line.tool === "eraser" ? "destination-out" : "source-over"
+                }
+              />
+            ) : (
               <Line
                 key={i}
                 points={line.points.flatMap((point) => [point.x, point.y])}
-                stroke="#df4b26"
-                strokeWidth={5}
+                stroke={line.color}
+                strokeWidth={line.size}
+                dash={line.isDashed ? [15, 10] : []}
+                tension={1}
                 globalCompositeOperation={
                   line.tool === "eraser" ? "destination-out" : "source-over"
                 }
@@ -154,22 +168,43 @@ export const MapStage = ({
             );
           })}
 
-          {currentStroke && currentStroke.points.length > 1 && (
-            <Line
-              points={currentStroke.points.flatMap((point) => [
-                point.x,
-                point.y,
-              ])}
-              stroke={"#df4b26"}
-              strokeWidth={5}
-              opacity={0.8}
-              globalCompositeOperation={
-                currentStroke.tool === "eraser"
-                  ? "destination-out"
-                  : "source-over"
-              }
-            />
-          )}
+          {currentStroke &&
+            currentStroke.points.length > 1 &&
+            (currentStroke.isArrowHead ? (
+              <Arrow
+                points={currentStroke.points.flatMap((point) => [
+                  point.x,
+                  point.y,
+                ])}
+                tension={1}
+                stroke={currentStroke.color}
+                strokeWidth={currentStroke.size}
+                dash={currentStroke.isDashed ? [15, 10] : []}
+                opacity={0.8}
+                globalCompositeOperation={
+                  currentStroke.tool === "eraser"
+                    ? "destination-out"
+                    : "source-over"
+                }
+              />
+            ) : (
+              <Line
+                points={currentStroke.points.flatMap((point) => [
+                  point.x,
+                  point.y,
+                ])}
+                tension={1}
+                stroke={currentStroke.color}
+                strokeWidth={currentStroke.size}
+                dash={currentStroke.isDashed ? [15, 10] : []}
+                opacity={0.8}
+                globalCompositeOperation={
+                  currentStroke.tool === "eraser"
+                    ? "destination-out"
+                    : "source-over"
+                }
+              />
+            ))}
         </Layer>
       </Stage>
 
