@@ -141,7 +141,7 @@ export const MapStage = ({
         </Layer>
         <Layer>
           {drawLines.map((line, i) => {
-            return line.isArrowHead ? (
+            return line.isArrowHead && line.tool !== "eraser" ? (
               <Arrow
                 key={i}
                 isListening={false}
@@ -151,9 +151,7 @@ export const MapStage = ({
                 strokeWidth={line.size}
                 dash={line.isDashed ? [15, 10] : []}
                 tension={1}
-                globalCompositeOperation={
-                  line.tool === "eraser" ? "destination-out" : "source-over"
-                }
+                globalCompositeOperation={"source-over"}
               />
             ) : (
               <Line
@@ -163,7 +161,7 @@ export const MapStage = ({
                 points={line.points.flatMap((point) => [point.x, point.y])}
                 stroke={line.color}
                 strokeWidth={line.size}
-                dash={line.isDashed ? [15, 10] : []}
+                dash={line.isDashed && line.tool !== "eraser" ? [15, 10] : []}
                 tension={1}
                 globalCompositeOperation={
                   line.tool === "eraser" ? "destination-out" : "source-over"
@@ -174,7 +172,7 @@ export const MapStage = ({
 
           {currentStroke &&
             currentStroke.points.length > 1 &&
-            (currentStroke.isArrowHead ? (
+            (currentStroke.isArrowHead && currentStroke.tool !== "eraser" ? (
               <Arrow
                 points={currentStroke.points.flatMap((point) => [
                   point.x,
@@ -186,12 +184,7 @@ export const MapStage = ({
                 stroke={currentStroke.color}
                 strokeWidth={currentStroke.size}
                 dash={currentStroke.isDashed ? [15, 10] : []}
-                opacity={0.8}
-                globalCompositeOperation={
-                  currentStroke.tool === "eraser"
-                    ? "destination-out"
-                    : "source-over"
-                }
+                globalCompositeOperation={"source-over"}
               />
             ) : (
               <Line
@@ -204,8 +197,11 @@ export const MapStage = ({
                 tension={1}
                 stroke={currentStroke.color}
                 strokeWidth={currentStroke.size}
-                dash={currentStroke.isDashed ? [15, 10] : []}
-                opacity={0.8}
+                dash={
+                  currentStroke.isDashed && currentStroke.tool !== "eraser"
+                    ? [15, 10]
+                    : []
+                }
                 globalCompositeOperation={
                   currentStroke.tool === "eraser"
                     ? "destination-out"
