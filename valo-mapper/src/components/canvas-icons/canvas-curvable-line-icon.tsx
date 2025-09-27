@@ -236,6 +236,7 @@ export const CanvasCurvableLineIcon = ({
   };
 
   const handleReset = () => {
+    if (!isListening) return;
     setPath([]);
     setCurrentDistance(0);
     updateAbilitiesState([]);
