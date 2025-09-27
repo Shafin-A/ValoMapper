@@ -75,8 +75,8 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
         ...icon,
         id: TEMP_DRAG_ID,
         isAlly: isAlly,
-        x: 0,
-        y: 0,
+        x: -1000,
+        y: -1000,
       } as T;
 
       setIconsOnCanvas((prev) => {

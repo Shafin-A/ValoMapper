@@ -41,7 +41,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
 
   const [drawSettings, setDrawSettings] = useState<DrawSettings>({
     size: 5,
-    color: "#ff0000",
+    color: "#ffffff",
     isDashed: false,
     isArrowHead: false,
   });
