@@ -144,6 +144,8 @@ export const MapStage = ({
             return line.isArrowHead ? (
               <Arrow
                 key={i}
+                isListening={false}
+                perfectDrawEnabled={false}
                 points={line.points.flatMap((point) => [point.x, point.y])}
                 stroke={line.color}
                 strokeWidth={line.size}
@@ -156,6 +158,8 @@ export const MapStage = ({
             ) : (
               <Line
                 key={i}
+                isListening={false}
+                perfectDrawEnabled={false}
                 points={line.points.flatMap((point) => [point.x, point.y])}
                 stroke={line.color}
                 strokeWidth={line.size}
@@ -176,6 +180,8 @@ export const MapStage = ({
                   point.x,
                   point.y,
                 ])}
+                isListening={false}
+                perfectDrawEnabled={false}
                 tension={1}
                 stroke={currentStroke.color}
                 strokeWidth={currentStroke.size}
@@ -193,6 +199,8 @@ export const MapStage = ({
                   point.x,
                   point.y,
                 ])}
+                isListening={false}
+                perfectDrawEnabled={false}
                 tension={1}
                 stroke={currentStroke.color}
                 strokeWidth={currentStroke.size}

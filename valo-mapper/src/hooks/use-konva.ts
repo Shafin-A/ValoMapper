@@ -7,7 +7,7 @@ import { getNextId, isAgent } from "@/lib/utils";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { Dispatch, SetStateAction, useCallback, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useRef, useState } from "react";
 
 interface ContextMenuState {
   open: boolean;
@@ -36,6 +36,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
   } = useCanvas();
 
   const { drawSettings } = useSettings();
+
+  const frameRef = useRef<number | null>(null);
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     open: false,
@@ -142,9 +144,21 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         isArrowHead: drawSettings.isArrowHead,
       });
     } else {
-      setCurrentStroke((prev) =>
-        prev ? { ...prev, points: [...prev.points, worldPos] } : null
-      );
+      setCurrentStroke((prev) => {
+        if (!prev || prev.points.length === 0) return prev;
+
+        const lastPoint = prev.points[prev.points.length - 1];
+        const distance = Math.sqrt(
+          Math.pow(worldPos.x - lastPoint.x, 2) +
+            Math.pow(worldPos.y - lastPoint.y, 2)
+        );
+
+        // Only add point if moved more than 2 pixels
+        if (distance > 2) {
+          return { ...prev, points: [...prev.points, worldPos] };
+        }
+        return prev;
+      });
     }
   }, [
     drawSettings,
@@ -203,21 +217,27 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
   }, [isDrawMode, selectedCanvasIcon, handleDrawing, handleIconPlacement]);
 
   const handleStageMouseMove = useCallback(() => {
-    const worldPos = getWorldPointerPosition();
-    if (!worldPos) return;
-
-    if (isDrawMode && isDrawing.current) {
-      handleDrawing();
-      return;
+    if (frameRef.current) {
+      cancelAnimationFrame(frameRef.current);
     }
 
-    if (selectedCanvasIcon) {
-      const stage = stageRef.current;
-      const tempDragIcon = stage?.findOne(`#${TEMP_DRAG_ID}`);
-      if (tempDragIcon) {
-        tempDragIcon.position(worldPos);
+    frameRef.current = requestAnimationFrame(() => {
+      const worldPos = getWorldPointerPosition();
+      if (!worldPos) return;
+
+      if (isDrawMode && isDrawing.current) {
+        handleDrawing();
+        return;
       }
-    }
+
+      if (selectedCanvasIcon) {
+        const stage = stageRef.current;
+        const tempDragIcon = stage?.findOne(`#${TEMP_DRAG_ID}`);
+        if (tempDragIcon) {
+          tempDragIcon.position(worldPos);
+        }
+      }
+    });
   }, [
     getWorldPointerPosition,
     isDrawMode,
@@ -226,7 +246,6 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     handleDrawing,
     stageRef,
   ]);
-
   const handleStageMouseLeave = useCallback(() => {
     if (isDrawing.current && currentStroke) {
       setDrawLines((prev) => [...prev, currentStroke]);
