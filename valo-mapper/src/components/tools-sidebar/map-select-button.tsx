@@ -40,7 +40,7 @@ export const MapSelectButton = ({
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="relative h-20 w-64 hover:opacity-80 transition-opacity border-2 border-gray-300 hover:border-gray-400 p-0 overflow-hidden"
+            className="relative h-20 w-64 hover:opacity-80 transition-all duration-400 ease-in-out border-2 border-gray-300 hover:border-gray-400 p-0 overflow-hidden"
             style={{
               backgroundImage: `url(${selectedMap.listview_src})`,
               backgroundSize: "cover",
