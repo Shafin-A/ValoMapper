@@ -36,6 +36,11 @@ export type AbilityCanvas = CanvasItem & {
 
 export type AgentRole = "Duelist" | "Controller" | "Initiator" | "Sentinel";
 
+export type EraserSettings = {
+  size: number;
+  mode: "pixel" | "line";
+};
+
 export type DrawSettings = {
   size: number;
   color: string;

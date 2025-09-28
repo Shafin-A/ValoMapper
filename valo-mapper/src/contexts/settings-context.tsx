@@ -1,15 +1,17 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
-import { DrawSettings, IconSettings } from "@/lib/types";
+import { DrawSettings, EraserSettings, IconSettings } from "@/lib/types";
 
 interface SettingsContextType {
   agentsSettings: IconSettings;
   abilitiesSettings: IconSettings;
   drawSettings: DrawSettings;
+  eraserSettings: EraserSettings;
   updateAgentsSettings: (settings: Partial<IconSettings>) => void;
   updateAbilitiesSettings: (settings: Partial<IconSettings>) => void;
   updateDrawSettings: (settings: Partial<DrawSettings>) => void;
+  updateEraserSettings: (settings: Partial<EraserSettings>) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -46,6 +48,11 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     isArrowHead: false,
   });
 
+  const [eraserSettings, setEraserSettings] = useState<EraserSettings>({
+    size: 5,
+    mode: "pixel",
+  });
+
   const updateAgentsSettings = (newSettings: Partial<IconSettings>) => {
     setAgentsSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -58,15 +65,21 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     setDrawSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
+  const updateEraserSettings = (newSettings: Partial<EraserSettings>) => {
+    setEraserSettings((prev) => ({ ...prev, ...newSettings }));
+  };
+
   return (
     <SettingsContext.Provider
       value={{
         agentsSettings,
         abilitiesSettings,
         drawSettings,
+        eraserSettings,
         updateAgentsSettings,
         updateAbilitiesSettings,
         updateDrawSettings,
+        updateEraserSettings,
       }}
     >
       {children}

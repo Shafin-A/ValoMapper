@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { DrawSettings } from "./draw-settings";
 import { MapSelectButton } from "./map-select-button";
+import { EraserSettings } from "./eraser-settings";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -186,6 +187,10 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
             </div>
             <AnimatedContent show={isDrawMode && tool === "pencil"}>
               <DrawSettings />
+            </AnimatedContent>
+
+            <AnimatedContent show={isDrawMode && tool === "eraser"}>
+              <EraserSettings />
             </AnimatedContent>
           </div>
         </SidebarContent>
