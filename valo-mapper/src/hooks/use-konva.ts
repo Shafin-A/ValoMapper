@@ -7,7 +7,12 @@ import {
   TEMP_DRAG_ID,
 } from "@/lib/consts";
 import { AbilityCanvas, AgentCanvas } from "@/lib/types";
-import { doesEraserIntersect, getNextId, isAgent } from "@/lib/utils";
+import {
+  doesEraserIntersect,
+  getIntersectingLines,
+  getNextId,
+  isAgent,
+} from "@/lib/utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
@@ -40,11 +45,12 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setCurrentStroke,
   } = useCanvas();
 
-  const { drawSettings } = useSettings();
+  const { drawSettings, eraserSettings } = useSettings();
 
   const frameRef = useRef<number | null>(null);
   const drawingBufferRef = useRef<Vector2d[]>([]);
   const currentLineRef = useRef<Konva.Line | Konva.Arrow>(null);
+  const erasedLinesRef = useRef<Set<number>>(new Set()); // Track already erased lines
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     open: false,
@@ -144,12 +150,15 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       isDrawing.current = true;
       drawingBufferRef.current = [worldPos];
 
-      // Only set React state once at start
+      if (tool === "eraser" && eraserSettings.mode === "line") {
+        erasedLinesRef.current.clear();
+      }
+
       setCurrentStroke({
         tool,
         points: [worldPos],
         color: drawSettings.color,
-        size: drawSettings.size,
+        size: tool === "eraser" ? eraserSettings.size : drawSettings.size,
         isDashed: drawSettings.isDashed,
         isArrowHead: drawSettings.isArrowHead,
       });
@@ -164,6 +173,28 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       if (distance > 5) {
         drawingBufferRef.current.push(worldPos);
 
+        if (tool === "eraser" && eraserSettings.mode === "line") {
+          const currentSegment = [lastPoint, worldPos];
+          const intersectingLineIndices = getIntersectingLines(
+            currentSegment,
+            drawLines
+          );
+
+          const newIntersections = intersectingLineIndices.filter(
+            (index) => !erasedLinesRef.current.has(index)
+          );
+
+          if (newIntersections.length > 0) {
+            newIntersections.forEach((index) => {
+              erasedLinesRef.current.add(index);
+            });
+
+            setDrawLines((prev) =>
+              prev.filter((_, index) => !newIntersections.includes(index))
+            );
+          }
+        }
+
         if (currentLineRef.current) {
           const flatPoints = drawingBufferRef.current.flatMap((p) => [
             p.x,
@@ -176,10 +207,13 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     }
   }, [
     drawSettings,
+    eraserSettings,
     getWorldPointerPosition,
     isDrawing,
     setCurrentStroke,
     tool,
+    drawLines,
+    setDrawLines,
   ]);
 
   const handleIconPlacement = useCallback(() => {
@@ -263,16 +297,20 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         tool,
         points: drawingBufferRef.current,
         color: drawSettings.color,
-        size: drawSettings.size,
+        size: tool === "eraser" ? eraserSettings.size : drawSettings.size,
         isDashed: drawSettings.isDashed,
         isArrowHead: drawSettings.isArrowHead,
       };
 
       if (tool === "eraser") {
-        if (doesEraserIntersect(drawingBufferRef.current, drawLines)) {
-          setDrawLines((prev) => [...prev, finalStroke]);
+        if (eraserSettings.mode === "line") {
+          setCurrentStroke(null);
+        } else {
+          if (doesEraserIntersect(drawingBufferRef.current, drawLines)) {
+            setDrawLines((prev) => [...prev, finalStroke]);
+          }
+          setCurrentStroke(null);
         }
-        setCurrentStroke(null);
       } else {
         setDrawLines((prev) => [...prev, finalStroke]);
         setCurrentStroke(null);
@@ -288,6 +326,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     drawLines,
     setCurrentStroke,
     setDrawLines,
+    eraserSettings,
   ]);
 
   const handleStageMouseLeave = useCallback(() => {

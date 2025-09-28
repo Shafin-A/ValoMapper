@@ -160,3 +160,47 @@ export const doesEraserIntersect = (
   }
   return false;
 };
+
+export const getIntersectingLines = (
+  eraserPoints: Vector2d[],
+  existingStrokes: DrawLine[]
+): number[] => {
+  const intersectingIndices: number[] = [];
+
+  const drawableStrokes = existingStrokes.filter(
+    (stroke) => stroke.tool !== "eraser"
+  );
+
+  for (
+    let strokeIndex = 0;
+    strokeIndex < drawableStrokes.length;
+    strokeIndex++
+  ) {
+    const stroke = drawableStrokes[strokeIndex];
+    let hasIntersection = false;
+
+    for (let i = 0; i < eraserPoints.length - 1 && !hasIntersection; i++) {
+      const eraserP1 = eraserPoints[i];
+      const eraserP2 = eraserPoints[i + 1];
+
+      for (let j = 0; j < stroke.points.length - 1; j++) {
+        const strokeP1 = stroke.points[j];
+        const strokeP2 = stroke.points[j + 1];
+
+        if (doLinesIntersect(eraserP1, eraserP2, strokeP1, strokeP2)) {
+          hasIntersection = true;
+          break;
+        }
+      }
+    }
+
+    if (hasIntersection) {
+      const originalIndex = existingStrokes.findIndex((s) => s === stroke);
+      if (originalIndex !== -1) {
+        intersectingIndices.push(originalIndex);
+      }
+    }
+  }
+
+  return intersectingIndices;
+};
