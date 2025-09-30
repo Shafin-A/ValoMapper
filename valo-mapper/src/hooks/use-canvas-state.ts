@@ -6,6 +6,7 @@ import {
   AgentCanvas,
   DrawLine,
   MapOption,
+  TextItem,
   Tool,
   UndoableState,
 } from "@/lib/types";
@@ -13,6 +14,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useCanvasState = () => {
   const [isAlly, setIsAlly] = useState(true);
+  const [textsOnCanvas, setTextsOnCanvas] = useState<TextItem[]>([
+    {
+      id: "1",
+      text: "Text 1",
+      x: 100,
+      y: 100,
+      width: 100,
+    },
+  ]);
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
   const [agentsOnCanvas, setAgentsOnCanvas] = useState<AgentCanvas[]>([]);
   const [abilitiesOnCanvas, setAbilitiesOnCanvas] = useState<AbilityCanvas[]>(
@@ -41,8 +52,9 @@ export const useCanvasState = () => {
       abilitiesOnCanvas,
       selectedMap,
       drawLines,
+      textsOnCanvas,
     }),
-    [agentsOnCanvas, abilitiesOnCanvas, selectedMap, drawLines]
+    [agentsOnCanvas, abilitiesOnCanvas, selectedMap, drawLines, textsOnCanvas]
   );
 
   useEffect(() => {
@@ -110,6 +122,7 @@ export const useCanvasState = () => {
     setAbilitiesOnCanvas(state.abilitiesOnCanvas);
     setSelectedMap(state.selectedMap);
     setDrawLines(state.drawLines);
+    setTextsOnCanvas(state.textsOnCanvas);
 
     setTimeout(() => {
       isUpdatingFromHistory.current = false;
@@ -137,35 +150,9 @@ export const useCanvasState = () => {
     setAbilitiesOnCanvas([]);
     setSelectedCanvasIcon(null);
     setDrawLines([]);
+    setTextsOnCanvas([]);
+    setEditingTextId(null);
   }, []);
-
-  const setAgentsOnCanvasWithHistory = useCallback(
-    (value: AgentCanvas[] | ((prev: AgentCanvas[]) => AgentCanvas[])) => {
-      setAgentsOnCanvas(value);
-    },
-    []
-  );
-
-  const setAbilitiesOnCanvasWithHistory = useCallback(
-    (value: AbilityCanvas[] | ((prev: AbilityCanvas[]) => AbilityCanvas[])) => {
-      setAbilitiesOnCanvas(value);
-    },
-    []
-  );
-
-  const setSelectedMapWithHistory = useCallback(
-    (value: MapOption | ((prev: MapOption) => MapOption)) => {
-      setSelectedMap(value);
-    },
-    []
-  );
-
-  const setDrawLinesWithHistory = useCallback(
-    (value: DrawLine[] | ((prev: DrawLine[]) => DrawLine[])) => {
-      setDrawLines(value);
-    },
-    []
-  );
 
   const saveToHistory = useCallback(() => {
     if (isUpdatingFromHistory.current) return;
@@ -196,14 +183,14 @@ export const useCanvasState = () => {
     selectedMap,
     isAlly,
     setIsAlly,
-    setAgentsOnCanvas: setAgentsOnCanvasWithHistory,
-    setAbilitiesOnCanvas: setAbilitiesOnCanvasWithHistory,
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
     setSelectedCanvasIcon,
-    setSelectedMap: setSelectedMapWithHistory,
+    setSelectedMap,
     tool,
     setTool,
     drawLines,
-    setDrawLines: setDrawLinesWithHistory,
+    setDrawLines,
     currentStroke,
     setCurrentStroke,
     isDrawMode,
@@ -216,5 +203,9 @@ export const useCanvasState = () => {
     canUndo: historyIndex > 0,
     canRedo: historyIndex < history.length - 1,
     saveToHistory,
+    textsOnCanvas,
+    setTextsOnCanvas,
+    editingTextId,
+    setEditingTextId,
   };
 };

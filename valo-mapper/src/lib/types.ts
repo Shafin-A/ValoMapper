@@ -48,6 +48,14 @@ export type DrawSettings = {
   isArrowHead: boolean;
 };
 
+export type TextItem = {
+  id: string;
+  text: string;
+  width: number;
+  x: number;
+  y: number;
+};
+
 export type IconSettings = {
   scale: number;
   borderOpacity: number;
@@ -225,4 +233,5 @@ export type UndoableState = {
   abilitiesOnCanvas: AbilityCanvas[];
   selectedMap: MapOption;
   drawLines: DrawLine[];
+  textsOnCanvas: TextItem[];
 };

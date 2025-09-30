@@ -8,6 +8,7 @@ import type {
   AgentCanvas,
   DrawLine,
   MapOption,
+  TextItem,
   Tool,
   UndoableState,
 } from "@/lib/types";
@@ -42,6 +43,10 @@ interface CanvasContextType {
   saveToHistory: () => void;
   history: UndoableState[];
   resetState: () => void;
+  textsOnCanvas: TextItem[];
+  setTextsOnCanvas: React.Dispatch<React.SetStateAction<TextItem[]>>;
+  editingTextId: string | null;
+  setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
