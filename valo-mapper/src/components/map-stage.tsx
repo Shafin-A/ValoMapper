@@ -202,10 +202,16 @@ export const MapStage = ({
     textsOnCanvas.map((textItem) => (
       <Group
         key={textItem.id}
+        id={textItem.id}
         draggable={!isDrawMode && editingTextId !== textItem.id}
         x={textItem.x}
         y={textItem.y}
-        onClick={() => handleTextClick(textItem.id)}
+        onClick={(e: KonvaEventObject<MouseEvent>) => {
+          // Only handle left clicks
+          if (e.evt.button === 0) {
+            handleTextClick(textItem.id);
+          }
+        }}
         onDragEnd={(e) => handleTextDragEnd(textItem.id, e)}
       >
         <Rect

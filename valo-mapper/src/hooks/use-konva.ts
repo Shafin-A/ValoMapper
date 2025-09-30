@@ -24,7 +24,7 @@ interface ContextMenuState {
   x: number;
   y: number;
   itemId: string;
-  itemType: "agent" | "ability";
+  itemType: "agent" | "ability" | "text";
 }
 
 type CanvasIconItem = AgentCanvas | AbilityCanvas;
@@ -37,6 +37,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setAgentsOnCanvas,
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
+    textsOnCanvas,
+    setTextsOnCanvas,
     isDrawMode,
     isDrawing,
     drawLines,
@@ -50,7 +52,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
   const frameRef = useRef<number | null>(null);
   const drawingBufferRef = useRef<Vector2d[]>([]);
   const currentLineRef = useRef<Konva.Line | Konva.Arrow>(null);
-  const erasedLinesRef = useRef<Set<number>>(new Set()); // Track already erased lines
+  const erasedLinesRef = useRef<Set<number>>(new Set());
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     open: false,
@@ -375,20 +377,29 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       const isAbilityItem = abilitiesOnCanvas.some(
         (ability) => ability.id.toString() === targetId
       );
+      const isTextItem = textsOnCanvas.some(
+        (text) => text.id.toString() === targetId
+      );
 
-      if (!isAgentItem && !isAbilityItem) return;
+      if (!isAgentItem && !isAbilityItem && !isTextItem) return;
+
+      let itemType: "agent" | "ability" | "text";
+      if (isAgentItem) itemType = "agent";
+      else if (isAbilityItem) itemType = "ability";
+      else if (isTextItem) itemType = "text";
+      else return;
 
       setContextMenu({
         open: true,
         x: containerRect.left + pointerPosition.x,
         y: containerRect.top + pointerPosition.y,
         itemId: targetId,
-        itemType: isAgentItem ? "agent" : "ability",
+        itemType,
       });
 
       e.cancelBubble = true;
     },
-    [stageRef, agentsOnCanvas, abilitiesOnCanvas]
+    [stageRef, agentsOnCanvas, abilitiesOnCanvas, textsOnCanvas]
   );
 
   const handlePopoverOpenChange = useCallback((open: boolean) => {
@@ -411,7 +422,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         };
         setAgentsOnCanvas((prev) => [...prev, newAgent]);
       }
-    } else {
+    } else if (itemType === "ability") {
       const ability = abilitiesOnCanvas.find((a) => a.id === itemId);
       if (ability) {
         const newAbility = {
@@ -422,15 +433,28 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         };
         setAbilitiesOnCanvas((prev) => [...prev, newAbility]);
       }
+    } else if (itemType === "text") {
+      const text = textsOnCanvas.find((t) => t.id === itemId);
+      if (text) {
+        const newText = {
+          ...text,
+          id: getNextId("text"),
+          x: text.x + 20,
+          y: text.y + 20,
+        };
+        setTextsOnCanvas((prev) => [...prev, newText]);
+      }
     }
     closeContextMenu();
   }, [
     contextMenu,
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
     closeContextMenu,
+    agentsOnCanvas,
+    setAgentsOnCanvas,
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
+    textsOnCanvas,
+    setTextsOnCanvas,
   ]);
 
   const handleDelete = useCallback(() => {
@@ -440,13 +464,21 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
 
     if (itemType === "agent") {
       setAgentsOnCanvas((prev) => prev.filter((agent) => agent.id !== itemId));
-    } else {
+    } else if (itemType === "ability") {
       setAbilitiesOnCanvas((prev) =>
         prev.filter((ability) => ability.id !== itemId)
       );
+    } else if (itemType === "text") {
+      setTextsOnCanvas((prev) => prev.filter((text) => text.id !== itemId));
     }
     closeContextMenu();
-  }, [contextMenu, setAgentsOnCanvas, setAbilitiesOnCanvas, closeContextMenu]);
+  }, [
+    contextMenu,
+    closeContextMenu,
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    setTextsOnCanvas,
+  ]);
 
   const handleToggleAlly = useCallback(() => {
     if (!contextMenu.open) return;

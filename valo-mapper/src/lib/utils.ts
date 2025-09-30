@@ -93,7 +93,7 @@ export const isAgent = (obj: unknown): obj is Agent => {
   );
 };
 
-export const getNextId = (type: "agent" | "ability") => {
+export const getNextId = (type: "agent" | "ability" | "text") => {
   const timestamp = Date.now().toString(36);
   return `${type}-${timestamp}`;
 };

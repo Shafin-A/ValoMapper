@@ -4,7 +4,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { AbilityCanvas, AgentCanvas } from "@/lib/types";
+import { AbilityCanvas, AgentCanvas, TextItem } from "@/lib/types";
 import { Copy, Heart, HeartCrack, Trash2 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -14,8 +14,8 @@ interface ContextMenuPopoverProps {
   open: boolean;
   x: number;
   y: number;
-  itemType: "agent" | "ability";
-  currentItem: AgentCanvas | AbilityCanvas | null;
+  itemType: "agent" | "ability" | "text";
+  currentItem: AgentCanvas | AbilityCanvas | TextItem | null;
   onOpenChange: (open: boolean) => void;
   onDuplicate: () => void;
   onToggleAlly: () => void;
@@ -56,13 +56,14 @@ export const ContextMenuPopover = ({
 
   useEffect(() => {
     if (open) {
-      // Popover closing has animation but currentItem becomes null immediately so isAlly becomes false as default leading to flickering icon
-      setInitialIsAlly(currentItem?.isAlly ?? false);
+      if (itemType !== "text" && currentItem) {
+        setInitialIsAlly((currentItem as AgentCanvas | AbilityCanvas).isAlly);
+      }
       setAllowTooltips(false); // Tooltip opens on its own after opening popover for some reason so need to delay it
       const timer = setTimeout(() => setAllowTooltips(true), 300);
       return () => clearTimeout(timer);
     }
-  }, [currentItem?.isAlly, open]);
+  }, [currentItem, itemType, open]);
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -82,7 +83,13 @@ export const ContextMenuPopover = ({
         <div className="flex items-center space-x-1">
           <ConditionalTooltip
             enabled={allowTooltips}
-            content={`Duplicate ${itemType === "agent" ? "Agent" : "Ability"}`}
+            content={`Duplicate ${
+              itemType === "agent"
+                ? "Agent"
+                : itemType === "ability"
+                ? "Ability"
+                : "Text"
+            }`}
           >
             <Button variant="ghost" size="sm" onClick={onDuplicate}>
               <Copy />
@@ -94,23 +101,33 @@ export const ContextMenuPopover = ({
             className="data-[orientation=vertical]:h-6"
           />
 
+          {itemType !== "text" && (
+            <>
+              <ConditionalTooltip
+                enabled={allowTooltips}
+                content={initialIsAlly ? "Make Enemy" : "Make Ally"}
+              >
+                <Button variant="ghost" size="sm" onClick={onToggleAlly}>
+                  {initialIsAlly ? <HeartCrack /> : <Heart />}
+                </Button>
+              </ConditionalTooltip>
+
+              <Separator
+                orientation="vertical"
+                className="data-[orientation=vertical]:h-6"
+              />
+            </>
+          )}
+
           <ConditionalTooltip
             enabled={allowTooltips}
-            content={initialIsAlly ? "Make Enemy" : "Make Ally"}
-          >
-            <Button variant="ghost" size="sm" onClick={onToggleAlly}>
-              {initialIsAlly ? <HeartCrack /> : <Heart />}
-            </Button>
-          </ConditionalTooltip>
-
-          <Separator
-            orientation="vertical"
-            className="data-[orientation=vertical]:h-6"
-          />
-
-          <ConditionalTooltip
-            enabled={allowTooltips}
-            content={`Delete ${itemType === "agent" ? "Agent" : "Ability"}`}
+            content={`Delete ${
+              itemType === "agent"
+                ? "Agent"
+                : itemType === "ability"
+                ? "Ability"
+                : "Text"
+            }`}
           >
             <Button variant="destructiveGhost" size="sm" onClick={onDelete}>
               <Trash2 />
