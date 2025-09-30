@@ -227,12 +227,12 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
           }}
           onTransform={() => handleTransform(textItem.id)}
           onTransformEnd={() => handleTransformEnd(textItem.id)}
-          text={textItem.text}
+          text={textItem.text || "Click to add text..."}
           fontSize={18}
           padding={10}
           width={textItem.width}
           visible={editingTextId !== textItem.id}
-          fill={"#ffffff"}
+          fill={textItem.text ? "#ffffff" : "#52525b"}
           sceneFunc={function (context, shape) {
             context.fillStyle = "#18181b";
             const radius = 8;
@@ -252,6 +252,7 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
         {editingTextId === textItem.id ? (
           <TextEditor
             textNode={textRefs.current.get(textItem.id)!}
+            text={textItem.text || ""}
             onChange={(value) => handleTextChange(textItem.id, value)}
             onClose={handleTextEditComplete}
           />

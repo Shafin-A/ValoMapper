@@ -70,11 +70,11 @@ export const ToolsSidebar = ({
     setTextsOnCanvas((prev) => [
       ...prev,
       {
-        text: "Click to edit...",
+        id: getNextId("text"),
+        text: "",
         x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 10),
         y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 10),
-        width: 150,
-        id: getNextId("text"),
+        width: 200,
       },
     ]);
 

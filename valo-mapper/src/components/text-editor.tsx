@@ -4,12 +4,14 @@ import Konva from "konva";
 
 interface TextEditorProps {
   textNode: Konva.Text;
+  text: string;
   onClose: () => void;
   onChange: (text: string) => void;
 }
 
 export const TextEditor = ({
   textNode,
+  text,
   onClose,
   onChange,
 }: TextEditorProps) => {
@@ -26,7 +28,7 @@ export const TextEditor = ({
 
       const textPosition = textNode.position();
 
-      textarea.value = textNode.text();
+      textarea.value = text;
       textarea.style.height = "auto";
 
       textarea.style.position = "absolute";
@@ -46,7 +48,7 @@ export const TextEditor = ({
       textarea.style.fontFamily = textNode.fontFamily();
       textarea.style.transformOrigin = "left top";
       textarea.style.textAlign = textNode.align();
-      textarea.style.color = textNode.fill().toString();
+      textarea.style.color = "#ffffff";
       textarea.style.backgroundColor = "#18181b";
       textarea.style.borderRadius = "8px";
 
@@ -94,12 +96,12 @@ export const TextEditor = ({
         window.removeEventListener("click", handleOutsideClick);
       };
     },
-    [textNode, onChange, onClose]
+    [textNode, text, onChange, onClose]
   );
 
   return (
     <Html>
-      <textarea ref={textareaCallbackRef} placeholder="Enter text..." />
+      <textarea ref={textareaCallbackRef} />
     </Html>
   );
 };
