@@ -43,7 +43,10 @@ const Home = () => {
     <div className="[--header-height:calc(--spacing(14))]">
       <SiteHeader {...sidebarState} />
 
-      <ToolsSidebar sidebarOpen={sidebarState.leftSidebarOpen} />
+      <ToolsSidebar
+        sidebarOpen={sidebarState.leftSidebarOpen}
+        mapPosition={mapPosition}
+      />
 
       <div
         className="flex h-[calc(100svh-1px-var(--header-height))]!"
@@ -53,7 +56,6 @@ const Home = () => {
           width={dimensions.width}
           height={dimensions.height}
           mapPosition={mapPosition}
-          mapSize={MAP_SIZE}
         />
       </div>
 

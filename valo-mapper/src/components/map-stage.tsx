@@ -21,20 +21,15 @@ import {
 import useImage from "use-image";
 import { TextEditor } from "./text-editor";
 import { KonvaEventObject } from "konva/lib/Node";
+import { MAP_SIZE } from "@/lib/consts";
 
 interface MapStageProps {
   width: number;
   height: number;
   mapPosition: Vector2d;
-  mapSize: number;
 }
 
-export const MapStage = ({
-  width,
-  height,
-  mapPosition,
-  mapSize,
-}: MapStageProps) => {
+export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
   const {
     agentsOnCanvas,
     setAgentsOnCanvas,
@@ -326,12 +321,12 @@ export const MapStage = ({
           {mapImage && (
             <KonvaImage
               image={mapImage}
-              width={mapSize}
-              height={mapSize}
-              x={mapPosition.x + mapSize / 2}
-              y={mapPosition.y + mapSize / 2}
-              offsetX={mapSize / 2}
-              offsetY={mapSize / 2}
+              width={MAP_SIZE}
+              height={MAP_SIZE}
+              x={mapPosition.x + MAP_SIZE / 2}
+              y={mapPosition.y + MAP_SIZE / 2}
+              offsetX={MAP_SIZE / 2}
+              offsetY={MAP_SIZE / 2}
               scale={{ x: 1.25, y: 1.25 }}
             />
           )}

@@ -13,7 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
-import { MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
+import { MAP_OPTIONS, MAP_SIZE, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapOption, Tool } from "@/lib/types";
 import {
   ALargeSmall,
@@ -27,12 +27,18 @@ import {
 import { DrawSettings } from "./draw-settings";
 import { MapSelectButton } from "./map-select-button";
 import { EraserSettings } from "./eraser-settings";
+import { getNextId } from "@/lib/utils";
+import { Vector2d } from "konva/lib/types";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
+  mapPosition: Vector2d;
 }
 
-export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
+export const ToolsSidebar = ({
+  sidebarOpen,
+  mapPosition,
+}: ToolsSidebarProps) => {
   const {
     selectedMap,
     setSelectedMap,
@@ -45,6 +51,7 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
     tool,
     setTool,
     isDrawMode,
+    setTextsOnCanvas,
   } = useCanvas();
 
   const handleMapSelect = (option: MapOption) => {
@@ -58,6 +65,18 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
       setTool(tool);
     }
   };
+
+  const handleAddText = () =>
+    setTextsOnCanvas((prev) => [
+      ...prev,
+      {
+        text: "Click to edit...",
+        x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 10),
+        y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 10),
+        width: 150,
+        id: getNextId("text"),
+      },
+    ]);
 
   return (
     <SidebarProvider
@@ -166,7 +185,7 @@ export const ToolsSidebar = ({ sidebarOpen }: ToolsSidebarProps) => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="lg">
+                  <Button variant="ghost" size="lg" onClick={handleAddText}>
                     <ALargeSmall />
                   </Button>
                 </TooltipTrigger>

@@ -14,15 +14,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useCanvasState = () => {
   const [isAlly, setIsAlly] = useState(true);
-  const [textsOnCanvas, setTextsOnCanvas] = useState<TextItem[]>([
-    {
-      id: "1",
-      text: "Text 1",
-      x: 100,
-      y: 100,
-      width: 100,
-    },
-  ]);
+  const [textsOnCanvas, setTextsOnCanvas] = useState<TextItem[]>([]);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
   const [agentsOnCanvas, setAgentsOnCanvas] = useState<AgentCanvas[]>([]);
