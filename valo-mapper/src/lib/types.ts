@@ -14,13 +14,21 @@ export type Agent = {
   role: AgentRole;
 };
 
-export type CanvasItem = {
+export type BaseCanvasItem = {
   id: string;
+  x: number;
+  y: number;
+};
+
+export type CanvasItem = BaseCanvasItem & {
   name: string;
   src: string;
   isAlly: boolean;
-  x: number;
-  y: number;
+};
+
+export type TextCanvas = BaseCanvasItem & {
+  text: string;
+  width: number;
 };
 
 export type AgentCanvas = CanvasItem & {
@@ -46,14 +54,6 @@ export type DrawSettings = {
   color: string;
   isDashed: boolean;
   isArrowHead: boolean;
-};
-
-export type TextItem = {
-  id: string;
-  text: string;
-  width: number;
-  x: number;
-  y: number;
 };
 
 export type IconSettings = {
@@ -233,5 +233,5 @@ export type UndoableState = {
   abilitiesOnCanvas: AbilityCanvas[];
   selectedMap: MapOption;
   drawLines: DrawLine[];
-  textsOnCanvas: TextItem[];
+  textsOnCanvas: TextCanvas[];
 };

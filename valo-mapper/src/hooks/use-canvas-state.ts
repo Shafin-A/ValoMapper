@@ -6,7 +6,7 @@ import {
   AgentCanvas,
   DrawLine,
   MapOption,
-  TextItem,
+  TextCanvas,
   Tool,
   UndoableState,
 } from "@/lib/types";
@@ -14,7 +14,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useCanvasState = () => {
   const [isAlly, setIsAlly] = useState(true);
-  const [textsOnCanvas, setTextsOnCanvas] = useState<TextItem[]>([]);
+  const [textsOnCanvas, setTextsOnCanvas] = useState<TextCanvas[]>([]);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
   const [agentsOnCanvas, setAgentsOnCanvas] = useState<AgentCanvas[]>([]);
