@@ -4,7 +4,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { AbilityCanvas, AgentCanvas, TextItem } from "@/lib/types";
+import {
+  AbilityCanvas,
+  AgentCanvas,
+  ImageCanvas,
+  TextCanvas,
+} from "@/lib/types";
 import { Copy, Heart, HeartCrack, Trash2 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -14,8 +19,8 @@ interface ContextMenuPopoverProps {
   open: boolean;
   x: number;
   y: number;
-  itemType: "agent" | "ability" | "text";
-  currentItem: AgentCanvas | AbilityCanvas | TextItem | null;
+  itemType: "agent" | "ability" | "text" | "image";
+  currentItem: AgentCanvas | AbilityCanvas | TextCanvas | ImageCanvas | null;
   onOpenChange: (open: boolean) => void;
   onDuplicate: () => void;
   onToggleAlly: () => void;
@@ -56,7 +61,7 @@ export const ContextMenuPopover = ({
 
   useEffect(() => {
     if (open) {
-      if (itemType !== "text" && currentItem) {
+      if (itemType !== "text" && itemType !== "image" && currentItem) {
         setInitialIsAlly((currentItem as AgentCanvas | AbilityCanvas).isAlly);
       }
       setAllowTooltips(false); // Tooltip opens on its own after opening popover for some reason so need to delay it
@@ -88,6 +93,8 @@ export const ContextMenuPopover = ({
                 ? "Agent"
                 : itemType === "ability"
                 ? "Ability"
+                : itemType === "image"
+                ? "Image"
                 : "Text"
             }`}
           >
@@ -101,7 +108,7 @@ export const ContextMenuPopover = ({
             className="data-[orientation=vertical]:h-6"
           />
 
-          {itemType !== "text" && (
+          {itemType !== "text" && itemType !== "image" && (
             <>
               <ConditionalTooltip
                 enabled={allowTooltips}
@@ -126,6 +133,8 @@ export const ContextMenuPopover = ({
                 ? "Agent"
                 : itemType === "ability"
                 ? "Ability"
+                : itemType === "image"
+                ? "Image"
                 : "Text"
             }`}
           >

@@ -31,6 +31,12 @@ export type TextCanvas = BaseCanvasItem & {
   width: number;
 };
 
+export type ImageCanvas = BaseCanvasItem & {
+  src: string;
+  width: number;
+  height: number;
+};
+
 export type AgentCanvas = CanvasItem & {
   role: AgentRole;
 };
@@ -234,4 +240,5 @@ export type UndoableState = {
   selectedMap: MapOption;
   drawLines: DrawLine[];
   textsOnCanvas: TextCanvas[];
+  imagesOnCanvas: ImageCanvas[];
 };

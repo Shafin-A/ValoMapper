@@ -6,7 +6,7 @@ import { useKonva } from "@/hooks/use-konva";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { Ref, useCallback, useRef } from "react";
+import { Ref, useCallback, useEffect, useRef } from "react";
 import {
   Arrow,
   Group,
@@ -43,10 +43,14 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     setTextsOnCanvas,
     editingTextId,
     setEditingTextId,
+    imagesOnCanvas,
+    setImagesOnCanvas,
   } = useCanvas();
 
   const textRefs = useRef<Map<string, Konva.Text>>(new Map());
   const transformerRefs = useRef<Map<string, Konva.Transformer>>(new Map());
+  const imageNodeRefs = useRef<Map<string, Konva.Image>>(new Map());
+  const imageLoaderRefs = useRef<Map<string, HTMLImageElement>>(new Map());
 
   const attachTransformerToText = useCallback(
     (textNode: Konva.Text | null, transformerId: string) => {
@@ -69,7 +73,7 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     [setEditingTextId, setAbilitiesOnCanvas]
   );
 
-  const handleTransform = useCallback((textId: string) => {
+  const handleTextTransform = useCallback((textId: string) => {
     const textNode = textRefs.current.get(textId);
     if (!textNode) return;
 
@@ -82,7 +86,7 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     });
   }, []);
 
-  const handleTransformEnd = useCallback(
+  const handleTextTransformEnd = useCallback(
     (textId: string) => {
       const textNode = textRefs.current.get(textId);
       if (!textNode) return;
@@ -108,6 +112,58 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     setEditingTextId(null);
   }, [setEditingTextId]);
 
+  const handleImageTransform = useCallback((imageId: string) => {
+    const imageNode = imageNodeRefs.current.get(imageId);
+    if (!imageNode) return;
+
+    const scaleX = imageNode.scaleX();
+    const scaleY = imageNode.scaleY();
+    const newWidth = Math.max(5, imageNode.width() * scaleX);
+    const newHeight = Math.max(5, imageNode.height() * scaleY);
+
+    imageNode.setAttrs({
+      width: newWidth,
+      height: newHeight,
+      scaleX: 1,
+      scaleY: 1,
+    });
+  }, []);
+
+  const handleImageTransformEnd = useCallback(
+    (imageId: string) => {
+      const imageNode = imageNodeRefs.current.get(imageId);
+      if (!imageNode) return;
+
+      setImagesOnCanvas((prev) =>
+        prev.map((item) =>
+          item.id === imageId
+            ? {
+                ...item,
+                width: imageNode.width(),
+                height: imageNode.height(),
+              }
+            : item
+        )
+      );
+    },
+    [setImagesOnCanvas]
+  );
+
+  const handleImageDragEnd = useCallback(
+    (imageId: string, e: KonvaEventObject<DragEvent>) => {
+      if (!e.target) return;
+      const newX = e.target.x();
+      const newY = e.target.y();
+
+      setImagesOnCanvas((prev) =>
+        prev.map((item) =>
+          item.id === imageId ? { ...item, x: newX, y: newY } : item
+        )
+      );
+    },
+    [setImagesOnCanvas]
+  );
+
   const handleTextDragEnd = useCallback(
     (textId: string, e: KonvaEventObject<DragEvent>) => {
       if (!e.target) return;
@@ -126,6 +182,16 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
   const { agentsSettings, abilitiesSettings } = useSettings();
 
   const [mapImage] = useImage(selectedMap.minimap_src);
+
+  useEffect(() => {
+    imagesOnCanvas.forEach((imageItem) => {
+      if (!imageLoaderRefs.current.has(imageItem.id)) {
+        const img = new window.Image();
+        img.src = imageItem.src;
+        imageLoaderRefs.current.set(imageItem.id, img);
+      }
+    });
+  }, [imagesOnCanvas]);
 
   const stageRef = useRef<KonvaStage | null>(null);
 
@@ -193,6 +259,53 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
       />
     ));
 
+  const renderImages = () =>
+    imagesOnCanvas.map((imageItem) => (
+      <Group
+        key={imageItem.id}
+        id={imageItem.id}
+        draggable={!isDrawMode}
+        x={imageItem.x}
+        y={imageItem.y}
+        onDragEnd={(e) => handleImageDragEnd(imageItem.id, e)}
+      >
+        <KonvaImage
+          ref={(node) => {
+            if (node) {
+              imageNodeRefs.current.set(imageItem.id, node);
+            } else {
+              imageNodeRefs.current.delete(imageItem.id);
+            }
+          }}
+          image={imageLoaderRefs.current.get(imageItem.id)}
+          width={imageItem.width}
+          height={imageItem.height}
+          onTransform={() => handleImageTransform(imageItem.id)}
+          onTransformEnd={() => handleImageTransformEnd(imageItem.id)}
+        />
+        <Transformer
+          ref={(node) => {
+            if (node) {
+              transformerRefs.current.set(imageItem.id, node);
+              if (imageNodeRefs.current.get(imageItem.id)) {
+                node.nodes([imageNodeRefs.current.get(imageItem.id)!]);
+              }
+            } else {
+              transformerRefs.current.delete(imageItem.id);
+            }
+          }}
+          boundBoxFunc={(_, newBox) => ({
+            ...newBox,
+            width: Math.max(5, newBox.width),
+            height: Math.max(5, newBox.height),
+          })}
+          rotateEnabled={false}
+          borderEnabled={false}
+          enabledAnchors={["bottom-right"]}
+        />
+      </Group>
+    ));
+
   const renderTexts = () =>
     textsOnCanvas.map((textItem) => (
       <Group
@@ -225,8 +338,8 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
               textRefs.current.delete(textItem.id);
             }
           }}
-          onTransform={() => handleTransform(textItem.id)}
-          onTransformEnd={() => handleTransformEnd(textItem.id)}
+          onTransform={() => handleTextTransform(textItem.id)}
+          onTransformEnd={() => handleTextTransformEnd(textItem.id)}
           text={textItem.text || "Click to add text..."}
           fontSize={18}
           padding={10}
@@ -335,6 +448,7 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
         <Layer isListening={!isDrawMode}>
           {renderAbilities()}
           {renderAgents()}
+          {renderImages()}
           {renderTexts()}
         </Layer>
         <Layer isListening={isDrawMode}>

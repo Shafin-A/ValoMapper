@@ -5,6 +5,7 @@ import {
   Agent,
   AgentCanvas,
   DrawLine,
+  ImageCanvas,
   MapOption,
   TextCanvas,
   Tool,
@@ -15,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export const useCanvasState = () => {
   const [isAlly, setIsAlly] = useState(true);
   const [textsOnCanvas, setTextsOnCanvas] = useState<TextCanvas[]>([]);
+  const [imagesOnCanvas, setImagesOnCanvas] = useState<ImageCanvas[]>([]);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
   const [agentsOnCanvas, setAgentsOnCanvas] = useState<AgentCanvas[]>([]);
@@ -45,8 +47,16 @@ export const useCanvasState = () => {
       selectedMap,
       drawLines,
       textsOnCanvas,
+      imagesOnCanvas,
     }),
-    [agentsOnCanvas, abilitiesOnCanvas, selectedMap, drawLines, textsOnCanvas]
+    [
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+      selectedMap,
+      drawLines,
+      textsOnCanvas,
+      imagesOnCanvas,
+    ]
   );
 
   useEffect(() => {
@@ -115,6 +125,7 @@ export const useCanvasState = () => {
     setSelectedMap(state.selectedMap);
     setDrawLines(state.drawLines);
     setTextsOnCanvas(state.textsOnCanvas);
+    setImagesOnCanvas(state.imagesOnCanvas);
 
     setTimeout(() => {
       isUpdatingFromHistory.current = false;
@@ -143,6 +154,7 @@ export const useCanvasState = () => {
     setSelectedCanvasIcon(null);
     setDrawLines([]);
     setTextsOnCanvas([]);
+    setImagesOnCanvas([]);
     setEditingTextId(null);
   }, []);
 
@@ -197,6 +209,8 @@ export const useCanvasState = () => {
     saveToHistory,
     textsOnCanvas,
     setTextsOnCanvas,
+    imagesOnCanvas,
+    setImagesOnCanvas,
     editingTextId,
     setEditingTextId,
   };

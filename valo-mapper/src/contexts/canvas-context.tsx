@@ -9,6 +9,7 @@ import type {
   DrawLine,
   MapOption,
   TextCanvas,
+  ImageCanvas,
   Tool,
   UndoableState,
 } from "@/lib/types";
@@ -45,6 +46,8 @@ interface CanvasContextType {
   resetState: () => void;
   textsOnCanvas: TextCanvas[];
   setTextsOnCanvas: React.Dispatch<React.SetStateAction<TextCanvas[]>>;
+  imagesOnCanvas: ImageCanvas[];
+  setImagesOnCanvas: React.Dispatch<React.SetStateAction<ImageCanvas[]>>;
   editingTextId: string | null;
   setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>;
 }

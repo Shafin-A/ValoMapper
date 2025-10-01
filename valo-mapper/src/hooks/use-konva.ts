@@ -6,7 +6,7 @@ import {
   SCALE_FACTOR,
   TEMP_DRAG_ID,
 } from "@/lib/consts";
-import { AbilityCanvas, AgentCanvas } from "@/lib/types";
+import { AbilityCanvas, AgentCanvas, ImageCanvas } from "@/lib/types";
 import {
   doesEraserIntersect,
   getIntersectingLines,
@@ -24,10 +24,10 @@ interface ContextMenuState {
   x: number;
   y: number;
   itemId: string;
-  itemType: "agent" | "ability" | "text";
+  itemType: "agent" | "ability" | "text" | "image";
 }
 
-type CanvasIconItem = AgentCanvas | AbilityCanvas;
+type CanvasIconItem = AgentCanvas | AbilityCanvas | ImageCanvas;
 
 export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
   const {
@@ -39,6 +39,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setAbilitiesOnCanvas,
     textsOnCanvas,
     setTextsOnCanvas,
+    imagesOnCanvas,
+    setImagesOnCanvas,
     isDrawMode,
     isDrawing,
     drawLines,
@@ -380,13 +382,17 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       const isTextItem = textsOnCanvas.some(
         (text) => text.id.toString() === targetId
       );
+      const isImageItem = imagesOnCanvas.some(
+        (image) => image.id.toString() === targetId
+      );
 
-      if (!isAgentItem && !isAbilityItem && !isTextItem) return;
+      if (!isAgentItem && !isAbilityItem && !isTextItem && !isImageItem) return;
 
-      let itemType: "agent" | "ability" | "text";
+      let itemType: "agent" | "ability" | "text" | "image";
       if (isAgentItem) itemType = "agent";
       else if (isAbilityItem) itemType = "ability";
       else if (isTextItem) itemType = "text";
+      else if (isImageItem) itemType = "image";
       else return;
 
       setContextMenu({
@@ -399,7 +405,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
 
       e.cancelBubble = true;
     },
-    [stageRef, agentsOnCanvas, abilitiesOnCanvas, textsOnCanvas]
+    [stageRef, agentsOnCanvas, abilitiesOnCanvas, textsOnCanvas, imagesOnCanvas]
   );
 
   const handlePopoverOpenChange = useCallback((open: boolean) => {
@@ -444,6 +450,17 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         };
         setTextsOnCanvas((prev) => [...prev, newText]);
       }
+    } else if (itemType === "image") {
+      const image = imagesOnCanvas.find((i) => i.id === itemId);
+      if (image) {
+        const newImage = {
+          ...image,
+          id: getNextId("image"),
+          x: image.x + 20,
+          y: image.y + 20,
+        };
+        setImagesOnCanvas((prev) => [...prev, newImage]);
+      }
     }
     closeContextMenu();
   }, [
@@ -455,6 +472,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setAbilitiesOnCanvas,
     textsOnCanvas,
     setTextsOnCanvas,
+    imagesOnCanvas,
+    setImagesOnCanvas,
   ]);
 
   const handleDelete = useCallback(() => {
@@ -470,6 +489,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       );
     } else if (itemType === "text") {
       setTextsOnCanvas((prev) => prev.filter((text) => text.id !== itemId));
+    } else if (itemType === "image") {
+      setImagesOnCanvas((prev) => prev.filter((image) => image.id !== itemId));
     }
     closeContextMenu();
   }, [
@@ -478,6 +499,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
     setTextsOnCanvas,
+    setImagesOnCanvas,
   ]);
 
   const handleToggleAlly = useCallback(() => {
