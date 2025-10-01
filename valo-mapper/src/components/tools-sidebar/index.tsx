@@ -52,6 +52,7 @@ export const ToolsSidebar = ({
     setTool,
     isDrawMode,
     setTextsOnCanvas,
+    setEditingTextId,
   } = useCanvas();
 
   const handleMapSelect = (option: MapOption) => {
@@ -63,20 +64,24 @@ export const ToolsSidebar = ({
     setIsDrawMode(pressed);
     if (pressed) {
       setTool(tool);
+      setEditingTextId(null);
     }
   };
 
-  const handleAddText = () =>
+  const handleAddText = () => {
+    setEditingTextId(null);
+
     setTextsOnCanvas((prev) => [
       ...prev,
       {
         id: getNextId("text"),
         text: "",
-        x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 10),
-        y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 10),
+        x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+        y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
         width: 200,
       },
     ]);
+  };
 
   return (
     <SidebarProvider
