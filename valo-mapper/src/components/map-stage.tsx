@@ -6,7 +6,7 @@ import { useKonva } from "@/hooks/use-konva";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { Ref, useCallback, useEffect, useRef } from "react";
+import { Ref, useCallback, useEffect, useRef, useState } from "react";
 import {
   Arrow,
   Group,
@@ -47,6 +47,8 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     setImagesOnCanvas,
   } = useCanvas();
 
+  const [hoveredImageId, setHoveredImageId] = useState<string | null>(null);
+
   const textRefs = useRef<Map<string, Konva.Text>>(new Map());
   const transformerRefs = useRef<Map<string, Konva.Transformer>>(new Map());
   const imageNodeRefs = useRef<Map<string, Konva.Image>>(new Map());
@@ -67,10 +69,11 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
 
   const handleTextClick = useCallback(
     (textId: string) => {
+      if (isDrawMode) return;
       setEditingTextId(textId);
       setAbilitiesOnCanvas([]);
     },
-    [setEditingTextId, setAbilitiesOnCanvas]
+    [isDrawMode, setEditingTextId, setAbilitiesOnCanvas]
   );
 
   const handleTextTransform = useCallback((textId: string) => {
@@ -179,6 +182,11 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     [setTextsOnCanvas]
   );
 
+  const handleImageMouseOver = (imageId: string | null) => {
+    if (editingTextId) return;
+    setHoveredImageId(imageId);
+  };
+
   const { agentsSettings, abilitiesSettings } = useSettings();
 
   const [mapImage] = useImage(selectedMap.minimap_src);
@@ -268,6 +276,8 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
         x={imageItem.x}
         y={imageItem.y}
         onDragEnd={(e) => handleImageDragEnd(imageItem.id, e)}
+        onMouseEnter={() => handleImageMouseOver(imageItem.id)}
+        onMouseLeave={() => handleImageMouseOver(null)}
       >
         <KonvaImage
           ref={(node) => {
@@ -283,26 +293,49 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
           onTransform={() => handleImageTransform(imageItem.id)}
           onTransformEnd={() => handleImageTransformEnd(imageItem.id)}
         />
-        <Transformer
-          ref={(node) => {
-            if (node) {
-              transformerRefs.current.set(imageItem.id, node);
-              if (imageNodeRefs.current.get(imageItem.id)) {
-                node.nodes([imageNodeRefs.current.get(imageItem.id)!]);
+        {hoveredImageId === imageItem.id && !isDrawMode && !editingTextId && (
+          <Transformer
+            ref={(node) => {
+              if (node) {
+                transformerRefs.current.set(imageItem.id, node);
+                if (imageNodeRefs.current.get(imageItem.id)) {
+                  node.nodes([imageNodeRefs.current.get(imageItem.id)!]);
+                }
+              } else {
+                transformerRefs.current.delete(imageItem.id);
               }
-            } else {
-              transformerRefs.current.delete(imageItem.id);
-            }
-          }}
-          boundBoxFunc={(_, newBox) => ({
-            ...newBox,
-            width: Math.max(5, newBox.width),
-            height: Math.max(5, newBox.height),
-          })}
-          rotateEnabled={false}
-          borderEnabled={false}
-          enabledAnchors={["bottom-right"]}
-        />
+            }}
+            boundBoxFunc={(_, newBox) => ({
+              ...newBox,
+              width: Math.max(5, newBox.width),
+              height: Math.max(5, newBox.height),
+            })}
+            rotateEnabled={false}
+            borderEnabled={false}
+            enabledAnchors={["bottom-right"]}
+            anchorSize={30}
+            anchorStyleFunc={(anchor) => {
+              const scale = stageRef.current?.scaleX() ?? 1;
+              const size = anchor.getAttr("width") * scale;
+
+              anchor
+                .fill("#52525b")
+                .stroke("#52525b")
+                .strokeWidth(1)
+                .sceneFunc((ctx, shape) => {
+                  ctx.beginPath();
+                  ctx.moveTo(size, 0);
+                  ctx.lineTo(size, size);
+                  ctx.lineTo(0, size);
+                  ctx.closePath();
+                  ctx.fillStrokeShape(shape);
+                });
+
+              anchor.offsetX(30 * scale);
+              anchor.offsetY(30 * scale);
+            }}
+          />
+        )}
       </Group>
     ));
 
@@ -414,7 +447,13 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
   const currentItem = contextMenu.open
     ? contextMenu.itemType === "agent"
       ? agentsOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null
-      : abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null
+      : contextMenu.itemType === "ability"
+      ? abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null
+      : contextMenu.itemType === "text"
+      ? textsOnCanvas.find((t) => t.id === contextMenu.itemId) ?? null
+      : contextMenu.itemType === "image"
+      ? imagesOnCanvas.find((i) => i.id === contextMenu.itemId) ?? null
+      : null
     : null;
 
   return (
