@@ -19,9 +19,10 @@ import {
   Transformer,
 } from "react-konva";
 import useImage from "use-image";
-import { TextEditor } from "./text-editor";
+import { TextEditor } from "../text-editor";
 import { KonvaEventObject } from "konva/lib/Node";
 import { MAP_SIZE } from "@/lib/consts";
+import { useTextEditor } from "@/hooks/use-text-editor";
 
 interface MapStageProps {
   width: number;
@@ -40,80 +41,27 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     isDrawMode,
     currentStroke,
     textsOnCanvas,
-    setTextsOnCanvas,
     editingTextId,
-    setEditingTextId,
     imagesOnCanvas,
     setImagesOnCanvas,
   } = useCanvas();
 
+  const {
+    textRefs,
+    transformerRefs,
+    handleTextClick,
+    handleTextChange,
+    attachTransformerToText,
+    handleTextDragEnd,
+    handleTextTransform,
+    handleTextTransformEnd,
+    handleTextEditComplete,
+  } = useTextEditor();
+
   const [hoveredImageId, setHoveredImageId] = useState<string | null>(null);
 
-  const textRefs = useRef<Map<string, Konva.Text>>(new Map());
-  const transformerRefs = useRef<Map<string, Konva.Transformer>>(new Map());
   const imageNodeRefs = useRef<Map<string, Konva.Image>>(new Map());
   const imageLoaderRefs = useRef<Map<string, HTMLImageElement>>(new Map());
-
-  const attachTransformerToText = useCallback(
-    (textNode: Konva.Text | null, transformerId: string) => {
-      if (textNode) {
-        const transformer = transformerRefs.current.get(transformerId);
-        if (transformer) {
-          transformer.nodes([textNode]);
-          transformer.getLayer()?.batchDraw();
-        }
-      }
-    },
-    []
-  );
-
-  const handleTextClick = useCallback(
-    (textId: string) => {
-      if (isDrawMode) return;
-      setEditingTextId(textId);
-      setAbilitiesOnCanvas([]);
-    },
-    [isDrawMode, setEditingTextId, setAbilitiesOnCanvas]
-  );
-
-  const handleTextTransform = useCallback((textId: string) => {
-    const textNode = textRefs.current.get(textId);
-    if (!textNode) return;
-
-    const scaleX = textNode.scaleX();
-    const newWidth = textNode.width() * scaleX;
-
-    textNode.setAttrs({
-      width: newWidth,
-      scaleX: 1,
-    });
-  }, []);
-
-  const handleTextTransformEnd = useCallback(
-    (textId: string) => {
-      const textNode = textRefs.current.get(textId);
-      if (!textNode) return;
-
-      setTextsOnCanvas((prev) =>
-        prev.map((item) =>
-          item.id === textId ? { ...item, width: textNode.width() } : item
-        )
-      );
-    },
-    [setTextsOnCanvas]
-  );
-
-  const handleTextChange = (textId: string, newText: string) => {
-    setTextsOnCanvas((prev) =>
-      prev.map((item) =>
-        item.id === textId ? { ...item, text: newText } : item
-      )
-    );
-  };
-
-  const handleTextEditComplete = useCallback(() => {
-    setEditingTextId(null);
-  }, [setEditingTextId]);
 
   const handleImageTransform = useCallback((imageId: string) => {
     const imageNode = imageNodeRefs.current.get(imageId);
@@ -165,21 +113,6 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
       );
     },
     [setImagesOnCanvas]
-  );
-
-  const handleTextDragEnd = useCallback(
-    (textId: string, e: KonvaEventObject<DragEvent>) => {
-      if (!e.target) return;
-      const newX = e.target.x();
-      const newY = e.target.y();
-
-      setTextsOnCanvas((prev) =>
-        prev.map((item) =>
-          item.id === textId ? { ...item, x: newX, y: newY } : item
-        )
-      );
-    },
-    [setTextsOnCanvas]
   );
 
   const handleImageMouseOver = (imageId: string | null) => {
