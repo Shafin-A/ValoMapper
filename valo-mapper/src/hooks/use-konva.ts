@@ -6,7 +6,6 @@ import {
   SCALE_FACTOR,
   TEMP_DRAG_ID,
 } from "@/lib/consts";
-import { AbilityCanvas, AgentCanvas, ImageCanvas } from "@/lib/types";
 import {
   doesEraserIntersect,
   getIntersectingLines,
@@ -17,7 +16,7 @@ import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { Dispatch, SetStateAction, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 interface ContextMenuState {
   open: boolean;
@@ -26,8 +25,6 @@ interface ContextMenuState {
   itemId: string;
   itemType: "agent" | "ability" | "text" | "image";
 }
-
-type CanvasIconItem = AgentCanvas | AbilityCanvas | ImageCanvas;
 
 export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
   const {
@@ -338,27 +335,6 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     removeTempDragIcon();
   }, [handleMouseUp, removeTempDragIcon]);
 
-  const handleDragEnd = useCallback(
-    <T extends CanvasIconItem>(
-      e: KonvaEventObject<DragEvent>,
-      icon: T,
-      setIconsOnCanvas: Dispatch<SetStateAction<T[]>>
-    ) => {
-      const newX = e.target.x();
-      const newY = e.target.y();
-
-      setIconsOnCanvas((prev) => {
-        const index = prev.findIndex((item) => item.id === icon.id);
-        if (index === -1) return prev;
-
-        const updatedItems = [...prev];
-        updatedItems[index] = { ...updatedItems[index], x: newX, y: newY };
-        return updatedItems;
-      });
-    },
-    []
-  );
-
   const handleContextMenu = useCallback(
     (e: KonvaEventObject<PointerEvent>) => {
       e.evt.preventDefault();
@@ -531,7 +507,6 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     handleStageMouseMove,
     handleStageMouseLeave,
     handleMouseUp,
-    handleDragEnd,
     handleContextMenu,
     handlePopoverOpenChange,
     handleDuplicate,

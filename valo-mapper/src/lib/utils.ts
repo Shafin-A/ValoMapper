@@ -13,6 +13,7 @@ import {
   AdjustableLineAbility,
   Agent,
   ArcAbility,
+  BaseCanvasItem,
   CircleAbility,
   CurvableLineAbility,
   DoubleLineAbility,
@@ -23,6 +24,7 @@ import {
 import { clsx, type ClassValue } from "clsx";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
+import { Dispatch, SetStateAction } from "react";
 import { twMerge } from "tailwind-merge";
 
 export const cn = (...inputs: ClassValue[]) => {
@@ -203,4 +205,22 @@ export const getIntersectingLines = (
   }
 
   return intersectingIndices;
+};
+
+export const handleDragEnd = <T extends BaseCanvasItem>(
+  e: KonvaEventObject<DragEvent>,
+  icon: T,
+  setIconsOnCanvas: Dispatch<SetStateAction<T[]>>
+) => {
+  const newX = e.target.x();
+  const newY = e.target.y();
+
+  setIconsOnCanvas((prev) => {
+    const index = prev.findIndex((item) => item.id === icon.id);
+    if (index === -1) return prev;
+
+    const updatedItems = [...prev];
+    updatedItems[index] = { ...updatedItems[index], x: newX, y: newY };
+    return updatedItems;
+  });
 };

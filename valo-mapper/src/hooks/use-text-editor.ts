@@ -1,9 +1,11 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import { useCallback, useRef } from "react";
+import { RefObject, useCallback, useRef } from "react";
 
-export const useTextEditor = () => {
+export const useTextEditor = (
+  transformerRefs: RefObject<Map<string, Konva.Transformer>>
+) => {
   const {
     setTextsOnCanvas,
     isDrawMode,
@@ -12,7 +14,6 @@ export const useTextEditor = () => {
   } = useCanvas();
 
   const textRefs = useRef<Map<string, Konva.Text>>(new Map());
-  const transformerRefs = useRef<Map<string, Konva.Transformer>>(new Map());
 
   const attachTransformerToText = useCallback(
     (textNode: Konva.Text | null, transformerId: string) => {
@@ -24,7 +25,7 @@ export const useTextEditor = () => {
         }
       }
     },
-    []
+    [transformerRefs]
   );
 
   const handleTextClick = useCallback(
@@ -92,7 +93,6 @@ export const useTextEditor = () => {
 
   return {
     textRefs,
-    transformerRefs,
     handleTextClick,
     handleTextChange,
     handleTextEditComplete,

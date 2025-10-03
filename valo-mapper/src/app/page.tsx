@@ -1,7 +1,7 @@
 "use client";
 
 import { AgentsSidebar } from "@/components/agents-sidebar";
-import { MapStage } from "@/components/canvas/map-stage";
+import { MapStage } from "@/components/canvas";
 import { SiteHeader } from "@/components/site-header";
 import { ToolsSidebar } from "@/components/tools-sidebar";
 import { useCanvas } from "@/contexts/canvas-context";
