@@ -50,7 +50,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
 
   const [eraserSettings, setEraserSettings] = useState<EraserSettings>({
     size: 5,
-    mode: "pixel",
+    mode: "line",
   });
 
   const updateAgentsSettings = (newSettings: Partial<IconSettings>) => {
