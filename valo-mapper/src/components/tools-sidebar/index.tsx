@@ -86,6 +86,7 @@ export const ToolsSidebar = ({
 
   const handleAddText = () => {
     setEditingTextId(null);
+    setIsDrawMode(false);
 
     setTextsOnCanvas((prev) => [
       ...prev,

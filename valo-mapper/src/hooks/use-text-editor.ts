@@ -6,12 +6,7 @@ import { RefObject, useCallback, useRef } from "react";
 export const useTextEditor = (
   transformerRefs: RefObject<Map<string, Konva.Transformer>>
 ) => {
-  const {
-    setTextsOnCanvas,
-    isDrawMode,
-    setEditingTextId,
-    setAbilitiesOnCanvas,
-  } = useCanvas();
+  const { setTextsOnCanvas, isDrawMode, setEditingTextId } = useCanvas();
 
   const textRefs = useRef<Map<string, Konva.Text>>(new Map());
 
@@ -32,9 +27,8 @@ export const useTextEditor = (
     (textId: string) => {
       if (isDrawMode) return;
       setEditingTextId(textId);
-      setAbilitiesOnCanvas([]);
     },
-    [isDrawMode, setEditingTextId, setAbilitiesOnCanvas]
+    [isDrawMode, setEditingTextId]
   );
 
   const handleTextTransform = useCallback((textId: string) => {
