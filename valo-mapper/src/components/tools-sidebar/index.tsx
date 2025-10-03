@@ -30,7 +30,8 @@ import { useRef } from "react";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
-import { MapSelectButton } from "./map-select-button";
+import { MapSelect } from "./map-select-button";
+import { useSettings } from "@/contexts/settings-context";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -61,6 +62,8 @@ export const ToolsSidebar = ({
     setEditingTextId,
     setImagesOnCanvas,
   } = useCanvas();
+
+  const { agentsSettings } = useSettings();
 
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
@@ -164,11 +167,13 @@ export const ToolsSidebar = ({
           <SidebarHeader>
             <div className="flex flex-col gap-3 p-2">
               <span className="text-base font-semibold">Maps</span>
-              <MapSelectButton
+              <MapSelect
                 mapOptions={MAP_OPTIONS}
                 selectedMap={selectedMap}
                 setSelectedMap={setSelectedMap}
                 onMapSelect={handleMapSelect}
+                allyColor={agentsSettings.allyColor}
+                enemyColor={agentsSettings.enemyColor}
               />
             </div>
           </SidebarHeader>

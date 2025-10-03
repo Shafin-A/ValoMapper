@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -6,28 +6,38 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapOption } from "@/lib/types";
 
-interface MapSelectButtonProps {
+interface MapSelectProps {
   mapOptions: MapOption[];
   onMapSelect?: (selectedMap: MapOption) => void;
   className?: string;
   selectedMap: MapOption;
   setSelectedMap: React.Dispatch<React.SetStateAction<MapOption>>;
+  allyColor: string;
+  enemyColor: string;
 }
 
-export const MapSelectButton = ({
+export const MapSelect = ({
   mapOptions,
   onMapSelect,
   className = "",
   selectedMap,
   setSelectedMap,
-}: MapSelectButtonProps) => {
+  allyColor,
+  enemyColor,
+}: MapSelectProps) => {
+  const [side, setSide] = useState<"attack" | "defense">("defense");
+
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
     onMapSelect?.(option);
+  };
+
+  const handleRotationToggle = () => {
+    setSide((prev) => (prev === "attack" ? "defense" : "attack"));
   };
 
   if (!mapOptions || mapOptions.length === 0) {
@@ -35,12 +45,12 @@ export const MapSelectButton = ({
   }
 
   return (
-    <div className={`flex justify-center ${className}`}>
+    <div className={`flex items-center justify-center gap-2 ${className}`}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="relative h-20 w-64 hover:opacity-80 transition-all duration-400 ease-in-out border-2 border-gray-300 hover:border-gray-400 p-0 overflow-hidden"
+            className="relative h-20 w-56 hover:opacity-80 transition-all duration-400 ease-in-out border-2 border-gray-300 hover:border-gray-400 p-0 overflow-hidden"
             style={{
               backgroundImage: `url(${selectedMap.listview_src})`,
               backgroundSize: "cover",
@@ -63,8 +73,8 @@ export const MapSelectButton = ({
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent className="w-64" align="center">
-          <ScrollArea className="w-64 h-80">
+        <DropdownMenuContent className="w-full" align="start">
+          <ScrollArea className="w-72 h-80">
             {mapOptions.map((option) => (
               <DropdownMenuItem
                 key={option.id}
@@ -98,6 +108,22 @@ export const MapSelectButton = ({
           </ScrollArea>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Button
+        variant="outline"
+        onClick={handleRotationToggle}
+        className="h-20 w-16 transition-all duration-200 flex flex-col items-center justify-center gap-1"
+      >
+        <RefreshCw
+          className={`size-8 transition-transform duration-500 ${
+            side === "attack" ? "rotate-0" : "rotate-180"
+          }`}
+          color={side === "attack" ? enemyColor : allyColor}
+        />
+        <span className="text-xs text-white font-semibold uppercase">
+          {side}
+        </span>
+      </Button>
     </div>
   );
 };
