@@ -35,6 +35,8 @@ export const useCanvasState = () => {
   const [isDrawMode, setIsDrawMode] = useState(false);
   const isDrawing = useRef(false);
 
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
   const [history, setHistory] = useState<UndoableState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const isUpdatingFromHistory = useRef(false);
@@ -200,6 +202,8 @@ export const useCanvasState = () => {
     isDrawMode,
     setIsDrawMode,
     isDrawing,
+    isDeleteOpen,
+    setIsDeleteOpen,
     history,
     undo,
     redo,

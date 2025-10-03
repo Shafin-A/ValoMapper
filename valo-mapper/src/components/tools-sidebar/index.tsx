@@ -13,9 +13,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
-import { useRef } from "react";
 import { MAP_OPTIONS, MAP_SIZE, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapOption, Tool } from "@/lib/types";
+import { getNextId } from "@/lib/utils";
+import { Vector2d } from "konva/lib/types";
 import {
   ALargeSmall,
   Eraser,
@@ -25,11 +26,11 @@ import {
   Trash2,
   Undo,
 } from "lucide-react";
+import { useRef } from "react";
+import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
-import { MapSelectButton } from "./map-select-button";
 import { EraserSettings } from "./eraser-settings";
-import { getNextId } from "@/lib/utils";
-import { Vector2d } from "konva/lib/types";
+import { MapSelectButton } from "./map-select-button";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -54,6 +55,8 @@ export const ToolsSidebar = ({
     tool,
     setTool,
     isDrawMode,
+    isDeleteOpen,
+    setIsDeleteOpen,
     setTextsOnCanvas,
     setEditingTextId,
     setImagesOnCanvas,
@@ -64,12 +67,18 @@ export const ToolsSidebar = ({
     resetState();
   };
 
-  const handlePressedChange = (pressed: boolean, tool: Tool) => {
+  const handleDrawPressedChange = (pressed: boolean, tool: Tool) => {
+    setIsDeleteOpen(false);
     setIsDrawMode(pressed);
     if (pressed) {
       setTool(tool);
       setEditingTextId(null);
     }
+  };
+
+  const handleDeletePressedChange = (pressed: boolean) => {
+    setIsDrawMode(false);
+    setIsDeleteOpen(pressed);
   };
 
   const handleAddText = () => {
@@ -209,7 +218,7 @@ export const ToolsSidebar = ({
                       }
                       pressed={isDrawMode && tool === "pencil"}
                       onPressedChange={(pressed) =>
-                        handlePressedChange(pressed, "pencil")
+                        handleDrawPressedChange(pressed, "pencil")
                       }
                     >
                       <Pencil />
@@ -228,7 +237,7 @@ export const ToolsSidebar = ({
                       }
                       pressed={isDrawMode && tool === "eraser"}
                       onPressedChange={(pressed) =>
-                        handlePressedChange(pressed, "eraser")
+                        handleDrawPressedChange(pressed, "eraser")
                       }
                     >
                       <Eraser />
@@ -240,9 +249,15 @@ export const ToolsSidebar = ({
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="destructiveGhost" size="lg">
+                    <Toggle
+                      size="lg"
+                      variant="destructive"
+                      data-state={isDeleteOpen ? "on" : "off"}
+                      pressed={isDeleteOpen}
+                      onPressedChange={handleDeletePressedChange}
+                    >
                       <Trash2 />
-                    </Button>
+                    </Toggle>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" align="center">
                     Delete
@@ -279,6 +294,10 @@ export const ToolsSidebar = ({
 
               <AnimatedContent show={isDrawMode && tool === "eraser"}>
                 <EraserSettings />
+              </AnimatedContent>
+
+              <AnimatedContent show={isDeleteOpen}>
+                <DeleteSettings />
               </AnimatedContent>
             </div>
           </SidebarContent>

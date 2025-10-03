@@ -14,6 +14,8 @@ const toggleVariants = cva(
         default: "bg-transparent",
         outline:
           "border border-input bg-transparent shadow-xs hover:bg-accent hover:text-accent-foreground",
+        destructive:
+          "bg-transparent text-destructive hover:bg-destructive/10 hover:text-destructive/70 data-[state=on]:bg-destructive/15 data-[state=on]:text-destructive data-[state=on]:hover:bg-destructive/15 data-[state=on]:hover:text-destructive dark:text-destructive dark:hover:bg-destructive/20 dark:hover:text-destructive/70 dark:data-[state=on]:bg-destructive/25 dark:data-[state=on]:hover:bg-destructive/25 dark:data-[state=on]:hover:text-destructive",
       },
       size: {
         default: "h-9 px-2 min-w-9",

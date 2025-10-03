@@ -37,6 +37,8 @@ interface CanvasContextType {
   isDrawMode: boolean;
   setIsDrawMode: React.Dispatch<React.SetStateAction<boolean>>;
   isDrawing: RefObject<boolean>;
+  isDeleteOpen: boolean;
+  setIsDeleteOpen: React.Dispatch<React.SetStateAction<boolean>>;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
