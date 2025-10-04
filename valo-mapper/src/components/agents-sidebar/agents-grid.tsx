@@ -1,16 +1,23 @@
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AGENTS } from "@/lib/consts";
-import Image from "next/image";
-import { Agent, AgentRole } from "@/lib/types";
-import { useSettings } from "@/contexts/settings-context";
-import { EllipsisVertical } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
-import { useCanvas } from "@/contexts/canvas-context";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useCanvas } from "@/contexts/canvas-context";
+import { useSettings } from "@/contexts/settings-context";
+import { AGENTS } from "@/lib/consts";
+import { Agent, AgentRole } from "@/lib/types";
+import { EllipsisVertical, Users } from "lucide-react";
+import Image from "next/image";
 
 interface AgentsGridProps {
   selectedRole: AgentRole | "All";
@@ -48,62 +55,86 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
 
   return (
     <ScrollArea className="h-full w-full">
-      <div className="grid grid-cols-4 gap-4 p-2">
-        {filteredAgents.map((agent) => {
-          const isSelected = selectedCanvasIcon?.name === agent.name;
-          const borderColor = isAlly ? allyColor : enemyColor;
+      {filteredAgents.length === 0 ? (
+        <div className="flex items-center justify-center ">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Users />
+              </EmptyMedia>
+            </EmptyHeader>
+            <EmptyTitle>
+              {selectedRole === "All"
+                ? "No agents on map"
+                : `No ${selectedRole.toLowerCase()} agents on map`}
+            </EmptyTitle>
+            <EmptyDescription>
+              {selectedRole === "All"
+                ? "Add agents to the map to see them here"
+                : `Add ${selectedRole.toLowerCase()} agents to the map to see them here`}
+            </EmptyDescription>
+          </Empty>
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-4 p-2">
+          {filteredAgents.map((agent) => {
+            const isSelected = selectedCanvasIcon?.name === agent.name;
+            const borderColor = isAlly ? allyColor : enemyColor;
 
-          return (
-            <div key={agent.name} className="relative inline-block">
-              <Tooltip delayDuration={700}>
-                <TooltipTrigger>
-                  <Image
-                    className={`rounded-md transition-transform duration-200 ${
-                      isSelected ? `border-2 scale-110 shadow-lg` : "border"
-                    }`}
-                    style={{
-                      borderColor: isSelected ? borderColor : "transparent",
-                      cursor: "pointer",
-                    }}
-                    src={agent.src}
-                    alt={agent.name}
-                    width={50}
-                    height={50}
-                    draggable
-                    onClick={() => onAgentClick(agent)}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>{agent.name}</TooltipContent>
-              </Tooltip>
+            return (
+              <div key={agent.name} className="relative inline-block">
+                <Tooltip delayDuration={700}>
+                  <TooltipTrigger>
+                    <Image
+                      className={`rounded-md transition-transform duration-200 ${
+                        isSelected ? `border-2 scale-110 shadow-lg` : "border"
+                      }`}
+                      style={{
+                        borderColor: isSelected ? borderColor : "transparent",
+                        cursor: "pointer",
+                      }}
+                      src={agent.src}
+                      alt={agent.name}
+                      width={50}
+                      height={50}
+                      draggable
+                      onClick={() => onAgentClick(agent)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>{agent.name}</TooltipContent>
+                </Tooltip>
 
-              <Tooltip delayDuration={700}>
-                <TooltipTrigger asChild>
-                  <Toggle
-                    size="icon"
-                    className="absolute -top-2 -right-2 rounded-full"
-                    data-state={
-                      selectedAgentAbilities?.name === agent.name ? "on" : "off"
-                    }
-                    pressed={selectedAgentAbilities?.name === agent.name}
-                    onPressedChange={(pressed) => {
-                      setSelectedCanvasIcon(null);
-                      if (pressed) {
-                        setSelectedAgentAbilities(agent);
-                      } else {
-                        setSelectedAgentAbilities(null);
+                <Tooltip delayDuration={700}>
+                  <TooltipTrigger asChild>
+                    <Toggle
+                      size="icon"
+                      className="absolute -top-2 -right-2 rounded-full"
+                      data-state={
+                        selectedAgentAbilities?.name === agent.name
+                          ? "on"
+                          : "off"
                       }
-                    }}
-                  >
-                    <EllipsisVertical />
-                    <span className="sr-only">Abilities</span>
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>Abilities</TooltipContent>
-              </Tooltip>
-            </div>
-          );
-        })}
-      </div>
+                      pressed={selectedAgentAbilities?.name === agent.name}
+                      onPressedChange={(pressed) => {
+                        setSelectedCanvasIcon(null);
+                        if (pressed) {
+                          setSelectedAgentAbilities(agent);
+                        } else {
+                          setSelectedAgentAbilities(null);
+                        }
+                      }}
+                    >
+                      <EllipsisVertical />
+                      <span className="sr-only">Abilities</span>
+                    </Toggle>
+                  </TooltipTrigger>
+                  <TooltipContent>Abilities</TooltipContent>
+                </Tooltip>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </ScrollArea>
   );
 };
