@@ -12,6 +12,7 @@ import type {
   ImageCanvas,
   Tool,
   UndoableState,
+  MapSide,
 } from "@/lib/types";
 import React, { createContext, RefObject, useContext } from "react";
 
@@ -28,6 +29,8 @@ interface CanvasContextType {
   setIsAlly: React.Dispatch<React.SetStateAction<boolean>>;
   selectedMap: MapOption;
   setSelectedMap: React.Dispatch<React.SetStateAction<MapOption>>;
+  mapSide: MapSide;
+  setMapSide: React.Dispatch<React.SetStateAction<MapSide>>;
   tool: Tool;
   setTool: React.Dispatch<React.SetStateAction<Tool>>;
   currentStroke: DrawLine | null;

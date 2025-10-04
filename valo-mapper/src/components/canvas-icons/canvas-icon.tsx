@@ -25,6 +25,7 @@ export interface CanvasIconProps {
   fill?: string;
   strokeWidth: number;
   onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
+  rotation?: number;
 }
 
 export const CanvasIcon = ({
@@ -44,6 +45,7 @@ export const CanvasIcon = ({
   fill = "#1b1b1b",
   strokeWidth,
   onDragEnd,
+  rotation = 0,
 }: CanvasIconProps) => {
   const [image] = useImage(src);
   const groupRef = useRef<Konva.Group>(null);
@@ -75,6 +77,7 @@ export const CanvasIcon = ({
       offsetY={height / 2}
       onDragStart={isListening ? handleOnDragStart : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
+      rotation={rotation}
     >
       <KonvaImage
         image={image}

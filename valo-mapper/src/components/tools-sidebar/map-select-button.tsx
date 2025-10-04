@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapOption } from "@/lib/types";
+import { MapOption, MapSide } from "@/lib/types";
 
 interface MapSelectProps {
   mapOptions: MapOption[];
@@ -18,6 +18,9 @@ interface MapSelectProps {
   setSelectedMap: React.Dispatch<React.SetStateAction<MapOption>>;
   allyColor: string;
   enemyColor: string;
+  mapSide: MapSide;
+  setMapSide: React.Dispatch<React.SetStateAction<MapSide>>;
+  onMapRotate?: () => void;
 }
 
 export const MapSelect = ({
@@ -28,16 +31,18 @@ export const MapSelect = ({
   setSelectedMap,
   allyColor,
   enemyColor,
+  mapSide,
+  setMapSide,
+  onMapRotate,
 }: MapSelectProps) => {
-  const [side, setSide] = useState<"attack" | "defense">("defense");
-
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
     onMapSelect?.(option);
   };
 
   const handleRotationToggle = () => {
-    setSide((prev) => (prev === "attack" ? "defense" : "attack"));
+    setMapSide((prev) => (prev === "attack" ? "defense" : "attack"));
+    onMapRotate?.();
   };
 
   if (!mapOptions || mapOptions.length === 0) {
@@ -116,12 +121,12 @@ export const MapSelect = ({
       >
         <RefreshCw
           className={`size-8 transition-transform duration-500 ${
-            side === "attack" ? "rotate-0" : "rotate-180"
+            mapSide === "attack" ? "rotate-0" : "rotate-180"
           }`}
-          color={side === "attack" ? enemyColor : allyColor}
+          color={mapSide === "attack" ? enemyColor : allyColor}
         />
         <span className="text-xs text-white font-semibold uppercase">
-          {side}
+          {mapSide}
         </span>
       </Button>
     </div>

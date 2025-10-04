@@ -47,6 +47,8 @@ export const ToolsSidebar = ({
   const {
     selectedMap,
     setSelectedMap,
+    mapSide,
+    setMapSide,
     undo,
     redo,
     canUndo,
@@ -61,13 +63,63 @@ export const ToolsSidebar = ({
     setTextsOnCanvas,
     setEditingTextId,
     setImagesOnCanvas,
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    setDrawLines,
+    abilitiesOnCanvas,
   } = useCanvas();
 
+  console.log(abilitiesOnCanvas);
   const { agentsSettings } = useSettings();
 
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
     resetState();
+  };
+
+  const handleRotationToggle = () => {
+    setAgentsOnCanvas((prev) =>
+      prev.map((agent) => ({
+        ...agent,
+        x: 2 * (mapPosition.x + MAP_SIZE / 2) - agent.x,
+        y: 2 * (mapPosition.y + MAP_SIZE / 2) - agent.y,
+      }))
+    );
+
+    setAbilitiesOnCanvas((prev) =>
+      prev.map((ability) => ({
+        ...ability,
+        x: 2 * (mapPosition.x + MAP_SIZE / 2) - ability.x,
+        y: 2 * (mapPosition.y + MAP_SIZE / 2) - ability.y,
+        currentRotation: ((ability.currentRotation || 0) + 180) % 360,
+      }))
+    );
+
+    setTextsOnCanvas((prev) =>
+      prev.map((text) => ({
+        ...text,
+        x: 2 * (mapPosition.x + MAP_SIZE / 2) - text.x,
+        y: 2 * (mapPosition.y + MAP_SIZE / 2) - text.y,
+      }))
+    );
+
+    setImagesOnCanvas((prev) =>
+      prev.map((image) => ({
+        ...image,
+        x: 2 * (mapPosition.x + MAP_SIZE / 2) - image.x,
+        y: 2 * (mapPosition.y + MAP_SIZE / 2) - image.y,
+      }))
+    );
+
+    setDrawLines((prev) =>
+      prev.map((line) => ({
+        ...line,
+        points: line.points.map((point) => ({
+          x: 2 * (mapPosition.x + MAP_SIZE / 2) - point.x,
+          y: 2 * (mapPosition.y + MAP_SIZE / 2) - point.y,
+        })),
+      }))
+    );
   };
 
   const handleDrawPressedChange = (pressed: boolean, tool: Tool) => {
@@ -175,6 +227,9 @@ export const ToolsSidebar = ({
                 onMapSelect={handleMapSelect}
                 allyColor={agentsSettings.allyColor}
                 enemyColor={agentsSettings.enemyColor}
+                mapSide={mapSide}
+                setMapSide={setMapSide}
+                onMapRotate={handleRotationToggle}
               />
             </div>
           </SidebarHeader>

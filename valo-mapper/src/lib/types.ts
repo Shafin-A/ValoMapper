@@ -234,10 +234,13 @@ export type DrawLine = {
   isArrowHead: boolean;
 };
 
+export type MapSide = "attack" | "defense";
+
 export type UndoableState = {
   agentsOnCanvas: AgentCanvas[];
   abilitiesOnCanvas: AbilityCanvas[];
   selectedMap: MapOption;
+  mapSide: MapSide;
   drawLines: DrawLine[];
   textsOnCanvas: TextCanvas[];
   imagesOnCanvas: ImageCanvas[];

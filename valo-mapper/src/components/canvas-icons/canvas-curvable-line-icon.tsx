@@ -20,6 +20,7 @@ interface CanvasCurvableLineIconProps extends CanvasIconProps {
   handleColor?: string;
   handleStrokeColor?: string;
   initialPath?: Vector2d[];
+  rotation?: number;
 }
 
 export const CanvasCurvableLineIcon = ({
@@ -45,6 +46,7 @@ export const CanvasCurvableLineIcon = ({
   handleStrokeColor = "#ffffff",
   strokeWidth,
   initialPath = [],
+  rotation = 0,
 }: CanvasCurvableLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const handleRef = useRef<Konva.Circle>(null);
@@ -55,7 +57,7 @@ export const CanvasCurvableLineIcon = ({
 
   const lastInitialPathRef = useRef<string>("");
 
-  const { setAbilitiesOnCanvas } = useCanvas();
+  const { setAbilitiesOnCanvas, mapSide } = useCanvas();
 
   const calculatePathDistance = useCallback((points: Vector2d[]): number => {
     if (points.length < 2) return 0;
@@ -168,9 +170,14 @@ export const CanvasCurvableLineIcon = ({
 
         const groupPosition = groupRef.current.getAbsolutePosition();
         const stageScale = stage.scaleX();
+        const groupRotation = groupRef.current.rotation();
 
-        const localX = (pointer.x - groupPosition.x) / stageScale;
-        const localY = (pointer.y - groupPosition.y) / stageScale;
+        const dx = (pointer.x - groupPosition.x) / stageScale;
+        const dy = (pointer.y - groupPosition.y) / stageScale;
+
+        const radians = (-groupRotation * Math.PI) / 180;
+        const localX = dx * Math.cos(radians) - dy * Math.sin(radians);
+        const localY = dx * Math.sin(radians) + dy * Math.cos(radians);
 
         const lastPoint = newPath[newPath.length - 1];
         const distance = Math.sqrt(
@@ -261,6 +268,7 @@ export const CanvasCurvableLineIcon = ({
       onMouseDown={isListening ? handleMouseDown : undefined}
       onDragStart={isListening ? handleDragStart : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
+      rotation={rotation}
     >
       {path.length > 1 && (
         <Line
@@ -291,7 +299,7 @@ export const CanvasCurvableLineIcon = ({
       {
         <Circle
           x={endPoint.x}
-          y={endPoint.y - 25}
+          y={mapSide === "defense" ? endPoint.y - 25 : endPoint.y + 25}
           isListening={isListening}
           radius={8}
           onClick={handleReset}
@@ -317,6 +325,7 @@ export const CanvasCurvableLineIcon = ({
         strokeWidth={strokeWidth}
         allyColor={allyColor}
         enemyColor={enemyColor}
+        rotation={-rotation}
       />
     </Group>
   );

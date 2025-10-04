@@ -11,7 +11,7 @@ interface CanvasMapBackgroundProps {
 export const CanvasMapBackground = ({
   mapPosition,
 }: CanvasMapBackgroundProps) => {
-  const { selectedMap } = useCanvas();
+  const { selectedMap, mapSide } = useCanvas();
   const [mapImage] = useImage(selectedMap.minimap_src);
 
   return (
@@ -26,6 +26,7 @@ export const CanvasMapBackground = ({
         offsetX={MAP_SIZE / 2}
         offsetY={MAP_SIZE / 2}
         scale={{ x: 1.25, y: 1.25 }}
+        rotation={mapSide === "defense" ? 0 : 180}
       />
     )
   );

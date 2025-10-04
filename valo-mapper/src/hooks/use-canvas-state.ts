@@ -28,6 +28,7 @@ export const useCanvasState = () => {
   >(null);
 
   const [selectedMap, setSelectedMap] = useState<MapOption>(MAP_OPTIONS[1]); // Default Ascent
+  const [mapSide, setMapSide] = useState<"attack" | "defense">("defense");
 
   const [currentStroke, setCurrentStroke] = useState<DrawLine | null>(null);
   const [tool, setTool] = useState<Tool>("pencil");
@@ -47,6 +48,7 @@ export const useCanvasState = () => {
       agentsOnCanvas,
       abilitiesOnCanvas,
       selectedMap,
+      mapSide,
       drawLines,
       textsOnCanvas,
       imagesOnCanvas,
@@ -55,6 +57,7 @@ export const useCanvasState = () => {
       agentsOnCanvas,
       abilitiesOnCanvas,
       selectedMap,
+      mapSide,
       drawLines,
       textsOnCanvas,
       imagesOnCanvas,
@@ -125,6 +128,7 @@ export const useCanvasState = () => {
     setAgentsOnCanvas(state.agentsOnCanvas);
     setAbilitiesOnCanvas(state.abilitiesOnCanvas);
     setSelectedMap(state.selectedMap);
+    setMapSide(state.mapSide);
     setDrawLines(state.drawLines);
     setTextsOnCanvas(state.textsOnCanvas);
     setImagesOnCanvas(state.imagesOnCanvas);
@@ -217,5 +221,7 @@ export const useCanvasState = () => {
     setImagesOnCanvas,
     editingTextId,
     setEditingTextId,
+    mapSide,
+    setMapSide,
   };
 };
