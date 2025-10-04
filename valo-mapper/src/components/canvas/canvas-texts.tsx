@@ -40,10 +40,7 @@ export const CanvasTexts = ({ stageRef, transformerRefs }: CanvasTextProps) => {
       }}
       onDragEnd={(e) => handleTextDragEnd(textItem.id, e)}
     >
-      <Rect
-        width={textItem.width}
-        height={Math.max(60, textRefs.current.get(textItem.id)?.height() || 0)}
-      />
+      <Rect width={textItem.width} height={Math.max(60, textItem.height)} />
       <Text
         ref={(node) => {
           if (node) {

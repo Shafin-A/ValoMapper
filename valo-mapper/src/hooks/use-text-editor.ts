@@ -51,7 +51,9 @@ export const useTextEditor = (
 
       setTextsOnCanvas((prev) =>
         prev.map((item) =>
-          item.id === textId ? { ...item, width: textNode.width() } : item
+          item.id === textId
+            ? { ...item, width: textNode.width(), height: textNode.height() }
+            : item
         )
       );
     },

@@ -29,6 +29,7 @@ export type CanvasItem = BaseCanvasItem & {
 export type TextCanvas = BaseCanvasItem & {
   text: string;
   width: number;
+  height: number;
 };
 
 export type ImageCanvas = BaseCanvasItem & {

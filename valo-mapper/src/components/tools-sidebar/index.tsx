@@ -96,19 +96,40 @@ export const ToolsSidebar = ({
     );
 
     setTextsOnCanvas((prev) =>
-      prev.map((text) => ({
-        ...text,
-        x: 2 * (mapPosition.x + MAP_SIZE / 2) - text.x,
-        y: 2 * (mapPosition.y + MAP_SIZE / 2) - text.y,
-      }))
+      prev.map((text) => {
+        const cx = text.x + text.width / 2;
+        const cy = text.y + text.height / 2;
+
+        const mapCenterX = mapPosition.x + MAP_SIZE / 2;
+        const mapCenterY = mapPosition.y + MAP_SIZE / 2;
+
+        const newCx = 2 * mapCenterX - cx;
+        const newCy = 2 * mapCenterY - cy;
+
+        return {
+          ...text,
+          x: newCx - text.width / 2,
+          y: newCy - text.height / 2,
+        };
+      })
     );
 
     setImagesOnCanvas((prev) =>
-      prev.map((image) => ({
-        ...image,
-        x: 2 * (mapPosition.x + MAP_SIZE / 2) - image.x,
-        y: 2 * (mapPosition.y + MAP_SIZE / 2) - image.y,
-      }))
+      prev.map((image) => {
+        const cx = image.x + image.width / 2;
+        const cy = image.y + image.height / 2;
+        const mapCenterX = mapPosition.x + MAP_SIZE / 2;
+        const mapCenterY = mapPosition.y + MAP_SIZE / 2;
+
+        const newCx = 2 * mapCenterX - cx;
+        const newCy = 2 * mapCenterY - cy;
+
+        return {
+          ...image,
+          x: newCx - image.width / 2,
+          y: newCy - image.height / 2,
+        };
+      })
     );
 
     setDrawLines((prev) =>
@@ -148,6 +169,7 @@ export const ToolsSidebar = ({
         x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
         y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
         width: 200,
+        height: 60,
       },
     ]);
   };
