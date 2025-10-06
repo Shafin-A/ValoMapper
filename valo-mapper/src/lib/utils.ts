@@ -255,8 +255,8 @@ export const handleDragMove = (
   const deleteZone = {
     x: deleteGroup.x(),
     y: deleteGroup.y(),
-    width: deleteGroup.width(),
-    height: deleteGroup.height(),
+    width: deleteGroup.width() * deleteGroup.scaleX(),
+    height: deleteGroup.height() * deleteGroup.scaleY(),
   };
 
   const groupX = group.x();
