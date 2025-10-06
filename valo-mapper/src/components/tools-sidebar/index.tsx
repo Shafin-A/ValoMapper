@@ -66,10 +66,8 @@ export const ToolsSidebar = ({
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
     setDrawLines,
-    abilitiesOnCanvas,
   } = useCanvas();
 
-  console.log(abilitiesOnCanvas);
   const { agentsSettings } = useSettings();
 
   const handleMapSelect = (option: MapOption) => {
