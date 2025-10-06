@@ -4,6 +4,7 @@ import {
   MAX_ZOOM_SCALE,
   MIN_ZOOM_SCALE,
   SCALE_FACTOR,
+  SIDEBAR_WIDTH,
   TEMP_DRAG_ID,
 } from "@/lib/consts";
 import {
@@ -52,6 +53,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
   const drawingBufferRef = useRef<Vector2d[]>([]);
   const currentLineRef = useRef<Konva.Line | Konva.Arrow>(null);
   const erasedLinesRef = useRef<Set<number>>(new Set());
+  const deleteGroupRef = useRef<Konva.Group | null>(null);
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     open: false,
@@ -102,6 +104,30 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setSelectedCanvasIcon,
   ]);
 
+  const handleDragMove = useCallback(() => {
+    const deleteGroup = deleteGroupRef.current;
+    if (!deleteGroup) return;
+
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const scale = stage.scaleX();
+
+    const fixedX =
+      (stage.width() - deleteGroup.width() - SIDEBAR_WIDTH - 20) / scale;
+    const fixedY = 20 / scale;
+
+    deleteGroup.position({
+      x: fixedX - stage.x() / scale,
+      y: fixedY - stage.y() / scale,
+    });
+
+    deleteGroup.scale({
+      x: 1 / scale,
+      y: 1 / scale,
+    });
+  }, [stageRef]);
+
   const handleWheel = useCallback(
     (e: KonvaEventObject<WheelEvent>) => {
       e.evt.preventDefault();
@@ -139,8 +165,10 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       };
 
       stage.position(newPos);
+
+      handleDragMove();
     },
-    [stageRef]
+    [handleDragMove, stageRef]
   );
 
   const handleDrawing = useCallback(() => {
@@ -512,7 +540,9 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     handleDuplicate,
     handleDelete,
     handleToggleAlly,
+    handleDragMove,
     contextMenu,
     currentLineRef,
+    deleteGroupRef,
   };
 };

@@ -24,6 +24,7 @@ export interface CanvasIconProps {
   enemyColor: string;
   fill?: string;
   strokeWidth: number;
+  onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
   onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
   rotation?: number;
 }
@@ -44,6 +45,7 @@ export const CanvasIcon = ({
   enemyColor,
   fill = "#1b1b1b",
   strokeWidth,
+  onDragMove,
   onDragEnd,
   rotation = 0,
 }: CanvasIconProps) => {
@@ -57,6 +59,10 @@ export const CanvasIcon = ({
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
     if (groupRef.current) groupRef.current.opacity(1);
     onDragEnd?.(e);
+  };
+
+  const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
+    onDragMove?.(e);
   };
 
   const alphaHex = Math.round(borderOpacity * 255)
@@ -76,6 +82,7 @@ export const CanvasIcon = ({
       offsetX={width / 2}
       offsetY={height / 2}
       onDragStart={isListening ? handleOnDragStart : undefined}
+      onDragMove={isListening ? handleDragMove : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
       rotation={rotation}
     >

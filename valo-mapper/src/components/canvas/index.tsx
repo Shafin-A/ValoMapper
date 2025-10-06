@@ -12,6 +12,7 @@ import { CanvasTexts } from "./canvas-texts";
 import { CanvasImages } from "./canvas-images";
 import { CanvasMapBackground } from "./canvas-map-background";
 import { CanvasDrawLines } from "./canvas-draw-lines";
+import { DeleteZone } from "./delete-zone";
 
 interface MapStageProps {
   width: number;
@@ -43,8 +44,10 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     handleDuplicate,
     handleToggleAlly,
     handlePopoverOpenChange,
+    handleDragMove,
     contextMenu,
     currentLineRef,
+    deleteGroupRef,
   } = useKonva(stageRef);
 
   const currentItem = contextMenu.open
@@ -67,6 +70,7 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
         ref={stageRef}
         onWheel={handleWheel}
         draggable={!isDrawMode}
+        onDragMove={handleDragMove}
         onMouseMove={handleStageMouseMove}
         onMouseDown={handleStageClick}
         onMouseUp={handleMouseUp}
@@ -78,12 +82,13 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
         </Layer>
         <Layer isListening={!isDrawMode}>
           <CanvasAbilities />
-          <CanvasAgents />
+          <CanvasAgents deleteGroupRef={deleteGroupRef} />
           <CanvasImages stageRef={stageRef} transformerRefs={transformerRefs} />
           <CanvasTexts stageRef={stageRef} transformerRefs={transformerRefs} />
         </Layer>
         <Layer isListening={isDrawMode}>
           <CanvasDrawLines currentLineRef={currentLineRef} />
+          <DeleteZone deleteGroupRef={deleteGroupRef} width={width} />
         </Layer>
       </Stage>
 

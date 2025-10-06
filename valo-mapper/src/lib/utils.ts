@@ -22,6 +22,7 @@ import {
   XLineAbility,
 } from "@/lib/types";
 import { clsx, type ClassValue } from "clsx";
+import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
 import { Dispatch, SetStateAction } from "react";
@@ -210,10 +211,26 @@ export const getIntersectingLines = (
 export const handleDragEnd = <T extends BaseCanvasItem>(
   e: KonvaEventObject<DragEvent>,
   icon: T,
-  setIconsOnCanvas: Dispatch<SetStateAction<T[]>>
+  setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
+  deleteGroupRef?: React.RefObject<Konva.Group | null>
 ) => {
-  const newX = e.target.x();
-  const newY = e.target.y();
+  const node = e.target;
+  const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
+
+  if (deleteGroupRef?.current) {
+    deleteGroupRef.current.opacity(0.5);
+  }
+
+  node.getStage()!.container().style.cursor = "default";
+  node.setAttr("isOverDeleteGroup", false);
+
+  if (isOverDeleteGroup) {
+    setIconsOnCanvas((prev) => prev.filter((item) => item.id !== icon.id));
+    return;
+  }
+
+  const newX = node.x();
+  const newY = node.y();
 
   setIconsOnCanvas((prev) => {
     const index = prev.findIndex((item) => item.id === icon.id);
