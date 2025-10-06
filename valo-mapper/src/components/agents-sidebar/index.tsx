@@ -106,8 +106,8 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     <SidebarProvider
       open={sidebarOpen}
       style={{
-        ["--sidebar-width" as keyof React.CSSProperties]: SIDEBAR_WIDTH,
-        ["--sidebar-width-mobile" as keyof React.CSSProperties]: SIDEBAR_WIDTH,
+        ["--sidebar-width" as keyof React.CSSProperties]: `${SIDEBAR_WIDTH}px`,
+        ["--sidebar-width-mobile" as keyof React.CSSProperties]: `${SIDEBAR_WIDTH}px`,
       }}
     >
       <Sidebar

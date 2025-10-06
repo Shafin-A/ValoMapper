@@ -58,8 +58,8 @@ export const ToolsSidebar = ({
     tool,
     setTool,
     isDrawMode,
-    isDeleteOpen,
-    setIsDeleteOpen,
+    isDeleteSettingsOpen,
+    setIsDeleteSettingsOpen,
     setTextsOnCanvas,
     setEditingTextId,
     setImagesOnCanvas,
@@ -144,7 +144,7 @@ export const ToolsSidebar = ({
   };
 
   const handleDrawPressedChange = (pressed: boolean, tool: Tool) => {
-    setIsDeleteOpen(false);
+    setIsDeleteSettingsOpen(false);
     setIsDrawMode(pressed);
     if (pressed) {
       setTool(tool);
@@ -154,7 +154,7 @@ export const ToolsSidebar = ({
 
   const handleDeletePressedChange = (pressed: boolean) => {
     setIsDrawMode(false);
-    setIsDeleteOpen(pressed);
+    setIsDeleteSettingsOpen(pressed);
   };
 
   const handleAddText = () => {
@@ -228,9 +228,8 @@ export const ToolsSidebar = ({
       />
       <SidebarProvider
         style={{
-          ["--sidebar-width" as keyof React.CSSProperties]: SIDEBAR_WIDTH,
-          ["--sidebar-width-mobile" as keyof React.CSSProperties]:
-            SIDEBAR_WIDTH,
+          ["--sidebar-width" as keyof React.CSSProperties]: `${SIDEBAR_WIDTH}px`,
+          ["--sidebar-width-mobile" as keyof React.CSSProperties]: `${SIDEBAR_WIDTH}px`,
         }}
         open={sidebarOpen}
       >
@@ -335,8 +334,8 @@ export const ToolsSidebar = ({
                     <Toggle
                       size="lg"
                       variant="destructive"
-                      data-state={isDeleteOpen ? "on" : "off"}
-                      pressed={isDeleteOpen}
+                      data-state={isDeleteSettingsOpen ? "on" : "off"}
+                      pressed={isDeleteSettingsOpen}
                       onPressedChange={handleDeletePressedChange}
                     >
                       <Trash2 />
@@ -379,7 +378,7 @@ export const ToolsSidebar = ({
                 <EraserSettings />
               </AnimatedContent>
 
-              <AnimatedContent show={isDeleteOpen}>
+              <AnimatedContent show={isDeleteSettingsOpen}>
                 <DeleteSettings />
               </AnimatedContent>
             </div>

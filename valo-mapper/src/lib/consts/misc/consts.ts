@@ -2,7 +2,7 @@ import { MapOption } from "@/lib/types";
 
 export const TEMP_DRAG_ID = "temp-drag-id";
 
-export const SIDEBAR_WIDTH = "20rem";
+export const SIDEBAR_WIDTH = 320;
 export const SCALE_FACTOR = 1.25;
 export const MAP_SIZE = 1000;
 export const MAX_ZOOM_SCALE = 4;
