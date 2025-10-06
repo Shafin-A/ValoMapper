@@ -28,6 +28,7 @@ import {
   isXLineAbility,
   mToPixels,
 } from "@/lib/utils";
+import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
 import { ReactNode } from "react";
 
@@ -36,6 +37,7 @@ interface AbilityIconProps extends CanvasIconProps {
   rotation?: number;
   currentPath?: Vector2d[];
   currentLength?: number;
+  onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
 }
 
 const getConfig = <T,>(

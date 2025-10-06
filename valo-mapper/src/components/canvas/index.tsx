@@ -81,7 +81,7 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
           <CanvasMapBackground mapPosition={mapPosition} />
         </Layer>
         <Layer isListening={!isDrawMode}>
-          <CanvasAbilities />
+          <CanvasAbilities deleteGroupRef={deleteGroupRef} />
           <CanvasAgents deleteGroupRef={deleteGroupRef} />
           <CanvasImages stageRef={stageRef} transformerRefs={transformerRefs} />
           <CanvasTexts stageRef={stageRef} transformerRefs={transformerRefs} />

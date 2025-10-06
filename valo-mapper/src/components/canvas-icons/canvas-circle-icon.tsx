@@ -1,8 +1,12 @@
-import { Group, Circle } from "react-konva";
+import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
+import {
+  handleMouseOutDefaultCursor,
+  handleMouseOverGrabCursor,
+} from "@/lib/utils";
+import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useRef } from "react";
-import Konva from "konva";
-import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
+import { Circle, Group } from "react-konva";
 
 interface CanvasCircleIconProps extends CanvasIconProps {
   boxRadius: number;
@@ -21,6 +25,7 @@ export const CanvasCircleIcon = ({
   src,
   isListening,
   draggable = true,
+  onDragMove,
   onDragEnd,
   borderOpacity,
   boxRadius,
@@ -70,9 +75,12 @@ export const CanvasCircleIcon = ({
       y={y}
       listening={isListening}
       draggable={draggable}
-      onMouseDown={handleMouseDown}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
+      onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
+      onMouseDown={isListening ? handleMouseDown : undefined}
+      onDragStart={isListening ? handleDragStart : undefined}
+      onDragEnd={isListening ? handleDragEnd : undefined}
+      onDragMove={isListening ? onDragMove : undefined}
     >
       <Circle
         radius={circleRadius}

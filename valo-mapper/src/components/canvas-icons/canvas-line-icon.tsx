@@ -43,6 +43,7 @@ export const CanvasLineIcon = ({
   src,
   isListening,
   draggable = true,
+  onDragMove,
   onDragEnd,
   borderOpacity,
   radius,
@@ -269,6 +270,7 @@ export const CanvasLineIcon = ({
       onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
       onMouseDown={isListening ? handleMouseDown : undefined}
       onDragStart={isListening ? handleDragStart : undefined}
+      onDragMove={isListening ? onDragMove : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
     >
       <Line
@@ -304,9 +306,9 @@ export const CanvasLineIcon = ({
           stroke={rotationHandleStrokeColor}
           strokeWidth={2}
           opacity={isInteracting ? 0.8 : 0.6}
-          onMouseDown={handleInteractionMouseDown}
-          onMouseOver={handleRotationHandleMouseOver}
-          onMouseOut={handleRotationHandleMouseOut}
+          onMouseDown={isListening ? handleInteractionMouseDown : undefined}
+          onMouseOver={isListening ? handleRotationHandleMouseOver : undefined}
+          onMouseOut={isListening ? handleRotationHandleMouseOut : undefined}
         />
       )}
 

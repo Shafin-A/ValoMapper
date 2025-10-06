@@ -44,6 +44,7 @@ export const CanvasDoubleLineIcon = ({
   src,
   isListening,
   draggable = true,
+  onDragMove,
   onDragEnd,
   borderOpacity,
   radius,
@@ -284,6 +285,7 @@ export const CanvasDoubleLineIcon = ({
       onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
       onMouseDown={isListening ? handleMouseDown : undefined}
       onDragStart={isListening ? handleDragStart : undefined}
+      onDragMove={isListening ? onDragMove : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
     >
       <Line
@@ -334,9 +336,9 @@ export const CanvasDoubleLineIcon = ({
           stroke={rotationHandleStrokeColor}
           strokeWidth={2}
           opacity={isInteracting ? 0.8 : 0.6}
-          onMouseDown={handleInteractionMouseDown}
-          onMouseOver={handleRotationHandleMouseOver}
-          onMouseOut={handleRotationHandleMouseOut}
+          onMouseDown={isListening ? handleInteractionMouseDown : undefined}
+          onMouseOver={isListening ? handleRotationHandleMouseOver : undefined}
+          onMouseOut={isListening ? handleRotationHandleMouseOut : undefined}
         />
       )}
 

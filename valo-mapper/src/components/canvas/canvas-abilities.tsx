@@ -1,9 +1,14 @@
 import { AbilityIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
-import { handleDragEnd } from "@/lib/utils";
+import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import Konva from "konva";
 
-export const CanvasAbilities = () => {
+interface CanvasAbilityProps {
+  deleteGroupRef: React.RefObject<Konva.Group | null>;
+}
+
+export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
   const { abilitiesOnCanvas, setAbilitiesOnCanvas, isDrawMode } = useCanvas();
 
   const { abilitiesSettings } = useSettings();
@@ -20,7 +25,10 @@ export const CanvasAbilities = () => {
       src={ability.src}
       draggable={!isDrawMode}
       isListening={!isDrawMode}
-      onDragEnd={(e) => handleDragEnd(e, ability, setAbilitiesOnCanvas)}
+      onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
+      onDragEnd={(e) =>
+        handleDragEnd(e, ability, setAbilitiesOnCanvas, deleteGroupRef)
+      }
       width={abilitiesSettings.scale}
       height={abilitiesSettings.scale}
       borderOpacity={abilitiesSettings.borderOpacity}

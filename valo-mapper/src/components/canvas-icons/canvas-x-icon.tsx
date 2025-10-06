@@ -32,6 +32,7 @@ export const CanvasXIcon = ({
   src,
   isListening,
   draggable = true,
+  onDragMove,
   onDragEnd,
   borderOpacity,
   radius,
@@ -200,6 +201,7 @@ export const CanvasXIcon = ({
       onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
       onMouseDown={isListening ? handleMouseDown : undefined}
       onDragStart={isListening ? handleDragStart : undefined}
+      onDragMove={isListening ? onDragMove : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
     >
       <Line
@@ -251,9 +253,9 @@ export const CanvasXIcon = ({
           stroke={rotationHandleStrokeColor}
           strokeWidth={2}
           opacity={isInteracting ? 0.8 : 0.6}
-          onMouseDown={handleInteractionMouseDown}
-          onMouseOver={handleRotationHandleMouseOver}
-          onMouseOut={handleRotationHandleMouseOut}
+          onMouseDown={isListening ? handleInteractionMouseDown : undefined}
+          onMouseOver={isListening ? handleRotationHandleMouseOver : undefined}
+          onMouseOut={isListening ? handleRotationHandleMouseOut : undefined}
         />
       )}
 

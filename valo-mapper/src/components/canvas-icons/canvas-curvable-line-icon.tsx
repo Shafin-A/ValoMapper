@@ -8,7 +8,7 @@ import {
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle, Group, Line } from "react-konva";
 
 interface CanvasCurvableLineIconProps extends CanvasIconProps {
@@ -31,6 +31,7 @@ export const CanvasCurvableLineIcon = ({
   src,
   isListening,
   draggable = true,
+  onDragMove,
   onDragEnd,
   borderOpacity,
   radius,
@@ -267,6 +268,7 @@ export const CanvasCurvableLineIcon = ({
       onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
       onMouseDown={isListening ? handleMouseDown : undefined}
       onDragStart={isListening ? handleDragStart : undefined}
+      onDragMove={isListening ? onDragMove : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
       rotation={rotation}
     >
@@ -290,9 +292,9 @@ export const CanvasCurvableLineIcon = ({
           stroke={handleStrokeColor}
           strokeWidth={2}
           opacity={isDrawing ? 0.8 : 0.6}
-          onMouseDown={handlePathDrawing}
-          onMouseOver={handleMouseOver}
-          onMouseOut={handleMouseOut}
+          onMouseDown={isListening ? handlePathDrawing : undefined}
+          onMouseOver={isListening ? handleMouseOver : undefined}
+          onMouseOut={isListening ? handleMouseOut : undefined}
         />
       )}
 
@@ -302,9 +304,9 @@ export const CanvasCurvableLineIcon = ({
           y={mapSide === "defense" ? endPoint.y - 25 : endPoint.y + 25}
           isListening={isListening}
           radius={8}
-          onClick={handleReset}
-          onMouseOver={handleMouseOver}
-          onMouseOut={handleMouseOut}
+          onClick={isListening ? handleReset : undefined}
+          onMouseOver={isListening ? handleMouseOver : undefined}
+          onMouseOut={isListening ? handleMouseOut : undefined}
           fill={constraintReached ? "#e54646" : "#46e546"}
           opacity={0.6}
         />

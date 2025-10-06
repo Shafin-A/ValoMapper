@@ -1,9 +1,9 @@
-import { Group, Circle, Arc } from "react-konva";
-import type { KonvaEventObject } from "konva/lib/Node";
-import { useCallback, useEffect, useRef, useState } from "react";
-import Konva from "konva";
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
+import Konva from "konva";
+import type { KonvaEventObject } from "konva/lib/Node";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Arc, Circle, Group } from "react-konva";
 
 interface CanvasArcIconProps extends CanvasIconProps {
   boxRadius: number;
@@ -28,6 +28,7 @@ export const CanvasArcIcon = ({
   src,
   isListening,
   draggable = true,
+  onDragMove,
   onDragEnd,
   borderOpacity,
   boxRadius,
@@ -178,9 +179,10 @@ export const CanvasArcIcon = ({
       y={y}
       isListening={isListening}
       draggable={draggable}
-      onMouseDown={handleMouseDown}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onMouseDown={isListening ? handleMouseDown : undefined}
+      onDragStart={isListening ? handleDragStart : undefined}
+      onDragMove={isListening ? onDragMove : undefined}
+      onDragEnd={isListening ? handleDragEnd : undefined}
     >
       <Arc
         strokeWidth={circleStrokeWidth}
@@ -223,9 +225,9 @@ export const CanvasArcIcon = ({
           stroke={rotationHandleStrokeColor}
           strokeWidth={2}
           opacity={isInteracting ? 0.8 : 0.6}
-          onMouseDown={handleInteractionMouseDown}
-          onMouseOver={handleRotationHandleMouseOver}
-          onMouseOut={handleRotationHandleMouseOut}
+          onMouseDown={isListening ? handleInteractionMouseDown : undefined}
+          onMouseOver={isListening ? handleRotationHandleMouseOver : undefined}
+          onMouseOut={isListening ? handleRotationHandleMouseOut : undefined}
         />
       )}
       <CanvasIcon
