@@ -1,4 +1,8 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import {
+  handleMouseOutDefaultCursor,
+  handleMouseOverGrabCursor,
+} from "@/lib/utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -21,35 +25,30 @@ export const useImageTransform = () => {
     });
   }, [imagesOnCanvas]);
 
-  const handleImageTransform = useCallback((imageId: string) => {
-    const imageNode = imageNodeRefs.current.get(imageId);
-    if (!imageNode) return;
-
-    const scaleX = imageNode.scaleX();
-    const scaleY = imageNode.scaleY();
-    const newWidth = Math.max(5, imageNode.width() * scaleX);
-    const newHeight = Math.max(5, imageNode.height() * scaleY);
-
-    imageNode.setAttrs({
-      width: newWidth,
-      height: newHeight,
-      scaleX: 1,
-      scaleY: 1,
-    });
-  }, []);
-
   const handleImageTransformEnd = useCallback(
     (imageId: string) => {
       const imageNode = imageNodeRefs.current.get(imageId);
       if (!imageNode) return;
+
+      const scaleX = imageNode.scaleX();
+      const scaleY = imageNode.scaleY();
+      const newWidth = Math.max(5, imageNode.width() * scaleX);
+      const newHeight = Math.max(5, imageNode.height() * scaleY);
+
+      imageNode.setAttrs({
+        width: newWidth,
+        height: newHeight,
+        scaleX: 1,
+        scaleY: 1,
+      });
 
       setImagesOnCanvas((prev) =>
         prev.map((item) =>
           item.id === imageId
             ? {
                 ...item,
-                width: imageNode.width(),
-                height: imageNode.height(),
+                width: newWidth,
+                height: newHeight,
               }
             : item
         )
@@ -58,33 +57,27 @@ export const useImageTransform = () => {
     [setImagesOnCanvas]
   );
 
-  const handleImageDragEnd = useCallback(
-    (imageId: string, e: KonvaEventObject<DragEvent>) => {
-      if (!e.target) return;
-      const newX = e.target.x();
-      const newY = e.target.y();
-
-      setImagesOnCanvas((prev) =>
-        prev.map((item) =>
-          item.id === imageId ? { ...item, x: newX, y: newY } : item
-        )
-      );
-    },
-    [setImagesOnCanvas]
-  );
-
-  const handleImageMouseOver = (imageId: string | null) => {
+  const handleImageMouseEnter = (
+    e: KonvaEventObject<MouseEvent>,
+    imageId: string
+  ) => {
     if (editingTextId) return;
+    handleMouseOverGrabCursor(e);
     setHoveredImageId(imageId);
+  };
+
+  const handleImageMouseLeave = (e: KonvaEventObject<MouseEvent>) => {
+    if (editingTextId) return;
+    handleMouseOutDefaultCursor(e);
+    setHoveredImageId(null);
   };
 
   return {
     imageNodeRefs,
     imageLoaderRefs,
     hoveredImageId,
-    handleImageMouseOver,
-    handleImageDragEnd,
-    handleImageTransform,
+    handleImageMouseEnter,
+    handleImageMouseLeave,
     handleImageTransformEnd,
     setHoveredImageId,
   };

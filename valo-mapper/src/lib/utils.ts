@@ -244,28 +244,51 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
 
 export const handleDragMove = (
   e: KonvaEventObject<DragEvent>,
-  deleteGroupRef: React.RefObject<Konva.Group | null>
+  deleteGroupRef?: React.RefObject<Konva.Group | null>,
+  nodeRef?: Konva.Node | null
 ) => {
-  const node = e.target;
-  const pos = node.position();
+  if (!deleteGroupRef?.current) return;
 
-  if (deleteGroupRef.current) {
-    const deleteGroup = deleteGroupRef.current;
-    const deleteZone = {
-      x: deleteGroup.x(),
-      y: deleteGroup.y(),
-      width: deleteGroup.width(),
-      height: deleteGroup.height(),
-    };
+  const group = e.target;
+  const deleteGroup = deleteGroupRef.current;
 
-    const isOver =
-      pos.x >= deleteZone.x &&
-      pos.x <= deleteZone.x + deleteZone.width &&
-      pos.y >= deleteZone.y &&
-      pos.y <= deleteZone.y + deleteZone.height;
+  const deleteZone = {
+    x: deleteGroup.x(),
+    y: deleteGroup.y(),
+    width: deleteGroup.width(),
+    height: deleteGroup.height(),
+  };
 
-    deleteGroup.opacity(isOver ? 0.8 : 0.5);
+  const groupX = group.x();
+  const groupY = group.y();
 
-    node.setAttr("isOverDeleteGroup", isOver);
+  let isOver: boolean;
+
+  if (nodeRef) {
+    const width = nodeRef.width();
+    const height = nodeRef.height();
+
+    isOver = !(
+      groupX + width < deleteZone.x ||
+      groupX > deleteZone.x + deleteZone.width ||
+      groupY + height < deleteZone.y ||
+      groupY > deleteZone.y + deleteZone.height
+    );
+  } else {
+    const width = group.width() || 0;
+    const height = group.height() || 0;
+
+    const centerX = groupX + width / 2;
+    const centerY = groupY + height / 2;
+
+    isOver =
+      centerX >= deleteZone.x &&
+      centerX <= deleteZone.x + deleteZone.width &&
+      centerY >= deleteZone.y &&
+      centerY <= deleteZone.y + deleteZone.height;
   }
+
+  deleteGroup.opacity(isOver ? 0.8 : 0.5);
+
+  group.setAttr("isOverDeleteGroup", isOver);
 };
