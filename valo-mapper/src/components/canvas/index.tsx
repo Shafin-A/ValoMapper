@@ -88,7 +88,11 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
             transformerRefs={transformerRefs}
             deleteGroupRef={deleteGroupRef}
           />
-          <CanvasTexts stageRef={stageRef} transformerRefs={transformerRefs} />
+          <CanvasTexts
+            stageRef={stageRef}
+            transformerRefs={transformerRefs}
+            deleteGroupRef={deleteGroupRef}
+          />
         </Layer>
         <Layer isListening={isDrawMode}>
           <CanvasDrawLines currentLineRef={currentLineRef} />

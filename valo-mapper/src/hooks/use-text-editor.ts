@@ -1,6 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import Konva from "konva";
-import { KonvaEventObject } from "konva/lib/Node";
 import { RefObject, useCallback, useRef } from "react";
 
 export const useTextEditor = (
@@ -72,21 +71,6 @@ export const useTextEditor = (
     setEditingTextId(null);
   }, [setEditingTextId]);
 
-  const handleTextDragEnd = useCallback(
-    (textId: string, e: KonvaEventObject<DragEvent>) => {
-      if (!e.target) return;
-      const newX = e.target.x();
-      const newY = e.target.y();
-
-      setTextsOnCanvas((prev) =>
-        prev.map((item) =>
-          item.id === textId ? { ...item, x: newX, y: newY } : item
-        )
-      );
-    },
-    [setTextsOnCanvas]
-  );
-
   return {
     textRefs,
     handleTextClick,
@@ -95,6 +79,5 @@ export const useTextEditor = (
     attachTransformerToText,
     handleTextTransform,
     handleTextTransformEnd,
-    handleTextDragEnd,
   };
 };
