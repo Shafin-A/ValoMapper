@@ -241,3 +241,31 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
     return updatedItems;
   });
 };
+
+export const handleDragMove = (
+  e: KonvaEventObject<DragEvent>,
+  deleteGroupRef: React.RefObject<Konva.Group | null>
+) => {
+  const node = e.target;
+  const pos = node.position();
+
+  if (deleteGroupRef.current) {
+    const deleteGroup = deleteGroupRef.current;
+    const deleteZone = {
+      x: deleteGroup.x(),
+      y: deleteGroup.y(),
+      width: deleteGroup.width(),
+      height: deleteGroup.height(),
+    };
+
+    const isOver =
+      pos.x >= deleteZone.x &&
+      pos.x <= deleteZone.x + deleteZone.width &&
+      pos.y >= deleteZone.y &&
+      pos.y <= deleteZone.y + deleteZone.height;
+
+    deleteGroup.opacity(isOver ? 0.8 : 0.5);
+
+    node.setAttr("isOverDeleteGroup", isOver);
+  }
+};
