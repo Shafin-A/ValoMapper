@@ -32,7 +32,11 @@ export const DeleteSettings = () => {
   return (
     <div className="space-y-1 mt-6">
       <div className="flex flex-col items-center gap-4 p-2 justify-center">
-        <Button variant="destructive" className="w-full" onClick={resetState}>
+        <Button
+          variant="destructive"
+          className="w-full"
+          onClick={() => resetState()}
+        >
           Delete All
         </Button>
         <div className="flex flex-wrap justify-between gap-2 w-full">

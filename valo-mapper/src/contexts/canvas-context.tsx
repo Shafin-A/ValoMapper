@@ -13,6 +13,7 @@ import type {
   Tool,
   UndoableState,
   MapSide,
+  PhaseState,
 } from "@/lib/types";
 import React, { createContext, RefObject, useContext } from "react";
 
@@ -48,13 +49,17 @@ interface CanvasContextType {
   canRedo: boolean;
   saveToHistory: () => void;
   history: UndoableState[];
-  resetState: () => void;
+  resetState: (resetAllPhases?: boolean) => void;
   textsOnCanvas: TextCanvas[];
   setTextsOnCanvas: React.Dispatch<React.SetStateAction<TextCanvas[]>>;
   imagesOnCanvas: ImageCanvas[];
   setImagesOnCanvas: React.Dispatch<React.SetStateAction<ImageCanvas[]>>;
   editingTextId: string | null;
   setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>;
+  phases: PhaseState[];
+  currentPhaseIndex: number;
+  switchToPhase: (index: number) => void;
+  duplicatePhase: (index: number) => void;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);

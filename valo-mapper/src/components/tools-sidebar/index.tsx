@@ -4,6 +4,7 @@ import {
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { MAP_OPTIONS, MAP_SIZE, SIDEBAR_WIDTH } from "@/lib/consts";
@@ -32,13 +33,15 @@ export const ToolsSidebar = ({
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
     setDrawLines,
+    currentPhaseIndex,
+    switchToPhase,
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
 
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
-    resetState();
+    resetState(true);
   };
 
   const handleRotationToggle = () => {
@@ -138,6 +141,25 @@ export const ToolsSidebar = ({
         </SidebarHeader>
 
         <SidebarContent className="px-4 pb-4">
+          <div className="space-y-2 mt-4">
+            <span className="text-base font-semibold block">Phases</span>
+            <ToggleGroup
+              type="single"
+              className="grid grid-cols-5 gap-2 w-full"
+              defaultValue="1"
+              value={(currentPhaseIndex + 1).toString()}
+              onValueChange={(value) => {
+                if (value) switchToPhase(Number(value) - 1);
+              }}
+              rounded
+            >
+              {Array.from({ length: 10 }, (_, i) => (
+                <ToggleGroupItem key={i + 1} value={(i + 1).toString()}>
+                  {i + 1}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
           <ToolsSection mapPosition={mapPosition} />
         </SidebarContent>
       </Sidebar>

@@ -245,4 +245,13 @@ export type UndoableState = {
   drawLines: DrawLine[];
   textsOnCanvas: TextCanvas[];
   imagesOnCanvas: ImageCanvas[];
+  currentPhaseIndex: number;
+};
+
+export type PhaseState = {
+  agentsOnCanvas: AgentCanvas[];
+  abilitiesOnCanvas: AbilityCanvas[];
+  drawLines: DrawLine[];
+  textsOnCanvas: TextCanvas[];
+  imagesOnCanvas: ImageCanvas[];
 };
