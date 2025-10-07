@@ -41,7 +41,7 @@ export const DeleteZone = ({ deleteGroupRef, width }: CanvasAgentProps) => {
       <Rect
         width={100}
         height={100}
-        dash={[5, 5]}
+        dash={[15, 5]}
         stroke="#ff0000"
         cornerRadius={10}
       />
