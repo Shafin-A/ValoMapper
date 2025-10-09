@@ -1,8 +1,8 @@
+import { useCanvasItems } from "@/hooks/use-canvas-items";
+import { useCanvasUI } from "@/hooks/use-canvas-ui";
+import { useHistoryManager } from "@/hooks/use-history-manager";
+import { usePhaseManager } from "@/hooks/use-phase-manager";
 import { usePhaseTransitions } from "@/hooks/use-phase-transition";
-import { usePhaseManager } from "./use-phase-manager";
-import { useCanvasItems } from "./use-canvas-items";
-import { useHistoryManager } from "./use-history-manager";
-import { useCanvasUI } from "./use-canvas-ui";
 import { useCallback } from "react";
 
 export const useCanvasState = () => {
@@ -15,8 +15,8 @@ export const useCanvasState = () => {
     phaseManager.updateCurrentPhase
   );
 
-  const historyManager = useHistoryManager({
-    getCurrentState: () => ({
+  const getCurrentState = useCallback(
+    () => ({
       agentsOnCanvas: canvasItems.agentsOnCanvas,
       abilitiesOnCanvas: canvasItems.abilitiesOnCanvas,
       drawLines: canvasItems.drawLines,
@@ -26,7 +26,20 @@ export const useCanvasState = () => {
       mapSide: canvasUI.mapSide,
       currentPhaseIndex: phaseManager.currentPhaseIndex,
     }),
-    applyState: (state) => {
+    [
+      canvasItems.agentsOnCanvas,
+      canvasItems.abilitiesOnCanvas,
+      canvasItems.drawLines,
+      canvasItems.textsOnCanvas,
+      canvasItems.imagesOnCanvas,
+      canvasUI.selectedMap,
+      canvasUI.mapSide,
+      phaseManager.currentPhaseIndex,
+    ]
+  );
+
+  const applyState = useCallback(
+    (state: ReturnType<typeof getCurrentState>) => {
       if (state.currentPhaseIndex !== undefined) {
         phaseManager.setCurrentPhaseIndex(state.currentPhaseIndex);
         phaseManager.setEditedPhases((prev) =>
@@ -45,6 +58,12 @@ export const useCanvasState = () => {
       canvasUI.setSelectedMap(state.selectedMap);
       canvasUI.setMapSide(state.mapSide);
     },
+    [phaseManager, canvasUI]
+  );
+
+  const historyManager = useHistoryManager({
+    getCurrentState,
+    applyState,
   });
 
   const resetState = useCallback(
