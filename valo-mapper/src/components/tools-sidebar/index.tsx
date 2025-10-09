@@ -12,6 +12,7 @@ import { MapOption } from "@/lib/types";
 import { Vector2d } from "konva/lib/types";
 import { MapSelect } from "./map-select-button";
 import { ToolsSection } from "./tools-section";
+import { useState } from "react";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -33,8 +34,12 @@ export const ToolsSidebar = ({
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
     setDrawLines,
+    phases,
     currentPhaseIndex,
     switchToPhase,
+    transitionToPhase,
+    isTransitioning,
+    editedPhases,
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
@@ -110,6 +115,26 @@ export const ToolsSidebar = ({
     );
   };
 
+  const [pendingPhaseIndex, setPendingPhaseIndex] = useState<number | null>(
+    null
+  );
+
+  const handlePhaseSwitch = async (newIndex: number) => {
+    if (isTransitioning.current) return;
+
+    setPendingPhaseIndex(newIndex);
+
+    const fromPhase = phases[currentPhaseIndex];
+    const toPhase = phases[newIndex];
+
+    if (editedPhases.has(newIndex)) {
+      await transitionToPhase(fromPhase, toPhase, 200);
+    }
+
+    switchToPhase(newIndex);
+    setPendingPhaseIndex(null);
+  };
+
   return (
     <SidebarProvider
       style={{
@@ -147,9 +172,11 @@ export const ToolsSidebar = ({
               type="single"
               className="grid grid-cols-5 gap-2 w-full"
               defaultValue="1"
-              value={(currentPhaseIndex + 1).toString()}
+              value={((pendingPhaseIndex ?? currentPhaseIndex) + 1).toString()}
               onValueChange={(value) => {
-                if (value) switchToPhase(Number(value) - 1);
+                if (value) {
+                  handlePhaseSwitch(Number(value) - 1);
+                }
               }}
               rounded
             >

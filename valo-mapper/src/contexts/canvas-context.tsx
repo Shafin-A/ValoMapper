@@ -15,6 +15,7 @@ import type {
   MapSide,
   PhaseState,
 } from "@/lib/types";
+import Konva from "konva";
 import React, { createContext, RefObject, useContext } from "react";
 
 interface CanvasContextType {
@@ -60,6 +61,15 @@ interface CanvasContextType {
   currentPhaseIndex: number;
   switchToPhase: (index: number) => void;
   duplicatePhase: (index: number) => void;
+  editedPhases: Set<number>;
+  transitionToPhase: (
+    transitionFrom: PhaseState,
+    transitionTo: PhaseState,
+    duration: number
+  ) => Promise<void>;
+  registerNode: (id: string, node: Konva.Node) => void;
+  unregisterNode: (id: string) => void;
+  isTransitioning: RefObject<boolean>;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);

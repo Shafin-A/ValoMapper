@@ -9,7 +9,13 @@ interface CanvasAgentProps {
 }
 
 export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
-  const { agentsOnCanvas, setAgentsOnCanvas, isDrawMode } = useCanvas();
+  const {
+    agentsOnCanvas,
+    setAgentsOnCanvas,
+    isDrawMode,
+    registerNode,
+    unregisterNode,
+  } = useCanvas();
 
   const { agentsSettings } = useSettings();
 
@@ -34,6 +40,8 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
       radius={agentsSettings.radius}
       allyColor={agentsSettings.allyColor}
       enemyColor={agentsSettings.enemyColor}
+      registerNode={registerNode}
+      unregisterNode={unregisterNode}
     />
   ));
 };

@@ -13,6 +13,7 @@ import {
   UndoableState,
 } from "@/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePhaseTransitions } from "@/hooks/use-phase-transition";
 
 const createEmptyPhaseState = (): PhaseState => ({
   agentsOnCanvas: [],
@@ -335,6 +336,9 @@ export const useCanvasState = () => {
     [deletePhase, currentPhaseIndex]
   );
 
+  const { transitionToPhase, registerNode, unregisterNode, isTransitioning } =
+    usePhaseTransitions();
+
   return {
     agentsOnCanvas,
     abilitiesOnCanvas,
@@ -377,5 +381,9 @@ export const useCanvasState = () => {
     switchToPhase,
     duplicatePhase,
     editedPhases,
+    transitionToPhase,
+    registerNode,
+    unregisterNode,
+    isTransitioning,
   };
 };

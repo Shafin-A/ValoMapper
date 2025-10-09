@@ -4,7 +4,7 @@ import {
 } from "@/lib/utils";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Group, Image as KonvaImage } from "react-konva";
 import useImage from "use-image";
 
@@ -27,6 +27,8 @@ export interface CanvasIconProps {
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
   onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
   rotation?: number;
+  registerNode?: (id: string, node: Konva.Node) => void;
+  unregisterNode?: (id: string) => void;
 }
 
 export const CanvasIcon = ({
@@ -48,9 +50,22 @@ export const CanvasIcon = ({
   onDragMove,
   onDragEnd,
   rotation = 0,
+  registerNode,
+  unregisterNode,
 }: CanvasIconProps) => {
   const [image] = useImage(src);
   const groupRef = useRef<Konva.Group>(null);
+
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    if (registerNode) registerNode(id, group);
+
+    return () => {
+      if (unregisterNode) unregisterNode(id);
+    };
+  }, [id, registerNode, unregisterNode]);
 
   const handleOnDragStart = () => {
     if (groupRef.current) groupRef.current.opacity(0.5);
