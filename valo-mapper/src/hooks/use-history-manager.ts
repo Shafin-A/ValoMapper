@@ -92,6 +92,7 @@ export const useHistoryManager = ({
   const applyHistoryState = useCallback(
     (state: UndoableState) => {
       isUpdatingFromHistory.current = true;
+      lastSavedState.current = state;
       applyState(state);
       setTimeout(() => {
         isUpdatingFromHistory.current = false;
