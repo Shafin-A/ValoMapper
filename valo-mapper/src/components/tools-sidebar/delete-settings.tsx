@@ -21,10 +21,14 @@ export const DeleteSettings = () => {
     setDrawLines,
     setTextsOnCanvas,
     setImagesOnCanvas,
+    setToolIconsOnCanvas,
   } = useCanvas();
 
   const resetAgents = () => setAgentsOnCanvas([]);
-  const resetAbilities = () => setAbilitiesOnCanvas([]);
+  const resetAbilities = () => {
+    setAbilitiesOnCanvas([]);
+    setToolIconsOnCanvas([]);
+  };
   const resetDrawings = () => setDrawLines([]);
   const resetTexts = () => setTextsOnCanvas([]);
   const resetImages = () => setImagesOnCanvas([]);
