@@ -13,6 +13,7 @@ import { CanvasImages } from "./canvas-images";
 import { CanvasMapBackground } from "./canvas-map-background";
 import { CanvasDrawLines } from "./canvas-draw-lines";
 import { DeleteZone } from "./delete-zone";
+import { CanvasToolIcons } from "./canvas-tool-icons";
 
 interface MapStageProps {
   width: number;
@@ -93,6 +94,7 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
             transformerRefs={transformerRefs}
             deleteGroupRef={deleteGroupRef}
           />
+          <CanvasToolIcons deleteGroupRef={deleteGroupRef} />
         </Layer>
         <Layer isListening={isDrawMode}>
           <CanvasDrawLines currentLineRef={currentLineRef} />

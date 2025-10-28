@@ -249,7 +249,11 @@ export type UndoableState = {
   currentPhaseIndex: number;
 };
 
-export type ToolIconCanvas = BaseCanvasItem;
+export type ToolIconCanvas = BaseCanvasItem & {
+  src: string;
+  width: number;
+  height: number;
+};
 
 export type PhaseState = {
   agentsOnCanvas: AgentCanvas[];

@@ -19,23 +19,36 @@ export const PIXELS_PER_METER = 122 / 15;
 
 export const WEAPONS = {
   sidearms: [
-    { name: "classic" },
-    { name: "shorty" },
-    { name: "frenzy" },
-    { name: "ghost" },
-    { name: "sheriff" },
-    { name: "knife" },
+    { name: "classic", width: 188 / 5, height: 128 / 5 },
+    { name: "shorty", width: 308 / 6, height: 100 / 6 },
+    { name: "frenzy", width: 168 / 5, height: 128 / 5 },
+    { name: "ghost", width: 300 / 6, height: 100 / 6 },
+    { name: "sheriff", width: 248 / 5, height: 128 / 5 },
+    { name: "knife", width: 100 / 2, height: 32 / 2 },
   ],
-  smgs: [{ name: "stinger" }, { name: "spectre" }],
-  shotguns: [{ name: "bucky" }, { name: "judge" }],
+  smgs: [
+    { name: "stinger", width: 328 / 5, height: 128 / 5 },
+    { name: "spectre", width: 352 / 5, height: 128 / 5 },
+  ],
+  shotguns: [
+    { name: "bucky", width: 508 / 7, height: 100 / 7 },
+    { name: "judge", width: 412 / 7, height: 128 / 7 },
+  ],
   rifles: [
-    { name: "bulldog" },
-    { name: "guardian" },
-    { name: "phantom" },
-    { name: "vandal" },
+    { name: "bulldog", width: 400 / 7, height: 124 / 7 },
+    { name: "guardian", width: 508 / 7, height: 108 / 7 },
+    { name: "phantom", width: 508 / 7, height: 120 / 7 },
+    { name: "vandal", width: 420 / 7, height: 128 / 7 },
   ],
-  snipers: [{ name: "marshal" }, { name: "outlaw" }, { name: "operator" }],
-  machineGuns: [{ name: "ares" }, { name: "odin" }],
+  snipers: [
+    { name: "marshal", width: 508 / 7, height: 92 / 7 },
+    { name: "outlaw", width: 512 / 7, height: 108 / 7 },
+    { name: "operator", width: 504 / 7, height: 104 / 7 },
+  ],
+  machineGuns: [
+    { name: "ares", width: 484 / 7, height: 100 / 7 },
+    { name: "odin", width: 444 / 7, height: 124 / 7 },
+  ],
 };
 
 export const MAP_OPTIONS: MapOption[] = [

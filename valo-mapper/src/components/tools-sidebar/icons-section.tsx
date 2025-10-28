@@ -12,7 +12,7 @@ interface IconsSectionProps {
 export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
   const { setEditingTextId, setIsDrawMode, setToolIconsOnCanvas } = useCanvas();
 
-  const handleAddToolIcon = () => {
+  const handleAddToolIcon = (name: string, width: number, height: number) => {
     setEditingTextId(null);
     setIsDrawMode(false);
 
@@ -22,6 +22,9 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
         id: getNextId("text"),
         x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
         y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+        src: `/tools/${name}.webp`,
+        width,
+        height,
       },
     ]);
   };
@@ -31,7 +34,10 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
       <span className="text-base font-semibold block">Icons</span>
 
       <div className="grid grid-cols-5 gap-2">
-        <ToolIconButton name="spike" onClick={handleAddToolIcon} />
+        <ToolIconButton
+          name="spike"
+          onClick={() => handleAddToolIcon("spike", 32, 32)}
+        />
       </div>
 
       <div className="flex gap-4">
@@ -48,9 +54,18 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
       </div>
 
       <div className="grid grid-cols-5 gap-2">
-        <ToolIconButton name="light_shield" onClick={handleAddToolIcon} />
-        <ToolIconButton name="regen_shield" onClick={handleAddToolIcon} />
-        <ToolIconButton name="heavy_shield" onClick={handleAddToolIcon} />
+        <ToolIconButton
+          name="light_shield"
+          onClick={() => handleAddToolIcon("light_shield", 32, 32)}
+        />
+        <ToolIconButton
+          name="regen_shield"
+          onClick={() => handleAddToolIcon("regen_shield", 32, 32)}
+        />
+        <ToolIconButton
+          name="heavy_shield"
+          onClick={() => handleAddToolIcon("heavy_shield", 32, 32)}
+        />
       </div>
     </div>
   );
