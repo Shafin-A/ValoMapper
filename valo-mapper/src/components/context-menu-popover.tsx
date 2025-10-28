@@ -19,7 +19,7 @@ interface ContextMenuPopoverProps {
   open: boolean;
   x: number;
   y: number;
-  itemType: "agent" | "ability" | "text" | "image";
+  itemType: "agent" | "ability" | "text" | "image" | "tool";
   currentItem: AgentCanvas | AbilityCanvas | TextCanvas | ImageCanvas | null;
   onOpenChange: (open: boolean) => void;
   onDuplicate: () => void;
@@ -95,6 +95,8 @@ export const ContextMenuPopover = ({
                 ? "Ability"
                 : itemType === "image"
                 ? "Image"
+                : itemType === "tool"
+                ? "Icon"
                 : "Text"
             }`}
           >
@@ -108,23 +110,25 @@ export const ContextMenuPopover = ({
             className="data-[orientation=vertical]:h-6"
           />
 
-          {itemType !== "text" && itemType !== "image" && (
-            <>
-              <ConditionalTooltip
-                enabled={allowTooltips}
-                content={initialIsAlly ? "Make Enemy" : "Make Ally"}
-              >
-                <Button variant="ghost" size="sm" onClick={onToggleAlly}>
-                  {initialIsAlly ? <HeartCrack /> : <Heart />}
-                </Button>
-              </ConditionalTooltip>
+          {itemType !== "text" &&
+            itemType !== "image" &&
+            itemType !== "tool" && (
+              <>
+                <ConditionalTooltip
+                  enabled={allowTooltips}
+                  content={initialIsAlly ? "Make Enemy" : "Make Ally"}
+                >
+                  <Button variant="ghost" size="sm" onClick={onToggleAlly}>
+                    {initialIsAlly ? <HeartCrack /> : <Heart />}
+                  </Button>
+                </ConditionalTooltip>
 
-              <Separator
-                orientation="vertical"
-                className="data-[orientation=vertical]:h-6"
-              />
-            </>
-          )}
+                <Separator
+                  orientation="vertical"
+                  className="data-[orientation=vertical]:h-6"
+                />
+              </>
+            )}
 
           <ConditionalTooltip
             enabled={allowTooltips}
@@ -135,6 +139,8 @@ export const ContextMenuPopover = ({
                 ? "Ability"
                 : itemType === "image"
                 ? "Image"
+                : itemType === "tool"
+                ? "Icon"
                 : "Text"
             }`}
           >

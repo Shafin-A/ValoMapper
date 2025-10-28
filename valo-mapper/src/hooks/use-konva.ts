@@ -24,7 +24,7 @@ interface ContextMenuState {
   x: number;
   y: number;
   itemId: string;
-  itemType: "agent" | "ability" | "text" | "image";
+  itemType: "agent" | "ability" | "text" | "image" | "tool";
 }
 
 export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
@@ -39,6 +39,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setTextsOnCanvas,
     imagesOnCanvas,
     setImagesOnCanvas,
+    toolIconsOnCanvas,
+    setToolIconsOnCanvas,
     isDrawMode,
     isDrawing,
     drawLines,
@@ -389,14 +391,25 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       const isImageItem = imagesOnCanvas.some(
         (image) => image.id.toString() === targetId
       );
+      const isToolIconItem = toolIconsOnCanvas.some(
+        (toolIcon) => toolIcon.id === targetId
+      );
 
-      if (!isAgentItem && !isAbilityItem && !isTextItem && !isImageItem) return;
+      if (
+        !isAgentItem &&
+        !isAbilityItem &&
+        !isTextItem &&
+        !isImageItem &&
+        !isToolIconItem
+      )
+        return;
 
-      let itemType: "agent" | "ability" | "text" | "image";
+      let itemType: "agent" | "ability" | "text" | "image" | "tool";
       if (isAgentItem) itemType = "agent";
       else if (isAbilityItem) itemType = "ability";
       else if (isTextItem) itemType = "text";
       else if (isImageItem) itemType = "image";
+      else if (isToolIconItem) itemType = "tool";
       else return;
 
       setContextMenu({
@@ -409,7 +422,14 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
 
       e.cancelBubble = true;
     },
-    [stageRef, agentsOnCanvas, abilitiesOnCanvas, textsOnCanvas, imagesOnCanvas]
+    [
+      stageRef,
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+      textsOnCanvas,
+      imagesOnCanvas,
+      toolIconsOnCanvas,
+    ]
   );
 
   const handlePopoverOpenChange = useCallback((open: boolean) => {
@@ -465,6 +485,17 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         };
         setImagesOnCanvas((prev) => [...prev, newImage]);
       }
+    } else if (itemType === "tool") {
+      const toolIcon = toolIconsOnCanvas.find((i) => i.id === itemId);
+      if (toolIcon) {
+        const newToolIcon = {
+          ...toolIcon,
+          id: getNextId("tool"),
+          x: toolIcon.x + 20,
+          y: toolIcon.y + 20,
+        };
+        setToolIconsOnCanvas((prev) => [...prev, newToolIcon]);
+      }
     }
     closeContextMenu();
   }, [
@@ -478,6 +509,8 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setTextsOnCanvas,
     imagesOnCanvas,
     setImagesOnCanvas,
+    toolIconsOnCanvas,
+    setToolIconsOnCanvas,
   ]);
 
   const handleDelete = useCallback(() => {
@@ -495,6 +528,10 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       setTextsOnCanvas((prev) => prev.filter((text) => text.id !== itemId));
     } else if (itemType === "image") {
       setImagesOnCanvas((prev) => prev.filter((image) => image.id !== itemId));
+    } else if (itemType === "tool") {
+      setToolIconsOnCanvas((prev) =>
+        prev.filter((toolIcon) => toolIcon.id !== itemId)
+      );
     }
     closeContextMenu();
   }, [
@@ -504,6 +541,7 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     setAbilitiesOnCanvas,
     setTextsOnCanvas,
     setImagesOnCanvas,
+    setToolIconsOnCanvas,
   ]);
 
   const handleToggleAlly = useCallback(() => {
