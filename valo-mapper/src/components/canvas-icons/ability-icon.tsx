@@ -341,6 +341,11 @@ const ABILITY_RENDERERS: Record<
   tejo_ult: renderLineAbility,
   tejo_missile: renderCircleAbility,
 
+  //Veto
+  veto_teleport: renderCircleAbility,
+  veto_molly: renderCircleAbility,
+  veto_interceptor: renderCircleAbility,
+
   // Viper
   viper_molly: renderCircleAbility,
   viper_smoke: renderCircleAbility,

@@ -28,6 +28,7 @@ export const AGENTS: Agent[] = [
   { name: "Skye", src: "/agents/skye/skye.png", role: "Initiator" },
   { name: "Sova", src: "/agents/sova/sova.png", role: "Initiator" },
   { name: "Tejo", src: "/agents/tejo/tejo.png", role: "Initiator" },
+  { name: "Veto", src: "/agents/veto/veto.png", role: "Sentinel" },
   { name: "Viper", src: "/agents/viper/viper.png", role: "Controller" },
   { name: "Vyse", src: "/agents/vyse/vyse.png", role: "Sentinel" },
   { name: "Waylay", src: "/agents/waylay/waylay.png", role: "Duelist" },

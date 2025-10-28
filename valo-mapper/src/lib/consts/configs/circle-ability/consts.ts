@@ -145,6 +145,18 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     radius: 4.5,
     colors: { stroke: "#3b1d49", fill: "#b8864980" },
   },
+  veto_teleport: {
+    radius: 28.5,
+    colors: { stroke: "#2ab7ed", fill: "#2ab7ed80" },
+  },
+  veto_molly: {
+    radius: 8,
+    colors: { stroke: "#2ab7ed", fill: "#2ab7ed80" },
+  },
+  veto_interceptor: {
+    radius: 20,
+    colors: { stroke: "#2ab7ed", fill: "#2ab7ed80" },
+  },
   viper_molly: {
     radius: 4.5,
     colors: { stroke: "#67e72a", fill: "#48a85380" },

@@ -605,6 +605,32 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "tejo_ult",
     },
   ],
+  Veto: [
+    {
+      id: "crosscut",
+      src: "/agents/veto/crosscut.png",
+      name: "Crosscut",
+      action: "veto_teleport",
+    },
+    {
+      id: "chokehold",
+      src: "/agents/veto/chokehold.png",
+      name: "Chokehold",
+      action: "veto_molly",
+    },
+    {
+      id: "interceptor",
+      src: "/agents/veto/interceptor.png",
+      name: "Interceptor",
+      action: "veto_interceptor",
+    },
+    {
+      id: "evolution",
+      src: "/agents/veto/evolution.png",
+      name: "Evolution",
+      action: "icon",
+    },
+  ],
   Viper: [
     {
       id: "snake_bite",
