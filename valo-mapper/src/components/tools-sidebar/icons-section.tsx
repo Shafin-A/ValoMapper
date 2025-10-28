@@ -4,6 +4,12 @@ import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
 import { ToolIconButton } from "./tool-icon-button";
 import { WeaponColumn } from "./weapon-column";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface IconsSectionProps {
   mapPosition: Vector2d;
@@ -30,43 +36,70 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
   };
 
   return (
-    <div className="space-y-4 mt-4">
-      <span className="text-base font-semibold block">Icons</span>
+    <div className="mt-4">
+      <span className="text-base font-semibold block mb-4">Icons</span>
 
-      <div className="grid grid-cols-5 gap-2">
-        <ToolIconButton
-          name="spike"
-          onClick={() => handleAddToolIcon("spike", 32, 32)}
-        />
-      </div>
+      <Accordion
+        type="multiple"
+        defaultValue={["utilities", "weapons", "shields"]}
+        className="w-full"
+      >
+        <AccordionItem value="utilities">
+          <AccordionTrigger className="text-sm">Spike</AccordionTrigger>
+          <AccordionContent>
+            <div className="grid grid-cols-5 gap-2 pt-2">
+              <ToolIconButton
+                name="spike"
+                onClick={() => handleAddToolIcon("spike", 32, 32)}
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
-      <div className="flex gap-4">
-        <WeaponColumn weapons={WEAPONS.sidearms} onClick={handleAddToolIcon} />
-        <WeaponColumn
-          weapons={[...WEAPONS.smgs, ...WEAPONS.shotguns]}
-          onClick={handleAddToolIcon}
-        />
-        <WeaponColumn weapons={WEAPONS.rifles} onClick={handleAddToolIcon} />
-        <WeaponColumn
-          weapons={[...WEAPONS.snipers, ...WEAPONS.machineGuns]}
-          onClick={handleAddToolIcon}
-        />
-      </div>
+        <AccordionItem value="weapons">
+          <AccordionTrigger className="text-sm">Guns</AccordionTrigger>
+          <AccordionContent>
+            <div className="flex gap-4 pt-2">
+              <WeaponColumn
+                weapons={WEAPONS.sidearms}
+                onClick={handleAddToolIcon}
+              />
+              <WeaponColumn
+                weapons={[...WEAPONS.smgs, ...WEAPONS.shotguns]}
+                onClick={handleAddToolIcon}
+              />
+              <WeaponColumn
+                weapons={WEAPONS.rifles}
+                onClick={handleAddToolIcon}
+              />
+              <WeaponColumn
+                weapons={[...WEAPONS.snipers, ...WEAPONS.machineGuns]}
+                onClick={handleAddToolIcon}
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
-      <div className="grid grid-cols-5 gap-2">
-        <ToolIconButton
-          name="light_shield"
-          onClick={() => handleAddToolIcon("light_shield", 32, 32)}
-        />
-        <ToolIconButton
-          name="regen_shield"
-          onClick={() => handleAddToolIcon("regen_shield", 32, 32)}
-        />
-        <ToolIconButton
-          name="heavy_shield"
-          onClick={() => handleAddToolIcon("heavy_shield", 32, 32)}
-        />
-      </div>
+        <AccordionItem value="shields">
+          <AccordionTrigger className="text-sm">Shields</AccordionTrigger>
+          <AccordionContent>
+            <div className="grid grid-cols-5 gap-2 pt-2">
+              <ToolIconButton
+                name="light_shield"
+                onClick={() => handleAddToolIcon("light_shield", 32, 32)}
+              />
+              <ToolIconButton
+                name="regen_shield"
+                onClick={() => handleAddToolIcon("regen_shield", 32, 32)}
+              />
+              <ToolIconButton
+                name="heavy_shield"
+                onClick={() => handleAddToolIcon("heavy_shield", 32, 32)}
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 };
