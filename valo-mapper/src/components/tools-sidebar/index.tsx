@@ -34,6 +34,7 @@ export const ToolsSidebar = ({
     setImagesOnCanvas,
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
+    setToolIconsOnCanvas,
     setDrawLines,
     phases,
     currentPhaseIndex,
@@ -112,6 +113,14 @@ export const ToolsSidebar = ({
           x: 2 * (mapPosition.x + MAP_SIZE / 2) - point.x,
           y: 2 * (mapPosition.y + MAP_SIZE / 2) - point.y,
         })),
+      }))
+    );
+
+    setToolIconsOnCanvas((prev) =>
+      prev.map((toolIcon) => ({
+        ...toolIcon,
+        x: 2 * (mapPosition.x + MAP_SIZE / 2) - toolIcon.x,
+        y: 2 * (mapPosition.y + MAP_SIZE / 2) - toolIcon.y,
       }))
     );
   };
