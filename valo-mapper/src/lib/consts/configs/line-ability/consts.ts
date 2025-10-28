@@ -143,7 +143,7 @@ export const LINE_ABILITY_CONFIGS: Record<
   breach_ult: {
     stroke: "#ffde2180",
     lineLength: 32,
-    strokeWidth: 23,
+    strokeWidth: 18,
     iconLineGap: 8,
     rotationHandleDistance: 200,
   },
@@ -156,7 +156,7 @@ export const LINE_ABILITY_CONFIGS: Record<
   fade_ult: {
     lineLength: 40,
     stroke: "#00000080",
-    strokeWidth: 24,
+    strokeWidth: 20,
   },
   iso_wall: {
     lineLength: 27.5,
@@ -173,12 +173,12 @@ export const LINE_ABILITY_CONFIGS: Record<
     strokeWidth: 6,
   },
   iso_ult: {
-    lineLength: 48,
+    lineLength: 36,
     stroke: "#4d43aa80",
     strokeWidth: 15,
   },
   omen_blind: {
-    lineLength: 34.5,
+    lineLength: 27,
     stroke: "#261c4a80",
     strokeWidth: 8.6,
   },
@@ -213,6 +213,6 @@ export const LINE_ABILITY_CONFIGS: Record<
   waylay_ult: {
     lineLength: 36,
     stroke: "#94c36580",
-    strokeWidth: 18,
+    strokeWidth: 13.5,
   },
 };
