@@ -13,6 +13,7 @@ import { Vector2d } from "konva/lib/types";
 import { MapSelect } from "./map-select-button";
 import { ToolsSection } from "./tools-section";
 import { useState } from "react";
+import { IconsSection } from "./icons-section";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -188,6 +189,7 @@ export const ToolsSidebar = ({
             </ToggleGroup>
           </div>
           <ToolsSection mapPosition={mapPosition} />
+          <IconsSection mapPosition={mapPosition} />
         </SidebarContent>
       </Sidebar>
     </SidebarProvider>

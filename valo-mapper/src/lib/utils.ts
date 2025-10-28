@@ -96,7 +96,9 @@ export const isAgent = (obj: unknown): obj is Agent => {
   );
 };
 
-export const getNextId = (type: "agent" | "ability" | "text" | "image") => {
+export const getNextId = (
+  type: "agent" | "ability" | "text" | "image" | "tool"
+) => {
   const timestamp = Date.now().toString(36);
   return `${type}-${timestamp}`;
 };

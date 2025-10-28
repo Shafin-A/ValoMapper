@@ -14,6 +14,7 @@ import type {
   UndoableState,
   MapSide,
   PhaseState,
+  ToolIconCanvas,
 } from "@/lib/types";
 import Konva from "konva";
 import React, { createContext, RefObject, useContext } from "react";
@@ -57,6 +58,8 @@ interface CanvasContextType {
   setImagesOnCanvas: React.Dispatch<React.SetStateAction<ImageCanvas[]>>;
   editingTextId: string | null;
   setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>;
+  toolIconsOnCanvas: ToolIconCanvas[];
+  setToolIconsOnCanvas: React.Dispatch<React.SetStateAction<ToolIconCanvas[]>>;
   phases: PhaseState[];
   currentPhaseIndex: number;
   switchToPhase: (index: number) => void;

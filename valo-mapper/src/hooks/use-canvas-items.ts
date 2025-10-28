@@ -5,6 +5,7 @@ import {
   ImageCanvas,
   PhaseState,
   TextCanvas,
+  ToolIconCanvas,
 } from "@/lib/types";
 import { useCallback } from "react";
 
@@ -17,6 +18,18 @@ export const useCanvasItems = (
   const agentsOnCanvas = currentPhase.agentsOnCanvas;
   const abilitiesOnCanvas = currentPhase.abilitiesOnCanvas;
   const drawLines = currentPhase.drawLines;
+  const toolIconsOnCanvas = currentPhase.toolIconsOnCanvas;
+
+  const setToolIconsOnCanvas = useCallback(
+    (
+      value: ToolIconCanvas[] | ((prev: ToolIconCanvas[]) => ToolIconCanvas[])
+    ) => {
+      const newValue =
+        typeof value === "function" ? value(toolIconsOnCanvas) : value;
+      updateCurrentPhase({ toolIconsOnCanvas: newValue });
+    },
+    [toolIconsOnCanvas, updateCurrentPhase]
+  );
 
   const setTextsOnCanvas = useCallback(
     (value: TextCanvas[] | ((prev: TextCanvas[]) => TextCanvas[])) => {
@@ -73,5 +86,7 @@ export const useCanvasItems = (
     setImagesOnCanvas,
     textsOnCanvas,
     setTextsOnCanvas,
+    toolIconsOnCanvas,
+    setToolIconsOnCanvas,
   };
 };

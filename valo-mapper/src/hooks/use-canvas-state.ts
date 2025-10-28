@@ -22,6 +22,7 @@ export const useCanvasState = () => {
       drawLines: canvasItems.drawLines,
       textsOnCanvas: canvasItems.textsOnCanvas,
       imagesOnCanvas: canvasItems.imagesOnCanvas,
+      toolIconsOnCanvas: canvasItems.toolIconsOnCanvas,
       selectedMap: canvasUI.selectedMap,
       mapSide: canvasUI.mapSide,
       currentPhaseIndex: phaseManager.currentPhaseIndex,
@@ -32,6 +33,7 @@ export const useCanvasState = () => {
       canvasItems.drawLines,
       canvasItems.textsOnCanvas,
       canvasItems.imagesOnCanvas,
+      canvasItems.toolIconsOnCanvas,
       canvasUI.selectedMap,
       canvasUI.mapSide,
       phaseManager.currentPhaseIndex,
@@ -53,6 +55,7 @@ export const useCanvasState = () => {
         drawLines: state.drawLines,
         textsOnCanvas: state.textsOnCanvas,
         imagesOnCanvas: state.imagesOnCanvas,
+        toolIconsOnCanvas: state.toolIconsOnCanvas,
       });
 
       canvasUI.setSelectedMap(state.selectedMap);

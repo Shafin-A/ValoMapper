@@ -1,4 +1,5 @@
 export { PIXELS_PER_METER } from "./misc/consts";
+export { WEAPONS } from "./misc/consts";
 export { TEMP_DRAG_ID } from "./misc/consts";
 export { MAP_OPTIONS } from "./misc/consts";
 export { SIDEBAR_WIDTH } from "./misc/consts";

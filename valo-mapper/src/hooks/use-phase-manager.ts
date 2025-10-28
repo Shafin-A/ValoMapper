@@ -7,6 +7,7 @@ const createEmptyPhaseState = (): PhaseState => ({
   drawLines: [],
   textsOnCanvas: [],
   imagesOnCanvas: [],
+  toolIconsOnCanvas: [],
 });
 
 export const usePhaseManager = () => {

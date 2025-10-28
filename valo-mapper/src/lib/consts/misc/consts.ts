@@ -17,6 +17,27 @@ export const ROLE_ICONS: Record<string, string> = {
 
 export const PIXELS_PER_METER = 122 / 15;
 
+export const WEAPONS = {
+  sidearms: [
+    { name: "classic" },
+    { name: "shorty" },
+    { name: "frenzy" },
+    { name: "ghost" },
+    { name: "sheriff" },
+    { name: "knife" },
+  ],
+  smgs: [{ name: "stinger" }, { name: "spectre" }],
+  shotguns: [{ name: "bucky" }, { name: "judge" }],
+  rifles: [
+    { name: "bulldog" },
+    { name: "guardian" },
+    { name: "phantom" },
+    { name: "vandal" },
+  ],
+  snipers: [{ name: "marshal" }, { name: "outlaw" }, { name: "operator" }],
+  machineGuns: [{ name: "ares" }, { name: "odin" }],
+};
+
 export const MAP_OPTIONS: MapOption[] = [
   {
     id: "abyss",

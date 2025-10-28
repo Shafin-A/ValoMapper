@@ -245,8 +245,11 @@ export type UndoableState = {
   drawLines: DrawLine[];
   textsOnCanvas: TextCanvas[];
   imagesOnCanvas: ImageCanvas[];
+  toolIconsOnCanvas: ToolIconCanvas[];
   currentPhaseIndex: number;
 };
+
+export type ToolIconCanvas = BaseCanvasItem;
 
 export type PhaseState = {
   agentsOnCanvas: AgentCanvas[];
@@ -254,4 +257,5 @@ export type PhaseState = {
   drawLines: DrawLine[];
   textsOnCanvas: TextCanvas[];
   imagesOnCanvas: ImageCanvas[];
+  toolIconsOnCanvas: ToolIconCanvas[];
 };
