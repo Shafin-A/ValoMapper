@@ -182,6 +182,40 @@
   }
 }
 
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--rotation));
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(var(--rotation));
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(var(--rotation));
+  }
+
+  to {
+    transform: rotate(calc(var(--rotation) + 360deg));
+  }
+}
+
+@keyframes pulse-scale {
+
+  0%,
+  100% {
+    transform: scale(1) rotate(var(--rotation));
+  }
+
+  50% {
+    transform: scale(1.25) rotate(var(--rotation));
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
