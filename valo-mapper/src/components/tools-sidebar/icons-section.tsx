@@ -39,11 +39,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
     <div className="mt-4">
       <span className="text-base font-semibold block mb-4">Icons</span>
 
-      <Accordion
-        type="multiple"
-        defaultValue={["utilities", "weapons", "shields"]}
-        className="w-full"
-      >
+      <Accordion type="multiple" className="w-full">
         <AccordionItem value="utilities">
           <AccordionTrigger className="text-sm">Spike</AccordionTrigger>
           <AccordionContent>
