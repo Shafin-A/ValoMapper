@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SettingsProvider } from "@/contexts/settings-context";
 import "./globals.css";
 import { CanvasProvider } from "@/contexts/canvas-context";
+import QueryProvider from "@/components/providers/query-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,9 +37,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SettingsProvider>
-            <CanvasProvider>{children}</CanvasProvider>
-          </SettingsProvider>
+          <QueryProvider>
+            <SettingsProvider>
+              <CanvasProvider>{children}</CanvasProvider>
+            </SettingsProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

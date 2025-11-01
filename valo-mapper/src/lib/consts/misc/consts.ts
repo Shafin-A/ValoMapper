@@ -17,6 +17,12 @@ export const ROLE_ICONS: Record<string, string> = {
 
 export const PIXELS_PER_METER = 122 / 15;
 
+export const LANDING_MESSAGES = [
+  "Design strategies that win rounds",
+  "Coordinate executes with pixel-perfect precision",
+  "Share tactics that dominate ranked",
+] as const;
+
 export const WEAPONS = {
   sidearms: [
     { name: "classic", width: 188 / 5, height: 128 / 5 },
