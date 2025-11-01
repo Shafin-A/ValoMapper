@@ -3,12 +3,24 @@ import { useCanvasUI } from "@/hooks/use-canvas-ui";
 import { useHistoryManager } from "@/hooks/use-history-manager";
 import { usePhaseManager } from "@/hooks/use-phase-manager";
 import { usePhaseTransitions } from "@/hooks/use-phase-transition";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useLobby } from "./api/use-lobby";
+import { useParams } from "next/navigation";
 
 export const useCanvasState = () => {
+  const params = useParams();
+  const lobbyCode =
+    typeof params?.lobbyCode === "string" ? params.lobbyCode : undefined;
+
   const phaseTransitions = usePhaseTransitions();
   const canvasUI = useCanvasUI();
   const phaseManager = usePhaseManager();
+
+  const { lobby, updateLobby } = useLobby(lobbyCode ?? "");
+  const lastSaveRef = useRef<number>(Date.now());
+  const lastSavedStateRef = useRef<ReturnType<typeof getCurrentState> | null>(
+    null
+  );
 
   const canvasItems = useCanvasItems(
     phaseManager.currentPhase,
@@ -81,6 +93,70 @@ export const useCanvasState = () => {
     [phaseManager, canvasUI]
   );
 
+  const saveCanvasState = useCallback(() => {
+    if (!lobbyCode) return;
+
+    const currentState = getCurrentState();
+    updateLobby(currentState);
+
+    lastSavedStateRef.current = currentState;
+    lastSaveRef.current = Date.now();
+  }, [lobbyCode, getCurrentState, updateLobby]);
+
+  const initialLoadRef = useRef(false);
+
+  useEffect(() => {
+    if (lobbyCode && lobby && !initialLoadRef.current) {
+      initialLoadRef.current = true;
+
+      if (lobby.canvasState) {
+        applyState(lobby.canvasState);
+        lastSavedStateRef.current = lobby.canvasState;
+      }
+    }
+  }, [lobbyCode, lobby, applyState]);
+
+  const relevantProps = useRef<(keyof ReturnType<typeof getCurrentState>)[]>([
+    "agentsOnCanvas",
+    "abilitiesOnCanvas",
+    "drawLines",
+    "textsOnCanvas",
+    "imagesOnCanvas",
+    "toolIconsOnCanvas",
+    "selectedMap",
+    "mapSide",
+    "currentPhaseIndex",
+  ]);
+
+  const hasUnsavedChanges = useCallback(() => {
+    if (!lastSavedStateRef.current) return true;
+    const currentState = getCurrentState();
+
+    return relevantProps.current.some(
+      (prop) =>
+        JSON.stringify(currentState[prop]) !==
+        JSON.stringify(lastSavedStateRef.current![prop])
+    );
+  }, [getCurrentState]);
+
+  useEffect(() => {
+    if (!lobbyCode || !initialLoadRef.current) return;
+
+    const checkAndSave = () => {
+      const now = Date.now();
+      const timeSinceLastSave = now - lastSaveRef.current;
+
+      if (timeSinceLastSave >= 5 * 60 * 1000 && hasUnsavedChanges()) {
+        saveCanvasState();
+      }
+    };
+
+    checkAndSave();
+
+    const interval = setInterval(checkAndSave, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [lobbyCode, hasUnsavedChanges, saveCanvasState]);
+
   return {
     ...phaseManager,
     ...phaseTransitions,
@@ -88,5 +164,6 @@ export const useCanvasState = () => {
     ...historyManager,
     ...canvasUI,
     resetState,
+    saveCanvasState,
   };
 };

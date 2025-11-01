@@ -45,7 +45,8 @@ func InitDB() {
 	_, err = DB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS lobbies (
 			code VARCHAR(10) PRIMARY KEY,
-			created_at TIMESTAMPTZ NOT NULL
+			created_at TIMESTAMPTZ NOT NULL,
+			canvas_state JSONB
 		)
 	`)
 	if err != nil {

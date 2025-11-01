@@ -269,3 +269,5 @@ export type PhaseState = {
   imagesOnCanvas: ImageCanvas[];
   toolIconsOnCanvas: ToolIconCanvas[];
 };
+
+export type CanvasState = UndoableState;

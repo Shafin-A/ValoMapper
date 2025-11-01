@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -40,12 +41,63 @@ func GetLobby(w http.ResponseWriter, r *http.Request) {
 
 	lobby, err := models.GetLobbyByCode(code)
 	if err != nil {
-		http.Error(w, "Error retrieving lobby", http.StatusInternalServerError)
+		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if lobby == nil {
 		http.Error(w, "Lobby not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(lobby)
+}
+
+type UpdateLobbyRequest struct {
+	CanvasState json.RawMessage `json:"canvasState"`
+}
+
+func UpdateLobby(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	path := r.URL.Path
+	code := strings.TrimPrefix(path, "/api/lobbies/")
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Error reading request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	var req UpdateLobbyRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	existingLobby, err := models.GetLobbyByCode(code)
+	if err != nil {
+		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if existingLobby == nil {
+		http.Error(w, "Lobby not found", http.StatusNotFound)
+		return
+	}
+
+	lobby := &models.Lobby{
+		Code:        code,
+		CreatedAt:   existingLobby.CreatedAt,
+		CanvasState: req.CanvasState,
+	}
+
+	if err := lobby.Save(); err != nil {
+		http.Error(w, "Error updating lobby", http.StatusInternalServerError)
 		return
 	}
 

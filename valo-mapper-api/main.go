@@ -23,10 +23,11 @@ func main() {
 
 	r.HandleFunc("/api/lobbies", handlers.CreateLobby).Methods("POST")
 	r.HandleFunc("/api/lobbies/{code}", handlers.GetLobby).Methods("GET")
+	r.HandleFunc("/api/lobbies/{code}", handlers.UpdateLobby).Methods("PATCH")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Content-Type"},
 		AllowCredentials: true,
 	})
