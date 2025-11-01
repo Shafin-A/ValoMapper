@@ -3,13 +3,22 @@ package main
 import (
 	"log"
 	"net/http"
+	"valo-mapper-api/db"
 	"valo-mapper-api/handlers"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	db.InitDB()
+	defer db.DB.Close()
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/lobbies", handlers.CreateLobby).Methods("POST")

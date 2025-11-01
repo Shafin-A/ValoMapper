@@ -4,33 +4,30 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 	"valo-mapper-api/models"
 )
 
-var (
-	lobbies = make(map[string]*models.Lobby)
-	mu      sync.Mutex
-)
-
 func CreateLobby(w http.ResponseWriter, r *http.Request) {
+	var err error
 	lobby := &models.Lobby{
-		Code:      models.GenerateLobbyCode(),
 		CreatedAt: time.Now(),
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
-
 	for {
-		if _, exists := lobbies[lobby.Code]; !exists {
+		lobby.Code = models.GenerateLobbyCode()
+		err = lobby.Save()
+		if err == nil {
 			break
 		}
-		lobby.Code = models.GenerateLobbyCode()
-	}
 
-	lobbies[lobby.Code] = lobby
+		if strings.Contains(err.Error(), "duplicate key") {
+			continue
+		}
+
+		http.Error(w, "Error creating lobby", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -41,11 +38,13 @@ func GetLobby(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	code := strings.TrimPrefix(path, "/api/lobbies/")
 
-	mu.Lock()
-	lobby, exists := lobbies[code]
-	mu.Unlock()
+	lobby, err := models.GetLobbyByCode(code)
+	if err != nil {
+		http.Error(w, "Error retrieving lobby", http.StatusInternalServerError)
+		return
+	}
 
-	if !exists {
+	if lobby == nil {
 		http.Error(w, "Lobby not found", http.StatusNotFound)
 		return
 	}
