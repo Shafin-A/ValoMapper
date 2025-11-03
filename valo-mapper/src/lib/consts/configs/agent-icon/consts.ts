@@ -1,4 +1,4 @@
-import { AbilityIconConfig } from "@/lib/types";
+import { AbilityIconConfig, AbilityIconItem } from "@/lib/types";
 
 export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   Astra: [
@@ -736,3 +736,12 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
     },
   ],
 };
+
+export const ABILITY_LOOKUP: Record<string, AbilityIconItem> = Object.values(
+  AGENT_ICON_CONFIGS
+)
+  .flatMap((items: AbilityIconItem[]) => items)
+  .reduce((acc, ability) => {
+    acc[ability.name] = ability;
+    return acc;
+  }, {} as Record<string, AbilityIconItem>);

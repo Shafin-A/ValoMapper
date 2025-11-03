@@ -10,7 +10,6 @@ export type MapOption = {
 
 export type Agent = {
   name: string;
-  src: string;
   role: AgentRole;
 };
 
@@ -22,7 +21,6 @@ export type BaseCanvasItem = {
 
 export type CanvasItem = BaseCanvasItem & {
   name: string;
-  src: string;
   isAlly: boolean;
 };
 

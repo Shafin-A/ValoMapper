@@ -1,7 +1,7 @@
 import { CanvasIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
-import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import { getAgentImgSrc, handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
 
 interface CanvasAgentProps {
@@ -26,7 +26,7 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
       isAlly={agent.isAlly}
       x={agent.x}
       y={agent.y}
-      src={agent.src}
+      src={getAgentImgSrc(agent.name)}
       draggable={!isDrawMode}
       isListening={!isDrawMode}
       onDragMove={(e) => handleDragMove(e, deleteGroupRef)}

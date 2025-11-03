@@ -16,6 +16,7 @@ import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { AGENTS } from "@/lib/consts";
 import { Agent, AgentRole } from "@/lib/types";
+import { getAgentImgSrc } from "@/lib/utils";
 import { EllipsisVertical, Users } from "lucide-react";
 import Image from "next/image";
 
@@ -93,7 +94,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                         borderColor: isSelected ? borderColor : "transparent",
                         cursor: "pointer",
                       }}
-                      src={agent.src}
+                      src={getAgentImgSrc(agent.name)}
                       alt={agent.name}
                       width={50}
                       height={50}

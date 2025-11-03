@@ -1,6 +1,7 @@
 import { AbilityIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
+import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
 
@@ -22,7 +23,7 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
       x={ability.x}
       y={ability.y}
       rotation={ability.currentRotation}
-      src={ability.src}
+      src={ABILITY_LOOKUP[ability.name].src}
       draggable={!isDrawMode}
       isListening={!isDrawMode}
       onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
