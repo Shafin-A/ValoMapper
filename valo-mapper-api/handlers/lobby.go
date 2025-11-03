@@ -11,8 +11,26 @@ import (
 
 func CreateLobby(w http.ResponseWriter, r *http.Request) {
 	var err error
+
+	defaultMap, err := models.GetMapById("ascent")
+	if err != nil {
+		http.Error(w, "Error getting default map: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	lobby := &models.Lobby{
 		CreatedAt: time.Now(),
+		CanvasState: &models.FullCanvasState{
+			SelectedMap:       *defaultMap,
+			MapSide:           "defense",
+			CurrentPhaseIndex: 0,
+			AgentsOnCanvas:    []models.CanvasAgent{},
+			AbilitiesOnCanvas: []models.CanvasAbility{},
+			DrawLines:         []models.CanvasDrawLine{},
+			TextsOnCanvas:     []models.CanvasText{},
+			ImagesOnCanvas:    []models.CanvasImage{},
+			ToolIconsOnCanvas: []models.CanvasToolIcon{},
+		},
 	}
 
 	for {
@@ -21,21 +39,22 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			break
 		}
-
-		if strings.Contains(err.Error(), "duplicate key") {
-			continue
+		if !strings.Contains(err.Error(), "duplicate key") {
+			http.Error(w, "Error creating lobby: "+err.Error(), http.StatusInternalServerError)
+			return
 		}
-
-		http.Error(w, "Error creating lobby", http.StatusInternalServerError)
-		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(lobby)
 }
 
 func GetLobby(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	path := r.URL.Path
 	code := strings.TrimPrefix(path, "/api/lobbies/")
 
@@ -44,18 +63,42 @@ func GetLobby(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	if lobby == nil {
 		http.Error(w, "Lobby not found", http.StatusNotFound)
 		return
 	}
+
+	mapDetails, err := models.GetMapById(lobby.CanvasState.SelectedMap.ID)
+	if err != nil {
+		http.Error(w, "Error retrieving map details: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	state := &models.FullCanvasState{
+		SelectedMap:       *mapDetails,
+		MapSide:           lobby.CanvasState.MapSide,
+		CurrentPhaseIndex: lobby.CanvasState.CurrentPhaseIndex,
+		AgentsOnCanvas:    []models.CanvasAgent{},
+		AbilitiesOnCanvas: []models.CanvasAbility{},
+		DrawLines:         []models.CanvasDrawLine{},
+		TextsOnCanvas:     []models.CanvasText{},
+		ImagesOnCanvas:    []models.CanvasImage{},
+		ToolIconsOnCanvas: []models.CanvasToolIcon{},
+	}
+
+	err = models.GetCanvasStateDetails(code, lobby.CanvasState.CurrentPhaseIndex, state)
+	if err != nil {
+		http.Error(w, "Error retrieving canvas state: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	lobby.CanvasState = state
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(lobby)
 }
 
 type UpdateLobbyRequest struct {
-	CanvasState json.RawMessage `json:"canvasState"`
+	CanvasState *models.FullCanvasState `json:"canvasState"`
 }
 
 func UpdateLobby(w http.ResponseWriter, r *http.Request) {
@@ -90,14 +133,43 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := models.SaveCanvasState(code, *req.CanvasState); err != nil {
+		http.Error(w, "Error updating canvas state: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	mapDetails, err := models.GetMapById(req.CanvasState.SelectedMap.ID)
+	if err != nil {
+		http.Error(w, "Error retrieving map details: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	state := &models.FullCanvasState{
+		SelectedMap:       *mapDetails,
+		MapSide:           req.CanvasState.MapSide,
+		CurrentPhaseIndex: req.CanvasState.CurrentPhaseIndex,
+		AgentsOnCanvas:    []models.CanvasAgent{},
+		AbilitiesOnCanvas: []models.CanvasAbility{},
+		DrawLines:         []models.CanvasDrawLine{},
+		TextsOnCanvas:     []models.CanvasText{},
+		ImagesOnCanvas:    []models.CanvasImage{},
+		ToolIconsOnCanvas: []models.CanvasToolIcon{},
+	}
+
+	err = models.GetCanvasStateDetails(code, req.CanvasState.CurrentPhaseIndex, state)
+	if err != nil {
+		http.Error(w, "Error retrieving canvas state: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	lobby := &models.Lobby{
 		Code:        code,
 		CreatedAt:   existingLobby.CreatedAt,
-		CanvasState: req.CanvasState,
+		CanvasState: state,
 	}
 
 	if err := lobby.Save(); err != nil {
-		http.Error(w, "Error updating lobby", http.StatusInternalServerError)
+		http.Error(w, "Error updating lobby: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -1,0 +1,82 @@
+package db
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/url"
+	"os"
+	"time"
+
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var DB *pgxpool.Pool
+
+func GetDB() (*pgxpool.Pool, error) {
+	if DB == nil {
+		return nil, fmt.Errorf("database connection not initialized")
+	}
+	return DB, nil
+}
+
+func InitDB() error {
+	requiredEnvVars := []string{"DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME"}
+	for _, envVar := range requiredEnvVars {
+		if os.Getenv(envVar) == "" {
+			return fmt.Errorf("required environment variable %s is not set", envVar)
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	password := url.QueryEscape(os.Getenv("DB_PASSWORD"))
+
+	connStr := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"),
+		password,
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
+	)
+
+	config, err := pgxpool.ParseConfig(connStr)
+	if err != nil {
+		return fmt.Errorf("error parsing database config: %w", err)
+	}
+
+	config.MaxConns = 10
+	config.MinConns = 2
+	config.MaxConnLifetime = time.Hour
+	config.MaxConnIdleTime = 30 * time.Minute
+	config.HealthCheckPeriod = time.Minute
+
+	DB, err = pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		return fmt.Errorf("error creating database pool: %w", err)
+	}
+
+	if err := DB.Ping(ctx); err != nil {
+		return fmt.Errorf("error pinging the database: %w", err)
+	}
+
+	log.Println("Database connection established successfully")
+
+	if err := RunMigrations(connStr); err != nil {
+		return fmt.Errorf("error running database migrations: %w", err)
+	}
+
+	log.Println("Database initialized successfully!")
+	return nil
+}
+
+func Close() {
+	if DB != nil {
+		DB.Close()
+		log.Println("Database connection closed")
+	}
+}
