@@ -3,8 +3,6 @@ import { Vector2d } from "konva/lib/types";
 export type MapOption = {
   id: string;
   text: string;
-  listview_src: string;
-  minimap_src: string;
   textColor: string;
 };
 

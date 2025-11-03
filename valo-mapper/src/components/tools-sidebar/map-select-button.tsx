@@ -57,7 +57,7 @@ export const MapSelect = ({
             variant="outline"
             className="relative h-20 w-56 hover:opacity-80 transition-all duration-400 ease-in-out border-2 border-gray-300 hover:border-gray-400 p-0 overflow-hidden"
             style={{
-              backgroundImage: `url(${selectedMap.listview_src})`,
+              backgroundImage: `url(/maps/listviewicons/${selectedMap.id}.webp)`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
@@ -89,7 +89,7 @@ export const MapSelect = ({
                 <div
                   className="relative w-full h-20 hover:opacity-80 transition-opacity rounded-sm overflow-hidden flex items-center justify-center"
                   style={{
-                    backgroundImage: `url(${option.listview_src})`,
+                    backgroundImage: `url(/maps/listviewicons/${option.id}.webp)`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }}
