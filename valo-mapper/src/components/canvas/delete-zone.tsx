@@ -15,18 +15,33 @@ export const DeleteZone = ({ deleteGroupRef, width }: CanvasAgentProps) => {
 
   useEffect(() => {
     const svgString = renderToStaticMarkup(
-      <Trash2 size={32} color="#ff0000" />
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <Trash2 size={24} color="#ff0000" />
+      </svg>
     );
-    const blob = new Blob([svgString], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
+
+    const dataUrl = `data:image/svg+xml;base64,${btoa(svgString)}`;
+
     const img = new window.Image();
 
     img.onload = () => {
-      setIconImg(img);
-      URL.revokeObjectURL(url);
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        setIconImg(img);
+      } else {
+        console.error("Image loaded but has 0 dimensions");
+      }
     };
 
-    img.src = url;
+    img.onerror = (e) => {
+      console.error("Failed to load delete icon:", e);
+    };
+
+    img.src = dataUrl;
   }, []);
 
   return (
@@ -45,11 +60,13 @@ export const DeleteZone = ({ deleteGroupRef, width }: CanvasAgentProps) => {
         stroke="#ff0000"
         cornerRadius={10}
       />
-      {iconImg && (
+      {iconImg && iconImg.naturalWidth > 0 && iconImg.naturalHeight > 0 && (
         <KonvaImage
           image={iconImg}
-          x={(100 - iconImg.width) / 2}
-          y={(100 - iconImg.height) / 2}
+          x={(100 - 32) / 2}
+          y={(100 - 32) / 2}
+          width={32}
+          height={32}
         />
       )}
     </Group>
