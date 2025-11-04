@@ -28,7 +28,6 @@ import { useRef } from "react";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
-import { toast } from "sonner";
 
 interface ToolsSectionProps {
   mapPosition: Vector2d;
@@ -133,7 +132,6 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
 
   const handleSyncCanvas = () => {
     saveCanvasState();
-    toast.success("Canvas synced!");
   };
 
   return (

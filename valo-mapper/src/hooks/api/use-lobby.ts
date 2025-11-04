@@ -1,5 +1,6 @@
 import { CanvasState } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 type Lobby = {
   lobbyCode: string;
@@ -38,13 +39,19 @@ export const useLobby = (lobbyCode: string) => {
           body: JSON.stringify({ canvasState }),
         }
       );
+
       if (!response.ok) {
         throw new Error("Failed to update lobby");
       }
+
       return response.json();
     },
     onSuccess: () => {
+      toast.success("Canvas synced!");
       refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to sync canvas. Error: ${error.message}`);
     },
   });
 
