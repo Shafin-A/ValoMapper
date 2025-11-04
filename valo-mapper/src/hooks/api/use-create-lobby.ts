@@ -18,7 +18,7 @@ export const useCreateLobby = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      router.push(`/${data.lobbyCode}`);
+      router.push(`/${data.lobbyCode}?created=true`);
     },
     onError: (error) => {
       console.error("Failed to create lobby:", error);

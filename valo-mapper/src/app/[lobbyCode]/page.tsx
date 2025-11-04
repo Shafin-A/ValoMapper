@@ -9,7 +9,9 @@ import { useDimensions } from "@/hooks/use-dimensions";
 import { usePositionScaling } from "@/hooks/use-position-scaling";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { MAP_SIZE } from "@/lib/consts";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useSearchParams, useParams } from "next/navigation";
+import { toast } from "sonner";
 
 const LobbyEditPage = () => {
   const divRef = useRef<HTMLDivElement>(null);
@@ -38,6 +40,24 @@ const LobbyEditPage = () => {
     x: (dimensions.width - MAP_SIZE) / 2,
     y: (dimensions.height - MAP_SIZE) / 2,
   };
+
+  const searchParams = useSearchParams();
+  const params = useParams();
+
+  useEffect(() => {
+    if (searchParams.get("created") === "true") {
+      toast.success(`Lobby created • Code: ${params.lobbyCode}`, {
+        id: `lobby-created-${params.lobbyCode}`,
+        action: {
+          label: "Copy Link",
+          onClick: () => {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success("Link copied!");
+          },
+        },
+      });
+    }
+  }, [params.lobbyCode, searchParams]);
 
   return (
     <div className="[--header-height:calc(--spacing(14))]">

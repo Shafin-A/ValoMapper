@@ -28,6 +28,7 @@ import { useRef } from "react";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
+import { toast } from "sonner";
 
 interface ToolsSectionProps {
   mapPosition: Vector2d;
@@ -130,6 +131,11 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
     event.target.value = "";
   };
 
+  const handleSyncCanvas = () => {
+    saveCanvasState();
+    toast.success("Canvas synced!");
+  };
+
   return (
     <>
       <input
@@ -145,7 +151,7 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={saveCanvasState}
+                onClick={handleSyncCanvas}
                 disabled={!hasUnsavedChanges || isUpdatingLobby}
                 variant="ghost"
                 size="lg"
@@ -179,7 +185,6 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
                 disabled={!canUndo}
                 variant="ghost"
                 size="lg"
-                // className="col-start-4"
               >
                 <Undo />
               </Button>
