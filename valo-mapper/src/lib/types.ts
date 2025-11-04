@@ -240,15 +240,11 @@ export type DrawLine = {
 export type MapSide = "attack" | "defense";
 
 export type UndoableState = {
-  agentsOnCanvas: AgentCanvas[];
-  abilitiesOnCanvas: AbilityCanvas[];
+  phases: PhaseState[];
   selectedMap: MapOption;
   mapSide: MapSide;
-  drawLines: DrawLine[];
-  textsOnCanvas: TextCanvas[];
-  imagesOnCanvas: ImageCanvas[];
-  toolIconsOnCanvas: ToolIconCanvas[];
   currentPhaseIndex: number;
+  editedPhases: number[];
 };
 
 export type ToolIconCanvas = BaseCanvasItem & {

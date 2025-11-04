@@ -46,14 +46,15 @@ func (l *Lobby) Save() error {
 	if exists {
 		_, err = conn.Exec(context.Background(),
 			`UPDATE lobbies 
-			SET selected_map_id = $1, map_side = $2, current_phase_index = $3
-			WHERE code = $4`,
-			l.CanvasState.SelectedMap.ID, l.CanvasState.MapSide, l.CanvasState.CurrentPhaseIndex, l.Code)
+			SET selected_map_id = $1, map_side = $2, current_phase_index = $3, edited_phases = $4
+			WHERE code = $5`,
+			l.CanvasState.SelectedMap.ID, l.CanvasState.MapSide,
+			l.CanvasState.CurrentPhaseIndex, l.CanvasState.EditedPhases, l.Code)
 	} else {
 		_, err = conn.Exec(context.Background(),
-			`INSERT INTO lobbies (code, created_at, selected_map_id, map_side, current_phase_index) 
-			VALUES ($1, $2, $3, $4, $5)`,
-			l.Code, l.CreatedAt, l.CanvasState.SelectedMap.ID, l.CanvasState.MapSide, l.CanvasState.CurrentPhaseIndex)
+			`INSERT INTO lobbies (code, created_at, selected_map_id, map_side, current_phase_index, edited_phases) 
+			VALUES ($1, $2, $3, $4, $5, $6)`,
+			l.Code, l.CreatedAt, l.CanvasState.SelectedMap.ID, l.CanvasState.MapSide, l.CanvasState.CurrentPhaseIndex, l.CanvasState.EditedPhases)
 	}
 
 	return err
@@ -65,21 +66,30 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 		return nil, err
 	}
 
-	lobby := &Lobby{
-		CanvasState: &FullCanvasState{
-			SelectedMap:       MapOption{},
+	emptyPhases := make([]PhaseState, 10)
+	for i := range 10 {
+		emptyPhases[i] = PhaseState{
 			AgentsOnCanvas:    []CanvasAgent{},
 			AbilitiesOnCanvas: []CanvasAbility{},
 			DrawLines:         []CanvasDrawLine{},
 			TextsOnCanvas:     []CanvasText{},
 			ImagesOnCanvas:    []CanvasImage{},
 			ToolIconsOnCanvas: []CanvasToolIcon{},
+		}
+	}
+
+	lobby := &Lobby{
+		CanvasState: &FullCanvasState{
+			SelectedMap:  MapOption{},
+			EditedPhases: []int{},
+			Phases:       emptyPhases,
 		},
 	}
 
 	var mapID string
+	var editedPhases []int
 	err = conn.QueryRow(context.Background(),
-		`SELECT code, created_at, selected_map_id, map_side, current_phase_index 
+		`SELECT code, created_at, selected_map_id, map_side, current_phase_index, edited_phases 
 		FROM lobbies 
 		WHERE code = $1`,
 		code).Scan(
@@ -88,6 +98,7 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 		&mapID,
 		&lobby.CanvasState.MapSide,
 		&lobby.CanvasState.CurrentPhaseIndex,
+		&editedPhases,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -97,22 +108,19 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 		return nil, err
 	}
 
+	lobby.CanvasState.EditedPhases = editedPhases
+
 	mapDetails, err := GetMapById(mapID)
 	if err != nil {
 		return nil, err
 	}
 	lobby.CanvasState.SelectedMap = *mapDetails
 
-	if err == pgx.ErrNoRows {
-		return nil, nil
-	}
-
-	lobby.CanvasState.SelectedMap = *mapDetails
-
-	err = GetCanvasStateDetails(code, lobby.CanvasState.CurrentPhaseIndex, lobby.CanvasState)
+	phases, err := GetAllCanvasPhases(code)
 	if err != nil {
 		return nil, err
 	}
+	lobby.CanvasState.Phases = phases
 
 	return lobby, nil
 }

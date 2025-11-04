@@ -30,46 +30,30 @@ export const useCanvasState = () => {
 
   const getCurrentState = useCallback(
     () => ({
-      agentsOnCanvas: canvasItems.agentsOnCanvas,
-      abilitiesOnCanvas: canvasItems.abilitiesOnCanvas,
-      drawLines: canvasItems.drawLines,
-      textsOnCanvas: canvasItems.textsOnCanvas,
-      imagesOnCanvas: canvasItems.imagesOnCanvas,
-      toolIconsOnCanvas: canvasItems.toolIconsOnCanvas,
+      phases: phaseManager.phases,
       selectedMap: canvasUI.selectedMap,
       mapSide: canvasUI.mapSide,
       currentPhaseIndex: phaseManager.currentPhaseIndex,
+      editedPhases: Array.from(phaseManager.editedPhases),
     }),
     [
-      canvasItems.agentsOnCanvas,
-      canvasItems.abilitiesOnCanvas,
-      canvasItems.drawLines,
-      canvasItems.textsOnCanvas,
-      canvasItems.imagesOnCanvas,
-      canvasItems.toolIconsOnCanvas,
+      phaseManager.phases,
       canvasUI.selectedMap,
       canvasUI.mapSide,
       phaseManager.currentPhaseIndex,
+      phaseManager.editedPhases,
     ]
   );
 
   const applyState = useCallback(
     (state: ReturnType<typeof getCurrentState>) => {
+      phaseManager.setPhases(state.phases);
+
       if (state.currentPhaseIndex !== undefined) {
         phaseManager.setCurrentPhaseIndex(state.currentPhaseIndex);
-        phaseManager.setEditedPhases((prev) =>
-          new Set(prev).add(state.currentPhaseIndex)
-        );
       }
 
-      phaseManager.updateCurrentPhase({
-        agentsOnCanvas: state.agentsOnCanvas,
-        abilitiesOnCanvas: state.abilitiesOnCanvas,
-        drawLines: state.drawLines,
-        textsOnCanvas: state.textsOnCanvas,
-        imagesOnCanvas: state.imagesOnCanvas,
-        toolIconsOnCanvas: state.toolIconsOnCanvas,
-      });
+      phaseManager.setEditedPhases(new Set(state.editedPhases));
 
       canvasUI.setSelectedMap(state.selectedMap);
       canvasUI.setMapSide(state.mapSide);
@@ -120,12 +104,7 @@ export const useCanvasState = () => {
   }, [lobbyCode, lobby, applyState]);
 
   const relevantProps = useRef<(keyof ReturnType<typeof getCurrentState>)[]>([
-    "agentsOnCanvas",
-    "abilitiesOnCanvas",
-    "drawLines",
-    "textsOnCanvas",
-    "imagesOnCanvas",
-    "toolIconsOnCanvas",
+    "phases",
     "selectedMap",
     "mapSide",
     "currentPhaseIndex",

@@ -42,11 +42,12 @@ export const useHistoryManager = ({
     if (isUpdatingFromHistory.current) return;
 
     const currentState = getCurrentState();
+    const currentPhase = currentState.phases[currentState.currentPhaseIndex];
 
-    const hasTempAgents = currentState.agentsOnCanvas.some(
+    const hasTempAgents = currentPhase.agentsOnCanvas.some(
       (agent) => agent.id === TEMP_DRAG_ID
     );
-    const hasTempAbilities = currentState.abilitiesOnCanvas.some(
+    const hasTempAbilities = currentPhase.abilitiesOnCanvas.some(
       (ability) => ability.id === TEMP_DRAG_ID
     );
 

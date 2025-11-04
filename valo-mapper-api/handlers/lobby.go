@@ -18,18 +18,26 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lobby := &models.Lobby{
-		CreatedAt: time.Now(),
-		CanvasState: &models.FullCanvasState{
-			SelectedMap:       *defaultMap,
-			MapSide:           "defense",
-			CurrentPhaseIndex: 0,
+	emptyPhases := make([]models.PhaseState, 10)
+	for i := range 10 {
+		emptyPhases[i] = models.PhaseState{
 			AgentsOnCanvas:    []models.CanvasAgent{},
 			AbilitiesOnCanvas: []models.CanvasAbility{},
 			DrawLines:         []models.CanvasDrawLine{},
 			TextsOnCanvas:     []models.CanvasText{},
 			ImagesOnCanvas:    []models.CanvasImage{},
 			ToolIconsOnCanvas: []models.CanvasToolIcon{},
+		}
+	}
+
+	lobby := &models.Lobby{
+		CreatedAt: time.Now(),
+		CanvasState: &models.FullCanvasState{
+			SelectedMap:       *defaultMap,
+			MapSide:           "defense",
+			CurrentPhaseIndex: 0,
+			EditedPhases:      []int{0},
+			Phases:            emptyPhases,
 		},
 	}
 
@@ -68,30 +76,13 @@ func GetLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mapDetails, err := models.GetMapById(lobby.CanvasState.SelectedMap.ID)
+	phases, err := models.GetAllCanvasPhases(code)
 	if err != nil {
-		http.Error(w, "Error retrieving map details: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error retrieving canvas phases: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	state := &models.FullCanvasState{
-		SelectedMap:       *mapDetails,
-		MapSide:           lobby.CanvasState.MapSide,
-		CurrentPhaseIndex: lobby.CanvasState.CurrentPhaseIndex,
-		AgentsOnCanvas:    []models.CanvasAgent{},
-		AbilitiesOnCanvas: []models.CanvasAbility{},
-		DrawLines:         []models.CanvasDrawLine{},
-		TextsOnCanvas:     []models.CanvasText{},
-		ImagesOnCanvas:    []models.CanvasImage{},
-		ToolIconsOnCanvas: []models.CanvasToolIcon{},
-	}
-
-	err = models.GetCanvasStateDetails(code, lobby.CanvasState.CurrentPhaseIndex, state)
-	if err != nil {
-		http.Error(w, "Error retrieving canvas state: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	lobby.CanvasState = state
+	lobby.CanvasState.Phases = phases
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(lobby)
@@ -144,22 +135,18 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	phases, err := models.GetAllCanvasPhases(code)
+	if err != nil {
+		http.Error(w, "Error retrieving canvas phases: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	state := &models.FullCanvasState{
 		SelectedMap:       *mapDetails,
 		MapSide:           req.CanvasState.MapSide,
 		CurrentPhaseIndex: req.CanvasState.CurrentPhaseIndex,
-		AgentsOnCanvas:    []models.CanvasAgent{},
-		AbilitiesOnCanvas: []models.CanvasAbility{},
-		DrawLines:         []models.CanvasDrawLine{},
-		TextsOnCanvas:     []models.CanvasText{},
-		ImagesOnCanvas:    []models.CanvasImage{},
-		ToolIconsOnCanvas: []models.CanvasToolIcon{},
-	}
-
-	err = models.GetCanvasStateDetails(code, req.CanvasState.CurrentPhaseIndex, state)
-	if err != nil {
-		http.Error(w, "Error retrieving canvas state: "+err.Error(), http.StatusInternalServerError)
-		return
+		EditedPhases:      req.CanvasState.EditedPhases,
+		Phases:            phases,
 	}
 
 	lobby := &models.Lobby{
