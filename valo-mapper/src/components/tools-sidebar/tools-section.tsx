@@ -13,8 +13,12 @@ import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
 import {
   ALargeSmall,
+  Cloud,
+  CloudCheck,
+  CloudOff,
   Eraser,
   Image as ImageIcon,
+  Loader2,
   Pencil,
   Redo,
   Trash2,
@@ -46,6 +50,10 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
     setTextsOnCanvas,
     setEditingTextId,
     setImagesOnCanvas,
+    saveCanvasState,
+    hasUnsavedChanges,
+    isUpdatingLobby,
+    isErrorUpdatingLobby,
   } = useCanvas();
 
   const handleDrawPressedChange = (pressed: boolean, tool: Tool) => {
@@ -137,11 +145,41 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                onClick={saveCanvasState}
+                disabled={!hasUnsavedChanges || isUpdatingLobby}
+                variant="ghost"
+                size="lg"
+                className="col-start-3"
+              >
+                {isUpdatingLobby ? (
+                  <Loader2 className="animate-spin" />
+                ) : isErrorUpdatingLobby ? (
+                  <CloudOff className="text-destructive" />
+                ) : hasUnsavedChanges ? (
+                  <Cloud />
+                ) : (
+                  <CloudCheck />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" align="center">
+              {isUpdatingLobby
+                ? "Syncing..."
+                : isErrorUpdatingLobby
+                ? `Sync failed`
+                : hasUnsavedChanges
+                ? "Unsaved changes"
+                : "All changes synced"}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
                 onClick={undo}
                 disabled={!canUndo}
                 variant="ghost"
                 size="lg"
-                className="col-start-4"
+                // className="col-start-4"
               >
                 <Undo />
               </Button>

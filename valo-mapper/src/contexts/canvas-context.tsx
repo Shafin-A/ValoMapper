@@ -73,6 +73,10 @@ interface CanvasContextType {
   registerNode: (id: string, node: Konva.Node) => void;
   unregisterNode: (id: string) => void;
   isTransitioning: RefObject<boolean>;
+  saveCanvasState: () => void;
+  hasUnsavedChanges: boolean;
+  isUpdatingLobby: boolean;
+  isErrorUpdatingLobby: boolean;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);

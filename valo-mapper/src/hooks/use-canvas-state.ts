@@ -3,7 +3,7 @@ import { useCanvasUI } from "@/hooks/use-canvas-ui";
 import { useHistoryManager } from "@/hooks/use-history-manager";
 import { usePhaseManager } from "@/hooks/use-phase-manager";
 import { usePhaseTransitions } from "@/hooks/use-phase-transition";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLobby } from "./api/use-lobby";
 import { useParams } from "next/navigation";
 
@@ -16,7 +16,8 @@ export const useCanvasState = () => {
   const canvasUI = useCanvasUI();
   const phaseManager = usePhaseManager();
 
-  const { lobby, updateLobby } = useLobby(lobbyCode ?? "");
+  const { lobby, updateLobby, isUpdatingLobby, isErrorUpdatingLobby } =
+    useLobby(lobbyCode ?? "");
   const lastSaveRef = useRef<number>(Date.now());
   const lastSavedStateRef = useRef<ReturnType<typeof getCurrentState> | null>(
     null
@@ -101,6 +102,8 @@ export const useCanvasState = () => {
 
     lastSavedStateRef.current = currentState;
     lastSaveRef.current = Date.now();
+
+    setHasUnsavedChanges(false);
   }, [lobbyCode, getCurrentState, updateLobby]);
 
   const initialLoadRef = useRef(false);
@@ -128,16 +131,28 @@ export const useCanvasState = () => {
     "currentPhaseIndex",
   ]);
 
-  const hasUnsavedChanges = useCallback(() => {
-    if (!lastSavedStateRef.current) return true;
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const checkUnsavedChanges = useCallback(() => {
+    if (!lastSavedStateRef.current) {
+      setHasUnsavedChanges(true);
+      return true;
+    }
     const currentState = getCurrentState();
 
-    return relevantProps.current.some(
+    const hasChanges = relevantProps.current.some(
       (prop) =>
         JSON.stringify(currentState[prop]) !==
         JSON.stringify(lastSavedStateRef.current![prop])
     );
+
+    setHasUnsavedChanges(hasChanges);
+    return hasChanges;
   }, [getCurrentState]);
+
+  useEffect(() => {
+    checkUnsavedChanges();
+  }, [checkUnsavedChanges]);
 
   useEffect(() => {
     if (!lobbyCode || !initialLoadRef.current) return;
@@ -146,7 +161,7 @@ export const useCanvasState = () => {
       const now = Date.now();
       const timeSinceLastSave = now - lastSaveRef.current;
 
-      if (timeSinceLastSave >= 5 * 60 * 1000 && hasUnsavedChanges()) {
+      if (timeSinceLastSave >= 5 * 60 * 1000 && hasUnsavedChanges) {
         saveCanvasState();
       }
     };
@@ -165,5 +180,8 @@ export const useCanvasState = () => {
     ...canvasUI,
     resetState,
     saveCanvasState,
+    hasUnsavedChanges,
+    isUpdatingLobby,
+    isErrorUpdatingLobby,
   };
 };
