@@ -88,11 +88,7 @@ export const isArcAbility = (action: AbilityAction): action is ArcAbility => {
 
 export const isAgent = (obj: unknown): obj is Agent => {
   return (
-    typeof obj === "object" &&
-    obj !== null &&
-    "src" in obj &&
-    "name" in obj &&
-    "role" in obj
+    typeof obj === "object" && obj !== null && "name" in obj && "role" in obj
   );
 };
 
