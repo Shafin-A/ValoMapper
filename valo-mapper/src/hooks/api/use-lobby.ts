@@ -22,7 +22,11 @@ export const useLobby = (lobbyCode: string) => {
     enabled: !!lobbyCode,
   });
 
-  const { mutate: updateLobby } = useMutation({
+  const {
+    mutate: updateLobby,
+    isPending: isUpdatingLobby,
+    isError: isErrorUpdatingLobby,
+  } = useMutation({
     mutationFn: async (canvasState: CanvasState) => {
       const response = await fetch(
         `http://localhost:8080/api/lobbies/${lobbyCode}`,
@@ -47,5 +51,7 @@ export const useLobby = (lobbyCode: string) => {
   return {
     lobby,
     updateLobby,
+    isUpdatingLobby,
+    isErrorUpdatingLobby,
   };
 };

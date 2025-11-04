@@ -252,6 +252,7 @@ export type UndoableState = {
 };
 
 export type ToolIconCanvas = BaseCanvasItem & {
+  name: string;
   width: number;
   height: number;
 };

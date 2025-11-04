@@ -28,7 +28,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
         id: getNextId("text"),
         x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
         y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-        src: `/tools/${name}.webp`,
+        name,
         width,
         height,
       },

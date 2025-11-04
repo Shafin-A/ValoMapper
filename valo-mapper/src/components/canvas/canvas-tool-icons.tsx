@@ -23,7 +23,7 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
       isAlly={true}
       x={toolIcon.x}
       y={toolIcon.y}
-      src={toolIcon.src}
+      src={`/tools/${toolIcon.name}.webp`}
       draggable={!isDrawMode}
       isListening={!isDrawMode}
       onDragMove={(e) => handleDragMove(e, deleteGroupRef)}

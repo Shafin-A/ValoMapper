@@ -1,12 +1,11 @@
 "use client";
-
 import { BackgroundDecoration } from "@/components/landing/background-decoration";
 import { HeaderActions } from "@/components/landing/header-actions";
 import { HeroSection } from "@/components/landing/hero-section";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import React from "react";
 
-export const LandingPage = () => {
+const LandingPage = () => {
   const createLobbyMutation = useCreateLobby();
 
   return (

@@ -296,7 +296,7 @@ export const handleDragMove = (
 };
 
 const sanitizeAgentName = (name: string): string => {
-  return name.replace(/\//g, "").replace(/\s+/g, "_");
+  return name.replace(/\//g, "").replace(/\s+/g, "_").toLowerCase();
 };
 
 export const getAgentImgSrc = (agentName: string): string => {
