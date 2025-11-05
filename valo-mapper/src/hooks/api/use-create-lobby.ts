@@ -18,7 +18,8 @@ export const useCreateLobby = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      router.push(`/${data.lobbyCode}?created=true`);
+      router.push(`/${data.lobbyCode}`);
+      sessionStorage.setItem("showCreatedToast", "true");
     },
     onError: (error) => {
       console.error("Failed to create lobby:", error);

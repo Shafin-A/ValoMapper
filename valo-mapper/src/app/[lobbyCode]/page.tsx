@@ -10,7 +10,7 @@ import { usePositionScaling } from "@/hooks/use-position-scaling";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { MAP_SIZE } from "@/lib/consts";
 import { useEffect, useRef } from "react";
-import { useSearchParams, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
 
 const LobbyEditPage = () => {
@@ -41,11 +41,10 @@ const LobbyEditPage = () => {
     y: (dimensions.height - MAP_SIZE) / 2,
   };
 
-  const searchParams = useSearchParams();
   const params = useParams();
 
   useEffect(() => {
-    if (searchParams.get("created") === "true") {
+    if (sessionStorage.getItem("showCreatedToast")) {
       toast.success(`Lobby created • Code: ${params.lobbyCode}`, {
         id: `lobby-created-${params.lobbyCode}`,
         action: {
@@ -56,8 +55,10 @@ const LobbyEditPage = () => {
           },
         },
       });
+
+      sessionStorage.removeItem("showCreatedToast");
     }
-  }, [params.lobbyCode, searchParams]);
+  }, [params.lobbyCode]);
 
   return (
     <div className="[--header-height:calc(--spacing(14))]">
