@@ -16,6 +16,7 @@ type Lobby struct {
 	SelectedMapId string           `json:"selectedMapId"`
 	MapSide       string           `json:"mapSide"`
 	CanvasState   *FullCanvasState `json:"canvasState,omitempty"`
+	UpdatedAt     time.Time        `json:"updatedAt"`
 }
 
 func GenerateLobbyCode() string {
@@ -89,12 +90,13 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 	var mapID string
 	var editedPhases []int
 	err = conn.QueryRow(context.Background(),
-		`SELECT code, created_at, selected_map_id, map_side, current_phase_index, edited_phases 
+		`SELECT code, created_at, updated_at, selected_map_id, map_side, current_phase_index, edited_phases 
 		FROM lobbies 
 		WHERE code = $1`,
 		code).Scan(
 		&lobby.Code,
 		&lobby.CreatedAt,
+		&lobby.UpdatedAt,
 		&mapID,
 		&lobby.CanvasState.MapSide,
 		&lobby.CanvasState.CurrentPhaseIndex,

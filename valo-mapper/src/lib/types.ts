@@ -263,3 +263,10 @@ export type PhaseState = {
 };
 
 export type CanvasState = UndoableState;
+
+export type Lobby = {
+  lobbyCode: string;
+  createdAt: string;
+  canvasState: CanvasState | null;
+  updatedAt: string;
+};

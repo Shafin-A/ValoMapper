@@ -1,12 +1,6 @@
-import { CanvasState } from "@/lib/types";
+import { CanvasState, Lobby } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-type Lobby = {
-  lobbyCode: string;
-  createdAt: string;
-  canvasState: CanvasState | null;
-};
 
 export const useLobby = (lobbyCode: string) => {
   const { data: lobby, refetch } = useQuery<Lobby>({

@@ -16,6 +16,10 @@ func RunMigrations(databaseURL string) error {
 	}
 	defer m.Close()
 
+	// if err := m.Drop(); err != nil {
+	// 	log.Printf("Drop error: %v", err)
+	// }
+
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return err
 	}

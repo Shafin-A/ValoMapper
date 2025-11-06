@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS lobbies (
     selected_map_id VARCHAR(50) REFERENCES maps(id),
     map_side VARCHAR(10),
     current_phase_index INTEGER DEFAULT 0,
-    edited_phases INTEGER[] DEFAULT ARRAY[0]
+    edited_phases INTEGER[] DEFAULT ARRAY[0],
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Create canvas_agents table
