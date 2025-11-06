@@ -44,11 +44,15 @@ export const LoginForm = ({
         setError(
           "Please verify your email before signing in. Check your inbox for the verification link."
         );
+
         await logout();
+
         return;
       }
 
-      router.push("/");
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectTo = searchParams.get("redirect") || "/";
+      router.push(redirectTo);
     } catch (err: unknown) {
       if (err instanceof FirebaseError) {
         if (err.code === "auth/invalid-credential") {
