@@ -17,13 +17,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FirebaseError } from "@firebase/util";
+import { sendEmailVerification } from "firebase/auth";
+import { toast } from "sonner";
 
 export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
-  const router = useRouter();
-  const { signUp } = useFirebaseAuth();
+  const { signUp, logout } = useFirebaseAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,9 +43,18 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
     setLoading(true);
 
     try {
-      await signUp(email, password);
-      router.push("/");
-    } catch (err: unknown) {
+      const user = await signUp(email, password);
+
+      await sendEmailVerification(user);
+
+      await logout();
+
+      setError("");
+
+      toast.success(
+        "Account created! Please check your email and verify your account before logging in."
+      );
+    } catch (err) {
       if (err instanceof FirebaseError) {
         if (err.code === "auth/email-already-in-use") {
           setError("An account with this email already exists.");

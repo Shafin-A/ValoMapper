@@ -26,7 +26,7 @@ export const LoginForm = ({
   ...props
 }: React.ComponentProps<"div">) => {
   const router = useRouter();
-  const { signIn } = useFirebaseAuth();
+  const { signIn, logout } = useFirebaseAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -38,7 +38,16 @@ export const LoginForm = ({
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      const user = await signIn(email, password);
+
+      if (!user.emailVerified) {
+        setError(
+          "Please verify your email before signing in. Check your inbox for the verification link."
+        );
+        await logout();
+        return;
+      }
+
       router.push("/");
     } catch (err: unknown) {
       if (err instanceof FirebaseError) {
