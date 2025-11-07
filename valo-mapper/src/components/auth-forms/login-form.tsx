@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { Home } from "lucide-react";
 
 export const LoginForm = ({
   className,
@@ -74,7 +75,17 @@ export const LoginForm = ({
     <div className={className} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
+          <CardTitle className="flex gap-2 items-center">
+            <Button
+              variant="outline"
+              onClick={() => router.push("/")}
+              size="icon"
+              className="cursor-pointer"
+            >
+              <Home />
+            </Button>
+            Login to your account
+          </CardTitle>
           <CardDescription>
             Enter your email below to login to your account
           </CardDescription>

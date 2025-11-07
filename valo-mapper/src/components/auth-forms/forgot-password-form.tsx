@@ -20,6 +20,8 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
+import { Home } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export const ForgotPasswordForm = ({
   className,
@@ -29,6 +31,8 @@ export const ForgotPasswordForm = ({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +62,17 @@ export const ForgotPasswordForm = ({
     <div className={className} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Reset your password</CardTitle>
+          <CardTitle className="flex gap-2 items-center">
+            <Button
+              variant="outline"
+              onClick={() => router.push("/")}
+              size="icon"
+              className="cursor-pointer"
+            >
+              <Home />
+            </Button>
+            Reset your password
+          </CardTitle>
           <CardDescription>
             Enter your email address and we&apos;ll send you a link to reset
             your password
