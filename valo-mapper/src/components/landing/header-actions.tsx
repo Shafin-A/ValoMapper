@@ -32,6 +32,7 @@ export const HeaderActions = () => {
       <Button
         variant="ghost"
         className="transition-all hover:scale-105 will-change-transform"
+        onClick={() => router.push("/strategies")}
       >
         My Strategies
       </Button>
