@@ -9,7 +9,8 @@ import (
 	"syscall"
 	"time"
 	"valo-mapper-api/db"
-	"valo-mapper-api/handlers"
+	"valo-mapper-api/firebase"
+	"valo-mapper-api/routes"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -26,19 +27,20 @@ func main() {
 	}
 	defer db.Close()
 
-	r := mux.NewRouter()
+	firebaseAuth, err := firebase.InitFirebaseAuth()
+	if err != nil {
+		log.Fatalf("Failed to initialize Firebase: %v", err)
+	}
 
-	r.HandleFunc("/api/lobbies", handlers.CreateLobby).Methods("POST")
-	r.HandleFunc("/api/lobbies/{code}", handlers.GetLobby).Methods("GET")
-	r.HandleFunc("/api/lobbies/{code}", handlers.UpdateLobby).Methods("PATCH")
+	r := mux.NewRouter()
+	routes.SetupRoutes(r, firebaseAuth)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-		AllowedHeaders:   []string{"Content-Type"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	})
-
 	handler := c.Handler(r)
 
 	srv := &http.Server{

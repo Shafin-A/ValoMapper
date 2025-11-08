@@ -33,3 +33,15 @@ CREATE INDEX IF NOT EXISTS idx_canvas_tool_icons_lobby_phase ON canvas_tool_icon
 -- Index for lobbies
 CREATE INDEX IF NOT EXISTS idx_lobbies_created_at ON lobbies(created_at);
 CREATE INDEX IF NOT EXISTS idx_lobbies_selected_map_id ON lobbies(selected_map_id);
+
+-- Index for users
+CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON users(firebase_uid);
+
+-- Index for folders
+CREATE INDEX IF NOT EXISTS idx_folders_user_id ON folders(user_id);
+CREATE INDEX IF NOT EXISTS idx_folders_parent_folder_id ON folders(parent_folder_id);
+
+-- Index for strategies
+CREATE INDEX IF NOT EXISTS idx_strategies_user_id ON strategies(user_id);
+CREATE INDEX IF NOT EXISTS idx_strategies_folder_id ON strategies(folder_id);
+CREATE INDEX IF NOT EXISTS idx_strategies_lobby_code ON strategies(lobby_code);

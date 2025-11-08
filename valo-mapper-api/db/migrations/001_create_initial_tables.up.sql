@@ -102,3 +102,38 @@ CREATE TABLE IF NOT EXISTS canvas_tool_icons (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (id, lobby_code, phase_index)
 );
+
+-- Create users table --
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    firebase_uid VARCHAR(128) UNIQUE NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    email_verified BOOLEAN DEFAULT FALSE,
+    display_name VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -- Create folders table --
+CREATE TABLE IF NOT EXISTS folders (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    parent_folder_id INTEGER NULL REFERENCES folders(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(user_id, parent_folder_id, name)
+);
+
+-- -- Create strategies table --
+CREATE TABLE IF NOT EXISTS strategies (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    folder_id INTEGER NULL REFERENCES folders(id) ON DELETE CASCADE,
+    lobby_code VARCHAR(10) NOT NULL REFERENCES lobbies(code) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(user_id, lobby_code)
+);
