@@ -49,3 +49,5 @@ go.work
 # Logs
 logs
 *.log
+
+serviceAccountKey.json
