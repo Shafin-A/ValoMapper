@@ -19,10 +19,18 @@ export const useFirebaseAuth = () => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
+
+      if (firebaseUser) {
+        queryClient.invalidateQueries({ queryKey: ["user"] });
+        queryClient.invalidateQueries({ queryKey: ["folders-and-strategies"] });
+      } else {
+        queryClient.removeQueries({ queryKey: ["user"] });
+        queryClient.removeQueries({ queryKey: ["folders-and-strategies"] });
+      }
     });
 
     return unsubscribe;
-  }, []);
+  }, [queryClient]);
 
   const getIdToken = async () => {
     if (user) {
@@ -56,6 +64,7 @@ export const useFirebaseAuth = () => {
   const logout = async () => {
     await signOut(auth);
     queryClient.removeQueries({ queryKey: ["user"] });
+    queryClient.removeQueries({ queryKey: ["folders-and-strategies"] });
   };
 
   return { user, loading, signIn, signUp, logout, getIdToken };

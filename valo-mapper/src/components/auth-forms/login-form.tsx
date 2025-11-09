@@ -34,16 +34,13 @@ export const LoginForm = ({
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [idToken, setIdToken] = useState<string | null>(null);
 
   const {
     user,
     isLoading: isUserLoading,
     isError: isUserError,
     error: userError,
-  } = useUser({
-    idToken: idToken || "",
-  });
+  } = useUser();
 
   useEffect(() => {
     if (user && !isUserLoading) {
@@ -79,8 +76,7 @@ export const LoginForm = ({
         return;
       }
 
-      const token = await firebaseUser.getIdToken();
-      setIdToken(token);
+      setLoading(false);
     } catch (err: unknown) {
       if (err instanceof FirebaseError) {
         if (err.code === "auth/invalid-credential") {
@@ -88,7 +84,7 @@ export const LoginForm = ({
         } else if (err.code === "auth/too-many-requests") {
           setError("Too many failed attempts. Please try again later.");
         } else {
-          setError("Failed to sign in. Please try again.");
+          setError("Failed to log in. Please try again.");
         }
       } else if (err instanceof Error) {
         setError(err.message);
@@ -154,7 +150,7 @@ export const LoginForm = ({
               </Field>
               <Field>
                 <Button type="submit" disabled={loading || isUserLoading}>
-                  {loading || isUserLoading ? "Signing in..." : "Login"}
+                  {loading || isUserLoading ? "Logging in..." : "Login"}
                 </Button>
 
                 {error && (

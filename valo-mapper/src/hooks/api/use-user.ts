@@ -1,11 +1,9 @@
 import { User } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
+import { useFirebaseAuth } from "../use-firebase-auth";
 
-interface FetchUserParams {
-  idToken: string;
-}
-
-export const useUser = ({ idToken }: FetchUserParams) => {
+export const useUser = () => {
+  const { getIdToken, user: firebaseUser } = useFirebaseAuth();
   const {
     data: user,
     isLoading,
@@ -14,12 +12,20 @@ export const useUser = ({ idToken }: FetchUserParams) => {
   } = useQuery<User>({
     queryKey: ["user"],
     queryFn: async () => {
+      const idToken = await getIdToken();
+
+      if (!idToken) {
+        throw new Error("User not authenticated");
+      }
+
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      };
+
       const response = await fetch(`http://localhost:8080/api/users/me`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
+        headers,
       });
 
       if (!response.ok) {
@@ -28,7 +34,7 @@ export const useUser = ({ idToken }: FetchUserParams) => {
 
       return response.json();
     },
-    enabled: !!idToken,
+    enabled: !!firebaseUser,
   });
 
   return {
