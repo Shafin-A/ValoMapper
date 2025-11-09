@@ -5,6 +5,7 @@ import { SidebarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction } from "react";
+import Link from "next/link";
 
 interface SiteHeaderProps {
   leftSidebarOpen: boolean;
@@ -32,7 +33,13 @@ export const SiteHeader = ({
             <SidebarIcon />
           </Button>
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <span>ValoMapper</span>
+          <Link href="/">
+            <h1 className="font-bold">
+              <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                ValoMapper
+              </span>
+            </h1>
+          </Link>
         </div>
 
         <div className="flex items-center gap-2 h-full">
