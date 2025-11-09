@@ -55,7 +55,6 @@ export const BackgroundDecoration = () => {
             animation:
               "spin-slow 20s linear infinite reverse, pulse-scale 10s ease-in-out infinite",
             "--rotation": "45deg",
-            animationDelay: "2s",
           } as React.CSSProperties
         }
       />
