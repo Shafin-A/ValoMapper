@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { FolderCard } from "@/components/strategies/folder-card";
-import { StrategyItem } from "@/components/strategies/strategy-item";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { FolderOpen, Home } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,8 +11,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { FolderOpen, Home, Plus } from "lucide-react";
-import { Lobby } from "@/lib/types";
+import { FolderCard } from "@/components/strategies/folder-card";
+import { StrategyItem } from "@/components/strategies/strategy-item";
 import {
   Empty,
   EmptyDescription,
@@ -20,134 +20,32 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useRouter } from "next/navigation";
-
-interface StrategyData {
-  id: string;
-  name: string;
-  type: "folder" | "strategy";
-  lobby?: Lobby;
-  children?: StrategyData[];
-}
-
-const mockData: StrategyData[] = [
-  {
-    id: "folder-1",
-    name: "Attack Strategies",
-    type: "folder",
-    children: [
-      {
-        id: "folder-1-1",
-        name: "A Site",
-        type: "folder",
-        children: [
-          {
-            id: "strat-1",
-            name: "A Site Rush",
-            type: "strategy",
-            lobby: {
-              updatedAt: "2025-11-05T14:30:00Z",
-              canvasState: {
-                selectedMap: { id: "bind", text: "", textColor: "" },
-                phases: [],
-                mapSide: "attack",
-                currentPhaseIndex: 0,
-                editedPhases: [],
-              },
-              lobbyCode: "",
-              createdAt: "",
-            },
-          },
-          {
-            id: "strat-2",
-            name: "A Site Default",
-            type: "strategy",
-            lobby: {
-              updatedAt: "2025-11-04T10:15:00Z",
-              canvasState: {
-                selectedMap: { id: "haven", text: "", textColor: "" },
-                phases: [],
-                mapSide: "attack",
-                currentPhaseIndex: 0,
-                editedPhases: [],
-              },
-              lobbyCode: "",
-              createdAt: "",
-            },
-          },
-        ],
-      },
-      {
-        id: "folder-1-2",
-        name: "B Site",
-        type: "folder",
-        children: [
-          {
-            id: "strat-3",
-            name: "B Site Split",
-            type: "strategy",
-            lobby: {
-              updatedAt: "2025-11-03T16:45:00Z",
-              canvasState: {
-                selectedMap: { id: "ascent", text: "", textColor: "" },
-                phases: [],
-                mapSide: "attack",
-                currentPhaseIndex: 0,
-                editedPhases: [],
-              },
-              lobbyCode: "",
-              createdAt: "",
-            },
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "folder-2",
-    name: "Defense Strategies",
-    type: "folder",
-    children: [],
-  },
-  {
-    id: "strat-5",
-    name: "Quick Rotate",
-    type: "strategy",
-    lobby: {
-      updatedAt: "2025-11-07T11:00:00Z",
-      canvasState: {
-        selectedMap: { id: "icebox", text: "", textColor: "" },
-        phases: [],
-        mapSide: "defense",
-        currentPhaseIndex: 0,
-        editedPhases: [],
-      },
-      lobbyCode: "",
-      createdAt: "",
-    },
-  },
-];
+import { Button } from "@/components/ui/button";
+import { CreateFolderPopover } from "@/components/strategies/create-folder-popover";
+import { StrategyData } from "@/lib/types";
+import { useFolders } from "@/hooks/api/use-folder";
+import { buildTree } from "@/lib/utils";
 
 const MyStrategiesPage = () => {
+  const { data, isLoading, isError, refetch } = useFolders();
   const [navigationPath, setNavigationPath] = useState<
     { id: string; name: string }[]
   >([{ id: "root", name: "My Strategies" }]);
-
   const router = useRouter();
 
-  const getCurrentItems = (): StrategyData[] => {
-    if (navigationPath.length === 1) {
-      return mockData;
-    }
+  const treeData = useMemo(() => {
+    if (!data) return [];
+    return buildTree(data.folders, data.strategies);
+  }, [data]);
 
-    let current = mockData;
+  const getCurrentItems = (): StrategyData[] => {
+    if (navigationPath.length === 1) return treeData;
+
+    let current = treeData;
     for (let i = 1; i < navigationPath.length; i++) {
       const folder = current.find((item) => item.id === navigationPath[i].id);
-      if (folder && folder.children) {
-        current = folder.children;
-      }
+      if (folder?.children) current = folder.children;
     }
     return current;
   };
@@ -161,6 +59,14 @@ const MyStrategiesPage = () => {
   };
 
   const currentItems = getCurrentItems();
+  const currentFolderId =
+    navigationPath.length === 1
+      ? null
+      : Number(navigationPath[navigationPath.length - 1].id);
+
+  if (isLoading) return <p className="p-8">Loading folders...</p>;
+  if (isError)
+    return <p className="p-8 text-destructive">Failed to load data.</p>;
 
   return (
     <div className="min-h-screen">
@@ -183,10 +89,10 @@ const MyStrategiesPage = () => {
                 {navigationPath[navigationPath.length - 1].name}
               </h1>
             </div>
-            <Button onClick={() => console.log("Create folder")}>
-              <Plus />
-              New Folder
-            </Button>
+            <CreateFolderPopover
+              parentFolderId={currentFolderId}
+              onSuccess={refetch}
+            />
           </div>
 
           <Breadcrumb>
@@ -241,7 +147,8 @@ const MyStrategiesPage = () => {
                 <StrategyItem
                   key={item.id}
                   name={item.name}
-                  lobby={item.lobby || {}}
+                  selectedMapId={item.selectedMapId ?? ""}
+                  updatedAt={item.updatedAt ?? new Date()}
                   onClick={() => console.log("Open strategy:", item.id)}
                   onMenuClick={() => console.log("Strategy menu:", item.id)}
                 />

@@ -126,3 +126,85 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 
 	return lobby, nil
 }
+
+func GetLobbiesByCodes(codes []string) ([]Lobby, error) {
+	if len(codes) == 0 {
+		return []Lobby{}, nil
+	}
+
+	conn, err := db.GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	emptyPhases := make([]PhaseState, 10)
+	for i := range 10 {
+		emptyPhases[i] = PhaseState{
+			AgentsOnCanvas:    []CanvasAgent{},
+			AbilitiesOnCanvas: []CanvasAbility{},
+			DrawLines:         []CanvasDrawLine{},
+			TextsOnCanvas:     []CanvasText{},
+			ImagesOnCanvas:    []CanvasImage{},
+			ToolIconsOnCanvas: []CanvasToolIcon{},
+		}
+	}
+
+	rows, err := conn.Query(context.Background(),
+		`SELECT code, created_at, updated_at, selected_map_id, map_side, current_phase_index, edited_phases 
+		FROM lobbies 
+		WHERE code = ANY($1)`,
+		codes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	lobbies := make([]Lobby, 0, len(codes))
+
+	for rows.Next() {
+		lobby := Lobby{
+			CanvasState: &FullCanvasState{
+				SelectedMap:  MapOption{},
+				EditedPhases: []int{},
+				Phases:       emptyPhases,
+			},
+		}
+
+		var mapID string
+		var editedPhases []int
+		err := rows.Scan(
+			&lobby.Code,
+			&lobby.CreatedAt,
+			&lobby.UpdatedAt,
+			&mapID,
+			&lobby.CanvasState.MapSide,
+			&lobby.CanvasState.CurrentPhaseIndex,
+			&editedPhases,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		lobby.CanvasState.EditedPhases = editedPhases
+
+		mapDetails, err := GetMapById(mapID)
+		if err != nil {
+			return nil, err
+		}
+		lobby.CanvasState.SelectedMap = *mapDetails
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		if err != nil {
+			return nil, err
+		}
+		lobby.CanvasState.Phases = phases
+
+		lobbies = append(lobbies, lobby)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return lobbies, nil
+}

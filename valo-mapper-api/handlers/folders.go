@@ -52,10 +52,6 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 	}
 
 	if err := folder.Save(); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			http.Error(w, "A folder with this name already exists in this location", http.StatusConflict)
-			return
-		}
 		http.Error(w, "Error creating folder: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -81,6 +77,10 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 	if err != nil {
 		http.Error(w, "Error retrieving folders: "+err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if folders == nil {
+		folders = []models.Folder{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -176,10 +176,6 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 	}
 
 	if err := folder.Update(); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			http.Error(w, "A folder with this name already exists in this location", http.StatusConflict)
-			return
-		}
 		http.Error(w, "Error updating folder: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

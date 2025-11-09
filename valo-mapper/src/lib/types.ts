@@ -266,9 +266,37 @@ export type CanvasState = UndoableState;
 
 export type Lobby = {
   lobbyCode: string;
-  createdAt: string;
+  createdAt: Date;
   canvasState: CanvasState | null;
-  updatedAt: string;
+  updatedAt: Date;
+};
+
+export type StrategyData = {
+  id: string;
+  name: string;
+  type: "folder" | "strategy";
+  selectedMapId?: string;
+  updatedAt?: Date;
+  children?: StrategyData[];
+};
+
+export type Folder = {
+  id: number;
+  userId: number;
+  name: string;
+  parentFolderId?: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type Strategy = {
+  id: number;
+  userId: number;
+  folderId?: number;
+  name: string;
+  selectedMapId: string;
+  updatedAt: Date;
+};
 
 export type User = {
   id: number;

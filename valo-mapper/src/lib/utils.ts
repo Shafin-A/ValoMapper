@@ -18,7 +18,10 @@ import {
   CurvableLineAbility,
   DoubleLineAbility,
   DrawLine,
+  Folder,
   LineAbility,
+  Strategy,
+  StrategyData,
   XLineAbility,
 } from "@/lib/types";
 import { clsx, type ClassValue } from "clsx";
@@ -324,4 +327,54 @@ export const getRelativeTime = (date: Date) => {
   }
 
   return rtf.format(0, "second");
+};
+
+export const buildTree = (
+  folders: Folder[],
+  strategies: Strategy[]
+): StrategyData[] => {
+  const folderMap = new Map<number, StrategyData>();
+  const rootItems: StrategyData[] = [];
+
+  folders.forEach((folder) => {
+    folderMap.set(folder.id, {
+      id: folder.id.toString(),
+      name: folder.name,
+      type: "folder",
+      children: [],
+    });
+  });
+
+  folders.forEach((folder) => {
+    const node = folderMap.get(folder.id)!;
+    if (!folder.parentFolderId) {
+      rootItems.push(node);
+    } else {
+      const parent = folderMap.get(folder.parentFolderId);
+      if (parent?.children) {
+        parent.children.push(node);
+      }
+    }
+  });
+
+  strategies.forEach((strategy) => {
+    const strategyNode: StrategyData = {
+      id: strategy.id.toString(),
+      name: strategy.name,
+      type: "strategy",
+      selectedMapId: strategy.selectedMapId,
+      updatedAt: strategy.updatedAt,
+    };
+
+    if (!strategy.folderId) {
+      rootItems.push(strategyNode);
+    } else {
+      const parent = folderMap.get(strategy.folderId);
+      if (parent?.children) {
+        parent.children.push(strategyNode);
+      }
+    }
+  });
+
+  return rootItems;
 };

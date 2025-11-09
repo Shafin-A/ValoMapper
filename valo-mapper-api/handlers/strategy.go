@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"valo-mapper-api/models"
 
@@ -12,16 +13,33 @@ import (
 )
 
 type CreateStrategyRequest struct {
-	FolderID    *int   `json:"folderId,omitempty"`
-	LobbyCode   string `json:"lobbyCode"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
+	FolderID  *int   `json:"folderId,omitempty"`
+	LobbyCode string `json:"lobbyCode"`
+	Name      string `json:"name"`
 }
 
 type UpdateStrategyRequest struct {
-	FolderID    *int    `json:"folderId,omitempty"`
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
+	FolderID *int    `json:"folderId,omitempty"`
+	Name     *string `json:"name,omitempty"`
+}
+
+type StrategyResponse struct {
+	ID            int       `json:"id"`
+	UserID        int       `json:"userId"`
+	FolderID      *int      `json:"folderId"`
+	Name          string    `json:"name"`
+	SelectedMapID string    `json:"selectedMapId"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+}
+
+func NewStrategyResponse(strategy *models.Strategy, lobby *models.Lobby) *StrategyResponse {
+	return &StrategyResponse{
+		UserID:        strategy.UserID,
+		FolderID:      strategy.FolderID,
+		Name:          strategy.Name,
+		SelectedMapID: lobby.SelectedMapId,
+		UpdatedAt:     lobby.UpdatedAt,
+	}
 }
 
 func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -78,9 +96,11 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 		return
 	}
 
+	response := NewStrategyResponse(strategy, lobby)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(strategy)
+	json.NewEncoder(w).Encode(response)
 }
 
 func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -118,8 +138,38 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 		return
 	}
 
+	lobbyCodes := make([]string, 0, len(strategies))
+	for _, s := range strategies {
+		lobbyCodes = append(lobbyCodes, s.LobbyCode)
+	}
+
+	lobbies, err := models.GetLobbiesByCodes(lobbyCodes)
+	if err != nil {
+		http.Error(w, "Error retrieving lobbies: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	lobbyMap := make(map[string]*models.Lobby)
+	for i := range lobbies {
+		lobbyMap[lobbies[i].Code] = &lobbies[i]
+	}
+
+	var responses []*StrategyResponse
+	for _, s := range strategies {
+		lobby, exists := lobbyMap[s.LobbyCode]
+		if !exists || lobby == nil {
+			http.Error(w, "Lobby not found", http.StatusNotFound)
+			return
+		}
+		responses = append(responses, NewStrategyResponse(&s, lobby))
+	}
+
+	if responses == nil {
+		responses = []*StrategyResponse{}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(strategies)
+	json.NewEncoder(w).Encode(responses)
 }
 
 func GetStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -157,8 +207,20 @@ func GetStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clie
 		return
 	}
 
+	lobby, err := models.GetLobbyByCode(strategy.LobbyCode)
+	if err != nil {
+		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if lobby == nil {
+		http.Error(w, "Lobby not found", http.StatusNotFound)
+		return
+	}
+
+	response := NewStrategyResponse(strategy, lobby)
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(strategy)
+	json.NewEncoder(w).Encode(response)
 }
 
 func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -215,8 +277,21 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 		return
 	}
 
+	lobby, err := models.GetLobbyByCode(strategy.LobbyCode)
+	if err != nil {
+		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if lobby == nil {
+		http.Error(w, "Lobby not found", http.StatusNotFound)
+		return
+	}
+
+	response := NewStrategyResponse(strategy, lobby)
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(strategy)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
