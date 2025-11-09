@@ -12,10 +12,25 @@ type User struct {
 	FirebaseUID   string    `json:"firebaseUid"`
 	Email         string    `json:"email"`
 	EmailVerified bool      `json:"emailVerified"`
-	DisplayName   *string   `json:"displayName,omitempty"`
-	PhotoURL      *string   `json:"photoUrl,omitempty"`
+	Name          string    `json:"name"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
+}
+
+func (u *User) Update() error {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	err = conn.QueryRow(context.Background(), `
+		UPDATE users
+		SET email_verified = $1, name = $2, updated_at = NOW()
+		WHERE firebase_uid = $3
+		RETURNING updated_at
+	`, u.EmailVerified, u.Name, u.FirebaseUID).Scan(&u.UpdatedAt)
+
+	return err
 }
 
 func (u *User) Save() error {
@@ -24,10 +39,10 @@ func (u *User) Save() error {
 		return err
 	}
 
-	err = conn.QueryRow(context.Background(), `INSERT INTO users (firebase_uid, email, email_verified, created_at, updated_at)
-		VALUES ($1, $2, $3, NOW(), NOW())
+	err = conn.QueryRow(context.Background(), `INSERT INTO users (firebase_uid, email, email_verified, name, created_at, updated_at)
+		VALUES ($1, $2, $3, $4,NOW(), NOW())
 		ON CONFLICT (firebase_uid) DO NOTHING
-		RETURNING id, created_at, updated_at`, u.FirebaseUID, u.Email, u.EmailVerified).Scan(
+		RETURNING id, created_at, updated_at`, u.FirebaseUID, u.Email, u.EmailVerified, u.Name).Scan(
 		&u.ID,
 		&u.CreatedAt,
 		&u.UpdatedAt,
@@ -47,7 +62,7 @@ func (u *User) LoadByFirebaseUID() error {
 	}
 
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, display_name, created_at, updated_at
+		SELECT id, firebase_uid, email, email_verified, name, created_at, updated_at
 		FROM users
 		WHERE firebase_uid = $1
 	`, u.FirebaseUID).Scan(
@@ -55,7 +70,7 @@ func (u *User) LoadByFirebaseUID() error {
 		&u.FirebaseUID,
 		&u.Email,
 		&u.EmailVerified,
-		&u.DisplayName,
+		&u.Name,
 		&u.CreatedAt,
 		&u.UpdatedAt,
 	)
@@ -64,7 +79,10 @@ func (u *User) LoadByFirebaseUID() error {
 }
 
 func GetUserByFirebaseUID(uid string) (*User, error) {
-	user := &User{}
+	user := &User{
+		FirebaseUID: uid,
+	}
+
 	err := user.LoadByFirebaseUID()
 	if err == sql.ErrNoRows {
 		return nil, nil

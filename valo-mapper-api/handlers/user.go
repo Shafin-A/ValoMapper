@@ -10,6 +10,7 @@ import (
 
 type CreateUserRequest struct {
 	FirebaseUID string `json:"firebaseUid"`
+	Name        string `json:"name"`
 	Email       string `json:"email"`
 }
 
@@ -39,6 +40,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 
 	user := &models.User{
 		FirebaseUID:   req.FirebaseUID,
+		Name:          req.Name,
 		Email:         req.Email,
 		EmailVerified: false,
 	}
@@ -50,5 +52,21 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(user)
+}
+
+func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user, err := authenticateRequest(r, firebaseAuth)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }

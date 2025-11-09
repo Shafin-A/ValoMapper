@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FirebaseError } from "firebase/app";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,17 +21,43 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { Home } from "lucide-react";
+import { useUser } from "@/hooks/api/use-user";
 
 export const LoginForm = ({
   className,
   ...props
 }: React.ComponentProps<"div">) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signIn, logout } = useFirebaseAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [idToken, setIdToken] = useState<string | null>(null);
+
+  const {
+    user,
+    isLoading: isUserLoading,
+    isError: isUserError,
+    error: userError,
+  } = useUser({
+    idToken: idToken || "",
+  });
+
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      const redirectTo = searchParams.get("redirect") || "/";
+      router.push(redirectTo);
+    }
+  }, [user, isUserLoading, router, searchParams]);
+
+  useEffect(() => {
+    if (isUserError && userError) {
+      setError(`Failed to load user data: ${userError.message}`);
+      setLoading(false);
+    }
+  }, [isUserError, userError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,21 +65,22 @@ export const LoginForm = ({
     setLoading(true);
 
     try {
-      const user = await signIn(email, password);
+      const firebaseUser = await signIn(email, password);
 
-      if (!user.emailVerified) {
+      if (!firebaseUser.emailVerified) {
         setError(
           "Please verify your email before signing in. Check your inbox for the verification link."
         );
 
         await logout();
 
+        setLoading(false);
+
         return;
       }
 
-      const searchParams = new URLSearchParams(window.location.search);
-      const redirectTo = searchParams.get("redirect") || "/";
-      router.push(redirectTo);
+      const token = await firebaseUser.getIdToken();
+      setIdToken(token);
     } catch (err: unknown) {
       if (err instanceof FirebaseError) {
         if (err.code === "auth/invalid-credential") {
@@ -63,10 +90,11 @@ export const LoginForm = ({
         } else {
           setError("Failed to sign in. Please try again.");
         }
+      } else if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError("An unexpected error occurred.");
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -102,7 +130,7 @@ export const LoginForm = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={loading}
+                  disabled={loading || isUserLoading}
                 />
               </Field>
               <Field>
@@ -121,12 +149,12 @@ export const LoginForm = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={loading}
+                  disabled={loading || isUserLoading}
                 />
               </Field>
               <Field>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Signing in..." : "Login"}
+                <Button type="submit" disabled={loading || isUserLoading}>
+                  {loading || isUserLoading ? "Signing in..." : "Login"}
                 </Button>
 
                 {error && (

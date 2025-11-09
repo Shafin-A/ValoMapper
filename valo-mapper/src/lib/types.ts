@@ -269,4 +269,12 @@ export type Lobby = {
   createdAt: string;
   canvasState: CanvasState | null;
   updatedAt: string;
+
+export type User = {
+  id: number;
+  firebaseUid: string;
+  name: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
 };

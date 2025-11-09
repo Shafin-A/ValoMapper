@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS users (
     firebase_uid VARCHAR(128) UNIQUE NOT NULL,
     email VARCHAR(255) NOT NULL,
     email_verified BOOLEAN DEFAULT FALSE,
-    display_name VARCHAR(255),
+    name VARCHAR(255),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -132,7 +132,6 @@ CREATE TABLE IF NOT EXISTS strategies (
     folder_id INTEGER NULL REFERENCES folders(id) ON DELETE CASCADE,
     lobby_code VARCHAR(10) NOT NULL REFERENCES lobbies(code) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    description TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(user_id, lobby_code)

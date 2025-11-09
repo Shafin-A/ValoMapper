@@ -9,7 +9,13 @@ import (
 )
 
 func RegisterUserRoutes(r *mux.Router, firebaseAuth *auth.Client) {
-	r.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
+	users := r.PathPrefix("/api/users").Subrouter()
+
+	users.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
 		handlers.CreateUser(w, r, firebaseAuth)
 	}).Methods("POST")
+
+	users.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetUser(w, r, firebaseAuth)
+	}).Methods("GET")
 }

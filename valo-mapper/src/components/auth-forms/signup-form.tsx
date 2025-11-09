@@ -23,6 +23,7 @@ import { sendEmailVerification } from "firebase/auth";
 import { toast } from "sonner";
 import { Home } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCreateUser } from "@/hooks/api/use-create-user";
 
 export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
   const { signUp, logout } = useFirebaseAuth();
@@ -34,6 +35,8 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+
+  const createUserMutation = useCreateUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +51,14 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
 
     try {
       const user = await signUp(email, password);
+      const idToken = await user.getIdToken();
+
+      await createUserMutation.mutateAsync({
+        idToken,
+        firebaseUid: user.uid,
+        name,
+        email,
+      });
 
       await sendEmailVerification(user);
 
@@ -69,6 +80,8 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
         } else {
           setError("Failed to create account. Please try again.");
         }
+      } else if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError("An unexpected error occurred.");
       }
@@ -107,7 +120,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || createUserMutation.isPending}
               />
             </Field>
             <Field>
@@ -119,7 +132,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || createUserMutation.isPending}
               />
               <FieldDescription>
                 We&apos;ll use this to contact you. We will not share your email
@@ -134,7 +147,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || createUserMutation.isPending}
               />
               <FieldDescription>
                 At least 8 characters, with upper & lowercase letters, a number,
@@ -151,14 +164,19 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || createUserMutation.isPending}
               />
               <FieldDescription>Please confirm your password.</FieldDescription>
             </Field>
             <FieldGroup>
               <Field>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Creating Account..." : "Create Account"}
+                <Button
+                  type="submit"
+                  disabled={loading || createUserMutation.isPending}
+                >
+                  {loading || createUserMutation.isPending
+                    ? "Creating Account..."
+                    : "Create Account"}
                 </Button>
 
                 {error && (

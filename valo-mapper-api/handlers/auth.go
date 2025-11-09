@@ -35,10 +35,16 @@ func authenticateRequest(r *http.Request, firebaseAuth *auth.Client) (*models.Us
 
 	user, err := models.GetUserByFirebaseUID(token.UID)
 	if err != nil {
-		return nil, errors.New("error retrieving user")
+		return nil, errors.New("error retrieving user: " + err.Error() + ": " + token.UID)
 	}
 	if user == nil {
 		return nil, errors.New("user not found")
+	}
+
+	firebaseUser, err := firebaseAuth.GetUser(context.Background(), token.UID)
+	if err == nil && firebaseUser.EmailVerified != user.EmailVerified {
+		user.EmailVerified = firebaseUser.EmailVerified
+		user.Update()
 	}
 
 	return user, nil

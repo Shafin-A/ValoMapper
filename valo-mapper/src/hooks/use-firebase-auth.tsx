@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { auth } from "@/lib/firebase";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -6,11 +7,13 @@ import {
   signOut,
   User,
 } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { useEffect, useState } from "react";
 
 export const useFirebaseAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -52,6 +55,7 @@ export const useFirebaseAuth = () => {
 
   const logout = async () => {
     await signOut(auth);
+    queryClient.removeQueries({ queryKey: ["user"] });
   };
 
   return { user, loading, signIn, signUp, logout, getIdToken };
