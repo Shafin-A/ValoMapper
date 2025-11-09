@@ -12,10 +12,11 @@ export const CanvasMapBackground = ({
   mapPosition,
 }: CanvasMapBackgroundProps) => {
   const { selectedMap, mapSide } = useCanvas();
-  const [mapImage] = useImage(`/maps/minimaps/${selectedMap.id}.webp`);
+  const [mapImage, status] = useImage(`/maps/minimaps/${selectedMap.id}.webp`);
 
   return (
-    mapImage && (
+    mapImage &&
+    status === "loaded" && (
       <Image
         alt={selectedMap.text}
         image={mapImage}
