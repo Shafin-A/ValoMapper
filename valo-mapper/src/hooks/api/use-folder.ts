@@ -3,6 +3,7 @@
 import { Folder, Strategy } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { buildTree } from "@/lib/utils";
 
 export const useFolders = () => {
   const { getIdToken } = useFirebaseAuth();
@@ -30,13 +31,12 @@ export const useFolders = () => {
         throw new Error("Failed to fetch folders or strategies");
       }
 
-      const folders = await foldersRes.json();
-      const strategies = await strategiesRes.json();
+      const folders = (await foldersRes.json()) as Folder[];
+      const strategies = (await strategiesRes.json()) as Strategy[];
 
-      return {
-        folders: folders as Folder[],
-        strategies: strategies as Strategy[],
-      };
+      const strategyData = buildTree(folders, strategies);
+
+      return strategyData;
     },
   });
 

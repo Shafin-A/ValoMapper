@@ -6,9 +6,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useFolders } from "@/hooks/api/use-folder";
 import { StrategyData } from "@/lib/types";
-import { buildTree } from "@/lib/utils";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const MyStrategiesPage = () => {
@@ -19,10 +18,7 @@ const MyStrategiesPage = () => {
 
   const router = useRouter();
 
-  const treeData = useMemo(() => {
-    if (!data) return [];
-    return buildTree(data.folders, data.strategies);
-  }, [data]);
+  const treeData = data || [];
 
   const getCurrentItems = (): StrategyData[] => {
     if (navigationPath.length === 1) return treeData;
