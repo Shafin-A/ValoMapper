@@ -9,6 +9,7 @@ import { StrategyData } from "@/lib/types";
 import { FolderOpen } from "lucide-react";
 import { FolderCard } from "./folder-card";
 import { StrategyItem } from "./strategy-item";
+import { useRouter } from "next/navigation";
 
 interface StrategiesContentProps {
   currentItems: StrategyData[];
@@ -19,6 +20,8 @@ export const StrategiesContent = ({
   currentItems,
   navigateToFolder,
 }: StrategiesContentProps) => {
+  const router = useRouter();
+
   return (
     <>
       {currentItems.length === 0 ? (
@@ -51,7 +54,7 @@ export const StrategiesContent = ({
                 updatedAt={
                   item.updatedAt ? new Date(item.updatedAt) : new Date()
                 }
-                onClick={() => console.log("Open strategy:", item.id)}
+                onClick={() => router.push(`/${item.lobbyCode}`)}
                 onMenuClick={() => console.log("Strategy menu:", item.id)}
               />
             )
