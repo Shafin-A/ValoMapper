@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 
 export const useDimensions = (ref: React.RefObject<HTMLElement | null>) => {
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [dimensions, setDimensions] = useState({ width: 5, height: 5 });
   const [previousDimensions, setPreviousDimensions] = useState({
-    width: 0,
-    height: 0,
+    width: 5,
+    height: 5,
   });
 
   const dimensionsRef = useRef(dimensions);
