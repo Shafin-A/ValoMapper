@@ -338,7 +338,7 @@ export const buildTree = (
 
   folders.forEach((folder) => {
     folderMap.set(folder.id, {
-      id: folder.id.toString(),
+      id: `folder-${folder.id}`,
       name: folder.name,
       type: "folder",
       children: [],
@@ -359,7 +359,7 @@ export const buildTree = (
 
   strategies.forEach((strategy) => {
     const strategyNode: StrategyData = {
-      id: strategy.id.toString(),
+      id: `strategy-${strategy.id}`,
       name: strategy.name,
       type: "strategy",
       lobbyCode: strategy.lobbyCode,

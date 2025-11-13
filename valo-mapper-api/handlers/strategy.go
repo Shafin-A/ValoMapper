@@ -35,6 +35,7 @@ type StrategyResponse struct {
 
 func NewStrategyResponse(strategy *models.Strategy, lobby *models.Lobby) *StrategyResponse {
 	return &StrategyResponse{
+		ID:            strategy.ID,
 		UserID:        strategy.UserID,
 		FolderID:      strategy.FolderID,
 		Name:          strategy.Name,

@@ -132,11 +132,15 @@ export const TreeViewDialogContent = ({
   const flatData = flattenData(strategyData._virtual_root);
 
   const handleSave = () => {
+    const folderId =
+      selectedLocation === "root"
+        ? undefined
+        : Number(selectedLocation.replace("folder-", ""));
+
     createStrategy({
       name: strategyName,
       lobbyCode: lobbyCode || "",
-      folderId:
-        selectedLocation === "root" ? undefined : Number(selectedLocation),
+      folderId: folderId,
     });
 
     setOpen(false);
