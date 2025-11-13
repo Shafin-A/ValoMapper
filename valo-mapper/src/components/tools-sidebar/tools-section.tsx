@@ -21,13 +21,17 @@ import {
   Loader2,
   Pencil,
   Redo,
+  Save,
   Trash2,
   Undo,
 } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import TreeViewDialogContent from "../strategies/tree-view-dialog-content";
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 
 interface ToolsSectionProps {
   mapPosition: Vector2d;
@@ -35,6 +39,8 @@ interface ToolsSectionProps {
 
 export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [openSaveDialog, setOpenSaveDialog] = useState(false);
 
   const {
     undo,
@@ -134,6 +140,10 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
     saveCanvasState();
   };
 
+  const { user } = useFirebaseAuth();
+
+  const isAuthenticated = user !== null;
+
   return (
     <>
       <input
@@ -146,6 +156,31 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
       <div className="space-y-2 mt-4">
         <span className="text-base font-semibold block">Tools</span>
         <div className="grid grid-cols-5 gap-2">
+          <Dialog open={openSaveDialog} onOpenChange={setOpenSaveDialog}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    className="col-start-2"
+                    disabled={isUpdatingLobby || !isAuthenticated}
+                  >
+                    <Save />
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top" align="center">
+                {isUpdatingLobby
+                  ? "Syncing..."
+                  : !isAuthenticated
+                  ? "Log in to save"
+                  : "Save"}
+              </TooltipContent>
+            </Tooltip>
+
+            <TreeViewDialogContent setOpen={setOpenSaveDialog} />
+          </Dialog>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -153,7 +188,6 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
                 disabled={!hasUnsavedChanges || isUpdatingLobby}
                 variant="ghost"
                 size="lg"
-                className="col-start-3"
               >
                 {isUpdatingLobby ? (
                   <Loader2 className="animate-spin" />
@@ -172,7 +206,7 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
                 : isErrorUpdatingLobby
                 ? `Sync failed`
                 : hasUnsavedChanges
-                ? "Unsaved changes"
+                ? "Sync"
                 : "All changes synced"}
             </TooltipContent>
           </Tooltip>

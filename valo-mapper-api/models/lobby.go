@@ -112,6 +112,8 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 
 	lobby.CanvasState.EditedPhases = editedPhases
 
+	lobby.SelectedMapId = mapID
+
 	mapDetails, err := GetMapById(mapID)
 	if err != nil {
 		return nil, err
@@ -186,6 +188,8 @@ func GetLobbiesByCodes(codes []string) ([]Lobby, error) {
 		}
 
 		lobby.CanvasState.EditedPhases = editedPhases
+
+		lobby.SelectedMapId = mapID
 
 		mapDetails, err := GetMapById(mapID)
 		if err != nil {

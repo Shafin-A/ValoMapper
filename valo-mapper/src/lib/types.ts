@@ -275,6 +275,7 @@ export type StrategyData = {
   id: string;
   name: string;
   type: "folder" | "strategy";
+  lobbyCode?: string;
   selectedMapId?: string;
   updatedAt?: Date;
   children?: StrategyData[];
@@ -295,6 +296,7 @@ export type Strategy = {
   folderId?: number;
   name: string;
   selectedMapId: string;
+  lobbyCode: string;
   updatedAt: Date;
 };
 

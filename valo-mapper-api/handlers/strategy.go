@@ -29,6 +29,7 @@ type StrategyResponse struct {
 	FolderID      *int      `json:"folderId"`
 	Name          string    `json:"name"`
 	SelectedMapID string    `json:"selectedMapId"`
+	LobbyCode     string    `json:"lobbyCode"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
@@ -38,6 +39,7 @@ func NewStrategyResponse(strategy *models.Strategy, lobby *models.Lobby) *Strate
 		FolderID:      strategy.FolderID,
 		Name:          strategy.Name,
 		SelectedMapID: lobby.SelectedMapId,
+		LobbyCode:     lobby.Code,
 		UpdatedAt:     lobby.UpdatedAt,
 	}
 }

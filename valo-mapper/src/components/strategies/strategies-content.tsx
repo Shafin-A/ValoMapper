@@ -48,7 +48,9 @@ export const StrategiesContent = ({
                 key={item.id}
                 name={item.name}
                 selectedMapId={item.selectedMapId ?? ""}
-                updatedAt={item.updatedAt ?? new Date()}
+                updatedAt={
+                  item.updatedAt ? new Date(item.updatedAt) : new Date()
+                }
                 onClick={() => console.log("Open strategy:", item.id)}
                 onMenuClick={() => console.log("Strategy menu:", item.id)}
               />

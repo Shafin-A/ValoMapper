@@ -362,6 +362,7 @@ export const buildTree = (
       id: strategy.id.toString(),
       name: strategy.name,
       type: "strategy",
+      lobbyCode: strategy.lobbyCode,
       selectedMapId: strategy.selectedMapId,
       updatedAt: strategy.updatedAt,
     };
@@ -377,4 +378,39 @@ export const buildTree = (
   });
 
   return rootItems;
+};
+
+export const flattenData = (
+  data: StrategyData,
+  result: Record<string, StrategyData> = {}
+): Record<string, StrategyData> => {
+  result[data.id] = data;
+  if (data.children) {
+    data.children.forEach((child) => flattenData(child, result));
+  }
+  return result;
+};
+
+export const buildLocationPath = (
+  selectedId: string,
+  data: Record<string, StrategyData>
+): Array<{ id: string; name: string }> => {
+  const parts: Array<{ id: string; name: string }> = [];
+  let currentId: string | undefined = selectedId;
+
+  while (currentId && currentId !== "root") {
+    const item = data[currentId];
+    if (item) {
+      parts.unshift({ id: currentId, name: item.name });
+      const parent = Object.values(data).find((d) =>
+        d.children?.some((c) => c.id === currentId)
+      );
+      currentId = parent?.id;
+    } else {
+      break;
+    }
+  }
+
+  parts.unshift({ id: "root", name: "My Strategies" });
+  return parts;
 };
