@@ -31,7 +31,11 @@ import { useFolders } from "@/hooks/api/use-folder";
 import { TreeView } from "./tree-view";
 import { useCreateStrategy } from "@/hooks/api/use-create-strategy";
 import { useParams } from "next/navigation";
-import { buildLocationPath, flattenData } from "@/lib/utils";
+import {
+  buildLocationPath,
+  flattenData,
+  getFolderOrStrategyId,
+} from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import Link from "next/link";
 
@@ -132,10 +136,7 @@ export const TreeViewDialogContent = ({
   const flatData = flattenData(strategyData._virtual_root);
 
   const handleSave = () => {
-    const folderId =
-      selectedLocation === "root"
-        ? undefined
-        : Number(selectedLocation.replace("folder-", ""));
+    const folderId = getFolderOrStrategyId(selectedLocation, "folder");
 
     createStrategy({
       name: strategyName,

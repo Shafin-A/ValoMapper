@@ -10,6 +10,8 @@ import { FolderOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FolderCard } from "./folder-card";
 import { StrategyItem } from "./strategy-item";
+import { useUpdateFolder } from "@/hooks/api/use-update-folder";
+import { convertFolderOrStrategyId } from "@/lib/utils";
 
 interface StrategiesContentProps {
   currentItems: StrategyData[];
@@ -21,6 +23,7 @@ export const StrategiesContent = ({
   navigateToFolder,
 }: StrategiesContentProps) => {
   const router = useRouter();
+  const { mutate: updateFolder } = useUpdateFolder();
 
   return (
     <>
@@ -44,7 +47,12 @@ export const StrategiesContent = ({
                 key={item.id}
                 name={item.name}
                 onClick={() => navigateToFolder(item.id, item.name)}
-                onRename={() => console.log("Rename folder:", item.id)}
+                onRename={(newName) =>
+                  updateFolder({
+                    folderId: convertFolderOrStrategyId(item.id, "folder"),
+                    name: newName,
+                  })
+                }
                 onDelete={() => console.log("Delete folder:", item.id)}
               />
             ) : (

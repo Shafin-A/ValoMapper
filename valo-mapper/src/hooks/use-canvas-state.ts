@@ -18,8 +18,11 @@ export const useCanvasState = () => {
   const phaseManager = usePhaseManager();
 
   const { data: lobby } = useLobby(lobbyCode);
-  const { updateLobby, isUpdatingLobby, isErrorUpdatingLobby } =
-    useUpdateLobby(lobbyCode);
+  const {
+    mutate: updateLobby,
+    isPending: isUpdatingLobby,
+    isError: isErrorUpdatingLobby,
+  } = useUpdateLobby(lobbyCode);
   const lastSaveRef = useRef<number>(Date.now());
   const lastSavedStateRef = useRef<ReturnType<typeof getCurrentState> | null>(
     null

@@ -414,3 +414,15 @@ export const buildLocationPath = (
   parts.unshift({ id: "root", name: "My Strategies" });
   return parts;
 };
+
+export const convertFolderOrStrategyId = (
+  id: string,
+  type: "folder" | "strategy"
+) => {
+  return Number(id.replace(type + "-", ""));
+};
+
+export const getFolderOrStrategyId = (
+  id: string,
+  type: "folder" | "strategy"
+) => (id === "root" ? undefined : convertFolderOrStrategyId(id, type));

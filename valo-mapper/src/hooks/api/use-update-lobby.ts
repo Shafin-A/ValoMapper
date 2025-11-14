@@ -5,11 +5,7 @@ import { toast } from "sonner";
 export const useUpdateLobby = (lobbyCode: string) => {
   const queryClient = useQueryClient();
 
-  const {
-    mutate: updateLobby,
-    isPending: isUpdatingLobby,
-    isError: isErrorUpdatingLobby,
-  } = useMutation({
+  const { mutate, isPending, isError } = useMutation({
     mutationFn: async (canvasState: CanvasState) => {
       const response = await fetch(
         `http://localhost:8080/api/lobbies/${lobbyCode}`,
@@ -38,8 +34,8 @@ export const useUpdateLobby = (lobbyCode: string) => {
   });
 
   return {
-    updateLobby,
-    isUpdatingLobby,
-    isErrorUpdatingLobby,
+    mutate,
+    isPending,
+    isError,
   };
 };
