@@ -1,14 +1,21 @@
-import { MoreVertical } from "lucide-react";
-import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn, getRelativeTime } from "@/lib/utils";
-import { Button } from "../ui/button";
+import { FolderPen, MoreVertical, Trash2 } from "lucide-react";
+import Image from "next/image";
 
 interface StrategyItemProps {
   name: string;
   selectedMapId: string;
   updatedAt: Date;
   onClick?: () => void;
-  onMenuClick?: () => void;
+  onRename?: () => void;
+  onDelete?: () => void;
   className?: string;
 }
 
@@ -17,18 +24,18 @@ export const StrategyItem = ({
   selectedMapId,
   updatedAt,
   onClick,
-  onMenuClick,
+  onRename,
+  onDelete,
   className,
 }: StrategyItemProps) => {
   const mapId = selectedMapId;
-
   const imageUrl = mapId ? `/maps/listviewicons/${mapId}.webp` : "";
 
   return (
     <div
       onClick={onClick}
       className={cn(
-        "relative flex flex-col w-56 rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900  transition-all cursor-pointer group",
+        "relative flex flex-col w-56 rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900 transition-all cursor-pointer group select-none",
         className
       )}
     >
@@ -37,19 +44,42 @@ export const StrategyItem = ({
           src={imageUrl}
           alt={mapId ?? "Map preview"}
           fill
+          sizes="100%"
           className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+          draggable={false}
         />
 
-        <Button
-          variant="ghost"
-          onClick={(e) => {
-            e.stopPropagation();
-            onMenuClick?.();
-          }}
-          className="absolute top-2 right-2 rounded-full"
-        >
-          <MoreVertical size={16} />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-2 right-2 rounded-full"
+            >
+              <MoreVertical size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onRename?.();
+              }}
+            >
+              <FolderPen />
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+            >
+              <Trash2 className="text-destructive" />
+              <span className="text-destructive">Delete</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex flex-col gap-1 px-3 py-3">

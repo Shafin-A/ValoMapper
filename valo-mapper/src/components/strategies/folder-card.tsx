@@ -1,18 +1,26 @@
-import { MoreVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { Button } from "../ui/button";
+import { FolderPen, MoreVertical, Trash2 } from "lucide-react";
 
 interface FolderCardProps {
   name: string;
   onClick?: () => void;
-  onMenuClick?: () => void;
+  onRename?: () => void;
+  onDelete?: () => void;
   className?: string;
 }
 
 export const FolderCard = ({
   name,
   onClick,
-  onMenuClick,
+  onRename,
+  onDelete,
   className,
 }: FolderCardProps) => {
   return (
@@ -32,16 +40,38 @@ export const FolderCard = ({
       </svg>
 
       <div className="absolute inset-0 flex flex-col justify-between p-3">
-        <Button
-          variant="ghost"
-          onClick={(e) => {
-            e.stopPropagation();
-            onMenuClick?.();
-          }}
-          className="self-end mt-10 rounded-full"
-        >
-          <MoreVertical size={18} />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              onClick={(e) => e.stopPropagation()}
+              className="self-end mt-10 rounded-full"
+            >
+              <MoreVertical size={18} />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onRename?.();
+              }}
+            >
+              <FolderPen />
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+            >
+              <Trash2 className="text-destructive" />
+              <span className="text-destructive">Delete</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <div className="text-center mb-8">
           <p className="text-white font-medium truncate">{name}</p>
