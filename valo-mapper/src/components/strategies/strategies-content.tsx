@@ -5,13 +5,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { useUpdateFolder } from "@/hooks/api/use-update-folder";
+import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
 import { StrategyData } from "@/lib/types";
+import { convertFolderOrStrategyId } from "@/lib/utils";
 import { FolderOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FolderCard } from "./folder-card";
 import { StrategyItem } from "./strategy-item";
-import { useUpdateFolder } from "@/hooks/api/use-update-folder";
-import { convertFolderOrStrategyId } from "@/lib/utils";
 
 interface StrategiesContentProps {
   currentItems: StrategyData[];
@@ -24,6 +25,7 @@ export const StrategiesContent = ({
 }: StrategiesContentProps) => {
   const router = useRouter();
   const { mutate: updateFolder } = useUpdateFolder();
+  const { mutate: updateStrategy } = useUpdateStrategy();
 
   return (
     <>
@@ -64,7 +66,12 @@ export const StrategiesContent = ({
                   item.updatedAt ? new Date(item.updatedAt) : new Date()
                 }
                 onClick={() => router.push(`/${item.lobbyCode}`)}
-                onRename={() => console.log("Rename strategy:", item.id)}
+                onRename={(newName) =>
+                  updateStrategy({
+                    strategyId: convertFolderOrStrategyId(item.id, "strategy"),
+                    name: newName,
+                  })
+                }
                 onDelete={() => console.log("Delete strategy:", item.id)}
               />
             )
