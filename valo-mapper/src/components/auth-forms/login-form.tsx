@@ -36,7 +36,7 @@ export const LoginForm = ({
   const [loading, setLoading] = useState(false);
 
   const {
-    user,
+    data: user,
     isLoading: isUserLoading,
     isError: isUserError,
     error: userError,
