@@ -1,23 +1,25 @@
+import { useLobby } from "@/hooks/api/use-lobby";
+import { useUpdateLobby } from "@/hooks/api/use-update-lobby";
 import { useCanvasItems } from "@/hooks/use-canvas-items";
 import { useCanvasUI } from "@/hooks/use-canvas-ui";
 import { useHistoryManager } from "@/hooks/use-history-manager";
 import { usePhaseManager } from "@/hooks/use-phase-manager";
 import { usePhaseTransitions } from "@/hooks/use-phase-transition";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useLobby } from "./api/use-lobby";
 import { useParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useCanvasState = () => {
   const params = useParams();
   const lobbyCode =
-    typeof params?.lobbyCode === "string" ? params.lobbyCode : undefined;
+    typeof params?.lobbyCode === "string" ? params.lobbyCode : "";
 
   const phaseTransitions = usePhaseTransitions();
   const canvasUI = useCanvasUI();
   const phaseManager = usePhaseManager();
 
-  const { lobby, updateLobby, isUpdatingLobby, isErrorUpdatingLobby } =
-    useLobby(lobbyCode ?? "");
+  const { data: lobby } = useLobby(lobbyCode);
+  const { updateLobby, isUpdatingLobby, isErrorUpdatingLobby } =
+    useUpdateLobby(lobbyCode);
   const lastSaveRef = useRef<number>(Date.now());
   const lastSavedStateRef = useRef<ReturnType<typeof getCurrentState> | null>(
     null

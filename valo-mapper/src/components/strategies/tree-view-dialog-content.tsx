@@ -106,7 +106,7 @@ export const TreeViewDialogContent = ({
   const { mutate: createStrategy, isPending } = useCreateStrategy();
   const params = useParams();
   const lobbyCode =
-    typeof params?.lobbyCode === "string" ? params.lobbyCode : undefined;
+    typeof params?.lobbyCode === "string" ? params.lobbyCode : "";
 
   const isStrategyInFolder = data?.some((s) => s.lobbyCode === lobbyCode);
 

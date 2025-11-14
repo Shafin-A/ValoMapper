@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 
@@ -10,7 +10,9 @@ interface CreateFolderParams {
 }
 
 export const useCreateFolder = () => {
+  const queryClient = useQueryClient();
   const { getIdToken } = useFirebaseAuth();
+
   return useMutation({
     mutationFn: async ({ name, parentFolderId }: CreateFolderParams) => {
       const token = await getIdToken();
@@ -31,6 +33,9 @@ export const useCreateFolder = () => {
     },
     onSuccess: (data) => {
       toast.success(`Folder "${data.folderName}" created successfully!`);
+      queryClient.invalidateQueries({
+        queryKey: ["folders-and-strategies"],
+      });
     },
     onError: (error) => {
       toast.error(`Failed to create folder. Error: ${error.message}`);

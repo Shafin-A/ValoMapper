@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface CreateUserParams {
   idToken: string;
@@ -8,6 +8,8 @@ interface CreateUserParams {
 }
 
 export const useCreateUser = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       idToken,
@@ -31,6 +33,9 @@ export const useCreateUser = () => {
       if (!response.ok) throw new Error("Failed to create user");
 
       return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
     },
   });
 };

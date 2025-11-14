@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 
@@ -11,7 +11,9 @@ interface CreateStrategyParams {
 }
 
 export const useCreateStrategy = () => {
+  const queryClient = useQueryClient();
   const { getIdToken } = useFirebaseAuth();
+
   return useMutation({
     mutationFn: async ({ name, lobbyCode, folderId }: CreateStrategyParams) => {
       const token = await getIdToken();
@@ -32,6 +34,9 @@ export const useCreateStrategy = () => {
     },
     onSuccess: (data) => {
       toast.success(`Strategy "${data.strategyName}" created successfully!`);
+      queryClient.invalidateQueries({
+        queryKey: ["folders-and-strategies"],
+      });
     },
     onError: (error) => {
       toast.error(`Failed to create strategy. Error: ${error.message}`);
