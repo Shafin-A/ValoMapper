@@ -8,16 +8,14 @@ import { useFolders } from "@/hooks/api/use-folder";
 import { StrategyData } from "@/lib/types";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { convertFolderOrStrategyId } from "@/lib/utils";
+import Link from "next/link";
 
 const MyStrategiesPage = () => {
   const { data, isLoading, isError, refetch } = useFolders();
   const [navigationPath, setNavigationPath] = useState<
     { id: string; name: string }[]
   >([{ id: "root", name: "My Strategies" }]);
-
-  const router = useRouter();
 
   const treeData = data || [];
 
@@ -67,12 +65,10 @@ const MyStrategiesPage = () => {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md space-y-4">
           <div className="flex justify-end">
-            <Button
-              variant="outline"
-              onClick={() => router.push("/")}
-              size="icon"
-            >
-              <Home className="h-4 w-4" />
+            <Button variant="outline" size="icon" asChild>
+              <Link href="/">
+                <Home className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
           <Alert variant="destructive">

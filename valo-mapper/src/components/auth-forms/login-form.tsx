@@ -100,13 +100,10 @@ export const LoginForm = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex gap-2 items-center">
-            <Button
-              variant="outline"
-              onClick={() => router.push("/")}
-              size="icon"
-              className="cursor-pointer"
-            >
-              <Home />
+            <Button variant="outline" size="icon" asChild>
+              <Link href="/">
+                <Home />
+              </Link>
             </Button>
             Login to your account
           </CardTitle>

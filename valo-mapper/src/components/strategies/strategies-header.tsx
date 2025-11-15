@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { CreateFolderPopover } from "./create-folder-popover";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface StrategiesHeaderProps {
   navigationPath: { id: string; name: string }[];
@@ -25,19 +25,14 @@ export const StrategiesHeader = ({
   refetch,
   navigateToBreadcrumb,
 }: StrategiesHeaderProps) => {
-  const router = useRouter();
-
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3 mb-4 h-8">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="cursor-pointer"
-            onClick={() => router.push("/")}
-          >
-            <Home className="size-8" />
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/">
+              <Home className="size-8" />
+            </Link>
           </Button>
           <Separator orientation="vertical" />
           <FolderOpen className="w-8 h-8" />

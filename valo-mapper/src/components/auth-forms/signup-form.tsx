@@ -22,7 +22,6 @@ import { FirebaseError } from "@firebase/util";
 import { sendEmailVerification } from "firebase/auth";
 import { toast } from "sonner";
 import { Home } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCreateUser } from "@/hooks/api/use-create-user";
 
 export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
@@ -33,8 +32,6 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const router = useRouter();
 
   const createUserMutation = useCreateUser();
 
@@ -94,13 +91,10 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
     <Card {...props}>
       <CardHeader>
         <CardTitle className="flex gap-2 items-center">
-          <Button
-            variant="outline"
-            onClick={() => router.push("/")}
-            size="icon"
-            className="cursor-pointer"
-          >
-            <Home />
+          <Button variant="outline" size="icon" asChild>
+            <Link href="/">
+              <Home />
+            </Link>
           </Button>
           Create an account
         </CardTitle>
