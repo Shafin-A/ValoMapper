@@ -33,7 +33,7 @@ export const useCreateStrategy = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      toast.success(`Strategy "${data.strategyName}" created successfully!`);
+      toast.success(`Strategy "${data.name}" created successfully!`);
       queryClient.invalidateQueries({
         queryKey: ["folders-and-strategies"],
       });

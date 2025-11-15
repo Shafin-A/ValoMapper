@@ -32,7 +32,7 @@ export const useCreateFolder = () => {
       return response.json();
     },
     onSuccess: (data) => {
-      toast.success(`Folder "${data.folderName}" created successfully!`);
+      toast.success(`Folder "${data.name}" created successfully!`);
       queryClient.invalidateQueries({
         queryKey: ["folders-and-strategies"],
       });

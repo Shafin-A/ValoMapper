@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import { FolderPen, MoreVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { DeleteDialog } from "./delete-dialog";
 
 interface FolderCardProps {
   name: string;
@@ -28,12 +29,13 @@ export const FolderCard = ({
 }: FolderCardProps) => {
   const [openDropdown, setOpenDropdown] = useState(false);
   const [openRenameDialog, setOpenRenameDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   return (
     <div
       onClick={(e) => {
         e.stopPropagation();
-        if (!openRenameDialog) onClick?.();
+        if (!openRenameDialog && !openDeleteDialog) onClick?.();
       }}
       className={cn(
         "relative w-56 h-56 cursor-pointer select-none transition-transform duration-200",
@@ -64,7 +66,7 @@ export const FolderCard = ({
             <DropdownMenuContent
               align="end"
               onCloseAutoFocus={(event) => {
-                if (openRenameDialog) {
+                if (openRenameDialog || openDeleteDialog) {
                   event.preventDefault(); // Prevent dropdown from stealing focus when dialog is opening
                 }
               }}
@@ -83,9 +85,11 @@ export const FolderCard = ({
                 </DropdownMenuItem>
               </DialogTrigger>
               <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete?.();
+                onClick={(e) => e.stopPropagation()}
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setOpenDeleteDialog(true);
+                  setOpenDropdown(false);
                 }}
               >
                 <Trash2 className="text-destructive" />
@@ -103,6 +107,17 @@ export const FolderCard = ({
             type="folder"
           />
         </Dialog>
+
+        <DeleteDialog
+          open={openDeleteDialog}
+          onOpenChange={setOpenDeleteDialog}
+          onConfirm={() => {
+            onDelete?.();
+            setOpenDeleteDialog(false);
+          }}
+          itemName={name}
+          type="folder"
+        />
 
         <div className="text-center mb-8">
           <p className="text-white font-medium truncate">{name}</p>

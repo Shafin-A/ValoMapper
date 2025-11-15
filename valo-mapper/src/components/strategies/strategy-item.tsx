@@ -11,6 +11,7 @@ import { cn, getRelativeTime } from "@/lib/utils";
 import { FolderPen, MoreVertical, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { DeleteDialog } from "./delete-dialog";
 
 interface StrategyItemProps {
   name: string;
@@ -33,6 +34,7 @@ export const StrategyItem = ({
 }: StrategyItemProps) => {
   const [openDropdown, setOpenDropdown] = useState(false);
   const [openRenameDialog, setOpenRenameDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const mapId = selectedMapId;
   const imageUrl = mapId ? `/maps/listviewicons/${mapId}.webp` : "";
@@ -41,7 +43,7 @@ export const StrategyItem = ({
     <div
       onClick={(e) => {
         e.stopPropagation();
-        if (!openRenameDialog) onClick?.();
+        if (!openRenameDialog && !openDeleteDialog) onClick?.();
       }}
       className={cn(
         "relative flex flex-col w-56 rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900 transition-all cursor-pointer group select-none",
@@ -73,7 +75,7 @@ export const StrategyItem = ({
             <DropdownMenuContent
               align="end"
               onCloseAutoFocus={(event) => {
-                if (openRenameDialog) {
+                if (openRenameDialog || openDeleteDialog) {
                   event.preventDefault(); // Prevent dropdown from stealing focus when dialog is opening
                 }
               }}
@@ -92,9 +94,11 @@ export const StrategyItem = ({
                 </DropdownMenuItem>
               </DialogTrigger>
               <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete?.();
+                onClick={(e) => e.stopPropagation()}
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setOpenDeleteDialog(true);
+                  setOpenDropdown(false);
                 }}
               >
                 <Trash2 className="text-destructive" />
@@ -112,6 +116,17 @@ export const StrategyItem = ({
             type="strategy"
           />
         </Dialog>
+
+        <DeleteDialog
+          open={openDeleteDialog}
+          onOpenChange={setOpenDeleteDialog}
+          onConfirm={() => {
+            onDelete?.();
+            setOpenDeleteDialog(false);
+          }}
+          itemName={name}
+          type="strategy"
+        />
       </div>
 
       <div className="flex flex-col gap-1 px-3 py-3">

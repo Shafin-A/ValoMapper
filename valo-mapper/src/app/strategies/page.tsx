@@ -9,6 +9,7 @@ import { StrategyData } from "@/lib/types";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { convertFolderOrStrategyId } from "@/lib/utils";
 
 const MyStrategiesPage = () => {
   const { data, isLoading, isError, refetch } = useFolders();
@@ -43,7 +44,10 @@ const MyStrategiesPage = () => {
   const currentFolderId =
     navigationPath.length === 1
       ? null
-      : Number(navigationPath[navigationPath.length - 1].id);
+      : convertFolderOrStrategyId(
+          navigationPath[navigationPath.length - 1].id,
+          "folder"
+        );
 
   if (isLoading) {
     return (

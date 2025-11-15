@@ -13,6 +13,8 @@ import { FolderOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FolderCard } from "./folder-card";
 import { StrategyItem } from "./strategy-item";
+import { useDeleteFolder } from "@/hooks/api/use-delete-folder";
+import { useDeleteStrategy } from "@/hooks/api/use-delete-strategy";
 
 interface StrategiesContentProps {
   currentItems: StrategyData[];
@@ -26,6 +28,9 @@ export const StrategiesContent = ({
   const router = useRouter();
   const { mutate: updateFolder } = useUpdateFolder();
   const { mutate: updateStrategy } = useUpdateStrategy();
+
+  const { mutate: deleteFolder } = useDeleteFolder();
+  const { mutate: deleteStrategy } = useDeleteStrategy();
 
   return (
     <>
@@ -55,7 +60,11 @@ export const StrategiesContent = ({
                     name: newName,
                   })
                 }
-                onDelete={() => console.log("Delete folder:", item.id)}
+                onDelete={() =>
+                  deleteFolder({
+                    folderId: convertFolderOrStrategyId(item.id, "folder"),
+                  })
+                }
               />
             ) : (
               <StrategyItem
@@ -72,7 +81,11 @@ export const StrategiesContent = ({
                     name: newName,
                   })
                 }
-                onDelete={() => console.log("Delete strategy:", item.id)}
+                onDelete={() =>
+                  deleteStrategy({
+                    strategyId: convertFolderOrStrategyId(item.id, "strategy"),
+                  })
+                }
               />
             )
           )}

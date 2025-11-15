@@ -7,7 +7,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useRef } from "react";
+import { capitalize } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
 
 interface RenameDialogProps {
   currentName: string;
@@ -22,9 +23,6 @@ export const RenameDialog = ({
 }: RenameDialogProps) => {
   const [name, setName] = useState(currentName);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const capitalize = (s: string) =>
-    s && String(s[0]).toUpperCase() + String(s).slice(1);
 
   useEffect(() => {
     setName(currentName);
