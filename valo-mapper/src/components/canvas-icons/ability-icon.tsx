@@ -288,10 +288,10 @@ const ABILITY_RENDERERS: Record<
   gekko_molly: renderCircleAbility,
 
   // Harbor
-  harbor_cascade_wall: renderAdjustableLineAbility,
+  harbor_blind: renderCircleAbility,
   harbor_cove: renderCircleAbility,
   harbor_wall: renderCurvableLineAbility,
-  harbor_ult: renderCircleAbility,
+  harbor_ult: renderLineAbility,
 
   // Iso
   iso_wall: renderLineAbility,

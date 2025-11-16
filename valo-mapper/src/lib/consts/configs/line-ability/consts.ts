@@ -101,17 +101,6 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
     minLength: 4,
     maxLength: 15,
   },
-  harbor_cascade_wall: {
-    showThickEnd: true,
-    thickEndLength: 1,
-    thickEndStroke: "#5c98a1",
-    stroke: "#5c98a180",
-    lineLength: 12,
-    strokeWidth: 9.75,
-    minLength: 2,
-    maxLength: 35,
-    iconLineGap: 4,
-  },
 };
 
 export const LINE_ABILITY_CONFIGS: Record<
@@ -157,6 +146,11 @@ export const LINE_ABILITY_CONFIGS: Record<
     lineLength: 40,
     stroke: "#00000080",
     strokeWidth: 20,
+  },
+  harbor_ult: {
+    lineLength: 40,
+    strokeWidth: 20,
+    stroke: "#1e3c4c80",
   },
   iso_wall: {
     lineLength: 27.5,

@@ -243,22 +243,22 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   ],
   Harbor: [
     {
-      id: "cascade",
-      src: "/agents/harbor/cascade.png",
-      name: "Cascade",
-      action: "harbor_cascade_wall",
-    },
-    {
-      id: "cove",
-      src: "/agents/harbor/cove.png",
-      name: "Cove",
-      action: "harbor_cove",
+      id: "storm_surge",
+      src: "/agents/harbor/storm_surge.png",
+      name: "Storm Surge",
+      action: "harbor_blind",
     },
     {
       id: "high_tide",
       src: "/agents/harbor/high_tide.png",
       name: "High Tide",
       action: "harbor_wall",
+    },
+    {
+      id: "cove",
+      src: "/agents/harbor/cove.png",
+      name: "Cove",
+      action: "harbor_cove",
     },
     {
       id: "reckoning",

@@ -103,7 +103,7 @@ export type AbilityAction =
   | "fade_seize"
   | "fade_ult"
   | "gekko_molly"
-  | "harbor_cascade_wall"
+  | "harbor_blind"
   | "harbor_cove"
   | "harbor_wall"
   | "harbor_ult"
@@ -152,6 +152,7 @@ export type LineAbility = Extract<
   | "breach_ult"
   | "deadlock_trip"
   | "fade_ult"
+  | "harbor_ult"
   | "iso_wall"
   | "iso_vuln"
   | "iso_ult"
@@ -177,7 +178,7 @@ export type CurvableLineAbility = Extract<
 
 export type AdjustableLineAbility = Extract<
   AbilityAction,
-  "breach_stun" | "cypher_trip" | "harbor_cascade_wall"
+  "breach_stun" | "cypher_trip"
 >;
 
 export type CircleAbility = Extract<
@@ -199,7 +200,7 @@ export type CircleAbility = Extract<
   | "fade_seize"
   | "gekko_molly"
   | "harbor_cove"
-  | "harbor_ult"
+  | "harbor_blind"
   | "jett_smoke"
   | "kayo_molly"
   | "kayo_knife"

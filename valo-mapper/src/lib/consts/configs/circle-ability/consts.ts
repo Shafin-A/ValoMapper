@@ -76,9 +76,9 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     radius: 4.5,
     colors: { stroke: "#f2d6a3", fill: "#136c6b80" },
   },
-  harbor_ult: {
-    radius: 21.25,
-    colors: { stroke: "#f2d6a3", fill: "#136c6b80" },
+  harbor_blind: {
+    radius: 6,
+    colors: { stroke: "#f2d6a3", fill: "#1e3c4c80" },
   },
   jett_smoke: {
     radius: 3.35,
