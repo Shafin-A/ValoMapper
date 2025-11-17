@@ -79,7 +79,7 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
         onContextMenu={handleContextMenu}
       >
         <Layer isListening={false}>
-          <CanvasMapBackground mapPosition={mapPosition} />
+          <CanvasMapBackground mapPosition={mapPosition} stageRef={stageRef} />
         </Layer>
         <Layer isListening={!isDrawMode}>
           <CanvasAbilities deleteGroupRef={deleteGroupRef} />

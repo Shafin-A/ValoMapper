@@ -77,6 +77,9 @@ interface CanvasContextType {
   hasUnsavedChanges: boolean;
   isUpdatingLobby: boolean;
   isErrorUpdatingLobby: boolean;
+  isLoadingLobby: boolean;
+  isErrorLobby: boolean;
+  lobbyError: Error | null;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);

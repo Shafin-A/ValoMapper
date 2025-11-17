@@ -21,6 +21,7 @@ interface MapSelectProps {
   mapSide: MapSide;
   setMapSide: React.Dispatch<React.SetStateAction<MapSide>>;
   onMapRotate?: () => void;
+  disabled?: boolean;
 }
 
 export const MapSelect = ({
@@ -34,13 +35,16 @@ export const MapSelect = ({
   mapSide,
   setMapSide,
   onMapRotate,
+  disabled = false,
 }: MapSelectProps) => {
   const handleMapSelect = (option: MapOption) => {
+    if (disabled) return;
     setSelectedMap(option);
     onMapSelect?.(option);
   };
 
   const handleRotationToggle = () => {
+    if (disabled) return;
     setMapSide((prev) => (prev === "attack" ? "defense" : "attack"));
     onMapRotate?.();
   };
@@ -52,15 +56,16 @@ export const MapSelect = ({
   return (
     <div className={`flex items-center justify-center gap-2 ${className}`}>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger asChild disabled={disabled}>
           <Button
             variant="outline"
-            className="relative h-20 w-56 hover:opacity-80 transition-all duration-400 ease-in-out border-2 border-gray-300 hover:border-gray-400 p-0 overflow-hidden"
+            className="relative h-20 w-56 hover:opacity-80 transition-all duration-400 ease-in-out border-2 border-gray-300 hover:border-gray-400 p-0 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               backgroundImage: `url(/maps/listviewicons/${selectedMap.id}.webp)`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
+            disabled={disabled}
           >
             <div className="absolute inset-0 bg-black/30" />
 
@@ -85,6 +90,7 @@ export const MapSelect = ({
                 key={option.id}
                 onClick={() => handleMapSelect(option)}
                 className="p-0 cursor-pointer focus:bg-transparent"
+                disabled={disabled}
               >
                 <div
                   className="relative w-full h-20 hover:opacity-80 transition-opacity rounded-sm overflow-hidden flex items-center justify-center"
@@ -117,7 +123,8 @@ export const MapSelect = ({
       <Button
         variant="outline"
         onClick={handleRotationToggle}
-        className="h-20 w-16 transition-all duration-200 flex flex-col items-center justify-center gap-1"
+        className="h-20 w-16 transition-all duration-200 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={disabled}
       >
         <RefreshCw
           className={`size-8 transition-transform duration-500 ${

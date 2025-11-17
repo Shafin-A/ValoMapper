@@ -17,7 +17,12 @@ export const useCanvasState = () => {
   const canvasUI = useCanvasUI();
   const phaseManager = usePhaseManager();
 
-  const { data: lobby } = useLobby(lobbyCode);
+  const {
+    data: lobby,
+    isLoading: isLoadingLobby,
+    isError: isErrorLobby,
+    error: lobbyError,
+  } = useLobby(lobbyCode);
   const {
     mutate: updateLobby,
     isPending: isUpdatingLobby,
@@ -167,5 +172,8 @@ export const useCanvasState = () => {
     hasUnsavedChanges,
     isUpdatingLobby,
     isErrorUpdatingLobby,
+    isLoadingLobby,
+    isErrorLobby,
+    lobbyError,
   };
 };

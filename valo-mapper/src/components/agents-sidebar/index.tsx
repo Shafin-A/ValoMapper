@@ -29,6 +29,7 @@ import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
 import { SIDEBAR_WIDTH, TEMP_DRAG_ID } from "@/lib/consts";
 import { useCanvas } from "@/contexts/canvas-context";
+import { Loader2, AlertCircle } from "lucide-react";
 
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
@@ -51,6 +52,8 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     setIsAlly,
     setIsDrawMode,
     setEditingTextId,
+    isLoadingLobby,
+    isErrorLobby,
   } = useCanvas();
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
@@ -128,6 +131,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
                   }}
                   checked={isAlly}
                   onCheckedChange={setIsAlly}
+                  disabled={isLoadingLobby || isErrorLobby}
                 />
                 <span className="text-sm">{isAlly ? "Ally" : "Enemy"}</span>
               </div>
@@ -135,57 +139,89 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
                 <Checkbox
                   checked={onMap}
                   onCheckedChange={(checked) => setOnMap(!!checked)}
+                  disabled={isLoadingLobby || isErrorLobby}
                 />
                 <span className="text-sm">On map</span>
               </div>
             </div>
           </div>
         </SidebarHeader>
-        <SidebarContent>
-          <Tabs
-            value={selectedRole}
-            onValueChange={(value) =>
-              setSelectedRole(value as AgentRole | "All")
+        <SidebarContent className="relative">
+          <div
+            className={
+              isLoadingLobby || isErrorLobby
+                ? "pointer-events-none opacity-50"
+                : ""
             }
-            className="w-full"
           >
-            <RoleTabs selectedRole={selectedRole} />
-            <TabsContent value={selectedRole} className="h-[320px]">
-              <AgentsGrid
-                selectedRole={selectedRole}
-                onMap={onMap}
-                onAgentClick={handleAgentClick}
-                selectedAgentAbilities={selectedAgentAbilities}
-                setSelectedAgentAbilities={setSelectedAgentAbilities}
-              />
-            </TabsContent>
-          </Tabs>
-          <Separator />
-          <Accordion type="multiple" className="w-full">
-            <AccordionItem value="agents-settings">
-              <AccordionTrigger className="px-2">
-                Agents Settings
-              </AccordionTrigger>
-              <AccordionContent>
-                <SettingsPanel
-                  settings={agentsSettings}
-                  onSettingsChange={updateAgentsSettings}
+            <Tabs
+              value={selectedRole}
+              onValueChange={(value) =>
+                setSelectedRole(value as AgentRole | "All")
+              }
+              className="w-full"
+            >
+              <RoleTabs selectedRole={selectedRole} />
+              <TabsContent value={selectedRole} className="h-[320px]">
+                <AgentsGrid
+                  selectedRole={selectedRole}
+                  onMap={onMap}
+                  onAgentClick={handleAgentClick}
+                  selectedAgentAbilities={selectedAgentAbilities}
+                  setSelectedAgentAbilities={setSelectedAgentAbilities}
                 />
-              </AccordionContent>
-            </AccordionItem>
+              </TabsContent>
+            </Tabs>
+            <Separator />
+            <Accordion type="multiple" className="w-full">
+              <AccordionItem value="agents-settings">
+                <AccordionTrigger className="px-2">
+                  Agents Settings
+                </AccordionTrigger>
+                <AccordionContent>
+                  <SettingsPanel
+                    settings={agentsSettings}
+                    onSettingsChange={updateAgentsSettings}
+                  />
+                </AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="abilities-settings">
-              <AccordionTrigger className="px-2">
-                Abilities Settings
-              </AccordionTrigger>
-              <AccordionContent>
-                <SettingsPanel
-                  settings={abilitiesSettings}
-                  onSettingsChange={updateAbilitiesSettings}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+              <AccordionItem value="abilities-settings">
+                <AccordionTrigger className="px-2">
+                  Abilities Settings
+                </AccordionTrigger>
+                <AccordionContent>
+                  <SettingsPanel
+                    settings={abilitiesSettings}
+                    onSettingsChange={updateAbilitiesSettings}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+
+          {isLoadingLobby && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">
+                Loading agents...
+              </span>
+            </div>
+          )}
+
+          {isErrorLobby && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 text-center bg-background/80 backdrop-blur-sm">
+              <AlertCircle className="h-12 w-12 text-destructive" />
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium">
+                  Failed to load lobby
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Please try again later
+                </span>
+              </div>
+            </div>
+          )}
         </SidebarContent>
       </Sidebar>
       <AgentAbilities

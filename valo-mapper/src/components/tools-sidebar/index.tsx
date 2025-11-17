@@ -10,10 +10,11 @@ import { useSettings } from "@/contexts/settings-context";
 import { MAP_OPTIONS, MAP_SIZE, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapOption } from "@/lib/types";
 import { Vector2d } from "konva/lib/types";
-import { MapSelect } from "./map-select-button";
-import { ToolsSection } from "./tools-section";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { IconsSection } from "./icons-section";
+import { MapSelect } from "./map-select-button";
+import { ToolsSection } from "./tools-section";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -42,6 +43,8 @@ export const ToolsSidebar = ({
     transitionToPhase,
     isTransitioning,
     editedPhases,
+    isLoadingLobby,
+    isErrorLobby,
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
@@ -171,34 +174,68 @@ export const ToolsSidebar = ({
               mapSide={mapSide}
               setMapSide={setMapSide}
               onMapRotate={handleRotationToggle}
+              disabled={isLoadingLobby || isErrorLobby}
             />
           </div>
         </SidebarHeader>
 
-        <SidebarContent className="px-4 pb-4">
-          <div className="space-y-2 mt-4">
-            <span className="text-base font-semibold block">Phases</span>
-            <ToggleGroup
-              type="single"
-              className="grid grid-cols-5 gap-2 w-full"
-              defaultValue="1"
-              value={((pendingPhaseIndex ?? currentPhaseIndex) + 1).toString()}
-              onValueChange={(value) => {
-                if (value) {
-                  handlePhaseSwitch(Number(value) - 1);
-                }
-              }}
-              rounded
-            >
-              {Array.from({ length: 10 }, (_, i) => (
-                <ToggleGroupItem key={i + 1} value={(i + 1).toString()}>
-                  {i + 1}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
+        <SidebarContent className="px-4 pb-4 relative">
+          <div
+            className={
+              isLoadingLobby || isErrorLobby
+                ? "pointer-events-none opacity-50"
+                : ""
+            }
+          >
+            <div className="space-y-2 mt-4">
+              <span className="text-base font-semibold block">Phases</span>
+              <ToggleGroup
+                type="single"
+                className="grid grid-cols-5 gap-2 w-full"
+                defaultValue="1"
+                value={(
+                  (pendingPhaseIndex ?? currentPhaseIndex) + 1
+                ).toString()}
+                onValueChange={(value) => {
+                  if (value) {
+                    handlePhaseSwitch(Number(value) - 1);
+                  }
+                }}
+                rounded
+              >
+                {Array.from({ length: 10 }, (_, i) => (
+                  <ToggleGroupItem key={i + 1} value={(i + 1).toString()}>
+                    {i + 1}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+            <ToolsSection mapPosition={mapPosition} />
+            <IconsSection mapPosition={mapPosition} />
           </div>
-          <ToolsSection mapPosition={mapPosition} />
-          <IconsSection mapPosition={mapPosition} />
+
+          {isLoadingLobby && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">
+                Loading tools...
+              </span>
+            </div>
+          )}
+
+          {isErrorLobby && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 text-center bg-background/80 backdrop-blur-sm">
+              <AlertCircle className="h-12 w-12 text-destructive" />
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium">
+                  Failed to load lobby
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Please try again later
+                </span>
+              </div>
+            </div>
+          )}
         </SidebarContent>
       </Sidebar>
     </SidebarProvider>
