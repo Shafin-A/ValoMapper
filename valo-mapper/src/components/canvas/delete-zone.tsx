@@ -1,16 +1,14 @@
-import { SIDEBAR_WIDTH } from "@/lib/consts";
 import Konva from "konva";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Group, Rect, Image as KonvaImage } from "react-konva";
 
-interface CanvasAgentProps {
+interface DeleteZoneProps {
   deleteGroupRef: React.RefObject<Konva.Group | null>;
-  width: number;
 }
 
-export const DeleteZone = ({ deleteGroupRef, width }: CanvasAgentProps) => {
+export const DeleteZone = ({ deleteGroupRef }: DeleteZoneProps) => {
   const [iconImg, setIconImg] = useState<HTMLImageElement | null>(null);
 
   useEffect(() => {
@@ -44,18 +42,21 @@ export const DeleteZone = ({ deleteGroupRef, width }: CanvasAgentProps) => {
     img.src = dataUrl;
   }, []);
 
+  const DELETE_ZONE_SIZE = 100;
+  const ICON_SIZE = 32;
+
   return (
     <Group
       ref={deleteGroupRef}
-      x={width - 100 - SIDEBAR_WIDTH - 20}
-      y={20}
-      width={100}
-      height={100}
+      x={0}
+      y={0}
+      width={DELETE_ZONE_SIZE}
+      height={DELETE_ZONE_SIZE}
       opacity={0.5}
     >
       <Rect
-        width={100}
-        height={100}
+        width={DELETE_ZONE_SIZE}
+        height={DELETE_ZONE_SIZE}
         dash={[15, 5]}
         stroke="#ff0000"
         cornerRadius={10}
@@ -63,10 +64,10 @@ export const DeleteZone = ({ deleteGroupRef, width }: CanvasAgentProps) => {
       {iconImg && iconImg.naturalWidth > 0 && iconImg.naturalHeight > 0 && (
         <KonvaImage
           image={iconImg}
-          x={(100 - 32) / 2}
-          y={(100 - 32) / 2}
-          width={32}
-          height={32}
+          x={(DELETE_ZONE_SIZE - ICON_SIZE) / 2}
+          y={(DELETE_ZONE_SIZE - ICON_SIZE) / 2}
+          width={ICON_SIZE}
+          height={ICON_SIZE}
         />
       )}
     </Group>

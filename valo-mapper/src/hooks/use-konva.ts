@@ -27,7 +27,10 @@ interface ContextMenuState {
   itemType: "agent" | "ability" | "text" | "image" | "tool";
 }
 
-export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
+export const useKonva = (
+  stageRef: React.RefObject<Stage | null>,
+  baseScale: number
+) => {
   const {
     selectedCanvasIcon,
     setSelectedCanvasIcon,
@@ -73,11 +76,11 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     if (!pos) return null;
 
     const stagePos = stage.position();
-    const scale = stage.scaleX();
+    const totalScale = stage.scaleX();
 
     return {
-      x: (pos.x - stagePos.x) / scale,
-      y: (pos.y - stagePos.y) / scale,
+      x: (pos.x - stagePos.x) / totalScale,
+      y: (pos.y - stagePos.y) / totalScale,
     };
   }, [stageRef]);
 
@@ -113,20 +116,30 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
     const stage = stageRef.current;
     if (!stage) return;
 
-    const scale = stage.scaleX();
+    const container = stage.container();
+    const containerWidth = container.offsetWidth;
 
-    const fixedX =
-      (stage.width() - deleteGroup.width() - SIDEBAR_WIDTH - 20) / scale;
-    const fixedY = 20 / scale;
+    const DELETE_ZONE_WIDTH = 120;
+    const PADDING = 20;
+
+    const screenX =
+      containerWidth - DELETE_ZONE_WIDTH - SIDEBAR_WIDTH - PADDING;
+    const screenY = PADDING;
+
+    const totalScale = stage.scaleX();
+    const stagePos = stage.position();
+
+    const worldX = (screenX - stagePos.x) / totalScale;
+    const worldY = (screenY - stagePos.y) / totalScale;
 
     deleteGroup.position({
-      x: fixedX - stage.x() / scale,
-      y: fixedY - stage.y() / scale,
+      x: worldX,
+      y: worldY,
     });
 
     deleteGroup.scale({
-      x: 1 / scale,
-      y: 1 / scale,
+      x: 1 / totalScale,
+      y: 1 / totalScale,
     });
   }, [stageRef]);
 
@@ -137,13 +150,13 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
       const stage = stageRef.current;
       if (!stage) return;
 
-      const oldScale = stage.scaleX();
+      const currentZoomScale = stage.scaleX() / baseScale;
       const pointer = stage.getPointerPosition();
       if (!pointer) return;
 
       const mousePointTo: Vector2d = {
-        x: (pointer.x - stage.x()) / oldScale,
-        y: (pointer.y - stage.y()) / oldScale,
+        x: (pointer.x - stage.x()) / stage.scaleX(),
+        y: (pointer.y - stage.y()) / stage.scaleX(),
       };
 
       let direction = e.evt.deltaY > 0 ? 1 : -1;
@@ -151,26 +164,29 @@ export const useKonva = (stageRef: React.RefObject<Stage | null>) => {
         direction = -direction;
       }
 
-      const newScale =
-        direction < 0 ? oldScale * SCALE_FACTOR : oldScale / SCALE_FACTOR;
+      const newZoomScale =
+        direction < 0
+          ? currentZoomScale * SCALE_FACTOR
+          : currentZoomScale / SCALE_FACTOR;
 
-      const clampedNewScale = Math.max(
+      const clampedZoomScale = Math.max(
         MIN_ZOOM_SCALE,
-        Math.min(MAX_ZOOM_SCALE, newScale)
+        Math.min(MAX_ZOOM_SCALE, newZoomScale)
       );
 
-      stage.scale({ x: clampedNewScale, y: clampedNewScale });
+      const newTotalScale = baseScale * clampedZoomScale;
+      stage.scale({ x: newTotalScale, y: newTotalScale });
 
       const newPos: Vector2d = {
-        x: pointer.x - mousePointTo.x * clampedNewScale,
-        y: pointer.y - mousePointTo.y * clampedNewScale,
+        x: pointer.x - mousePointTo.x * newTotalScale,
+        y: pointer.y - mousePointTo.y * newTotalScale,
       };
 
       stage.position(newPos);
 
       handleDragMove();
     },
-    [handleDragMove, stageRef]
+    [handleDragMove, stageRef, baseScale]
   );
 
   const handleDrawing = useCallback(() => {

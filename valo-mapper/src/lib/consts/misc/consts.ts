@@ -8,6 +8,9 @@ export const MAP_SIZE = 1000;
 export const MAX_ZOOM_SCALE = 4;
 export const MIN_ZOOM_SCALE = 1;
 
+export const VIRTUAL_WIDTH = 2560;
+export const VIRTUAL_HEIGHT = 1440;
+
 export const ROLE_ICONS: Record<string, string> = {
   Controller: "/roles/controller.png",
   Duelist: "/roles/duelist.png",

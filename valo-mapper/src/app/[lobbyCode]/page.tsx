@@ -7,45 +7,48 @@ import { ToolsSidebar } from "@/components/tools-sidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useCanvas } from "@/contexts/canvas-context";
-import { useDimensions } from "@/hooks/use-dimensions";
-import { usePositionScaling } from "@/hooks/use-position-scaling";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { MAP_SIZE } from "@/lib/consts";
+import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts/misc/consts";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const LobbyEditPage = () => {
   const divRef = useRef<HTMLDivElement>(null);
+  const [stageScale, setStageScale] = useState(1);
 
-  const { dimensions, previousDimensions } = useDimensions(divRef);
   const sidebarState = useSidebarState();
 
-  const {
-    agentsOnCanvas,
-    setAgentsOnCanvas,
-    abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    isLoadingLobby,
-    isErrorLobby,
-    lobbyError,
-  } = useCanvas();
+  const { isLoadingLobby, isErrorLobby, lobbyError } = useCanvas();
 
-  usePositionScaling(
-    dimensions,
-    previousDimensions,
-    agentsOnCanvas,
-    setAgentsOnCanvas,
-    abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    MAP_SIZE
-  );
+  useEffect(() => {
+    const updateScale = () => {
+      if (!divRef.current) return;
+
+      const containerWidth = divRef.current.offsetWidth;
+      const containerHeight = divRef.current.offsetHeight;
+
+      const scaleX = containerWidth / VIRTUAL_WIDTH;
+      const scaleY = containerHeight / VIRTUAL_HEIGHT;
+      const scale = Math.min(scaleX, scaleY);
+
+      setStageScale(scale);
+    };
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+
+    return () => {
+      window.removeEventListener("resize", updateScale);
+    };
+  }, []);
 
   const mapPosition = {
-    x: (dimensions.width - MAP_SIZE) / 2,
-    y: (dimensions.height - MAP_SIZE) / 2,
+    x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
+    y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
   };
 
   const params = useParams();
@@ -79,7 +82,7 @@ const LobbyEditPage = () => {
       />
 
       <div
-        className="flex h-[calc(100svh-1px-var(--header-height))]!"
+        className="flex h-[calc(100svh-1px-var(--header-height))] overflow-hidden"
         ref={divRef}
       >
         {isLoadingLobby ? (
@@ -130,8 +133,9 @@ const LobbyEditPage = () => {
           </div>
         ) : (
           <MapStage
-            width={dimensions.width}
-            height={dimensions.height}
+            width={VIRTUAL_WIDTH * stageScale}
+            height={VIRTUAL_HEIGHT * stageScale}
+            scale={stageScale}
             mapPosition={mapPosition}
           />
         )}

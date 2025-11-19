@@ -4,7 +4,7 @@ import { useKonva } from "@/hooks/use-konva";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Layer, Stage } from "react-konva";
 import { CanvasAbilities } from "./canvas-abilities";
 import { CanvasAgents } from "./canvas-agents";
@@ -18,10 +18,16 @@ import { CanvasToolIcons } from "./canvas-tool-icons";
 interface MapStageProps {
   width: number;
   height: number;
+  scale: number;
   mapPosition: Vector2d;
 }
 
-export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
+export const MapStage = ({
+  width,
+  height,
+  scale,
+  mapPosition,
+}: MapStageProps) => {
   const {
     agentsOnCanvas,
     abilitiesOnCanvas,
@@ -49,7 +55,45 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     contextMenu,
     currentLineRef,
     deleteGroupRef,
-  } = useKonva(stageRef);
+  } = useKonva(stageRef, scale);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const container = stage.container();
+    const containerWidth = container.offsetWidth;
+    const containerHeight = container.offsetHeight;
+
+    const scaledWidth = width;
+    const scaledHeight = height;
+
+    const x = (containerWidth - scaledWidth) / 2;
+    const y = (containerHeight - scaledHeight) / 2;
+
+    stage.position({ x, y });
+    stage.batchDraw();
+
+    handleDragMove();
+  }, [width, height, handleDragMove]);
+
+  useEffect(() => {
+    handleDragMove();
+
+    const handleResize = () => {
+      handleDragMove();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [handleDragMove]);
+
+  useEffect(() => {
+    handleDragMove();
+  }, [scale, handleDragMove]);
 
   const currentItem = contextMenu.open
     ? contextMenu.itemType === "agent"
@@ -64,10 +108,19 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
     : null;
 
   return (
-    <div style={{ position: "relative" }}>
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       <Stage
         width={width}
         height={height}
+        scaleX={scale}
+        scaleY={scale}
         ref={stageRef}
         onWheel={handleWheel}
         draggable={!isDrawMode}
@@ -98,7 +151,7 @@ export const MapStage = ({ width, height, mapPosition }: MapStageProps) => {
         </Layer>
         <Layer isListening={isDrawMode}>
           <CanvasDrawLines currentLineRef={currentLineRef} />
-          <DeleteZone deleteGroupRef={deleteGroupRef} width={width} />
+          <DeleteZone deleteGroupRef={deleteGroupRef} />
         </Layer>
       </Stage>
 
