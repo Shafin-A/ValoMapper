@@ -1,11 +1,23 @@
 "use client";
 
-import { SidebarIcon } from "lucide-react";
+import { CircleQuestionMark, SidebarIcon, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Dispatch, SetStateAction } from "react";
 import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { useUser } from "@/hooks/api/use-user";
+import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { usePathname } from "next/navigation";
 
 interface SiteHeaderProps {
   leftSidebarOpen: boolean;
@@ -20,6 +32,10 @@ export const SiteHeader = ({
   rightSidebarOpen,
   setRightSidebarOpen,
 }: SiteHeaderProps) => {
+  const { logout } = useFirebaseAuth();
+  const { data: user } = useUser();
+  const pathname = usePathname();
+
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
       <div className="flex h-(--header-height) w-full items-center justify-between gap-2 px-2">
@@ -43,6 +59,41 @@ export const SiteHeader = ({
         </div>
 
         <div className="flex items-center gap-2 h-full">
+          <Button className="h-8 w-8" variant="ghost" size="icon">
+            <CircleQuestionMark />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="h-8 w-8" variant="ghost" size="icon">
+                <UserRound />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end">
+              {!user ? (
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={`/login?redirect=${encodeURIComponent(pathname)}`}
+                  >
+                    Login
+                  </Link>
+                </DropdownMenuItem>
+              ) : (
+                <>
+                  <DropdownMenuLabel>Welcome {user?.name}</DropdownMenuLabel>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem>Profile</DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Link href="/strategies">My Strategies</Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Separator orientation="vertical" className="ml-2 h-4" />
           <Button
             className="h-8 w-8"

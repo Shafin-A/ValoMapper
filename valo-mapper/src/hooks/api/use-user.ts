@@ -10,7 +10,7 @@ export const useUser = () => {
       const idToken = await getIdToken();
 
       if (!idToken) {
-        throw new Error("User not authenticated");
+        return null;
       }
 
       const headers = {
