@@ -33,6 +33,8 @@ export const useCanvasState = () => {
     null
   );
 
+  const lastLoadedLobbyRef = useRef<string>("");
+
   const canvasItems = useCanvasItems(
     phaseManager.currentPhase,
     phaseManager.updateCurrentPhase
@@ -100,18 +102,20 @@ export const useCanvasState = () => {
     setHasUnsavedChanges(false);
   }, [lobbyCode, getCurrentState, updateLobby]);
 
-  const initialLoadRef = useRef(false);
-
   useEffect(() => {
-    if (lobbyCode && lobby && !initialLoadRef.current) {
-      initialLoadRef.current = true;
+    if (lobbyCode && lobby && lobbyCode !== lastLoadedLobbyRef.current) {
+      lastLoadedLobbyRef.current = lobbyCode;
 
       if (lobby.canvasState) {
         applyState(lobby.canvasState);
         lastSavedStateRef.current = lobby.canvasState;
+      } else {
+        phaseManager.resetAllPhases();
+        canvasUI.resetEdits();
+        lastSavedStateRef.current = null;
       }
     }
-  }, [lobbyCode, lobby, applyState]);
+  }, [lobbyCode, lobby, applyState, phaseManager, canvasUI]);
 
   const relevantProps = useRef<(keyof ReturnType<typeof getCurrentState>)[]>([
     "phases",
@@ -144,7 +148,7 @@ export const useCanvasState = () => {
   }, [checkUnsavedChanges]);
 
   useEffect(() => {
-    if (!lobbyCode || !initialLoadRef.current) return;
+    if (!lobbyCode || lobbyCode !== lastLoadedLobbyRef.current) return;
 
     const checkAndSave = () => {
       const now = Date.now();
