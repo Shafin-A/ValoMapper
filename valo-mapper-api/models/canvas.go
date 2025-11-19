@@ -24,20 +24,20 @@ type MapOption struct {
 }
 
 type CanvasAgent struct {
-	ID        string `json:"id"`
-	AgentName string `json:"name"`
-	Role      string `json:"role"`
-	IsAlly    bool   `json:"isAlly"`
-	X         int    `json:"x"`
-	Y         int    `json:"y"`
+	ID        string  `json:"id"`
+	AgentName string  `json:"name"`
+	Role      string  `json:"role"`
+	IsAlly    bool    `json:"isAlly"`
+	X         float64 `json:"x"`
+	Y         float64 `json:"y"`
 }
 
 type CanvasAbility struct {
 	ID              string     `json:"id"`
 	AgentName       string     `json:"name"`
 	Action          string     `json:"action"`
-	X               int        `json:"x"`
-	Y               int        `json:"y"`
+	X               float64    `json:"x"`
+	Y               float64    `json:"y"`
 	CurrentPath     []Position `json:"currentPath,omitempty"`
 	CurrentLength   float64    `json:"currentLength,omitempty"`
 	CurrentRotation float64    `json:"currentRotation,omitempty"`
@@ -57,8 +57,8 @@ type CanvasDrawLine struct {
 type CanvasText struct {
 	ID     string  `json:"id"`
 	Text   string  `json:"text"`
-	X      int     `json:"x"`
-	Y      int     `json:"y"`
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
 	Width  float64 `json:"width"`
 	Height float64 `json:"height"`
 }
@@ -66,16 +66,16 @@ type CanvasText struct {
 type CanvasImage struct {
 	ID     string  `json:"id"`
 	Src    string  `json:"src"`
-	X      int     `json:"x"`
-	Y      int     `json:"y"`
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
 	Width  float64 `json:"width"`
 	Height float64 `json:"height"`
 }
 
 type CanvasToolIcon struct {
 	ID     string  `json:"id"`
-	X      int     `json:"x"`
-	Y      int     `json:"y"`
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
 	Width  float64 `json:"width"`
 	Height float64 `json:"height"`
 }
