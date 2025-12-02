@@ -10,6 +10,7 @@ import (
 	"time"
 	"valo-mapper-api/db"
 	"valo-mapper-api/firebase"
+	"valo-mapper-api/middleware"
 	"valo-mapper-api/routes"
 
 	"github.com/gorilla/mux"
@@ -35,13 +36,16 @@ func main() {
 	r := mux.NewRouter()
 	routes.SetupRoutes(r, firebaseAuth)
 
+	var handler http.Handler = r
+	handler = middleware.RequestIDMiddleware(handler)
+
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	})
-	handler := c.Handler(r)
+	handler = c.Handler(handler)
 
 	srv := &http.Server{
 		Addr:         ":8080",

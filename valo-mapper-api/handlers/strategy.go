@@ -7,7 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
+	"valo-mapper-api/utils"
 
 	"firebase.google.com/go/v4/auth"
 )
@@ -47,39 +49,39 @@ func NewStrategyResponse(strategy *models.Strategy, lobby *models.Lobby) *Strate
 
 func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
 	var req CreateStrategyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
 	defer r.Body.Close()
 
 	if req.LobbyCode == "" {
-		http.Error(w, "Lobby code is required", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Lobby code is required"), middleware.GetRequestID(r))
 		return
 	}
 	if req.Name == "" {
-		http.Error(w, "Strategy name is required", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Strategy name is required"), middleware.GetRequestID(r))
 		return
 	}
 
 	lobby, err := models.GetLobbyByCode(req.LobbyCode)
 	if err != nil {
-		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
 		return
 	}
 	if lobby == nil {
-		http.Error(w, "Lobby not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -92,29 +94,30 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 
 	if err := strategy.Save(); err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
-			http.Error(w, "You have already saved this lobby", http.StatusConflict)
+			utils.SendJSONError(w, utils.NewConflict("You have already saved this lobby", err), middleware.GetRequestID(r))
 			return
 		}
-		http.Error(w, "Error creating strategy: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to create strategy", err), middleware.GetRequestID(r))
 		return
 	}
 
 	response := NewStrategyResponse(strategy, lobby)
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
 }
 
 func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -123,7 +126,7 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 	if folderIDStr != "" {
 		id, err := strconv.Atoi(folderIDStr)
 		if err != nil {
-			http.Error(w, "Invalid folder ID", http.StatusBadRequest)
+			utils.SendJSONError(w, utils.NewBadRequest("Invalid folder ID"), middleware.GetRequestID(r))
 			return
 		}
 		folderID = &id
@@ -137,7 +140,7 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 	}
 
 	if err != nil {
-		http.Error(w, "Error retrieving strategies: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategies", err), middleware.GetRequestID(r))
 		return
 	}
 
@@ -148,7 +151,7 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 
 	lobbies, err := models.GetLobbiesByCodes(lobbyCodes)
 	if err != nil {
-		http.Error(w, "Error retrieving lobbies: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobbies", err), middleware.GetRequestID(r))
 		return
 	}
 
@@ -161,7 +164,7 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 	for _, s := range strategies {
 		lobby, exists := lobbyMap[s.LobbyCode]
 		if !exists || lobby == nil {
-			http.Error(w, "Lobby not found", http.StatusNotFound)
+			utils.SendJSONError(w, utils.NewInternal("Inconsistent data: lobby not found", nil), middleware.GetRequestID(r))
 			return
 		}
 		responses = append(responses, NewStrategyResponse(&s, lobby))
@@ -172,18 +175,19 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	json.NewEncoder(w).Encode(responses)
 }
 
 func GetStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -191,50 +195,51 @@ func GetStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clie
 	idStr := strings.TrimPrefix(path, "/api/strategies/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid strategy ID", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid strategy ID"), middleware.GetRequestID(r))
 		return
 	}
 
 	strategy, err := models.GetStrategyByID(id)
 	if err != nil {
-		http.Error(w, "Error retrieving strategy: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategy", err), middleware.GetRequestID(r))
 		return
 	}
 	if strategy == nil {
-		http.Error(w, "Strategy not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	if strategy.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
 		return
 	}
 
 	lobby, err := models.GetLobbyByCode(strategy.LobbyCode)
 	if err != nil {
-		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
 		return
 	}
 	if lobby == nil {
-		http.Error(w, "Lobby not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	response := NewStrategyResponse(strategy, lobby)
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	json.NewEncoder(w).Encode(response)
 }
 
 func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodPatch {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -242,29 +247,29 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 	idStr := strings.TrimPrefix(path, "/api/strategies/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid strategy ID", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid strategy ID"), middleware.GetRequestID(r))
 		return
 	}
 
 	var req UpdateStrategyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
 	defer r.Body.Close()
 
 	strategy, err := models.GetStrategyByID(id)
 	if err != nil {
-		http.Error(w, "Error retrieving strategy: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategy", err), middleware.GetRequestID(r))
 		return
 	}
 	if strategy == nil {
-		http.Error(w, "Strategy not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	if strategy.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -276,36 +281,37 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 	}
 
 	if err := strategy.Update(); err != nil {
-		http.Error(w, "Error updating strategy: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to update strategy", err), middleware.GetRequestID(r))
 		return
 	}
 
 	lobby, err := models.GetLobbyByCode(strategy.LobbyCode)
 	if err != nil {
-		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
 		return
 	}
 	if lobby == nil {
-		http.Error(w, "Lobby not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	response := NewStrategyResponse(strategy, lobby)
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
 
 func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -313,29 +319,30 @@ func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 	idStr := strings.TrimPrefix(path, "/api/strategies/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid strategy ID", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid strategy ID"), middleware.GetRequestID(r))
 		return
 	}
 
 	strategy, err := models.GetStrategyByID(id)
 	if err != nil {
-		http.Error(w, "Error retrieving strategy: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategy", err), middleware.GetRequestID(r))
 		return
 	}
 	if strategy == nil {
-		http.Error(w, "Strategy not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	if strategy.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
 		return
 	}
 
 	if err := strategy.Delete(); err != nil {
-		http.Error(w, "Error deleting strategy: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to delete strategy", err), middleware.GetRequestID(r))
 		return
 	}
 
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusNoContent)
 }

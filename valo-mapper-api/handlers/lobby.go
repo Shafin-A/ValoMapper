@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
+	"valo-mapper-api/utils"
 )
 
 func CreateLobby(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +16,7 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 
 	defaultMap, err := models.GetMapById("ascent")
 	if err != nil {
-		http.Error(w, "Error getting default map: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to initialize lobby with default map", err), middleware.GetRequestID(r))
 		return
 	}
 
@@ -48,18 +50,20 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if !strings.Contains(err.Error(), "duplicate key") {
-			http.Error(w, "Error creating lobby: "+err.Error(), http.StatusInternalServerError)
+			utils.SendJSONError(w, utils.NewInternal("Unable to create lobby", err), middleware.GetRequestID(r))
 			return
 		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(lobby)
 }
 
 func GetLobby(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -68,23 +72,24 @@ func GetLobby(w http.ResponseWriter, r *http.Request) {
 
 	lobby, err := models.GetLobbyByCode(code)
 	if err != nil {
-		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
 		return
 	}
 	if lobby == nil {
-		http.Error(w, "Lobby not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	phases, err := models.GetAllCanvasPhases(code)
 	if err != nil {
-		http.Error(w, "Error retrieving canvas phases: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve canvas phases", err), middleware.GetRequestID(r))
 		return
 	}
 
 	lobby.CanvasState.Phases = phases
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	json.NewEncoder(w).Encode(lobby)
 }
 
@@ -94,7 +99,7 @@ type UpdateLobbyRequest struct {
 
 func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPatch {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -103,41 +108,41 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Unable to read request body"), middleware.GetRequestID(r))
 		return
 	}
 	defer r.Body.Close()
 
 	var req UpdateLobbyRequest
 	if err := json.Unmarshal(body, &req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
 
 	existingLobby, err := models.GetLobbyByCode(code)
 	if err != nil {
-		http.Error(w, "Error retrieving lobby: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
 		return
 	}
 	if existingLobby == nil {
-		http.Error(w, "Lobby not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	if err := models.SaveCanvasState(code, *req.CanvasState); err != nil {
-		http.Error(w, "Error updating canvas state: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to save canvas state", err), middleware.GetRequestID(r))
 		return
 	}
 
 	mapDetails, err := models.GetMapById(req.CanvasState.SelectedMap.ID)
 	if err != nil {
-		http.Error(w, "Error retrieving map details: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve map details", err), middleware.GetRequestID(r))
 		return
 	}
 
 	phases, err := models.GetAllCanvasPhases(code)
 	if err != nil {
-		http.Error(w, "Error retrieving canvas phases: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve canvas phases", err), middleware.GetRequestID(r))
 		return
 	}
 
@@ -156,10 +161,11 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := lobby.Save(); err != nil {
-		http.Error(w, "Error updating lobby: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to update lobby", err), middleware.GetRequestID(r))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	json.NewEncoder(w).Encode(lobby)
 }

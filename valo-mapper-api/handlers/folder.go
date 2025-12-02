@@ -6,7 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
+	"valo-mapper-api/utils"
 
 	"firebase.google.com/go/v4/auth"
 )
@@ -23,25 +25,25 @@ type UpdateFolderRequest struct {
 
 func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
 	var req CreateFolderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
 	defer r.Body.Close()
 
 	if req.Name == "" {
-		http.Error(w, "Folder name is required", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Folder name is required"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -52,30 +54,31 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 	}
 
 	if err := folder.Save(); err != nil {
-		http.Error(w, "Error creating folder: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to create folder", err), middleware.GetRequestID(r))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(folder)
 }
 
 func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
 	folders, err := models.GetFoldersByUserID(user.ID)
 	if err != nil {
-		http.Error(w, "Error retrieving folders: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folders", err), middleware.GetRequestID(r))
 		return
 	}
 
@@ -84,18 +87,19 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	json.NewEncoder(w).Encode(folders)
 }
 
 func GetFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -103,38 +107,39 @@ func GetFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client
 	idStr := strings.TrimPrefix(path, "/api/folders/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid folder ID", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid folder ID"), middleware.GetRequestID(r))
 		return
 	}
 
 	folder, err := models.GetFolderByID(id)
 	if err != nil {
-		http.Error(w, "Error retrieving folder: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folder", err), middleware.GetRequestID(r))
 		return
 	}
 	if folder == nil {
-		http.Error(w, "Folder not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	if folder.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	json.NewEncoder(w).Encode(folder)
 }
 
 func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodPatch {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -142,29 +147,29 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 	idStr := strings.TrimPrefix(path, "/api/folders/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid folder ID", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid folder ID"), middleware.GetRequestID(r))
 		return
 	}
 
 	var req UpdateFolderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
 	defer r.Body.Close()
 
 	folder, err := models.GetFolderByID(id)
 	if err != nil {
-		http.Error(w, "Error retrieving folder: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folder", err), middleware.GetRequestID(r))
 		return
 	}
 	if folder == nil {
-		http.Error(w, "Folder not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	if folder.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -176,23 +181,24 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 	}
 
 	if err := folder.Update(); err != nil {
-		http.Error(w, "Error updating folder: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to update folder", err), middleware.GetRequestID(r))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	json.NewEncoder(w).Encode(folder)
 }
 
 func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
 	}
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
@@ -200,29 +206,30 @@ func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 	idStr := strings.TrimPrefix(path, "/api/folders/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid folder ID", http.StatusBadRequest)
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid folder ID"), middleware.GetRequestID(r))
 		return
 	}
 
 	folder, err := models.GetFolderByID(id)
 	if err != nil {
-		http.Error(w, "Error retrieving folder: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folder", err), middleware.GetRequestID(r))
 		return
 	}
 	if folder == nil {
-		http.Error(w, "Folder not found", http.StatusNotFound)
+		utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
 		return
 	}
 
 	if folder.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
 		return
 	}
 
 	if err := folder.Delete(); err != nil {
-		http.Error(w, "Error deleting folder: "+err.Error(), http.StatusInternalServerError)
+		utils.SendJSONError(w, utils.NewInternal("Unable to delete folder", err), middleware.GetRequestID(r))
 		return
 	}
 
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusNoContent)
 }
