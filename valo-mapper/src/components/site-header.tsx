@@ -3,9 +3,14 @@
 import { CircleQuestionMark, SidebarIcon, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Dispatch, SetStateAction } from "react";
-import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,10 +19,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Dispatch, SetStateAction } from "react";
+import { HelpTab } from "./help-tab";
 
 interface SiteHeaderProps {
   leftSidebarOpen: boolean;
@@ -59,9 +68,24 @@ export const SiteHeader = ({
         </div>
 
         <div className="flex items-center gap-2 h-full">
-          <Button className="h-8 w-8" variant="ghost" size="icon">
-            <CircleQuestionMark />
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="h-8 w-8" variant="ghost" size="icon">
+                <CircleQuestionMark />
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent className="max-w-none w-[90vw] sm:max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Help</DialogTitle>
+                <DialogDescription>
+                  Find help for different sections.
+                </DialogDescription>
+              </DialogHeader>
+
+              <HelpTab />
+            </DialogContent>
+          </Dialog>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
