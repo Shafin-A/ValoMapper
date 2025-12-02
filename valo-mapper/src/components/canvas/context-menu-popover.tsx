@@ -11,8 +11,8 @@ import {
   TextCanvas,
 } from "@/lib/types";
 import { Copy, Heart, HeartCrack, Trash2 } from "lucide-react";
-import { Separator } from "./ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Separator } from "../ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useEffect, useState } from "react";
 
 interface ContextMenuPopoverProps {

@@ -1,5 +1,5 @@
 import QueryProvider from "@/components/providers/query-provider";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { CanvasProvider } from "@/contexts/canvas-context";
 import { SettingsProvider } from "@/contexts/settings-context";

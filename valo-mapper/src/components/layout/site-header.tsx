@@ -26,7 +26,7 @@ import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
-import { HelpTab } from "./help-tab";
+import { HelpTab } from "@/components/help/help-tab";
 
 interface SiteHeaderProps {
   leftSidebarOpen: boolean;

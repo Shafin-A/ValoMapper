@@ -2,7 +2,7 @@ import { useCanvas } from "@/contexts/canvas-context";
 import { useTextEditor } from "@/hooks/use-text-editor";
 import { Group, Rect, Text, Transformer } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import { TextEditor } from "@/components/text-editor";
+import { TextEditor } from "@/components/canvas/text-editor";
 import Konva from "konva";
 import { RefObject } from "react";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";

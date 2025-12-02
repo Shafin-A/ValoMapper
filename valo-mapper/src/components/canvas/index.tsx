@@ -1,4 +1,4 @@
-import { ContextMenuPopover } from "@/components/context-menu-popover";
+import { ContextMenuPopover } from "@/components/canvas/context-menu-popover";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useKonva } from "@/hooks/use-konva";
 import Konva from "konva";

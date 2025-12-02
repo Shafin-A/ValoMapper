@@ -2,7 +2,7 @@
 
 import { AgentsSidebar } from "@/components/agents-sidebar";
 import { MapStage } from "@/components/canvas";
-import { SiteHeader } from "@/components/site-header";
+import { SiteHeader } from "@/components/layout/site-header";
 import { ToolsSidebar } from "@/components/tools-sidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

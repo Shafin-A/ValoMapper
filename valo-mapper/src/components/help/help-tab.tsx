@@ -1,7 +1,7 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { ScrollArea } from "./ui/scroll-area";
-import { PrivacyPolicy } from "./privacy-policy";
-import { TermsOfService } from "./terms-of-service";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { PrivacyPolicy } from "@/components/legal/privacy-policy";
+import { TermsOfService } from "@/components/legal/terms-of-service";
 
 export const HelpTab = () => {
   const tabs = [
