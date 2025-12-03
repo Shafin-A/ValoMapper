@@ -99,6 +99,9 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsDeleteSettingsOpen,
     setEditingTextId,
     isDrawMode,
+    phases,
+    currentPhaseIndex,
+    switchToPhase,
   } = canvasState;
 
   const {
@@ -154,6 +157,22 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
           return;
         }
 
+        if (key === "a") {
+          if (currentPhaseIndex > 0) {
+            switchToPhase(currentPhaseIndex - 1);
+            e.preventDefault();
+          }
+          return;
+        }
+
+        if (key === "d") {
+          if (currentPhaseIndex < phases.length - 1) {
+            switchToPhase(currentPhaseIndex + 1);
+            e.preventDefault();
+          }
+          return;
+        }
+
         if (key === "q") {
           if (tool === "pencil" && isDrawMode) {
             setIsDrawMode(false);
@@ -201,6 +220,9 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
     eraserSettings,
     updateDrawSettings,
     updateEraserSettings,
+    phases,
+    currentPhaseIndex,
+    switchToPhase,
   ]);
 
   return (

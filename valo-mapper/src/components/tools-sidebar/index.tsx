@@ -15,6 +15,7 @@ import { useState } from "react";
 import { IconsSection } from "./icons-section";
 import { MapSelect } from "./map-select-button";
 import { ToolsSection } from "./tools-section";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -203,11 +204,43 @@ export const ToolsSidebar = ({
                 }}
                 rounded
               >
-                {Array.from({ length: 10 }, (_, i) => (
-                  <ToggleGroupItem key={i + 1} value={(i + 1).toString()}>
-                    {i + 1}
-                  </ToggleGroupItem>
-                ))}
+                {Array.from({ length: 10 }, (_, i) => {
+                  const phaseNum = i + 1;
+                  const isPrevious = phaseNum === currentPhaseIndex;
+                  const isNext = phaseNum === currentPhaseIndex + 2;
+
+                  if (isPrevious) {
+                    return (
+                      <Tooltip key={phaseNum}>
+                        <TooltipTrigger asChild>
+                          <ToggleGroupItem value={phaseNum.toString()}>
+                            {phaseNum}
+                          </ToggleGroupItem>
+                        </TooltipTrigger>
+                        <TooltipContent>A</TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+
+                  if (isNext) {
+                    return (
+                      <Tooltip key={phaseNum}>
+                        <TooltipTrigger asChild>
+                          <ToggleGroupItem value={phaseNum.toString()}>
+                            {phaseNum}
+                          </ToggleGroupItem>
+                        </TooltipTrigger>
+                        <TooltipContent>D</TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+
+                  return (
+                    <ToggleGroupItem key={phaseNum} value={phaseNum.toString()}>
+                      {phaseNum}
+                    </ToggleGroupItem>
+                  );
+                })}
               </ToggleGroup>
             </div>
             <ToolsSection mapPosition={mapPosition} />
