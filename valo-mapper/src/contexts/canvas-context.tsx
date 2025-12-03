@@ -81,6 +81,8 @@ interface CanvasContextType {
   isLoadingLobby: boolean;
   isErrorLobby: boolean;
   lobbyError: Error | null;
+  hoveredElementId: string | null;
+  setHoveredElementId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
@@ -89,6 +91,9 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const canvasState = useCanvasState();
+  const [hoveredElementId, setHoveredElementId] = React.useState<string | null>(
+    null
+  );
 
   const {
     undo,
@@ -98,10 +103,16 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
     setTool,
     setIsDeleteSettingsOpen,
     setEditingTextId,
+    editingTextId,
     isDrawMode,
     phases,
     currentPhaseIndex,
     switchToPhase,
+    setImagesOnCanvas,
+    setTextsOnCanvas,
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    setToolIconsOnCanvas,
   } = canvasState;
 
   const {
@@ -173,6 +184,29 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
           return;
         }
 
+        if (key === "e") {
+          if (hoveredElementId && !isDrawMode && !editingTextId) {
+            setImagesOnCanvas((prev) =>
+              prev.filter((img) => img.id !== hoveredElementId)
+            );
+            setTextsOnCanvas((prev) =>
+              prev.filter((txt) => txt.id !== hoveredElementId)
+            );
+            setAgentsOnCanvas((prev) =>
+              prev.filter((agent) => agent.id !== hoveredElementId)
+            );
+            setAbilitiesOnCanvas((prev) =>
+              prev.filter((ability) => ability.id !== hoveredElementId)
+            );
+            setToolIconsOnCanvas((prev) =>
+              prev.filter((toolIcon) => toolIcon.id !== hoveredElementId)
+            );
+            setHoveredElementId(null);
+            e.preventDefault();
+          }
+          return;
+        }
+
         if (key === "q") {
           if (tool === "pencil" && isDrawMode) {
             setIsDrawMode(false);
@@ -216,6 +250,7 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsDeleteSettingsOpen,
     setEditingTextId,
     isDrawMode,
+    editingTextId,
     drawSettings,
     eraserSettings,
     updateDrawSettings,
@@ -223,10 +258,22 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
     phases,
     currentPhaseIndex,
     switchToPhase,
+    hoveredElementId,
+    setImagesOnCanvas,
+    setTextsOnCanvas,
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    setToolIconsOnCanvas,
   ]);
 
   return (
-    <CanvasContext.Provider value={canvasState}>
+    <CanvasContext.Provider
+      value={{
+        ...canvasState,
+        hoveredElementId,
+        setHoveredElementId,
+      }}
+    >
       {children}
     </CanvasContext.Provider>
   );

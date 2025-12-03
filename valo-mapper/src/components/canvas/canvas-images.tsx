@@ -16,17 +16,42 @@ export const CanvasImages = ({
   transformerRefs,
   deleteGroupRef,
 }: CanvasImageProps) => {
-  const { imagesOnCanvas, isDrawMode, editingTextId, setImagesOnCanvas } =
-    useCanvas();
+  const {
+    imagesOnCanvas,
+    isDrawMode,
+    editingTextId,
+    setImagesOnCanvas,
+    setHoveredElementId,
+    selectedCanvasIcon,
+  } = useCanvas();
 
   const {
     imageNodeRefs,
     imageLoaderRefs,
     hoveredImageId,
-    handleImageMouseEnter,
+    handleImageMouseEnter: hookHandleImageMouseEnter,
     handleImageMouseLeave,
     handleImageTransformEnd,
   } = useImageTransform();
+
+  const handleImageMouseEnter = (
+    e: Konva.KonvaEventObject<MouseEvent>,
+    imageId: string
+  ) => {
+    if (!selectedCanvasIcon) {
+      hookHandleImageMouseEnter(e, imageId);
+      setHoveredElementId(imageId);
+    }
+  };
+
+  const handleImageMouseLeaveInternal = (
+    e: Konva.KonvaEventObject<MouseEvent>
+  ) => {
+    handleImageMouseLeave(e);
+    if (!selectedCanvasIcon) {
+      setHoveredElementId(null);
+    }
+  };
 
   return imagesOnCanvas.map((imageItem) => {
     const imageNode = imageNodeRefs.current.get(imageItem.id);
@@ -44,7 +69,7 @@ export const CanvasImages = ({
           handleDragEnd(e, imageItem, setImagesOnCanvas, deleteGroupRef)
         }
         onMouseEnter={(e) => handleImageMouseEnter(e, imageItem.id)}
-        onMouseLeave={(e) => handleImageMouseLeave(e)}
+        onMouseLeave={(e) => handleImageMouseLeaveInternal(e)}
       >
         <Image
           alt="image"

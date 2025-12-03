@@ -4,41 +4,55 @@ import { useSettings } from "@/contexts/settings-context";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
+import { Group } from "react-konva";
 
 interface CanvasAbilityProps {
   deleteGroupRef: React.RefObject<Konva.Group | null>;
 }
 
 export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
-  const { abilitiesOnCanvas, setAbilitiesOnCanvas, isDrawMode } = useCanvas();
+  const {
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
+    isDrawMode,
+    setHoveredElementId,
+    selectedCanvasIcon,
+  } = useCanvas();
 
   const { abilitiesSettings } = useSettings();
 
   return abilitiesOnCanvas.map((ability) => (
-    <AbilityIcon
+    <Group
       key={ability.id}
-      id={ability.id}
-      isAlly={ability.isAlly}
-      action={ability.action}
-      x={ability.x}
-      y={ability.y}
-      rotation={ability.currentRotation}
-      src={ABILITY_LOOKUP[ability.name].src}
-      draggable={!isDrawMode}
-      isListening={!isDrawMode}
-      onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
-      onDragEnd={(e) =>
-        handleDragEnd(e, ability, setAbilitiesOnCanvas, deleteGroupRef)
+      onMouseEnter={() =>
+        !selectedCanvasIcon && setHoveredElementId(ability.id)
       }
-      width={abilitiesSettings.scale}
-      height={abilitiesSettings.scale}
-      borderOpacity={abilitiesSettings.borderOpacity}
-      strokeWidth={abilitiesSettings.borderWidth}
-      radius={abilitiesSettings.radius}
-      allyColor={abilitiesSettings.allyColor}
-      enemyColor={abilitiesSettings.enemyColor}
-      currentPath={ability.currentPath}
-      currentLength={ability.currentLength}
-    />
+      onMouseLeave={() => !selectedCanvasIcon && setHoveredElementId(null)}
+    >
+      <AbilityIcon
+        id={ability.id}
+        isAlly={ability.isAlly}
+        action={ability.action}
+        x={ability.x}
+        y={ability.y}
+        rotation={ability.currentRotation}
+        src={ABILITY_LOOKUP[ability.name].src}
+        draggable={!isDrawMode}
+        isListening={!isDrawMode}
+        onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
+        onDragEnd={(e) =>
+          handleDragEnd(e, ability, setAbilitiesOnCanvas, deleteGroupRef)
+        }
+        width={abilitiesSettings.scale}
+        height={abilitiesSettings.scale}
+        borderOpacity={abilitiesSettings.borderOpacity}
+        strokeWidth={abilitiesSettings.borderWidth}
+        radius={abilitiesSettings.radius}
+        allyColor={abilitiesSettings.allyColor}
+        enemyColor={abilitiesSettings.enemyColor}
+        currentPath={ability.currentPath}
+        currentLength={ability.currentLength}
+      />
+    </Group>
   ));
 };

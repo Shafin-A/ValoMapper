@@ -18,8 +18,14 @@ export const CanvasTexts = ({
   transformerRefs,
   deleteGroupRef,
 }: CanvasTextProps) => {
-  const { textsOnCanvas, isDrawMode, editingTextId, setTextsOnCanvas } =
-    useCanvas();
+  const {
+    textsOnCanvas,
+    isDrawMode,
+    editingTextId,
+    setTextsOnCanvas,
+    setHoveredElementId,
+    selectedCanvasIcon,
+  } = useCanvas();
 
   const {
     textRefs,
@@ -48,6 +54,10 @@ export const CanvasTexts = ({
             handleTextClick(textItem.id);
           }
         }}
+        onMouseEnter={() =>
+          !selectedCanvasIcon && setHoveredElementId(textItem.id)
+        }
+        onMouseLeave={() => !selectedCanvasIcon && setHoveredElementId(null)}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef, textNode)}
         onDragEnd={(e) =>
           handleDragEnd(e, textItem, setTextsOnCanvas, deleteGroupRef)
