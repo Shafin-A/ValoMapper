@@ -230,6 +230,7 @@ export type CircleAbility = Extract<
 export type Tool = "pencil" | "eraser";
 
 export type DrawLine = {
+  id: string;
   tool: Tool;
   points: Vector2d[];
   color: string;

@@ -202,6 +202,7 @@ export const useKonva = (
       }
 
       setCurrentStroke({
+        id: getNextId("tool"),
         tool,
         points: [worldPos],
         color: drawSettings.color,
@@ -341,6 +342,7 @@ export const useKonva = (
   const handleMouseUp = useCallback(() => {
     if (isDrawing.current && drawingBufferRef.current.length > 0) {
       const finalStroke = {
+        id: getNextId("tool"),
         tool,
         points: drawingBufferRef.current,
         color: drawSettings.color,
