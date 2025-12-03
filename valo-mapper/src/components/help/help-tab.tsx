@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PrivacyPolicy } from "@/components/legal/privacy-policy";
 import { TermsOfService } from "@/components/legal/terms-of-service";
+import { Shortcuts } from "./shortcuts";
 
 export const HelpTab = () => {
   const tabs = [
@@ -20,8 +21,7 @@ export const HelpTab = () => {
     {
       name: "Keyboard Shortcuts",
       value: "keyboard_shortcuts",
-      type: "text",
-      content: "",
+      type: "component",
     },
     {
       name: "Lobbies",
@@ -90,6 +90,8 @@ export const HelpTab = () => {
                     <PrivacyPolicy />
                   ) : tab.value === "terms_of_service" ? (
                     <TermsOfService />
+                  ) : tab.value === "keyboard_shortcuts" ? (
+                    <Shortcuts />
                   ) : null}
                 </div>
               </div>
