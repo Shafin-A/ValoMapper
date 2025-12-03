@@ -222,7 +222,7 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top" align="center">
-              Undo
+              Undo (Ctrl + Z)
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -237,7 +237,7 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top" align="center">
-              Redo
+              Redo (Ctrl + Shift + Z)
             </TooltipContent>
           </Tooltip>
 
@@ -255,7 +255,7 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Draw
+              Draw (Q)
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -272,7 +272,7 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Eraser
+              Eraser (W)
             </TooltipContent>
           </Tooltip>
           <Tooltip>

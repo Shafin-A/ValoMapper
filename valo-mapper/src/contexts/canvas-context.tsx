@@ -17,7 +17,8 @@ import type {
   ToolIconCanvas,
 } from "@/lib/types";
 import Konva from "konva";
-import React, { createContext, RefObject, useContext } from "react";
+import React, { createContext, RefObject, useContext, useEffect } from "react";
+import { useSettings } from "./settings-context";
 
 interface CanvasContextType {
   agentsOnCanvas: AgentCanvas[];
@@ -88,6 +89,119 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const canvasState = useCanvasState();
+
+  const {
+    undo,
+    redo,
+    setIsDrawMode,
+    tool,
+    setTool,
+    setIsDeleteSettingsOpen,
+    setEditingTextId,
+    isDrawMode,
+  } = canvasState;
+
+  const {
+    drawSettings,
+    eraserSettings,
+    updateDrawSettings,
+    updateEraserSettings,
+  } = useSettings();
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      try {
+        const target = e.target as HTMLElement | null;
+        if (
+          target &&
+          (target.tagName === "INPUT" ||
+            target.tagName === "TEXTAREA" ||
+            target.isContentEditable)
+        ) {
+          return;
+        }
+
+        const key = e.key.toLowerCase();
+        const isModifier = e.ctrlKey || e.metaKey;
+
+        if (isModifier) {
+          if (key === "z") {
+            if (e.shiftKey) {
+              redo();
+            } else {
+              undo();
+            }
+            e.preventDefault();
+            return;
+          }
+
+          if (key === "q") {
+            if (e.shiftKey) {
+              updateDrawSettings({ isArrowHead: !drawSettings.isArrowHead });
+            } else {
+              updateDrawSettings({ isDashed: !drawSettings.isDashed });
+            }
+            e.preventDefault();
+            return;
+          }
+        }
+
+        if (key === "w" && e.shiftKey) {
+          updateEraserSettings({
+            mode: eraserSettings.mode === "line" ? "pixel" : "line",
+          });
+          e.preventDefault();
+          return;
+        }
+
+        if (key === "q") {
+          if (tool === "pencil" && isDrawMode) {
+            setIsDrawMode(false);
+          } else {
+            setIsDeleteSettingsOpen(false);
+            setEditingTextId(null);
+            setIsDrawMode(true);
+            setTool("pencil");
+          }
+          e.preventDefault();
+          return;
+        }
+
+        if (key === "w") {
+          if (tool === "eraser" && isDrawMode) {
+            setIsDrawMode(false);
+          } else {
+            setIsDeleteSettingsOpen(false);
+            setEditingTextId(null);
+            setIsDrawMode(true);
+            setTool("eraser");
+          }
+          e.preventDefault();
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const listenerOptions: AddEventListenerOptions = { capture: true };
+    window.addEventListener("keydown", onKeyDown, listenerOptions);
+    return () =>
+      window.removeEventListener("keydown", onKeyDown, listenerOptions);
+  }, [
+    undo,
+    redo,
+    setIsDrawMode,
+    tool,
+    setTool,
+    setIsDeleteSettingsOpen,
+    setEditingTextId,
+    isDrawMode,
+    drawSettings,
+    eraserSettings,
+    updateDrawSettings,
+    updateEraserSettings,
+  ]);
 
   return (
     <CanvasContext.Provider value={canvasState}>
