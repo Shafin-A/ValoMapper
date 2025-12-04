@@ -8,7 +8,7 @@ import { buildTree } from "@/lib/utils";
 export const useFolders = () => {
   const { getIdToken } = useFirebaseAuth();
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["folders-and-strategies"],
     queryFn: async () => {
       const token = await getIdToken();
@@ -40,5 +40,5 @@ export const useFolders = () => {
     },
   });
 
-  return { data, isLoading, isError, refetch };
+  return { data, isLoading, isError, error, refetch };
 };
