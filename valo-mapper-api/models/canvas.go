@@ -1,11 +1,13 @@
 package models
 
 type FullCanvasState struct {
-	SelectedMap       MapOption    `json:"selectedMap"`
-	MapSide           string       `json:"mapSide"`
-	CurrentPhaseIndex int          `json:"currentPhaseIndex"`
-	EditedPhases      []int        `json:"editedPhases"`
-	Phases            []PhaseState `json:"phases"`
+	SelectedMap       MapOption     `json:"selectedMap"`
+	MapSide           string        `json:"mapSide"`
+	CurrentPhaseIndex int           `json:"currentPhaseIndex"`
+	EditedPhases      []int         `json:"editedPhases"`
+	Phases            []PhaseState  `json:"phases"`
+	AgentsSettings    *IconSettings `json:"agentsSettings,omitempty"`
+	AbilitiesSettings *IconSettings `json:"abilitiesSettings,omitempty"`
 }
 
 type PhaseState struct {
@@ -21,6 +23,15 @@ type MapOption struct {
 	ID        string `json:"id"`
 	Text      string `json:"text"`
 	TextColor string `json:"textColor"`
+}
+
+type IconSettings struct {
+	Scale         int     `json:"scale"`
+	BorderOpacity float64 `json:"borderOpacity"`
+	BorderWidth   int     `json:"borderWidth"`
+	Radius        int     `json:"radius"`
+	AllyColor     string  `json:"allyColor"`
+	EnemyColor    string  `json:"enemyColor"`
 }
 
 type CanvasAgent struct {

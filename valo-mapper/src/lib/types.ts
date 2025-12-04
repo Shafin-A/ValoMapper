@@ -247,6 +247,8 @@ export type UndoableState = {
   mapSide: MapSide;
   currentPhaseIndex: number;
   editedPhases: number[];
+  agentsSettings?: IconSettings;
+  abilitiesSettings?: IconSettings;
 };
 
 export type ToolIconCanvas = BaseCanvasItem & {

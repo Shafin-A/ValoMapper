@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base32"
+	"encoding/json"
 	"time"
 	"valo-mapper-api/db"
 
@@ -44,18 +45,44 @@ func (l *Lobby) Save() error {
 		return err
 	}
 
+	var (
+		selectedMapID     string
+		mapSide           string
+		currentPhaseIndex int
+		editedPhases      []int
+		agentsJSON        []byte
+		abilitiesJSON     []byte
+	)
+	if l.CanvasState != nil {
+		selectedMapID = l.CanvasState.SelectedMap.ID
+		mapSide = l.CanvasState.MapSide
+		currentPhaseIndex = l.CanvasState.CurrentPhaseIndex
+		editedPhases = l.CanvasState.EditedPhases
+		if l.CanvasState.AgentsSettings != nil {
+			agentsJSON, err = json.Marshal(l.CanvasState.AgentsSettings)
+			if err != nil {
+				return err
+			}
+		}
+		if l.CanvasState.AbilitiesSettings != nil {
+			abilitiesJSON, err = json.Marshal(l.CanvasState.AbilitiesSettings)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	if exists {
 		_, err = conn.Exec(context.Background(),
 			`UPDATE lobbies 
-			SET selected_map_id = $1, map_side = $2, current_phase_index = $3, edited_phases = $4
-			WHERE code = $5`,
-			l.CanvasState.SelectedMap.ID, l.CanvasState.MapSide,
-			l.CanvasState.CurrentPhaseIndex, l.CanvasState.EditedPhases, l.Code)
+			SET selected_map_id = $1, map_side = $2, current_phase_index = $3, edited_phases = $4, agents_settings = $5, abilities_settings = $6
+			WHERE code = $7`,
+			selectedMapID, mapSide, currentPhaseIndex, editedPhases, agentsJSON, abilitiesJSON, l.Code)
 	} else {
 		_, err = conn.Exec(context.Background(),
-			`INSERT INTO lobbies (code, created_at, selected_map_id, map_side, current_phase_index, edited_phases) 
-			VALUES ($1, $2, $3, $4, $5, $6)`,
-			l.Code, l.CreatedAt, l.CanvasState.SelectedMap.ID, l.CanvasState.MapSide, l.CanvasState.CurrentPhaseIndex, l.CanvasState.EditedPhases)
+			`INSERT INTO lobbies (code, created_at, selected_map_id, map_side, current_phase_index, edited_phases, agents_settings, abilities_settings) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			l.Code, l.CreatedAt, selectedMapID, mapSide, currentPhaseIndex, editedPhases, agentsJSON, abilitiesJSON)
 	}
 
 	return err
@@ -89,8 +116,10 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 
 	var mapID string
 	var editedPhases []int
+	var agentsJSON []byte
+	var abilitiesJSON []byte
 	err = conn.QueryRow(context.Background(),
-		`SELECT code, created_at, updated_at, selected_map_id, map_side, current_phase_index, edited_phases 
+		`SELECT code, created_at, updated_at, selected_map_id, map_side, current_phase_index, edited_phases, agents_settings, abilities_settings 
 		FROM lobbies 
 		WHERE code = $1`,
 		code).Scan(
@@ -101,6 +130,8 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 		&lobby.CanvasState.MapSide,
 		&lobby.CanvasState.CurrentPhaseIndex,
 		&editedPhases,
+		&agentsJSON,
+		&abilitiesJSON,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -119,6 +150,19 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 		return nil, err
 	}
 	lobby.CanvasState.SelectedMap = *mapDetails
+
+	if agentsJSON != nil {
+		var s IconSettings
+		if err := json.Unmarshal(agentsJSON, &s); err == nil {
+			lobby.CanvasState.AgentsSettings = &s
+		}
+	}
+	if abilitiesJSON != nil {
+		var s IconSettings
+		if err := json.Unmarshal(abilitiesJSON, &s); err == nil {
+			lobby.CanvasState.AbilitiesSettings = &s
+		}
+	}
 
 	phases, err := GetAllCanvasPhases(code)
 	if err != nil {
@@ -152,7 +196,7 @@ func GetLobbiesByCodes(codes []string) ([]Lobby, error) {
 	}
 
 	rows, err := conn.Query(context.Background(),
-		`SELECT code, created_at, updated_at, selected_map_id, map_side, current_phase_index, edited_phases 
+		`SELECT code, created_at, updated_at, selected_map_id, map_side, current_phase_index, edited_phases, agents_settings, abilities_settings 
 		FROM lobbies 
 		WHERE code = ANY($1)`,
 		codes)
@@ -174,6 +218,8 @@ func GetLobbiesByCodes(codes []string) ([]Lobby, error) {
 
 		var mapID string
 		var editedPhases []int
+		var agentsJSON []byte
+		var abilitiesJSON []byte
 		err := rows.Scan(
 			&lobby.Code,
 			&lobby.CreatedAt,
@@ -182,6 +228,8 @@ func GetLobbiesByCodes(codes []string) ([]Lobby, error) {
 			&lobby.CanvasState.MapSide,
 			&lobby.CanvasState.CurrentPhaseIndex,
 			&editedPhases,
+			&agentsJSON,
+			&abilitiesJSON,
 		)
 		if err != nil {
 			return nil, err
@@ -196,6 +244,19 @@ func GetLobbiesByCodes(codes []string) ([]Lobby, error) {
 			return nil, err
 		}
 		lobby.CanvasState.SelectedMap = *mapDetails
+
+		if agentsJSON != nil {
+			var s IconSettings
+			if err := json.Unmarshal(agentsJSON, &s); err == nil {
+				lobby.CanvasState.AgentsSettings = &s
+			}
+		}
+		if abilitiesJSON != nil {
+			var s IconSettings
+			if err := json.Unmarshal(abilitiesJSON, &s); err == nil {
+				lobby.CanvasState.AbilitiesSettings = &s
+			}
+		}
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
 		if err != nil {

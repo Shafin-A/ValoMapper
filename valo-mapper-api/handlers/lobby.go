@@ -152,6 +152,8 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 		CurrentPhaseIndex: req.CanvasState.CurrentPhaseIndex,
 		EditedPhases:      req.CanvasState.EditedPhases,
 		Phases:            phases,
+		AgentsSettings:    req.CanvasState.AgentsSettings,
+		AbilitiesSettings: req.CanvasState.AbilitiesSettings,
 	}
 
 	lobby := &models.Lobby{

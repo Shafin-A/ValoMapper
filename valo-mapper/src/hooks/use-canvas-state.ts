@@ -5,6 +5,8 @@ import { useCanvasUI } from "@/hooks/use-canvas-ui";
 import { useHistoryManager } from "@/hooks/use-history-manager";
 import { usePhaseManager } from "@/hooks/use-phase-manager";
 import { usePhaseTransitions } from "@/hooks/use-phase-transition";
+import { useSettings } from "@/contexts/settings-context";
+import { UndoableState } from "@/lib/types";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -16,6 +18,12 @@ export const useCanvasState = () => {
   const phaseTransitions = usePhaseTransitions();
   const canvasUI = useCanvasUI();
   const phaseManager = usePhaseManager();
+  const {
+    agentsSettings,
+    abilitiesSettings,
+    updateAgentsSettings,
+    updateAbilitiesSettings,
+  } = useSettings();
 
   const {
     data: lobby,
@@ -29,9 +37,7 @@ export const useCanvasState = () => {
     isError: isErrorUpdatingLobby,
   } = useUpdateLobby(lobbyCode);
   const lastSaveRef = useRef<number>(Date.now());
-  const lastSavedStateRef = useRef<ReturnType<typeof getCurrentState> | null>(
-    null
-  );
+  const lastSavedStateRef = useRef<UndoableState | null>(null);
 
   const lastLoadedLobbyRef = useRef<string>("");
 
@@ -41,12 +47,14 @@ export const useCanvasState = () => {
   );
 
   const getCurrentState = useCallback(
-    () => ({
+    (): UndoableState => ({
       phases: phaseManager.phases,
       selectedMap: canvasUI.selectedMap,
       mapSide: canvasUI.mapSide,
       currentPhaseIndex: phaseManager.currentPhaseIndex,
       editedPhases: Array.from(phaseManager.editedPhases),
+      agentsSettings,
+      abilitiesSettings,
     }),
     [
       phaseManager.phases,
@@ -54,11 +62,13 @@ export const useCanvasState = () => {
       canvasUI.mapSide,
       phaseManager.currentPhaseIndex,
       phaseManager.editedPhases,
+      agentsSettings,
+      abilitiesSettings,
     ]
   );
 
   const applyState = useCallback(
-    (state: ReturnType<typeof getCurrentState>) => {
+    (state: UndoableState) => {
       phaseManager.setPhases(state.phases);
 
       if (state.currentPhaseIndex !== undefined) {
@@ -109,19 +119,36 @@ export const useCanvasState = () => {
       if (lobby.canvasState) {
         applyState(lobby.canvasState);
         lastSavedStateRef.current = lobby.canvasState;
+
+        if (lobby.canvasState.agentsSettings) {
+          updateAgentsSettings(lobby.canvasState.agentsSettings);
+        }
+        if (lobby.canvasState.abilitiesSettings) {
+          updateAbilitiesSettings(lobby.canvasState.abilitiesSettings);
+        }
       } else {
         phaseManager.resetAllPhases();
         canvasUI.resetEdits();
         lastSavedStateRef.current = null;
       }
     }
-  }, [lobbyCode, lobby, applyState, phaseManager, canvasUI]);
+  }, [
+    lobbyCode,
+    lobby,
+    applyState,
+    phaseManager,
+    canvasUI,
+    updateAgentsSettings,
+    updateAbilitiesSettings,
+  ]);
 
-  const relevantProps = useRef<(keyof ReturnType<typeof getCurrentState>)[]>([
+  const relevantProps = useRef<(keyof UndoableState)[]>([
     "phases",
     "selectedMap",
     "mapSide",
     "currentPhaseIndex",
+    "agentsSettings",
+    "abilitiesSettings",
   ]);
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
