@@ -17,6 +17,10 @@ type CreateUserRequest struct {
 	Email       string `json:"email"`
 }
 
+type UpdateUserRequest struct {
+	Name string `json:"name"`
+}
+
 func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodPost {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
@@ -73,6 +77,39 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
+	json.NewEncoder(w).Encode(user)
+}
+
+func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+	if r.Method != http.MethodPut {
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
+		return
+	}
+
+	user, err := authenticateRequest(r, firebaseAuth)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+		return
+	}
+
+	var req UpdateUserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
+		return
+	}
+	defer r.Body.Close()
+
+	if req.Name != "" {
+		user.Name = req.Name
+	}
+
+	if err := user.Update(); err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Unable to update user", err), middleware.GetRequestID(r))
 		return
 	}
 

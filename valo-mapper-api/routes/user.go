@@ -18,4 +18,8 @@ func RegisterUserRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 	users.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
 		handlers.GetUser(w, r, firebaseAuth)
 	}).Methods("GET")
+
+	users.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
+		handlers.UpdateUser(w, r, firebaseAuth)
+	}).Methods("PUT")
 }

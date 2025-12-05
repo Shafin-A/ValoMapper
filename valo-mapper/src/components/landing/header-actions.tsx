@@ -35,6 +35,13 @@ export const HeaderActions = () => {
         <Link href="/strategies">My Strategies</Link>
       </Button>
       <Button
+        variant="ghost"
+        className="transition-all hover:scale-105 will-change-transform"
+        asChild
+      >
+        <Link href="/profile">My Profile</Link>
+      </Button>
+      <Button
         variant="outline"
         onClick={logout}
         className="transition-all hover:scale-105 will-change-transform"

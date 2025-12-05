@@ -106,7 +106,9 @@ export const SiteHeader = ({
                 <>
                   <DropdownMenuLabel>Welcome {user?.name}</DropdownMenuLabel>
                   <DropdownMenuGroup>
-                    <DropdownMenuItem>Profile</DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile">My Profile</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/strategies">My Strategies</Link>
                     </DropdownMenuItem>

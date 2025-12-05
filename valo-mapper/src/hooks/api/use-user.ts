@@ -4,7 +4,7 @@ import { useFirebaseAuth } from "../use-firebase-auth";
 
 export const useUser = () => {
   const { getIdToken, user: firebaseUser } = useFirebaseAuth();
-  const { data, isLoading, isError, error } = useQuery<User>({
+  const { data, isLoading, isError, error, refetch } = useQuery<User>({
     queryKey: ["user"],
     queryFn: async () => {
       const idToken = await getIdToken();
@@ -37,5 +37,6 @@ export const useUser = () => {
     isLoading,
     isError,
     error,
+    refetch,
   };
 };

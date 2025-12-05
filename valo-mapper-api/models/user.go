@@ -25,10 +25,10 @@ func (u *User) Update() error {
 
 	err = conn.QueryRow(context.Background(), `
 		UPDATE users
-		SET email_verified = $1, name = $2, updated_at = NOW()
-		WHERE firebase_uid = $3
+		SET email = $1, email_verified = $2, name = $3, updated_at = NOW()
+		WHERE firebase_uid = $4
 		RETURNING updated_at
-	`, u.EmailVerified, u.Name, u.FirebaseUID).Scan(&u.UpdatedAt)
+	`, u.Email, u.EmailVerified, u.Name, u.FirebaseUID).Scan(&u.UpdatedAt)
 
 	return err
 }
