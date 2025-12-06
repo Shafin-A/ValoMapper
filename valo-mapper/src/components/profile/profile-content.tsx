@@ -46,6 +46,7 @@ export const ProfileContent = () => {
 
   const [name, setName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -53,7 +54,7 @@ export const ProfileContent = () => {
     }
   }, [user]);
 
-  if (!firebaseUser) {
+  if (!firebaseUser && !isLoggingOut) {
     return (
       <div className="w-full">
         <Card>
@@ -84,7 +85,7 @@ export const ProfileContent = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || isLoggingOut) {
     return (
       <div className="w-full">
         <Card>
@@ -189,6 +190,7 @@ export const ProfileContent = () => {
   };
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     await logout();
     router.push("/");
   };
