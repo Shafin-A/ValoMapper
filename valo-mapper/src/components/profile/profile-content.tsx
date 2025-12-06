@@ -19,11 +19,22 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useUpdateUser } from "@/hooks/api/use-update-user";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { AlertCircle, LogOut, Home } from "lucide-react";
+import { AlertCircle, LogOut, Home, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 
@@ -72,8 +83,6 @@ export const ProfileContent = () => {
       </div>
     );
   }
-
-  console.log(firebaseUser);
 
   if (isLoading) {
     return (
@@ -184,6 +193,10 @@ export const ProfileContent = () => {
     router.push("/");
   };
 
+  const handleDeleteAccount = async () => {
+    toast.info("Deleting...");
+  };
+
   return (
     <div className="w-full">
       <Card>
@@ -292,6 +305,40 @@ export const ProfileContent = () => {
                 </>
               )}
             </div>
+
+            {!isEditing && (
+              <div className="pt-6 border-t">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full gap-2">
+                      <Trash2 className="h-4 w-4" />
+                      Delete Account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently
+                        delete your account and remove all your data from our
+                        servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAccount}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/70"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
