@@ -37,11 +37,13 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, LogOut, Home, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
+import { useDeleteUser } from "@/hooks/api/use-delete-user";
 
 export const ProfileContent = () => {
   const { data: user, isLoading, refetch } = useUser();
   const { logout, user: firebaseUser } = useFirebaseAuth();
-  const { mutate: updateUser, isPending } = useUpdateUser();
+  const { mutate: updateUser, isPending: isUpdatingUser } = useUpdateUser();
+  const { mutate: deleteUser, isPending: isDeletingUser } = useDeleteUser();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -54,7 +56,7 @@ export const ProfileContent = () => {
     }
   }, [user]);
 
-  if (!firebaseUser && !isLoggingOut) {
+  if (!firebaseUser && !isLoggingOut && !isDeletingUser) {
     return (
       <div className="w-full">
         <Card>
@@ -85,7 +87,7 @@ export const ProfileContent = () => {
     );
   }
 
-  if (isLoading || isLoggingOut) {
+  if (isLoading || isLoggingOut || isDeletingUser) {
     return (
       <div className="w-full">
         <Card>
@@ -173,12 +175,8 @@ export const ProfileContent = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Profile updated successfully");
           refetch();
           setIsEditing(false);
-        },
-        onError: () => {
-          toast.error("Failed to update profile");
         },
       }
     );
@@ -196,7 +194,12 @@ export const ProfileContent = () => {
   };
 
   const handleDeleteAccount = async () => {
-    toast.info("Deleting...");
+    deleteUser(undefined, {
+      onSuccess: async () => {
+        await logout();
+        router.push("/");
+      },
+    });
   };
 
   return (
@@ -223,7 +226,7 @@ export const ProfileContent = () => {
                 id="name"
                 value={name}
                 onChange={handleNameChange}
-                disabled={!isEditing || isPending}
+                disabled={!isEditing || isUpdatingUser}
                 placeholder="Your name"
               />
             </div>
@@ -289,18 +292,18 @@ export const ProfileContent = () => {
                   <Button
                     onClick={handleSave}
                     disabled={
-                      isPending ||
+                      isUpdatingUser ||
                       !name.trim() ||
                       name.trim() === user.name.trim()
                     }
                     className="flex-1"
                   >
-                    {isPending ? "Saving..." : "Save"}
+                    {isUpdatingUser ? "Saving..." : "Save"}
                   </Button>
                   <Button
                     onClick={handleCancel}
                     variant="outline"
-                    disabled={isPending}
+                    disabled={isUpdatingUser}
                   >
                     Cancel
                   </Button>

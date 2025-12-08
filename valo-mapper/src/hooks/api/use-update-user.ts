@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useFirebaseAuth } from "../use-firebase-auth";
+import { toast } from "sonner";
 
 interface UpdateUserData {
   name: string;
@@ -31,6 +32,12 @@ export const useUpdateUser = () => {
       }
 
       return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Profile updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update profile");
     },
   });
 

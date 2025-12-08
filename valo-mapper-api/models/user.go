@@ -55,6 +55,20 @@ func (u *User) Save() error {
 	return err
 }
 
+func (u *User) Delete() error {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Exec(context.Background(), `
+		DELETE FROM users
+		WHERE firebase_uid = $1
+	`, u.FirebaseUID)
+
+	return err
+}
+
 func (u *User) LoadByFirebaseUID() error {
 	conn, err := db.GetDB()
 	if err != nil {

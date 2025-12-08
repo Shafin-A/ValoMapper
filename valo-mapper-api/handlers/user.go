@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -53,7 +54,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 	}
 
 	if err := user.Save(); err != nil {
-		// Check for duplicate key constraint
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "already exists") {
 			utils.SendJSONError(w, utils.NewConflict("User already exists", err), middleware.GetRequestID(r))
 			return
@@ -116,4 +116,31 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	json.NewEncoder(w).Encode(user)
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+	if r.Method != http.MethodDelete {
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
+		return
+	}
+
+	user, err := authenticateRequest(r, firebaseAuth)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+		return
+	}
+
+	if err := user.Delete(); err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Unable to delete user", err), middleware.GetRequestID(r))
+		return
+	}
+
+	if err := firebaseAuth.DeleteUser(context.Background(), user.FirebaseUID); err != nil {
+		utils.SendJSONError(w, utils.NewInternal("User deleted from database but Firebase deletion failed", err), middleware.GetRequestID(r))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
+	w.WriteHeader(http.StatusNoContent)
 }
