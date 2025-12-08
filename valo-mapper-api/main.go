@@ -12,6 +12,7 @@ import (
 	"valo-mapper-api/firebase"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/routes"
+	"valo-mapper-api/scheduler"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -32,6 +33,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize Firebase: %v", err)
 	}
+
+	conn, err := db.GetDB()
+	if err != nil {
+		log.Fatalf("Failed to get database connection: %v", err)
+	}
+
+	cleanupScheduler := scheduler.NewCleanupScheduler(conn, 12*time.Hour)
+	cleanupScheduler.Start()
 
 	r := mux.NewRouter()
 	routes.SetupRoutes(r, firebaseAuth)
@@ -67,6 +76,8 @@ func main() {
 
 	<-quit
 	log.Println("Shutting down server gracefully...")
+
+	cleanupScheduler.Stop()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
