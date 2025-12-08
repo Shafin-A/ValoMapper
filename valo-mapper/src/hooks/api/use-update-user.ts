@@ -21,7 +21,7 @@ export const useUpdateUser = () => {
         Authorization: `Bearer ${token}`,
       };
 
-      const response = await fetch(`http://localhost:8080/api/users/me`, {
+      const response = await fetch("/api/users/me", {
         method: "PUT",
         headers,
         body: JSON.stringify(data),

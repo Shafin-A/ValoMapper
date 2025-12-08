@@ -15,16 +15,13 @@ export const useDeleteFolder = () => {
       const token = await getIdToken();
       if (!token) throw new Error("User not authenticated");
 
-      const response = await fetch(
-        `http://localhost:8080/api/folders/${folderId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/folders/${folderId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) throw new Error("Failed to delete folder");
 

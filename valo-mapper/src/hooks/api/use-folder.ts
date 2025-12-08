@@ -20,8 +20,8 @@ export const useFolders = () => {
       };
 
       const [foldersRes, strategiesRes] = await Promise.all([
-        fetch("http://localhost:8080/api/folders", { method: "GET", headers }),
-        fetch("http://localhost:8080/api/strategies", {
+        fetch("/api/folders", { method: "GET", headers }),
+        fetch("/api/strategies", {
           method: "GET",
           headers,
         }),

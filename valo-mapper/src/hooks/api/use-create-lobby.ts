@@ -8,7 +8,7 @@ export const useCreateLobby = () => {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch("http://localhost:8080/api/lobbies", {
+      const response = await fetch("/api/lobbies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });

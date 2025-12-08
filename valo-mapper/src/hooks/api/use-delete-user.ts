@@ -11,7 +11,7 @@ export const useDeleteUser = () => {
       const token = await getIdToken();
       if (!token) throw new Error("User not authenticated");
 
-      const response = await fetch(`http://localhost:8080/api/users/me`, {
+      const response = await fetch("/api/users/me", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

@@ -18,7 +18,7 @@ export const useCreateFolder = () => {
       const token = await getIdToken();
       if (!token) throw new Error("User not authenticated");
 
-      const response = await fetch("http://localhost:8080/api/folders", {
+      const response = await fetch("/api/folders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

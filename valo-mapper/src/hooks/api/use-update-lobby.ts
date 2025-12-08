@@ -7,16 +7,13 @@ export const useUpdateLobby = (lobbyCode: string) => {
 
   const { mutate, isPending, isError } = useMutation({
     mutationFn: async (canvasState: CanvasState) => {
-      const response = await fetch(
-        `http://localhost:8080/api/lobbies/${lobbyCode}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ canvasState }),
-        }
-      );
+      const response = await fetch(`/api/lobbies/${lobbyCode}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ canvasState }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update lobby");

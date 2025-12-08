@@ -16,17 +16,14 @@ export const useUpdateFolder = () => {
       const token = await getIdToken();
       if (!token) throw new Error("User not authenticated");
 
-      const response = await fetch(
-        `http://localhost:8080/api/folders/${folderId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ name }),
-        }
-      );
+      const response = await fetch(`/api/folders/${folderId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name }),
+      });
 
       if (!response.ok) throw new Error("Failed to update folder");
 

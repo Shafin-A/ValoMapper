@@ -19,7 +19,7 @@ export const useCreateStrategy = () => {
       const token = await getIdToken();
       if (!token) throw new Error("User not authenticated");
 
-      const response = await fetch("http://localhost:8080/api/strategies", {
+      const response = await fetch("/api/strategies", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
