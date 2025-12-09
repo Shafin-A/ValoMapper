@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { LANDING_MESSAGES } from "@/lib/consts";
 import { ArrowRight, Crosshair, Loader2 } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
 
 interface HeroSectionProps {
   onStartMapping: () => void;
@@ -14,10 +14,7 @@ export const HeroSection = ({
   onStartMapping,
   isLoading,
 }: HeroSectionProps) => {
-  const [isNavigating, setIsNavigating] = useState(false);
-
-  const handleStartMapping = () => {
-    setIsNavigating(true);
+  const handleStartMapping = async () => {
     onStartMapping();
   };
 
@@ -51,16 +48,11 @@ export const HeroSection = ({
           size="lg"
           className="group text-base px-8 py-6 hover:scale-105 transition-all duration-300 shadow-xl font-mono uppercase tracking-wider relative overflow-hidden hover:will-change-transform"
           onClick={handleStartMapping}
-          disabled={isLoading || isNavigating}
+          disabled={isLoading}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-ring opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <span className="relative flex items-center gap-2">
-            {isNavigating ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Redirecting...
-              </>
-            ) : isLoading ? (
+            {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Starting...

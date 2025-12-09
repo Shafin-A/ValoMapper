@@ -3,10 +3,20 @@ import { BackgroundDecoration } from "@/components/landing/background-decoration
 import { HeaderActions } from "@/components/landing/header-actions";
 import { HeroSection } from "@/components/landing/hero-section";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
-import React from "react";
+import React, { useState } from "react";
 
 const LandingPage = () => {
+  const [isNavigating, setIsNavigating] = useState(false);
   const createLobbyMutation = useCreateLobby();
+
+  const handleStartMapping = () => {
+    setIsNavigating(true);
+    createLobbyMutation.mutate(undefined, {
+      onError: () => {
+        setIsNavigating(false);
+      },
+    });
+  };
 
   return (
     <div className="min-h-screen text-foreground overflow-hidden relative">
@@ -14,8 +24,8 @@ const LandingPage = () => {
       <div className="relative">
         <HeaderActions />
         <HeroSection
-          onStartMapping={() => createLobbyMutation.mutate()}
-          isLoading={createLobbyMutation.isPending}
+          onStartMapping={handleStartMapping}
+          isLoading={createLobbyMutation.isPending || isNavigating}
         />
       </div>
     </div>

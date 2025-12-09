@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export const useCreateLobby = () => {
   const router = useRouter();
@@ -22,7 +23,7 @@ export const useCreateLobby = () => {
       sessionStorage.setItem("showCreatedToast", "true");
     },
     onError: (error) => {
-      console.error("Failed to create lobby:", error);
+      toast.error(`Failed to create lobby. Error: ${error.message}`);
     },
   });
 };
