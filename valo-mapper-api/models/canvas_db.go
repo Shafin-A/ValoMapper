@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"valo-mapper-api/db"
 
 	"github.com/jackc/pgx/v5"
@@ -47,6 +48,8 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AgentsOnCanvas = append(phases[phaseIndex].AgentsOnCanvas, agent)
+		} else {
+			log.Printf("WARNING: Agent %s has invalid phase index %d (valid range: 0-%d) in lobby %s", agent.ID, phaseIndex, len(phases)-1, lobbyCode)
 		}
 	}
 	rows.Close()
@@ -70,6 +73,8 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AbilitiesOnCanvas = append(phases[phaseIndex].AbilitiesOnCanvas, ability)
+		} else {
+			log.Printf("WARNING: Ability %s has invalid phase index %d (valid range: 0-%d) in lobby %s", ability.ID, phaseIndex, len(phases)-1, lobbyCode)
 		}
 	}
 	rows.Close()
@@ -97,6 +102,8 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].DrawLines = append(phases[phaseIndex].DrawLines, line)
+		} else {
+			log.Printf("WARNING: DrawLine %s has invalid phase index %d (valid range: 0-%d) in lobby %s", line.ID, phaseIndex, len(phases)-1, lobbyCode)
 		}
 	}
 	rows.Close()
@@ -119,6 +126,8 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].TextsOnCanvas = append(phases[phaseIndex].TextsOnCanvas, text)
+		} else {
+			log.Printf("WARNING: Text %s has invalid phase index %d (valid range: 0-%d) in lobby %s", text.ID, phaseIndex, len(phases)-1, lobbyCode)
 		}
 	}
 	rows.Close()
@@ -141,6 +150,8 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].ImagesOnCanvas = append(phases[phaseIndex].ImagesOnCanvas, image)
+		} else {
+			log.Printf("WARNING: Image %s has invalid phase index %d (valid range: 0-%d) in lobby %s", image.ID, phaseIndex, len(phases)-1, lobbyCode)
 		}
 	}
 	rows.Close()
