@@ -50,6 +50,7 @@ Before setting up the project, ensure you have:
    DB_PASSWORD=your_db_password
    DB_NAME=valo-mapper
    GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json
+   ALLOWED_ORIGINS=http://localhost:3000
    ```
 3. Ensure PostgreSQL is running and a database named `valo-mapper` exists.
 4. Place your Firebase service account JSON (`serviceAccountKey.json`) in `valo-mapper-api/`.

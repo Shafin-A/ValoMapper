@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 	"valo-mapper-api/db"
@@ -48,8 +49,13 @@ func main() {
 	var handler http.Handler = r
 	handler = middleware.RequestIDMiddleware(handler)
 
+	allowedOrigins := []string{"http://localhost:3000"}
+	if origin := os.Getenv("ALLOWED_ORIGINS"); origin != "" {
+		allowedOrigins = strings.Split(origin, ",")
+	}
+
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
