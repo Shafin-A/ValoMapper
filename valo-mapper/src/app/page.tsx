@@ -12,6 +12,10 @@ const LandingPage = () => {
   const handleStartMapping = () => {
     setIsNavigating(true);
     createLobbyMutation.mutate(undefined, {
+      onSuccess: () => {
+        // Reset after a timeout in case navigation fails
+        setTimeout(() => setIsNavigating(false), 5000);
+      },
       onError: () => {
         setIsNavigating(false);
       },
