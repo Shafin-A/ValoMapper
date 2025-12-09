@@ -124,6 +124,11 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.CanvasState == nil {
+		utils.SendJSONError(w, utils.NewBadRequest("Canvas state is required"), middleware.GetRequestID(r))
+		return
+	}
+
 	existingLobby, err := models.GetLobbyByCode(code)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
