@@ -20,10 +20,6 @@ func RegisterStrategyRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 	}).Methods("GET")
 
 	strategies.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetStrategy(w, r, firebaseAuth)
-	}).Methods("GET")
-
-	strategies.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
 		handlers.UpdateStrategy(w, r, firebaseAuth)
 	}).Methods("PATCH")
 

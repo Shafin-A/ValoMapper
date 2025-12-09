@@ -20,10 +20,6 @@ func RegisterFolderRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 	}).Methods("GET")
 
 	folders.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetFolder(w, r, firebaseAuth)
-	}).Methods("GET")
-
-	folders.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
 		handlers.UpdateFolder(w, r, firebaseAuth)
 	}).Methods("PATCH")
 

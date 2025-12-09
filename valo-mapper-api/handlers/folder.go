@@ -91,46 +91,6 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 	json.NewEncoder(w).Encode(folders)
 }
 
-func GetFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
-	if r.Method != http.MethodGet {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
-	user, err := authenticateRequest(r, firebaseAuth)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
-		return
-	}
-
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/folders/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewBadRequest("Invalid folder ID"), middleware.GetRequestID(r))
-		return
-	}
-
-	folder, err := models.GetFolderByID(id)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folder", err), middleware.GetRequestID(r))
-		return
-	}
-	if folder == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	if folder.UserID != user.ID {
-		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	json.NewEncoder(w).Encode(folder)
-}
-
 func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodPatch {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))

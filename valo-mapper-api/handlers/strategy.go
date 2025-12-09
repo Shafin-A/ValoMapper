@@ -179,58 +179,6 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 	json.NewEncoder(w).Encode(responses)
 }
 
-func GetStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
-	if r.Method != http.MethodGet {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
-	user, err := authenticateRequest(r, firebaseAuth)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
-		return
-	}
-
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/strategies/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewBadRequest("Invalid strategy ID"), middleware.GetRequestID(r))
-		return
-	}
-
-	strategy, err := models.GetStrategyByID(id)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategy", err), middleware.GetRequestID(r))
-		return
-	}
-	if strategy == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	if strategy.UserID != user.ID {
-		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
-		return
-	}
-
-	lobby, err := models.GetLobbyByCode(strategy.LobbyCode)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
-		return
-	}
-	if lobby == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	response := NewStrategyResponse(strategy, lobby)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	json.NewEncoder(w).Encode(response)
-}
-
 func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
 	if r.Method != http.MethodPatch {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
