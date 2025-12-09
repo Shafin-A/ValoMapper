@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
 import { MAP_SIZE } from "@/lib/consts";
+import { VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts/misc/consts";
 import { Tool } from "@/lib/types";
 import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
@@ -22,6 +23,7 @@ import {
   Pencil,
   Redo,
   Save,
+  Scan,
   Trash2,
   Undo,
 } from "lucide-react";
@@ -32,12 +34,15 @@ import { EraserSettings } from "./eraser-settings";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import TreeViewDialogContent from "../strategies/tree-view-dialog-content";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { MapStageHandle } from "@/components/canvas";
+import { RefObject } from "react";
 
 interface ToolsSectionProps {
   mapPosition: Vector2d;
+  stageRef?: RefObject<MapStageHandle | null>;
 }
 
-export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
+export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
@@ -95,6 +100,34 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
 
   const handleImageUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleRecenterCanvas = () => {
+    const stageHandle = stageRef?.current;
+    if (!stageHandle) return;
+
+    const stage = stageHandle.stage;
+    if (!stage) return;
+
+    const container = stage.container();
+    const containerWidth = container.offsetWidth;
+    const containerHeight = container.offsetHeight;
+
+    const scaleX = containerWidth / VIRTUAL_WIDTH;
+    const scaleY = containerHeight / VIRTUAL_HEIGHT;
+    const baseScale = Math.min(scaleX, scaleY);
+
+    const scaledWidth = VIRTUAL_WIDTH * baseScale;
+    const scaledHeight = VIRTUAL_HEIGHT * baseScale;
+
+    const x = (containerWidth - scaledWidth) / 2;
+    const y = (containerHeight - scaledHeight) / 2;
+
+    stage.position({ x, y });
+    stage.scale({ x: baseScale, y: baseScale });
+    stage.batchDraw();
+
+    stageHandle.handleDragMove();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,6 +189,21 @@ export const ToolsSection = ({ mapPosition }: ToolsSectionProps) => {
       <div className="space-y-2 mt-4">
         <span className="text-base font-semibold block">Tools</span>
         <div className="grid grid-cols-5 gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={handleRecenterCanvas}
+                disabled={!stageRef}
+              >
+                <Scan />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" align="center">
+              Recenter Canvas
+            </TooltipContent>
+          </Tooltip>
           <Dialog open={openSaveDialog} onOpenChange={setOpenSaveDialog}>
             <Tooltip>
               <TooltipTrigger asChild>

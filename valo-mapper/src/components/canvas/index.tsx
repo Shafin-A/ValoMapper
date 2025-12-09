@@ -4,7 +4,7 @@ import { useKonva } from "@/hooks/use-konva";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, forwardRef } from "react";
 import { Layer, Stage } from "react-konva";
 import { CanvasAbilities } from "./canvas-abilities";
 import { CanvasAgents } from "./canvas-agents";
@@ -15,6 +15,11 @@ import { CanvasDrawLines } from "./canvas-draw-lines";
 import { DeleteZone } from "./delete-zone";
 import { CanvasToolIcons } from "./canvas-tool-icons";
 
+export interface MapStageHandle {
+  stage: KonvaStage | null;
+  handleDragMove: () => void;
+}
+
 interface MapStageProps {
   width: number;
   height: number;
@@ -22,150 +27,164 @@ interface MapStageProps {
   mapPosition: Vector2d;
 }
 
-export const MapStage = ({
-  width,
-  height,
-  scale,
-  mapPosition,
-}: MapStageProps) => {
-  const {
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    isDrawMode,
-    textsOnCanvas,
-    imagesOnCanvas,
-  } = useCanvas();
+export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
+  ({ width, height, scale, mapPosition }, forwardedRef) => {
+    const {
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+      isDrawMode,
+      textsOnCanvas,
+      imagesOnCanvas,
+    } = useCanvas();
 
-  const stageRef = useRef<KonvaStage | null>(null);
+    const stageRef = useRef<KonvaStage | null>(null);
 
-  const transformerRefs = useRef<Map<string, Konva.Transformer>>(new Map());
+    const transformerRefs = useRef<Map<string, Konva.Transformer>>(new Map());
 
-  const {
-    handleWheel,
-    handleStageClick,
-    handleStageMouseLeave,
-    handleStageMouseMove,
-    handleMouseUp,
-    handleContextMenu,
-    handleDelete,
-    handleDuplicate,
-    handleToggleAlly,
-    handlePopoverOpenChange,
-    handleDragMove,
-    contextMenu,
-    currentLineRef,
-    deleteGroupRef,
-  } = useKonva(stageRef, scale);
+    const {
+      handleWheel,
+      handleStageClick,
+      handleStageMouseLeave,
+      handleStageMouseMove,
+      handleMouseUp,
+      handleContextMenu,
+      handleDelete,
+      handleDuplicate,
+      handleToggleAlly,
+      handlePopoverOpenChange,
+      handleDragMove,
+      contextMenu,
+      currentLineRef,
+      deleteGroupRef,
+    } = useKonva(stageRef, scale);
 
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
+    useEffect(() => {
+      if (forwardedRef) {
+        if (typeof forwardedRef === "function") {
+          forwardedRef({ stage: stageRef.current, handleDragMove });
+        } else {
+          forwardedRef.current = { stage: stageRef.current, handleDragMove };
+        }
+      }
+    }, [forwardedRef, handleDragMove]);
 
-    const container = stage.container();
-    const containerWidth = container.offsetWidth;
-    const containerHeight = container.offsetHeight;
+    useEffect(() => {
+      const stage = stageRef.current;
+      if (!stage) return;
 
-    const scaledWidth = width;
-    const scaledHeight = height;
+      const container = stage.container();
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
 
-    const x = (containerWidth - scaledWidth) / 2;
-    const y = (containerHeight - scaledHeight) / 2;
+      const scaledWidth = width;
+      const scaledHeight = height;
 
-    stage.position({ x, y });
-    stage.batchDraw();
+      const x = (containerWidth - scaledWidth) / 2;
+      const y = (containerHeight - scaledHeight) / 2;
 
-    handleDragMove();
-  }, [width, height, handleDragMove]);
+      stage.position({ x, y });
+      stage.batchDraw();
 
-  useEffect(() => {
-    handleDragMove();
-
-    const handleResize = () => {
       handleDragMove();
-    };
+    }, [width, height, handleDragMove]);
 
-    window.addEventListener("resize", handleResize);
+    useEffect(() => {
+      handleDragMove();
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [handleDragMove]);
+      const handleResize = () => {
+        handleDragMove();
+      };
 
-  useEffect(() => {
-    handleDragMove();
-  }, [scale, handleDragMove]);
+      window.addEventListener("resize", handleResize);
 
-  const currentItem = contextMenu.open
-    ? contextMenu.itemType === "agent"
-      ? agentsOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null
-      : contextMenu.itemType === "ability"
-      ? abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null
-      : contextMenu.itemType === "text"
-      ? textsOnCanvas.find((t) => t.id === contextMenu.itemId) ?? null
-      : contextMenu.itemType === "image"
-      ? imagesOnCanvas.find((i) => i.id === contextMenu.itemId) ?? null
-      : null
-    : null;
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }, [handleDragMove]);
 
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-      }}
-    >
-      <Stage
-        width={width}
-        height={height}
-        scaleX={scale}
-        scaleY={scale}
-        ref={stageRef}
-        onWheel={handleWheel}
-        draggable={!isDrawMode}
-        onDragMove={handleDragMove}
-        onMouseMove={handleStageMouseMove}
-        onMouseDown={handleStageClick}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleStageMouseLeave}
-        onContextMenu={handleContextMenu}
+    useEffect(() => {
+      handleDragMove();
+    }, [scale, handleDragMove]);
+
+    const currentItem = contextMenu.open
+      ? contextMenu.itemType === "agent"
+        ? agentsOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null
+        : contextMenu.itemType === "ability"
+        ? abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null
+        : contextMenu.itemType === "text"
+        ? textsOnCanvas.find((t) => t.id === contextMenu.itemId) ?? null
+        : contextMenu.itemType === "image"
+        ? imagesOnCanvas.find((i) => i.id === contextMenu.itemId) ?? null
+        : null
+      : null;
+
+    console.log(width, scale);
+
+    return (
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+        }}
       >
-        <Layer isListening={false}>
-          <CanvasMapBackground mapPosition={mapPosition} stageRef={stageRef} />
-        </Layer>
-        <Layer isListening={!isDrawMode}>
-          <CanvasAbilities deleteGroupRef={deleteGroupRef} />
-          <CanvasAgents deleteGroupRef={deleteGroupRef} />
-          <CanvasImages
-            stageRef={stageRef}
-            transformerRefs={transformerRefs}
-            deleteGroupRef={deleteGroupRef}
-          />
-          <CanvasTexts
-            stageRef={stageRef}
-            transformerRefs={transformerRefs}
-            deleteGroupRef={deleteGroupRef}
-          />
-          <CanvasToolIcons deleteGroupRef={deleteGroupRef} />
-        </Layer>
-        <Layer isListening={isDrawMode}>
-          <CanvasDrawLines currentLineRef={currentLineRef} />
-          <DeleteZone deleteGroupRef={deleteGroupRef} />
-        </Layer>
-      </Stage>
+        <Stage
+          width={width / scale}
+          height={height}
+          scaleX={scale}
+          scaleY={scale}
+          ref={stageRef}
+          onWheel={handleWheel}
+          draggable={!isDrawMode}
+          onDragMove={handleDragMove}
+          onMouseMove={handleStageMouseMove}
+          onMouseDown={handleStageClick}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleStageMouseLeave}
+          onContextMenu={handleContextMenu}
+        >
+          <Layer isListening={false}>
+            <CanvasMapBackground
+              mapPosition={mapPosition}
+              stageRef={stageRef}
+            />
+          </Layer>
+          <Layer isListening={!isDrawMode}>
+            <CanvasAbilities deleteGroupRef={deleteGroupRef} />
+            <CanvasAgents deleteGroupRef={deleteGroupRef} />
+            <CanvasImages
+              stageRef={stageRef}
+              transformerRefs={transformerRefs}
+              deleteGroupRef={deleteGroupRef}
+            />
+            <CanvasTexts
+              stageRef={stageRef}
+              transformerRefs={transformerRefs}
+              deleteGroupRef={deleteGroupRef}
+            />
+            <CanvasToolIcons deleteGroupRef={deleteGroupRef} />
+          </Layer>
+          <Layer isListening={isDrawMode}>
+            <CanvasDrawLines currentLineRef={currentLineRef} />
+            <DeleteZone deleteGroupRef={deleteGroupRef} />
+          </Layer>
+        </Stage>
 
-      <ContextMenuPopover
-        open={contextMenu.open}
-        x={contextMenu.x}
-        y={contextMenu.y}
-        itemType={contextMenu.itemType}
-        currentItem={currentItem}
-        onOpenChange={handlePopoverOpenChange}
-        onDuplicate={handleDuplicate}
-        onToggleAlly={handleToggleAlly}
-        onDelete={handleDelete}
-      />
-    </div>
-  );
-};
+        <ContextMenuPopover
+          open={contextMenu.open}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          itemType={contextMenu.itemType}
+          currentItem={currentItem}
+          onOpenChange={handlePopoverOpenChange}
+          onDuplicate={handleDuplicate}
+          onToggleAlly={handleToggleAlly}
+          onDelete={handleDelete}
+        />
+      </div>
+    );
+  }
+);
+
+MapStage.displayName = "MapStage";

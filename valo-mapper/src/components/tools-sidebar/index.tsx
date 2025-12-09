@@ -11,7 +11,9 @@ import { MAP_OPTIONS, MAP_SIZE, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapOption } from "@/lib/types";
 import { Vector2d } from "konva/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { RefObject } from "react";
 import { useState } from "react";
+import { MapStageHandle } from "@/components/canvas";
 import { IconsSection } from "./icons-section";
 import { MapSelect } from "./map-select-button";
 import { ToolsSection } from "./tools-section";
@@ -20,11 +22,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
   mapPosition: Vector2d;
+  stageRef?: RefObject<MapStageHandle | null>;
 }
 
 export const ToolsSidebar = ({
   sidebarOpen,
   mapPosition,
+  stageRef,
 }: ToolsSidebarProps) => {
   const {
     selectedMap,
@@ -243,7 +247,7 @@ export const ToolsSidebar = ({
                 })}
               </ToggleGroup>
             </div>
-            <ToolsSection mapPosition={mapPosition} />
+            <ToolsSection mapPosition={mapPosition} stageRef={stageRef} />
             <IconsSection mapPosition={mapPosition} />
           </div>
 

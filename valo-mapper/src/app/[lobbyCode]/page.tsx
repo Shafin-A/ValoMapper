@@ -1,7 +1,7 @@
 "use client";
 
 import { AgentsSidebar } from "@/components/agents-sidebar";
-import { MapStage } from "@/components/canvas";
+import { MapStage, MapStageHandle } from "@/components/canvas";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ToolsSidebar } from "@/components/tools-sidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 const LobbyEditPage = () => {
   const divRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<MapStageHandle | null>(null);
   const [stageScale, setStageScale] = useState(1);
 
   const sidebarState = useSidebarState();
@@ -79,6 +80,7 @@ const LobbyEditPage = () => {
       <ToolsSidebar
         sidebarOpen={sidebarState.leftSidebarOpen}
         mapPosition={mapPosition}
+        stageRef={stageRef}
       />
 
       <div
@@ -133,6 +135,7 @@ const LobbyEditPage = () => {
           </div>
         ) : (
           <MapStage
+            ref={stageRef}
             width={VIRTUAL_WIDTH * stageScale}
             height={VIRTUAL_HEIGHT * stageScale}
             scale={stageScale}
