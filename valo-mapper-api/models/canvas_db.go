@@ -192,7 +192,11 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		}
+	}()
 
 	// Delete all previous data for this lobby
 	tables := []string{
