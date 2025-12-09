@@ -164,6 +164,11 @@ export const ProfileContent = () => {
   };
 
   const handleSave = async () => {
+    if (!user) {
+      toast.error("User data not available");
+      return;
+    }
+
     if (!name.trim()) {
       toast.error("Name cannot be empty");
       return;
