@@ -19,6 +19,7 @@ import type {
 import Konva from "konva";
 import React, { createContext, RefObject, useContext, useEffect } from "react";
 import { useSettings } from "./settings-context";
+import { toast } from "sonner";
 
 interface CanvasContextType {
   agentsOnCanvas: AgentCanvas[];
@@ -233,7 +234,8 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
           return;
         }
       } catch (err) {
-        console.error(err);
+        console.error("Keyboard shortcut error:", err);
+        toast.error("An unexpected error occurred with keyboard shortcuts");
       }
     };
 
