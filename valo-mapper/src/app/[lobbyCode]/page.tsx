@@ -60,9 +60,14 @@ const LobbyEditPage = () => {
         id: `lobby-created-${params.lobbyCode}`,
         action: {
           label: "Copy Link",
-          onClick: () => {
-            navigator.clipboard.writeText(window.location.href);
-            toast.success("Link copied!");
+          onClick: async () => {
+            try {
+              await navigator.clipboard.writeText(window.location.href);
+              toast.success("Link copied!");
+            } catch (err) {
+              console.error("Failed to copy link:", err);
+              toast.error("Failed to copy link to clipboard");
+            }
           },
         },
       });
