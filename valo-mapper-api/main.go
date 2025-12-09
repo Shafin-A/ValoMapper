@@ -25,6 +25,26 @@ func main() {
 		log.Println("No .env file found, using environment variables")
 	}
 
+	requiredEnvVars := []string{
+		"DB_HOST",
+		"DB_PORT",
+		"DB_USER",
+		"DB_PASSWORD",
+		"DB_NAME",
+		"GOOGLE_APPLICATION_CREDENTIALS",
+	}
+
+	var missingVars []string
+	for _, envVar := range requiredEnvVars {
+		if os.Getenv(envVar) == "" {
+			missingVars = append(missingVars, envVar)
+		}
+	}
+
+	if len(missingVars) > 0 {
+		log.Fatalf("Missing required environment variables: %v", missingVars)
+	}
+
 	if err := db.InitDB(); err != nil {
 		log.Fatal("Failed to initialize database:", err)
 	}
