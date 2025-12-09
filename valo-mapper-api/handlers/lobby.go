@@ -43,7 +43,8 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	for {
+	maxRetries := 5
+	for i := range maxRetries {
 		lobby.Code = models.GenerateLobbyCode()
 		err = lobby.Save()
 		if err == nil {
@@ -51,6 +52,10 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		}
 		if !strings.Contains(err.Error(), "duplicate key") {
 			utils.SendJSONError(w, utils.NewInternal("Unable to create lobby", err), middleware.GetRequestID(r))
+			return
+		}
+		if i == maxRetries-1 {
+			utils.SendJSONError(w, utils.NewInternal("Unable to create lobby: max retries exceeded", err), middleware.GetRequestID(r))
 			return
 		}
 	}
