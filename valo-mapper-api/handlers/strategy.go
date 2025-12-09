@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -161,13 +162,18 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 	}
 
 	var responses []*StrategyResponse
+	var missingLobbies []string
 	for _, s := range strategies {
 		lobby, exists := lobbyMap[s.LobbyCode]
 		if !exists || lobby == nil {
-			utils.SendJSONError(w, utils.NewInternal("Inconsistent data: lobby not found", nil), middleware.GetRequestID(r))
-			return
+			missingLobbies = append(missingLobbies, s.LobbyCode)
+			continue
 		}
 		responses = append(responses, NewStrategyResponse(&s, lobby))
+	}
+
+	if len(missingLobbies) > 0 {
+		log.Printf("WARNING: Strategies reference missing lobbies: %v", missingLobbies)
 	}
 
 	if responses == nil {
