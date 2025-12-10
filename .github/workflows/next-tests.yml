@@ -1,0 +1,65 @@
+name: Next.js Frontend Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "valo-mapper/**"
+      - ".github/workflows/next-tests.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "valo-mapper/**"
+      - ".github/workflows/next-tests.yml"
+
+jobs:
+  test:
+    name: Test Next.js Frontend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./valo-mapper
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: valo-mapper/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run type check
+        run: npx tsc --noEmit
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./valo-mapper/coverage/lcov.info
+          flags: frontend
+
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Check for build artifacts
+        run: |
+          if [ ! -d ".next" ]; then
+            echo "Error: .next directory not found after build"
+            exit 1
+          fi
+          echo "Build completed successfully"
