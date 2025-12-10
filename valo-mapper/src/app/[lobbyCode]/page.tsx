@@ -13,38 +13,56 @@ import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts/misc/consts";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const LobbyEditPage = () => {
   const divRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<MapStageHandle | null>(null);
   const [stageScale, setStageScale] = useState(1);
+  const [isScaleReady, setIsScaleReady] = useState(false);
 
   const sidebarState = useSidebarState();
 
   const { isLoadingLobby, isErrorLobby, lobbyError } = useCanvas();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const updateScale = () => {
       if (!divRef.current) return;
 
       const containerWidth = divRef.current.offsetWidth;
       const containerHeight = divRef.current.offsetHeight;
 
+      if (containerWidth === 0 || containerHeight === 0) return;
+
       const scaleX = containerWidth / VIRTUAL_WIDTH;
       const scaleY = containerHeight / VIRTUAL_HEIGHT;
       const scale = Math.min(scaleX, scaleY);
 
       setStageScale(scale);
+      setIsScaleReady(true);
     };
 
-    updateScale();
-    window.addEventListener("resize", updateScale);
+    const timeoutId = setTimeout(updateScale, 0);
 
-    return () => {
-      window.removeEventListener("resize", updateScale);
-    };
+    if (typeof ResizeObserver !== "undefined") {
+      const resizeObserver = new ResizeObserver(updateScale);
+      setTimeout(() => {
+        if (divRef.current) {
+          resizeObserver.observe(divRef.current);
+        }
+      }, 0);
+      return () => {
+        clearTimeout(timeoutId);
+        resizeObserver.disconnect();
+      };
+    } else {
+      window.addEventListener("resize", updateScale);
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener("resize", updateScale);
+      };
+    }
   }, []);
 
   const mapPosition = {
@@ -137,6 +155,15 @@ const LobbyEditPage = () => {
                     )}
                   </AlertDescription>
                 </Alert>
+              </div>
+            </div>
+          ) : !isScaleReady ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
+                <p className="text-muted-foreground font-medium">
+                  Initializing canvas...
+                </p>
               </div>
             </div>
           ) : (

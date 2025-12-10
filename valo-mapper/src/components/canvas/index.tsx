@@ -118,8 +118,6 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
         : null
       : null;
 
-    console.log(width, scale);
-
     return (
       <div
         style={{
