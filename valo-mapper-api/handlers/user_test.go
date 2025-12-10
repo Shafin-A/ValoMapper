@@ -96,7 +96,7 @@ func testCreateUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func testGetUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
@@ -113,7 +113,7 @@ func testGetUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.Moc
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func testUpdateUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
@@ -146,7 +146,7 @@ func testUpdateUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func testDeleteUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {

@@ -53,7 +53,7 @@ func testCreateFolder(w http.ResponseWriter, r *http.Request, mockAuth *testutil
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(folder)
+	_ = json.NewEncoder(w).Encode(folder)
 }
 
 func testGetFolders(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
@@ -80,7 +80,7 @@ func testGetFolders(w http.ResponseWriter, r *http.Request, mockAuth *testutils.
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(folders)
+	_ = json.NewEncoder(w).Encode(folders)
 }
 
 func testUpdateFolder(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
@@ -117,7 +117,7 @@ func testUpdateFolder(w http.ResponseWriter, r *http.Request, mockAuth *testutil
 	}
 	if folder == nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Folder not found"))
+		_, _ = w.Write([]byte("Folder not found"))
 		return
 	}
 
@@ -140,7 +140,7 @@ func testUpdateFolder(w http.ResponseWriter, r *http.Request, mockAuth *testutil
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(folder)
+	_ = json.NewEncoder(w).Encode(folder)
 }
 
 func testDeleteFolder(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
@@ -170,7 +170,7 @@ func testDeleteFolder(w http.ResponseWriter, r *http.Request, mockAuth *testutil
 	}
 	if folder == nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Folder not found"))
+		_, _ = w.Write([]byte("Folder not found"))
 		return
 	}
 

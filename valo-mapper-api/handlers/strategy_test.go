@@ -51,7 +51,7 @@ func testCreateStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testut
 	}
 	if lobby == nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Lobby not found"))
+		_, _ = w.Write([]byte("Lobby not found"))
 		return
 	}
 
@@ -75,7 +75,7 @@ func testCreateStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testut
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 func testGetStrategies(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
@@ -144,7 +144,7 @@ func testGetStrategies(w http.ResponseWriter, r *http.Request, mockAuth *testuti
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(responses)
+	_ = json.NewEncoder(w).Encode(responses)
 }
 
 func testUpdateStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
@@ -181,7 +181,7 @@ func testUpdateStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testut
 	}
 	if strategy == nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Strategy not found"))
+		_, _ = w.Write([]byte("Strategy not found"))
 		return
 	}
 
@@ -209,7 +209,7 @@ func testUpdateStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testut
 	}
 	if lobby == nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Lobby not found"))
+		_, _ = w.Write([]byte("Lobby not found"))
 		return
 	}
 
@@ -217,7 +217,7 @@ func testUpdateStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testut
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 func testDeleteStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
@@ -247,7 +247,7 @@ func testDeleteStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testut
 	}
 	if strategy == nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Strategy not found"))
+		_, _ = w.Write([]byte("Strategy not found"))
 		return
 	}
 
