@@ -16,6 +16,7 @@ type FirebaseAuthInterface interface {
 type MockFirebaseAuth struct {
 	VerifyTokenFunc func(ctx context.Context, idToken string) (*auth.Token, error)
 	GetUserFunc     func(ctx context.Context, uid string) (*auth.UserRecord, error)
+	DeleteUserFunc  func(ctx context.Context, uid string) error
 }
 
 // VerifyIDToken mocks token verification
@@ -40,6 +41,14 @@ func (m *MockFirebaseAuth) GetUser(ctx context.Context, uid string) (*auth.UserR
 		},
 		EmailVerified: true,
 	}, nil
+}
+
+// DeleteUser mocks deleting a user
+func (m *MockFirebaseAuth) DeleteUser(ctx context.Context, uid string) error {
+	if m.DeleteUserFunc != nil {
+		return m.DeleteUserFunc(ctx, uid)
+	}
+	return nil
 }
 
 // NewMockFirebaseAuth creates a new mock Firebase Auth client

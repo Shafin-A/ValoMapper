@@ -2,9 +2,10 @@ package models
 
 import (
 	"context"
-	"database/sql"
 	"time"
 	"valo-mapper-api/db"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Folder struct {
@@ -82,7 +83,7 @@ func GetFolderByID(id int) (*Folder, error) {
 		&folder.UpdatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
 

@@ -2,9 +2,10 @@ package models
 
 import (
 	"context"
-	"database/sql"
 	"time"
 	"valo-mapper-api/db"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Strategy struct {
@@ -79,7 +80,7 @@ func GetStrategyByID(id int) (*Strategy, error) {
 		&strategy.UpdatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
