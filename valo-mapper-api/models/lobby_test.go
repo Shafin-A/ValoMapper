@@ -19,7 +19,7 @@ func TestGenerateLobbyCode(t *testing.T) {
 
 	t.Run("generates unique codes", func(t *testing.T) {
 		codes := make(map[string]bool)
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			code := GenerateLobbyCode()
 			assert.NotEmpty(t, code)
 			// Check uniqueness (very unlikely to collide in 100 iterations)
