@@ -13,9 +13,21 @@ valo-mapper-api/
 │   └── http.go        # HTTP test helpers
 ├── handlers/          # Handler tests
 │   ├── auth_test.go
-│   └── lobby_test.go
+│   ├── folder_test.go
+│   ├── lobby_test.go
+│   ├── strategy_test.go
+│   └── user_test.go
 ├── middleware/        # Middleware tests
 │   └── request_id_test.go
+├── models/            # Model tests
+│   ├── canvas_test.go
+│   ├── canvas_db_test.go
+│   ├── folder_test.go
+│   ├── helpers_test.go
+│   ├── lobby_test.go
+│   ├── map_test.go
+│   ├── strategy_test.go
+│   └── user_test.go
 ├── utils/            # Utility tests
 │   └── http_error_test.go
 └── db/               # Database tests
@@ -45,6 +57,7 @@ go tool cover -html=coverage.out
 ### Run Specific Package
 ```bash
 go test ./handlers
+go test ./models
 go test ./utils
 go test ./middleware
 ```
@@ -99,11 +112,22 @@ Tests automatically run on GitHub Actions with a PostgreSQL service container. N
 - **Utils**: Error handling, HTTP utilities
 - **Middleware**: Request ID generation
 - **Handlers**: Business logic with mocked dependencies
+- **Models**: JSON serialization for canvas structures (agents, abilities, draw lines, etc.)
+- **Lobby**: Code generation uniqueness and format validation
 
 ### Integration Tests
 - **Database**: Connection, queries, transactions
 - **Handlers**: Full request/response cycle with real database
-- **Models**: CRUD operations
+- **Models**: CRUD operations (User, Strategy, Folder, Lobby, Canvas, Map)
+  - Save/Create operations
+  - Update operations
+  - Delete operations
+  - Query operations (GetByID, GetByUserID, GetByCode, etc.)
+  - Foreign key constraints
+  - Null value handling
+  - Complex canvas state management
+  - JSON serialization/deserialization
+  - Multi-phase canvas data handling
 
 ### Mocking
 
@@ -136,12 +160,6 @@ func TestMyHandler(t *testing.T) {
     t.Run("integration test", func(t *testing.T) {
         pool := testutils.SetupTestDB(t)
         defer testutils.CleanupTestDB(t, pool)
-        
-        // Test with real database
-    })
-}
-```
-
 ### Example: Model Test
 
 ```go
@@ -152,6 +170,23 @@ func TestModelSave(t *testing.T) {
     
     pool := testutils.SetupTestDB(t)
     defer testutils.CleanupTestDB(t, pool)
+    
+    t.Run("creates model successfully", func(t *testing.T) {
+        testutils.TruncateTables(t, pool, "table_name")
+        
+        model := &Model{
+            Field: "value",
+        }
+        
+        err := model.Save()
+        require.NoError(t, err)
+        assert.NotZero(t, model.ID)
+        assert.NotZero(t, model.CreatedAt)
+    })
+}
+```
+
+See `models/user_test.go`, `models/strategy_test.go`, `models/folder_test.go`, `models/lobby_test.go`, and `models/canvas_db_test.go` for complete examples. defer testutils.CleanupTestDB(t, pool)
     
     testutils.TruncateTables(t, pool, "table_name")
     

@@ -2,9 +2,10 @@ package models
 
 import (
 	"context"
-	"database/sql"
 	"time"
 	"valo-mapper-api/db"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type User struct {
@@ -48,7 +49,7 @@ func (u *User) Save() error {
 		&u.UpdatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		return u.LoadByFirebaseUID()
 	}
 
@@ -98,7 +99,7 @@ func GetUserByFirebaseUID(uid string) (*User, error) {
 	}
 
 	err := user.LoadByFirebaseUID()
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {

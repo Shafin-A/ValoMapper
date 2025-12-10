@@ -38,10 +38,15 @@ func CreateTestUser(t *testing.T, pool *pgxpool.Pool, firebaseUID string) *model
 
 // CreateTestLobby creates a test lobby in the database
 func CreateTestLobby(t *testing.T, pool *pgxpool.Pool) *models.Lobby {
+	return CreateTestLobbyWithCode(t, pool, models.GenerateLobbyCode())
+}
+
+// CreateTestLobbyWithCode creates a test lobby with a specific code in the database
+func CreateTestLobbyWithCode(t *testing.T, pool *pgxpool.Pool, code string) *models.Lobby {
 	t.Helper()
 
 	lobby := &models.Lobby{
-		Code:      models.GenerateLobbyCode(),
+		Code:      code,
 		CreatedAt: time.Now(),
 		CanvasState: &models.FullCanvasState{
 			SelectedMap: models.MapOption{
