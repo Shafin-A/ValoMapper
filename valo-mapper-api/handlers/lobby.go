@@ -60,10 +60,7 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(lobby)
+	utils.SendJSON(w, http.StatusCreated, lobby, middleware.GetRequestID(r))
 }
 
 func GetLobby(w http.ResponseWriter, r *http.Request) {
@@ -93,9 +90,7 @@ func GetLobby(w http.ResponseWriter, r *http.Request) {
 
 	lobby.CanvasState.Phases = phases
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	json.NewEncoder(w).Encode(lobby)
+	utils.SendJSON(w, http.StatusOK, lobby, middleware.GetRequestID(r))
 }
 
 type UpdateLobbyRequest struct {
@@ -177,7 +172,5 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	json.NewEncoder(w).Encode(lobby)
+	utils.SendJSON(w, http.StatusOK, lobby, middleware.GetRequestID(r))
 }

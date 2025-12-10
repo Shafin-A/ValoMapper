@@ -58,10 +58,7 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(folder)
+	utils.SendJSON(w, http.StatusCreated, folder, middleware.GetRequestID(r))
 }
 
 func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -86,9 +83,7 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 		folders = []models.Folder{}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	json.NewEncoder(w).Encode(folders)
+	utils.SendJSON(w, http.StatusOK, folders, middleware.GetRequestID(r))
 }
 
 func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -145,9 +140,7 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	json.NewEncoder(w).Encode(folder)
+	utils.SendJSON(w, http.StatusOK, folder, middleware.GetRequestID(r))
 }
 
 func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {

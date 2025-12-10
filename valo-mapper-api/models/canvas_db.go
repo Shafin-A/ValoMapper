@@ -194,7 +194,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 	defer func() {
 		if err != nil {
-			tx.Rollback(ctx)
+			_ = tx.Rollback(ctx)
 		}
 	}()
 

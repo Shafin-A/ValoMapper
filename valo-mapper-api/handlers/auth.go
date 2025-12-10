@@ -44,7 +44,7 @@ func authenticateRequest(r *http.Request, firebaseAuth *auth.Client) (*models.Us
 	firebaseUser, err := firebaseAuth.GetUser(context.Background(), token.UID)
 	if err == nil && firebaseUser.EmailVerified != user.EmailVerified {
 		user.EmailVerified = firebaseUser.EmailVerified
-		user.Update()
+		_ = user.Update()
 	}
 
 	return user, nil

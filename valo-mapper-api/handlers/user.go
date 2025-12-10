@@ -62,10 +62,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	utils.SendJSON(w, http.StatusCreated, user, middleware.GetRequestID(r))
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -80,9 +77,7 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) 
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	json.NewEncoder(w).Encode(user)
+	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -113,9 +108,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	json.NewEncoder(w).Encode(user)
+	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {

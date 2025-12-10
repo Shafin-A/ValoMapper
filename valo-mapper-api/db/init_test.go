@@ -31,7 +31,7 @@ func TestInitDB(t *testing.T) {
 	// Change to parent directory for migrations to work
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	err = os.Chdir("..")
 	require.NoError(t, err)
@@ -121,7 +121,7 @@ func TestGetDB(t *testing.T) {
 
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	err = os.Chdir("..")
 	require.NoError(t, err)
@@ -177,7 +177,7 @@ func TestClose(t *testing.T) {
 
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	err = os.Chdir("..")
 	require.NoError(t, err)
@@ -216,7 +216,7 @@ func TestDatabaseConnectionPool(t *testing.T) {
 
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	err = os.Chdir("..")
 	require.NoError(t, err)

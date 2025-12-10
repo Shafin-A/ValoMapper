@@ -104,10 +104,7 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 
 	response := NewStrategyResponse(strategy, lobby)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	utils.SendJSON(w, http.StatusCreated, response, middleware.GetRequestID(r))
 }
 
 func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -180,9 +177,7 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 		responses = []*StrategyResponse{}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	json.NewEncoder(w).Encode(responses)
+	utils.SendJSON(w, http.StatusOK, responses, middleware.GetRequestID(r))
 }
 
 func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
@@ -251,10 +246,7 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 
 	response := NewStrategyResponse(strategy, lobby)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	utils.SendJSON(w, http.StatusOK, response, middleware.GetRequestID(r))
 }
 
 func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {

@@ -64,5 +64,22 @@ func SendJSONError(w http.ResponseWriter, he *HTTPError, requestID string) {
 		response["requestId"] = requestID
 	}
 
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("[request=%s] failed to encode error response: %v", requestID, err)
+	}
+}
+
+func SendJSON(w http.ResponseWriter, statusCode int, data any, requestID string) bool {
+	encoded, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("[request=%s] failed to encode JSON response: %v", requestID, err)
+		SendJSONError(w, NewInternal("Failed to encode response", err), requestID)
+		return false
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-ID", requestID)
+	w.WriteHeader(statusCode)
+	_, _ = w.Write(encoded)
+	return true
 }
