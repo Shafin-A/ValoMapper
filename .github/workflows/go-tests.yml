@@ -95,12 +95,9 @@ jobs:
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
-          file: ./valo-mapper-api/coverage.txt
-          flags: backend
-          name: backend-coverage
-          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Generate coverage report
         run: go tool cover -html=coverage.txt -o coverage.html
