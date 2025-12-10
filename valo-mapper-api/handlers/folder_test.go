@@ -2,12 +2,9 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
-	"strings"
 	"testing"
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
@@ -16,178 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testCreateFolder(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var req CreateFolderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	if req.Name == "" {
-		http.Error(w, "Folder name is required", http.StatusBadRequest)
-		return
-	}
-
-	folder := &models.Folder{
-		UserID:         user.ID,
-		Name:           req.Name,
-		ParentFolderID: req.ParentFolderID,
-	}
-
-	if err := folder.Save(); err != nil {
-		http.Error(w, "Unable to create folder", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(folder)
-}
-
-func testGetFolders(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	folders, err := models.GetFoldersByUserID(user.ID)
-	if err != nil {
-		http.Error(w, "Unable to retrieve folders", http.StatusInternalServerError)
-		return
-	}
-
-	if folders == nil {
-		folders = []models.Folder{}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(folders)
-}
-
-func testUpdateFolder(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodPatch {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/folders/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "Invalid folder ID", http.StatusBadRequest)
-		return
-	}
-
-	var req UpdateFolderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	folder, err := models.GetFolderByID(id)
-	if err != nil {
-		http.Error(w, "Unable to retrieve folder", http.StatusInternalServerError)
-		return
-	}
-	if folder == nil {
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte("Folder not found"))
-		return
-	}
-
-	if folder.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
-	if req.Name != nil {
-		folder.Name = *req.Name
-	}
-	if req.ParentFolderID != nil {
-		folder.ParentFolderID = req.ParentFolderID
-	}
-
-	if err := folder.Update(); err != nil {
-		http.Error(w, "Unable to update folder", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(folder)
-}
-
-func testDeleteFolder(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/folders/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "Invalid folder ID", http.StatusBadRequest)
-		return
-	}
-
-	folder, err := models.GetFolderByID(id)
-	if err != nil {
-		http.Error(w, "Unable to retrieve folder", http.StatusInternalServerError)
-		return
-	}
-	if folder == nil {
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte("Folder not found"))
-		return
-	}
-
-	if folder.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
-	if err := folder.Delete(); err != nil {
-		http.Error(w, "Unable to delete folder", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// Tests
 func TestCreateFolder(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -219,7 +44,7 @@ func TestCreateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateFolder(w, req, mockAuth)
+		CreateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
 
@@ -253,7 +78,7 @@ func TestCreateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateFolder(w, req, mockAuth)
+		CreateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
 
@@ -283,7 +108,7 @@ func TestCreateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateFolder(w, req, mockAuth)
+		CreateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -296,7 +121,7 @@ func TestCreateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "")
 		w := httptest.NewRecorder()
 
-		testCreateFolder(w, req, mockAuth)
+		CreateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -305,7 +130,7 @@ func TestCreateFolder(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/folders", nil)
 		w := httptest.NewRecorder()
 
-		testCreateFolder(w, req, mockAuth)
+		CreateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -341,7 +166,7 @@ func TestGetFolders(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, "/api/folders", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testGetFolders(w, req, mockAuth)
+		GetFolders(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -370,7 +195,7 @@ func TestGetFolders(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, "/api/folders", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testGetFolders(w, req, mockAuth)
+		GetFolders(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -384,7 +209,7 @@ func TestGetFolders(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, "/api/folders", nil, "")
 		w := httptest.NewRecorder()
 
-		testGetFolders(w, req, mockAuth)
+		GetFolders(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -393,7 +218,7 @@ func TestGetFolders(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/folders", nil)
 		w := httptest.NewRecorder()
 
-		testGetFolders(w, req, mockAuth)
+		GetFolders(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -433,7 +258,7 @@ func TestUpdateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateFolder(w, req, mockAuth)
+		UpdateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -465,7 +290,7 @@ func TestUpdateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", childFolder.ID), reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateFolder(w, req, mockAuth)
+		UpdateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -495,7 +320,7 @@ func TestUpdateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/folders/99999", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateFolder(w, req, mockAuth)
+		UpdateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -522,7 +347,7 @@ func TestUpdateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateFolder(w, req, mockAuth)
+		UpdateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -546,7 +371,7 @@ func TestUpdateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/folders/invalid", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateFolder(w, req, mockAuth)
+		UpdateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -562,7 +387,7 @@ func TestUpdateFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "")
 		w := httptest.NewRecorder()
 
-		testUpdateFolder(w, req, mockAuth)
+		UpdateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -571,7 +396,7 @@ func TestUpdateFolder(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/folders/1", nil)
 		w := httptest.NewRecorder()
 
-		testUpdateFolder(w, req, mockAuth)
+		UpdateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -606,11 +431,10 @@ func TestDeleteFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testDeleteFolder(w, req, mockAuth)
+		DeleteFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
 
-		// Verify folder was deleted (GetFolderByID returns (nil, nil) when not found)
 		deletedFolder, _ := models.GetFolderByID(folder.ID)
 		assert.Nil(t, deletedFolder)
 	})
@@ -629,7 +453,7 @@ func TestDeleteFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/folders/99999", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testDeleteFolder(w, req, mockAuth)
+		DeleteFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -651,7 +475,7 @@ func TestDeleteFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testDeleteFolder(w, req, mockAuth)
+		DeleteFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -670,7 +494,7 @@ func TestDeleteFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/folders/invalid", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testDeleteFolder(w, req, mockAuth)
+		DeleteFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -681,7 +505,7 @@ func TestDeleteFolder(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "")
 		w := httptest.NewRecorder()
 
-		testDeleteFolder(w, req, mockAuth)
+		DeleteFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -690,7 +514,7 @@ func TestDeleteFolder(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/folders/1", nil)
 		w := httptest.NewRecorder()
 
-		testDeleteFolder(w, req, mockAuth)
+		DeleteFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})

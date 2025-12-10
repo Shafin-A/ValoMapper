@@ -2,11 +2,8 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
@@ -15,166 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testVerifyFirebaseTokenUser(r *http.Request, authClient testutils.FirebaseAuthInterface) (*auth.Token, error) {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return nil, errors.New("missing authorization header")
-	}
-
-	idToken := strings.TrimPrefix(authHeader, "Bearer ")
-
-	token, err := authClient.VerifyIDToken(context.Background(), idToken)
-	if err != nil {
-		return nil, errors.New("invalid or expired token")
-	}
-
-	return token, nil
-}
-
-func testAuthenticateRequest(r *http.Request, mockAuth *testutils.MockFirebaseAuth) (*models.User, error) {
-	token, err := testVerifyFirebaseTokenUser(r, mockAuth)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := models.GetUserByFirebaseUID(token.UID)
-	if err != nil {
-		return nil, errors.New("unable to retrieve user profile")
-	}
-	if user == nil {
-		return nil, errors.New("user profile not found")
-	}
-
-	firebaseUser, err := mockAuth.GetUser(context.Background(), token.UID)
-	if err == nil && firebaseUser.EmailVerified != user.EmailVerified {
-		user.EmailVerified = firebaseUser.EmailVerified
-		_ = user.Update()
-	}
-
-	return user, nil
-}
-
-func testCreateUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	token, err := testVerifyFirebaseTokenUser(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var req CreateUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	if token.UID != req.FirebaseUID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
-	user := &models.User{
-		FirebaseUID:   req.FirebaseUID,
-		Name:          req.Name,
-		Email:         req.Email,
-		EmailVerified: false,
-	}
-
-	if err := user.Save(); err != nil {
-		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "already exists") || strings.Contains(err.Error(), "unique constraint") {
-			http.Error(w, "User already exists", http.StatusConflict)
-			return
-		}
-		http.Error(w, "Unable to create user", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(user)
-}
-
-func testGetUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(user)
-}
-
-func testUpdateUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodPut {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var req UpdateUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	if req.Name != "" {
-		user.Name = req.Name
-	}
-
-	if err := user.Update(); err != nil {
-		http.Error(w, "Unable to update user", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(user)
-}
-
-func testDeleteUser(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	if err := user.Delete(); err != nil {
-		http.Error(w, "Unable to delete user", http.StatusInternalServerError)
-		return
-	}
-
-	if err := mockAuth.DeleteUser(context.Background(), user.FirebaseUID); err != nil {
-		http.Error(w, "User deleted from database but Firebase deletion failed", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// Tests
 func TestCreateUser(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -201,7 +38,7 @@ func TestCreateUser(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateUser(w, req, mockAuth)
+		CreateUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
 
@@ -224,7 +61,7 @@ func TestCreateUser(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", reqBody, "")
 		w := httptest.NewRecorder()
 
-		testCreateUser(w, req, mockAuth)
+		CreateUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -233,7 +70,7 @@ func TestCreateUser(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 		w := httptest.NewRecorder()
 
-		testCreateUser(w, req, mockAuth)
+		CreateUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -266,7 +103,7 @@ func TestGetUser(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testGetUser(w, req, mockAuth)
+		GetUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -281,7 +118,7 @@ func TestGetUser(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "")
 		w := httptest.NewRecorder()
 
-		testGetUser(w, req, mockAuth)
+		GetUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -290,7 +127,7 @@ func TestGetUser(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/users", nil)
 		w := httptest.NewRecorder()
 
-		testGetUser(w, req, mockAuth)
+		GetUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -327,7 +164,7 @@ func TestUpdateUser(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPut, "/api/users", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateUser(w, req, mockAuth)
+		UpdateUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -346,7 +183,7 @@ func TestUpdateUser(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPut, "/api/users", reqBody, "")
 		w := httptest.NewRecorder()
 
-		testUpdateUser(w, req, mockAuth)
+		UpdateUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -355,7 +192,7 @@ func TestUpdateUser(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 		w := httptest.NewRecorder()
 
-		testUpdateUser(w, req, mockAuth)
+		UpdateUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -396,18 +233,15 @@ func TestDeleteUser(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/users", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testDeleteUser(w, req, mockAuth)
+		DeleteUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
 		assert.True(t, deleteUserCalled, "DeleteUser should have been called on Firebase Auth")
 
-		// Verify user was deleted from database
 		deletedUser, err := models.GetUserByFirebaseUID(testUser.FirebaseUID)
 		if err != nil {
-			// Some implementations return an error for not found
 			assert.Contains(t, err.Error(), "no rows")
 		} else {
-			// Others return nil
 			assert.Nil(t, deletedUser)
 		}
 	})
@@ -416,7 +250,7 @@ func TestDeleteUser(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/users", nil, "")
 		w := httptest.NewRecorder()
 
-		testDeleteUser(w, req, mockAuth)
+		DeleteUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -425,7 +259,7 @@ func TestDeleteUser(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 		w := httptest.NewRecorder()
 
-		testDeleteUser(w, req, mockAuth)
+		DeleteUser(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})

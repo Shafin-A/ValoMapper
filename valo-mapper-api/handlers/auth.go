@@ -11,7 +11,21 @@ import (
 	"firebase.google.com/go/v4/auth"
 )
 
-func verifyFirebaseToken(r *http.Request, firebaseAuth *auth.Client) (*auth.Token, error) {
+type FirebaseAuthInterface interface {
+	VerifyIDToken(ctx context.Context, idToken string) (*auth.Token, error)
+	GetUser(ctx context.Context, uid string) (*auth.UserRecord, error)
+	DeleteUser(ctx context.Context, uid string) error
+}
+
+type FirebaseAuthClient struct {
+	*auth.Client
+}
+
+func NewFirebaseAuthClient(client *auth.Client) FirebaseAuthInterface {
+	return &FirebaseAuthClient{Client: client}
+}
+
+func verifyFirebaseToken(r *http.Request, firebaseAuth FirebaseAuthInterface) (*auth.Token, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return nil, errors.New("missing authorization header")
@@ -27,7 +41,7 @@ func verifyFirebaseToken(r *http.Request, firebaseAuth *auth.Client) (*auth.Toke
 	return token, nil
 }
 
-func authenticateRequest(r *http.Request, firebaseAuth *auth.Client) (*models.User, error) {
+func authenticateRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*models.User, error) {
 	token, err := verifyFirebaseToken(r, firebaseAuth)
 	if err != nil {
 		return nil, err

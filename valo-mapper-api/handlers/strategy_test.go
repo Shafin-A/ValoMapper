@@ -2,12 +2,9 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
-	"strings"
 	"testing"
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
@@ -16,255 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testCreateStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var req CreateStrategyRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	if req.LobbyCode == "" {
-		http.Error(w, "Lobby code is required", http.StatusBadRequest)
-		return
-	}
-	if req.Name == "" {
-		http.Error(w, "Strategy name is required", http.StatusBadRequest)
-		return
-	}
-
-	lobby, err := models.GetLobbyByCode(req.LobbyCode)
-	if err != nil {
-		http.Error(w, "Unable to retrieve lobby", http.StatusInternalServerError)
-		return
-	}
-	if lobby == nil {
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte("Lobby not found"))
-		return
-	}
-
-	strategy := &models.Strategy{
-		UserID:    user.ID,
-		FolderID:  req.FolderID,
-		LobbyCode: req.LobbyCode,
-		Name:      req.Name,
-	}
-
-	if err := strategy.Save(); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			http.Error(w, "You have already saved this lobby", http.StatusConflict)
-			return
-		}
-		http.Error(w, "Unable to create strategy", http.StatusInternalServerError)
-		return
-	}
-
-	response := NewStrategyResponse(strategy, lobby)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(response)
-}
-
-func testGetStrategies(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	folderIDStr := r.URL.Query().Get("folderId")
-	var folderID *int
-	if folderIDStr != "" {
-		id, err := strconv.Atoi(folderIDStr)
-		if err != nil {
-			http.Error(w, "Invalid folder ID", http.StatusBadRequest)
-			return
-		}
-		folderID = &id
-	}
-
-	var strategies []models.Strategy
-	if folderID != nil {
-		strategies, err = models.GetStrategiesByFolderID(user.ID, *folderID)
-	} else {
-		strategies, err = models.GetStrategiesByUserID(user.ID)
-	}
-
-	if err != nil {
-		http.Error(w, "Unable to retrieve strategies", http.StatusInternalServerError)
-		return
-	}
-
-	lobbyCodes := make([]string, 0, len(strategies))
-	for _, s := range strategies {
-		lobbyCodes = append(lobbyCodes, s.LobbyCode)
-	}
-
-	lobbies, err := models.GetLobbiesByCodes(lobbyCodes)
-	if err != nil {
-		http.Error(w, "Unable to retrieve lobbies", http.StatusInternalServerError)
-		return
-	}
-
-	lobbyMap := make(map[string]*models.Lobby)
-	for i := range lobbies {
-		lobbyMap[lobbies[i].Code] = &lobbies[i]
-	}
-
-	var responses []*StrategyResponse
-	for _, s := range strategies {
-		lobby, exists := lobbyMap[s.LobbyCode]
-		if !exists || lobby == nil {
-			continue
-		}
-		responses = append(responses, NewStrategyResponse(&s, lobby))
-	}
-
-	if responses == nil {
-		responses = []*StrategyResponse{}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(responses)
-}
-
-func testUpdateStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodPatch {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/strategies/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "Invalid strategy ID", http.StatusBadRequest)
-		return
-	}
-
-	var req UpdateStrategyRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	strategy, err := models.GetStrategyByID(id)
-	if err != nil {
-		http.Error(w, "Unable to retrieve strategy", http.StatusInternalServerError)
-		return
-	}
-	if strategy == nil {
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte("Strategy not found"))
-		return
-	}
-
-	if strategy.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
-	if req.Name != nil {
-		strategy.Name = *req.Name
-	}
-	if req.FolderID != nil {
-		strategy.FolderID = req.FolderID
-	}
-
-	if err := strategy.Update(); err != nil {
-		http.Error(w, "Unable to update strategy", http.StatusInternalServerError)
-		return
-	}
-
-	lobby, err := models.GetLobbyByCode(strategy.LobbyCode)
-	if err != nil {
-		http.Error(w, "Unable to retrieve lobby", http.StatusInternalServerError)
-		return
-	}
-	if lobby == nil {
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte("Lobby not found"))
-		return
-	}
-
-	response := NewStrategyResponse(strategy, lobby)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(response)
-}
-
-func testDeleteStrategy(w http.ResponseWriter, r *http.Request, mockAuth *testutils.MockFirebaseAuth) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
-		return
-	}
-
-	user, err := testAuthenticateRequest(r, mockAuth)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/strategies/")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "Invalid strategy ID", http.StatusBadRequest)
-		return
-	}
-
-	strategy, err := models.GetStrategyByID(id)
-	if err != nil {
-		http.Error(w, "Unable to retrieve strategy", http.StatusInternalServerError)
-		return
-	}
-	if strategy == nil {
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte("Strategy not found"))
-		return
-	}
-
-	if strategy.UserID != user.ID {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
-	if err := strategy.Delete(); err != nil {
-		http.Error(w, "Unable to delete strategy", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// Tests
 func TestCreateStrategy(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -299,7 +47,7 @@ func TestCreateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
 
@@ -336,7 +84,7 @@ func TestCreateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
 
@@ -367,7 +115,7 @@ func TestCreateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -393,7 +141,7 @@ func TestCreateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -417,7 +165,7 @@ func TestCreateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -444,7 +192,7 @@ func TestCreateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testCreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusConflict, w.Code)
 	})
@@ -460,7 +208,7 @@ func TestCreateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "")
 		w := httptest.NewRecorder()
 
-		testCreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -469,7 +217,7 @@ func TestCreateStrategy(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/strategies", nil)
 		w := httptest.NewRecorder()
 
-		testCreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -507,7 +255,7 @@ func TestGetStrategies(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, "/api/strategies", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testGetStrategies(w, req, mockAuth)
+		GetStrategies(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -548,7 +296,7 @@ func TestGetStrategies(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, fmt.Sprintf("/api/strategies?folderId=%d", folder.ID), nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testGetStrategies(w, req, mockAuth)
+		GetStrategies(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -576,7 +324,7 @@ func TestGetStrategies(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, "/api/strategies", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testGetStrategies(w, req, mockAuth)
+		GetStrategies(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -600,7 +348,7 @@ func TestGetStrategies(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, "/api/strategies?folderId=invalid", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testGetStrategies(w, req, mockAuth)
+		GetStrategies(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -609,7 +357,7 @@ func TestGetStrategies(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodGet, "/api/strategies", nil, "")
 		w := httptest.NewRecorder()
 
-		testGetStrategies(w, req, mockAuth)
+		GetStrategies(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -618,7 +366,7 @@ func TestGetStrategies(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/strategies", nil)
 		w := httptest.NewRecorder()
 
-		testGetStrategies(w, req, mockAuth)
+		GetStrategies(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -659,7 +407,7 @@ func TestUpdateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateStrategy(w, req, mockAuth)
+		UpdateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -692,7 +440,7 @@ func TestUpdateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateStrategy(w, req, mockAuth)
+		UpdateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -722,7 +470,7 @@ func TestUpdateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/strategies/99999", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateStrategy(w, req, mockAuth)
+		UpdateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -750,7 +498,7 @@ func TestUpdateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateStrategy(w, req, mockAuth)
+		UpdateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -774,7 +522,7 @@ func TestUpdateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/strategies/invalid", reqBody, "valid-token")
 		w := httptest.NewRecorder()
 
-		testUpdateStrategy(w, req, mockAuth)
+		UpdateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -791,7 +539,7 @@ func TestUpdateStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "")
 		w := httptest.NewRecorder()
 
-		testUpdateStrategy(w, req, mockAuth)
+		UpdateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -800,7 +548,7 @@ func TestUpdateStrategy(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/strategies/1", nil)
 		w := httptest.NewRecorder()
 
-		testUpdateStrategy(w, req, mockAuth)
+		UpdateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -836,11 +584,10 @@ func TestDeleteStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/strategies/%d", strategy.ID), nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testDeleteStrategy(w, req, mockAuth)
+		DeleteStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
 
-		// Verify strategy was deleted (GetStrategyByID returns (nil, nil) when not found)
 		deletedStrategy, _ := models.GetStrategyByID(strategy.ID)
 		assert.Nil(t, deletedStrategy)
 	})
@@ -859,7 +606,7 @@ func TestDeleteStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/strategies/99999", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testDeleteStrategy(w, req, mockAuth)
+		DeleteStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -882,7 +629,7 @@ func TestDeleteStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/strategies/%d", strategy.ID), nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testDeleteStrategy(w, req, mockAuth)
+		DeleteStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -901,7 +648,7 @@ func TestDeleteStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/strategies/invalid", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		testDeleteStrategy(w, req, mockAuth)
+		DeleteStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -913,7 +660,7 @@ func TestDeleteStrategy(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/strategies/%d", strategy.ID), nil, "")
 		w := httptest.NewRecorder()
 
-		testDeleteStrategy(w, req, mockAuth)
+		DeleteStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -922,7 +669,7 @@ func TestDeleteStrategy(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/strategies/1", nil)
 		w := httptest.NewRecorder()
 
-		testDeleteStrategy(w, req, mockAuth)
+		DeleteStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})

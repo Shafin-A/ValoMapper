@@ -9,8 +9,6 @@ import (
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
-
-	"firebase.google.com/go/v4/auth"
 )
 
 type CreateFolderRequest struct {
@@ -23,7 +21,7 @@ type UpdateFolderRequest struct {
 	ParentFolderID *int    `json:"parentFolderId,omitempty"`
 }
 
-func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPost {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
@@ -61,7 +59,7 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 	utils.SendJSON(w, http.StatusCreated, folder, middleware.GetRequestID(r))
 }
 
-func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodGet {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
@@ -86,7 +84,7 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 	utils.SendJSON(w, http.StatusOK, folders, middleware.GetRequestID(r))
 }
 
-func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPatch {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
@@ -143,7 +141,7 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cli
 	utils.SendJSON(w, http.StatusOK, folder, middleware.GetRequestID(r))
 }
 
-func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodDelete {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return

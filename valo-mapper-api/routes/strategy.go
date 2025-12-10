@@ -10,20 +10,21 @@ import (
 
 func RegisterStrategyRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 	strategies := r.PathPrefix("/api/strategies").Subrouter()
+	authClient := handlers.NewFirebaseAuthClient(firebaseAuth)
 
 	strategies.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
-		handlers.CreateStrategy(w, r, firebaseAuth)
+		handlers.CreateStrategy(w, r, authClient)
 	}).Methods("POST")
 
 	strategies.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetStrategies(w, r, firebaseAuth)
+		handlers.GetStrategies(w, r, authClient)
 	}).Methods("GET")
 
 	strategies.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handlers.UpdateStrategy(w, r, firebaseAuth)
+		handlers.UpdateStrategy(w, r, authClient)
 	}).Methods("PATCH")
 
 	strategies.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handlers.DeleteStrategy(w, r, firebaseAuth)
+		handlers.DeleteStrategy(w, r, authClient)
 	}).Methods("DELETE")
 }

@@ -11,8 +11,6 @@ import (
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
-
-	"firebase.google.com/go/v4/auth"
 )
 
 type CreateStrategyRequest struct {
@@ -48,7 +46,7 @@ func NewStrategyResponse(strategy *models.Strategy, lobby *models.Lobby) *Strate
 	}
 }
 
-func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPost {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
@@ -107,7 +105,7 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 	utils.SendJSON(w, http.StatusCreated, response, middleware.GetRequestID(r))
 }
 
-func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodGet {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
@@ -180,7 +178,7 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Cl
 	utils.SendJSON(w, http.StatusOK, responses, middleware.GetRequestID(r))
 }
 
-func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPatch {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
@@ -249,7 +247,7 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.C
 	utils.SendJSON(w, http.StatusOK, response, middleware.GetRequestID(r))
 }
 
-func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodDelete {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return

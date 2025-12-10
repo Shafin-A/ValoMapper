@@ -8,8 +8,6 @@ import (
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
-
-	"firebase.google.com/go/v4/auth"
 )
 
 type CreateUserRequest struct {
@@ -22,7 +20,7 @@ type UpdateUserRequest struct {
 	Name string `json:"name"`
 }
 
-func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPost {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
@@ -65,7 +63,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 	utils.SendJSON(w, http.StatusCreated, user, middleware.GetRequestID(r))
 }
 
-func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodGet {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
@@ -80,7 +78,7 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
 
-func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPut {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
@@ -111,7 +109,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Clien
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth *auth.Client) {
+func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodDelete {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
 		return
