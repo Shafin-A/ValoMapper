@@ -160,6 +160,8 @@ func TestMyHandler(t *testing.T) {
     t.Run("integration test", func(t *testing.T) {
         pool := testutils.SetupTestDB(t)
         defer testutils.CleanupTestDB(t, pool)
+```
+
 ### Example: Model Test
 
 ```go
@@ -186,13 +188,7 @@ func TestModelSave(t *testing.T) {
 }
 ```
 
-See `models/user_test.go`, `models/strategy_test.go`, `models/folder_test.go`, `models/lobby_test.go`, and `models/canvas_db_test.go` for complete examples. defer testutils.CleanupTestDB(t, pool)
-    
-    testutils.TruncateTables(t, pool, "table_name")
-    
-    // Test model operations
-}
-```
+See `models/user_test.go`, `models/strategy_test.go`, `models/folder_test.go`, `models/lobby_test.go`, and `models/canvas_db_test.go` for complete examples.
 
 ## Best Practices
 
