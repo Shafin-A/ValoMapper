@@ -11,7 +11,7 @@ import { MAP_OPTIONS, MAP_SIZE, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapOption } from "@/lib/types";
 import { Vector2d } from "konva/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { RefObject } from "react";
+import { RefObject, Suspense } from "react";
 import { useState } from "react";
 import { MapStageHandle } from "@/components/canvas";
 import { IconsSection } from "./icons-section";
@@ -185,71 +185,76 @@ export const ToolsSidebar = ({
         </SidebarHeader>
 
         <SidebarContent className="px-4 pb-4 relative">
-          <div
-            className={
-              isLoadingLobby || isErrorLobby
-                ? "pointer-events-none opacity-50"
-                : ""
-            }
-          >
-            <div className="space-y-2 mt-4">
-              <span className="text-base font-semibold block">Phases</span>
-              <ToggleGroup
-                type="single"
-                className="grid grid-cols-5 gap-2 w-full"
-                defaultValue="1"
-                value={(
-                  (pendingPhaseIndex ?? currentPhaseIndex) + 1
-                ).toString()}
-                onValueChange={(value) => {
-                  if (value) {
-                    handlePhaseSwitch(Number(value) - 1);
-                  }
-                }}
-                rounded
-              >
-                {Array.from({ length: 10 }, (_, i) => {
-                  const phaseNum = i + 1;
-                  const isPrevious = phaseNum === currentPhaseIndex;
-                  const isNext = phaseNum === currentPhaseIndex + 2;
+          <Suspense fallback={<ToolsSidebarLoadingSkeleton />}>
+            <div
+              className={
+                isLoadingLobby || isErrorLobby
+                  ? "pointer-events-none opacity-50"
+                  : ""
+              }
+            >
+              <div className="space-y-2 mt-4">
+                <span className="text-base font-semibold block">Phases</span>
+                <ToggleGroup
+                  type="single"
+                  className="grid grid-cols-5 gap-2 w-full"
+                  defaultValue="1"
+                  value={(
+                    (pendingPhaseIndex ?? currentPhaseIndex) + 1
+                  ).toString()}
+                  onValueChange={(value) => {
+                    if (value) {
+                      handlePhaseSwitch(Number(value) - 1);
+                    }
+                  }}
+                  rounded
+                >
+                  {Array.from({ length: 10 }, (_, i) => {
+                    const phaseNum = i + 1;
+                    const isPrevious = phaseNum === currentPhaseIndex;
+                    const isNext = phaseNum === currentPhaseIndex + 2;
 
-                  if (isPrevious) {
+                    if (isPrevious) {
+                      return (
+                        <Tooltip key={phaseNum}>
+                          <TooltipTrigger asChild>
+                            <ToggleGroupItem value={phaseNum.toString()}>
+                              {phaseNum}
+                            </ToggleGroupItem>
+                          </TooltipTrigger>
+                          <TooltipContent>A</TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+
+                    if (isNext) {
+                      return (
+                        <Tooltip key={phaseNum}>
+                          <TooltipTrigger asChild>
+                            <ToggleGroupItem value={phaseNum.toString()}>
+                              {phaseNum}
+                            </ToggleGroupItem>
+                          </TooltipTrigger>
+                          <TooltipContent>D</TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+
                     return (
-                      <Tooltip key={phaseNum}>
-                        <TooltipTrigger asChild>
-                          <ToggleGroupItem value={phaseNum.toString()}>
-                            {phaseNum}
-                          </ToggleGroupItem>
-                        </TooltipTrigger>
-                        <TooltipContent>A</TooltipContent>
-                      </Tooltip>
+                      <ToggleGroupItem
+                        key={phaseNum}
+                        value={phaseNum.toString()}
+                      >
+                        {phaseNum}
+                      </ToggleGroupItem>
                     );
-                  }
-
-                  if (isNext) {
-                    return (
-                      <Tooltip key={phaseNum}>
-                        <TooltipTrigger asChild>
-                          <ToggleGroupItem value={phaseNum.toString()}>
-                            {phaseNum}
-                          </ToggleGroupItem>
-                        </TooltipTrigger>
-                        <TooltipContent>D</TooltipContent>
-                      </Tooltip>
-                    );
-                  }
-
-                  return (
-                    <ToggleGroupItem key={phaseNum} value={phaseNum.toString()}>
-                      {phaseNum}
-                    </ToggleGroupItem>
-                  );
-                })}
-              </ToggleGroup>
+                  })}
+                </ToggleGroup>
+              </div>
+              <ToolsSection mapPosition={mapPosition} stageRef={stageRef} />
+              <IconsSection mapPosition={mapPosition} />
             </div>
-            <ToolsSection mapPosition={mapPosition} stageRef={stageRef} />
-            <IconsSection mapPosition={mapPosition} />
-          </div>
+          </Suspense>
 
           {isLoadingLobby && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
@@ -276,5 +281,14 @@ export const ToolsSidebar = ({
         </SidebarContent>
       </Sidebar>
     </SidebarProvider>
+  );
+};
+
+const ToolsSidebarLoadingSkeleton = () => {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-8">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <span className="text-sm text-muted-foreground">Loading tools...</span>
+    </div>
   );
 };

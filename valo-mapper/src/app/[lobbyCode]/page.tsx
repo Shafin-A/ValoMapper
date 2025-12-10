@@ -13,7 +13,7 @@ import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts/misc/consts";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const LobbyEditPage = () => {
@@ -88,68 +88,81 @@ const LobbyEditPage = () => {
         stageRef={stageRef}
       />
 
-      <div
-        className="flex h-[calc(100svh-1px-var(--header-height))] overflow-hidden"
-        ref={divRef}
-      >
-        {isLoadingLobby ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
-              <p className="text-muted-foreground font-medium">
-                Loading lobby...
-              </p>
-            </div>
-          </div>
-        ) : isErrorLobby ? (
-          <div className="w-full h-full flex items-center justify-center px-4">
-            <div className="max-w-md space-y-4">
-              <div className="flex justify-end">
-                <Button variant="outline" size="icon" asChild>
-                  <Link href="/">
-                    <Home className="h-4 w-4" />
-                  </Link>
-                </Button>
+      <Suspense fallback={<LobbyLoadingSkeleton />}>
+        <div
+          className="flex h-[calc(100svh-1px-var(--header-height))] overflow-hidden"
+          ref={divRef}
+        >
+          {isLoadingLobby ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
+                <p className="text-muted-foreground font-medium">
+                  Loading lobby...
+                </p>
               </div>
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>
-                  {isNotFound ? "Lobby not found" : "Failed to load lobby"}
-                </AlertTitle>
-                <AlertDescription>
-                  {isNotFound ? (
-                    <div className="space-y-2">
-                      <p>
-                        This lobby doesn&apos;t exist or may have been deleted
-                        due to inactivity.
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Unsaved lobbies are automatically removed after 12 hours
-                        of inactivity.
-                      </p>
-                    </div>
-                  ) : (
-                    <p>
-                      There was an error loading this lobby. Please try again
-                      later.
-                    </p>
-                  )}
-                </AlertDescription>
-              </Alert>
             </div>
-          </div>
-        ) : (
-          <MapStage
-            ref={stageRef}
-            width={VIRTUAL_WIDTH * stageScale}
-            height={VIRTUAL_HEIGHT * stageScale}
-            scale={stageScale}
-            mapPosition={mapPosition}
-          />
-        )}
-      </div>
+          ) : isErrorLobby ? (
+            <div className="w-full h-full flex items-center justify-center px-4">
+              <div className="max-w-md space-y-4">
+                <div className="flex justify-end">
+                  <Button variant="outline" size="icon" asChild>
+                    <Link href="/">
+                      <Home className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>
+                    {isNotFound ? "Lobby not found" : "Failed to load lobby"}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {isNotFound ? (
+                      <div className="space-y-2">
+                        <p>
+                          This lobby doesn&apos;t exist or may have been deleted
+                          due to inactivity.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Unsaved lobbies are automatically removed after 12
+                          hours of inactivity.
+                        </p>
+                      </div>
+                    ) : (
+                      <p>
+                        There was an error loading this lobby. Please try again
+                        later.
+                      </p>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </div>
+          ) : (
+            <MapStage
+              ref={stageRef}
+              width={VIRTUAL_WIDTH * stageScale}
+              height={VIRTUAL_HEIGHT * stageScale}
+              scale={stageScale}
+              mapPosition={mapPosition}
+            />
+          )}
+        </div>
+      </Suspense>
 
       <AgentsSidebar sidebarOpen={sidebarState.rightSidebarOpen} />
+    </div>
+  );
+};
+
+const LobbyLoadingSkeleton = () => {
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
+        <p className="text-muted-foreground font-medium">Loading lobby...</p>
+      </div>
     </div>
   );
 };

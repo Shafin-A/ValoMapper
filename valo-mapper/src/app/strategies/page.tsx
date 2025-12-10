@@ -4,11 +4,12 @@ import { StrategiesContent } from "@/components/strategies/strategies-content";
 import { StrategiesHeader } from "@/components/strategies/strategies-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useFolders } from "@/hooks/api/use-folder";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { StrategyData } from "@/lib/types";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { convertFolderOrStrategyId } from "@/lib/utils";
 import Link from "next/link";
 
@@ -129,17 +130,41 @@ const MyStrategiesPage = () => {
   return (
     <div className="min-h-screen">
       <div className="max-w-[1600px] mx-auto px-8 py-8">
-        <StrategiesHeader
-          navigationPath={navigationPath}
-          currentFolderId={currentFolderId}
-          refetch={refetch}
-          navigateToBreadcrumb={navigateToBreadcrumb}
-        />
+        <Suspense fallback={<StrategiesSkeleton />}>
+          <StrategiesHeader
+            navigationPath={navigationPath}
+            currentFolderId={currentFolderId}
+            refetch={refetch}
+            navigateToBreadcrumb={navigateToBreadcrumb}
+          />
 
-        <StrategiesContent
-          currentItems={currentItems}
-          navigateToFolder={navigateToFolder}
-        />
+          <StrategiesContent
+            currentItems={currentItems}
+            navigateToFolder={navigateToFolder}
+          />
+        </Suspense>
+      </div>
+    </div>
+  );
+};
+
+const StrategiesSkeleton = () => {
+  return (
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-64" />
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+        <Skeleton className="h-6 w-full max-w-md" />
+      </div>
+      <div className="flex flex-wrap gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-48 w-64 rounded-lg" />
+        ))}
       </div>
     </div>
   );

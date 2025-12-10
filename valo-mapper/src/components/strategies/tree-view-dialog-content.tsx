@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 
 import {
   DialogContent,
@@ -221,21 +221,23 @@ export const TreeViewDialogContent = ({
             <BreadcrumbList>{renderBreadcrumbs(locationPath)}</BreadcrumbList>
           </Breadcrumb>
           <ScrollArea className="h-[300px] border rounded-md">
-            {isLoading || isPending ? (
-              <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : data && data.length >= 0 ? (
-              <TreeView
-                flatData={flatData}
-                selectedLocation={selectedLocation}
-                setSelectedLocation={setSelectedLocation}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                No folders yet
-              </div>
-            )}
+            <Suspense fallback={<TreeViewLoadingSkeleton />}>
+              {isLoading || isPending ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : data && data.length >= 0 ? (
+                <TreeView
+                  flatData={flatData}
+                  selectedLocation={selectedLocation}
+                  setSelectedLocation={setSelectedLocation}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  No folders yet
+                </div>
+              )}
+            </Suspense>
           </ScrollArea>
         </div>
       </div>
@@ -254,6 +256,14 @@ export const TreeViewDialogContent = ({
         </Button>
       </DialogFooter>
     </DialogContent>
+  );
+};
+
+const TreeViewLoadingSkeleton = () => {
+  return (
+    <div className="flex items-center justify-center h-full">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
   );
 };
 
