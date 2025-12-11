@@ -25,7 +25,7 @@ export const HeroSection = ({
           [
         </div>
         <h1 className="text-7xl sm:text-8xl md:text-9xl font-bold mb-4 tracking-tighter">
-          <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-foreground to-primary bg-clip-text text-transparent">
             ValoMapper
           </span>
         </h1>
@@ -50,7 +50,7 @@ export const HeroSection = ({
           onClick={handleStartMapping}
           disabled={isLoading}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary to-ring opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-linear-to-r from-primary to-ring opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <span className="relative flex items-center gap-2">
             {isLoading ? (
               <>

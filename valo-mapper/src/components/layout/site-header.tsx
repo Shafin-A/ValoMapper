@@ -60,7 +60,7 @@ export const SiteHeader = ({
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Link href="/">
             <h1 className="font-bold">
-              <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-foreground to-primary bg-clip-text text-transparent">
                 ValoMapper
               </span>
             </h1>
