@@ -149,12 +149,11 @@ export const PrivacyPolicy = () => {
               authentication and account management
             </li>
             <li>
-              <strong>PostgreSQL Database</strong> (hosted service TBD) - for
+              <strong>PostgreSQL Database</strong> (Fly.io Postgres) - for
               storing user references and lobby data
             </li>
             <li>
-              <strong>Cloud Hosting Provider</strong> (TBD) - for website
-              hosting and infrastructure
+              <strong>Fly.io</strong> - for website hosting and infrastructure
             </li>
           </ul>
           <p className="mb-3">
