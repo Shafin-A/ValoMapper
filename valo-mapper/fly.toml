@@ -3,6 +3,7 @@ app = 'valomapper-frontend'
 primary_region = 'yyz'
 
 [build]
+  dockerfile = "Dockerfile"
 
 [http_service]
   internal_port = 3000
