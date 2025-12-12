@@ -1,113 +1,18 @@
 name: Deploy to Fly.io
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_run:
+    workflows: ["Next.js Frontend Tests", "Go Backend Tests"]
+    types:
+      - completed
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  test-frontend:
-    name: Test Frontend
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./valo-mapper
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          cache: "npm"
-          cache-dependency-path: valo-mapper/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run tests
-        run: npm test
-
-  test-backend:
-    name: Test Backend
-    runs-on: ubuntu-latest
-
-    # PostgreSQL service container
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: valomapper_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-    defaults:
-      run:
-        working-directory: ./valo-mapper-api
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.25"
-          cache-dependency-path: valo-mapper-api/go.sum
-
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Wait for PostgreSQL
-        run: |
-          until pg_isready -h localhost -p 5432 -U postgres; do
-            echo "Waiting for PostgreSQL..."
-            sleep 2
-          done
-
-      - name: Run database migrations
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: valomapper_test
-        run: |
-          go run db/migrations.go || echo "Migrations completed or skipped"
-
-      - name: Create mock Firebase credentials
-        run: |
-          echo '{"type":"service_account","project_id":"test"}' > serviceAccountKey.json
-
-      - name: Run tests
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: valomapper_test
-          GOOGLE_APPLICATION_CREDENTIALS: ./serviceAccountKey.json
-        run: go test -v ./...
-
   deploy-backend:
     name: Deploy Backend to Fly.io
     runs-on: ubuntu-latest
-    needs: [test-backend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
       - name: Checkout code
@@ -124,8 +29,7 @@ jobs:
   deploy-frontend:
     name: Deploy Frontend to Fly.io
     runs-on: ubuntu-latest
-    needs: [test-frontend, deploy-backend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [deploy-backend]
 
     steps:
       - name: Checkout code
