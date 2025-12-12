@@ -39,7 +39,8 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy Backend
-        run: flyctl deploy --remote-only --config valo-mapper-api/fly.toml
+        working-directory: ./valo-mapper-api
+        run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -60,6 +61,7 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy Frontend
-        run: flyctl deploy --remote-only --config valo-mapper/fly.toml
+        working-directory: ./valo-mapper
+        run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
