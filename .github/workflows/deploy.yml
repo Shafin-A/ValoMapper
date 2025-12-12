@@ -22,8 +22,10 @@ jobs:
           filters: |
             backend:
               - 'valo-mapper-api/**'
+              - '.github/workflows/deploy.yml'
             frontend:
               - 'valo-mapper/**'
+              - '.github/workflows/deploy.yml'
 
   deploy-backend:
     name: Deploy Backend to Fly.io
