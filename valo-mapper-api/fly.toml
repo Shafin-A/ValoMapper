@@ -1,0 +1,22 @@
+# fly.toml for ValoMapper API (Go)
+app = 'valomapper-api'
+primary_region = 'yyz'
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[env]
+  # CORS configuration
+  ALLOWED_ORIGINS = "https://valomapper-frontend.fly.dev"

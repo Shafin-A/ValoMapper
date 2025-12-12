@@ -1,0 +1,5 @@
+# Ignore service account key (sensitive!)
+serviceAccountKey.json
+
+# Fly.io
+.fly/

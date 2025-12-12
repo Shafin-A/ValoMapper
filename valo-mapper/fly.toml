@@ -1,0 +1,24 @@
+# fly.toml for ValoMapper Frontend (Next.js)
+app = 'valomapper-frontend'
+primary_region = 'yyz'
+
+[build]
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+# Environment variables
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  API_URL = "https://valomapper-api.fly.dev/api"

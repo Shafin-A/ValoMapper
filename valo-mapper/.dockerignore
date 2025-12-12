@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Testing
+coverage/
+
+# Build
+.next/
+out/
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
+.env*.local
+
+# Fly.io
+.fly/

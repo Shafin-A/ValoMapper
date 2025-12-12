@@ -12,7 +12,24 @@ import (
 func InitFirebaseAuth() (*auth.Client, error) {
 	ctx := context.Background()
 
-	opt := option.WithCredentialsFile(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+	credsEnv := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	var opt option.ClientOption
+
+	trimmed := ""
+	if len(credsEnv) > 0 {
+		for i := 0; i < len(credsEnv); i++ {
+			if credsEnv[i] != ' ' && credsEnv[i] != '\t' && credsEnv[i] != '\n' && credsEnv[i] != '\r' {
+				trimmed = credsEnv[i:]
+				break
+			}
+		}
+	}
+
+	if len(trimmed) > 0 && trimmed[0] == '{' {
+		opt = option.WithCredentialsJSON([]byte(credsEnv))
+	} else {
+		opt = option.WithCredentialsFile(credsEnv)
+	}
 
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
