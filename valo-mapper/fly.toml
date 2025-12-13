@@ -4,6 +4,8 @@ primary_region = 'yyz'
 
 [build]
   dockerfile = "Dockerfile"
+  [build.args]
+    API_URL = "https://valomapper-api.fly.dev/api"
 
 [http_service]
   internal_port = 3000
