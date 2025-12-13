@@ -60,6 +60,49 @@ Before setting up the project, ensure you have:
    go run main.go
    ```
 
+## Deployment
+
+ValoMapper is configured for deployment on Fly.io using Docker containers.
+
+### Quick Deployment Steps
+
+1. **Install Fly CLI and login**:
+   ```sh
+   fly auth login
+   ```
+
+2. **Create Fly.io apps**:
+   ```sh
+   fly apps create valomapper-api
+   fly apps create valomapper-frontend
+   ```
+
+3. **Set up PostgreSQL database**:
+   ```sh
+   fly postgres create --name valomapper-db --region yyz
+   ```
+
+4. **Configure secrets**:
+   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`
+   - Frontend: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `API_URL`
+
+5. **Deploy**:
+   ```sh
+   fly deploy --app valomapper-api
+   fly deploy --app valomapper-frontend
+   ```
+
+### GitHub Actions CI/CD
+
+To enable automated deployments:
+
+1. **Create a Fly.io deploy token**:
+   ```sh
+   fly tokens create deploy
+   ```
+
+2. **Add to GitHub secrets**: Go to your repository settings → Secrets and variables → Actions, and add `FLY_API_TOKEN` with the token value.
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
