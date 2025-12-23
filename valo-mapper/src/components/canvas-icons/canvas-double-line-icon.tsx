@@ -80,6 +80,7 @@ export const CanvasDoubleLineIcon = ({
   const rotationHandleRef = useRef<Konva.Circle>(null);
 
   const [isInteracting, setIsInteracting] = useState(false);
+  const [isHoveringHandle, setIsHoveringHandle] = useState(false);
   const [currentRotation, setCurrentRotation] = useState(rotation);
   const [currentLength, setCurrentLength] = useState(lineLength);
 
@@ -93,11 +94,12 @@ export const CanvasDoubleLineIcon = ({
     if (groupRef.current && image) {
       requestAnimationFrame(() => {
         if (groupRef.current) {
+          groupRef.current.clearCache();
           groupRef.current.cache({ pixelRatio: 2 });
         }
       });
     }
-  }, [image]);
+  }, [image, currentRotation, currentLength, isInteracting, isHoveringHandle]);
 
   useEffect(() => {
     setCurrentRotation(rotation);
@@ -236,12 +238,12 @@ export const CanvasDoubleLineIcon = ({
 
   const handleRotationHandleMouseOver = () => {
     if (!isListening) return;
-    if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.8);
+    setIsHoveringHandle(true);
   };
 
   const handleRotationHandleMouseOut = () => {
     if (!isListening) return;
-    if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.6);
+    setIsHoveringHandle(false);
   };
 
   const halfLength = currentLength / 2;
@@ -348,7 +350,7 @@ export const CanvasDoubleLineIcon = ({
           fill={handleColor}
           stroke={rotationHandleStrokeColor}
           strokeWidth={2}
-          opacity={isInteracting ? 0.8 : 0.6}
+          opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
           onMouseDown={isListening ? handleInteractionMouseDown : undefined}
           onMouseOver={isListening ? handleRotationHandleMouseOver : undefined}
           onMouseOut={isListening ? handleRotationHandleMouseOut : undefined}
