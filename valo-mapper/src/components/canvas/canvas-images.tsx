@@ -21,6 +21,7 @@ export const CanvasImages = ({
     isDrawMode,
     editingTextId,
     setImagesOnCanvas,
+    hoveredElementId,
     setHoveredElementId,
     selectedCanvasIcon,
   } = useCanvas();
@@ -53,6 +54,12 @@ export const CanvasImages = ({
     }
   };
 
+  const handleImageClick = (imageId: string) => {
+    if (!isDrawMode && !editingTextId) {
+      setHoveredElementId((prev) => (prev === imageId ? null : imageId));
+    }
+  };
+
   return imagesOnCanvas.map((imageItem) => {
     const imageNode = imageNodeRefs.current.get(imageItem.id);
     const imageLoader = imageLoaderRefs.current.get(imageItem.id);
@@ -70,6 +77,8 @@ export const CanvasImages = ({
         }
         onMouseEnter={(e) => handleImageMouseEnter(e, imageItem.id)}
         onMouseLeave={(e) => handleImageMouseLeaveInternal(e)}
+        onTap={() => handleImageClick(imageItem.id)}
+        onClick={() => handleImageClick(imageItem.id)}
       >
         <Image
           alt="image"
@@ -85,49 +94,52 @@ export const CanvasImages = ({
           height={imageItem.height}
           onTransformEnd={() => handleImageTransformEnd(imageItem.id)}
         />
-        {hoveredImageId === imageItem.id && !isDrawMode && !editingTextId && (
-          <Transformer
-            ref={(node) => {
-              if (node) {
-                transformerRefs.current.set(imageItem.id, node);
-                if (imageNode) {
-                  node.nodes([imageNode]);
+        {(hoveredImageId === imageItem.id ||
+          hoveredElementId === imageItem.id) &&
+          !isDrawMode &&
+          !editingTextId && (
+            <Transformer
+              ref={(node) => {
+                if (node) {
+                  transformerRefs.current.set(imageItem.id, node);
+                  if (imageNode) {
+                    node.nodes([imageNode]);
+                  }
+                } else {
+                  transformerRefs.current.delete(imageItem.id);
                 }
-              } else {
-                transformerRefs.current.delete(imageItem.id);
-              }
-            }}
-            boundBoxFunc={(_, newBox) => ({
-              ...newBox,
-              width: Math.max(5, newBox.width),
-              height: Math.max(5, newBox.height),
-            })}
-            rotateEnabled={false}
-            borderEnabled={false}
-            enabledAnchors={["bottom-right"]}
-            anchorSize={30}
-            anchorStyleFunc={(anchor) => {
-              const scale = stageRef.current?.scaleX() ?? 1;
-              const size = anchor.getAttr("width") * scale;
+              }}
+              boundBoxFunc={(_, newBox) => ({
+                ...newBox,
+                width: Math.max(5, newBox.width),
+                height: Math.max(5, newBox.height),
+              })}
+              rotateEnabled={false}
+              borderEnabled={false}
+              enabledAnchors={["bottom-right"]}
+              anchorSize={30}
+              anchorStyleFunc={(anchor) => {
+                const scale = stageRef.current?.scaleX() ?? 1;
+                const size = anchor.getAttr("width") * scale;
 
-              anchor
-                .fill("#52525b")
-                .stroke("#52525b")
-                .strokeWidth(1)
-                .sceneFunc((ctx, shape) => {
-                  ctx.beginPath();
-                  ctx.moveTo(size, 0);
-                  ctx.lineTo(size, size);
-                  ctx.lineTo(0, size);
-                  ctx.closePath();
-                  ctx.fillStrokeShape(shape);
-                });
+                anchor
+                  .fill("#52525b")
+                  .stroke("#52525b")
+                  .strokeWidth(1)
+                  .sceneFunc((ctx, shape) => {
+                    ctx.beginPath();
+                    ctx.moveTo(size, 0);
+                    ctx.lineTo(size, size);
+                    ctx.lineTo(0, size);
+                    ctx.closePath();
+                    ctx.fillStrokeShape(shape);
+                  });
 
-              anchor.offsetX(30 * scale);
-              anchor.offsetY(30 * scale);
-            }}
-          />
-        )}
+                anchor.offsetX(30 * scale);
+                anchor.offsetY(30 * scale);
+              }}
+            />
+          )}
       </Group>
     );
   });
