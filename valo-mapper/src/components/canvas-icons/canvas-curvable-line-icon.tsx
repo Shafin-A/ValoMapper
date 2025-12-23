@@ -3,13 +3,13 @@ import { useCanvas } from "@/contexts/canvas-context";
 import {
   handleMouseOutDefaultCursor,
   handleMouseOverGrabCursor,
-  handleMouseOverPointerCursor,
 } from "@/lib/utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle, Group, Line } from "react-konva";
+import useImage from "use-image";
 
 interface CanvasCurvableLineIconProps extends CanvasIconProps {
   maxDistance: number;
@@ -53,10 +53,13 @@ export const CanvasCurvableLineIcon = ({
   const handleRef = useRef<Konva.Circle>(null);
 
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isHoveringHandle, setIsHoveringHandle] = useState(false);
   const [path, setPath] = useState<Vector2d[]>(initialPath);
   const [currentDistance, setCurrentDistance] = useState(0);
 
   const lastInitialPathRef = useRef<string>("");
+
+  const [image] = useImage(src);
 
   const { setAbilitiesOnCanvas, mapSide } = useCanvas();
 
@@ -70,6 +73,17 @@ export const CanvasCurvableLineIcon = ({
     }
     return totalDistance;
   }, []);
+
+  useEffect(() => {
+    if (groupRef.current && image) {
+      requestAnimationFrame(() => {
+        if (groupRef.current) {
+          groupRef.current.clearCache();
+          groupRef.current.cache({ pixelRatio: 2 });
+        }
+      });
+    }
+  }, [image, path, isDrawing, isHoveringHandle]);
 
   useEffect(() => {
     const currentSerialized = JSON.stringify(initialPath);
@@ -136,7 +150,7 @@ export const CanvasCurvableLineIcon = ({
   );
 
   const handlePathDrawing = useCallback(
-    (e: KonvaEventObject<MouseEvent>) => {
+    (e: KonvaEventObject<MouseEvent> | KonvaEventObject<TouchEvent>) => {
       if (!isListening) return;
       e.cancelBubble = true;
 
@@ -150,7 +164,7 @@ export const CanvasCurvableLineIcon = ({
           ? [...path]
           : [{ x: Math.max(width || 32, height || 32) / 2 + 5, y: 0 }];
 
-      const handleMouseUp = () => {
+      const handleDrawEnd = () => {
         const finalPath = [...newPath];
         setIsDrawing(false);
 
@@ -164,7 +178,7 @@ export const CanvasCurvableLineIcon = ({
         stage.off(".pathdrawing");
       };
 
-      const handleMouseMove = () => {
+      const handleDrawMove = () => {
         if (!groupRef.current) return;
         const pointer = stage.getPointerPosition();
         if (!pointer) return;
@@ -206,7 +220,7 @@ export const CanvasCurvableLineIcon = ({
             setPath([...newPath]);
             setCurrentDistance(maxDistance);
 
-            handleMouseUp();
+            handleDrawEnd();
             return;
           }
 
@@ -216,9 +230,11 @@ export const CanvasCurvableLineIcon = ({
         }
       };
 
-      stage.on("mousemove.pathdrawing", handleMouseMove);
-      stage.on("mouseup.pathdrawing", handleMouseUp);
-      stage.on("mouseleave.pathdrawing", handleMouseUp);
+      stage.on("mousemove.pathdrawing", handleDrawMove);
+      stage.on("mouseup.pathdrawing", handleDrawEnd);
+      stage.on("mouseleave.pathdrawing", handleDrawEnd);
+      stage.on("touchmove.pathdrawing", handleDrawMove);
+      stage.on("touchend.pathdrawing", handleDrawEnd);
     },
     [
       calculatePathDistance,
@@ -231,16 +247,14 @@ export const CanvasCurvableLineIcon = ({
     ]
   );
 
-  const handleMouseOver = (e: KonvaEventObject<MouseEvent>) => {
+  const handleMouseOver = () => {
     if (!isListening) return;
-    e.target.opacity(0.8);
-    handleMouseOverPointerCursor(e);
+    setIsHoveringHandle(true);
   };
 
-  const handleMouseOut = (e: KonvaEventObject<MouseEvent>) => {
+  const handleMouseOut = () => {
     if (!isListening) return;
-    e.target.opacity(0.6);
-    handleMouseOutDefaultCursor(e);
+    setIsHoveringHandle(false);
   };
 
   const handleReset = () => {
@@ -291,8 +305,9 @@ export const CanvasCurvableLineIcon = ({
           fill={stroke}
           stroke={handleStrokeColor}
           strokeWidth={2}
-          opacity={isDrawing ? 0.8 : 0.6}
+          opacity={isDrawing || isHoveringHandle ? 0.8 : 0.6}
           onMouseDown={isListening ? handlePathDrawing : undefined}
+          onTouchStart={isListening ? handlePathDrawing : undefined}
           onMouseOver={isListening ? handleMouseOver : undefined}
           onMouseOut={isListening ? handleMouseOut : undefined}
         />
@@ -305,6 +320,7 @@ export const CanvasCurvableLineIcon = ({
           isListening={isListening}
           radius={8}
           onClick={isListening ? handleReset : undefined}
+          onTap={isListening ? handleReset : undefined}
           onMouseOver={isListening ? handleMouseOver : undefined}
           onMouseOut={isListening ? handleMouseOut : undefined}
           fill={constraintReached ? "#e54646" : "#46e546"}

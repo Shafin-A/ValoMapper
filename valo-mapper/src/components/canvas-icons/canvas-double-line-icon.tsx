@@ -137,8 +137,8 @@ export const CanvasDoubleLineIcon = ({
     [draggable, onDragEnd]
   );
 
-  const handleInteractionMouseDown = useCallback(
-    (e: KonvaEventObject<MouseEvent>) => {
+  const handleInteractionStart = useCallback(
+    (e: KonvaEventObject<MouseEvent> | KonvaEventObject<TouchEvent>) => {
       if (!isListening) return;
       e.cancelBubble = true;
       setIsInteracting(true);
@@ -146,7 +146,7 @@ export const CanvasDoubleLineIcon = ({
       const stage = e.target.getStage();
       if (!stage || !groupRef.current) return;
 
-      const handleInteractionMouseMove = () => {
+      const handleInteractionMove = () => {
         if (!groupRef.current) return;
 
         const pointer = stage.getPointerPosition();
@@ -195,7 +195,7 @@ export const CanvasDoubleLineIcon = ({
         }
       };
 
-      const handleInteractionMouseUp = () => {
+      const handleInteractionEnd = () => {
         if (rotationHandleRef.current) rotationHandleRef.current.opacity(0.6);
         setIsInteracting(false);
 
@@ -219,9 +219,11 @@ export const CanvasDoubleLineIcon = ({
         stage.off(".interaction");
       };
 
-      stage.on("mousemove.interaction", handleInteractionMouseMove);
-      stage.on("mouseup.interaction", handleInteractionMouseUp);
-      stage.on("mouseleave.interaction", handleInteractionMouseUp);
+      stage.on("mousemove.interaction", handleInteractionMove);
+      stage.on("mouseup.interaction", handleInteractionEnd);
+      stage.on("mouseleave.interaction", handleInteractionEnd);
+      stage.on("touchmove.interaction", handleInteractionMove);
+      stage.on("touchend.interaction", handleInteractionEnd);
     },
     [
       isListening,
@@ -351,7 +353,8 @@ export const CanvasDoubleLineIcon = ({
           stroke={rotationHandleStrokeColor}
           strokeWidth={2}
           opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
-          onMouseDown={isListening ? handleInteractionMouseDown : undefined}
+          onMouseDown={isListening ? handleInteractionStart : undefined}
+          onTouchStart={isListening ? handleInteractionStart : undefined}
           onMouseOver={isListening ? handleRotationHandleMouseOver : undefined}
           onMouseOut={isListening ? handleRotationHandleMouseOut : undefined}
         />
