@@ -47,6 +47,7 @@ export const CanvasTexts = ({
         draggable={!isDrawMode && editingTextId !== textItem.id}
         x={textItem.x}
         y={textItem.y}
+        onTap={() => handleTextClick(textItem.id)}
         onClick={(e: KonvaEventObject<MouseEvent>) => {
           // Only handle left clicks
           if (e.evt.button === 0) {

@@ -162,7 +162,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
               className="w-full"
             >
               <RoleTabs selectedRole={selectedRole} />
-              <TabsContent value={selectedRole} className="h-[320px]">
+              <TabsContent value={selectedRole} className="h-80">
                 <AgentsGrid
                   selectedRole={selectedRole}
                   onMap={onMap}
