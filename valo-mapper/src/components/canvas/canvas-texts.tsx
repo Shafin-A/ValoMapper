@@ -39,7 +39,6 @@ export const CanvasTexts = ({
 
   return textsOnCanvas.map((textItem) => {
     const textNode = textRefs.current.get(textItem.id);
-    const transformer = transformerRefs.current.get(textItem.id);
 
     return (
       <Group
@@ -124,8 +123,10 @@ export const CanvasTexts = ({
             anchorStroke="#18181b"
             anchorStyleFunc={(anchor) => {
               if (anchor.hasName("middle-right")) {
-                if (transformer) {
-                  const h = transformer.height();
+                const currentTransformer =
+                  anchor.getParent() as Konva.Transformer;
+                if (currentTransformer) {
+                  const h = currentTransformer.height();
                   const scale = stageRef.current?.scaleX() ?? 1;
                   anchor.cornerRadius(10 * scale);
                   anchor.width(10 * scale);
