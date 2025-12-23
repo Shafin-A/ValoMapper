@@ -1,6 +1,8 @@
 import { Html } from "react-konva-utils";
 import { useCallback, useRef } from "react";
 import Konva from "konva";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface TextEditorProps {
   textNode: Konva.Text;
@@ -16,6 +18,7 @@ export const TextEditor = ({
   onChange,
 }: TextEditorProps) => {
   const cleanupRef = useRef<(() => void) | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const textareaCallbackRef = useCallback(
     (textarea: HTMLTextAreaElement | null) => {
@@ -25,6 +28,8 @@ export const TextEditor = ({
       }
 
       if (!textarea || !textNode) return;
+
+      textareaRef.current = textarea;
 
       const textPosition = textNode.position();
 
@@ -101,7 +106,22 @@ export const TextEditor = ({
 
   return (
     <Html>
-      <textarea ref={textareaCallbackRef} />
+      <div>
+        <textarea ref={textareaCallbackRef} />
+        <Button
+          variant="default"
+          size="icon"
+          className="absolute -top-2 -right-2 rounded-full size-6"
+          onClick={(e) => {
+            e.stopPropagation();
+            onChange(textareaRef.current?.value || "");
+            onClose();
+          }}
+        >
+          <X />
+          <span className="sr-only">Close</span>
+        </Button>
+      </div>
     </Html>
   );
 };
