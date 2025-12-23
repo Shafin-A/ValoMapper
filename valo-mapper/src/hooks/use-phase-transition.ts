@@ -9,19 +9,6 @@ export const usePhaseTransitions = () => {
 
   const registerNode = useCallback((id: string, node: Konva.Node) => {
     nodeRefs.current.set(id, node);
-
-    node.opacity(0);
-
-    const duration = transitionDuration.current / 1000;
-    const tween = new Konva.Tween({
-      node: node,
-      duration: duration,
-      opacity: 1,
-      easing: Konva.Easings.EaseInOut,
-    });
-    tween.play();
-
-    setTimeout(() => tween.destroy(), transitionDuration.current);
   }, []);
 
   const unregisterNode = useCallback((id: string) => {
