@@ -264,42 +264,52 @@ export const useKonva = (
     setDrawLines,
   ]);
 
-  const handleIconPlacement = useCallback(() => {
-    const stage = stageRef.current;
-    if (!stage || !selectedCanvasIcon) return;
+  const handleIconPlacement = useCallback(
+    (position?: Vector2d) => {
+      const stage = stageRef.current;
+      if (!stage || !selectedCanvasIcon) return;
 
-    const tempDragIcon = stage.findOne(`#${TEMP_DRAG_ID}`);
-    if (!tempDragIcon) return;
+      let pos: Vector2d;
+      if (position) {
+        pos = position;
+      } else {
+        const tempDragIcon = stage.findOne(`#${TEMP_DRAG_ID}`);
+        if (!tempDragIcon) return;
+        pos = tempDragIcon.position();
+      }
 
-    const pos = tempDragIcon.position();
-    const newId = getNextId(isAgent(selectedCanvasIcon) ? "agent" : "ability");
-
-    if (isAgent(selectedCanvasIcon)) {
-      setAgentsOnCanvas((prev) =>
-        prev.map((agent) =>
-          agent.id === TEMP_DRAG_ID
-            ? { ...agent, id: newId, x: pos.x, y: pos.y }
-            : agent
-        )
+      const newId = getNextId(
+        isAgent(selectedCanvasIcon) ? "agent" : "ability"
       );
-    } else {
-      setAbilitiesOnCanvas((prev) =>
-        prev.map((ability) =>
-          ability.id === TEMP_DRAG_ID
-            ? { ...ability, id: newId, x: pos.x, y: pos.y }
-            : ability
-        )
-      );
-    }
 
-    setSelectedCanvasIcon(null);
-  }, [
-    selectedCanvasIcon,
-    setAbilitiesOnCanvas,
-    setAgentsOnCanvas,
-    setSelectedCanvasIcon,
-    stageRef,
-  ]);
+      if (isAgent(selectedCanvasIcon)) {
+        setAgentsOnCanvas((prev) =>
+          prev.map((agent) =>
+            agent.id === TEMP_DRAG_ID
+              ? { ...agent, id: newId, x: pos.x, y: pos.y }
+              : agent
+          )
+        );
+      } else {
+        setAbilitiesOnCanvas((prev) =>
+          prev.map((ability) =>
+            ability.id === TEMP_DRAG_ID
+              ? { ...ability, id: newId, x: pos.x, y: pos.y }
+              : ability
+          )
+        );
+      }
+
+      setSelectedCanvasIcon(null);
+    },
+    [
+      selectedCanvasIcon,
+      setAbilitiesOnCanvas,
+      setAgentsOnCanvas,
+      setSelectedCanvasIcon,
+      stageRef,
+    ]
+  );
 
   const handleStageClick = useCallback(() => {
     if (isDrawMode) {
@@ -308,9 +318,18 @@ export const useKonva = (
     }
 
     if (selectedCanvasIcon) {
-      handleIconPlacement();
+      const worldPos = getWorldPointerPosition();
+      if (worldPos) {
+        handleIconPlacement(worldPos);
+      }
     }
-  }, [isDrawMode, selectedCanvasIcon, handleDrawing, handleIconPlacement]);
+  }, [
+    isDrawMode,
+    selectedCanvasIcon,
+    handleDrawing,
+    handleIconPlacement,
+    getWorldPointerPosition,
+  ]);
 
   const handleStageMouseMove = useCallback(() => {
     const worldPos = getWorldPointerPosition();
