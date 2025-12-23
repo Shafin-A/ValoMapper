@@ -8,6 +8,7 @@ import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { Circle, Group, Line } from "react-konva";
+import useImage from "use-image";
 
 type IconPosition = "middle" | "start";
 type HandleMode = "rotation" | "length";
@@ -85,6 +86,18 @@ export const CanvasDoubleLineIcon = ({
   const rotationRef = useRef(rotation);
   const lengthRef = useRef(lineLength);
   const frameRef = useRef<number | null>(null);
+
+  const [image] = useImage(src);
+
+  useEffect(() => {
+    if (groupRef.current && image) {
+      requestAnimationFrame(() => {
+        if (groupRef.current) {
+          groupRef.current.cache({ pixelRatio: 2 });
+        }
+      });
+    }
+  }, [image]);
 
   useEffect(() => {
     setCurrentRotation(rotation);

@@ -8,6 +8,7 @@ import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle, Group, Line } from "react-konva";
+import useImage from "use-image";
 
 interface CanvasXIconProps extends CanvasIconProps {
   lineLength: number;
@@ -62,6 +63,18 @@ export const CanvasXIcon = ({
 
   const rotationRef = useRef<number>(rotation);
   const frameRef = useRef<number | null>(null);
+
+  const [image] = useImage(src);
+
+  useEffect(() => {
+    if (groupRef.current && image) {
+      requestAnimationFrame(() => {
+        if (groupRef.current) {
+          groupRef.current.cache({ pixelRatio: 2 });
+        }
+      });
+    }
+  }, [image]);
 
   useEffect(() => {
     setCurrentRotation(rotation);

@@ -4,6 +4,7 @@ import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Arc, Circle, Group } from "react-konva";
+import useImage from "use-image";
 
 interface CanvasArcIconProps extends CanvasIconProps {
   boxRadius: number;
@@ -58,6 +59,18 @@ export const CanvasArcIcon = ({
   const frameRef = useRef<number | null>(null);
 
   const rotationRef = useRef<number>(rotation);
+
+  const [image] = useImage(src);
+
+  useEffect(() => {
+    if (groupRef.current && image) {
+      requestAnimationFrame(() => {
+        if (groupRef.current) {
+          groupRef.current.cache({ pixelRatio: 2 });
+        }
+      });
+    }
+  }, [image]);
 
   useEffect(() => {
     setCurrentRotation(rotation);

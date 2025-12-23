@@ -5,8 +5,9 @@ import {
 } from "@/lib/utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Circle, Group } from "react-konva";
+import useImage from "use-image";
 
 interface CanvasCircleIconProps extends CanvasIconProps {
   boxRadius: number;
@@ -41,6 +42,17 @@ export const CanvasCircleIcon = ({
   height,
 }: CanvasCircleIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
+  const [image] = useImage(src);
+
+  useEffect(() => {
+    if (groupRef.current && image) {
+      requestAnimationFrame(() => {
+        if (groupRef.current) {
+          groupRef.current.cache({ pixelRatio: 2 });
+        }
+      });
+    }
+  }, [image]);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
