@@ -26,6 +26,7 @@ import {
   Scan,
   Trash2,
   Undo,
+  Info,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { DeleteSettings } from "./delete-settings";
@@ -187,7 +188,34 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
         style={{ display: "none" }}
       />
       <div className="space-y-2 mt-4">
-        <span className="text-base font-semibold block">Tools</span>
+        <div className="flex items-center justify-between">
+          <span className="text-base font-semibold">Tools</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="inline-flex items-center justify-center"
+                type="button"
+              >
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <div className="space-y-1">
+                <p>Press Q to enter draw mode </p>
+                <p>Press W to enter erase mode </p>
+                <p>Press E while hovering an element to delete it</p>
+                <p>Press Ctrl+Z/Ctrl+Shift+Z to undo/redo</p>
+              </div>
+              <div className="mt-2">
+                <p>
+                  Add text, images, and drawings here. Also recenter the view,
+                  save to folders, sync changes to the lobby, and undo/redo any
+                  action.
+                </p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <div className="grid grid-cols-5 gap-2">
           <Tooltip>
             <TooltipTrigger asChild>

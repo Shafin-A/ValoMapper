@@ -29,7 +29,12 @@ import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
 import { SIDEBAR_WIDTH, TEMP_DRAG_ID } from "@/lib/consts";
 import { useCanvas } from "@/contexts/canvas-context";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
@@ -120,7 +125,31 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
       >
         <SidebarHeader>
           <div className="flex flex-col gap-3 p-2">
-            <span className="text-base font-semibold">Agents</span>
+            <div className="flex items-center justify-between">
+              <span className="text-base font-semibold">Agents</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="inline-flex items-center justify-center"
+                    type="button"
+                  >
+                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="space-y-2">
+                    <p>
+                      Press E while hovering an agent/ability on the map to
+                      delete it
+                    </p>
+                    <p>
+                      Choose an agent/ability and then click on the map to
+                      position it
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Switch

@@ -10,7 +10,7 @@ import { useSettings } from "@/contexts/settings-context";
 import { MAP_OPTIONS, MAP_SIZE, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapOption } from "@/lib/types";
 import { Vector2d } from "konva/lib/types";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Info } from "lucide-react";
 import { RefObject, Suspense } from "react";
 import { useState } from "react";
 import { MapStageHandle } from "@/components/canvas";
@@ -194,7 +194,31 @@ export const ToolsSidebar = ({
               }
             >
               <div className="space-y-2 mt-4">
-                <span className="text-base font-semibold block">Phases</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-semibold">Phases</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="inline-flex items-center justify-center"
+                        type="button"
+                      >
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <div className="space-y-2">
+                        <p>
+                          Press A and D to switch back and forth between phases
+                        </p>
+                        <p>
+                          Use Phases to build out and detail your strategy step
+                          by step by placing agents and abilites at different
+                          phases
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
                 <ToggleGroup
                   type="single"
                   className="grid grid-cols-5 gap-2 w-full"
