@@ -2,7 +2,7 @@ export const PrivacyPolicy = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Dec 2nd, 2025
+        <strong>Last Updated:</strong> Dec 23rd, 2025
       </div>
 
       <p>
@@ -204,7 +204,7 @@ export const PrivacyPolicy = () => {
         <p>
           We do not have automated age verification mechanisms in place. If you
           believe a child has provided personal information to ValoMapper,
-          please contact us at valomapper@gmail.com and we will promptly
+          please contact us at valomappercontact@gmail.com and we will promptly
           investigate and delete such information.
         </p>
       </section>
@@ -277,9 +277,9 @@ export const PrivacyPolicy = () => {
           </li>
         </ul>
         <p>
-          To exercise these rights, contact us at valomapper@gmail.com. We will
-          respond to valid requests within a reasonable timeframe as required by
-          applicable law.
+          To exercise these rights, contact us at valomappercontact@gmail.com.
+          We will respond to valid requests within a reasonable timeframe as
+          required by applicable law.
         </p>
       </section>
 
@@ -349,7 +349,7 @@ export const PrivacyPolicy = () => {
           If you have questions, concerns, or requests regarding this Privacy
           Policy or your personal information, please contact us at:
         </p>
-        <p className="font-semibold">valomapper@gmail.com</p>
+        <p className="font-semibold">valomappercontact@gmail.com</p>
       </section>
 
       <section className="space-y-4">

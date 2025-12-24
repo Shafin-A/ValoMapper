@@ -2,7 +2,7 @@ export const TermsOfService = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Dec 2nd, 2025
+        <strong>Last Updated:</strong> Dec 23rd, 2025
       </div>
 
       <p>
@@ -395,7 +395,7 @@ export const TermsOfService = () => {
           If you have any questions about these Terms of Service, please contact
           us at:
         </p>
-        <p className="font-semibold">valomapper@gmail.com</p>
+        <p className="font-semibold">valomappercontact@gmail.com</p>
       </section>
 
       <section className="space-y-4">

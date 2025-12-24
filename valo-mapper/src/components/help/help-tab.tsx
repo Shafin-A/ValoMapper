@@ -50,7 +50,7 @@ export const HelpTab = () => {
       type: "text",
       content:
         "If you have questions, concerns, or requests please contact us at: \n\n\
-        valomapper@gmail.com",
+        valomappercontact@gmail.com",
     },
   ];
 
