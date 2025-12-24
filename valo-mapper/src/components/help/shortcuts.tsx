@@ -23,6 +23,10 @@ export const Shortcuts = () => {
           keys: [["E"]],
           description: "Delete Hovered Element",
         },
+        {
+          keys: [["R"]],
+          description: "Recenter Canvas",
+        },
       ],
     },
     {

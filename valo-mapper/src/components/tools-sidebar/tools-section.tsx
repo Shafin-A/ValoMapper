@@ -28,7 +28,7 @@ import {
   Undo,
   Info,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
@@ -66,6 +66,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     hasUnsavedChanges,
     isUpdatingLobby,
     isErrorUpdatingLobby,
+    recenterCanvasCallback,
   } = useCanvas();
 
   const handleDrawPressedChange = (pressed: boolean, tool: Tool) => {
@@ -103,7 +104,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     fileInputRef.current?.click();
   };
 
-  const handleRecenterCanvas = () => {
+  const handleRecenterCanvas = useCallback(() => {
     const stageHandle = stageRef?.current;
     if (!stageHandle) return;
 
@@ -129,7 +130,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     stage.batchDraw();
 
     stageHandle.handleDragMove();
-  };
+  }, [stageRef]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -178,6 +179,13 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
 
   const isAuthenticated = user !== null;
 
+  useEffect(() => {
+    recenterCanvasCallback.current = handleRecenterCanvas;
+    return () => {
+      recenterCanvasCallback.current = null;
+    };
+  }, [handleRecenterCanvas, recenterCanvasCallback]);
+
   return (
     <>
       <input
@@ -204,6 +212,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
                 <p>Press Q to enter draw mode </p>
                 <p>Press W to enter erase mode </p>
                 <p>Press E while hovering an element to delete it</p>
+                <p>Press R to recenter the canvas</p>
                 <p>Press Ctrl+Z/Ctrl+Shift+Z to undo/redo</p>
               </div>
               <div className="mt-2">
@@ -229,7 +238,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top" align="center">
-              Recenter Canvas
+              Recenter Canvas (R)
             </TooltipContent>
           </Tooltip>
           <Dialog open={openSaveDialog} onOpenChange={setOpenSaveDialog}>

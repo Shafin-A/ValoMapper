@@ -7,46 +7,57 @@ import type {
   Agent,
   AgentCanvas,
   DrawLine,
-  MapOption,
-  TextCanvas,
   ImageCanvas,
-  Tool,
-  UndoableState,
+  MapOption,
   MapSide,
   PhaseState,
+  TextCanvas,
+  Tool,
   ToolIconCanvas,
+  UndoableState,
 } from "@/lib/types";
 import Konva from "konva";
-import React, { createContext, RefObject, useContext, useEffect } from "react";
-import { useSettings } from "./settings-context";
+import {
+  createContext,
+  Dispatch,
+  FC,
+  ReactNode,
+  RefObject,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
+import { useSettings } from "./settings-context";
 
 interface CanvasContextType {
   agentsOnCanvas: AgentCanvas[];
-  setAgentsOnCanvas: React.Dispatch<React.SetStateAction<AgentCanvas[]>>;
+  setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>;
   abilitiesOnCanvas: AbilityCanvas[];
-  setAbilitiesOnCanvas: React.Dispatch<React.SetStateAction<AbilityCanvas[]>>;
+  setAbilitiesOnCanvas: Dispatch<SetStateAction<AbilityCanvas[]>>;
   selectedCanvasIcon: Agent | AbilityIconItem | null;
-  setSelectedCanvasIcon: React.Dispatch<
-    React.SetStateAction<Agent | AbilityIconItem | null>
+  setSelectedCanvasIcon: Dispatch<
+    SetStateAction<Agent | AbilityIconItem | null>
   >;
   isAlly: boolean;
-  setIsAlly: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsAlly: Dispatch<SetStateAction<boolean>>;
   selectedMap: MapOption;
-  setSelectedMap: React.Dispatch<React.SetStateAction<MapOption>>;
+  setSelectedMap: Dispatch<SetStateAction<MapOption>>;
   mapSide: MapSide;
-  setMapSide: React.Dispatch<React.SetStateAction<MapSide>>;
+  setMapSide: Dispatch<SetStateAction<MapSide>>;
   tool: Tool;
-  setTool: React.Dispatch<React.SetStateAction<Tool>>;
+  setTool: Dispatch<SetStateAction<Tool>>;
   currentStroke: DrawLine | null;
-  setCurrentStroke: React.Dispatch<React.SetStateAction<DrawLine | null>>;
+  setCurrentStroke: Dispatch<SetStateAction<DrawLine | null>>;
   drawLines: DrawLine[];
-  setDrawLines: React.Dispatch<React.SetStateAction<DrawLine[]>>;
+  setDrawLines: Dispatch<SetStateAction<DrawLine[]>>;
   isDrawMode: boolean;
-  setIsDrawMode: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsDrawMode: Dispatch<SetStateAction<boolean>>;
   isDrawing: RefObject<boolean>;
   isDeleteSettingsOpen: boolean;
-  setIsDeleteSettingsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsDeleteSettingsOpen: Dispatch<SetStateAction<boolean>>;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -55,13 +66,13 @@ interface CanvasContextType {
   history: UndoableState[];
   resetState: (resetAllPhases?: boolean) => void;
   textsOnCanvas: TextCanvas[];
-  setTextsOnCanvas: React.Dispatch<React.SetStateAction<TextCanvas[]>>;
+  setTextsOnCanvas: Dispatch<SetStateAction<TextCanvas[]>>;
   imagesOnCanvas: ImageCanvas[];
-  setImagesOnCanvas: React.Dispatch<React.SetStateAction<ImageCanvas[]>>;
+  setImagesOnCanvas: Dispatch<SetStateAction<ImageCanvas[]>>;
   editingTextId: string | null;
-  setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>;
+  setEditingTextId: Dispatch<SetStateAction<string | null>>;
   toolIconsOnCanvas: ToolIconCanvas[];
-  setToolIconsOnCanvas: React.Dispatch<React.SetStateAction<ToolIconCanvas[]>>;
+  setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>;
   phases: PhaseState[];
   currentPhaseIndex: number;
   switchToPhase: (index: number) => void;
@@ -83,18 +94,16 @@ interface CanvasContextType {
   isErrorLobby: boolean;
   lobbyError: Error | null;
   hoveredElementId: string | null;
-  setHoveredElementId: React.Dispatch<React.SetStateAction<string | null>>;
+  setHoveredElementId: Dispatch<SetStateAction<string | null>>;
+  recenterCanvasCallback: RefObject<(() => void) | null>;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
 
-export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const canvasState = useCanvasState();
-  const [hoveredElementId, setHoveredElementId] = React.useState<string | null>(
-    null
-  );
+  const [hoveredElementId, setHoveredElementId] = useState<string | null>(null);
+  const recenterCanvasCallback = useRef<(() => void) | null>(null);
 
   const {
     undo,
@@ -208,6 +217,12 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
           return;
         }
 
+        if (key === "r") {
+          recenterCanvasCallback.current?.();
+          e.preventDefault();
+          return;
+        }
+
         if (key === "q") {
           if (tool === "pencil" && isDrawMode) {
             setIsDrawMode(false);
@@ -266,6 +281,7 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
     setToolIconsOnCanvas,
+    recenterCanvasCallback,
   ]);
 
   return (
@@ -274,6 +290,7 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({
         ...canvasState,
         hoveredElementId,
         setHoveredElementId,
+        recenterCanvasCallback,
       }}
     >
       {children}
