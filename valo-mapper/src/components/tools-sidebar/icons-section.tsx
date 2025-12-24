@@ -10,6 +10,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 interface IconsSectionProps {
   mapPosition: Vector2d;
@@ -37,7 +43,25 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
 
   return (
     <div className="mt-4">
-      <span className="text-base font-semibold block mb-4">Icons</span>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-base font-semibold">Icons</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="inline-flex items-center justify-center"
+              type="button"
+            >
+              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="space-y-2">
+              <p>Press E while hovering an icon on the map to delete it</p>
+              <p>Click an icon to place it on the map</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </div>
 
       <Accordion type="multiple" className="w-full">
         <AccordionItem value="utilities">
