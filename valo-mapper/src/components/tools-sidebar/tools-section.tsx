@@ -14,6 +14,7 @@ import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
 import {
   ALargeSmall,
+  Camera,
   Cloud,
   CloudCheck,
   CloudOff,
@@ -29,6 +30,7 @@ import {
   Info,
 } from "lucide-react";
 import { useRef, useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
@@ -37,6 +39,7 @@ import TreeViewDialogContent from "../strategies/tree-view-dialog-content";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { MapStageHandle } from "@/components/canvas";
 import { RefObject } from "react";
+import { Group } from "konva/lib/Group";
 
 interface ToolsSectionProps {
   mapPosition: Vector2d;
@@ -175,6 +178,83 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     saveCanvasState();
   };
 
+  const handleScreenshot = () => {
+    const stageHandle = stageRef?.current;
+    if (!stageHandle) return;
+
+    const stage = stageHandle.stage;
+    if (!stage) return;
+
+    try {
+      const layers = stage.getLayers();
+
+      const drawLayer = layers.find((layer) => {
+        const children = layer.getChildren();
+        return children.some(
+          (child) => child.getClassName() === "Group" && child.opacity() === 0.5
+        );
+      });
+
+      let deleteZone: Group | null = null;
+      if (drawLayer) {
+        deleteZone = drawLayer
+          .getChildren()
+          .find(
+            (child) =>
+              child.getClassName() === "Group" && child.opacity() === 0.5
+          ) as Group | null;
+
+        if (deleteZone) {
+          deleteZone.hide();
+        }
+      }
+
+      const currentPosition = stage.position();
+      const currentScale = stage.scale();
+
+      stage.position({ x: 0, y: 0 });
+      stage.scale({ x: 1, y: 1 });
+
+      const dataURL = stage.toDataURL({
+        x: 0,
+        y: 0,
+        width: VIRTUAL_WIDTH,
+        height: VIRTUAL_HEIGHT,
+        pixelRatio: 2,
+        mimeType: "image/png",
+      });
+
+      stage.position(currentPosition);
+      stage.scale(currentScale);
+
+      if (deleteZone) {
+        deleteZone.show();
+      }
+
+      stage.batchDraw();
+
+      const now = new Date();
+      const date = now.toISOString().split("T")[0];
+      const time = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+      const filename = `valomapper-${date}-${time}.png`;
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Screenshot saved successfully!", {
+        description: filename,
+      });
+    } catch (error) {
+      console.error("Failed to save screenshot:", error);
+      toast.error("Failed to save screenshot", {
+        description: "Please try again.",
+      });
+    }
+  };
+
   const { user } = useFirebaseAuth();
 
   const isAuthenticated = user !== null;
@@ -218,8 +298,8 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               <div className="mt-2">
                 <p>
                   Add text, images, and drawings here. Also recenter the view,
-                  save to folders, sync changes to the lobby, and undo/redo any
-                  action.
+                  screenshot the canvas, save to folders, sync changes to the
+                  lobby, or undo/redo any action.
                 </p>
               </div>
             </TooltipContent>
@@ -394,6 +474,21 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
               Add Image
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={handleScreenshot}
+                disabled={!stageRef}
+              >
+                <Camera />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="center">
+              Screenshot
             </TooltipContent>
           </Tooltip>
         </div>
