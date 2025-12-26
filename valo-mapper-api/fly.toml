@@ -21,4 +21,4 @@ primary_region = 'yyz'
 
 [env]
   # CORS configuration
-  ALLOWED_ORIGINS = "https://valomapper-frontend.fly.dev"
+  ALLOWED_ORIGINS = "https://valomapper.fly.dev"

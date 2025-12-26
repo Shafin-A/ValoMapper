@@ -1,5 +1,5 @@
 # fly.toml for ValoMapper Frontend (Next.js)
-app = 'valomapper-frontend'
+app = 'valomapper'
 primary_region = 'yyz'
 
 [build]

@@ -74,7 +74,7 @@ ValoMapper is configured for deployment on Fly.io using Docker containers.
 2. **Create Fly.io apps**:
    ```sh
    fly apps create valomapper-api
-   fly apps create valomapper-frontend
+   fly apps create valomapper
    ```
 
 3. **Set up PostgreSQL database**:
@@ -89,7 +89,7 @@ ValoMapper is configured for deployment on Fly.io using Docker containers.
 5. **Deploy**:
    ```sh
    fly deploy --app valomapper-api
-   fly deploy --app valomapper-frontend
+   fly deploy --app valomapper
    ```
 
 ### GitHub Actions CI/CD
