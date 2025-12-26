@@ -34,7 +34,7 @@ export const RoleTabs: React.FC<Pick<RoleTabsProps, "selectedRole">> = ({
           icon = (
             <div className="w-7 h-7 flex items-center justify-center">
               <Grid3x3
-                className="!size-6.5"
+                className="size-6.5!"
                 strokeWidth={2.5}
                 color="#fff"
                 style={{ opacity: isSelected ? 1 : 0.5 }}
