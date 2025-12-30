@@ -5,7 +5,8 @@ import { useFirebaseAuth } from "../use-firebase-auth";
 import { toast } from "sonner";
 
 interface UpdateUserData {
-  name: string;
+  name?: string;
+  tourCompleted?: boolean;
 }
 
 export const useUpdateUser = () => {

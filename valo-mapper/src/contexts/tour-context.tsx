@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
+import { useUser } from "@/hooks/api/use-user";
+import { useUpdateUser } from "@/hooks/api/use-update-user";
 
 interface TourContextType {
   isTourOpen: boolean;
@@ -31,17 +39,32 @@ export const useTour = () => {
 export const TourProvider = ({ children }: { children: React.ReactNode }) => {
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const { data: user } = useUser();
+  const updateUser = useUpdateUser();
   const [hasCompletedTour, setHasCompletedTour] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("valomapper-tour-completed") === "true";
     }
     return false;
   });
+
   const [autoAdvanceState, setAutoAdvanceState] = useState({
     step1Advanced: false,
     step3Advanced: false,
     step4Advanced: false,
   });
+
+  useEffect(() => {
+    if (user && user.tourCompleted) {
+      setHasCompletedTour(user.tourCompleted);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "valomapper-tour-completed",
+          user.tourCompleted ? "true" : "false"
+        );
+      }
+    }
+  }, [user]);
 
   const startTour = useCallback(() => {
     setIsTourOpen(true);
@@ -63,7 +86,10 @@ export const TourProvider = ({ children }: { children: React.ReactNode }) => {
     if (typeof window !== "undefined") {
       localStorage.setItem("valomapper-tour-completed", "true");
     }
-  }, []);
+    if (user && !user.tourCompleted) {
+      updateUser.mutate({ tourCompleted: true });
+    }
+  }, [user, updateUser]);
 
   const markStepAdvanced = useCallback((step: 1 | 3 | 4) => {
     setAutoAdvanceState((prev) => ({

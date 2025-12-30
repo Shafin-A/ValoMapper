@@ -16,6 +16,7 @@ type User struct {
 	Name          string    `json:"name"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
+	TourCompleted bool      `json:"tourCompleted"`
 }
 
 func (u *User) Update() error {
@@ -26,10 +27,10 @@ func (u *User) Update() error {
 
 	err = conn.QueryRow(context.Background(), `
 		UPDATE users
-		SET email = $1, email_verified = $2, name = $3, updated_at = NOW()
-		WHERE firebase_uid = $4
+		SET email = $1, email_verified = $2, name = $3, tour_completed = $4, updated_at = NOW()
+		WHERE firebase_uid = $5
 		RETURNING updated_at
-	`, u.Email, u.EmailVerified, u.Name, u.FirebaseUID).Scan(&u.UpdatedAt)
+	`, u.Email, u.EmailVerified, u.Name, u.TourCompleted, u.FirebaseUID).Scan(&u.UpdatedAt)
 
 	return err
 }
@@ -40,10 +41,10 @@ func (u *User) Save() error {
 		return err
 	}
 
-	err = conn.QueryRow(context.Background(), `INSERT INTO users (firebase_uid, email, email_verified, name, created_at, updated_at)
-		VALUES ($1, $2, $3, $4,NOW(), NOW())
+	err = conn.QueryRow(context.Background(), `INSERT INTO users (firebase_uid, email, email_verified, name, tour_completed, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
 		ON CONFLICT (firebase_uid) DO NOTHING
-		RETURNING id, created_at, updated_at`, u.FirebaseUID, u.Email, u.EmailVerified, u.Name).Scan(
+		RETURNING id, created_at, updated_at`, u.FirebaseUID, u.Email, u.EmailVerified, u.Name, u.TourCompleted).Scan(
 		&u.ID,
 		&u.CreatedAt,
 		&u.UpdatedAt,
@@ -77,7 +78,7 @@ func (u *User) LoadByFirebaseUID() error {
 	}
 
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, created_at, updated_at
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, created_at, updated_at
 		FROM users
 		WHERE firebase_uid = $1
 	`, u.FirebaseUID).Scan(
@@ -86,6 +87,7 @@ func (u *User) LoadByFirebaseUID() error {
 		&u.Email,
 		&u.EmailVerified,
 		&u.Name,
+		&u.TourCompleted,
 		&u.CreatedAt,
 		&u.UpdatedAt,
 	)

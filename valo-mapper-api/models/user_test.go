@@ -23,6 +23,7 @@ func TestUserSave(t *testing.T) {
 			Email:         "test@example.com",
 			Name:          "Test User",
 			EmailVerified: true,
+			TourCompleted: true,
 		}
 
 		err := user.Save()
@@ -34,6 +35,7 @@ func TestUserSave(t *testing.T) {
 		assert.Equal(t, "test@example.com", user.Email)
 		assert.Equal(t, "Test User", user.Name)
 		assert.True(t, user.EmailVerified)
+		assert.True(t, user.TourCompleted)
 	})
 
 	t.Run("handles duplicate firebase_uid with ON CONFLICT", func(t *testing.T) {
@@ -100,6 +102,7 @@ func TestUserUpdate(t *testing.T) {
 			Email:         "old@example.com",
 			Name:          "Old Name",
 			EmailVerified: false,
+			TourCompleted: false,
 		}
 		err := user.Save()
 		require.NoError(t, err)
@@ -110,6 +113,7 @@ func TestUserUpdate(t *testing.T) {
 		user.Email = "new@example.com"
 		user.Name = "New Name"
 		user.EmailVerified = true
+		user.TourCompleted = true
 
 		err = user.Update()
 		require.NoError(t, err)
@@ -122,6 +126,7 @@ func TestUserUpdate(t *testing.T) {
 		assert.Equal(t, "new@example.com", loaded.Email)
 		assert.Equal(t, "New Name", loaded.Name)
 		assert.True(t, loaded.EmailVerified)
+		assert.True(t, loaded.TourCompleted)
 	})
 
 	t.Run("returns error for non-existent user", func(t *testing.T) {

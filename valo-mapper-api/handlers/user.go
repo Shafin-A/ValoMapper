@@ -17,7 +17,8 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Name string `json:"name"`
+	Name          string `json:"name"`
+	TourCompleted *bool  `json:"tourCompleted,omitempty"`
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
@@ -99,6 +100,10 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 
 	if req.Name != "" {
 		user.Name = req.Name
+	}
+
+	if req.TourCompleted != nil {
+		user.TourCompleted = *req.TourCompleted
 	}
 
 	if err := user.Update(); err != nil {

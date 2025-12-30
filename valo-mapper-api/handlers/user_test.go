@@ -12,6 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func ptrBool(b bool) *bool {
+	return &b
+}
+
 func TestCreateUser(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -49,6 +53,7 @@ func TestCreateUser(t *testing.T) {
 		assert.Equal(t, "Test User", user.Name)
 		assert.Equal(t, "test@example.com", user.Email)
 		assert.NotZero(t, user.ID)
+		assert.False(t, user.TourCompleted)
 	})
 
 	t.Run("rejects missing authorization", func(t *testing.T) {
@@ -112,6 +117,7 @@ func TestGetUser(t *testing.T) {
 
 		assert.Equal(t, testUser.ID, user.ID)
 		assert.Equal(t, testUser.FirebaseUID, user.FirebaseUID)
+		assert.False(t, user.TourCompleted)
 	})
 
 	t.Run("rejects missing authorization", func(t *testing.T) {
@@ -158,7 +164,8 @@ func TestUpdateUser(t *testing.T) {
 		}
 
 		reqBody := UpdateUserRequest{
-			Name: "Updated Name",
+			Name:          "Updated Name",
+			TourCompleted: ptrBool(true),
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPut, "/api/users", reqBody, "valid-token")
@@ -173,6 +180,7 @@ func TestUpdateUser(t *testing.T) {
 
 		assert.Equal(t, "Updated Name", user.Name)
 		assert.Equal(t, testUser.ID, user.ID)
+		assert.True(t, user.TourCompleted)
 	})
 
 	t.Run("rejects missing authorization", func(t *testing.T) {

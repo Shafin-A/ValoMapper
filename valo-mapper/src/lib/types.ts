@@ -311,4 +311,5 @@ export type User = {
   email: string;
   createdAt: Date;
   updatedAt: Date;
+  tourCompleted?: boolean;
 };
