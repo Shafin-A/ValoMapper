@@ -275,7 +275,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
         onChange={handleFileChange}
         style={{ display: "none" }}
       />
-      <div className="space-y-2 mt-4">
+      <div className="space-y-2 mt-4" data-tour="tools-section">
         <div className="flex items-center justify-between">
           <span className="text-base font-semibold">Tools</span>
           <Tooltip>
@@ -326,6 +326,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               <TooltipTrigger asChild>
                 <DialogTrigger asChild>
                   <Button
+                    data-tour="save-strategy"
                     variant="ghost"
                     size="lg"
                     className="col-start-2"
@@ -353,6 +354,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
                 disabled={!hasUnsavedChanges || isUpdatingLobby}
                 variant="ghost"
                 size="lg"
+                data-tour="sync-canvas"
               >
                 {isUpdatingLobby ? (
                   <Loader2 className="animate-spin" />

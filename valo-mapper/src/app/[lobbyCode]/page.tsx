@@ -4,6 +4,7 @@ import { AgentsSidebar } from "@/components/agents-sidebar";
 import { MapStage, MapStageHandle } from "@/components/canvas";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ToolsSidebar } from "@/components/tools-sidebar";
+import { TourAutoAdvance } from "@/components/tour/tour-auto-advance";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useCanvas } from "@/contexts/canvas-context";
@@ -98,6 +99,8 @@ const LobbyEditPage = () => {
 
   return (
     <div className="[--header-height:calc(--spacing(14))]">
+      <TourAutoAdvance />
+
       <SiteHeader {...sidebarState} />
 
       <ToolsSidebar

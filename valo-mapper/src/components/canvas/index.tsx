@@ -126,6 +126,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           height: "100%",
           overflow: "hidden",
         }}
+        data-tour="map-canvas"
       >
         <Stage
           width={width / scale}

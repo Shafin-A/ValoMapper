@@ -1,5 +1,6 @@
 import QueryProvider from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { TourProviderWrapper } from "@/components/providers/tour-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { CanvasProvider } from "@/contexts/canvas-context";
 import { SettingsProvider } from "@/contexts/settings-context";
@@ -40,8 +41,10 @@ export default function RootLayout({
         >
           <QueryProvider>
             <SettingsProvider>
-              <CanvasProvider>{children}</CanvasProvider>
-              <Toaster richColors closeButton />
+              <TourProviderWrapper>
+                <CanvasProvider>{children}</CanvasProvider>
+                <Toaster richColors closeButton />
+              </TourProviderWrapper>
             </SettingsProvider>
           </QueryProvider>
         </ThemeProvider>

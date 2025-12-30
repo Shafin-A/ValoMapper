@@ -42,7 +42,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
   };
 
   return (
-    <div className="mt-4">
+    <div className="mt-4" data-tour="icons-section">
       <div className="flex items-center justify-between mb-4">
         <span className="text-base font-semibold">Icons</span>
         <Tooltip>

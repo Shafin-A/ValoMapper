@@ -193,7 +193,7 @@ export const ToolsSidebar = ({
                   : ""
               }
             >
-              <div className="space-y-2 mt-4">
+              <div className="space-y-2 mt-4" data-tour="phases">
                 <div className="flex items-center justify-between">
                   <span className="text-base font-semibold">Phases</span>
                   <Tooltip>

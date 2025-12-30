@@ -87,6 +87,11 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                 <Tooltip delayDuration={700}>
                   <TooltipTrigger>
                     <Image
+                      data-tour={
+                        agent.name === "Brimstone"
+                          ? "agent-brimstone"
+                          : undefined
+                      }
                       className={`rounded-md transition-transform duration-200 ${
                         isSelected ? `border-2 scale-110 shadow-lg` : "border"
                       }`}
@@ -108,6 +113,11 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                 <Tooltip delayDuration={700}>
                   <TooltipTrigger asChild>
                     <Toggle
+                      data-tour={
+                        agent.name === "Brimstone"
+                          ? "brimstone-abilities-button"
+                          : undefined
+                      }
                       size="icon"
                       className="absolute -top-2 -right-2 rounded-full"
                       data-state={

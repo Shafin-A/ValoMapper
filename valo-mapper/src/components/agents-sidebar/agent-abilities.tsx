@@ -49,10 +49,18 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
           const isSelected = selectedCanvasIcon?.name === iconConfig.name;
           const borderColor = isAlly ? allyColor : enemyColor;
 
+          const isThirdAbility =
+            AGENT_ICON_CONFIGS[agent.name]?.[2]?.name === iconConfig.name;
+
           return (
             <Tooltip key={iconConfig.name}>
               <TooltipTrigger asChild>
                 <Image
+                  data-tour={
+                    agent.name === "Brimstone" && isThirdAbility
+                      ? "brimstone-third-ability"
+                      : undefined
+                  }
                   className={`rounded-md transition-transform duration-200 ${
                     isSelected ? `border-2 scale-110 shadow-lg` : "border"
                   }`}

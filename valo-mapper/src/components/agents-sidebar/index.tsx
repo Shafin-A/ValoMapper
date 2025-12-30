@@ -119,6 +119,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
       }}
     >
       <Sidebar
+        data-tour="agents-sidebar"
         className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
         collapsible="offcanvas"
         side="right"

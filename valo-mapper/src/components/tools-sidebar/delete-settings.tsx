@@ -37,6 +37,7 @@ export const DeleteSettings = () => {
     <div className="space-y-1 mt-6">
       <div className="flex flex-col items-center gap-4 p-2 justify-center">
         <Button
+          data-tour="clear-canvas"
           variant="destructive"
           className="w-full"
           onClick={() => resetState()}
