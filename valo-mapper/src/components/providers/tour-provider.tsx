@@ -13,7 +13,8 @@ import { tourSteps } from "@/components/tour/tour-steps";
 const TourContent = ({ children }: { children: React.ReactNode }) => {
   const { hasCompletedTour, startTour, isTourOpen } = useTour();
   const pathname = usePathname();
-  const isLobbyPage = pathname && pathname.match(/^\/[^\/]+$/);
+  const LOBBY_ID_REGEX = /^\/[A-Z2-7]{7,8}$/;
+  const isLobbyPage = pathname ? LOBBY_ID_REGEX.test(pathname) : false;
 
   useEffect(() => {
     if (!hasCompletedTour && !isTourOpen && isLobbyPage) {
