@@ -4,20 +4,43 @@ export const GET = async (
 ) => {
   const { lobbyCode } = await params;
 
-  const response = await fetch(`${process.env.API_URL}/lobbies/${lobbyCode}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  if (!response.ok) {
-    return Response.json(
+  try {
+    const response = await fetch(
+      `${process.env.API_URL}/lobbies/${lobbyCode}`,
       {
-        error:
-          response.status === 404 ? "Lobby not found" : "Failed to fetch lobby",
-      },
-      { status: response.status }
+        signal: controller.signal,
+      }
     );
-  }
 
-  const data = await response.json();
-  return Response.json(data);
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return Response.json(
+        {
+          error:
+            response.status === 404
+              ? "Lobby not found"
+              : "Failed to fetch lobby",
+        },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    return Response.json(data);
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      return Response.json(
+        { error: "Request timed out. Please try again." },
+        { status: 504 }
+      );
+    }
+    throw error;
+  }
 };
 
 export const PATCH = async (
@@ -28,21 +51,41 @@ export const PATCH = async (
 
   const body = await request.json();
 
-  const response = await fetch(`${process.env.API_URL}/lobbies/${lobbyCode}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  if (!response.ok) {
-    return Response.json(
-      { error: "Failed to update lobby" },
-      { status: response.status }
+  try {
+    const response = await fetch(
+      `${process.env.API_URL}/lobbies/${lobbyCode}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      }
     );
-  }
 
-  const data = await response.json();
-  return Response.json(data);
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return Response.json(
+        { error: "Failed to update lobby" },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    return Response.json(data);
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      return Response.json(
+        { error: "Request timed out. Please try again." },
+        { status: 504 }
+      );
+    }
+    throw error;
+  }
 };

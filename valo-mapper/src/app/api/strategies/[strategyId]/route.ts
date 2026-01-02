@@ -10,25 +10,42 @@ export const DELETE = async (
 
   const { strategyId } = await params;
 
-  const response = await fetch(
-    `${process.env.API_URL}/strategies/${strategyId}`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: authHeader,
-      },
-    }
-  );
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  if (!response.ok) {
-    return Response.json(
-      { error: "Failed to delete strategy" },
-      { status: response.status }
+  try {
+    const response = await fetch(
+      `${process.env.API_URL}/strategies/${strategyId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader,
+        },
+        signal: controller.signal,
+      }
     );
-  }
 
-  return Response.json({ success: true });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return Response.json(
+        { error: "Failed to delete strategy" },
+        { status: response.status }
+      );
+    }
+
+    return Response.json({ success: true });
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      return Response.json(
+        { error: "Request timed out. Please try again." },
+        { status: 504 }
+      );
+    }
+    throw error;
+  }
 };
 
 export const PATCH = async (
@@ -49,25 +66,42 @@ export const PATCH = async (
     return Response.json({ error: "No request body" }, { status: 400 });
   }
 
-  const response = await fetch(
-    `${process.env.API_URL}/strategies/${strategyId}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: authHeader,
-      },
-      body: JSON.stringify(body),
-    }
-  );
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  if (!response.ok) {
-    return Response.json(
-      { error: "Failed to update strategy" },
-      { status: response.status }
+  try {
+    const response = await fetch(
+      `${process.env.API_URL}/strategies/${strategyId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      }
     );
-  }
 
-  const data = await response.json();
-  return Response.json(data);
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return Response.json(
+        { error: "Failed to update strategy" },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    return Response.json(data);
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      return Response.json(
+        { error: "Request timed out. Please try again." },
+        { status: 504 }
+      );
+    }
+    throw error;
+  }
 };

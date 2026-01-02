@@ -95,6 +95,59 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
+// Polyfill Request and Response for Node.js test environment
+global.Request = class Request {
+  url: string;
+  method: string;
+  headers: { get: (name: string) => string | null };
+  body: string | null;
+  private _headerMap: Map<string, string>;
+
+  constructor(url: string, options?: any) {
+    this.url = url;
+    this.method = options?.method || "GET";
+    this._headerMap = new Map();
+    if (options?.headers) {
+      Object.entries(options.headers).forEach(([key, value]) => {
+        this._headerMap.set(key.toLowerCase(), value as string);
+      });
+    }
+    this.body = options?.body || null;
+    this.headers = {
+      get: (name: string) => this._headerMap.get(name.toLowerCase()) || null,
+    };
+  }
+
+  json() {
+    return Promise.resolve(this.body ? JSON.parse(this.body) : null);
+  }
+} as any;
+
+global.Response = class Response {
+  body: any;
+  status: number;
+  statusText: string;
+  headers: Map<string, string>;
+  ok: boolean;
+
+  constructor(body?: any, init?: { status?: number; statusText?: string }) {
+    this.body = body;
+    this.status = init?.status || 200;
+    this.statusText = init?.statusText || "";
+    this.headers = new Map();
+    this.ok = this.status >= 200 && this.status < 300;
+  }
+
+  static json(data: any, init?: { status?: number }) {
+    const response = new Response(JSON.stringify(data), init);
+    return response;
+  }
+
+  async json() {
+    return typeof this.body === "string" ? JSON.parse(this.body) : this.body;
+  }
+} as any;
+
 // Suppress console errors in tests
 global.console = {
   ...console,
