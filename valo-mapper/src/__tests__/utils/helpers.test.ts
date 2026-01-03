@@ -164,12 +164,17 @@ describe("Utils", () => {
       expect(toolId).toMatch(/^tool-/);
     });
 
-    it("should generate different IDs on subsequent calls", async () => {
+    it("should generate different IDs on subsequent calls", () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(0);
+
       const id1 = getNextId("agent");
-      await new Promise((resolve) => setTimeout(resolve, 1));
+      jest.advanceTimersByTime(1);
       const id2 = getNextId("agent");
 
       expect(id1).not.toBe(id2);
+
+      jest.useRealTimers();
     });
   });
 });
