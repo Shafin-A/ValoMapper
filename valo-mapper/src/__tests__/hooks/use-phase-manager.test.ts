@@ -3,6 +3,14 @@ import { usePhaseManager } from "@/hooks/use-phase-manager";
 import { PhaseState } from "@/lib/types";
 
 describe("usePhaseManager", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it("should initialize with 10 empty phases", () => {
     const { result } = renderHook(() => usePhaseManager());
 

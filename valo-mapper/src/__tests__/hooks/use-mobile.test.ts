@@ -6,6 +6,7 @@ describe("useIsMobile", () => {
   let matchMediaMock: jest.Mock;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     matchMediaMock = jest.fn();
     window.matchMedia = matchMediaMock;
   });
@@ -16,6 +17,7 @@ describe("useIsMobile", () => {
       configurable: true,
       value: originalInnerWidth,
     });
+    jest.useRealTimers();
   });
 
   it("should return true for mobile viewport", () => {

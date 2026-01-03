@@ -6,6 +6,7 @@ describe("useDimensions", () => {
   let mockElement: HTMLElement;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     mockElement = document.createElement("div");
     Object.defineProperty(mockElement, "offsetWidth", {
       configurable: true,
@@ -15,6 +16,10 @@ describe("useDimensions", () => {
       configurable: true,
       value: 600,
     });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it("should return initial dimensions", () => {

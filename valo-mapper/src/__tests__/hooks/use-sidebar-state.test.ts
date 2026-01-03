@@ -2,6 +2,14 @@ import { renderHook, act } from "@testing-library/react";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 
 describe("useSidebarState", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it("should initialize with default values", () => {
     const { result } = renderHook(() => useSidebarState());
 
