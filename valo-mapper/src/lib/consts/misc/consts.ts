@@ -11,6 +11,8 @@ export const MIN_ZOOM_SCALE = 1;
 export const VIRTUAL_WIDTH = 2560;
 export const VIRTUAL_HEIGHT = 1440;
 
+export const CONTEXT_MENU_DUPLICATE_OFFSET = 20;
+
 export const ROLE_ICONS: Record<string, string> = {
   Controller: "/roles/controller.png",
   Duelist: "/roles/duelist.png",

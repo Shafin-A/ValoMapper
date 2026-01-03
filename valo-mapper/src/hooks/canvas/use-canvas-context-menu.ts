@@ -1,7 +1,10 @@
+import { CONTEXT_MENU_DUPLICATE_OFFSET } from "@/lib/consts/misc/consts";
 import {
   AbilityCanvas,
   AgentCanvas,
+  BaseCanvasItem,
   ImageCanvas,
+  ItemType,
   TextCanvas,
   ToolIconCanvas,
 } from "@/lib/types";
@@ -10,12 +13,37 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 
+const duplicateItem = <T extends BaseCanvasItem>(
+  items: T[],
+  itemId: string,
+  setItems: Dispatch<SetStateAction<T[]>>,
+  idPrefix: ItemType
+): void => {
+  const item = items.find((i) => i.id === itemId);
+  if (item) {
+    const newItem = {
+      ...item,
+      id: getNextId(idPrefix),
+      x: item.x + CONTEXT_MENU_DUPLICATE_OFFSET,
+      y: item.y + CONTEXT_MENU_DUPLICATE_OFFSET,
+    };
+    setItems((prev) => [...prev, newItem]);
+  }
+};
+
+const deleteItem = <T extends BaseCanvasItem>(
+  itemId: string,
+  setItems: Dispatch<SetStateAction<T[]>>
+): void => {
+  setItems((prev) => prev.filter((item) => item.id !== itemId));
+};
+
 interface ContextMenuState {
   open: boolean;
   x: number;
   y: number;
   itemId: string;
-  itemType: "agent" | "ability" | "text" | "image" | "tool";
+  itemType: ItemType;
 }
 
 export const useCanvasContextMenu = (
@@ -82,7 +110,7 @@ export const useCanvasContextMenu = (
       )
         return;
 
-      let itemType: "agent" | "ability" | "text" | "image" | "tool";
+      let itemType: ItemType;
       if (isAgentItem) itemType = "agent";
       else if (isAbilityItem) itemType = "ability";
       else if (isTextItem) itemType = "text";
@@ -118,61 +146,32 @@ export const useCanvasContextMenu = (
 
     const { itemId, itemType } = contextMenu;
 
-    if (itemType === "agent") {
-      const agent = agentsOnCanvas.find((a) => a.id === itemId);
-      if (agent) {
-        const newAgent = {
-          ...agent,
-          id: getNextId("agent"),
-          x: agent.x + 20,
-          y: agent.y + 20,
-        };
-        setAgentsOnCanvas((prev) => [...prev, newAgent]);
-      }
-    } else if (itemType === "ability") {
-      const ability = abilitiesOnCanvas.find((a) => a.id === itemId);
-      if (ability) {
-        const newAbility = {
-          ...ability,
-          id: getNextId("ability"),
-          x: ability.x + 20,
-          y: ability.y + 20,
-        };
-        setAbilitiesOnCanvas((prev) => [...prev, newAbility]);
-      }
-    } else if (itemType === "text") {
-      const text = textsOnCanvas.find((t) => t.id === itemId);
-      if (text) {
-        const newText = {
-          ...text,
-          id: getNextId("text"),
-          x: text.x + 20,
-          y: text.y + 20,
-        };
-        setTextsOnCanvas((prev) => [...prev, newText]);
-      }
-    } else if (itemType === "image") {
-      const image = imagesOnCanvas.find((i) => i.id === itemId);
-      if (image) {
-        const newImage = {
-          ...image,
-          id: getNextId("image"),
-          x: image.x + 20,
-          y: image.y + 20,
-        };
-        setImagesOnCanvas((prev) => [...prev, newImage]);
-      }
-    } else if (itemType === "tool") {
-      const toolIcon = toolIconsOnCanvas.find((i) => i.id === itemId);
-      if (toolIcon) {
-        const newToolIcon = {
-          ...toolIcon,
-          id: getNextId("tool"),
-          x: toolIcon.x + 20,
-          y: toolIcon.y + 20,
-        };
-        setToolIconsOnCanvas((prev) => [...prev, newToolIcon]);
-      }
+    switch (itemType) {
+      case "agent":
+        duplicateItem(agentsOnCanvas, itemId, setAgentsOnCanvas, itemType);
+        break;
+      case "ability":
+        duplicateItem(
+          abilitiesOnCanvas,
+          itemId,
+          setAbilitiesOnCanvas,
+          itemType
+        );
+        break;
+      case "text":
+        duplicateItem(textsOnCanvas, itemId, setTextsOnCanvas, itemType);
+        break;
+      case "image":
+        duplicateItem(imagesOnCanvas, itemId, setImagesOnCanvas, itemType);
+        break;
+      case "tool":
+        duplicateItem(
+          toolIconsOnCanvas,
+          itemId,
+          setToolIconsOnCanvas,
+          itemType
+        );
+        break;
     }
     closeContextMenu();
   }, [
@@ -195,20 +194,22 @@ export const useCanvasContextMenu = (
 
     const { itemId, itemType } = contextMenu;
 
-    if (itemType === "agent") {
-      setAgentsOnCanvas((prev) => prev.filter((agent) => agent.id !== itemId));
-    } else if (itemType === "ability") {
-      setAbilitiesOnCanvas((prev) =>
-        prev.filter((ability) => ability.id !== itemId)
-      );
-    } else if (itemType === "text") {
-      setTextsOnCanvas((prev) => prev.filter((text) => text.id !== itemId));
-    } else if (itemType === "image") {
-      setImagesOnCanvas((prev) => prev.filter((image) => image.id !== itemId));
-    } else if (itemType === "tool") {
-      setToolIconsOnCanvas((prev) =>
-        prev.filter((toolIcon) => toolIcon.id !== itemId)
-      );
+    switch (itemType) {
+      case "agent":
+        deleteItem(itemId, setAgentsOnCanvas);
+        break;
+      case "ability":
+        deleteItem(itemId, setAbilitiesOnCanvas);
+        break;
+      case "text":
+        deleteItem(itemId, setTextsOnCanvas);
+        break;
+      case "image":
+        deleteItem(itemId, setImagesOnCanvas);
+        break;
+      case "tool":
+        deleteItem(itemId, setToolIconsOnCanvas);
+        break;
     }
     closeContextMenu();
   }, [
