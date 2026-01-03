@@ -43,6 +43,9 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
 
     const {
       handleWheel,
+      handleTouchStart,
+      handleTouchMove,
+      handleTouchEnd,
       handleStageClick,
       handleStageMouseLeave,
       handleStageMouseMove,
@@ -139,9 +142,18 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           onDragMove={handleDragMove}
           onMouseMove={handleStageMouseMove}
           onMouseDown={handleStageClick}
-          onTouchStart={handleStageClick}
-          onTouchMove={handleStageMouseMove}
-          onTouchEnd={handleMouseUp}
+          onTouchStart={(e) => {
+            handleTouchStart(e);
+            handleStageClick();
+          }}
+          onTouchMove={(e) => {
+            handleTouchMove(e);
+            handleStageMouseMove();
+          }}
+          onTouchEnd={(e) => {
+            handleTouchEnd(e);
+            handleMouseUp();
+          }}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleStageMouseLeave}
           onContextMenu={handleContextMenu}

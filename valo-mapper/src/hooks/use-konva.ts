@@ -59,6 +59,9 @@ export const useKonva = (
   const currentLineRef = useRef<Konva.Line | Konva.Arrow>(null);
   const erasedLinesRef = useRef<Set<number>>(new Set());
   const deleteGroupRef = useRef<Konva.Group | null>(null);
+  const pinchInitialDistanceRef = useRef<number | null>(null);
+  const pinchInitialScaleRef = useRef<number | null>(null);
+  const pinchCenterRef = useRef<Vector2d | null>(null);
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     open: false,
@@ -187,6 +190,112 @@ export const useKonva = (
       handleDragMove();
     },
     [handleDragMove, stageRef, baseScale]
+  );
+
+  const handleTouchStart = useCallback(
+    (e: KonvaEventObject<TouchEvent>) => {
+      const touches = e.evt.touches;
+      const stage = stageRef.current;
+      if (!stage || touches.length !== 2) return;
+
+      e.evt.preventDefault();
+      if (stage.isDragging()) stage.stopDrag();
+      stage.draggable(false);
+
+      const rect = stage.container().getBoundingClientRect();
+      const touchPoints: Vector2d[] = Array.from(touches).map((touch) => ({
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      }));
+
+      const stagePos = stage.position();
+      const totalScale = stage.scaleX();
+
+      const worldPoints = touchPoints.map((p) => ({
+        x: (p.x - stagePos.x) / totalScale,
+        y: (p.y - stagePos.y) / totalScale,
+      }));
+
+      const dx = worldPoints[0].x - worldPoints[1].x;
+      const dy = worldPoints[0].y - worldPoints[1].y;
+      pinchInitialDistanceRef.current = Math.hypot(dx, dy);
+      pinchInitialScaleRef.current = totalScale;
+      pinchCenterRef.current = {
+        x: (worldPoints[0].x + worldPoints[1].x) / 2,
+        y: (worldPoints[0].y + worldPoints[1].y) / 2,
+      };
+    },
+    [stageRef]
+  );
+
+  const handleTouchMove = useCallback(
+    (e: KonvaEventObject<TouchEvent>) => {
+      const touches = e.evt.touches;
+      const stage = stageRef.current;
+      if (
+        !stage ||
+        touches.length !== 2 ||
+        pinchInitialDistanceRef.current === null ||
+        pinchInitialScaleRef.current === null ||
+        !pinchCenterRef.current
+      )
+        return;
+
+      e.evt.preventDefault();
+      if (stage.isDragging()) stage.stopDrag();
+
+      const rect = stage.container().getBoundingClientRect();
+      const touchPoints: Vector2d[] = Array.from(touches).map((touch) => ({
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      }));
+
+      const dx = touchPoints[0].x - touchPoints[1].x;
+      const dy = touchPoints[0].y - touchPoints[1].y;
+      const newDistance = Math.hypot(dx, dy);
+
+      const newTotalScaleRaw =
+        pinchInitialScaleRef.current *
+        (newDistance / pinchInitialDistanceRef.current);
+
+      const clampedZoomScale = Math.max(
+        MIN_ZOOM_SCALE,
+        Math.min(MAX_ZOOM_SCALE, newTotalScaleRaw / baseScale)
+      );
+      const newTotalScale = clampedZoomScale * baseScale;
+
+      const centerScreen: Vector2d = {
+        x: (touchPoints[0].x + touchPoints[1].x) / 2,
+        y: (touchPoints[0].y + touchPoints[1].y) / 2,
+      };
+
+      stage.scale({ x: newTotalScale, y: newTotalScale });
+
+      const newPos: Vector2d = {
+        x: centerScreen.x - pinchCenterRef.current.x * newTotalScale,
+        y: centerScreen.y - pinchCenterRef.current.y * newTotalScale,
+      };
+
+      stage.position(newPos);
+      handleDragMove();
+    },
+    [baseScale, handleDragMove, stageRef]
+  );
+
+  const handleTouchEnd = useCallback(
+    (e: KonvaEventObject<TouchEvent>) => {
+      if (e.evt.touches.length <= 1) {
+        pinchInitialDistanceRef.current = null;
+        pinchInitialScaleRef.current = null;
+        pinchCenterRef.current = null;
+
+        const stage = stageRef.current;
+        if (stage) {
+          stage.draggable(!isDrawMode);
+        }
+      }
+    },
+    [isDrawMode, stageRef]
   );
 
   const handleDrawing = useCallback(() => {
@@ -615,6 +724,9 @@ export const useKonva = (
     handleDuplicate,
     handleDelete,
     handleToggleAlly,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     handleDragMove,
     contextMenu,
     currentLineRef,
