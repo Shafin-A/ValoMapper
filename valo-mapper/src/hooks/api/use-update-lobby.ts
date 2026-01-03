@@ -1,32 +1,23 @@
-import { CanvasState } from "@/lib/types";
+import { CanvasState, Lobby } from "@/lib/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/api";
 
 export const useUpdateLobby = (lobbyCode: string) => {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, isError } = useMutation({
-    mutationFn: async (canvasState: CanvasState) => {
-      const response = await fetch(`/api/lobbies/${lobbyCode}`, {
+    mutationFn: (canvasState: CanvasState) =>
+      apiFetch<Lobby>(`/api/lobbies/${lobbyCode}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ canvasState }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update lobby");
-      }
-
-      return response.json();
-    },
+      }),
     onSuccess: () => {
       toast.success("Canvas synced!");
       queryClient.invalidateQueries({ queryKey: ["lobby", lobbyCode] });
     },
     onError: (error) => {
-      toast.error(`Failed to sync canvas. Error: ${error.message}`);
+      toast.error(`Failed to sync canvas: ${error.message}`);
     },
   });
 

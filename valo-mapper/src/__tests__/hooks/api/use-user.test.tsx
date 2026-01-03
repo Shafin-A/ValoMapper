@@ -110,7 +110,6 @@ describe("useUser", () => {
 
     expect(result.current.data).toEqual(mockUserData);
     expect(global.fetch).toHaveBeenCalledWith("/api/users/me", {
-      method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${mockToken}`,

@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
+import { User } from "@/lib/types";
 
 interface CreateUserParams {
   idToken: string;
@@ -16,24 +18,12 @@ export const useCreateUser = () => {
       firebaseUid,
       name,
       email,
-    }: CreateUserParams) => {
-      const response = await fetch("/api/users", {
+    }: CreateUserParams) =>
+      apiFetch<User>("/api/users", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          firebaseUid,
-          name,
-          email,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to create user");
-
-      return response.json();
-    },
+        token: idToken,
+        body: JSON.stringify({ firebaseUid, name, email }),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user"] });
     },

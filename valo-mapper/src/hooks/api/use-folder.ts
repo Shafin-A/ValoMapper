@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch, authQueryOptions } from "@/lib/api";
 import { Folder, Strategy } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -14,30 +15,14 @@ export const useFolders = () => {
       const token = await getIdToken();
       if (!token) throw new Error("User not authenticated");
 
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
-
-      const [foldersRes, strategiesRes] = await Promise.all([
-        fetch("/api/folders", { method: "GET", headers }),
-        fetch("/api/strategies", {
-          method: "GET",
-          headers,
-        }),
+      const [folders, strategies] = await Promise.all([
+        apiFetch<Folder[]>("/api/folders", { token }),
+        apiFetch<Strategy[]>("/api/strategies", { token }),
       ]);
 
-      if (!foldersRes.ok || !strategiesRes.ok) {
-        throw new Error("Failed to fetch folders or strategies");
-      }
-
-      const folders = (await foldersRes.json()) as Folder[];
-      const strategies = (await strategiesRes.json()) as Strategy[];
-
-      const strategyData = buildTree(folders, strategies);
-
-      return strategyData;
+      return buildTree(folders, strategies);
     },
+    ...authQueryOptions,
   });
 
   return { data, isLoading, isError, error, refetch };

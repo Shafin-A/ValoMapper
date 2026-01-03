@@ -1,21 +1,13 @@
+import { apiFetch, DEFAULT_RETRY_CONFIG } from "@/lib/api";
 import { Lobby } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 
 export const useLobby = (lobbyCode: string) => {
   const { data, isLoading, isError, error } = useQuery<Lobby>({
     queryKey: ["lobby", lobbyCode],
-    queryFn: async () => {
-      const response = await fetch(`/api/lobbies/${lobbyCode}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Lobby not found");
-        }
-        throw new Error("Failed to fetch lobby");
-      }
-      return response.json();
-    },
+    queryFn: () => apiFetch<Lobby>(`/api/lobbies/${lobbyCode}`),
     enabled: !!lobbyCode,
+    ...DEFAULT_RETRY_CONFIG,
   });
 
   return {

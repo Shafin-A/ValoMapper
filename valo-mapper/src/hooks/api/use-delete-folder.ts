@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { apiFetch } from "@/lib/api";
 
 interface DeleteFolderParams {
   folderId: number;
@@ -15,24 +16,17 @@ export const useDeleteFolder = () => {
       const token = await getIdToken();
       if (!token) throw new Error("User not authenticated");
 
-      const response = await fetch(`/api/folders/${folderId}`, {
+      return apiFetch<null>(`/api/folders/${folderId}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        token,
       });
-
-      if (!response.ok) throw new Error("Failed to delete folder");
-
-      return null;
     },
     onSuccess: () => {
       toast.success("Folder deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["folders-and-strategies"] });
     },
     onError: (error) => {
-      toast.error(`Failed to delete folder. Error: ${error.message}`);
+      toast.error(`Failed to delete folder: ${error.message}`);
     },
   });
 
