@@ -6,6 +6,7 @@ import (
 )
 
 func SetupRoutes(r *mux.Router, firebaseAuth *auth.Client) {
+	RegisterHealthRoutes(r)
 	RegisterLobbyRoutes(r)
 	RegisterUserRoutes(r, firebaseAuth)
 	RegisterFolderRoutes(r, firebaseAuth)
