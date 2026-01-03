@@ -1,31 +1,13 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
-import {
-  MAX_ZOOM_SCALE,
-  MIN_ZOOM_SCALE,
-  SCALE_FACTOR,
-  SIDEBAR_WIDTH,
-  TEMP_DRAG_ID,
-} from "@/lib/consts";
-import {
-  doesEraserIntersect,
-  getIntersectingLines,
-  getNextId,
-  isAgent,
-} from "@/lib/utils";
-import Konva from "konva";
-import { KonvaEventObject } from "konva/lib/Node";
+import { TEMP_DRAG_ID } from "@/lib/consts";
+import { getNextId, isAgent } from "@/lib/utils";
+import { useCanvasZoom } from "./canvas/use-canvas-zoom";
+import { useCanvasDrawing } from "./canvas/use-canvas-drawing";
+import { useCanvasContextMenu } from "./canvas/use-canvas-context-menu";
 import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useCallback, useRef, useState } from "react";
-
-interface ContextMenuState {
-  open: boolean;
-  x: number;
-  y: number;
-  itemId: string;
-  itemType: "agent" | "ability" | "text" | "image" | "tool";
-}
+import { useCallback, useRef } from "react";
 
 export const useKonva = (
   stageRef: React.RefObject<Stage | null>,
@@ -55,21 +37,6 @@ export const useKonva = (
   const { drawSettings, eraserSettings } = useSettings();
 
   const frameRef = useRef<number | null>(null);
-  const drawingBufferRef = useRef<Vector2d[]>([]);
-  const currentLineRef = useRef<Konva.Line | Konva.Arrow>(null);
-  const erasedLinesRef = useRef<Set<number>>(new Set());
-  const deleteGroupRef = useRef<Konva.Group | null>(null);
-  const pinchInitialDistanceRef = useRef<number | null>(null);
-  const pinchInitialScaleRef = useRef<number | null>(null);
-  const pinchCenterRef = useRef<Vector2d | null>(null);
-
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-    open: false,
-    x: 0,
-    y: 0,
-    itemId: "",
-    itemType: "agent",
-  });
 
   const getWorldPointerPosition = useCallback(() => {
     const stage = stageRef.current;
@@ -86,10 +53,6 @@ export const useKonva = (
       y: (pos.y - stagePos.y) / totalScale,
     };
   }, [stageRef]);
-
-  const closeContextMenu = useCallback(() => {
-    setContextMenu((prev) => ({ ...prev, open: false }));
-  }, []);
 
   const removeTempDragIcon = useCallback(() => {
     if (!selectedCanvasIcon) return;
@@ -112,266 +75,46 @@ export const useKonva = (
     setSelectedCanvasIcon,
   ]);
 
-  const handleDragMove = useCallback(() => {
-    const deleteGroup = deleteGroupRef.current;
-    if (!deleteGroup) return;
+  const {
+    deleteGroupRef,
+    handleDragMove,
+    handleWheel,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = useCanvasZoom(stageRef, baseScale, isDrawMode);
 
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    const container = stage.container();
-    const containerWidth = container.offsetWidth;
-
-    const DELETE_ZONE_WIDTH = 120;
-    const PADDING = 20;
-
-    const screenX =
-      containerWidth - DELETE_ZONE_WIDTH - SIDEBAR_WIDTH - PADDING;
-    const screenY = PADDING;
-
-    const totalScale = stage.scaleX();
-    const stagePos = stage.position();
-
-    const worldX = (screenX - stagePos.x) / totalScale;
-    const worldY = (screenY - stagePos.y) / totalScale;
-
-    deleteGroup.position({
-      x: worldX,
-      y: worldY,
-    });
-
-    deleteGroup.scale({
-      x: 1 / totalScale,
-      y: 1 / totalScale,
-    });
-  }, [stageRef]);
-
-  const handleWheel = useCallback(
-    (e: KonvaEventObject<WheelEvent>) => {
-      e.evt.preventDefault();
-
-      const stage = stageRef.current;
-      if (!stage) return;
-
-      const currentZoomScale = stage.scaleX() / baseScale;
-      const pointer = stage.getPointerPosition();
-      if (!pointer) return;
-
-      const mousePointTo: Vector2d = {
-        x: (pointer.x - stage.x()) / stage.scaleX(),
-        y: (pointer.y - stage.y()) / stage.scaleX(),
-      };
-
-      let direction = e.evt.deltaY > 0 ? 1 : -1;
-      if (e.evt.ctrlKey) {
-        direction = -direction;
-      }
-
-      const newZoomScale =
-        direction < 0
-          ? currentZoomScale * SCALE_FACTOR
-          : currentZoomScale / SCALE_FACTOR;
-
-      const clampedZoomScale = Math.max(
-        MIN_ZOOM_SCALE,
-        Math.min(MAX_ZOOM_SCALE, newZoomScale)
-      );
-
-      const newTotalScale = baseScale * clampedZoomScale;
-      stage.scale({ x: newTotalScale, y: newTotalScale });
-
-      const newPos: Vector2d = {
-        x: pointer.x - mousePointTo.x * newTotalScale,
-        y: pointer.y - mousePointTo.y * newTotalScale,
-      };
-
-      stage.position(newPos);
-
-      handleDragMove();
-    },
-    [handleDragMove, stageRef, baseScale]
-  );
-
-  const handleTouchStart = useCallback(
-    (e: KonvaEventObject<TouchEvent>) => {
-      const touches = e.evt.touches;
-      const stage = stageRef.current;
-      if (!stage || touches.length !== 2) return;
-
-      e.evt.preventDefault();
-      if (stage.isDragging()) stage.stopDrag();
-      stage.draggable(false);
-
-      const rect = stage.container().getBoundingClientRect();
-      const touchPoints: Vector2d[] = Array.from(touches).map((touch) => ({
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top,
-      }));
-
-      const stagePos = stage.position();
-      const totalScale = stage.scaleX();
-
-      const worldPoints = touchPoints.map((p) => ({
-        x: (p.x - stagePos.x) / totalScale,
-        y: (p.y - stagePos.y) / totalScale,
-      }));
-
-      const dx = worldPoints[0].x - worldPoints[1].x;
-      const dy = worldPoints[0].y - worldPoints[1].y;
-      pinchInitialDistanceRef.current = Math.hypot(dx, dy);
-      pinchInitialScaleRef.current = totalScale;
-      pinchCenterRef.current = {
-        x: (worldPoints[0].x + worldPoints[1].x) / 2,
-        y: (worldPoints[0].y + worldPoints[1].y) / 2,
-      };
-    },
-    [stageRef]
-  );
-
-  const handleTouchMove = useCallback(
-    (e: KonvaEventObject<TouchEvent>) => {
-      const touches = e.evt.touches;
-      const stage = stageRef.current;
-      if (
-        !stage ||
-        touches.length !== 2 ||
-        pinchInitialDistanceRef.current === null ||
-        pinchInitialScaleRef.current === null ||
-        !pinchCenterRef.current
-      )
-        return;
-
-      e.evt.preventDefault();
-      if (stage.isDragging()) stage.stopDrag();
-
-      const rect = stage.container().getBoundingClientRect();
-      const touchPoints: Vector2d[] = Array.from(touches).map((touch) => ({
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top,
-      }));
-
-      const dx = touchPoints[0].x - touchPoints[1].x;
-      const dy = touchPoints[0].y - touchPoints[1].y;
-      const newDistance = Math.hypot(dx, dy);
-
-      const newTotalScaleRaw =
-        pinchInitialScaleRef.current *
-        (newDistance / pinchInitialDistanceRef.current);
-
-      const clampedZoomScale = Math.max(
-        MIN_ZOOM_SCALE,
-        Math.min(MAX_ZOOM_SCALE, newTotalScaleRaw / baseScale)
-      );
-      const newTotalScale = clampedZoomScale * baseScale;
-
-      const centerScreen: Vector2d = {
-        x: (touchPoints[0].x + touchPoints[1].x) / 2,
-        y: (touchPoints[0].y + touchPoints[1].y) / 2,
-      };
-
-      stage.scale({ x: newTotalScale, y: newTotalScale });
-
-      const newPos: Vector2d = {
-        x: centerScreen.x - pinchCenterRef.current.x * newTotalScale,
-        y: centerScreen.y - pinchCenterRef.current.y * newTotalScale,
-      };
-
-      stage.position(newPos);
-      handleDragMove();
-    },
-    [baseScale, handleDragMove, stageRef]
-  );
-
-  const handleTouchEnd = useCallback(
-    (e: KonvaEventObject<TouchEvent>) => {
-      if (e.evt.touches.length <= 1) {
-        pinchInitialDistanceRef.current = null;
-        pinchInitialScaleRef.current = null;
-        pinchCenterRef.current = null;
-
-        const stage = stageRef.current;
-        if (stage) {
-          stage.draggable(!isDrawMode);
-        }
-      }
-    },
-    [isDrawMode, stageRef]
-  );
-
-  const handleDrawing = useCallback(() => {
-    const worldPos = getWorldPointerPosition();
-    if (!worldPos) return;
-
-    if (!isDrawing.current) {
-      isDrawing.current = true;
-      drawingBufferRef.current = [worldPos];
-
-      if (tool === "eraser" && eraserSettings.mode === "line") {
-        erasedLinesRef.current.clear();
-      }
-
-      setCurrentStroke({
-        id: getNextId("tool"),
-        tool,
-        points: [worldPos],
-        color: drawSettings.color,
-        size: tool === "eraser" ? eraserSettings.size : drawSettings.size,
-        isDashed: drawSettings.isDashed,
-        isArrowHead: drawSettings.isArrowHead,
-      });
-    } else {
-      const lastPoint =
-        drawingBufferRef.current[drawingBufferRef.current.length - 1];
-      const distance = Math.sqrt(
-        Math.pow(worldPos.x - lastPoint.x, 2) +
-          Math.pow(worldPos.y - lastPoint.y, 2)
-      );
-
-      if (distance > 5) {
-        drawingBufferRef.current.push(worldPos);
-
-        if (tool === "eraser" && eraserSettings.mode === "line") {
-          const currentSegment = [lastPoint, worldPos];
-          const intersectingLineIndices = getIntersectingLines(
-            currentSegment,
-            drawLines
-          );
-
-          const newIntersections = intersectingLineIndices.filter(
-            (index) => !erasedLinesRef.current.has(index)
-          );
-
-          if (newIntersections.length > 0) {
-            newIntersections.forEach((index) => {
-              erasedLinesRef.current.add(index);
-            });
-
-            setDrawLines((prev) =>
-              prev.filter((_, index) => !newIntersections.includes(index))
-            );
-          }
-        }
-
-        if (currentLineRef.current) {
-          const flatPoints = drawingBufferRef.current.flatMap((p) => [
-            p.x,
-            p.y,
-          ]);
-          currentLineRef.current.points(flatPoints);
-          currentLineRef.current.getLayer()?.batchDraw();
-        }
-      }
-    }
-  }, [
-    drawSettings,
-    eraserSettings,
+  const { handleDrawing, handleMouseUp, currentLineRef } = useCanvasDrawing(
     getWorldPointerPosition,
     isDrawing,
-    setCurrentStroke,
     tool,
+    drawSettings,
+    eraserSettings,
     drawLines,
     setDrawLines,
-  ]);
+    setCurrentStroke
+  );
+
+  const {
+    contextMenu,
+    handleContextMenu,
+    handlePopoverOpenChange,
+    handleDuplicate,
+    handleDelete,
+    handleToggleAlly,
+  } = useCanvasContextMenu(
+    stageRef,
+    agentsOnCanvas,
+    setAgentsOnCanvas,
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
+    textsOnCanvas,
+    setTextsOnCanvas,
+    imagesOnCanvas,
+    setImagesOnCanvas,
+    toolIconsOnCanvas,
+    setToolIconsOnCanvas
+  );
 
   const handleIconPlacement = useCallback(
     (position?: Vector2d) => {
@@ -467,251 +210,10 @@ export const useKonva = (
     stageRef,
   ]);
 
-  const handleMouseUp = useCallback(() => {
-    if (isDrawing.current && drawingBufferRef.current.length > 0) {
-      const finalStroke = {
-        id: getNextId("tool"),
-        tool,
-        points: drawingBufferRef.current,
-        color: drawSettings.color,
-        size: tool === "eraser" ? eraserSettings.size : drawSettings.size,
-        isDashed: drawSettings.isDashed,
-        isArrowHead: drawSettings.isArrowHead,
-      };
-
-      if (tool === "eraser") {
-        if (eraserSettings.mode === "line") {
-          setCurrentStroke(null);
-        } else {
-          if (doesEraserIntersect(drawingBufferRef.current, drawLines)) {
-            setDrawLines((prev) => [...prev, finalStroke]);
-          }
-          setCurrentStroke(null);
-        }
-      } else {
-        setDrawLines((prev) => [...prev, finalStroke]);
-        setCurrentStroke(null);
-      }
-
-      drawingBufferRef.current = [];
-    }
-    isDrawing.current = false;
-  }, [
-    isDrawing,
-    tool,
-    drawSettings,
-    drawLines,
-    setCurrentStroke,
-    setDrawLines,
-    eraserSettings,
-  ]);
-
   const handleStageMouseLeave = useCallback(() => {
     handleMouseUp();
     removeTempDragIcon();
   }, [handleMouseUp, removeTempDragIcon]);
-
-  const handleContextMenu = useCallback(
-    (e: KonvaEventObject<PointerEvent>) => {
-      e.evt.preventDefault();
-
-      const stage = stageRef.current;
-      if (!stage || e.target === stage) return;
-
-      const containerRect = stage.container().getBoundingClientRect();
-      const pointerPosition = stage.getPointerPosition();
-      if (!pointerPosition) return;
-
-      const targetId = e.target.id() || e.target.parent?.id();
-      if (!targetId) return;
-
-      const isAgentItem = agentsOnCanvas.some(
-        (agent) => agent.id.toString() === targetId
-      );
-      const isAbilityItem = abilitiesOnCanvas.some(
-        (ability) => ability.id.toString() === targetId
-      );
-      const isTextItem = textsOnCanvas.some(
-        (text) => text.id.toString() === targetId
-      );
-      const isImageItem = imagesOnCanvas.some(
-        (image) => image.id.toString() === targetId
-      );
-      const isToolIconItem = toolIconsOnCanvas.some(
-        (toolIcon) => toolIcon.id === targetId
-      );
-
-      if (
-        !isAgentItem &&
-        !isAbilityItem &&
-        !isTextItem &&
-        !isImageItem &&
-        !isToolIconItem
-      )
-        return;
-
-      let itemType: "agent" | "ability" | "text" | "image" | "tool";
-      if (isAgentItem) itemType = "agent";
-      else if (isAbilityItem) itemType = "ability";
-      else if (isTextItem) itemType = "text";
-      else if (isImageItem) itemType = "image";
-      else if (isToolIconItem) itemType = "tool";
-      else return;
-
-      setContextMenu({
-        open: true,
-        x: containerRect.left + pointerPosition.x,
-        y: containerRect.top + pointerPosition.y,
-        itemId: targetId,
-        itemType,
-      });
-
-      e.cancelBubble = true;
-    },
-    [
-      stageRef,
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      textsOnCanvas,
-      imagesOnCanvas,
-      toolIconsOnCanvas,
-    ]
-  );
-
-  const handlePopoverOpenChange = useCallback((open: boolean) => {
-    setContextMenu((prev) => ({ ...prev, open }));
-  }, []);
-
-  const handleDuplicate = useCallback(() => {
-    if (!contextMenu.open) return;
-
-    const { itemId, itemType } = contextMenu;
-
-    if (itemType === "agent") {
-      const agent = agentsOnCanvas.find((a) => a.id === itemId);
-      if (agent) {
-        const newAgent = {
-          ...agent,
-          id: getNextId("agent"),
-          x: agent.x + 20,
-          y: agent.y + 20,
-        };
-        setAgentsOnCanvas((prev) => [...prev, newAgent]);
-      }
-    } else if (itemType === "ability") {
-      const ability = abilitiesOnCanvas.find((a) => a.id === itemId);
-      if (ability) {
-        const newAbility = {
-          ...ability,
-          id: getNextId("ability"),
-          x: ability.x + 20,
-          y: ability.y + 20,
-        };
-        setAbilitiesOnCanvas((prev) => [...prev, newAbility]);
-      }
-    } else if (itemType === "text") {
-      const text = textsOnCanvas.find((t) => t.id === itemId);
-      if (text) {
-        const newText = {
-          ...text,
-          id: getNextId("text"),
-          x: text.x + 20,
-          y: text.y + 20,
-        };
-        setTextsOnCanvas((prev) => [...prev, newText]);
-      }
-    } else if (itemType === "image") {
-      const image = imagesOnCanvas.find((i) => i.id === itemId);
-      if (image) {
-        const newImage = {
-          ...image,
-          id: getNextId("image"),
-          x: image.x + 20,
-          y: image.y + 20,
-        };
-        setImagesOnCanvas((prev) => [...prev, newImage]);
-      }
-    } else if (itemType === "tool") {
-      const toolIcon = toolIconsOnCanvas.find((i) => i.id === itemId);
-      if (toolIcon) {
-        const newToolIcon = {
-          ...toolIcon,
-          id: getNextId("tool"),
-          x: toolIcon.x + 20,
-          y: toolIcon.y + 20,
-        };
-        setToolIconsOnCanvas((prev) => [...prev, newToolIcon]);
-      }
-    }
-    closeContextMenu();
-  }, [
-    contextMenu,
-    closeContextMenu,
-    agentsOnCanvas,
-    setAgentsOnCanvas,
-    abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    textsOnCanvas,
-    setTextsOnCanvas,
-    imagesOnCanvas,
-    setImagesOnCanvas,
-    toolIconsOnCanvas,
-    setToolIconsOnCanvas,
-  ]);
-
-  const handleDelete = useCallback(() => {
-    if (!contextMenu.open) return;
-
-    const { itemId, itemType } = contextMenu;
-
-    if (itemType === "agent") {
-      setAgentsOnCanvas((prev) => prev.filter((agent) => agent.id !== itemId));
-    } else if (itemType === "ability") {
-      setAbilitiesOnCanvas((prev) =>
-        prev.filter((ability) => ability.id !== itemId)
-      );
-    } else if (itemType === "text") {
-      setTextsOnCanvas((prev) => prev.filter((text) => text.id !== itemId));
-    } else if (itemType === "image") {
-      setImagesOnCanvas((prev) => prev.filter((image) => image.id !== itemId));
-    } else if (itemType === "tool") {
-      setToolIconsOnCanvas((prev) =>
-        prev.filter((toolIcon) => toolIcon.id !== itemId)
-      );
-    }
-    closeContextMenu();
-  }, [
-    contextMenu,
-    closeContextMenu,
-    setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
-    setTextsOnCanvas,
-    setImagesOnCanvas,
-    setToolIconsOnCanvas,
-  ]);
-
-  const handleToggleAlly = useCallback(() => {
-    if (!contextMenu.open) return;
-
-    const { itemId, itemType } = contextMenu;
-
-    if (itemType === "agent") {
-      setAgentsOnCanvas((prev) =>
-        prev.map((agent) =>
-          agent.id === itemId ? { ...agent, isAlly: !agent.isAlly } : agent
-        )
-      );
-    } else {
-      setAbilitiesOnCanvas((prev) =>
-        prev.map((ability) =>
-          ability.id === itemId
-            ? { ...ability, isAlly: !ability.isAlly }
-            : ability
-        )
-      );
-    }
-    closeContextMenu();
-  }, [contextMenu, setAgentsOnCanvas, setAbilitiesOnCanvas, closeContextMenu]);
 
   return {
     handleWheel,
