@@ -3,14 +3,19 @@ import { useQuery } from "@tanstack/react-query";
 import { useFirebaseAuth } from "../use-firebase-auth";
 
 export const useUser = () => {
-  const { getIdToken, user: firebaseUser } = useFirebaseAuth();
+  const {
+    getIdToken,
+    user: firebaseUser,
+    loading: authLoading,
+  } = useFirebaseAuth();
+
   const { data, isLoading, isError, error, refetch } = useQuery<User>({
     queryKey: ["user"],
     queryFn: async () => {
       const idToken = await getIdToken();
 
       if (!idToken) {
-        return null;
+        throw new Error("No ID token available");
       }
 
       const headers = {
@@ -29,12 +34,14 @@ export const useUser = () => {
 
       return response.json();
     },
-    enabled: !!firebaseUser,
+    enabled: !!firebaseUser && !authLoading,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
   });
 
   return {
     data,
-    isLoading,
+    isLoading: authLoading || isLoading,
     isError,
     error,
     refetch,

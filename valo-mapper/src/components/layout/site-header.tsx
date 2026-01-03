@@ -42,7 +42,7 @@ export const SiteHeader = ({
   setRightSidebarOpen,
 }: SiteHeaderProps) => {
   const { logout } = useFirebaseAuth();
-  const { data: user } = useUser();
+  const { data: user, isLoading } = useUser();
   const pathname = usePathname();
 
   return (
@@ -94,7 +94,7 @@ export const SiteHeader = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
-              {!user ? (
+              {isLoading || !user ? (
                 <DropdownMenuItem asChild>
                   <Link
                     href={`/login?redirect=${encodeURIComponent(pathname)}`}
