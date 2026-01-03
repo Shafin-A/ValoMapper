@@ -1,6 +1,7 @@
 "use client";
 
 import { useCanvasState } from "@/hooks/use-canvas-state";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type {
   AbilityCanvas,
   AbilityIconItem,
@@ -25,12 +26,9 @@ import {
   RefObject,
   SetStateAction,
   useContext,
-  useEffect,
   useRef,
   useState,
 } from "react";
-import { toast } from "sonner";
-import { useSettings } from "./settings-context";
 
 interface CanvasContextType {
   agentsOnCanvas: AgentCanvas[];
@@ -105,184 +103,28 @@ export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [hoveredElementId, setHoveredElementId] = useState<string | null>(null);
   const recenterCanvasCallback = useRef<(() => void) | null>(null);
 
-  const {
-    undo,
-    redo,
-    setIsDrawMode,
-    tool,
-    setTool,
-    setIsDeleteSettingsOpen,
-    setEditingTextId,
-    editingTextId,
-    isDrawMode,
-    phases,
-    currentPhaseIndex,
-    switchToPhase,
-    setImagesOnCanvas,
-    setTextsOnCanvas,
-    setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
-    setToolIconsOnCanvas,
-  } = canvasState;
-
-  const {
-    drawSettings,
-    eraserSettings,
-    updateDrawSettings,
-    updateEraserSettings,
-  } = useSettings();
-
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      try {
-        const target = e.target as HTMLElement | null;
-        if (
-          target &&
-          (target.tagName === "INPUT" ||
-            target.tagName === "TEXTAREA" ||
-            target.isContentEditable)
-        ) {
-          return;
-        }
-
-        const key = e.key.toLowerCase();
-        const isModifier = e.ctrlKey || e.metaKey;
-
-        if (isModifier) {
-          if (key === "z") {
-            if (e.shiftKey) {
-              redo();
-            } else {
-              undo();
-            }
-            e.preventDefault();
-            return;
-          }
-
-          if (key === "q") {
-            if (e.shiftKey) {
-              updateDrawSettings({ isArrowHead: !drawSettings.isArrowHead });
-            } else {
-              updateDrawSettings({ isDashed: !drawSettings.isDashed });
-            }
-            e.preventDefault();
-            return;
-          }
-        }
-
-        if (key === "w" && e.shiftKey) {
-          updateEraserSettings({
-            mode: eraserSettings.mode === "line" ? "pixel" : "line",
-          });
-          e.preventDefault();
-          return;
-        }
-
-        if (key === "a") {
-          if (currentPhaseIndex > 0) {
-            switchToPhase(currentPhaseIndex - 1);
-            e.preventDefault();
-          }
-          return;
-        }
-
-        if (key === "d") {
-          if (currentPhaseIndex < phases.length - 1) {
-            switchToPhase(currentPhaseIndex + 1);
-            e.preventDefault();
-          }
-          return;
-        }
-
-        if (key === "e") {
-          if (hoveredElementId && !isDrawMode && !editingTextId) {
-            setImagesOnCanvas((prev) =>
-              prev.filter((img) => img.id !== hoveredElementId)
-            );
-            setTextsOnCanvas((prev) =>
-              prev.filter((txt) => txt.id !== hoveredElementId)
-            );
-            setAgentsOnCanvas((prev) =>
-              prev.filter((agent) => agent.id !== hoveredElementId)
-            );
-            setAbilitiesOnCanvas((prev) =>
-              prev.filter((ability) => ability.id !== hoveredElementId)
-            );
-            setToolIconsOnCanvas((prev) =>
-              prev.filter((toolIcon) => toolIcon.id !== hoveredElementId)
-            );
-            setHoveredElementId(null);
-            e.preventDefault();
-          }
-          return;
-        }
-
-        if (key === "r") {
-          recenterCanvasCallback.current?.();
-          e.preventDefault();
-          return;
-        }
-
-        if (key === "q") {
-          if (tool === "pencil" && isDrawMode) {
-            setIsDrawMode(false);
-          } else {
-            setIsDeleteSettingsOpen(false);
-            setEditingTextId(null);
-            setIsDrawMode(true);
-            setTool("pencil");
-          }
-          e.preventDefault();
-          return;
-        }
-
-        if (key === "w") {
-          if (tool === "eraser" && isDrawMode) {
-            setIsDrawMode(false);
-          } else {
-            setIsDeleteSettingsOpen(false);
-            setEditingTextId(null);
-            setIsDrawMode(true);
-            setTool("eraser");
-          }
-          e.preventDefault();
-          return;
-        }
-      } catch (err) {
-        console.error("Keyboard shortcut error:", err);
-        toast.error("An unexpected error occurred with keyboard shortcuts");
-      }
-    };
-
-    const listenerOptions: AddEventListenerOptions = { capture: true };
-    window.addEventListener("keydown", onKeyDown, listenerOptions);
-    return () =>
-      window.removeEventListener("keydown", onKeyDown, listenerOptions);
-  }, [
-    undo,
-    redo,
-    setIsDrawMode,
-    tool,
-    setTool,
-    setIsDeleteSettingsOpen,
-    setEditingTextId,
-    isDrawMode,
-    editingTextId,
-    drawSettings,
-    eraserSettings,
-    updateDrawSettings,
-    updateEraserSettings,
-    phases,
-    currentPhaseIndex,
-    switchToPhase,
+  useKeyboardShortcuts({
+    undo: canvasState.undo,
+    redo: canvasState.redo,
+    tool: canvasState.tool,
+    setTool: canvasState.setTool,
+    isDrawMode: canvasState.isDrawMode,
+    setIsDrawMode: canvasState.setIsDrawMode,
+    editingTextId: canvasState.editingTextId,
+    setEditingTextId: canvasState.setEditingTextId,
+    setIsDeleteSettingsOpen: canvasState.setIsDeleteSettingsOpen,
+    phases: canvasState.phases,
+    currentPhaseIndex: canvasState.currentPhaseIndex,
+    switchToPhase: canvasState.switchToPhase,
     hoveredElementId,
-    setImagesOnCanvas,
-    setTextsOnCanvas,
-    setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
-    setToolIconsOnCanvas,
+    setHoveredElementId,
+    setImagesOnCanvas: canvasState.setImagesOnCanvas,
+    setTextsOnCanvas: canvasState.setTextsOnCanvas,
+    setAgentsOnCanvas: canvasState.setAgentsOnCanvas,
+    setAbilitiesOnCanvas: canvasState.setAbilitiesOnCanvas,
+    setToolIconsOnCanvas: canvasState.setToolIconsOnCanvas,
     recenterCanvasCallback,
-  ]);
+  });
 
   return (
     <CanvasContext.Provider
