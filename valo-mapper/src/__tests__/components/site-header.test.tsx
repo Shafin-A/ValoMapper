@@ -8,15 +8,12 @@ import { User } from "@/lib/types";
 // Mock the hooks
 jest.mock("@/hooks/use-firebase-auth");
 jest.mock("@/hooks/api/use-user");
-jest.mock("next/navigation", () => ({
-  usePathname: jest.fn(),
-}));
 
 const mockUseFirebaseAuth = useFirebaseAuth as jest.MockedFunction<
   typeof useFirebaseAuth
 >;
 const mockUseUser = useUser as jest.MockedFunction<typeof useUser>;
-const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
+const mockUsePathname = jest.mocked(usePathname);
 
 describe("SiteHeader", () => {
   const mockSetLeftSidebarOpen = jest.fn();

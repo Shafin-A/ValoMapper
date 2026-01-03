@@ -7,6 +7,36 @@ type MockComponentProps = {
   [key: string]: unknown;
 };
 
+// Mock ResizeObserver (tests can override if needed)
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as unknown as typeof ResizeObserver;
+
+// Mock next/image
+jest.mock("next/image", () => ({
+  __esModule: true,
+  default: function MockImage({
+    alt,
+    src,
+    ...rest
+  }: {
+    alt?: string;
+    src?: string;
+    [key: string]: unknown;
+  }) {
+    return React.createElement("span", {
+      "data-testid": "mock-image",
+      "data-alt": alt,
+      "data-src": src,
+      role: "img",
+      "aria-label": alt,
+      ...rest,
+    });
+  },
+}));
+
 // Mock Konva
 jest.mock("react-konva", () => {
   return {
@@ -52,9 +82,9 @@ jest.mock("use-image", () => ({
   default: () => [null, "loaded"],
 }));
 
-// Mock Next.js router
+// Mock Next.js router (hooks are jest.fn() so tests can override return values)
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({
+  useRouter: jest.fn(() => ({
     push: jest.fn(),
     replace: jest.fn(),
     prefetch: jest.fn(),
@@ -62,9 +92,9 @@ jest.mock("next/navigation", () => ({
     pathname: "/",
     query: {},
     asPath: "/",
-  }),
-  usePathname: () => "/",
-  useSearchParams: () => new URLSearchParams(),
+  })),
+  usePathname: jest.fn(() => "/"),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
 }));
 
 // Mock Firebase
@@ -96,6 +126,17 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Polyfill Request and Response for Node.js test environment
+type RequestOptions = {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string | null;
+};
+
+type ResponseInit = {
+  status?: number;
+  statusText?: string;
+};
+
 global.Request = class Request {
   url: string;
   method: string;
@@ -103,13 +144,13 @@ global.Request = class Request {
   body: string | null;
   private _headerMap: Map<string, string>;
 
-  constructor(url: string, options?: any) {
+  constructor(url: string, options?: RequestOptions) {
     this.url = url;
     this.method = options?.method || "GET";
     this._headerMap = new Map();
     if (options?.headers) {
       Object.entries(options.headers).forEach(([key, value]) => {
-        this._headerMap.set(key.toLowerCase(), value as string);
+        this._headerMap.set(key.toLowerCase(), value);
       });
     }
     this.body = options?.body || null;
@@ -121,24 +162,24 @@ global.Request = class Request {
   json() {
     return Promise.resolve(this.body ? JSON.parse(this.body) : null);
   }
-} as any;
+} as unknown as typeof globalThis.Request;
 
 global.Response = class Response {
-  body: any;
+  body: string | null;
   status: number;
   statusText: string;
   headers: Map<string, string>;
   ok: boolean;
 
-  constructor(body?: any, init?: { status?: number; statusText?: string }) {
-    this.body = body;
+  constructor(body?: string | null, init?: ResponseInit) {
+    this.body = body ?? null;
     this.status = init?.status || 200;
     this.statusText = init?.statusText || "";
     this.headers = new Map();
     this.ok = this.status >= 200 && this.status < 300;
   }
 
-  static json(data: any, init?: { status?: number }) {
+  static json(data: unknown, init?: { status?: number }) {
     const response = new Response(JSON.stringify(data), init);
     return response;
   }
@@ -146,7 +187,7 @@ global.Response = class Response {
   async json() {
     return typeof this.body === "string" ? JSON.parse(this.body) : this.body;
   }
-} as any;
+} as unknown as typeof globalThis.Response;
 
 // Suppress console errors in tests
 global.console = {

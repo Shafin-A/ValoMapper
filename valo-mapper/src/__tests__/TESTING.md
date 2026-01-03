@@ -170,10 +170,11 @@ describe('POST /api/lobbies', () => {
 src/
   __tests__/
     api/             # API route tests (lobbies, users, strategies, folders)
-    hooks/           # Hook tests (use-sidebar-state, use-mobile, etc.)
+    hooks/           # Hook tests
+      api/           # API-related hooks (use-user, etc.)
+      canvas/        # Canvas hooks (drawing, zoom, history, etc.)
     components/      # Component tests (exclude ui/ components)
-    utils/           # Utility function tests (helpers.test.ts)
-    integration/     # Integration tests
+    utils/           # Utility function tests
 ```
 
 ## Tips
@@ -181,11 +182,11 @@ src/
 1. **Keep tests focused**: One concept per test
 2. **Use descriptive names**: `it('should add agent to canvas when clicked')`
 3. **Mock external dependencies**: API calls, Firebase, etc.
-4. **Test user behavior**: Click buttons, type input, not implemen
+4. **Test user behavior**: Click buttons, type input, not implementation details
+5. **Avoid snapshot tests**: For a canvas app, they're too brittle
 6. **Use fake timers for async operations**: Test timeouts without waiting (see API route examples)
 7. **Test authorization & validation**: Verify 401/400 errors in API routes
-8. **Test timeout handling**: Critical for fly.io cold starts (30-second timeouts)tation details
-5. **Avoid snapshot tests**: For a canvas app, they're too brittle
+8. **Test timeout handling**: Critical for fly.io cold starts (30-second timeouts)
 
 ## Coverage Goals
 
