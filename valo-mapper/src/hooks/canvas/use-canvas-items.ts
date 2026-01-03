@@ -7,86 +7,106 @@ import {
   TextCanvas,
   ToolIconCanvas,
 } from "@/lib/types";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
+
+const resolveValue = <T>(
+  value: T[] | ((prev: T[]) => T[]),
+  currentValue: T[]
+): T[] => (typeof value === "function" ? value(currentValue) : value);
 
 export const useCanvasItems = (
   currentPhase: PhaseState,
   updateCurrentPhase: (updates: Partial<PhaseState>) => void
 ) => {
-  const textsOnCanvas = currentPhase.textsOnCanvas;
-  const imagesOnCanvas = currentPhase.imagesOnCanvas;
-  const agentsOnCanvas = currentPhase.agentsOnCanvas;
-  const abilitiesOnCanvas = currentPhase.abilitiesOnCanvas;
-  const drawLines = currentPhase.drawLines;
-  const toolIconsOnCanvas = currentPhase.toolIconsOnCanvas;
+  const {
+    textsOnCanvas,
+    imagesOnCanvas,
+    agentsOnCanvas,
+    abilitiesOnCanvas,
+    drawLines,
+    toolIconsOnCanvas,
+  } = currentPhase;
 
   const setToolIconsOnCanvas = useCallback(
     (
       value: ToolIconCanvas[] | ((prev: ToolIconCanvas[]) => ToolIconCanvas[])
     ) => {
-      const newValue =
-        typeof value === "function" ? value(toolIconsOnCanvas) : value;
-      updateCurrentPhase({ toolIconsOnCanvas: newValue });
+      updateCurrentPhase({
+        toolIconsOnCanvas: resolveValue(value, toolIconsOnCanvas),
+      });
     },
     [toolIconsOnCanvas, updateCurrentPhase]
   );
 
   const setTextsOnCanvas = useCallback(
     (value: TextCanvas[] | ((prev: TextCanvas[]) => TextCanvas[])) => {
-      const newValue =
-        typeof value === "function" ? value(textsOnCanvas) : value;
-      updateCurrentPhase({ textsOnCanvas: newValue });
+      updateCurrentPhase({ textsOnCanvas: resolveValue(value, textsOnCanvas) });
     },
     [textsOnCanvas, updateCurrentPhase]
   );
 
   const setImagesOnCanvas = useCallback(
     (value: ImageCanvas[] | ((prev: ImageCanvas[]) => ImageCanvas[])) => {
-      const newValue =
-        typeof value === "function" ? value(imagesOnCanvas) : value;
-      updateCurrentPhase({ imagesOnCanvas: newValue });
+      updateCurrentPhase({
+        imagesOnCanvas: resolveValue(value, imagesOnCanvas),
+      });
     },
     [imagesOnCanvas, updateCurrentPhase]
   );
 
   const setAgentsOnCanvas = useCallback(
     (value: AgentCanvas[] | ((prev: AgentCanvas[]) => AgentCanvas[])) => {
-      const newValue =
-        typeof value === "function" ? value(agentsOnCanvas) : value;
-      updateCurrentPhase({ agentsOnCanvas: newValue });
+      updateCurrentPhase({
+        agentsOnCanvas: resolveValue(value, agentsOnCanvas),
+      });
     },
     [agentsOnCanvas, updateCurrentPhase]
   );
 
   const setAbilitiesOnCanvas = useCallback(
     (value: AbilityCanvas[] | ((prev: AbilityCanvas[]) => AbilityCanvas[])) => {
-      const newValue =
-        typeof value === "function" ? value(abilitiesOnCanvas) : value;
-      updateCurrentPhase({ abilitiesOnCanvas: newValue });
+      updateCurrentPhase({
+        abilitiesOnCanvas: resolveValue(value, abilitiesOnCanvas),
+      });
     },
     [abilitiesOnCanvas, updateCurrentPhase]
   );
 
   const setDrawLines = useCallback(
     (value: DrawLine[] | ((prev: DrawLine[]) => DrawLine[])) => {
-      const newValue = typeof value === "function" ? value(drawLines) : value;
-      updateCurrentPhase({ drawLines: newValue });
+      updateCurrentPhase({ drawLines: resolveValue(value, drawLines) });
     },
     [drawLines, updateCurrentPhase]
   );
 
-  return {
-    agentsOnCanvas,
-    setAgentsOnCanvas,
-    abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    drawLines,
-    setDrawLines,
-    imagesOnCanvas,
-    setImagesOnCanvas,
-    textsOnCanvas,
-    setTextsOnCanvas,
-    toolIconsOnCanvas,
-    setToolIconsOnCanvas,
-  };
+  return useMemo(
+    () => ({
+      agentsOnCanvas,
+      setAgentsOnCanvas,
+      abilitiesOnCanvas,
+      setAbilitiesOnCanvas,
+      drawLines,
+      setDrawLines,
+      imagesOnCanvas,
+      setImagesOnCanvas,
+      textsOnCanvas,
+      setTextsOnCanvas,
+      toolIconsOnCanvas,
+      setToolIconsOnCanvas,
+    }),
+    [
+      agentsOnCanvas,
+      setAgentsOnCanvas,
+      abilitiesOnCanvas,
+      setAbilitiesOnCanvas,
+      drawLines,
+      setDrawLines,
+      imagesOnCanvas,
+      setImagesOnCanvas,
+      textsOnCanvas,
+      setTextsOnCanvas,
+      toolIconsOnCanvas,
+      setToolIconsOnCanvas,
+    ]
+  );
 };
