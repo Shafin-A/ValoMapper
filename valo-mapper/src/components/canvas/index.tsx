@@ -1,6 +1,5 @@
 import { ContextMenuPopover } from "@/components/canvas/context-menu-popover";
 import { useCanvas } from "@/contexts/canvas-context";
-import { useKonva } from "@/hooks/use-konva";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
@@ -14,6 +13,7 @@ import { CanvasMapBackground } from "./canvas-map-background";
 import { CanvasDrawLines } from "./canvas-draw-lines";
 import { DeleteZone } from "./delete-zone";
 import { CanvasToolIcons } from "./canvas-tool-icons";
+import { useCanvasEvents } from "@/hooks/canvas";
 
 export interface MapStageHandle {
   stage: KonvaStage | null;
@@ -59,7 +59,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       contextMenu,
       currentLineRef,
       deleteGroupRef,
-    } = useKonva(stageRef, scale);
+    } = useCanvasEvents(stageRef, scale);
 
     useEffect(() => {
       if (forwardedRef) {

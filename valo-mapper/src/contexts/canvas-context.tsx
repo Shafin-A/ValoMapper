@@ -1,7 +1,6 @@
 "use client";
 
-import { useCanvasState } from "@/hooks/use-canvas-state";
-import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useCanvasState, useKeyboardShortcuts } from "@/hooks/canvas";
 import type {
   AbilityCanvas,
   AbilityIconItem,

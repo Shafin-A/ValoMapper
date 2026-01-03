@@ -2,14 +2,16 @@ import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import { getNextId, isAgent } from "@/lib/utils";
-import { useCanvasZoom } from "./canvas/use-canvas-zoom";
-import { useCanvasDrawing } from "./canvas/use-canvas-drawing";
-import { useCanvasContextMenu } from "./canvas/use-canvas-context-menu";
 import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
 import { useCallback, useRef } from "react";
+import {
+  useCanvasContextMenu,
+  useCanvasDrawing,
+  useCanvasZoom,
+} from "@/hooks/canvas";
 
-export const useKonva = (
+export const useCanvasEvents = (
   stageRef: React.RefObject<Stage | null>,
   baseScale: number
 ) => {

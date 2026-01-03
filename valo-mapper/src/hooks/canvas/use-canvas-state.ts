@@ -1,10 +1,12 @@
 import { useLobby } from "@/hooks/api/use-lobby";
 import { useUpdateLobby } from "@/hooks/api/use-update-lobby";
-import { useCanvasItems } from "@/hooks/use-canvas-items";
-import { useCanvasUI } from "@/hooks/use-canvas-ui";
-import { useHistoryManager } from "@/hooks/use-history-manager";
-import { usePhaseManager } from "@/hooks/use-phase-manager";
-import { usePhaseTransitions } from "@/hooks/use-phase-transition";
+import {
+  useCanvasItems,
+  useCanvasUI,
+  useHistoryManager,
+  usePhaseManager,
+  usePhaseTransitions,
+} from "@/hooks/canvas";
 import { useSettings } from "@/contexts/settings-context";
 import { UndoableState } from "@/lib/types";
 import { useParams } from "next/navigation";

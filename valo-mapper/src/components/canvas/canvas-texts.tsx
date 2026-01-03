@@ -1,5 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
-import { useTextEditor } from "@/hooks/use-text-editor";
+import { useTextEditor } from "@/hooks/canvas";
 import { Group, Rect, Text, Transformer } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { TextEditor } from "@/components/canvas/text-editor";

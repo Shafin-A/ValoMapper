@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { useHistoryManager } from "@/hooks/use-history-manager";
+import { useHistoryManager } from "@/hooks/canvas/use-history-manager";
 import { UndoableState } from "@/lib/types";
 
 describe("useHistoryManager", () => {

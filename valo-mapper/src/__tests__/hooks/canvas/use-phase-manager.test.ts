@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { usePhaseManager } from "@/hooks/use-phase-manager";
+import { usePhaseManager } from "@/hooks/canvas/use-phase-manager";
 import { PhaseState } from "@/lib/types";
 
 describe("usePhaseManager", () => {

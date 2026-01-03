@@ -1,5 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
-import { useImageTransform } from "@/hooks/use-image-transform";
+import { useImageTransform } from "@/hooks/canvas";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
 import { RefObject } from "react";

@@ -1,14 +1,14 @@
 import { renderHook, act } from "@testing-library/react";
-import { useKonva } from "@/hooks/use-konva";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import type { AgentCanvas } from "@/lib/types";
 import type { Stage } from "konva/lib/Stage";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
-import { useCanvasZoom } from "@/hooks/canvas/use-canvas-zoom";
-import { useCanvasDrawing } from "@/hooks/canvas/use-canvas-drawing";
-import { useCanvasContextMenu } from "@/hooks/canvas/use-canvas-context-menu";
 import { getNextId } from "@/lib/utils";
+import { useCanvasEvents } from "@/hooks/canvas/use-canvas-events";
+import { useCanvasContextMenu } from "@/hooks/canvas/use-canvas-context-menu";
+import { useCanvasDrawing } from "@/hooks/canvas/use-canvas-drawing";
+import { useCanvasZoom } from "@/hooks/canvas/use-canvas-zoom";
 
 type StageMock = {
   getPointerPosition: jest.Mock<{ x: number; y: number } | undefined, []>;
@@ -27,17 +27,9 @@ jest.mock("@/contexts/settings-context", () => ({
   useSettings: jest.fn(),
 }));
 
-jest.mock("@/hooks/canvas/use-canvas-zoom", () => ({
-  useCanvasZoom: jest.fn(),
-}));
-
-jest.mock("@/hooks/canvas/use-canvas-drawing", () => ({
-  useCanvasDrawing: jest.fn(),
-}));
-
-jest.mock("@/hooks/canvas/use-canvas-context-menu", () => ({
-  useCanvasContextMenu: jest.fn(),
-}));
+jest.mock("@/hooks/canvas/use-canvas-zoom");
+jest.mock("@/hooks/canvas/use-canvas-drawing");
+jest.mock("@/hooks/canvas/use-canvas-context-menu");
 
 jest.mock("@/lib/utils", () => {
   const actual = jest.requireActual("@/lib/utils");
@@ -131,7 +123,7 @@ const createCanvasContext = (
     ...overrides,
   } as unknown as ReturnType<typeof useCanvas>);
 
-describe("useKonva", () => {
+describe("useCanvasEvents", () => {
   const handleDrawingMock = jest.fn();
   const handleMouseUpMock = jest.fn();
 
@@ -212,7 +204,7 @@ describe("useKonva", () => {
       current: createStageMock() as unknown as Stage,
     };
 
-    const { result } = renderHook(() => useKonva(stageRef, 1));
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
 
     act(() => {
       result.current.handleStageClick();
@@ -253,7 +245,7 @@ describe("useKonva", () => {
       current: createStageMock() as unknown as Stage,
     };
 
-    const { result } = renderHook(() => useKonva(stageRef, 1));
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
 
     act(() => {
       result.current.handleStageClick();
@@ -301,7 +293,7 @@ describe("useKonva", () => {
       current: createStageMock() as unknown as Stage,
     };
 
-    const { result } = renderHook(() => useKonva(stageRef, 1));
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
 
     act(() => {
       result.current.handleStageMouseLeave();
