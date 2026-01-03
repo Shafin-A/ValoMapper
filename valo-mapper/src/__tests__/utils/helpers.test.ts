@@ -164,17 +164,20 @@ describe("Utils", () => {
       expect(toolId).toMatch(/^tool-/);
     });
 
-    it("should generate different IDs on subsequent calls", () => {
-      jest.useFakeTimers();
-      jest.setSystemTime(0);
+    it("should generate IDs with valid UUID format", () => {
+      const id = getNextId("agent");
+      const uuidPart = id.replace("agent-", "");
 
+      expect(uuidPart).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      );
+    });
+
+    it("should generate different IDs on subsequent calls", () => {
       const id1 = getNextId("agent");
-      jest.advanceTimersByTime(1);
       const id2 = getNextId("agent");
 
       expect(id1).not.toBe(id2);
-
-      jest.useRealTimers();
     });
   });
 });
