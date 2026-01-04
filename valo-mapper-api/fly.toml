@@ -22,7 +22,7 @@ primary_region = 'yyz'
 [[http_service.checks]]
   interval = "10s"
   timeout = "5s"
-  grace_period = "30s"
+  grace_period = "60s"
   method = "GET"
   path = "/health"
 

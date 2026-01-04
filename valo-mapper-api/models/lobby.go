@@ -32,13 +32,22 @@ func GenerateLobbyCode() string {
 }
 
 func (l *Lobby) Save() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return db.WithRetryNoResult(ctx, 2, func() error {
+		return l.saveInternal(ctx)
+	})
+}
+
+func (l *Lobby) saveInternal(ctx context.Context) error {
 	conn, err := db.GetDB()
 	if err != nil {
 		return err
 	}
 
 	var exists bool
-	err = conn.QueryRow(context.Background(),
+	err = conn.QueryRow(ctx,
 		"SELECT EXISTS(SELECT 1 FROM lobbies WHERE code = $1)",
 		l.Code).Scan(&exists)
 	if err != nil {
@@ -73,13 +82,13 @@ func (l *Lobby) Save() error {
 	}
 
 	if exists {
-		_, err = conn.Exec(context.Background(),
+		_, err = conn.Exec(ctx,
 			`UPDATE lobbies 
 			SET selected_map_id = $1, map_side = $2, current_phase_index = $3, edited_phases = $4, agents_settings = $5, abilities_settings = $6
 			WHERE code = $7`,
 			selectedMapID, mapSide, currentPhaseIndex, editedPhases, agentsJSON, abilitiesJSON, l.Code)
 	} else {
-		_, err = conn.Exec(context.Background(),
+		_, err = conn.Exec(ctx,
 			`INSERT INTO lobbies (code, created_at, selected_map_id, map_side, current_phase_index, edited_phases, agents_settings, abilities_settings) 
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 			l.Code, l.CreatedAt, selectedMapID, mapSide, currentPhaseIndex, editedPhases, agentsJSON, abilitiesJSON)

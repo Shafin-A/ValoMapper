@@ -67,6 +67,7 @@ func main() {
 	routes.SetupRoutes(r, firebaseAuth)
 
 	var handler http.Handler = r
+	handler = middleware.DBHealthMiddleware(handler)
 	handler = middleware.RequestIDMiddleware(handler)
 
 	allowedOrigins := []string{"http://localhost:3000"}

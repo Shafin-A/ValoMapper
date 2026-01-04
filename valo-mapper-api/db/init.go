@@ -50,10 +50,10 @@ func InitDB() error {
 	}
 
 	config.MaxConns = 10
-	config.MinConns = 2
-	config.MaxConnLifetime = time.Hour
-	config.MaxConnIdleTime = 30 * time.Minute
-	config.HealthCheckPeriod = time.Minute
+	config.MinConns = 1
+	config.MaxConnLifetime = 30 * time.Minute
+	config.MaxConnIdleTime = 5 * time.Minute
+	config.HealthCheckPeriod = 30 * time.Second
 
 	DB, err = pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
@@ -80,4 +80,11 @@ func Close() {
 		DB = nil
 		log.Println("Database connection closed")
 	}
+}
+
+func EnsureConnection(ctx context.Context) error {
+	if DB == nil {
+		return fmt.Errorf("database connection not initialized")
+	}
+	return DB.Ping(ctx)
 }
