@@ -18,6 +18,15 @@ import { IconsSection } from "./icons-section";
 import { MapSelect } from "./map-select-button";
 import { ToolsSection } from "./tools-section";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
@@ -53,6 +62,11 @@ export const ToolsSidebar = ({
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
+
+  const [showCallouts, setShowCallouts] = useState(false);
+  const [showSpawnBarriers, setShowSpawnBarriers] = useState(false);
+  const [showUltOrbs, setShowUltOrbs] = useState(false);
+  const [mapSettingsOpen, setMapSettingsOpen] = useState(false);
 
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
@@ -168,7 +182,65 @@ export const ToolsSidebar = ({
       >
         <SidebarHeader>
           <div className="flex flex-col gap-3 p-2">
-            <span className="text-base font-semibold">Maps</span>
+            <div className="flex items-center justify-between">
+              <span className="text-base font-semibold">Maps</span>
+              <Popover open={mapSettingsOpen} onOpenChange={setMapSettingsOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={isLoadingLobby || isErrorLobby}
+                  >
+                    <Settings
+                      className={`h-4 w-4 transition-transform duration-300 ${
+                        mapSettingsOpen ? "rotate-90" : ""
+                      }`}
+                    />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56" align="end">
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-sm">Map Settings</h4>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="show-callouts" className="text-sm">
+                          Show Map Callouts
+                        </Label>
+                        <Switch
+                          id="show-callouts"
+                          checked={showCallouts}
+                          onCheckedChange={setShowCallouts}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label
+                          htmlFor="show-spawn-barriers"
+                          className="text-sm"
+                        >
+                          Show Spawn Barriers
+                        </Label>
+                        <Switch
+                          id="show-spawn-barriers"
+                          checked={showSpawnBarriers}
+                          onCheckedChange={setShowSpawnBarriers}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="show-ult-orbs" className="text-sm">
+                          Show Ult Orbs
+                        </Label>
+                        <Switch
+                          id="show-ult-orbs"
+                          checked={showUltOrbs}
+                          onCheckedChange={setShowUltOrbs}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
             <MapSelect
               mapOptions={MAP_OPTIONS}
               selectedMap={selectedMap}
