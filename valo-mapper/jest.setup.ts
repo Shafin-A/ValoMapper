@@ -68,6 +68,14 @@ jest.mock("react-konva", () => {
         { "data-testid": "konva-group", ...props },
         children
       ),
+    Label: ({ children, ...props }: MockComponentProps) =>
+      React.createElement(
+        "div",
+        { "data-testid": "konva-label", ...props },
+        children
+      ),
+    Tag: (props: Record<string, unknown>) =>
+      React.createElement("div", { "data-testid": "konva-tag", ...props }),
     Transformer: (props: Record<string, unknown>) =>
       React.createElement("div", {
         "data-testid": "konva-transformer",
@@ -77,9 +85,15 @@ jest.mock("react-konva", () => {
 });
 
 // Mock useImage hook
+const mockImageElement = {
+  src: "",
+  onload: null as (() => void) | null,
+  onerror: null as (() => void) | null,
+} as unknown as HTMLImageElement;
+
 jest.mock("use-image", () => ({
   __esModule: true,
-  default: () => [null, "loaded"],
+  default: () => [mockImageElement, "loaded"],
 }));
 
 // Mock Next.js router (hooks are jest.fn() so tests can override return values)
