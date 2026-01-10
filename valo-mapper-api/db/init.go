@@ -30,7 +30,7 @@ func InitDB() error {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	password := url.QueryEscape(os.Getenv("DB_PASSWORD"))
@@ -55,13 +55,23 @@ func InitDB() error {
 	config.MaxConnIdleTime = 5 * time.Minute
 	config.HealthCheckPeriod = 30 * time.Second
 
-	DB, err = pgxpool.NewWithConfig(ctx, config)
-	if err != nil {
-		return fmt.Errorf("error creating database pool: %w", err)
-	}
+	err = WithRetryNoResult(ctx, 5, func() error {
+		var poolErr error
+		DB, poolErr = pgxpool.NewWithConfig(ctx, config)
+		if poolErr != nil {
+			return poolErr
+		}
 
-	if err := DB.Ping(ctx); err != nil {
-		return fmt.Errorf("error pinging the database: %w", err)
+		if pingErr := DB.Ping(ctx); pingErr != nil {
+			DB.Close()
+			DB = nil
+			return pingErr
+		}
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("error connecting to database after retries: %w", err)
 	}
 
 	log.Println("Database connection established successfully")
