@@ -782,10 +782,10 @@ export const MAP_CALLOUTS: Record<string, MapCalloutData> = {
     callouts: [
       {
         regionName: "Hall",
-        superRegionName: "A",
+        superRegionName: "Mid",
         location: {
-          x: 4825,
-          y: 2550,
+          x: 3126,
+          y: 2493,
         },
       },
       {
@@ -800,15 +800,15 @@ export const MAP_CALLOUTS: Record<string, MapCalloutData> = {
         regionName: "Spawn",
         superRegionName: "Defender Side",
         location: {
-          x: 8900,
-          y: 3525,
+          x: 9782,
+          y: 1962,
         },
       },
       {
         regionName: "Arches",
         superRegionName: "Defender Side",
         location: {
-          x: 9400,
+          x: 10099,
           y: -1300,
         },
       },
@@ -816,7 +816,7 @@ export const MAP_CALLOUTS: Record<string, MapCalloutData> = {
         regionName: "Wood Doors",
         superRegionName: "Mid",
         location: {
-          x: 4825,
+          x: 5246,
           y: 2550,
         },
       },
@@ -824,88 +824,72 @@ export const MAP_CALLOUTS: Record<string, MapCalloutData> = {
         regionName: "Pillar",
         superRegionName: "Mid",
         location: {
-          x: 4175,
-          y: 475,
+          x: 4626,
+          y: 406,
         },
       },
       {
         regionName: "Top",
         superRegionName: "Mid",
         location: {
-          x: 6175,
-          y: 525,
+          x: 7092,
+          y: -293,
         },
       },
       {
         regionName: "Nest",
         superRegionName: "Mid",
         location: {
-          x: 8650,
-          y: 275,
+          x: 8741,
+          y: -372,
         },
       },
       {
         regionName: "Window",
         superRegionName: "B",
         location: {
-          x: 2225,
-          y: -4175,
+          x: 2556,
+          y: -4473,
         },
       },
       {
         regionName: "Main",
         superRegionName: "B",
         location: {
-          x: 3550,
-          y: -4450,
-        },
-      },
-      {
-        regionName: "Snake",
-        superRegionName: "Attacker Side",
-        location: {
-          x: 550,
-          y: -2450,
+          x: 4626,
+          y: -4579,
         },
       },
       {
         regionName: "Elbow",
         superRegionName: "B",
         location: {
-          x: 4675,
-          y: -2900,
+          x: 6037,
+          y: -2548,
         },
       },
       {
         regionName: "Site",
         superRegionName: "B",
         location: {
-          x: 6450,
-          y: -5650,
+          x: 8147,
+          y: -4157,
         },
       },
       {
         regionName: "Tunnel",
         superRegionName: "B",
         location: {
-          x: 6450,
-          y: -1450,
+          x: 7620,
+          y: -1875,
         },
       },
       {
-        regionName: "Switch",
+        regionName: "Ramp",
         superRegionName: "A",
         location: {
-          x: 6425,
-          y: 3050,
-        },
-      },
-      {
-        regionName: "Chute",
-        superRegionName: "Mid",
-        location: {
-          x: 3875,
-          y: 1800,
+          x: 7300,
+          y: 2725,
         },
       },
       {
@@ -925,14 +909,6 @@ export const MAP_CALLOUTS: Record<string, MapCalloutData> = {
         },
       },
       {
-        regionName: "Rope",
-        superRegionName: "A",
-        location: {
-          x: 3100,
-          y: 2550,
-        },
-      },
-      {
         regionName: "Cannon",
         superRegionName: "Mid",
         location: {
@@ -941,27 +917,19 @@ export const MAP_CALLOUTS: Record<string, MapCalloutData> = {
         },
       },
       {
-        regionName: "Metal Doors",
-        superRegionName: "A",
-        location: {
-          x: 6825,
-          y: 2550,
-        },
-      },
-      {
         regionName: "Bottom",
         superRegionName: "Mid",
         location: {
-          x: 1575,
-          y: 475,
+          x: 2846,
+          y: 314,
         },
       },
       {
         regionName: "Lobby",
         superRegionName: "A",
         location: {
-          x: -1250,
-          y: 3400,
+          x: 552,
+          y: 2911,
         },
       },
       {
@@ -976,8 +944,8 @@ export const MAP_CALLOUTS: Record<string, MapCalloutData> = {
         regionName: "Site",
         superRegionName: "A",
         location: {
-          x: 4825,
-          y: 6325,
+          x: 6354,
+          y: 5588,
         },
       },
       {
