@@ -93,6 +93,12 @@ interface CanvasContextType {
   hoveredElementId: string | null;
   setHoveredElementId: Dispatch<SetStateAction<string | null>>;
   recenterCanvasCallback: RefObject<(() => void) | null>;
+  showCallouts: boolean;
+  setShowCallouts: Dispatch<SetStateAction<boolean>>;
+  showUltOrbs: boolean;
+  setShowUltOrbs: Dispatch<SetStateAction<boolean>>;
+  showSpawnBarriers: boolean;
+  setShowSpawnBarriers: Dispatch<SetStateAction<boolean>>;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);

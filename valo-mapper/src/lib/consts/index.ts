@@ -20,3 +20,9 @@ export {
   CURVABLE_LINE_ABILITY_CONFIGS,
 } from "./configs/line-ability/consts";
 export { ARC_ABILITY_CONFIGS } from "./configs/arc-icon/consts";
+export { MAP_CALLOUTS, getMapCallouts } from "./callouts/consts";
+export { MAP_ULT_ORBS, getMapUltOrbs } from "./ult-orbs/consts";
+export {
+  MAP_SPAWN_BARRIERS,
+  getMapSpawnBarriers,
+} from "./spawn-barriers/consts";

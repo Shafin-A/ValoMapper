@@ -15,6 +15,9 @@ export const useCanvasUI = () => {
   const isDrawing = useRef(false);
 
   const [isDeleteSettingsOpen, setIsDeleteSettingsOpen] = useState(false);
+  const [showCallouts, setShowCallouts] = useState(false);
+  const [showUltOrbs, setShowUltOrbs] = useState(false);
+  const [showSpawnBarriers, setShowSpawnBarriers] = useState(false);
 
   const [selectedCanvasIcon, setSelectedCanvasIcon] = useState<
     Agent | AbilityIconItem | null
@@ -43,6 +46,12 @@ export const useCanvasUI = () => {
     isDrawing,
     isDeleteSettingsOpen,
     setIsDeleteSettingsOpen,
+    showCallouts,
+    setShowCallouts,
+    showUltOrbs,
+    setShowUltOrbs,
+    showSpawnBarriers,
+    setShowSpawnBarriers,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
     resetEdits,

@@ -315,3 +315,30 @@ export type User = {
 };
 
 export type ItemType = "agent" | "ability" | "text" | "image" | "tool";
+
+export type Callout = {
+  regionName: string;
+  superRegionName: string;
+  location: Vector2d;
+};
+
+export type MapCalloutData = {
+  xMultiplier: number;
+  yMultiplier: number;
+  xScalarToAdd: number;
+  yScalarToAdd: number;
+  rotation: number;
+  callouts: Callout[];
+};
+
+export type SpawnBarrier = {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  isAlly: boolean;
+};
+
+export type MapSpawnBarrierData = {
+  barriers: SpawnBarrier[];
+};

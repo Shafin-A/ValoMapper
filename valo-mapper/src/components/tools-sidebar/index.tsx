@@ -59,13 +59,15 @@ export const ToolsSidebar = ({
     editedPhases,
     isLoadingLobby,
     isErrorLobby,
+    showCallouts,
+    setShowCallouts,
+    showUltOrbs,
+    setShowUltOrbs,
+    showSpawnBarriers,
+    setShowSpawnBarriers,
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
-
-  const [showCallouts, setShowCallouts] = useState(false);
-  const [showSpawnBarriers, setShowSpawnBarriers] = useState(false);
-  const [showUltOrbs, setShowUltOrbs] = useState(false);
   const [mapSettingsOpen, setMapSettingsOpen] = useState(false);
 
   const handleMapSelect = (option: MapOption) => {

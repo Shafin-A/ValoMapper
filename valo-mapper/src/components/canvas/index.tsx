@@ -7,6 +7,9 @@ import { useEffect, useRef, forwardRef } from "react";
 import { Layer, Stage } from "react-konva";
 import { CanvasAbilities } from "./canvas-abilities";
 import { CanvasAgents } from "./canvas-agents";
+import { CanvasCallouts } from "./canvas-callouts";
+import { CanvasUltOrbs } from "./canvas-ult-orbs";
+import { CanvasSpawnBarriers } from "./canvas-spawn-barriers";
 import { CanvasTexts } from "./canvas-texts";
 import { CanvasImages } from "./canvas-images";
 import { CanvasMapBackground } from "./canvas-map-background";
@@ -163,6 +166,9 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
               mapPosition={mapPosition}
               stageRef={stageRef}
             />
+            <CanvasUltOrbs mapPosition={mapPosition} />
+            <CanvasSpawnBarriers mapPosition={mapPosition} />
+            <CanvasCallouts mapPosition={mapPosition} />
           </Layer>
           <Layer isListening={!isDrawMode}>
             <CanvasAbilities deleteGroupRef={deleteGroupRef} />
