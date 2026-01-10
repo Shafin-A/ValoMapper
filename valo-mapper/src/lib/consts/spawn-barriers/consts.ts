@@ -67,8 +67,16 @@ export const MAP_SPAWN_BARRIERS: Record<string, MapSpawnBarrierData> = {
   },
   breeze: {
     barriers: [
-      { startX: 200, startY: 300, endX: 350, endY: 300, isAlly: false },
-      { startX: 800, startY: 700, endX: 950, endY: 700, isAlly: true },
+      { startX: 921, startY: 602, endX: 977, endY: 602, isAlly: true },
+      { startX: 666, startY: 727, endX: 666, endY: 792, isAlly: true },
+      { startX: 548, startY: 850, endX: 548, endY: 880, isAlly: true },
+      { startX: 281, startY: 527, endX: 281, endY: 583, isAlly: true },
+      { startX: -28, startY: 452, endX: 148, endY: 452, isAlly: true },
+      { startX: 791, startY: 461, endX: 846, endY: 461, isAlly: false },
+      { startX: 853, startY: 283, endX: 853, endY: 339, isAlly: false },
+      { startX: 490, startY: 335, endX: 563, endY: 335, isAlly: false },
+      { startX: 320, startY: 330, endX: 349, endY: 330, isAlly: false },
+      { startX: 222, startY: 229, endX: 240, endY: 257, isAlly: false },
     ],
   },
   fracture: {
