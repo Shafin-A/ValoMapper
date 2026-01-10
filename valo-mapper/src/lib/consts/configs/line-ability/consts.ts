@@ -89,7 +89,7 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
   breach_stun: {
     stroke: "#ffde2180",
     lineLength: 12,
-    strokeWidth: 7.5,
+    strokeWidth: 8,
     minLength: 8,
     maxLength: 56,
     iconLineGap: 8,

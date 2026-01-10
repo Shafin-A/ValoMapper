@@ -170,7 +170,7 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     colors: { stroke: "#2c2e58", fill: "#ea8a7d80" },
   },
   vyse_ult: {
-    radius: 28,
+    radius: 30,
     colors: { stroke: "#2c2e58", fill: "#bfc0d780" },
   },
   waylay_slow: {
