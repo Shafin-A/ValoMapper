@@ -11,13 +11,14 @@ interface CanvasSpawnBarriersProps {
 export const CanvasSpawnBarriers = ({
   mapPosition,
 }: CanvasSpawnBarriersProps) => {
-  const { selectedMap, mapSide, showSpawnBarriers } = useCanvas();
+  const { selectedMap, mapSide, showSpawnBarriers, isMapTransitioning } =
+    useCanvas();
   const { agentsSettings } = useSettings();
 
   const allyColor = agentsSettings.allyColor;
   const enemyColor = agentsSettings.enemyColor;
 
-  if (!showSpawnBarriers) {
+  if (!showSpawnBarriers || isMapTransitioning) {
     return null;
   }
 

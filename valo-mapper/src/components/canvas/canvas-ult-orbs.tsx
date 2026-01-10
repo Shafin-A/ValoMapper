@@ -8,9 +8,9 @@ interface CanvasUltOrbsProps {
 }
 
 export const CanvasUltOrbs = ({ mapPosition }: CanvasUltOrbsProps) => {
-  const { selectedMap, mapSide, showUltOrbs } = useCanvas();
+  const { selectedMap, mapSide, showUltOrbs, isMapTransitioning } = useCanvas();
 
-  if (!showUltOrbs) {
+  if (!showUltOrbs || isMapTransitioning) {
     return null;
   }
 

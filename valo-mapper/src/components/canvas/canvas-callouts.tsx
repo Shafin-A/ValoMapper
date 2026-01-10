@@ -8,9 +8,10 @@ interface CanvasCalloutsProps {
 }
 
 export const CanvasCallouts = ({ mapPosition }: CanvasCalloutsProps) => {
-  const { selectedMap, mapSide, showCallouts } = useCanvas();
+  const { selectedMap, mapSide, showCallouts, isMapTransitioning } =
+    useCanvas();
 
-  if (!showCallouts) {
+  if (!showCallouts || isMapTransitioning) {
     return null;
   }
 

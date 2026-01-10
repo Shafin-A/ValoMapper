@@ -99,6 +99,8 @@ interface CanvasContextType {
   setShowUltOrbs: Dispatch<SetStateAction<boolean>>;
   showSpawnBarriers: boolean;
   setShowSpawnBarriers: Dispatch<SetStateAction<boolean>>;
+  isMapTransitioning: boolean;
+  setIsMapTransitioning: Dispatch<SetStateAction<boolean>>;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
@@ -106,6 +108,7 @@ const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
 export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const canvasState = useCanvasState();
   const [hoveredElementId, setHoveredElementId] = useState<string | null>(null);
+  const [isMapTransitioning, setIsMapTransitioning] = useState(false);
   const recenterCanvasCallback = useRef<(() => void) | null>(null);
 
   useKeyboardShortcuts({
@@ -138,6 +141,8 @@ export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
         hoveredElementId,
         setHoveredElementId,
         recenterCanvasCallback,
+        isMapTransitioning,
+        setIsMapTransitioning,
       }}
     >
       {children}
