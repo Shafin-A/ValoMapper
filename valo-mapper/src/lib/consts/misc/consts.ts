@@ -34,6 +34,7 @@ export const WEAPONS = {
     { name: "shorty", width: 308 / 6, height: 100 / 6 },
     { name: "frenzy", width: 168 / 5, height: 128 / 5 },
     { name: "ghost", width: 300 / 6, height: 100 / 6 },
+    { name: "bandit", width: 256 / 6, height: 140 / 6 },
     { name: "sheriff", width: 248 / 5, height: 128 / 5 },
     { name: "knife", width: 100 / 2, height: 32 / 2 },
   ],
