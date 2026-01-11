@@ -11,7 +11,7 @@ import { Expand } from "lucide-react";
 import Image from "next/image";
 import { ensureAbsoluteUrl } from "@/lib/utils";
 
-interface ConnectingLineViewContentProps {
+interface LineupViewContentProps {
   images: string[];
   youtubeEmbedUrl: string | null;
   youtubeLink: string;
@@ -21,7 +21,7 @@ interface ConnectingLineViewContentProps {
   onOpenFullscreen: (index: number) => void;
 }
 
-export const ConnectingLineViewContent = ({
+export const LineupViewContent = ({
   images,
   youtubeEmbedUrl,
   youtubeLink,
@@ -29,7 +29,7 @@ export const ConnectingLineViewContent = ({
   notes,
   lineColor,
   onOpenFullscreen,
-}: ConnectingLineViewContentProps) => {
+}: LineupViewContentProps) => {
   const hasImages = images.length > 0;
   const hasYoutube = youtubeLink.trim() !== "";
   const hasNotes = notes.trim() !== "";

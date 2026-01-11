@@ -13,20 +13,20 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useCanvas } from "@/contexts/canvas-context";
 import { getYoutubeEmbedUrl } from "@/lib/utils";
-import { ConnectingLineViewContent } from "./connecting-line-view-content";
-import { ConnectingLineEditContent } from "./connecting-line-edit-content";
+import { LineupViewContent } from "./lineup-view-content";
+import { LineupEditContent } from "./lineup-edit-content";
 
-interface ConnectingLineViewDialogProps {
+interface LineupViewDialogProps {
   line: ConnectingLine | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const ConnectingLineViewDialog = ({
+export const LineupViewDialog = ({
   line,
   isOpen,
   onClose,
-}: ConnectingLineViewDialogProps) => {
+}: LineupViewDialogProps) => {
   const { setConnectingLines } = useCanvas();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
@@ -145,7 +145,7 @@ export const ConnectingLineViewDialog = ({
           </DialogHeader>
 
           {isEditMode ? (
-            <ConnectingLineEditContent
+            <LineupEditContent
               images={editImages}
               youtubeLink={editYoutubeLink}
               notes={editNotes}
@@ -158,7 +158,7 @@ export const ConnectingLineViewDialog = ({
               onLineColorChange={setEditLineColor}
             />
           ) : (
-            <ConnectingLineViewContent
+            <LineupViewContent
               images={displayImages}
               youtubeEmbedUrl={youtubeEmbedUrl}
               youtubeLink={displayYoutubeLink}

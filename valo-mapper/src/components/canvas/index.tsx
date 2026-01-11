@@ -19,7 +19,7 @@ import { DeleteZone } from "./delete-zone";
 import { CanvasToolIcons } from "./canvas-tool-icons";
 import { useCanvasEvents } from "@/hooks/canvas";
 import { FullscreenImageModal } from "./fullscreen-image-modal";
-import { ConnectingLineViewDialog } from "./connecting-line-view-dialog";
+import { LineupViewDialog } from "./lineup-view-dialog";
 import { ConnectingLine } from "@/lib/types";
 
 export interface MapStageHandle {
@@ -219,7 +219,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           onClose={() => setFullscreenImageSrc(null)}
         />
 
-        <ConnectingLineViewDialog
+        <LineupViewDialog
           line={selectedConnectingLine}
           isOpen={selectedConnectingLine !== null}
           onClose={() => setSelectedConnectingLine(null)}

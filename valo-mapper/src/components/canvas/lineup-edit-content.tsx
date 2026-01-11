@@ -5,7 +5,7 @@ import { LineupImageUpload } from "../tools-sidebar/lineup-dialog/lineup-image-u
 import { debounce } from "@/lib/utils";
 import { useMemo } from "react";
 
-interface ConnectingLineEditContentProps {
+interface LineupEditContentProps {
   images: string[];
   youtubeLink: string;
   notes: string;
@@ -18,7 +18,7 @@ interface ConnectingLineEditContentProps {
   onLineColorChange: (value: string) => void;
 }
 
-export const ConnectingLineEditContent = ({
+export const LineupEditContent = ({
   images,
   youtubeLink,
   notes,
@@ -29,7 +29,7 @@ export const ConnectingLineEditContent = ({
   onYoutubeLinkChange,
   onNotesChange,
   onLineColorChange,
-}: ConnectingLineEditContentProps) => {
+}: LineupEditContentProps) => {
   const debouncedSetLineColor = useMemo(
     () => debounce((color: string) => onLineColorChange(color), 16),
     [onLineColorChange]
