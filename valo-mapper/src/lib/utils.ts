@@ -466,6 +466,15 @@ export const getYoutubeEmbedUrl = (url: string): string | null => {
 
 export const ensureAbsoluteUrl = (url: string): string => {
   if (!url) return url;
+  // Block dangerous protocols
+  const lowerUrl = url.toLowerCase().trim();
+  if (
+    lowerUrl.startsWith("javascript:") ||
+    lowerUrl.startsWith("data:") ||
+    lowerUrl.startsWith("vbscript:")
+  ) {
+    return "";
+  }
   if (url.startsWith("http://") || url.startsWith("https://")) {
     return url;
   }
