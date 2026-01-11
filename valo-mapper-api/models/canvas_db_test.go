@@ -18,7 +18,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 
 	t.Run("returns empty phases for new lobby", func(t *testing.T) {
 		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "lobbies", "maps")
+			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
 
 		// Insert test map
 		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('ascent', 'Ascent', '#FF0000')`)
@@ -43,6 +43,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 			assert.Empty(t, phase.AgentsOnCanvas, "phase %d should have no agents", i)
 			assert.Empty(t, phase.AbilitiesOnCanvas, "phase %d should have no abilities", i)
 			assert.Empty(t, phase.DrawLines, "phase %d should have no draw lines", i)
+			assert.Empty(t, phase.ConnectingLines, "phase %d should have no connecting lines", i)
 			assert.Empty(t, phase.TextsOnCanvas, "phase %d should have no texts", i)
 			assert.Empty(t, phase.ImagesOnCanvas, "phase %d should have no images", i)
 			assert.Empty(t, phase.ToolIconsOnCanvas, "phase %d should have no tool icons", i)
@@ -51,7 +52,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 
 	t.Run("returns phases with saved canvas data", func(t *testing.T) {
 		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "lobbies", "maps")
+			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
 
 		// Insert test map
 		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('ascent', 'Ascent', '#FF0000')`)
@@ -95,6 +96,18 @@ func TestGetAllCanvasPhases(t *testing.T) {
 					Size:  2.5,
 				},
 			},
+			ConnectingLines: []CanvasConnectingLine{
+				{
+					ID:             "cline1",
+					FromID:         "agent1",
+					ToID:           "ability1",
+					StrokeColor:    "#00FF00",
+					StrokeWidth:    2.0,
+					UploadedImages: []string{"https://example.com/lineup.png"},
+					YoutubeLink:    "https://youtube.com/watch?v=test",
+					Notes:          "A site lineup",
+				},
+			},
 			TextsOnCanvas: []CanvasText{
 				{ID: "text1", Text: "Push A", X: 300, Y: 400, Width: 100, Height: 50},
 			},
@@ -119,6 +132,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 				AgentsOnCanvas:    []CanvasAgent{},
 				AbilitiesOnCanvas: []CanvasAbility{},
 				DrawLines:         []CanvasDrawLine{},
+				ConnectingLines:   []CanvasConnectingLine{},
 				TextsOnCanvas:     []CanvasText{},
 				ImagesOnCanvas:    []CanvasImage{},
 				ToolIconsOnCanvas: []CanvasToolIcon{},
@@ -148,6 +162,14 @@ func TestGetAllCanvasPhases(t *testing.T) {
 		assert.Equal(t, "img1", phases[0].ImagesOnCanvas[0].ID)
 		assert.Len(t, phases[0].ToolIconsOnCanvas, 1)
 		assert.Equal(t, "icon1", phases[0].ToolIconsOnCanvas[0].ID)
+		assert.Len(t, phases[0].ConnectingLines, 1)
+		assert.Equal(t, "cline1", phases[0].ConnectingLines[0].ID)
+		assert.Equal(t, "agent1", phases[0].ConnectingLines[0].FromID)
+		assert.Equal(t, "ability1", phases[0].ConnectingLines[0].ToID)
+		assert.Equal(t, "#00FF00", phases[0].ConnectingLines[0].StrokeColor)
+		assert.Len(t, phases[0].ConnectingLines[0].UploadedImages, 1)
+		assert.Equal(t, "https://youtube.com/watch?v=test", phases[0].ConnectingLines[0].YoutubeLink)
+		assert.Equal(t, "A site lineup", phases[0].ConnectingLines[0].Notes)
 
 		// Verify phase 1
 		assert.Len(t, phases[1].AgentsOnCanvas, 1)
@@ -183,7 +205,7 @@ func TestSaveCanvasState(t *testing.T) {
 
 	t.Run("saves canvas state successfully", func(t *testing.T) {
 		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "lobbies", "maps")
+			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
 
 		// Insert test map
 		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
@@ -217,6 +239,7 @@ func TestSaveCanvasState(t *testing.T) {
 				AgentsOnCanvas:    []CanvasAgent{},
 				AbilitiesOnCanvas: []CanvasAbility{},
 				DrawLines:         []CanvasDrawLine{},
+				ConnectingLines:   []CanvasConnectingLine{},
 				TextsOnCanvas:     []CanvasText{},
 				ImagesOnCanvas:    []CanvasImage{},
 				ToolIconsOnCanvas: []CanvasToolIcon{},
@@ -236,7 +259,7 @@ func TestSaveCanvasState(t *testing.T) {
 
 	t.Run("updates existing canvas state", func(t *testing.T) {
 		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "lobbies", "maps")
+			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
 
 		// Insert test map
 		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
@@ -265,6 +288,7 @@ func TestSaveCanvasState(t *testing.T) {
 				AgentsOnCanvas:    []CanvasAgent{},
 				AbilitiesOnCanvas: []CanvasAbility{},
 				DrawLines:         []CanvasDrawLine{},
+				ConnectingLines:   []CanvasConnectingLine{},
 				TextsOnCanvas:     []CanvasText{},
 				ImagesOnCanvas:    []CanvasImage{},
 				ToolIconsOnCanvas: []CanvasToolIcon{},
@@ -295,7 +319,7 @@ func TestSaveCanvasState(t *testing.T) {
 
 	t.Run("handles ability with current path", func(t *testing.T) {
 		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "lobbies", "maps")
+			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
 
 		// Insert test map
 		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
@@ -339,6 +363,7 @@ func TestSaveCanvasState(t *testing.T) {
 				AgentsOnCanvas:    []CanvasAgent{},
 				AbilitiesOnCanvas: []CanvasAbility{},
 				DrawLines:         []CanvasDrawLine{},
+				ConnectingLines:   []CanvasConnectingLine{},
 				TextsOnCanvas:     []CanvasText{},
 				ImagesOnCanvas:    []CanvasImage{},
 				ToolIconsOnCanvas: []CanvasToolIcon{},
@@ -358,7 +383,7 @@ func TestSaveCanvasState(t *testing.T) {
 
 	t.Run("handles draw line with points", func(t *testing.T) {
 		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "lobbies", "maps")
+			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
 
 		// Insert test map
 		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
@@ -400,6 +425,7 @@ func TestSaveCanvasState(t *testing.T) {
 				AgentsOnCanvas:    []CanvasAgent{},
 				AbilitiesOnCanvas: []CanvasAbility{},
 				DrawLines:         []CanvasDrawLine{},
+				ConnectingLines:   []CanvasConnectingLine{},
 				TextsOnCanvas:     []CanvasText{},
 				ImagesOnCanvas:    []CanvasImage{},
 				ToolIconsOnCanvas: []CanvasToolIcon{},
@@ -419,7 +445,7 @@ func TestSaveCanvasState(t *testing.T) {
 
 	t.Run("saves multiple types of items across different phases", func(t *testing.T) {
 		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "lobbies", "maps")
+			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
 
 		// Insert test map
 		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
@@ -465,6 +491,7 @@ func TestSaveCanvasState(t *testing.T) {
 					AgentsOnCanvas:    []CanvasAgent{},
 					AbilitiesOnCanvas: []CanvasAbility{},
 					DrawLines:         []CanvasDrawLine{},
+					ConnectingLines:   []CanvasConnectingLine{},
 					TextsOnCanvas:     []CanvasText{},
 					ImagesOnCanvas:    []CanvasImage{},
 					ToolIconsOnCanvas: []CanvasToolIcon{},
@@ -491,5 +518,170 @@ func TestSaveCanvasState(t *testing.T) {
 		// Verify phase 1 is empty
 		assert.Empty(t, phases[1].AgentsOnCanvas)
 		assert.Empty(t, phases[1].ImagesOnCanvas)
+	})
+
+	t.Run("saves and retrieves connecting lines with lineup data", func(t *testing.T) {
+		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
+			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
+
+		// Insert test map
+		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
+		require.NoError(t, err)
+
+		lobby := &Lobby{
+			Code: GenerateLobbyCode(),
+			CanvasState: &FullCanvasState{
+				SelectedMap: MapOption{ID: "bind"},
+			},
+		}
+		err = lobby.Save()
+		require.NoError(t, err)
+
+		canvasState := FullCanvasState{
+			Phases: make([]PhaseState, 10),
+		}
+
+		canvasState.Phases[0] = PhaseState{
+			ConnectingLines: []CanvasConnectingLine{
+				{
+					ID:             "cl1",
+					FromID:         "agent-1",
+					ToID:           "ability-1",
+					StrokeColor:    "#FF00FF",
+					StrokeWidth:    3.0,
+					UploadedImages: []string{"https://example.com/img1.png", "https://example.com/img2.png"},
+					YoutubeLink:    "https://www.youtube.com/watch?v=abc123",
+					Notes:          "Lineup for B site from spawn",
+				},
+				{
+					ID:          "cl2",
+					FromID:      "agent-2",
+					ToID:        "ability-2",
+					StrokeColor: "#00FFFF",
+					StrokeWidth: 2.0,
+					// No optional fields
+				},
+			},
+		}
+
+		for i := 1; i < 10; i++ {
+			canvasState.Phases[i] = PhaseState{
+				AgentsOnCanvas:    []CanvasAgent{},
+				AbilitiesOnCanvas: []CanvasAbility{},
+				DrawLines:         []CanvasDrawLine{},
+				ConnectingLines:   []CanvasConnectingLine{},
+				TextsOnCanvas:     []CanvasText{},
+				ImagesOnCanvas:    []CanvasImage{},
+				ToolIconsOnCanvas: []CanvasToolIcon{},
+			}
+		}
+
+		err = SaveCanvasState(lobby.Code, canvasState)
+		require.NoError(t, err)
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+
+		assert.Len(t, phases[0].ConnectingLines, 2)
+
+		// Verify first connecting line with all fields
+		cl1 := phases[0].ConnectingLines[0]
+		assert.Equal(t, "cl1", cl1.ID)
+		assert.Equal(t, "agent-1", cl1.FromID)
+		assert.Equal(t, "ability-1", cl1.ToID)
+		assert.Equal(t, "#FF00FF", cl1.StrokeColor)
+		assert.Equal(t, 3.0, cl1.StrokeWidth)
+		assert.Len(t, cl1.UploadedImages, 2)
+		assert.Equal(t, "https://example.com/img1.png", cl1.UploadedImages[0])
+		assert.Equal(t, "https://example.com/img2.png", cl1.UploadedImages[1])
+		assert.Equal(t, "https://www.youtube.com/watch?v=abc123", cl1.YoutubeLink)
+		assert.Equal(t, "Lineup for B site from spawn", cl1.Notes)
+
+		// Verify second connecting line without optional fields
+		cl2 := phases[0].ConnectingLines[1]
+		assert.Equal(t, "cl2", cl2.ID)
+		assert.Equal(t, "agent-2", cl2.FromID)
+		assert.Equal(t, "#00FFFF", cl2.StrokeColor)
+		assert.Empty(t, cl2.UploadedImages)
+		assert.Empty(t, cl2.YoutubeLink)
+		assert.Empty(t, cl2.Notes)
+	})
+
+	t.Run("updates connecting lines correctly", func(t *testing.T) {
+		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
+			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
+
+		// Insert test map
+		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
+		require.NoError(t, err)
+
+		lobby := &Lobby{
+			Code: GenerateLobbyCode(),
+			CanvasState: &FullCanvasState{
+				SelectedMap: MapOption{ID: "bind"},
+			},
+		}
+		err = lobby.Save()
+		require.NoError(t, err)
+
+		// First save with one connecting line
+		canvasState := FullCanvasState{
+			Phases: make([]PhaseState, 10),
+		}
+		canvasState.Phases[0] = PhaseState{
+			ConnectingLines: []CanvasConnectingLine{
+				{
+					ID:          "cl-old",
+					FromID:      "old-from",
+					ToID:        "old-to",
+					StrokeColor: "#000000",
+					StrokeWidth: 1.0,
+					Notes:       "Old notes",
+				},
+			},
+		}
+		for i := 1; i < 10; i++ {
+			canvasState.Phases[i] = PhaseState{
+				AgentsOnCanvas:    []CanvasAgent{},
+				AbilitiesOnCanvas: []CanvasAbility{},
+				DrawLines:         []CanvasDrawLine{},
+				ConnectingLines:   []CanvasConnectingLine{},
+				TextsOnCanvas:     []CanvasText{},
+				ImagesOnCanvas:    []CanvasImage{},
+				ToolIconsOnCanvas: []CanvasToolIcon{},
+			}
+		}
+
+		err = SaveCanvasState(lobby.Code, canvasState)
+		require.NoError(t, err)
+
+		// Update with new connecting line
+		canvasState.Phases[0] = PhaseState{
+			ConnectingLines: []CanvasConnectingLine{
+				{
+					ID:             "cl-new",
+					FromID:         "new-from",
+					ToID:           "new-to",
+					StrokeColor:    "#FFFFFF",
+					StrokeWidth:    5.0,
+					UploadedImages: []string{"new-image.png"},
+					YoutubeLink:    "https://youtube.com/new",
+					Notes:          "New notes",
+				},
+			},
+		}
+
+		err = SaveCanvasState(lobby.Code, canvasState)
+		require.NoError(t, err)
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+
+		// Should only have the new connecting line
+		assert.Len(t, phases[0].ConnectingLines, 1)
+		assert.Equal(t, "cl-new", phases[0].ConnectingLines[0].ID)
+		assert.Equal(t, "new-from", phases[0].ConnectingLines[0].FromID)
+		assert.Equal(t, "#FFFFFF", phases[0].ConnectingLines[0].StrokeColor)
+		assert.Equal(t, "New notes", phases[0].ConnectingLines[0].Notes)
 	})
 }

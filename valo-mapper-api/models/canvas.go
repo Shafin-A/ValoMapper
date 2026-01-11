@@ -11,12 +11,13 @@ type FullCanvasState struct {
 }
 
 type PhaseState struct {
-	AgentsOnCanvas    []CanvasAgent    `json:"agentsOnCanvas"`
-	AbilitiesOnCanvas []CanvasAbility  `json:"abilitiesOnCanvas"`
-	DrawLines         []CanvasDrawLine `json:"drawLines"`
-	TextsOnCanvas     []CanvasText     `json:"textsOnCanvas"`
-	ImagesOnCanvas    []CanvasImage    `json:"imagesOnCanvas"`
-	ToolIconsOnCanvas []CanvasToolIcon `json:"toolIconsOnCanvas"`
+	AgentsOnCanvas    []CanvasAgent          `json:"agentsOnCanvas"`
+	AbilitiesOnCanvas []CanvasAbility        `json:"abilitiesOnCanvas"`
+	DrawLines         []CanvasDrawLine       `json:"drawLines"`
+	ConnectingLines   []CanvasConnectingLine `json:"connectingLines"`
+	TextsOnCanvas     []CanvasText           `json:"textsOnCanvas"`
+	ImagesOnCanvas    []CanvasImage          `json:"imagesOnCanvas"`
+	ToolIconsOnCanvas []CanvasToolIcon       `json:"toolIconsOnCanvas"`
 }
 
 type MapOption struct {
@@ -63,6 +64,17 @@ type CanvasDrawLine struct {
 	Size        float64    `json:"size"`
 	IsDashed    bool       `json:"isDashed"`
 	IsArrowHead bool       `json:"isArrowHead"`
+}
+
+type CanvasConnectingLine struct {
+	ID             string   `json:"id"`
+	FromID         string   `json:"fromId"`
+	ToID           string   `json:"toId"`
+	StrokeColor    string   `json:"strokeColor"`
+	StrokeWidth    float64  `json:"strokeWidth"`
+	UploadedImages []string `json:"uploadedImages,omitempty"`
+	YoutubeLink    string   `json:"youtubeLink,omitempty"`
+	Notes          string   `json:"notes,omitempty"`
 }
 
 type CanvasText struct {

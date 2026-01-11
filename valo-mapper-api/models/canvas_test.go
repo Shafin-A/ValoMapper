@@ -116,6 +116,9 @@ func TestPhaseStateSerialization(t *testing.T) {
 			DrawLines: []CanvasDrawLine{
 				{ID: "l1", Tool: "brush", Color: "#FF0000", Size: 3.0},
 			},
+			ConnectingLines: []CanvasConnectingLine{
+				{ID: "cl1", FromID: "a1", ToID: "ab1", StrokeColor: "#FFFFFF", StrokeWidth: 2.0},
+			},
 			TextsOnCanvas: []CanvasText{
 				{ID: "t1", Text: "A site", X: 100, Y: 100, Width: 50, Height: 20},
 			},
@@ -137,6 +140,7 @@ func TestPhaseStateSerialization(t *testing.T) {
 		assert.Len(t, decoded.AgentsOnCanvas, 1)
 		assert.Len(t, decoded.AbilitiesOnCanvas, 1)
 		assert.Len(t, decoded.DrawLines, 1)
+		assert.Len(t, decoded.ConnectingLines, 1)
 		assert.Len(t, decoded.TextsOnCanvas, 1)
 		assert.Len(t, decoded.ImagesOnCanvas, 1)
 		assert.Len(t, decoded.ToolIconsOnCanvas, 1)
@@ -147,6 +151,7 @@ func TestPhaseStateSerialization(t *testing.T) {
 			AgentsOnCanvas:    []CanvasAgent{},
 			AbilitiesOnCanvas: []CanvasAbility{},
 			DrawLines:         []CanvasDrawLine{},
+			ConnectingLines:   []CanvasConnectingLine{},
 			TextsOnCanvas:     []CanvasText{},
 			ImagesOnCanvas:    []CanvasImage{},
 			ToolIconsOnCanvas: []CanvasToolIcon{},
@@ -162,6 +167,7 @@ func TestPhaseStateSerialization(t *testing.T) {
 		assert.Empty(t, decoded.AgentsOnCanvas)
 		assert.Empty(t, decoded.AbilitiesOnCanvas)
 		assert.Empty(t, decoded.DrawLines)
+		assert.Empty(t, decoded.ConnectingLines)
 		assert.Empty(t, decoded.TextsOnCanvas)
 		assert.Empty(t, decoded.ImagesOnCanvas)
 		assert.Empty(t, decoded.ToolIconsOnCanvas)
@@ -426,5 +432,78 @@ func TestIconSettingsSerialization(t *testing.T) {
 		assert.Equal(t, settings.Radius, decoded.Radius)
 		assert.Equal(t, settings.AllyColor, decoded.AllyColor)
 		assert.Equal(t, settings.EnemyColor, decoded.EnemyColor)
+	})
+}
+
+func TestCanvasConnectingLineSerialization(t *testing.T) {
+	t.Run("serializes connecting line with all fields", func(t *testing.T) {
+		line := CanvasConnectingLine{
+			ID:             "cl-1",
+			FromID:         "agent-1",
+			ToID:           "ability-1",
+			StrokeColor:    "#FF00FF",
+			StrokeWidth:    3.0,
+			UploadedImages: []string{"https://example.com/img1.png", "https://example.com/img2.png"},
+			YoutubeLink:    "https://www.youtube.com/watch?v=abc123",
+			Notes:          "Lineup for A site",
+		}
+
+		jsonData, err := json.Marshal(line)
+		require.NoError(t, err)
+
+		var decoded CanvasConnectingLine
+		err = json.Unmarshal(jsonData, &decoded)
+		require.NoError(t, err)
+
+		assert.Equal(t, line.ID, decoded.ID)
+		assert.Equal(t, line.FromID, decoded.FromID)
+		assert.Equal(t, line.ToID, decoded.ToID)
+		assert.Equal(t, line.StrokeColor, decoded.StrokeColor)
+		assert.Equal(t, line.StrokeWidth, decoded.StrokeWidth)
+		assert.Equal(t, line.UploadedImages, decoded.UploadedImages)
+		assert.Equal(t, line.YoutubeLink, decoded.YoutubeLink)
+		assert.Equal(t, line.Notes, decoded.Notes)
+	})
+
+	t.Run("serializes connecting line without optional fields", func(t *testing.T) {
+		line := CanvasConnectingLine{
+			ID:          "cl-2",
+			FromID:      "agent-2",
+			ToID:        "ability-2",
+			StrokeColor: "#FFFFFF",
+			StrokeWidth: 2.0,
+		}
+
+		jsonData, err := json.Marshal(line)
+		require.NoError(t, err)
+
+		var decoded CanvasConnectingLine
+		err = json.Unmarshal(jsonData, &decoded)
+		require.NoError(t, err)
+
+		assert.Equal(t, line.ID, decoded.ID)
+		assert.Equal(t, line.FromID, decoded.FromID)
+		assert.Equal(t, line.ToID, decoded.ToID)
+		assert.Nil(t, decoded.UploadedImages)
+		assert.Empty(t, decoded.YoutubeLink)
+		assert.Empty(t, decoded.Notes)
+	})
+
+	t.Run("omits empty optional fields in JSON", func(t *testing.T) {
+		line := CanvasConnectingLine{
+			ID:          "cl-3",
+			FromID:      "agent-3",
+			ToID:        "ability-3",
+			StrokeColor: "#000000",
+			StrokeWidth: 1.0,
+		}
+
+		jsonData, err := json.Marshal(line)
+		require.NoError(t, err)
+
+		jsonStr := string(jsonData)
+		assert.NotContains(t, jsonStr, "uploadedImages")
+		assert.NotContains(t, jsonStr, "youtubeLink")
+		assert.NotContains(t, jsonStr, "notes")
 	})
 }

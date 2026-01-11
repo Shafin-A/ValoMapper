@@ -22,6 +22,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 			AgentsOnCanvas:    []CanvasAgent{},
 			AbilitiesOnCanvas: []CanvasAbility{},
 			DrawLines:         []CanvasDrawLine{},
+			ConnectingLines:   []CanvasConnectingLine{},
 			TextsOnCanvas:     []CanvasText{},
 			ImagesOnCanvas:    []CanvasImage{},
 			ToolIconsOnCanvas: []CanvasToolIcon{},
@@ -178,6 +179,31 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	}
 	rows.Close()
 
+	// ---- CONNECTING LINES ----
+	rows, err = conn.Query(ctx, `
+		SELECT id, from_id, to_id, stroke_color, stroke_width, uploaded_images, youtube_link, notes, phase_index 
+		FROM canvas_connecting_lines 
+		WHERE lobby_code = $1 
+		ORDER BY phase_index`, lobbyCode)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var line CanvasConnectingLine
+		var phaseIndex int
+		if err := rows.Scan(&line.ID, &line.FromID, &line.ToID, &line.StrokeColor, &line.StrokeWidth,
+			&line.UploadedImages, &line.YoutubeLink, &line.Notes, &phaseIndex); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		if phaseIndex >= 0 && phaseIndex < len(phases) {
+			phases[phaseIndex].ConnectingLines = append(phases[phaseIndex].ConnectingLines, line)
+		} else {
+			log.Printf("WARNING: ConnectingLine %s has invalid phase index %d (valid range: 0-%d) in lobby %s", line.ID, phaseIndex, len(phases)-1, lobbyCode)
+		}
+	}
+	rows.Close()
+
 	return phases, nil
 }
 
@@ -201,7 +227,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	// Delete all previous data for this lobby
 	tables := []string{
 		"canvas_agents", "canvas_abilities", "canvas_draw_lines",
-		"canvas_texts", "canvas_images", "canvas_tool_icons",
+		"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines",
 	}
 	for _, table := range tables {
 		query := fmt.Sprintf("DELETE FROM %s WHERE lobby_code = $1",
@@ -213,12 +239,13 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 	// --- Prepare slices for each table ---
 	var (
-		agentRows   [][]interface{}
-		abilityRows [][]interface{}
-		lineRows    [][]interface{}
-		textRows    [][]interface{}
-		imageRows   [][]interface{}
-		iconRows    [][]interface{}
+		agentRows          [][]interface{}
+		abilityRows        [][]interface{}
+		lineRows           [][]interface{}
+		textRows           [][]interface{}
+		imageRows          [][]interface{}
+		iconRows           [][]interface{}
+		connectingLineRows [][]interface{}
 	)
 
 	for phaseIndex, phase := range state.Phases {
@@ -275,6 +302,14 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		for _, ic := range phase.ToolIconsOnCanvas {
 			iconRows = append(iconRows, []interface{}{
 				ic.ID, lobbyCode, ic.X, ic.Y, ic.Width, ic.Height, phaseIndex,
+			})
+		}
+
+		// Connecting Lines
+		for _, cl := range phase.ConnectingLines {
+			connectingLineRows = append(connectingLineRows, []interface{}{
+				cl.ID, lobbyCode, cl.FromID, cl.ToID, cl.StrokeColor, cl.StrokeWidth,
+				cl.UploadedImages, cl.YoutubeLink, cl.Notes, phaseIndex,
 			})
 		}
 	}
@@ -349,6 +384,18 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		)
 		if err != nil {
 			return fmt.Errorf("failed to insert tool icons: %w", err)
+		}
+	}
+
+	if len(connectingLineRows) > 0 {
+		_, err = tx.CopyFrom(
+			ctx,
+			pgx.Identifier{"canvas_connecting_lines"},
+			[]string{"id", "lobby_code", "from_id", "to_id", "stroke_color", "stroke_width", "uploaded_images", "youtube_link", "notes", "phase_index"},
+			pgx.CopyFromRows(connectingLineRows),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to insert connecting lines: %w", err)
 		}
 	}
 

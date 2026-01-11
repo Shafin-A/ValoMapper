@@ -333,6 +333,7 @@ func TestGetLobbyByCode(t *testing.T) {
 				AgentsOnCanvas:    []CanvasAgent{},
 				AbilitiesOnCanvas: []CanvasAbility{},
 				DrawLines:         []CanvasDrawLine{},
+				ConnectingLines:   []CanvasConnectingLine{},
 				TextsOnCanvas:     []CanvasText{},
 				ImagesOnCanvas:    []CanvasImage{},
 				ToolIconsOnCanvas: []CanvasToolIcon{},

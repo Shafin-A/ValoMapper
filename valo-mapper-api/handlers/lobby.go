@@ -26,6 +26,7 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 			AgentsOnCanvas:    []models.CanvasAgent{},
 			AbilitiesOnCanvas: []models.CanvasAbility{},
 			DrawLines:         []models.CanvasDrawLine{},
+			ConnectingLines:   []models.CanvasConnectingLine{},
 			TextsOnCanvas:     []models.CanvasText{},
 			ImagesOnCanvas:    []models.CanvasImage{},
 			ToolIconsOnCanvas: []models.CanvasToolIcon{},
