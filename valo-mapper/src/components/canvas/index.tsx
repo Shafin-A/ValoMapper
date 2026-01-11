@@ -3,7 +3,7 @@ import { useCanvas } from "@/contexts/canvas-context";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useEffect, useRef, forwardRef } from "react";
+import { useEffect, useRef, forwardRef, useState } from "react";
 import { Layer, Stage } from "react-konva";
 import { CanvasAbilities } from "./canvas-abilities";
 import { CanvasAgents } from "./canvas-agents";
@@ -17,6 +17,7 @@ import { CanvasDrawLines } from "./canvas-draw-lines";
 import { DeleteZone } from "./delete-zone";
 import { CanvasToolIcons } from "./canvas-tool-icons";
 import { useCanvasEvents } from "@/hooks/canvas";
+import { FullscreenImageModal } from "./fullscreen-image-modal";
 
 export interface MapStageHandle {
   stage: KonvaStage | null;
@@ -41,6 +42,9 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
     } = useCanvas();
 
     const stageRef = useRef<KonvaStage | null>(null);
+    const [fullscreenImageSrc, setFullscreenImageSrc] = useState<string | null>(
+      null
+    );
 
     const transformerRefs = useRef<Map<string, Konva.Transformer>>(new Map());
 
@@ -177,6 +181,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
               stageRef={stageRef}
               transformerRefs={transformerRefs}
               deleteGroupRef={deleteGroupRef}
+              onImageDoubleClick={setFullscreenImageSrc}
             />
             <CanvasTexts
               stageRef={stageRef}
@@ -201,6 +206,11 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           onDuplicate={handleDuplicate}
           onToggleAlly={handleToggleAlly}
           onDelete={handleDelete}
+        />
+
+        <FullscreenImageModal
+          imageSrc={fullscreenImageSrc}
+          onClose={() => setFullscreenImageSrc(null)}
         />
       </div>
     );

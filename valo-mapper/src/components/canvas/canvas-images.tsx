@@ -9,12 +9,14 @@ interface CanvasImageProps {
   stageRef: RefObject<Konva.Stage | null>;
   transformerRefs: RefObject<Map<string, Konva.Transformer>>;
   deleteGroupRef: RefObject<Konva.Group | null>;
+  onImageDoubleClick?: (imageSrc: string) => void;
 }
 
 export const CanvasImages = ({
   stageRef,
   transformerRefs,
   deleteGroupRef,
+  onImageDoubleClick,
 }: CanvasImageProps) => {
   const {
     imagesOnCanvas,
@@ -60,6 +62,13 @@ export const CanvasImages = ({
     }
   };
 
+  const handleImageDoubleClick = (imageId: string) => {
+    const imageLoader = imageLoaderRefs.current.get(imageId);
+    if (imageLoader && onImageDoubleClick) {
+      onImageDoubleClick(imageLoader.src);
+    }
+  };
+
   return imagesOnCanvas.map((imageItem) => {
     const imageNode = imageNodeRefs.current.get(imageItem.id);
     const imageLoader = imageLoaderRefs.current.get(imageItem.id);
@@ -79,6 +88,8 @@ export const CanvasImages = ({
         onMouseLeave={(e) => handleImageMouseLeaveInternal(e)}
         onTap={() => handleImageClick(imageItem.id)}
         onClick={() => handleImageClick(imageItem.id)}
+        onDblTap={() => handleImageDoubleClick(imageItem.id)}
+        onDblClick={() => handleImageDoubleClick(imageItem.id)}
       >
         <Image
           alt="image"
