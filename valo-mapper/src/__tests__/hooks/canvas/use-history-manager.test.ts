@@ -16,6 +16,7 @@ describe("useHistoryManager", () => {
         abilitiesOnCanvas: [],
         drawLines: [],
         textsOnCanvas: [],
+        connectingLines: [],
         imagesOnCanvas: [],
         toolIconsOnCanvas: [],
       })),
