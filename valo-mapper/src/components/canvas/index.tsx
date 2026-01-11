@@ -8,6 +8,7 @@ import { Layer, Stage } from "react-konva";
 import { CanvasAbilities } from "./canvas-abilities";
 import { CanvasAgents } from "./canvas-agents";
 import { CanvasCallouts } from "./canvas-callouts";
+import { CanvasConnectingLines } from "./canvas-connecting-lines";
 import { CanvasUltOrbs } from "./canvas-ult-orbs";
 import { CanvasSpawnBarriers } from "./canvas-spawn-barriers";
 import { CanvasTexts } from "./canvas-texts";
@@ -175,6 +176,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
             <CanvasCallouts mapPosition={mapPosition} />
           </Layer>
           <Layer isListening={!isDrawMode}>
+            <CanvasConnectingLines />
             <CanvasAbilities deleteGroupRef={deleteGroupRef} />
             <CanvasAgents deleteGroupRef={deleteGroupRef} />
             <CanvasImages

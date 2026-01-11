@@ -6,6 +6,7 @@ import type {
   AbilityIconItem,
   Agent,
   AgentCanvas,
+  ConnectingLine,
   DrawLine,
   ImageCanvas,
   MapOption,
@@ -50,6 +51,8 @@ interface CanvasContextType {
   setCurrentStroke: Dispatch<SetStateAction<DrawLine | null>>;
   drawLines: DrawLine[];
   setDrawLines: Dispatch<SetStateAction<DrawLine[]>>;
+  connectingLines: ConnectingLine[];
+  setConnectingLines: Dispatch<SetStateAction<ConnectingLine[]>>;
   isDrawMode: boolean;
   setIsDrawMode: Dispatch<SetStateAction<boolean>>;
   isDrawing: RefObject<boolean>;
@@ -131,6 +134,8 @@ export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setAgentsOnCanvas: canvasState.setAgentsOnCanvas,
     setAbilitiesOnCanvas: canvasState.setAbilitiesOnCanvas,
     setToolIconsOnCanvas: canvasState.setToolIconsOnCanvas,
+    connectingLines: canvasState.connectingLines,
+    setConnectingLines: canvasState.setConnectingLines,
     recenterCanvasCallback,
   });
 

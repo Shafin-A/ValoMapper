@@ -3,6 +3,7 @@ import {
   AbilityCanvas,
   AgentCanvas,
   BaseCanvasItem,
+  ConnectingLine,
   ImageCanvas,
   ItemType,
   TextCanvas,
@@ -57,7 +58,9 @@ export const useCanvasContextMenu = (
   imagesOnCanvas: ImageCanvas[],
   setImagesOnCanvas: Dispatch<SetStateAction<ImageCanvas[]>>,
   toolIconsOnCanvas: ToolIconCanvas[],
-  setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>
+  setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>,
+  connectingLines: ConnectingLine[],
+  setConnectingLines: Dispatch<SetStateAction<ConnectingLine[]>>
 ) => {
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     open: false,
@@ -194,12 +197,36 @@ export const useCanvasContextMenu = (
 
     const { itemId, itemType } = contextMenu;
 
+    const connectedLine = connectingLines.find(
+      (line) => line.fromId === itemId || line.toId === itemId
+    );
+
     switch (itemType) {
       case "agent":
         deleteItem(itemId, setAgentsOnCanvas);
+        if (connectedLine) {
+          const connectedId =
+            connectedLine.fromId === itemId
+              ? connectedLine.toId
+              : connectedLine.fromId;
+          deleteItem(connectedId, setAbilitiesOnCanvas);
+          setConnectingLines((prev) =>
+            prev.filter((line) => line.id !== connectedLine.id)
+          );
+        }
         break;
       case "ability":
         deleteItem(itemId, setAbilitiesOnCanvas);
+        if (connectedLine) {
+          const connectedId =
+            connectedLine.fromId === itemId
+              ? connectedLine.toId
+              : connectedLine.fromId;
+          deleteItem(connectedId, setAgentsOnCanvas);
+          setConnectingLines((prev) =>
+            prev.filter((line) => line.id !== connectedLine.id)
+          );
+        }
         break;
       case "text":
         deleteItem(itemId, setTextsOnCanvas);
@@ -215,8 +242,10 @@ export const useCanvasContextMenu = (
   }, [
     contextMenu,
     closeContextMenu,
+    connectingLines,
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
+    setConnectingLines,
     setTextsOnCanvas,
     setImagesOnCanvas,
     setToolIconsOnCanvas,

@@ -5,6 +5,7 @@ const createEmptyPhaseState = (): PhaseState => ({
   agentsOnCanvas: [],
   abilitiesOnCanvas: [],
   drawLines: [],
+  connectingLines: [],
   textsOnCanvas: [],
   imagesOnCanvas: [],
   toolIconsOnCanvas: [],

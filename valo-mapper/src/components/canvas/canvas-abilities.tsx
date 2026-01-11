@@ -14,6 +14,10 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
   const {
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
+    agentsOnCanvas,
+    setAgentsOnCanvas,
+    connectingLines,
+    setConnectingLines,
     isDrawMode,
     setHoveredElementId,
     selectedCanvasIcon,
@@ -41,7 +45,18 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
         isListening={!isDrawMode}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
         onDragEnd={(e) =>
-          handleDragEnd(e, ability, setAbilitiesOnCanvas, deleteGroupRef)
+          handleDragEnd(
+            e,
+            ability,
+            setAbilitiesOnCanvas,
+            deleteGroupRef,
+            connectingLines,
+            setConnectingLines,
+            (connectedId) =>
+              setAgentsOnCanvas((prev) =>
+                prev.filter((a) => a.id !== connectedId)
+              )
+          )
         }
         width={abilitiesSettings.scale}
         height={abilitiesSettings.scale}

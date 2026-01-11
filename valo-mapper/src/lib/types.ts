@@ -239,6 +239,14 @@ export type DrawLine = {
   isArrowHead: boolean;
 };
 
+export type ConnectingLine = {
+  id: string;
+  fromId: string;
+  toId: string;
+  strokeColor: string;
+  strokeWidth: number;
+};
+
 export type MapSide = "attack" | "defense";
 
 export type UndoableState = {
@@ -261,6 +269,7 @@ export type PhaseState = {
   agentsOnCanvas: AgentCanvas[];
   abilitiesOnCanvas: AbilityCanvas[];
   drawLines: DrawLine[];
+  connectingLines: ConnectingLine[];
   textsOnCanvas: TextCanvas[];
   imagesOnCanvas: ImageCanvas[];
   toolIconsOnCanvas: ToolIconCanvas[];

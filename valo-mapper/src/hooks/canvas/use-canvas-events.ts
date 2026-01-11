@@ -32,6 +32,8 @@ export const useCanvasEvents = (
     isDrawing,
     drawLines,
     setDrawLines,
+    connectingLines,
+    setConnectingLines,
     tool,
     setCurrentStroke,
   } = useCanvas();
@@ -115,7 +117,9 @@ export const useCanvasEvents = (
     imagesOnCanvas,
     setImagesOnCanvas,
     toolIconsOnCanvas,
-    setToolIconsOnCanvas
+    setToolIconsOnCanvas,
+    connectingLines,
+    setConnectingLines
   );
 
   const handleIconPlacement = useCallback(

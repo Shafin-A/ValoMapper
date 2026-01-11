@@ -21,6 +21,7 @@ import {
   Eraser,
   Image as ImageIcon,
   Loader2,
+  MapPinned,
   Pencil,
   Redo,
   Save,
@@ -36,6 +37,7 @@ import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import TreeViewDialogContent from "../strategies/tree-view-dialog-content";
+import { LineupDialog } from "./lineup-dialog";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { MapStageHandle } from "@/components/canvas";
 import { RefObject } from "react";
@@ -50,6 +52,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
+  const [openLineupDialog, setOpenLineupDialog] = useState(false);
 
   const {
     undo,
@@ -84,6 +87,16 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
   const handleDeletePressedChange = (pressed: boolean) => {
     setIsDrawMode(false);
     setIsDeleteSettingsOpen(pressed);
+  };
+
+  const handleLineupConfirm = (agentName: string, abilityName: string) => {
+    // TODO: Implement lineup logic
+    console.log("Lineup confirmed:", { agentName, abilityName });
+    setOpenLineupDialog(false);
+  };
+
+  const handleLineupCancel = () => {
+    setOpenLineupDialog(false);
   };
 
   const handleAddText = () => {
@@ -493,6 +506,25 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               Screenshot
             </TooltipContent>
           </Tooltip>
+          <Dialog open={openLineupDialog} onOpenChange={setOpenLineupDialog}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="lg">
+                    <MapPinned />
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="center">
+                Add Lineup
+              </TooltipContent>
+            </Tooltip>
+            <LineupDialog
+              onConfirm={handleLineupConfirm}
+              onCancel={handleLineupCancel}
+              mapPosition={mapPosition}
+            />
+          </Dialog>
         </div>
         <AnimatedContent show={isDrawMode && tool === "pencil"}>
           <DrawSettings />

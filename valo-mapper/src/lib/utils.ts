@@ -15,6 +15,7 @@ import {
   ArcAbility,
   BaseCanvasItem,
   CircleAbility,
+  ConnectingLine,
   CurvableLineAbility,
   DoubleLineAbility,
   DrawLine,
@@ -98,7 +99,7 @@ export const isAgent = (obj: unknown): obj is Agent => {
 export const getNextId = (
   type: "agent" | "ability" | "text" | "image" | "tool"
 ) => {
-  const uuid = crypto.randomUUID();
+  const uuid = generateUUID();
   return `${type}-${uuid}`;
 };
 
@@ -213,7 +214,10 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
   e: KonvaEventObject<DragEvent>,
   icon: T,
   setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
-  deleteGroupRef?: React.RefObject<Konva.Group | null>
+  deleteGroupRef?: React.RefObject<Konva.Group | null>,
+  connectingLines?: ConnectingLine[],
+  setConnectingLines?: Dispatch<SetStateAction<ConnectingLine[]>>,
+  onDeleteConnected?: (connectedId: string) => void
 ) => {
   const node = e.target;
   const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
@@ -226,6 +230,23 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
   node.setAttr("isOverDeleteGroup", false);
 
   if (isOverDeleteGroup) {
+    if (connectingLines && setConnectingLines) {
+      const connectedLine = connectingLines.find(
+        (line) => line.fromId === icon.id || line.toId === icon.id
+      );
+
+      if (connectedLine && onDeleteConnected) {
+        const connectedId =
+          connectedLine.fromId === icon.id
+            ? connectedLine.toId
+            : connectedLine.fromId;
+        onDeleteConnected(connectedId);
+        setConnectingLines((prev) =>
+          prev.filter((line) => line.id !== connectedLine.id)
+        );
+      }
+    }
+
     setIconsOnCanvas((prev) => prev.filter((item) => item.id !== icon.id));
     return;
   }

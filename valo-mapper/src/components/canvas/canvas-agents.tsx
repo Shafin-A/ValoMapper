@@ -13,6 +13,10 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
   const {
     agentsOnCanvas,
     setAgentsOnCanvas,
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
+    connectingLines,
+    setConnectingLines,
     isDrawMode,
     registerNode,
     unregisterNode,
@@ -38,7 +42,18 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
         isListening={!isDrawMode}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
         onDragEnd={(e) =>
-          handleDragEnd(e, agent, setAgentsOnCanvas, deleteGroupRef)
+          handleDragEnd(
+            e,
+            agent,
+            setAgentsOnCanvas,
+            deleteGroupRef,
+            connectingLines,
+            setConnectingLines,
+            (connectedId) =>
+              setAbilitiesOnCanvas((prev) =>
+                prev.filter((a) => a.id !== connectedId)
+              )
+          )
         }
         width={agentsSettings.scale}
         height={agentsSettings.scale}

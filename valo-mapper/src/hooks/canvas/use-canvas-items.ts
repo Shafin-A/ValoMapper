@@ -1,6 +1,7 @@
 import {
   AbilityCanvas,
   AgentCanvas,
+  ConnectingLine,
   DrawLine,
   ImageCanvas,
   PhaseState,
@@ -24,6 +25,7 @@ export const useCanvasItems = (
     agentsOnCanvas,
     abilitiesOnCanvas,
     drawLines,
+    connectingLines = [],
     toolIconsOnCanvas,
   } = currentPhase;
 
@@ -79,6 +81,17 @@ export const useCanvasItems = (
     [drawLines, updateCurrentPhase]
   );
 
+  const setConnectingLines = useCallback(
+    (
+      value: ConnectingLine[] | ((prev: ConnectingLine[]) => ConnectingLine[])
+    ) => {
+      updateCurrentPhase({
+        connectingLines: resolveValue(value, connectingLines),
+      });
+    },
+    [connectingLines, updateCurrentPhase]
+  );
+
   return useMemo(
     () => ({
       agentsOnCanvas,
@@ -87,6 +100,8 @@ export const useCanvasItems = (
       setAbilitiesOnCanvas,
       drawLines,
       setDrawLines,
+      connectingLines,
+      setConnectingLines,
       imagesOnCanvas,
       setImagesOnCanvas,
       textsOnCanvas,
@@ -101,6 +116,8 @@ export const useCanvasItems = (
       setAbilitiesOnCanvas,
       drawLines,
       setDrawLines,
+      connectingLines,
+      setConnectingLines,
       imagesOnCanvas,
       setImagesOnCanvas,
       textsOnCanvas,

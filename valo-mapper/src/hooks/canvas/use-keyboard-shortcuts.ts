@@ -4,6 +4,7 @@ import { useSettings } from "@/contexts/settings-context";
 import type {
   AbilityCanvas,
   AgentCanvas,
+  ConnectingLine,
   ImageCanvas,
   PhaseState,
   TextCanvas,
@@ -33,6 +34,8 @@ interface UseKeyboardShortcutsProps {
   setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>;
   setAbilitiesOnCanvas: Dispatch<SetStateAction<AbilityCanvas[]>>;
   setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>;
+  connectingLines: ConnectingLine[];
+  setConnectingLines: Dispatch<SetStateAction<ConnectingLine[]>>;
   recenterCanvasCallback: RefObject<(() => void) | null>;
 }
 
@@ -65,6 +68,8 @@ export const useKeyboardShortcuts = ({
   setAgentsOnCanvas,
   setAbilitiesOnCanvas,
   setToolIconsOnCanvas,
+  connectingLines,
+  setConnectingLines,
   recenterCanvasCallback,
 }: UseKeyboardShortcutsProps): void => {
   const {
@@ -126,18 +131,60 @@ export const useKeyboardShortcuts = ({
       if (key !== "e") return false;
       if (!hoveredElementId || isDrawMode || editingTextId) return false;
 
+      const connectedLine = connectingLines.find(
+        (line) =>
+          line.fromId === hoveredElementId || line.toId === hoveredElementId
+      );
+
       setImagesOnCanvas((prev) =>
         prev.filter((img) => img.id !== hoveredElementId)
       );
       setTextsOnCanvas((prev) =>
         prev.filter((txt) => txt.id !== hoveredElementId)
       );
-      setAgentsOnCanvas((prev) =>
-        prev.filter((agent) => agent.id !== hoveredElementId)
-      );
-      setAbilitiesOnCanvas((prev) =>
-        prev.filter((ability) => ability.id !== hoveredElementId)
-      );
+
+      setAgentsOnCanvas((prev) => {
+        const filtered = prev.filter((agent) => agent.id !== hoveredElementId);
+        if (connectedLine && connectedLine.fromId === hoveredElementId) {
+          setAbilitiesOnCanvas((abilities) =>
+            abilities.filter((ability) => ability.id !== connectedLine.toId)
+          );
+          setConnectingLines((lines) =>
+            lines.filter((line) => line.id !== connectedLine.id)
+          );
+        } else if (connectedLine && connectedLine.toId === hoveredElementId) {
+          setAbilitiesOnCanvas((abilities) =>
+            abilities.filter((ability) => ability.id !== connectedLine.fromId)
+          );
+          setConnectingLines((lines) =>
+            lines.filter((line) => line.id !== connectedLine.id)
+          );
+        }
+        return filtered;
+      });
+
+      setAbilitiesOnCanvas((prev) => {
+        const filtered = prev.filter(
+          (ability) => ability.id !== hoveredElementId
+        );
+        if (connectedLine && connectedLine.fromId === hoveredElementId) {
+          setAgentsOnCanvas((agents) =>
+            agents.filter((agent) => agent.id !== connectedLine.toId)
+          );
+          setConnectingLines((lines) =>
+            lines.filter((line) => line.id !== connectedLine.id)
+          );
+        } else if (connectedLine && connectedLine.toId === hoveredElementId) {
+          setAgentsOnCanvas((agents) =>
+            agents.filter((agent) => agent.id !== connectedLine.fromId)
+          );
+          setConnectingLines((lines) =>
+            lines.filter((line) => line.id !== connectedLine.id)
+          );
+        }
+        return filtered;
+      });
+
       setToolIconsOnCanvas((prev) =>
         prev.filter((toolIcon) => toolIcon.id !== hoveredElementId)
       );
@@ -259,6 +306,8 @@ export const useKeyboardShortcuts = ({
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
     setToolIconsOnCanvas,
+    connectingLines,
+    setConnectingLines,
     recenterCanvasCallback,
   ]);
 };
