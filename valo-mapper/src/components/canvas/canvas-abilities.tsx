@@ -14,7 +14,6 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
   const {
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
-    agentsOnCanvas,
     setAgentsOnCanvas,
     connectingLines,
     setConnectingLines,

@@ -99,7 +99,7 @@ export const isAgent = (obj: unknown): obj is Agent => {
 export const getNextId = (
   type: "agent" | "ability" | "text" | "image" | "tool"
 ) => {
-  const uuid = generateUUID();
+  const uuid = crypto.randomUUID();
   return `${type}-${uuid}`;
 };
 

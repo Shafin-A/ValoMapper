@@ -13,7 +13,6 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
   const {
     agentsOnCanvas,
     setAgentsOnCanvas,
-    abilitiesOnCanvas,
     setAbilitiesOnCanvas,
     connectingLines,
     setConnectingLines,
