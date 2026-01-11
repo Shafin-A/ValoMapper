@@ -54,6 +54,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
+        jest.fn(),
+        [],
         jest.fn()
       )
     );
@@ -94,6 +96,8 @@ describe("useCanvasContextMenu", () => {
         stageRef,
         agentsState,
         setAgents,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -151,6 +155,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
+        jest.fn(),
+        [],
         jest.fn()
       )
     );
@@ -191,6 +197,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
+        jest.fn(),
+        [],
         jest.fn()
       )
     );
@@ -215,6 +223,8 @@ describe("useCanvasContextMenu", () => {
     const { result } = renderHook(() =>
       useCanvasContextMenu(
         stageRef,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -254,6 +264,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
+        jest.fn(),
+        [],
         jest.fn()
       )
     );
@@ -281,6 +293,8 @@ describe("useCanvasContextMenu", () => {
       useCanvasContextMenu(
         stageRef,
         agents,
+        jest.fn(),
+        [],
         jest.fn(),
         [],
         jest.fn(),
@@ -326,6 +340,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
+        jest.fn(),
+        [],
         jest.fn()
       )
     );
@@ -359,6 +375,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         images,
+        jest.fn(),
+        [],
         jest.fn(),
         [],
         jest.fn()
@@ -396,6 +414,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         toolIcons,
+        jest.fn(),
+        [],
         jest.fn()
       )
     );
@@ -430,6 +450,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         textState,
         setTexts,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -476,6 +498,8 @@ describe("useCanvasContextMenu", () => {
         imageState,
         setImages,
         [],
+        jest.fn(),
+        [],
         jest.fn()
       )
     );
@@ -518,7 +542,9 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         toolState,
-        setToolIcons
+        setToolIcons,
+        [],
+        jest.fn()
       )
     );
 
@@ -556,6 +582,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         textState,
         setTexts,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -600,6 +628,8 @@ describe("useCanvasContextMenu", () => {
         imageState,
         setImages,
         [],
+        jest.fn(),
+        [],
         jest.fn()
       )
     );
@@ -640,7 +670,9 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         toolState,
-        setToolIcons
+        setToolIcons,
+        [],
+        jest.fn()
       )
     );
 
@@ -687,6 +719,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
+        jest.fn(),
+        [],
         jest.fn()
       )
     );
@@ -711,6 +745,8 @@ describe("useCanvasContextMenu", () => {
     const { result } = renderHook(() =>
       useCanvasContextMenu(
         stageRef,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -747,6 +783,8 @@ describe("useCanvasContextMenu", () => {
       useCanvasContextMenu(
         stageRef,
         agents,
+        jest.fn(),
+        [],
         jest.fn(),
         [],
         jest.fn(),

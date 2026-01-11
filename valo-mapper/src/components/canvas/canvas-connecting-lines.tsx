@@ -1,8 +1,15 @@
 import React, { useMemo } from "react";
 import { Line } from "react-konva";
 import { useCanvas } from "@/contexts/canvas-context";
+import { ConnectingLine } from "@/lib/types";
 
-export const CanvasConnectingLines: React.FC = () => {
+interface CanvasConnectingLinesProps {
+  onLineClick?: (line: ConnectingLine) => void;
+}
+
+export const CanvasConnectingLines: React.FC<CanvasConnectingLinesProps> = ({
+  onLineClick,
+}) => {
   const { connectingLines, agentsOnCanvas, abilitiesOnCanvas } = useCanvas();
 
   const itemsById = useMemo(() => {
@@ -30,8 +37,23 @@ export const CanvasConnectingLines: React.FC = () => {
             points={[from.x, from.y, to.x, to.y]}
             stroke={line.strokeColor}
             strokeWidth={line.strokeWidth}
-            isListening={false}
+            isListening={true}
             perfectDrawEnabled={false}
+            onClick={() => onLineClick?.(line)}
+            onTap={() => onLineClick?.(line)}
+            hitStrokeWidth={20}
+            onMouseEnter={(e) => {
+              const container = e.target.getStage()?.container();
+              if (container) {
+                container.style.cursor = "pointer";
+              }
+            }}
+            onMouseLeave={(e) => {
+              const container = e.target.getStage()?.container();
+              if (container) {
+                container.style.cursor = "default";
+              }
+            }}
           />
         );
       })}

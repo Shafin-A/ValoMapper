@@ -245,6 +245,9 @@ export type ConnectingLine = {
   toId: string;
   strokeColor: string;
   strokeWidth: number;
+  uploadedImages?: string[];
+  youtubeLink?: string;
+  notes?: string;
 };
 
 export type MapSide = "attack" | "defense";

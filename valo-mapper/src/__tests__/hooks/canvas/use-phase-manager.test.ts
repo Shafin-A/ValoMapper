@@ -29,6 +29,7 @@ describe("usePhaseManager", () => {
       textsOnCanvas: [],
       imagesOnCanvas: [],
       toolIconsOnCanvas: [],
+      connectingLines: [],
     };
 
     expect(result.current.currentPhase).toEqual(expectedEmptyPhase);

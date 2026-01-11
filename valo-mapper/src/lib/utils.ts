@@ -450,3 +450,24 @@ export const getFolderOrStrategyId = (
 
 export const capitalize = (s: string) =>
   s && String(s[0]).toUpperCase() + String(s).slice(1);
+
+export const getYoutubeEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+
+  if (match && match[2].length === 11) {
+    return `https://www.youtube.com/embed/${match[2]}`;
+  }
+
+  return null;
+};
+
+export const ensureAbsoluteUrl = (url: string): string => {
+  if (!url) return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  return `https://${url}`;
+};

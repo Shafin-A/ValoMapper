@@ -106,6 +106,9 @@ export const LineupDialog = ({
         toId: abilityId,
         strokeColor: lineColor,
         strokeWidth: 8,
+        uploadedImages,
+        youtubeLink,
+        notes,
       },
     ]);
 

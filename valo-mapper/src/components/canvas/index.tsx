@@ -19,6 +19,8 @@ import { DeleteZone } from "./delete-zone";
 import { CanvasToolIcons } from "./canvas-tool-icons";
 import { useCanvasEvents } from "@/hooks/canvas";
 import { FullscreenImageModal } from "./fullscreen-image-modal";
+import { ConnectingLineViewDialog } from "./connecting-line-view-dialog";
+import { ConnectingLine } from "@/lib/types";
 
 export interface MapStageHandle {
   stage: KonvaStage | null;
@@ -46,6 +48,8 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
     const [fullscreenImageSrc, setFullscreenImageSrc] = useState<string | null>(
       null
     );
+    const [selectedConnectingLine, setSelectedConnectingLine] =
+      useState<ConnectingLine | null>(null);
 
     const transformerRefs = useRef<Map<string, Konva.Transformer>>(new Map());
 
@@ -176,7 +180,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
             <CanvasCallouts mapPosition={mapPosition} />
           </Layer>
           <Layer isListening={!isDrawMode}>
-            <CanvasConnectingLines />
+            <CanvasConnectingLines onLineClick={setSelectedConnectingLine} />
             <CanvasAbilities deleteGroupRef={deleteGroupRef} />
             <CanvasAgents deleteGroupRef={deleteGroupRef} />
             <CanvasImages
@@ -213,6 +217,12 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
         <FullscreenImageModal
           imageSrc={fullscreenImageSrc}
           onClose={() => setFullscreenImageSrc(null)}
+        />
+
+        <ConnectingLineViewDialog
+          line={selectedConnectingLine}
+          isOpen={selectedConnectingLine !== null}
+          onClose={() => setSelectedConnectingLine(null)}
         />
       </div>
     );
