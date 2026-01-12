@@ -90,6 +90,8 @@ export const CanvasDoubleLineIcon = ({
 
   const [image] = useImage(src);
 
+  const { setAbilitiesOnCanvas, mapSide } = useCanvas();
+
   useEffect(() => {
     if (groupRef.current && image) {
       requestAnimationFrame(() => {
@@ -106,6 +108,7 @@ export const CanvasDoubleLineIcon = ({
     isInteracting,
     isHoveringHandle,
     isAlly,
+    mapSide,
   ]);
 
   useEffect(() => {
@@ -117,8 +120,6 @@ export const CanvasDoubleLineIcon = ({
     setCurrentLength(lineLength);
     lengthRef.current = lineLength;
   }, [lineLength]);
-
-  const { setAbilitiesOnCanvas } = useCanvas();
 
   const handleMouseDown = useCallback((e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;

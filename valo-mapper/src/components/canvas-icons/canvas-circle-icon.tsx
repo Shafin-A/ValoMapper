@@ -1,4 +1,5 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
+import { useCanvas } from "@/contexts/canvas-context";
 import {
   handleMouseOutDefaultCursor,
   handleMouseOverGrabCursor,
@@ -43,6 +44,7 @@ export const CanvasCircleIcon = ({
 }: CanvasCircleIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const [image] = useImage(src);
+  const { mapSide } = useCanvas();
 
   useEffect(() => {
     if (groupRef.current && image) {
@@ -53,7 +55,7 @@ export const CanvasCircleIcon = ({
         }
       });
     }
-  }, [image, isAlly]);
+  }, [image, isAlly, mapSide]);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;

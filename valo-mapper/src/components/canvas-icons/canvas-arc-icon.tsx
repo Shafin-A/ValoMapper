@@ -61,6 +61,8 @@ export const CanvasArcIcon = ({
 
   const rotationRef = useRef<number>(rotation);
 
+  const { setAbilitiesOnCanvas, mapSide } = useCanvas();
+
   const [image] = useImage(src);
 
   useEffect(() => {
@@ -72,14 +74,19 @@ export const CanvasArcIcon = ({
         }
       });
     }
-  }, [image, currentRotation, isInteracting, isHoveringHandle, isAlly]);
+  }, [
+    image,
+    currentRotation,
+    isInteracting,
+    isHoveringHandle,
+    isAlly,
+    mapSide,
+  ]);
 
   useEffect(() => {
     setCurrentRotation(rotation);
     rotationRef.current = rotation;
   }, [rotation]);
-
-  const { setAbilitiesOnCanvas } = useCanvas();
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;

@@ -88,6 +88,8 @@ export const CanvasLineIcon = ({
 
   const [image] = useImage(src);
 
+  const { setAbilitiesOnCanvas, mapSide } = useCanvas();
+
   useEffect(() => {
     if (groupRef.current && image) {
       requestAnimationFrame(() => {
@@ -104,6 +106,7 @@ export const CanvasLineIcon = ({
     isInteracting,
     isHoveringHandle,
     isAlly,
+    mapSide,
   ]);
 
   useEffect(() => {
@@ -115,8 +118,6 @@ export const CanvasLineIcon = ({
     setCurrentLength(lineLength);
     lengthRef.current = lineLength;
   }, [lineLength]);
-
-  const { setAbilitiesOnCanvas } = useCanvas();
 
   const handleMouseDown = useCallback((e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;

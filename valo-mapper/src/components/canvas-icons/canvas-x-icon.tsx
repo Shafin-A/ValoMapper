@@ -67,6 +67,8 @@ export const CanvasXIcon = ({
 
   const [image] = useImage(src);
 
+  const { setAbilitiesOnCanvas, mapSide } = useCanvas();
+
   useEffect(() => {
     if (groupRef.current && image) {
       requestAnimationFrame(() => {
@@ -76,14 +78,19 @@ export const CanvasXIcon = ({
         }
       });
     }
-  }, [image, currentRotation, isInteracting, isHoveringHandle, isAlly]);
+  }, [
+    image,
+    currentRotation,
+    isInteracting,
+    isHoveringHandle,
+    isAlly,
+    mapSide,
+  ]);
 
   useEffect(() => {
     setCurrentRotation(rotation);
     rotationRef.current = rotation;
   }, [rotation]);
-
-  const { setAbilitiesOnCanvas } = useCanvas();
 
   const handleMouseDown = useCallback((e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
