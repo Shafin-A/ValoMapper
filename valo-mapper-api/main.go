@@ -18,6 +18,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
+	"golang.org/x/time/rate"
 )
 
 func main() {
@@ -66,8 +67,11 @@ func main() {
 	r := mux.NewRouter()
 	routes.SetupRoutes(r, firebaseAuth)
 
+	rateLimiter := middleware.NewIPRateLimiter(rate.Limit(10), 20)
+
 	var handler http.Handler = r
 	handler = middleware.DBHealthMiddleware(handler)
+	handler = middleware.RateLimitMiddleware(rateLimiter)(handler)
 	handler = middleware.RequestIDMiddleware(handler)
 
 	allowedOrigins := []string{"http://localhost:3000"}
