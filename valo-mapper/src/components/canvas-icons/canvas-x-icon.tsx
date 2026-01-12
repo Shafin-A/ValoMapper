@@ -76,7 +76,7 @@ export const CanvasXIcon = ({
         }
       });
     }
-  }, [image, currentRotation, isInteracting, isHoveringHandle]);
+  }, [image, currentRotation, isInteracting, isHoveringHandle, isAlly]);
 
   useEffect(() => {
     setCurrentRotation(rotation);

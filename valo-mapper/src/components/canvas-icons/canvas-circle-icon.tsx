@@ -48,11 +48,12 @@ export const CanvasCircleIcon = ({
     if (groupRef.current && image) {
       requestAnimationFrame(() => {
         if (groupRef.current) {
+          groupRef.current.clearCache();
           groupRef.current.cache({ pixelRatio: 2 });
         }
       });
     }
-  }, [image]);
+  }, [image, isAlly]);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;

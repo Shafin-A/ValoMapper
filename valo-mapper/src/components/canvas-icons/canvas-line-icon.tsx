@@ -97,7 +97,14 @@ export const CanvasLineIcon = ({
         }
       });
     }
-  }, [image, currentRotation, currentLength, isInteracting, isHoveringHandle]);
+  }, [
+    image,
+    currentRotation,
+    currentLength,
+    isInteracting,
+    isHoveringHandle,
+    isAlly,
+  ]);
 
   useEffect(() => {
     setCurrentRotation(rotation);

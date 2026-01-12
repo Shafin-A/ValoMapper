@@ -72,7 +72,7 @@ export const CanvasArcIcon = ({
         }
       });
     }
-  }, [image, currentRotation, isInteracting, isHoveringHandle]);
+  }, [image, currentRotation, isInteracting, isHoveringHandle, isAlly]);
 
   useEffect(() => {
     setCurrentRotation(rotation);

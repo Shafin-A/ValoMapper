@@ -83,7 +83,7 @@ export const CanvasCurvableLineIcon = ({
         }
       });
     }
-  }, [image, path, isDrawing, isHoveringHandle]);
+  }, [image, path, isDrawing, isHoveringHandle, isAlly]);
 
   useEffect(() => {
     const currentSerialized = JSON.stringify(initialPath);
