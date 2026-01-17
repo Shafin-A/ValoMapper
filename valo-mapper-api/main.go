@@ -14,6 +14,7 @@ import (
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/routes"
 	"valo-mapper-api/scheduler"
+	"valo-mapper-api/websocket"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -64,8 +65,11 @@ func main() {
 	cleanupScheduler := scheduler.NewCleanupScheduler(conn, 12*time.Hour)
 	cleanupScheduler.Start()
 
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	r := mux.NewRouter()
-	routes.SetupRoutes(r, firebaseAuth)
+	routes.SetupRoutes(r, firebaseAuth, hub)
 
 	rateLimiter := middleware.NewIPRateLimiter(rate.Limit(10), 20)
 
