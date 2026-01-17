@@ -39,9 +39,11 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import TreeViewDialogContent from "../strategies/tree-view-dialog-content";
 import { LineupDialog } from "./lineup-dialog";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { MapStageHandle } from "@/components/canvas";
 import { RefObject } from "react";
 import { Group } from "konva/lib/Group";
+import { useWebSocket } from "@/contexts/websocket-context";
 
 interface ToolsSectionProps {
   mapPosition: Vector2d;
@@ -69,11 +71,27 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     setEditingTextId,
     setImagesOnCanvas,
     saveCanvasState,
+    saveCanvasStateAsync,
     hasUnsavedChanges,
     isUpdatingLobby,
     isErrorUpdatingLobby,
     recenterCanvasCallback,
+    onUndoRedoCallback,
   } = useCanvas();
+
+  const { notifyTextAdded, notifyImageAdded } = useCollaborativeCanvas();
+
+  const { users } = useWebSocket();
+
+  const handleUndo = () => {
+    undo();
+    setTimeout(() => onUndoRedoCallback.current?.(), 50);
+  };
+
+  const handleRedo = () => {
+    redo();
+    setTimeout(() => onUndoRedoCallback.current?.(), 50);
+  };
 
   const handleDrawPressedChange = (pressed: boolean, tool: Tool) => {
     setIsDeleteSettingsOpen(false);
@@ -89,9 +107,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     setIsDeleteSettingsOpen(pressed);
   };
 
-  const handleLineupConfirm = (agentName: string, abilityName: string) => {
-    // TODO: Implement lineup logic
-    console.log("Lineup confirmed:", { agentName, abilityName });
+  const handleLineupConfirm = () => {
     setOpenLineupDialog(false);
   };
 
@@ -103,17 +119,17 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     setEditingTextId(null);
     setIsDrawMode(false);
 
-    setTextsOnCanvas((prev) => [
-      ...prev,
-      {
-        id: getNextId("text"),
-        text: "",
-        x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-        y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-        width: 200,
-        height: 60,
-      },
-    ]);
+    const newText = {
+      id: getNextId("text"),
+      text: "",
+      x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+      y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+      width: 200,
+      height: 60,
+    };
+
+    setTextsOnCanvas((prev) => [...prev, newText]);
+    notifyTextAdded(newText);
   };
 
   const handleImageUpload = () => {
@@ -148,14 +164,16 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     stageHandle.handleDragMove();
   }, [stageRef]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         const maxSize = 500;
         let width = img.width;
         let height = img.height;
@@ -168,17 +186,21 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
           height = maxSize;
         }
 
-        setImagesOnCanvas((prev) => [
-          ...prev,
-          {
-            id: getNextId("image"),
-            src: e.target?.result as string,
-            x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-            y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-            width,
-            height,
-          },
-        ]);
+        const newImage = {
+          id: getNextId("image"),
+          src: e.target?.result as string,
+          x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+          y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+          width,
+          height,
+        };
+
+        setImagesOnCanvas((prev) => [...prev, newImage]);
+
+        if (users.length > 1) {
+          await saveCanvasStateAsync();
+        }
+        notifyImageAdded();
       };
       img.src = e.target?.result as string;
     };
@@ -393,7 +415,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={undo}
+                onClick={handleUndo}
                 disabled={!canUndo}
                 variant="ghost"
                 size="lg"
@@ -408,7 +430,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={redo}
+                onClick={handleRedo}
                 disabled={!canRedo}
                 variant="ghost"
                 size="lg"

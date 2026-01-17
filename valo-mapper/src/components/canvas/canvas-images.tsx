@@ -1,4 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useImageTransform } from "@/hooks/canvas";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
@@ -27,6 +28,8 @@ export const CanvasImages = ({
     setHoveredElementId,
     selectedCanvasIcon,
   } = useCanvas();
+
+  const { notifyImageMoved, notifyImageRemoved } = useCollaborativeCanvas();
 
   const {
     imageNodeRefs,
@@ -81,9 +84,26 @@ export const CanvasImages = ({
         x={imageItem.x}
         y={imageItem.y}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef, imageNode)}
-        onDragEnd={(e) =>
-          handleDragEnd(e, imageItem, setImagesOnCanvas, deleteGroupRef)
-        }
+        onDragEnd={(e) => {
+          handleDragEnd(
+            e,
+            imageItem,
+            setImagesOnCanvas,
+            deleteGroupRef,
+            undefined,
+            undefined,
+            undefined,
+            notifyImageRemoved,
+            (movedItem) =>
+              notifyImageMoved({
+                id: movedItem.id,
+                x: movedItem.x,
+                y: movedItem.y,
+                width: movedItem.width,
+                height: movedItem.height,
+              })
+          );
+        }}
         onMouseEnter={(e) => handleImageMouseEnter(e, imageItem.id)}
         onMouseLeave={(e) => handleImageMouseLeaveInternal(e)}
         onTap={() => handleImageClick(imageItem.id)}

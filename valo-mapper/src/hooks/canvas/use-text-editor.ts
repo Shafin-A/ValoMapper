@@ -1,11 +1,14 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import Konva from "konva";
 import { RefObject, useCallback, useRef } from "react";
 
 export const useTextEditor = (
   transformerRefs: RefObject<Map<string, Konva.Transformer>>
 ) => {
-  const { setTextsOnCanvas, isDrawMode, setEditingTextId } = useCanvas();
+  const { textsOnCanvas, setTextsOnCanvas, isDrawMode, setEditingTextId } =
+    useCanvas();
+  const { notifyTextUpdated } = useCollaborativeCanvas();
 
   const textRefs = useRef<Map<string, Konva.Text>>(new Map());
 
@@ -48,23 +51,31 @@ export const useTextEditor = (
       const textNode = textRefs.current.get(textId);
       if (!textNode) return;
 
-      setTextsOnCanvas((prev) =>
-        prev.map((item) =>
-          item.id === textId
-            ? { ...item, width: textNode.width(), height: textNode.height() }
-            : item
-        )
-      );
+      const textItem = textsOnCanvas.find((t) => t.id === textId);
+      if (textItem) {
+        const updatedText = {
+          ...textItem,
+          width: textNode.width(),
+          height: textNode.height(),
+        };
+        setTextsOnCanvas((prev) =>
+          prev.map((item) => (item.id === textId ? updatedText : item))
+        );
+        notifyTextUpdated(updatedText);
+      }
     },
-    [setTextsOnCanvas]
+    [setTextsOnCanvas, textsOnCanvas, notifyTextUpdated]
   );
 
   const handleTextChange = (textId: string, newText: string) => {
-    setTextsOnCanvas((prev) =>
-      prev.map((item) =>
-        item.id === textId ? { ...item, text: newText } : item
-      )
-    );
+    const textItem = textsOnCanvas.find((t) => t.id === textId);
+    if (textItem) {
+      const updatedText = { ...textItem, text: newText };
+      setTextsOnCanvas((prev) =>
+        prev.map((item) => (item.id === textId ? updatedText : item))
+      );
+      notifyTextUpdated(updatedText);
+    }
   };
 
   const handleTextEditComplete = useCallback(() => {

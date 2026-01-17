@@ -56,8 +56,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     const evt = {
@@ -105,8 +105,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -157,8 +157,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -199,8 +199,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -234,8 +234,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -266,8 +266,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -303,8 +303,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     const evt = {
@@ -342,8 +342,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -379,8 +379,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -416,8 +416,8 @@ describe("useCanvasContextMenu", () => {
         toolIcons,
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -455,8 +455,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -500,8 +500,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -544,8 +544,8 @@ describe("useCanvasContextMenu", () => {
         toolState,
         setToolIcons,
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -587,8 +587,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -630,8 +630,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -672,8 +672,8 @@ describe("useCanvasContextMenu", () => {
         toolState,
         setToolIcons,
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -721,8 +721,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -756,8 +756,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -793,8 +793,8 @@ describe("useCanvasContextMenu", () => {
         [],
         jest.fn(),
         [],
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {

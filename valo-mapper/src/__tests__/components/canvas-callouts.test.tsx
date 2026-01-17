@@ -43,7 +43,7 @@ describe("CanvasCallouts", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
     );
     mockGetMapCallouts.mockReturnValue(mockCalloutData);
   });
@@ -51,7 +51,7 @@ describe("CanvasCallouts", () => {
   describe("Visibility", () => {
     it("should render callouts when showCallouts is true", () => {
       const { container } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -65,7 +65,7 @@ describe("CanvasCallouts", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -79,7 +79,7 @@ describe("CanvasCallouts", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -90,7 +90,7 @@ describe("CanvasCallouts", () => {
       mockGetMapCallouts.mockReturnValue(undefined);
 
       const { container } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -101,7 +101,7 @@ describe("CanvasCallouts", () => {
   describe("Callout Rendering", () => {
     it("should render correct number of callouts", () => {
       const { container } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const labels = container.querySelectorAll('[data-testid="konva-label"]');
@@ -110,7 +110,7 @@ describe("CanvasCallouts", () => {
 
     it("should render callout labels with correct text", () => {
       const { container } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const texts = container.querySelectorAll('[data-testid="konva-text"]');
@@ -122,7 +122,7 @@ describe("CanvasCallouts", () => {
   describe("Map Side Handling", () => {
     it("should handle defense side positioning", () => {
       const { container } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -136,7 +136,7 @@ describe("CanvasCallouts", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -147,7 +147,7 @@ describe("CanvasCallouts", () => {
   describe("Transition Behavior", () => {
     it("should hide immediately when transition starts", () => {
       const { container, rerender } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       let group = container.querySelector('[data-testid="konva-group"]');
@@ -171,7 +171,7 @@ describe("CanvasCallouts", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container, rerender } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       let group = container.querySelector('[data-testid="konva-group"]');
@@ -213,7 +213,7 @@ describe("CanvasCallouts", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />
+        <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const labels = container.querySelectorAll('[data-testid="konva-label"]');

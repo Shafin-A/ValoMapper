@@ -1,5 +1,6 @@
 import { CanvasIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
 import { Group } from "react-konva";
@@ -19,6 +20,9 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
     selectedCanvasIcon,
   } = useCanvas();
 
+  const { notifyToolIconMoved, notifyToolIconRemoved } =
+    useCollaborativeCanvas();
+
   return toolIconsOnCanvas.map((toolIcon) => (
     <Group
       key={toolIcon.id}
@@ -36,9 +40,19 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
         draggable={!isDrawMode}
         isListening={!isDrawMode}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
-        onDragEnd={(e) =>
-          handleDragEnd(e, toolIcon, setToolIconsOnCanvas, deleteGroupRef)
-        }
+        onDragEnd={(e) => {
+          handleDragEnd(
+            e,
+            toolIcon,
+            setToolIconsOnCanvas,
+            deleteGroupRef,
+            undefined,
+            undefined,
+            undefined,
+            notifyToolIconRemoved,
+            notifyToolIconMoved
+          );
+        }}
         width={toolIcon.width}
         height={toolIcon.height}
         borderOpacity={0}

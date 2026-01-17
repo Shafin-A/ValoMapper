@@ -1,4 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useTextEditor } from "@/hooks/canvas";
 import { Group, Rect, Text, Transformer } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
@@ -26,6 +27,8 @@ export const CanvasTexts = ({
     setHoveredElementId,
     selectedCanvasIcon,
   } = useCanvas();
+
+  const { notifyTextUpdated, notifyTextRemoved } = useCollaborativeCanvas();
 
   const {
     textRefs,
@@ -59,9 +62,19 @@ export const CanvasTexts = ({
         }
         onMouseLeave={() => !selectedCanvasIcon && setHoveredElementId(null)}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef, textNode)}
-        onDragEnd={(e) =>
-          handleDragEnd(e, textItem, setTextsOnCanvas, deleteGroupRef)
-        }
+        onDragEnd={(e) => {
+          handleDragEnd(
+            e,
+            textItem,
+            setTextsOnCanvas,
+            deleteGroupRef,
+            undefined,
+            undefined,
+            undefined,
+            notifyTextRemoved,
+            notifyTextUpdated
+          );
+        }}
       >
         <Rect width={textItem.width} height={Math.max(60, textItem.height)} />
         <Text

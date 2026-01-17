@@ -1,9 +1,11 @@
 import { ContextMenuPopover } from "@/components/canvas/context-menu-popover";
+import { RemoteCursors } from "@/components/collaboration";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useWebSocket } from "@/contexts/websocket-context";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useEffect, useRef, forwardRef, useState } from "react";
+import { useEffect, useRef, forwardRef, useState, useCallback } from "react";
 import { Layer, Stage } from "react-konva";
 import { CanvasAbilities } from "./canvas-abilities";
 import { CanvasAgents } from "./canvas-agents";
@@ -44,6 +46,8 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       imagesOnCanvas,
     } = useCanvas();
 
+    const { sendCursorPosition, status: wsStatus } = useWebSocket();
+
     const stageRef = useRef<KonvaStage | null>(null);
     const [fullscreenImageSrc, setFullscreenImageSrc] = useState<string | null>(
       null
@@ -72,6 +76,21 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       currentLineRef,
       deleteGroupRef,
     } = useCanvasEvents(stageRef, scale);
+
+    const handleMouseMoveWithCursor = useCallback(() => {
+      handleStageMouseMove();
+
+      if (wsStatus === "connected" && stageRef.current) {
+        const pointer = stageRef.current.getPointerPosition();
+        if (pointer) {
+          const stagePos = stageRef.current.position();
+          const stageScale = stageRef.current.scaleX();
+          const x = (pointer.x - stagePos.x) / stageScale;
+          const y = (pointer.y - stagePos.y) / stageScale;
+          sendCursorPosition(x, y);
+        }
+      }
+    }, [handleStageMouseMove, wsStatus, sendCursorPosition]);
 
     useEffect(() => {
       if (forwardedRef) {
@@ -152,7 +171,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           onWheel={handleWheel}
           draggable={!isDrawMode}
           onDragMove={handleDragMove}
-          onMouseMove={handleStageMouseMove}
+          onMouseMove={handleMouseMoveWithCursor}
           onMouseDown={handleStageClick}
           onTouchStart={(e) => {
             handleTouchStart(e);
@@ -199,6 +218,9 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           <Layer isListening={isDrawMode}>
             <CanvasDrawLines currentLineRef={currentLineRef} />
             <DeleteZone deleteGroupRef={deleteGroupRef} />
+          </Layer>
+          <Layer isListening={false}>
+            <RemoteCursors scale={scale} />
           </Layer>
         </Stage>
 

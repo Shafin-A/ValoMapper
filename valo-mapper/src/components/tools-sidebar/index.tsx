@@ -6,12 +6,13 @@ import {
 } from "@/components/ui/sidebar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useSettings } from "@/contexts/settings-context";
 import { MAP_OPTIONS, MAP_SIZE, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MapOption } from "@/lib/types";
 import { Vector2d } from "konva/lib/types";
 import { AlertCircle, Loader2, Info } from "lucide-react";
-import { RefObject, Suspense } from "react";
+import { RefObject, Suspense, useEffect } from "react";
 import { useState } from "react";
 import { MapStageHandle } from "@/components/canvas";
 import { IconsSection } from "./icons-section";
@@ -65,10 +66,19 @@ export const ToolsSidebar = ({
     setShowUltOrbs,
     showSpawnBarriers,
     setShowSpawnBarriers,
+    notifyPhaseChangedCallback,
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
+  const { notifyPhaseChanged } = useCollaborativeCanvas();
   const [mapSettingsOpen, setMapSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    notifyPhaseChangedCallback.current = notifyPhaseChanged;
+    return () => {
+      notifyPhaseChangedCallback.current = null;
+    };
+  }, [notifyPhaseChanged, notifyPhaseChangedCallback]);
 
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
@@ -166,6 +176,7 @@ export const ToolsSidebar = ({
     }
 
     switchToPhase(newIndex);
+    notifyPhaseChanged(newIndex);
     setPendingPhaseIndex(null);
   };
 

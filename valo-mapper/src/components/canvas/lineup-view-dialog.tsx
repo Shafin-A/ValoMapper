@@ -12,6 +12,8 @@ import { LineupFullscreenViewer } from "../tools-sidebar/lineup-dialog/lineup-fu
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import { useWebSocket } from "@/contexts/websocket-context";
 import { getYoutubeEmbedUrl } from "@/lib/utils";
 import { LineupViewContent } from "./lineup-view-content";
 import { LineupEditContent } from "./lineup-edit-content";
@@ -27,7 +29,12 @@ export const LineupViewDialog = ({
   isOpen,
   onClose,
 }: LineupViewDialogProps) => {
-  const { setConnectingLines } = useCanvas();
+  const { setConnectingLines, saveCanvasStateAsync } = useCanvas();
+  const { notifyConnLineUpdated, notifyLineupWithImagesAdded } =
+    useCollaborativeCanvas();
+
+  const { users } = useWebSocket();
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -87,20 +94,32 @@ export const LineupViewDialog = ({
     setIsEditMode(false);
   };
 
-  const handleSaveEdit = () => {
-    setConnectingLines((prev) =>
-      prev.map((l) =>
-        l.id === line.id
-          ? {
-              ...l,
-              uploadedImages: editImages,
-              youtubeLink: editYoutubeLink,
-              notes: editNotes,
-              strokeColor: editLineColor,
-            }
-          : l
-      )
-    );
+  const handleSaveEdit = async () => {
+    const updatedLine = {
+      ...line,
+      uploadedImages: editImages,
+      youtubeLink: editYoutubeLink,
+      notes: editNotes,
+      strokeColor: editLineColor,
+    };
+
+    const hasImages = editImages.length > 0;
+
+    if (hasImages) {
+      setConnectingLines((prev) =>
+        prev.map((l) => (l.id === line.id ? updatedLine : l))
+      );
+      if (users.length > 1) {
+        await saveCanvasStateAsync();
+      }
+      notifyLineupWithImagesAdded();
+    } else {
+      setConnectingLines((prev) =>
+        prev.map((l) => (l.id === line.id ? updatedLine : l))
+      );
+      notifyConnLineUpdated(updatedLine);
+    }
+
     setDisplayImages(editImages);
     setDisplayYoutubeLink(editYoutubeLink);
     setDisplayNotes(editNotes);

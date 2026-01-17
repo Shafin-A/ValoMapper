@@ -10,12 +10,14 @@ import { Button } from "@/components/ui/button";
 import { AGENTS } from "@/lib/consts";
 import { getNextId } from "@/lib/utils";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { Vector2d } from "konva/lib/types";
 import { MAP_SIZE } from "@/lib/consts";
 import { useLineupForm } from "./lineup-dialog/use-lineup-form";
 import { LineupFormFields } from "./lineup-dialog/lineup-form-fields";
 import { LineupFullscreenViewer } from "./lineup-dialog/lineup-fullscreen-viewer";
+import { useWebSocket } from "@/contexts/websocket-context";
 
 interface LineupDialogProps {
   onConfirm?: (agentName: string, abilityName: string) => void;
@@ -36,7 +38,15 @@ export const LineupDialog = ({
     setAbilitiesOnCanvas,
     setConnectingLines,
     isAlly,
+    saveCanvasStateAsync,
   } = useCanvas();
+
+  const {
+    notifyAgentAdded,
+    notifyAbilityAdded,
+    notifyConnLineAdded,
+    notifyLineupWithImagesAdded,
+  } = useCollaborativeCanvas();
 
   const {
     selectedAgent,
@@ -56,7 +66,9 @@ export const LineupDialog = ({
     isFormValid,
   } = useLineupForm();
 
-  const handleConfirm = () => {
+  const { users } = useWebSocket();
+
+  const handleConfirm = async () => {
     if (!selectedAgent || !selectedAbility) return;
 
     const agent = AGENTS.find((a) => a.name === selectedAgent);
@@ -74,43 +86,51 @@ export const LineupDialog = ({
     const abilityX = agentX + 150;
     const abilityY = agentY;
 
-    setAgentsOnCanvas((prev) => [
-      ...prev,
-      {
-        id: agentId,
-        name: agent.name,
-        role: agent.role,
-        isAlly,
-        x: agentX,
-        y: agentY,
-      },
-    ]);
+    const newAgent = {
+      id: agentId,
+      name: agent.name,
+      role: agent.role,
+      isAlly,
+      x: agentX,
+      y: agentY,
+    };
 
-    setAbilitiesOnCanvas((prev) => [
-      ...prev,
-      {
-        id: abilityId,
-        name: abilityConfig.name,
-        action: abilityConfig.action,
-        isAlly,
-        x: abilityX,
-        y: abilityY,
-      },
-    ]);
+    const newAbility = {
+      id: abilityId,
+      name: abilityConfig.name,
+      action: abilityConfig.action,
+      isAlly,
+      x: abilityX,
+      y: abilityY,
+    };
 
-    setConnectingLines((prev) => [
-      ...prev,
-      {
-        id: getNextId("ability"),
-        fromId: agentId,
-        toId: abilityId,
-        strokeColor: lineColor,
-        strokeWidth: 8,
-        uploadedImages,
-        youtubeLink,
-        notes,
-      },
-    ]);
+    const newConnectingLine = {
+      id: getNextId("ability"),
+      fromId: agentId,
+      toId: abilityId,
+      strokeColor: lineColor,
+      strokeWidth: 8,
+      uploadedImages,
+      youtubeLink,
+      notes,
+    };
+
+    const hasImages = uploadedImages.length > 0;
+
+    setAgentsOnCanvas((prev) => [...prev, newAgent]);
+    setAbilitiesOnCanvas((prev) => [...prev, newAbility]);
+    setConnectingLines((prev) => [...prev, newConnectingLine]);
+
+    if (hasImages) {
+      if (users.length > 1) {
+        await saveCanvasStateAsync();
+      }
+      notifyLineupWithImagesAdded();
+    } else {
+      notifyAgentAdded(newAgent);
+      notifyAbilityAdded(newAbility);
+      notifyConnLineAdded(newConnectingLine);
+    }
 
     if (onConfirm) {
       onConfirm(selectedAgent, selectedAbility);

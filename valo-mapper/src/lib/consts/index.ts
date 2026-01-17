@@ -6,6 +6,7 @@ export { MAP_OPTIONS } from "./misc/consts";
 export { SIDEBAR_WIDTH } from "./misc/consts";
 export { SCALE_FACTOR } from "./misc/consts";
 export { MAP_SIZE } from "./misc/consts";
+export { VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "./misc/consts";
 export { MAX_ZOOM_SCALE } from "./misc/consts";
 export { MIN_ZOOM_SCALE } from "./misc/consts";
 export { ROLE_ICONS } from "./misc/consts";

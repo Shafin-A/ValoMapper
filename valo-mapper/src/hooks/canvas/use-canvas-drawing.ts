@@ -13,6 +13,7 @@ import {
   useCallback,
   useRef,
 } from "react";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
 export const useCanvasDrawing = (
   getWorldPointerPosition: () => Vector2d | null,
@@ -24,6 +25,7 @@ export const useCanvasDrawing = (
   setDrawLines: Dispatch<SetStateAction<DrawLine[]>>,
   setCurrentStroke: Dispatch<SetStateAction<DrawLine | null>>
 ) => {
+  const { notifyLineDrawn, notifyLineRemoved } = useCollaborativeCanvas();
   const drawingBufferRef = useRef<Vector2d[]>([]);
   const currentLineRef = useRef<Konva.Line | Konva.Arrow>(null);
   const erasedLinesRef = useRef<Set<number>>(new Set());
@@ -74,6 +76,12 @@ export const useCanvasDrawing = (
           if (newIntersections.length > 0) {
             newIntersections.forEach((index) => {
               erasedLinesRef.current.add(index);
+
+              const removedLine = drawLines[index];
+
+              if (removedLine) {
+                notifyLineRemoved(removedLine.id);
+              }
             });
 
             setDrawLines((prev) =>
@@ -101,6 +109,7 @@ export const useCanvasDrawing = (
     tool,
     drawLines,
     setDrawLines,
+    notifyLineRemoved,
   ]);
 
   const handleMouseUp = useCallback(() => {
@@ -121,11 +130,13 @@ export const useCanvasDrawing = (
         } else {
           if (doesEraserIntersect(drawingBufferRef.current, drawLines)) {
             setDrawLines((prev) => [...prev, finalStroke]);
+            notifyLineDrawn(finalStroke);
           }
           setCurrentStroke(null);
         }
       } else {
         setDrawLines((prev) => [...prev, finalStroke]);
+        notifyLineDrawn(finalStroke);
         setCurrentStroke(null);
       }
 
@@ -140,6 +151,7 @@ export const useCanvasDrawing = (
     setCurrentStroke,
     setDrawLines,
     eraserSettings,
+    notifyLineDrawn,
   ]);
 
   return {

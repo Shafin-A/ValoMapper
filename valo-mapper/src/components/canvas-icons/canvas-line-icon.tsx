@@ -20,6 +20,10 @@ interface CanvasLineIconProps extends CanvasIconProps {
   rotation?: number;
   onRotationChange?: (rotation: number) => void;
   onLengthChange?: (length: number) => void;
+  onInteractionEnd?: (data: {
+    currentRotation: number;
+    currentLength: number;
+  }) => void;
   showRotationHandle?: boolean;
   rotationHandleRadius?: number;
   rotationHandleColor?: string;
@@ -58,6 +62,7 @@ export const CanvasLineIcon = ({
   rotation = 0,
   onRotationChange,
   onLengthChange,
+  onInteractionEnd,
   showRotationHandle = true,
   rotationHandleRadius = 12,
   rotationHandleColor = "#e54646",
@@ -223,6 +228,11 @@ export const CanvasLineIcon = ({
           });
         }
 
+        onInteractionEnd?.({
+          currentRotation: rotationRef.current,
+          currentLength: lengthRef.current,
+        });
+
         stage.off(".interaction");
       };
 
@@ -239,6 +249,7 @@ export const CanvasLineIcon = ({
       isListening,
       maxLength,
       minLength,
+      onInteractionEnd,
       onLengthChange,
       onRotationChange,
       setAbilitiesOnCanvas,

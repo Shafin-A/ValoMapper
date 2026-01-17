@@ -1,4 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import {
   handleMouseOutDefaultCursor,
   handleMouseOverGrabCursor,
@@ -9,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useImageTransform = () => {
   const { imagesOnCanvas, setImagesOnCanvas, editingTextId } = useCanvas();
+  const { notifyImageMoved } = useCollaborativeCanvas();
 
   const [hoveredImageId, setHoveredImageId] = useState<string | null>(null);
 
@@ -42,19 +44,26 @@ export const useImageTransform = () => {
         scaleY: 1,
       });
 
-      setImagesOnCanvas((prev) =>
-        prev.map((item) =>
-          item.id === imageId
-            ? {
-                ...item,
-                width: newWidth,
-                height: newHeight,
-              }
-            : item
-        )
-      );
+      const imageItem = imagesOnCanvas.find((i) => i.id === imageId);
+      if (imageItem) {
+        const updatedImage = {
+          ...imageItem,
+          width: newWidth,
+          height: newHeight,
+        };
+        setImagesOnCanvas((prev) =>
+          prev.map((item) => (item.id === imageId ? updatedImage : item))
+        );
+        notifyImageMoved({
+          id: imageId,
+          x: imageItem.x,
+          y: imageItem.y,
+          width: newWidth,
+          height: newHeight,
+        });
+      }
     },
-    [setImagesOnCanvas]
+    [setImagesOnCanvas, imagesOnCanvas, notifyImageMoved]
   );
 
   const handleImageMouseEnter = (

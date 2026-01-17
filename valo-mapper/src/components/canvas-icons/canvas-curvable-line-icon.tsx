@@ -21,6 +21,7 @@ interface CanvasCurvableLineIconProps extends CanvasIconProps {
   handleStrokeColor?: string;
   initialPath?: Vector2d[];
   rotation?: number;
+  onInteractionEnd?: (data: { currentPath: Vector2d[] }) => void;
 }
 
 export const CanvasCurvableLineIcon = ({
@@ -48,6 +49,7 @@ export const CanvasCurvableLineIcon = ({
   strokeWidth,
   initialPath = [],
   rotation = 0,
+  onInteractionEnd,
 }: CanvasCurvableLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const handleRef = useRef<Konva.Circle>(null);
@@ -145,8 +147,10 @@ export const CanvasCurvableLineIcon = ({
           return copy;
         });
       }
+
+      onInteractionEnd?.({ currentPath: finalPath });
     },
-    [id, setAbilitiesOnCanvas]
+    [id, onInteractionEnd, setAbilitiesOnCanvas]
   );
 
   const handlePathDrawing = useCallback(

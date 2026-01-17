@@ -9,6 +9,7 @@ import {
 import { ChevronDown, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapOption, MapSide } from "@/lib/types";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
 interface MapSelectProps {
   mapOptions: MapOption[];
@@ -37,15 +38,20 @@ export const MapSelect = ({
   onMapRotate,
   disabled = false,
 }: MapSelectProps) => {
+  const { notifyMapChanged, notifySideChanged } = useCollaborativeCanvas();
+
   const handleMapSelect = (option: MapOption) => {
     if (disabled) return;
     setSelectedMap(option);
+    notifyMapChanged(option);
     onMapSelect?.(option);
   };
 
   const handleRotationToggle = () => {
     if (disabled) return;
-    setMapSide((prev) => (prev === "attack" ? "defense" : "attack"));
+    const newSide = mapSide === "attack" ? "defense" : "attack";
+    setMapSide(newSide);
+    notifySideChanged(newSide);
     onMapRotate?.();
   };
 

@@ -20,6 +20,10 @@ interface CanvasDoubleLineIconProps extends CanvasIconProps {
   rotation?: number;
   onRotationChange?: (rotation: number) => void;
   onLengthChange?: (length: number) => void;
+  onInteractionEnd?: (data: {
+    currentRotation: number;
+    currentLength: number;
+  }) => void;
   showRotationHandle?: boolean;
   rotationHandleRadius?: number;
   rotationHandleColor?: string;
@@ -59,6 +63,7 @@ export const CanvasDoubleLineIcon = ({
   rotation = 0,
   onRotationChange,
   onLengthChange,
+  onInteractionEnd,
   showRotationHandle = true,
   rotationHandleRadius = 12,
   rotationHandleColor = "#e54646",
@@ -224,6 +229,11 @@ export const CanvasDoubleLineIcon = ({
           });
         }
 
+        onInteractionEnd?.({
+          currentRotation: rotationRef.current,
+          currentLength: lengthRef.current,
+        });
+
         stage.off(".interaction");
       };
 
@@ -241,6 +251,7 @@ export const CanvasDoubleLineIcon = ({
       minLength,
       maxLength,
       onLengthChange,
+      onInteractionEnd,
       setAbilitiesOnCanvas,
       id,
     ]

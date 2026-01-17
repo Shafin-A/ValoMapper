@@ -10,6 +10,7 @@ import {
   useCanvasDrawing,
   useCanvasZoom,
 } from "@/hooks/canvas";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
 export const useCanvasEvents = (
   stageRef: React.RefObject<Stage | null>,
@@ -36,9 +37,12 @@ export const useCanvasEvents = (
     setConnectingLines,
     tool,
     setCurrentStroke,
+    saveCanvasStateAsync,
   } = useCanvas();
 
   const { drawSettings, eraserSettings } = useSettings();
+
+  const { notifyAgentAdded, notifyAbilityAdded } = useCollaborativeCanvas();
 
   const frameRef = useRef<number | null>(null);
 
@@ -119,7 +123,8 @@ export const useCanvasEvents = (
     toolIconsOnCanvas,
     setToolIconsOnCanvas,
     connectingLines,
-    setConnectingLines
+    setConnectingLines,
+    saveCanvasStateAsync
   );
 
   const handleIconPlacement = useCallback(
@@ -141,31 +146,49 @@ export const useCanvasEvents = (
       );
 
       if (isAgent(selectedCanvasIcon)) {
+        const newAgent = {
+          ...selectedCanvasIcon,
+          id: newId,
+          x: pos.x,
+          y: pos.y,
+          isAlly:
+            agentsOnCanvas.find((a) => a.id === TEMP_DRAG_ID)?.isAlly ?? true,
+        };
         setAgentsOnCanvas((prev) =>
-          prev.map((agent) =>
-            agent.id === TEMP_DRAG_ID
-              ? { ...agent, id: newId, x: pos.x, y: pos.y }
-              : agent
-          )
+          prev.map((agent) => (agent.id === TEMP_DRAG_ID ? newAgent : agent))
         );
+        notifyAgentAdded(newAgent);
       } else {
+        const tempAbility = abilitiesOnCanvas.find(
+          (a) => a.id === TEMP_DRAG_ID
+        );
+        const newAbility = {
+          ...selectedCanvasIcon,
+          id: newId,
+          x: pos.x,
+          y: pos.y,
+          isAlly: tempAbility?.isAlly ?? true,
+        };
         setAbilitiesOnCanvas((prev) =>
           prev.map((ability) =>
-            ability.id === TEMP_DRAG_ID
-              ? { ...ability, id: newId, x: pos.x, y: pos.y }
-              : ability
+            ability.id === TEMP_DRAG_ID ? newAbility : ability
           )
         );
+        notifyAbilityAdded(newAbility);
       }
 
       setSelectedCanvasIcon(null);
     },
     [
       selectedCanvasIcon,
+      agentsOnCanvas,
+      abilitiesOnCanvas,
       setAbilitiesOnCanvas,
       setAgentsOnCanvas,
       setSelectedCanvasIcon,
       stageRef,
+      notifyAgentAdded,
+      notifyAbilityAdded,
     ]
   );
 

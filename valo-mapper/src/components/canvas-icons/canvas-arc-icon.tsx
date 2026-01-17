@@ -14,6 +14,7 @@ interface CanvasArcIconProps extends CanvasIconProps {
   circleStrokeWidth?: number;
   fill: string;
   rotation?: number;
+  onInteractionEnd?: (data: { currentRotation: number }) => void;
   showRotationHandle?: boolean;
   rotationHandleDistance?: number;
   rotationHandleRadius?: number;
@@ -44,6 +45,7 @@ export const CanvasArcIcon = ({
   height,
   fov,
   rotation = 0,
+  onInteractionEnd,
   showRotationHandle = true,
   rotationHandleDistance = 70,
   rotationHandleRadius = 12,
@@ -166,6 +168,10 @@ export const CanvasArcIcon = ({
           });
         }
 
+        onInteractionEnd?.({
+          currentRotation: rotationRef.current,
+        });
+
         stage.container().style.cursor = "default";
 
         stage.off(".interaction");
@@ -177,7 +183,7 @@ export const CanvasArcIcon = ({
       stage.on("touchmove.interaction", handleInteractionMove);
       stage.on("touchend.interaction", handleInteractionEnd);
     },
-    [id, isListening, setAbilitiesOnCanvas]
+    [id, isListening, onInteractionEnd, setAbilitiesOnCanvas]
   );
 
   const radians = (currentRotation * Math.PI) / 180;

@@ -1,6 +1,7 @@
 import { CanvasIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { getAgentImgSrc, handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
 import { Group } from "react-konva";
@@ -24,6 +25,7 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
+  const { notifyAgentMoved, notifyAgentRemoved } = useCollaborativeCanvas();
 
   return agentsOnCanvas.map((agent) => (
     <Group
@@ -40,7 +42,7 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
         draggable={!isDrawMode}
         isListening={!isDrawMode}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
-        onDragEnd={(e) =>
+        onDragEnd={(e) => {
           handleDragEnd(
             e,
             agent,
@@ -51,9 +53,11 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
             (connectedId) =>
               setAbilitiesOnCanvas((prev) =>
                 prev.filter((a) => a.id !== connectedId)
-              )
-          )
-        }
+              ),
+            notifyAgentRemoved,
+            notifyAgentMoved
+          );
+        }}
         width={agentsSettings.scale}
         height={agentsSettings.scale}
         borderOpacity={agentsSettings.borderOpacity}

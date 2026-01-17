@@ -63,7 +63,7 @@ const createStageMock = (overrides: Partial<StageMock> = {}): StageMock => ({
 });
 
 const createCanvasContext = (
-  overrides: Partial<ReturnType<typeof mockUseCanvas>> = {}
+  overrides: Partial<ReturnType<typeof mockUseCanvas>> = {},
 ) =>
   ({
     selectedCanvasIcon: null,
@@ -121,7 +121,7 @@ const createCanvasContext = (
     setHoveredElementId: jest.fn(),
     recenterCanvasCallback: { current: null },
     ...overrides,
-  } as unknown as ReturnType<typeof useCanvas>);
+  }) as unknown as ReturnType<typeof useCanvas>;
 
 describe("useCanvasEvents", () => {
   const handleDrawingMock = jest.fn();
@@ -197,7 +197,7 @@ describe("useCanvasEvents", () => {
     mockUseCanvas.mockReturnValue(
       createCanvasContext({
         isDrawMode: true,
-      })
+      }),
     );
 
     const stageRef = {
@@ -238,7 +238,7 @@ describe("useCanvasEvents", () => {
         setSelectedCanvasIcon,
         agentsOnCanvas: agentsState,
         setAgentsOnCanvas,
-      })
+      }),
     );
 
     const stageRef = {
@@ -286,7 +286,7 @@ describe("useCanvasEvents", () => {
         setSelectedCanvasIcon,
         agentsOnCanvas: agentsState,
         setAgentsOnCanvas,
-      })
+      }),
     );
 
     const stageRef = {

@@ -217,7 +217,9 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
   deleteGroupRef?: React.RefObject<Konva.Group | null>,
   connectingLines?: ConnectingLine[],
   setConnectingLines?: Dispatch<SetStateAction<ConnectingLine[]>>,
-  onDeleteConnected?: (connectedId: string) => void
+  onDeleteConnected?: (connectedId: string) => void,
+  onItemRemoved?: (id: string) => void,
+  onItemMoved?: (item: T) => void
 ) => {
   const node = e.target;
   const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
@@ -248,6 +250,8 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
     }
 
     setIconsOnCanvas((prev) => prev.filter((item) => item.id !== icon.id));
+
+    onItemRemoved?.(icon.id);
     return;
   }
 
@@ -262,6 +266,8 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
     updatedItems[index] = { ...updatedItems[index], x: newX, y: newY };
     return updatedItems;
   });
+
+  onItemMoved?.({ ...icon, x: newX, y: newY } as T);
 };
 
 export const handleDragMove = (

@@ -17,6 +17,7 @@ import { toast } from "sonner";
 interface UseKeyboardShortcutsProps {
   undo: () => void;
   redo: () => void;
+  onUndoRedo?: () => void;
   tool: Tool;
   setTool: Dispatch<SetStateAction<Tool>>;
   isDrawMode: boolean;
@@ -27,6 +28,7 @@ interface UseKeyboardShortcutsProps {
   phases: PhaseState[];
   currentPhaseIndex: number;
   switchToPhase: (index: number) => void;
+  notifyPhaseChanged?: (phaseIndex: number) => void;
   hoveredElementId: string | null;
   setHoveredElementId: Dispatch<SetStateAction<string | null>>;
   setImagesOnCanvas: Dispatch<SetStateAction<ImageCanvas[]>>;
@@ -51,6 +53,7 @@ const isInputElement = (target: HTMLElement | null): boolean => {
 export const useKeyboardShortcuts = ({
   undo,
   redo,
+  onUndoRedo,
   tool,
   setTool,
   isDrawMode,
@@ -61,6 +64,7 @@ export const useKeyboardShortcuts = ({
   phases,
   currentPhaseIndex,
   switchToPhase,
+  notifyPhaseChanged,
   hoveredElementId,
   setHoveredElementId,
   setImagesOnCanvas,
@@ -91,6 +95,7 @@ export const useKeyboardShortcuts = ({
         } else {
           undo();
         }
+        setTimeout(() => onUndoRedo?.(), 50);
         e.preventDefault();
         return true;
       }
@@ -110,13 +115,17 @@ export const useKeyboardShortcuts = ({
 
     const handlePhaseNavigation = (key: string, e: KeyboardEvent): boolean => {
       if (key === "a" && currentPhaseIndex > 0) {
-        switchToPhase(currentPhaseIndex - 1);
+        const newIndex = currentPhaseIndex - 1;
+        switchToPhase(newIndex);
+        notifyPhaseChanged?.(newIndex);
         e.preventDefault();
         return true;
       }
 
       if (key === "d" && currentPhaseIndex < phases.length - 1) {
-        switchToPhase(currentPhaseIndex + 1);
+        const newIndex = currentPhaseIndex + 1;
+        switchToPhase(newIndex);
+        notifyPhaseChanged?.(newIndex);
         e.preventDefault();
         return true;
       }
@@ -285,6 +294,7 @@ export const useKeyboardShortcuts = ({
   }, [
     undo,
     redo,
+    onUndoRedo,
     setIsDrawMode,
     tool,
     setTool,
@@ -299,6 +309,7 @@ export const useKeyboardShortcuts = ({
     phases,
     currentPhaseIndex,
     switchToPhase,
+    notifyPhaseChanged,
     hoveredElementId,
     setHoveredElementId,
     setImagesOnCanvas,

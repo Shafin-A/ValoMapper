@@ -4,6 +4,7 @@ import { TourProviderWrapper } from "@/components/providers/tour-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { CanvasProvider } from "@/contexts/canvas-context";
 import { SettingsProvider } from "@/contexts/settings-context";
+import { WebSocketProvider } from "@/contexts/websocket-context";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -42,7 +43,9 @@ export default function RootLayout({
           <QueryProvider>
             <SettingsProvider>
               <TourProviderWrapper>
-                <CanvasProvider>{children}</CanvasProvider>
+                <CanvasProvider>
+                  <WebSocketProvider>{children}</WebSocketProvider>
+                </CanvasProvider>
                 <Toaster richColors closeButton />
               </TourProviderWrapper>
             </SettingsProvider>

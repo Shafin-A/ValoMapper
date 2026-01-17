@@ -3,6 +3,7 @@
 import { CircleQuestionMark, SidebarIcon, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ConnectionStatus, UserAvatars } from "@/components/collaboration";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { useWebSocket } from "@/contexts/websocket-context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
@@ -44,6 +46,7 @@ export const SiteHeader = ({
   const { logout } = useFirebaseAuth();
   const { data: user, isLoading } = useUser();
   const pathname = usePathname();
+  const { users } = useWebSocket();
 
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
@@ -66,6 +69,13 @@ export const SiteHeader = ({
             </h1>
           </Link>
         </div>
+
+        {users.length > 1 && (
+          <div className="flex items-center gap-3">
+            <UserAvatars />
+            <ConnectionStatus />
+          </div>
+        )}
 
         <div className="flex items-center gap-2 h-full">
           <Dialog>

@@ -6,15 +6,15 @@ import { apiFetch } from "@/lib/api";
 export const useUpdateLobby = (lobbyCode: string) => {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending, isError } = useMutation({
+  const { mutate, mutateAsync, isPending, isError } = useMutation({
     mutationFn: (canvasState: CanvasState) =>
       apiFetch<Lobby>(`/api/lobbies/${lobbyCode}`, {
         method: "PATCH",
         body: JSON.stringify({ canvasState }),
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Canvas synced!");
-      queryClient.invalidateQueries({ queryKey: ["lobby", lobbyCode] });
+      queryClient.setQueryData(["lobby", lobbyCode], data);
     },
     onError: (error) => {
       toast.error(`Failed to sync canvas: ${error.message}`);
@@ -23,6 +23,7 @@ export const useUpdateLobby = (lobbyCode: string) => {
 
   return {
     mutate,
+    mutateAsync,
     isPending,
     isError,
   };

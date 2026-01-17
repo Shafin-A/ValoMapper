@@ -1,4 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { MAP_SIZE, WEAPONS } from "@/lib/consts";
 import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
@@ -23,22 +24,23 @@ interface IconsSectionProps {
 
 export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
   const { setEditingTextId, setIsDrawMode, setToolIconsOnCanvas } = useCanvas();
+  const { notifyToolIconAdded } = useCollaborativeCanvas();
 
   const handleAddToolIcon = (name: string, width: number, height: number) => {
     setEditingTextId(null);
     setIsDrawMode(false);
 
-    setToolIconsOnCanvas((prev) => [
-      ...prev,
-      {
-        id: getNextId("text"),
-        x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-        y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-        name,
-        width,
-        height,
-      },
-    ]);
+    const newToolIcon = {
+      id: getNextId("text"),
+      x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+      y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+      name,
+      width,
+      height,
+    };
+
+    setToolIconsOnCanvas((prev) => [...prev, newToolIcon]);
+    notifyToolIconAdded(newToolIcon);
   };
 
   return (

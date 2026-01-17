@@ -20,10 +20,13 @@ npm run test:coverage
 ## What's Mocked
 
 ### Konva (Canvas Library)
+
 All react-konva components are mocked in `jest.setup.ts`:
+
 - Stage, Layer, Image, Rect, Circle, Line, Text, Group, Transformer
 
 ### Other Mocks
+
 - `use-image` hook (for loading images)
 - Next.js router (`next/navigation`)
 - Firebase auth and app
@@ -33,6 +36,7 @@ All react-konva components are mocked in `jest.setup.ts`:
 ## Testing Strategy
 
 ### ✅ DO Test
+
 - **Business Logic**: State management, data transformations
 - **Hooks**: Custom hooks in isolation
 - **Utility Functions**: Helper functions in `lib/utils.ts`
@@ -41,6 +45,7 @@ All react-konva components are mocked in `jest.setup.ts`:
 - **API Integration**: Mock API calls and test responses
 
 ### ❌ DON'T Test
+
 - **UI Components**: shadcn/ui components (already well-tested)
 - **Exact pixel positions**: Canvas positioning
 - **Konva internals**: Library rendering logic
@@ -50,123 +55,128 @@ All react-konva components are mocked in `jest.setup.ts`:
 ## Example Tests
 
 ### Testing a Hook
-```typescript
-import { renderHook, act } from '@testing-library/react'
-import { useSidebarState } from '@/hooks/use-sidebar-state'
 
-test('should toggle sidebar state', () => {
-  const { result } = renderHook(() => useSidebarState())
-  
+```typescript
+import { renderHook, act } from "@testing-library/react";
+import { useSidebarState } from "@/hooks/use-sidebar-state";
+
+test("should toggle sidebar state", () => {
+  const { result } = renderHook(() => useSidebarState());
+
   act(() => {
-    result.current.setLeftSidebarOpen(false)
-  })
-  
-  expect(result.current.leftSidebarOpen).toBe(false)
-})
+    result.current.setLeftSidebarOpen(false);
+  });
+
+  expect(result.current.leftSidebarOpen).toBe(false);
+});
 ```
 
 ### Testing Utility Functions
+
 ```typescript
-import { cn, mToPixels, isAgent } from '@/lib/utils'
-import { PIXELS_PER_METER } from '@/lib/consts'
+import { cn, mToPixels, isAgent } from "@/lib/utils";
+import { PIXELS_PER_METER } from "@/lib/consts";
 
-test('should merge class names', () => {
-  expect(cn('class1', 'class2')).toBe('class1 class2')
-})
+test("should merge class names", () => {
+  expect(cn("class1", "class2")).toBe("class1 class2");
+});
 
-test('should convert meters to pixels', () => {
-  expect(mToPixels(1)).toBe(PIXELS_PER_METER)
-})
+test("should convert meters to pixels", () => {
+  expect(mToPixels(1)).toBe(PIXELS_PER_METER);
+});
 
-test('should validate agent objects', () => {
-  expect(isAgent({ name: 'Jett', role: 'Duelist' })).toBe(true)
-  expect(isAgent({})).toBe(false)
-})
+test("should validate agent objects", () => {
+  expect(isAgent({ name: "Jett", role: "Duelist" })).toBe(true);
+  expect(isAgent({})).toBe(false);
+});
 ```
 
 ### Testing with Timers (debounce, etc)
-```typescript
-import { debounce } from '@/lib/utils'
 
-test('should debounce function calls', () => {
-  jest.useFakeTimers()
-  
-  const func = jest.fn()
-  const debouncedFunc = debounce(func, 100)
-  
-  debouncedFunc()
-  debouncedFunc()
-  debouncedFunc()
-  
-  jest.advanceTimersByTime(100)
-  
-  expect(func).toHaveBeenCalledTimes(1)
-})
+```typescript
+import { debounce } from "@/lib/utils";
+
+test("should debounce function calls", () => {
+  jest.useFakeTimers();
+
+  const func = jest.fn();
+  const debouncedFunc = debounce(func, 100);
+
+  debouncedFunc();
+  debouncedFunc();
+  debouncedFunc();
+
+  jest.advanceTimersByTime(100);
+
+  expect(func).toHaveBeenCalledTimes(1);
+});
 ```
 
 ### Testing API Routes
-```typescript
-import { POST } from '@/app/api/lobbies/route'
 
-describe('POST /api/lobbies', () => {
-  const originalFetch = global.fetch
-  let mockFetch: jest.Mock
+```typescript
+import { POST } from "@/app/api/lobbies/route";
+
+describe("POST /api/lobbies", () => {
+  const originalFetch = global.fetch;
+  let mockFetch: jest.Mock;
 
   beforeEach(() => {
-    mockFetch = jest.fn()
-    global.fetch = mockFetch
-    jest.useFakeTimers()
-  })
+    mockFetch = jest.fn();
+    global.fetch = mockFetch;
+    jest.useFakeTimers();
+  });
 
   afterEach(() => {
-    global.fetch = originalFetch
-    jest.useRealTimers()
-  })
+    global.fetch = originalFetch;
+    jest.useRealTimers();
+  });
 
-  it('should create lobby successfully', async () => {
-    const mockResponse = { lobbyCode: 'ABC123' }
+  it("should create lobby successfully", async () => {
+    const mockResponse = { lobbyCode: "ABC123" };
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
-    })
+    });
 
-    const responsePromise = POST()
-    jest.runAllTimers()
+    const responsePromise = POST();
+    jest.runAllTimers();
 
-    const response = await responsePromise
-    const data = await response.json()
+    const response = await responsePromise;
+    const data = await response.json();
 
     expect(mockFetch).toHaveBeenCalledWith(
       `${process.env.API_URL}/lobbies`,
       expect.objectContaining({
-        method: 'POST',
+        method: "POST",
         signal: expect.any(AbortSignal), // Tests timeout handling
-      })
-    )
-    expect(data).toEqual(mockResponse)
-  })
+      }),
+    );
+    expect(data).toEqual(mockResponse);
+  });
 
-  it('should timeout after 30 seconds', async () => {
-    const abortError = new Error('Aborted')
-    abortError.name = 'AbortError'
+  it("should timeout after 30 seconds", async () => {
+    const abortError = new Error("Aborted");
+    abortError.name = "AbortError";
 
-    mockFetch.mockRejectedValueOnce(abortError)
+    mockFetch.mockRejectedValueOnce(abortError);
 
-    const responsePromise = POST()
-    jest.advanceTimersByTime(30000)
+    const responsePromise = POST();
+    jest.advanceTimersByTime(30000);
 
-    const response = await responsePromise
-    const data = await response.json()
+    const response = await responsePromise;
+    const data = await response.json();
 
-    expect(response.status).toBe(504)
-    expect(data).toEqual({ error: 'Request timed out. Please try again.' })
-  })
-})
+    expect(response.status).toBe(504);
+    expect(data).toEqual({ error: "Request timed out. Please try again." });
+  });
+});
 ```
 
 ## File Structure
-```
+
+```any
 src/
   __tests__/
     api/             # API route tests (lobbies, users, strategies, folders)

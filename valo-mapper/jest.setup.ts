@@ -14,6 +14,74 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 } as unknown as typeof ResizeObserver;
 
+// Mock collaborative canvas hook
+jest.mock("@/hooks/use-collaborative-canvas", () => ({
+  useCollaborativeCanvas: jest.fn(() => ({
+    syncCanvasItem: jest.fn(),
+    syncCanvasItemDelete: jest.fn(),
+    syncCanvasItemToggleAlly: jest.fn(),
+    notifyAgentAdded: jest.fn(),
+    notifyAgentMoved: jest.fn(),
+    notifyAgentRemoved: jest.fn(),
+    notifyAbilityAdded: jest.fn(),
+    notifyAbilityMoved: jest.fn(),
+    notifyAbilityRemoved: jest.fn(),
+    notifyLineDrawn: jest.fn(),
+    notifyLineRemoved: jest.fn(),
+    notifyConnLineAdded: jest.fn(),
+    notifyConnLineUpdated: jest.fn(),
+    notifyConnLineRemoved: jest.fn(),
+    notifyTextAdded: jest.fn(),
+    notifyTextUpdated: jest.fn(),
+    notifyTextRemoved: jest.fn(),
+    notifyImageAdded: jest.fn(),
+    notifyImageMoved: jest.fn(),
+    notifyImageRemoved: jest.fn(),
+    notifyLineupWithImagesAdded: jest.fn(),
+    notifyCanvasUpdated: jest.fn(),
+    notifyToolIconAdded: jest.fn(),
+    notifyToolIconMoved: jest.fn(),
+    notifyToolIconRemoved: jest.fn(),
+    notifyMapChanged: jest.fn(),
+    notifySideChanged: jest.fn(),
+    notifyPhaseChanged: jest.fn(),
+  })),
+}));
+
+// Mock WebSocket context
+jest.mock("@/contexts/websocket-context", () => ({
+  useWebSocket: () => ({
+    status: "connected",
+    users: [],
+    cursors: new Map(),
+    sendCursorPosition: jest.fn(),
+    broadcastAgentAdded: jest.fn(),
+    broadcastAgentMoved: jest.fn(),
+    broadcastAgentRemoved: jest.fn(),
+    broadcastAbilityAdded: jest.fn(),
+    broadcastAbilityMoved: jest.fn(),
+    broadcastAbilityRemoved: jest.fn(),
+    broadcastLineDrawn: jest.fn(),
+    broadcastLineRemoved: jest.fn(),
+    broadcastConnLineAdded: jest.fn(),
+    broadcastConnLineUpdated: jest.fn(),
+    broadcastConnLineRemoved: jest.fn(),
+    broadcastTextAdded: jest.fn(),
+    broadcastTextUpdated: jest.fn(),
+    broadcastTextRemoved: jest.fn(),
+    broadcastImageAdded: jest.fn(),
+    broadcastImageMoved: jest.fn(),
+    broadcastImageRemoved: jest.fn(),
+    broadcastLobbyUpdated: jest.fn(),
+    broadcastToolIconAdded: jest.fn(),
+    broadcastToolIconMoved: jest.fn(),
+    broadcastToolIconRemoved: jest.fn(),
+    broadcastMapChanged: jest.fn(),
+    broadcastSideChanged: jest.fn(),
+    broadcastPhaseChanged: jest.fn(),
+  }),
+}));
+
 // Mock next/image
 jest.mock("next/image", () => ({
   __esModule: true,
@@ -44,13 +112,13 @@ jest.mock("react-konva", () => {
       React.createElement(
         "div",
         { "data-testid": "konva-stage", ...props },
-        children
+        children,
       ),
     Layer: ({ children, ...props }: MockComponentProps) =>
       React.createElement(
         "div",
         { "data-testid": "konva-layer", ...props },
-        children
+        children,
       ),
     Image: (props: Record<string, unknown>) =>
       React.createElement("div", { "data-testid": "konva-image", ...props }),
@@ -66,13 +134,13 @@ jest.mock("react-konva", () => {
       React.createElement(
         "div",
         { "data-testid": "konva-group", ...props },
-        children
+        children,
       ),
     Label: ({ children, ...props }: MockComponentProps) =>
       React.createElement(
         "div",
         { "data-testid": "konva-label", ...props },
-        children
+        children,
       ),
     Tag: (props: Record<string, unknown>) =>
       React.createElement("div", { "data-testid": "konva-tag", ...props }),
@@ -107,6 +175,7 @@ jest.mock("next/navigation", () => ({
     query: {},
     asPath: "/",
   })),
+  useParams: jest.fn(() => ({})),
   usePathname: jest.fn(() => "/"),
   useSearchParams: jest.fn(() => new URLSearchParams()),
 }));

@@ -17,6 +17,7 @@ import type {
   ToolIconCanvas,
   UndoableState,
 } from "@/lib/types";
+import type { FullSyncData } from "@/lib/websocket-types";
 import Konva from "konva";
 import {
   createContext,
@@ -87,6 +88,8 @@ interface CanvasContextType {
   unregisterNode: (id: string) => void;
   isTransitioning: RefObject<boolean>;
   saveCanvasState: () => void;
+  saveCanvasStateAsync: () => Promise<void>;
+  applyRemoteState: (state: UndoableState) => void;
   hasUnsavedChanges: boolean;
   isUpdatingLobby: boolean;
   isErrorUpdatingLobby: boolean;
@@ -96,6 +99,8 @@ interface CanvasContextType {
   hoveredElementId: string | null;
   setHoveredElementId: Dispatch<SetStateAction<string | null>>;
   recenterCanvasCallback: RefObject<(() => void) | null>;
+  onUndoRedoCallback: RefObject<(() => void) | null>;
+  notifyPhaseChangedCallback: RefObject<((phaseIndex: number) => void) | null>;
   showCallouts: boolean;
   setShowCallouts: Dispatch<SetStateAction<boolean>>;
   showUltOrbs: boolean;
@@ -104,6 +109,8 @@ interface CanvasContextType {
   setShowSpawnBarriers: Dispatch<SetStateAction<boolean>>;
   isMapTransitioning: boolean;
   setIsMapTransitioning: Dispatch<SetStateAction<boolean>>;
+  rotateCanvasItemsForSideSwap: () => void;
+  getCurrentStateForSync: () => FullSyncData;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
@@ -113,10 +120,15 @@ export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [hoveredElementId, setHoveredElementId] = useState<string | null>(null);
   const [isMapTransitioning, setIsMapTransitioning] = useState(false);
   const recenterCanvasCallback = useRef<(() => void) | null>(null);
+  const onUndoRedoCallback = useRef<(() => void) | null>(null);
+  const notifyPhaseChangedCallback = useRef<
+    ((phaseIndex: number) => void) | null
+  >(null);
 
   useKeyboardShortcuts({
     undo: canvasState.undo,
     redo: canvasState.redo,
+    onUndoRedo: () => onUndoRedoCallback.current?.(),
     tool: canvasState.tool,
     setTool: canvasState.setTool,
     isDrawMode: canvasState.isDrawMode,
@@ -127,6 +139,8 @@ export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
     phases: canvasState.phases,
     currentPhaseIndex: canvasState.currentPhaseIndex,
     switchToPhase: canvasState.switchToPhase,
+    notifyPhaseChanged: (phaseIndex: number) =>
+      notifyPhaseChangedCallback.current?.(phaseIndex),
     hoveredElementId,
     setHoveredElementId,
     setImagesOnCanvas: canvasState.setImagesOnCanvas,
@@ -146,6 +160,8 @@ export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
         hoveredElementId,
         setHoveredElementId,
         recenterCanvasCallback,
+        onUndoRedoCallback,
+        notifyPhaseChangedCallback,
         isMapTransitioning,
         setIsMapTransitioning,
       }}

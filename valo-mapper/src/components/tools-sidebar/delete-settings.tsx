@@ -5,6 +5,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import { useWebSocket } from "@/contexts/websocket-context";
 import {
   ALargeSmall,
   MapPinned,
@@ -25,17 +27,24 @@ export const DeleteSettings = () => {
     setToolIconsOnCanvas,
     connectingLines,
     setConnectingLines,
+    saveCanvasStateAsync,
   } = useCanvas();
 
-  const resetAgents = () => {
+  const { notifyCanvasUpdated } = useCollaborativeCanvas();
+  const { users } = useWebSocket();
+
+  const resetAgents = async () => {
     const connectedAgentIds = new Set(
       connectingLines.flatMap((line) => [line.fromId, line.toId])
     );
     setAgentsOnCanvas((prev) =>
       prev.filter((agent) => connectedAgentIds.has(agent.id))
     );
+    if (users.length > 1) await saveCanvasStateAsync();
+    notifyCanvasUpdated("agents_deleted");
   };
-  const resetAbilities = () => {
+
+  const resetAbilities = async () => {
     const connectedAbilityIds = new Set(
       connectingLines.flatMap((line) => [line.fromId, line.toId])
     );
@@ -43,11 +52,29 @@ export const DeleteSettings = () => {
       prev.filter((ability) => connectedAbilityIds.has(ability.id))
     );
     setToolIconsOnCanvas([]);
+    if (users.length > 1) await saveCanvasStateAsync();
+    notifyCanvasUpdated("abilities_deleted");
   };
-  const resetDrawings = () => setDrawLines([]);
-  const resetTexts = () => setTextsOnCanvas([]);
-  const resetImages = () => setImagesOnCanvas([]);
-  const resetLineups = () => {
+
+  const resetDrawings = async () => {
+    setDrawLines([]);
+    if (users.length > 1) await saveCanvasStateAsync();
+    notifyCanvasUpdated("drawings_deleted");
+  };
+
+  const resetTexts = async () => {
+    setTextsOnCanvas([]);
+    if (users.length > 1) await saveCanvasStateAsync();
+    notifyCanvasUpdated("texts_deleted");
+  };
+
+  const resetImages = async () => {
+    setImagesOnCanvas([]);
+    if (users.length > 1) await saveCanvasStateAsync();
+    notifyCanvasUpdated("images_deleted");
+  };
+
+  const resetLineups = async () => {
     const connectedIds = new Set(
       connectingLines.flatMap((line) => [line.fromId, line.toId])
     );
@@ -58,6 +85,14 @@ export const DeleteSettings = () => {
       prev.filter((ability) => !connectedIds.has(ability.id))
     );
     setConnectingLines([]);
+    if (users.length > 1) await saveCanvasStateAsync();
+    notifyCanvasUpdated("lineups_deleted");
+  };
+
+  const handleResetState = async () => {
+    resetState();
+    if (users.length > 1) await saveCanvasStateAsync();
+    notifyCanvasUpdated("canvas_cleared");
   };
 
   return (
@@ -67,7 +102,7 @@ export const DeleteSettings = () => {
           data-tour="clear-canvas"
           variant="destructive"
           className="w-full"
-          onClick={() => resetState()}
+          onClick={handleResetState}
         >
           Delete All
         </Button>

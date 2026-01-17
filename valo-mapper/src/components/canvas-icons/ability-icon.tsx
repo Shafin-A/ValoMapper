@@ -32,12 +32,18 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
 import { ReactNode } from "react";
 
+type InteractionData =
+  | { currentRotation: number }
+  | { currentRotation: number; currentLength: number }
+  | { currentPath: Vector2d[] };
+
 interface AbilityIconProps extends CanvasIconProps {
   action: AbilityAction;
   rotation?: number;
   currentPath?: Vector2d[];
   currentLength?: number;
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
+  onInteractionEnd?: (data: InteractionData) => void;
 }
 
 const getConfig = <T,>(

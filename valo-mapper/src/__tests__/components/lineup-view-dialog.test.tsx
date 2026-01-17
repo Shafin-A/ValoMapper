@@ -1,8 +1,18 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LineupViewDialog } from "@/components/canvas/lineup-view-dialog";
 import { ConnectingLine } from "@/lib/types";
 
 const mockSetConnectingLines = jest.fn();
+
+const render = (children: React.ReactElement) => {
+  const queryClient = new QueryClient();
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  return rtlRender(children, { wrapper });
+};
+
 jest.mock("@/contexts/canvas-context", () => ({
   useCanvas: () => ({
     setConnectingLines: mockSetConnectingLines,
@@ -96,7 +106,7 @@ jest.mock(
           </button>
         </div>
       ) : null,
-  })
+  }),
 );
 
 jest.mock("@/lib/utils", () => ({
@@ -289,7 +299,7 @@ describe("LineupViewDialog", () => {
 
   it("should sync state from line prop when dialog opens", () => {
     const { rerender } = render(
-      <LineupViewDialog {...defaultProps} isOpen={false} />
+      <LineupViewDialog {...defaultProps} isOpen={false} />,
     );
 
     const updatedLine: ConnectingLine = {
@@ -299,7 +309,7 @@ describe("LineupViewDialog", () => {
     };
 
     rerender(
-      <LineupViewDialog {...defaultProps} line={updatedLine} isOpen={true} />
+      <LineupViewDialog {...defaultProps} line={updatedLine} isOpen={true} />,
     );
 
     expect(screen.getByTestId("view-notes")).toHaveTextContent("Updated notes");
@@ -346,7 +356,7 @@ describe("LineupViewDialog", () => {
     fireEvent.click(screen.getByTestId("change-youtube"));
 
     expect(screen.getByTestId("edit-youtube")).toHaveTextContent(
-      "new-youtube-link"
+      "new-youtube-link",
     );
   });
 

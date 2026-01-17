@@ -1,5 +1,5 @@
 import { PhaseState } from "@/lib/types";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 const createEmptyPhaseState = (): PhaseState => ({
   agentsOnCanvas: [],
@@ -18,11 +18,25 @@ export const usePhaseManager = () => {
   );
   const [editedPhases, setEditedPhases] = useState<Set<number>>(new Set([0]));
 
+  const phasesRef = useRef(phases);
+
+  const setPhasesWithRef = useCallback(
+    (updater: PhaseState[] | ((prevPhases: PhaseState[]) => PhaseState[])) => {
+      setPhases((prevPhases) => {
+        const newPhases =
+          typeof updater === "function" ? updater(prevPhases) : updater;
+        phasesRef.current = newPhases;
+        return newPhases;
+      });
+    },
+    []
+  );
+
   const currentPhase = phases[currentPhaseIndex];
 
   const updateCurrentPhase = useCallback(
     (updates: Partial<PhaseState>) => {
-      setPhases((prevPhases) => {
+      setPhasesWithRef((prevPhases) => {
         const newPhases = [...prevPhases];
         newPhases[currentPhaseIndex] = {
           ...newPhases[currentPhaseIndex],
@@ -32,7 +46,7 @@ export const usePhaseManager = () => {
       });
       setEditedPhases((prev) => new Set(prev).add(currentPhaseIndex));
     },
-    [currentPhaseIndex]
+    [currentPhaseIndex, setPhasesWithRef]
   );
 
   const switchToPhase = useCallback(
@@ -50,7 +64,7 @@ export const usePhaseManager = () => {
         const phaseToClone = phases[highestEditedPhase];
         const clonedPhase = JSON.parse(JSON.stringify(phaseToClone));
 
-        setPhases((prev) => {
+        setPhasesWithRef((prev) => {
           const newPhases = [...prev];
           newPhases[index] = clonedPhase;
           return newPhases;
@@ -59,28 +73,31 @@ export const usePhaseManager = () => {
 
       setCurrentPhaseIndex(index);
     },
-    [editedPhases, phases]
+    [editedPhases, phases, setPhasesWithRef]
   );
 
-  const deletePhase = useCallback((index: number) => {
-    setPhases((prev) => {
-      const newPhases = [...prev];
-      newPhases[index] = createEmptyPhaseState();
-      return newPhases;
-    });
-    setEditedPhases((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(index);
-      newSet.add(0);
-      return newSet;
-    });
-  }, []);
+  const deletePhase = useCallback(
+    (index: number) => {
+      setPhasesWithRef((prev) => {
+        const newPhases = [...prev];
+        newPhases[index] = createEmptyPhaseState();
+        return newPhases;
+      });
+      setEditedPhases((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        newSet.add(0);
+        return newSet;
+      });
+    },
+    [setPhasesWithRef]
+  );
 
   const duplicatePhase = useCallback(
     (index: number) => {
       if (index < 9) {
         const duplicated = JSON.parse(JSON.stringify(phases[index]));
-        setPhases((prev) => {
+        setPhasesWithRef((prev) => {
           const newPhases = [...prev];
           newPhases[index + 1] = duplicated;
           return newPhases;
@@ -89,18 +106,21 @@ export const usePhaseManager = () => {
         setCurrentPhaseIndex(index + 1);
       }
     },
-    [phases]
+    [phases, setPhasesWithRef]
   );
 
   const resetAllPhases = useCallback(() => {
-    setPhases(Array.from({ length: 10 }, () => createEmptyPhaseState()));
+    setPhasesWithRef(Array.from({ length: 10 }, () => createEmptyPhaseState()));
     setEditedPhases(new Set([0]));
     setCurrentPhaseIndex(0);
-  }, []);
+  }, [setPhasesWithRef]);
+
+  const getLatestPhases = useCallback(() => phasesRef.current, []);
 
   return {
     phases,
-    setPhases,
+    setPhases: setPhasesWithRef,
+    getLatestPhases,
     currentPhase,
     currentPhaseIndex,
     setCurrentPhaseIndex,

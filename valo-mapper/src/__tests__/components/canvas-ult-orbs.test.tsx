@@ -30,7 +30,7 @@ describe("CanvasUltOrbs", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
     );
     mockGetMapUltOrbs.mockReturnValue(mockUltOrbData);
   });
@@ -38,7 +38,7 @@ describe("CanvasUltOrbs", () => {
   describe("Visibility", () => {
     it("should render ult orbs when showUltOrbs is true", () => {
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -52,7 +52,7 @@ describe("CanvasUltOrbs", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -66,7 +66,7 @@ describe("CanvasUltOrbs", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -77,7 +77,7 @@ describe("CanvasUltOrbs", () => {
       mockGetMapUltOrbs.mockReturnValue(undefined);
 
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -88,7 +88,7 @@ describe("CanvasUltOrbs", () => {
   describe("Orb Rendering", () => {
     it("should render correct number of ult orbs", () => {
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const groups = container.querySelectorAll('[data-testid="konva-group"]');
@@ -98,11 +98,11 @@ describe("CanvasUltOrbs", () => {
 
     it("should render orbs with circles", () => {
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const circles = container.querySelectorAll(
-        '[data-testid="konva-circle"]'
+        '[data-testid="konva-circle"]',
       );
       // Each orb has 2 circles (outer black, inner white)
       expect(circles.length).toBe(4);
@@ -112,7 +112,7 @@ describe("CanvasUltOrbs", () => {
   describe("Map Side Handling", () => {
     it("should handle defense side positioning", () => {
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -126,7 +126,7 @@ describe("CanvasUltOrbs", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -137,7 +137,7 @@ describe("CanvasUltOrbs", () => {
   describe("Transition Behavior", () => {
     it("should hide immediately when transition starts", () => {
       const { container, rerender } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       let group = container.querySelector('[data-testid="konva-group"]');
@@ -161,7 +161,7 @@ describe("CanvasUltOrbs", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container, rerender } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       let group = container.querySelector('[data-testid="konva-group"]');
@@ -195,11 +195,11 @@ describe("CanvasUltOrbs", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const circles = container.querySelectorAll(
-        '[data-testid="konva-circle"]'
+        '[data-testid="konva-circle"]',
       );
       expect(circles.length).toBe(4); // 2 orbs × 2 circles each
     });
@@ -212,11 +212,11 @@ describe("CanvasUltOrbs", () => {
       mockGetMapUltOrbs.mockReturnValue(singleOrbData);
 
       const { container } = render(
-        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />
+        <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const circles = container.querySelectorAll(
-        '[data-testid="konva-circle"]'
+        '[data-testid="konva-circle"]',
       );
       expect(circles.length).toBe(2); // 1 orb × 2 circles
     });

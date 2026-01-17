@@ -33,7 +33,7 @@ export const EraserSettings = () => {
 
         <div className="mt-2">
           <div className="flex items-start gap-2">
-            <Info className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <Info className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
             <span className="text-xs text-muted-foreground italic">
               Partially erased/disconnected lines are treated as complete lines
               and erased entirely

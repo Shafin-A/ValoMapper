@@ -1,6 +1,7 @@
 import { AbilityIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
@@ -23,6 +24,7 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
   } = useCanvas();
 
   const { abilitiesSettings } = useSettings();
+  const { notifyAbilityMoved, notifyAbilityRemoved } = useCollaborativeCanvas();
 
   return abilitiesOnCanvas.map((ability) => (
     <Group
@@ -43,7 +45,7 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
         draggable={!isDrawMode}
         isListening={!isDrawMode}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
-        onDragEnd={(e) =>
+        onDragEnd={(e) => {
           handleDragEnd(
             e,
             ability,
@@ -54,9 +56,11 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
             (connectedId) =>
               setAgentsOnCanvas((prev) =>
                 prev.filter((a) => a.id !== connectedId)
-              )
-          )
-        }
+              ),
+            notifyAbilityRemoved,
+            notifyAbilityMoved
+          );
+        }}
         width={abilitiesSettings.scale}
         height={abilitiesSettings.scale}
         borderOpacity={abilitiesSettings.borderOpacity}
@@ -66,6 +70,9 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
         enemyColor={abilitiesSettings.enemyColor}
         currentPath={ability.currentPath}
         currentLength={ability.currentLength}
+        onInteractionEnd={(data) => {
+          notifyAbilityMoved({ ...ability, ...data });
+        }}
       />
     </Group>
   ));

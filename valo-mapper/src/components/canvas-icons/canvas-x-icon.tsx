@@ -16,6 +16,7 @@ interface CanvasXIconProps extends CanvasIconProps {
   stroke: string;
   rotation?: number;
   onRotationChange?: (rotation: number) => void;
+  onInteractionEnd?: (data: { currentRotation: number }) => void;
   showRotationHandle?: boolean;
   rotationHandleRadius?: number;
   rotationHandleColor?: string;
@@ -46,6 +47,7 @@ export const CanvasXIcon = ({
   height,
   rotation = 0,
   onRotationChange,
+  onInteractionEnd,
   showRotationHandle = true,
   rotationHandleRadius = 12,
   rotationHandleColor = "#e54646",
@@ -172,6 +174,10 @@ export const CanvasXIcon = ({
           });
         }
 
+        onInteractionEnd?.({
+          currentRotation: rotationRef.current,
+        });
+
         stage.off(".interaction");
       };
 
@@ -181,7 +187,7 @@ export const CanvasXIcon = ({
       stage.on("touchmove.interaction", handleInteractionMove);
       stage.on("touchend.interaction", handleInteractionEnd);
     },
-    [id, isListening, onRotationChange, setAbilitiesOnCanvas]
+    [id, isListening, onInteractionEnd, onRotationChange, setAbilitiesOnCanvas]
   );
 
   const handleRotationHandleMouseOver = () => {
