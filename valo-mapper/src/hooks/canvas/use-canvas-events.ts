@@ -4,7 +4,7 @@ import { TEMP_DRAG_ID } from "@/lib/consts";
 import { getNextId, isAgent } from "@/lib/utils";
 import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import {
   useCanvasContextMenu,
   useCanvasDrawing,
@@ -14,7 +14,7 @@ import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
 export const useCanvasEvents = (
   stageRef: React.RefObject<Stage | null>,
-  baseScale: number
+  baseScale: number,
 ) => {
   const {
     selectedCanvasIcon,
@@ -46,6 +46,21 @@ export const useCanvasEvents = (
 
   const frameRef = useRef<number | null>(null);
 
+  const setCursorForCurrentTool = useCallback(() => {
+    const stage = stageRef.current;
+    if (!stage || !stage.container) return;
+
+    if (isDrawMode) {
+      if (tool === "pencil") {
+        stage.container().style.cursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E") 5 18, crosshair`;
+      } else if (tool === "eraser") {
+        stage.container().style.cursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3C/svg%3E") 12 12, crosshair`;
+      }
+    } else {
+      stage.container().style.cursor = "default";
+    }
+  }, [isDrawMode, tool, stageRef]);
+
   const getWorldPointerPosition = useCallback(() => {
     const stage = stageRef.current;
     if (!stage) return null;
@@ -67,11 +82,11 @@ export const useCanvasEvents = (
 
     if (isAgent(selectedCanvasIcon)) {
       setAgentsOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
+        prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
       );
     } else {
       setAbilitiesOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
+        prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
       );
     }
 
@@ -100,7 +115,7 @@ export const useCanvasEvents = (
     eraserSettings,
     drawLines,
     setDrawLines,
-    setCurrentStroke
+    setCurrentStroke,
   );
 
   const {
@@ -124,7 +139,7 @@ export const useCanvasEvents = (
     setToolIconsOnCanvas,
     connectingLines,
     setConnectingLines,
-    saveCanvasStateAsync
+    saveCanvasStateAsync,
   );
 
   const handleIconPlacement = useCallback(
@@ -142,7 +157,7 @@ export const useCanvasEvents = (
       }
 
       const newId = getNextId(
-        isAgent(selectedCanvasIcon) ? "agent" : "ability"
+        isAgent(selectedCanvasIcon) ? "agent" : "ability",
       );
 
       if (isAgent(selectedCanvasIcon)) {
@@ -155,12 +170,12 @@ export const useCanvasEvents = (
             agentsOnCanvas.find((a) => a.id === TEMP_DRAG_ID)?.isAlly ?? true,
         };
         setAgentsOnCanvas((prev) =>
-          prev.map((agent) => (agent.id === TEMP_DRAG_ID ? newAgent : agent))
+          prev.map((agent) => (agent.id === TEMP_DRAG_ID ? newAgent : agent)),
         );
         notifyAgentAdded(newAgent);
       } else {
         const tempAbility = abilitiesOnCanvas.find(
-          (a) => a.id === TEMP_DRAG_ID
+          (a) => a.id === TEMP_DRAG_ID,
         );
         const newAbility = {
           ...selectedCanvasIcon,
@@ -171,8 +186,8 @@ export const useCanvasEvents = (
         };
         setAbilitiesOnCanvas((prev) =>
           prev.map((ability) =>
-            ability.id === TEMP_DRAG_ID ? newAbility : ability
-          )
+            ability.id === TEMP_DRAG_ID ? newAbility : ability,
+          ),
         );
         notifyAbilityAdded(newAbility);
       }
@@ -189,7 +204,7 @@ export const useCanvasEvents = (
       stageRef,
       notifyAgentAdded,
       notifyAbilityAdded,
-    ]
+    ],
   );
 
   const handleStageClick = useCallback(() => {
@@ -216,6 +231,8 @@ export const useCanvasEvents = (
     const worldPos = getWorldPointerPosition();
     if (!worldPos) return;
 
+    setCursorForCurrentTool();
+
     if (isDrawMode && isDrawing.current) {
       handleDrawing();
     } else if (selectedCanvasIcon) {
@@ -232,6 +249,7 @@ export const useCanvasEvents = (
     }
   }, [
     getWorldPointerPosition,
+    setCursorForCurrentTool,
     isDrawMode,
     isDrawing,
     selectedCanvasIcon,
@@ -242,13 +260,27 @@ export const useCanvasEvents = (
   const handleStageMouseLeave = useCallback(() => {
     handleMouseUp();
     removeTempDragIcon();
-  }, [handleMouseUp, removeTempDragIcon]);
+
+    const stage = stageRef.current;
+    if (stage && stage.container) {
+      stage.container().style.cursor = "default";
+    }
+  }, [handleMouseUp, removeTempDragIcon, stageRef]);
+
+  const handleStageMouseEnter = useCallback(() => {
+    setCursorForCurrentTool();
+  }, [setCursorForCurrentTool]);
+
+  useEffect(() => {
+    setCursorForCurrentTool();
+  }, [setCursorForCurrentTool]);
 
   return {
     handleWheel,
     handleStageClick,
     handleStageMouseMove,
     handleStageMouseLeave,
+    handleStageMouseEnter,
     handleMouseUp,
     handleContextMenu,
     handlePopoverOpenChange,

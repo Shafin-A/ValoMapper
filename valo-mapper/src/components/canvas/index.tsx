@@ -50,7 +50,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
 
     const stageRef = useRef<KonvaStage | null>(null);
     const [fullscreenImageSrc, setFullscreenImageSrc] = useState<string | null>(
-      null
+      null,
     );
     const [selectedConnectingLine, setSelectedConnectingLine] =
       useState<ConnectingLine | null>(null);
@@ -64,6 +64,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       handleTouchEnd,
       handleStageClick,
       handleStageMouseLeave,
+      handleStageMouseEnter,
       handleStageMouseMove,
       handleMouseUp,
       handleContextMenu,
@@ -142,14 +143,15 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
 
     const currentItem = contextMenu.open
       ? contextMenu.itemType === "agent"
-        ? agentsOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null
+        ? (agentsOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null)
         : contextMenu.itemType === "ability"
-        ? abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null
-        : contextMenu.itemType === "text"
-        ? textsOnCanvas.find((t) => t.id === contextMenu.itemId) ?? null
-        : contextMenu.itemType === "image"
-        ? imagesOnCanvas.find((i) => i.id === contextMenu.itemId) ?? null
-        : null
+          ? (abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null)
+          : contextMenu.itemType === "text"
+            ? (textsOnCanvas.find((t) => t.id === contextMenu.itemId) ?? null)
+            : contextMenu.itemType === "image"
+              ? (imagesOnCanvas.find((i) => i.id === contextMenu.itemId) ??
+                null)
+              : null
       : null;
 
     return (
@@ -172,6 +174,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           draggable={!isDrawMode}
           onDragMove={handleDragMove}
           onMouseMove={handleMouseMoveWithCursor}
+          onMouseEnter={handleStageMouseEnter}
           onMouseDown={handleStageClick}
           onTouchStart={(e) => {
             handleTouchStart(e);
@@ -248,7 +251,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
         />
       </div>
     );
-  }
+  },
 );
 
 MapStage.displayName = "MapStage";
