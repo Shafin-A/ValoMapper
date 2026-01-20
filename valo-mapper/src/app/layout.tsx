@@ -2,6 +2,7 @@ import QueryProvider from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { TourProviderWrapper } from "@/components/providers/tour-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { CanvasProvider } from "@/contexts/canvas-context";
 import { SettingsProvider } from "@/contexts/settings-context";
 import { WebSocketProvider } from "@/contexts/websocket-context";
@@ -40,16 +41,18 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProvider>
-            <SettingsProvider>
-              <TourProviderWrapper>
-                <CanvasProvider>
-                  <WebSocketProvider>{children}</WebSocketProvider>
-                </CanvasProvider>
-                <Toaster richColors closeButton />
-              </TourProviderWrapper>
-            </SettingsProvider>
-          </QueryProvider>
+          <TooltipProvider>
+            <QueryProvider>
+              <SettingsProvider>
+                <TourProviderWrapper>
+                  <CanvasProvider>
+                    <WebSocketProvider>{children}</WebSocketProvider>
+                  </CanvasProvider>
+                  <Toaster richColors closeButton />
+                </TourProviderWrapper>
+              </SettingsProvider>
+            </QueryProvider>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

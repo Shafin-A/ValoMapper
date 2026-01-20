@@ -1,6 +1,7 @@
 "use client";
 import { BackgroundDecoration } from "@/components/landing/background-decoration";
 import { HeaderActions } from "@/components/landing/header-actions";
+import { ExternalLinks } from "@/components/shared/external-links";
 import { HeroSection } from "@/components/landing/hero-section";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import React, { useState } from "react";
@@ -32,6 +33,7 @@ const LandingPage = () => {
           isLoading={createLobbyMutation.isPending || isNavigating}
         />
       </div>
+      <ExternalLinks />
     </div>
   );
 };
