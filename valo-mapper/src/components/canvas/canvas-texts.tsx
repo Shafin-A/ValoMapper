@@ -72,7 +72,7 @@ export const CanvasTexts = ({
             undefined,
             undefined,
             notifyTextRemoved,
-            notifyTextUpdated
+            notifyTextUpdated,
           );
         }}
       >
@@ -103,7 +103,7 @@ export const CanvasTexts = ({
               0,
               shape.width(),
               Math.max(60, shape.height()),
-              radius
+              radius,
             );
             context.closePath();
             context.fill();
@@ -150,10 +150,17 @@ export const CanvasTexts = ({
                 }
               }
             }}
-            boundBoxFunc={(_, newBox) => ({
-              ...newBox,
-              width: Math.max(100, newBox.width),
-            })}
+            boundBoxFunc={(oldBox, newBox) => {
+              // Prevent flipping
+              if (newBox.x !== oldBox.x) {
+                return oldBox;
+              }
+
+              return {
+                ...newBox,
+                width: Math.max(100, newBox.width),
+              };
+            }}
           />
         )}
       </Group>
