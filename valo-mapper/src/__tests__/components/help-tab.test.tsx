@@ -24,14 +24,14 @@ describe("HelpTab", () => {
 
     expect(screen.getByRole("tab", { name: "About" })).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Keyboard Shortcuts" })
+      screen.getByRole("tab", { name: "Keyboard Shortcuts" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Lobbies" })).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Privacy Policy" })
+      screen.getByRole("tab", { name: "Privacy Policy" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Terms of Service" })
+      screen.getByRole("tab", { name: "Terms of Service" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Contact" })).toBeInTheDocument();
   });
@@ -72,10 +72,10 @@ describe("HelpTab", () => {
 
     expect(lobbiesTab).toHaveAttribute("data-state", "active");
     expect(
-      screen.getByText(/Each lobby is a shareable strategy board/i)
+      screen.getByText(/Each lobby is a shareable strategy board/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/You can share the URL or code with teammates/i)
+      screen.getByText(/You can share the URL or code with teammates/i),
     ).toBeInTheDocument();
   });
 
@@ -110,7 +110,7 @@ describe("HelpTab", () => {
 
     expect(contactTab).toHaveAttribute("data-state", "active");
     expect(
-      screen.getByText(/valomappercontact@gmail.com/i)
+      screen.getByText(/valomappercontact@gmail.com/i),
     ).toBeInTheDocument();
   });
 
@@ -129,7 +129,7 @@ describe("HelpTab", () => {
     await user.click(lobbiesTab);
 
     expect(
-      screen.getByRole("heading", { name: "Lobbies" })
+      screen.getByRole("heading", { name: "Lobbies" }),
     ).toBeInTheDocument();
   });
 

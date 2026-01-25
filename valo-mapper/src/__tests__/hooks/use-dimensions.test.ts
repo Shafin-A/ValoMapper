@@ -100,13 +100,13 @@ describe("useDimensions", () => {
 
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       "resize",
-      expect.any(Function)
+      expect.any(Function),
     );
 
     unmount();
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       "resize",
-      expect.any(Function)
+      expect.any(Function),
     );
 
     global.ResizeObserver = originalResizeObserver;

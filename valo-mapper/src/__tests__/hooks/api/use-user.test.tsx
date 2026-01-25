@@ -217,9 +217,9 @@ describe("useUser", () => {
                 ok: true,
                 json: () => Promise.resolve({ id: "123", name: "Test User" }),
               }),
-            100
-          )
-        )
+            100,
+          ),
+        ),
     );
 
     const { result: result2 } = renderHook(() => useUser(), {

@@ -20,7 +20,7 @@ export const DeleteZone = ({ deleteGroupRef }: DeleteZoneProps) => {
         xmlns="http://www.w3.org/2000/svg"
       >
         <Trash2 size={24} color="#ff0000" />
-      </svg>
+      </svg>,
     );
 
     const dataUrl = `data:image/svg+xml;base64,${btoa(svgString)}`;

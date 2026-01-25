@@ -52,7 +52,7 @@ export const useCollaborativeCanvas = () => {
         broadcastAgentAdded(agent, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastAgentAdded, currentPhaseIndex]
+    [isConnected, broadcastAgentAdded, currentPhaseIndex],
   );
 
   const notifyAgentMoved = useCallback(
@@ -61,7 +61,7 @@ export const useCollaborativeCanvas = () => {
         broadcastAgentMoved(agent, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastAgentMoved, currentPhaseIndex]
+    [isConnected, broadcastAgentMoved, currentPhaseIndex],
   );
 
   const notifyAgentRemoved = useCallback(
@@ -70,7 +70,7 @@ export const useCollaborativeCanvas = () => {
         broadcastAgentRemoved(id, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastAgentRemoved, currentPhaseIndex]
+    [isConnected, broadcastAgentRemoved, currentPhaseIndex],
   );
 
   const notifyAbilityAdded = useCallback(
@@ -79,7 +79,7 @@ export const useCollaborativeCanvas = () => {
         broadcastAbilityAdded(ability, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastAbilityAdded, currentPhaseIndex]
+    [isConnected, broadcastAbilityAdded, currentPhaseIndex],
   );
 
   const notifyAbilityMoved = useCallback(
@@ -88,7 +88,7 @@ export const useCollaborativeCanvas = () => {
         broadcastAbilityMoved(ability, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastAbilityMoved, currentPhaseIndex]
+    [isConnected, broadcastAbilityMoved, currentPhaseIndex],
   );
 
   const notifyAbilityRemoved = useCallback(
@@ -97,7 +97,7 @@ export const useCollaborativeCanvas = () => {
         broadcastAbilityRemoved(id, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastAbilityRemoved, currentPhaseIndex]
+    [isConnected, broadcastAbilityRemoved, currentPhaseIndex],
   );
 
   const notifyLineDrawn = useCallback(
@@ -106,7 +106,7 @@ export const useCollaborativeCanvas = () => {
         broadcastLineDrawn(line, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastLineDrawn, currentPhaseIndex]
+    [isConnected, broadcastLineDrawn, currentPhaseIndex],
   );
 
   const notifyLineRemoved = useCallback(
@@ -115,7 +115,7 @@ export const useCollaborativeCanvas = () => {
         broadcastLineRemoved(id, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastLineRemoved, currentPhaseIndex]
+    [isConnected, broadcastLineRemoved, currentPhaseIndex],
   );
 
   const notifyConnLineAdded = useCallback(
@@ -124,7 +124,7 @@ export const useCollaborativeCanvas = () => {
         broadcastConnLineAdded(line, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastConnLineAdded, currentPhaseIndex]
+    [isConnected, broadcastConnLineAdded, currentPhaseIndex],
   );
 
   const notifyConnLineUpdated = useCallback(
@@ -133,7 +133,7 @@ export const useCollaborativeCanvas = () => {
         broadcastConnLineUpdated(line, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastConnLineUpdated, currentPhaseIndex]
+    [isConnected, broadcastConnLineUpdated, currentPhaseIndex],
   );
 
   const notifyConnLineRemoved = useCallback(
@@ -142,7 +142,7 @@ export const useCollaborativeCanvas = () => {
         broadcastConnLineRemoved(id, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastConnLineRemoved, currentPhaseIndex]
+    [isConnected, broadcastConnLineRemoved, currentPhaseIndex],
   );
 
   const notifyTextAdded = useCallback(
@@ -151,7 +151,7 @@ export const useCollaborativeCanvas = () => {
         broadcastTextAdded(text, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastTextAdded, currentPhaseIndex]
+    [isConnected, broadcastTextAdded, currentPhaseIndex],
   );
 
   const notifyTextUpdated = useCallback(
@@ -160,7 +160,7 @@ export const useCollaborativeCanvas = () => {
         broadcastTextUpdated(text, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastTextUpdated, currentPhaseIndex]
+    [isConnected, broadcastTextUpdated, currentPhaseIndex],
   );
 
   const notifyTextRemoved = useCallback(
@@ -169,7 +169,7 @@ export const useCollaborativeCanvas = () => {
         broadcastTextRemoved(id, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastTextRemoved, currentPhaseIndex]
+    [isConnected, broadcastTextRemoved, currentPhaseIndex],
   );
 
   const notifyImageAdded = useCallback(() => {
@@ -193,7 +193,7 @@ export const useCollaborativeCanvas = () => {
         broadcastLobbyUpdated(action, username);
       }
     },
-    [isConnected, user?.name, broadcastLobbyUpdated]
+    [isConnected, user?.name, broadcastLobbyUpdated],
   );
 
   const notifyImageMoved = useCallback(
@@ -202,7 +202,7 @@ export const useCollaborativeCanvas = () => {
         broadcastImageMoved(image, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastImageMoved, currentPhaseIndex]
+    [isConnected, broadcastImageMoved, currentPhaseIndex],
   );
 
   const notifyImageRemoved = useCallback(
@@ -211,7 +211,7 @@ export const useCollaborativeCanvas = () => {
         broadcastImageRemoved(id, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastImageRemoved, currentPhaseIndex]
+    [isConnected, broadcastImageRemoved, currentPhaseIndex],
   );
 
   const notifyToolIconAdded = useCallback(
@@ -220,7 +220,7 @@ export const useCollaborativeCanvas = () => {
         broadcastToolIconAdded(toolIcon, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastToolIconAdded, currentPhaseIndex]
+    [isConnected, broadcastToolIconAdded, currentPhaseIndex],
   );
 
   const notifyToolIconMoved = useCallback(
@@ -229,7 +229,7 @@ export const useCollaborativeCanvas = () => {
         broadcastToolIconMoved(toolIcon, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastToolIconMoved, currentPhaseIndex]
+    [isConnected, broadcastToolIconMoved, currentPhaseIndex],
   );
 
   const notifyToolIconRemoved = useCallback(
@@ -238,7 +238,7 @@ export const useCollaborativeCanvas = () => {
         broadcastToolIconRemoved(id, currentPhaseIndex);
       }
     },
-    [isConnected, broadcastToolIconRemoved, currentPhaseIndex]
+    [isConnected, broadcastToolIconRemoved, currentPhaseIndex],
   );
 
   const notifyMapChanged = useCallback(
@@ -247,7 +247,7 @@ export const useCollaborativeCanvas = () => {
         broadcastMapChanged(selectedMap);
       }
     },
-    [isConnected, broadcastMapChanged]
+    [isConnected, broadcastMapChanged],
   );
 
   const notifySideChanged = useCallback(
@@ -256,7 +256,7 @@ export const useCollaborativeCanvas = () => {
         broadcastSideChanged(mapSide);
       }
     },
-    [isConnected, broadcastSideChanged]
+    [isConnected, broadcastSideChanged],
   );
 
   const notifyPhaseChanged = useCallback(
@@ -265,7 +265,7 @@ export const useCollaborativeCanvas = () => {
         broadcastPhaseChanged(phaseIndex);
       }
     },
-    [isConnected, broadcastPhaseChanged]
+    [isConnected, broadcastPhaseChanged],
   );
 
   return {

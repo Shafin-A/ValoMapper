@@ -41,7 +41,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
               line.tool === "eraser" ? "destination-out" : "source-over"
             }
           />
-        )
+        ),
       )}
 
       {currentStroke &&

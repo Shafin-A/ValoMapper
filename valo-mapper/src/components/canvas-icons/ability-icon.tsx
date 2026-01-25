@@ -50,7 +50,7 @@ const getConfig = <T,>(
   action: AbilityAction,
   configMap: Record<string, T>,
   validator: (action: AbilityAction) => boolean,
-  abilityType: string
+  abilityType: string,
 ): T => {
   if (!validator(action)) {
     throw new Error(`${action} is not a ${abilityType} ability`);
@@ -63,7 +63,7 @@ const renderCircleAbility = (props: AbilityIconProps): ReactNode => {
     props.action,
     CIRCLE_ABILITY_CONFIGS,
     isCircleAbility,
-    "circle"
+    "circle",
   );
 
   return (
@@ -83,7 +83,7 @@ const renderAdjustableLineAbility = (props: AbilityIconProps): ReactNode => {
     props.action,
     ADJUSTABLE_LINE_ABILITY_CONFIGS,
     isAdjustableLineAbility,
-    "adjustable line"
+    "adjustable line",
   );
 
   return (
@@ -118,7 +118,7 @@ const renderLineAbility = (props: AbilityIconProps): ReactNode => {
     props.action,
     LINE_ABILITY_CONFIGS,
     isLineAbility,
-    "line"
+    "line",
   );
 
   return (
@@ -151,7 +151,7 @@ const renderDoubleLineAbility = (props: AbilityIconProps): ReactNode => {
     props.action,
     DOUBLE_LINE_ABILITY_CONFIGS,
     isDoubleLineAbility,
-    "double line"
+    "double line",
   );
 
   return (
@@ -187,7 +187,7 @@ const renderXLineAbility = (props: AbilityIconProps): ReactNode => {
     props.action,
     X_LINE_ABILITY_CONFIGS,
     isXLineAbility,
-    "X line"
+    "X line",
   );
 
   return (
@@ -212,7 +212,7 @@ const renderCurvableLineAbility = (props: AbilityIconProps): ReactNode => {
     props.action,
     CURVABLE_LINE_ABILITY_CONFIGS,
     isCurvableLineAbility,
-    "curvable line"
+    "curvable line",
   );
 
   return (
@@ -230,7 +230,7 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
     props.action,
     ARC_ABILITY_CONFIGS,
     isArcAbility,
-    "arc"
+    "arc",
   );
 
   return (

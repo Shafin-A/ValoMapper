@@ -91,7 +91,7 @@ export const ToolsSidebar = ({
         ...agent,
         x: 2 * (mapPosition.x + MAP_SIZE / 2) - agent.x,
         y: 2 * (mapPosition.y + MAP_SIZE / 2) - agent.y,
-      }))
+      })),
     );
 
     setAbilitiesOnCanvas((prev) =>
@@ -100,7 +100,7 @@ export const ToolsSidebar = ({
         x: 2 * (mapPosition.x + MAP_SIZE / 2) - ability.x,
         y: 2 * (mapPosition.y + MAP_SIZE / 2) - ability.y,
         currentRotation: ((ability.currentRotation || 0) + 180) % 360,
-      }))
+      })),
     );
 
     setTextsOnCanvas((prev) =>
@@ -119,7 +119,7 @@ export const ToolsSidebar = ({
           x: newCx - text.width / 2,
           y: newCy - text.height / 2,
         };
-      })
+      }),
     );
 
     setImagesOnCanvas((prev) =>
@@ -137,7 +137,7 @@ export const ToolsSidebar = ({
           x: newCx - image.width / 2,
           y: newCy - image.height / 2,
         };
-      })
+      }),
     );
 
     setDrawLines((prev) =>
@@ -147,7 +147,7 @@ export const ToolsSidebar = ({
           x: 2 * (mapPosition.x + MAP_SIZE / 2) - point.x,
           y: 2 * (mapPosition.y + MAP_SIZE / 2) - point.y,
         })),
-      }))
+      })),
     );
 
     setToolIconsOnCanvas((prev) =>
@@ -155,12 +155,12 @@ export const ToolsSidebar = ({
         ...toolIcon,
         x: 2 * (mapPosition.x + MAP_SIZE / 2) - toolIcon.x,
         y: 2 * (mapPosition.y + MAP_SIZE / 2) - toolIcon.y,
-      }))
+      })),
     );
   };
 
   const [pendingPhaseIndex, setPendingPhaseIndex] = useState<number | null>(
-    null
+    null,
   );
 
   const handlePhaseSwitch = async (newIndex: number) => {

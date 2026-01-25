@@ -50,7 +50,7 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
             undefined,
             undefined,
             notifyToolIconRemoved,
-            notifyToolIconMoved
+            notifyToolIconMoved,
           );
         }}
         width={toolIcon.width}

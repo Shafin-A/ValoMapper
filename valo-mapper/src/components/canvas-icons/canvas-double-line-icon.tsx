@@ -147,7 +147,7 @@ export const CanvasDoubleLineIcon = ({
       }
       onDragEnd?.(e);
     },
-    [draggable, onDragEnd]
+    [draggable, onDragEnd],
   );
 
   const handleInteractionStart = useCallback(
@@ -189,7 +189,7 @@ export const CanvasDoubleLineIcon = ({
           const adjustedDistance = Math.max(0, distance - iconLineGap);
           const clampedDistance = Math.max(
             minLength,
-            Math.min(maxLength, adjustedDistance)
+            Math.min(maxLength, adjustedDistance),
           );
 
           rotationRef.current = angle;
@@ -254,7 +254,7 @@ export const CanvasDoubleLineIcon = ({
       onInteractionEnd,
       setAbilitiesOnCanvas,
       id,
-    ]
+    ],
   );
 
   const handleRotationHandleMouseOver = () => {

@@ -48,7 +48,7 @@ export const useCanvasState = () => {
 
   const canvasItems = useCanvasItems(
     phaseManager.currentPhase,
-    phaseManager.updateCurrentPhase
+    phaseManager.updateCurrentPhase,
   );
 
   const getCurrentState = useCallback(
@@ -67,7 +67,7 @@ export const useCanvasState = () => {
       canvasUI.mapSide,
       agentsSettings,
       abilitiesSettings,
-    ]
+    ],
   );
 
   const applyState = useCallback(
@@ -83,7 +83,7 @@ export const useCanvasState = () => {
       canvasUI.setSelectedMap(state.selectedMap);
       canvasUI.setMapSide(state.mapSide);
     },
-    [phaseManager, canvasUI]
+    [phaseManager, canvasUI],
   );
 
   const historyManager = useHistoryManager({
@@ -100,7 +100,7 @@ export const useCanvasState = () => {
       }
       canvasUI.resetEdits();
     },
-    [phaseManager, canvasUI]
+    [phaseManager, canvasUI],
   );
 
   const saveCanvasState = useCallback(() => {
@@ -181,7 +181,7 @@ export const useCanvasState = () => {
         updateAbilitiesSettings(state.abilitiesSettings);
       }
     },
-    [applyState, updateAgentsSettings, updateAbilitiesSettings]
+    [applyState, updateAgentsSettings, updateAbilitiesSettings],
   );
 
   const relevantProps = useRef<(keyof UndoableState)[]>([
@@ -205,7 +205,7 @@ export const useCanvasState = () => {
     const hasChanges = relevantProps.current.some(
       (prop) =>
         JSON.stringify(currentState[prop]) !==
-        JSON.stringify(lastSavedStateRef.current![prop])
+        JSON.stringify(lastSavedStateRef.current![prop]),
     );
 
     setHasUnsavedChanges(hasChanges);
@@ -243,7 +243,7 @@ export const useCanvasState = () => {
         ...agent,
         x: 2 * mapCenterX - agent.x,
         y: 2 * mapCenterY - agent.y,
-      }))
+      })),
     );
 
     canvasItems.setAbilitiesOnCanvas((prev) =>
@@ -252,7 +252,7 @@ export const useCanvasState = () => {
         x: 2 * mapCenterX - ability.x,
         y: 2 * mapCenterY - ability.y,
         currentRotation: ((ability.currentRotation || 0) + 180) % 360,
-      }))
+      })),
     );
 
     canvasItems.setTextsOnCanvas((prev) =>
@@ -266,7 +266,7 @@ export const useCanvasState = () => {
           x: newCx - text.width / 2,
           y: newCy - text.height / 2,
         };
-      })
+      }),
     );
 
     canvasItems.setImagesOnCanvas((prev) =>
@@ -280,7 +280,7 @@ export const useCanvasState = () => {
           x: newCx - image.width / 2,
           y: newCy - image.height / 2,
         };
-      })
+      }),
     );
 
     canvasItems.setDrawLines((prev) =>
@@ -290,7 +290,7 @@ export const useCanvasState = () => {
           x: 2 * mapCenterX - point.x,
           y: 2 * mapCenterY - point.y,
         })),
-      }))
+      })),
     );
 
     canvasItems.setToolIconsOnCanvas((prev) =>
@@ -298,7 +298,7 @@ export const useCanvasState = () => {
         ...toolIcon,
         x: 2 * mapCenterX - toolIcon.x,
         y: 2 * mapCenterY - toolIcon.y,
-      }))
+      })),
     );
   }, [canvasItems]);
 
@@ -310,7 +310,7 @@ export const useCanvasState = () => {
       currentPhaseIndex: phaseManager.currentPhaseIndex,
       editedPhases: Array.from(phaseManager.editedPhases),
     }),
-    [phaseManager, canvasUI.selectedMap, canvasUI.mapSide]
+    [phaseManager, canvasUI.selectedMap, canvasUI.mapSide],
   );
 
   return {

@@ -50,7 +50,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
 
   const filteredAgents = onMap
     ? agentsByRole.filter((agent) =>
-        agentsOnCanvas.some((canvasAgent) => canvasAgent.name === agent.name)
+        agentsOnCanvas.some((canvasAgent) => canvasAgent.name === agent.name),
       )
     : agentsByRole;
 

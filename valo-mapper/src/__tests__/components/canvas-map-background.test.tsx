@@ -26,7 +26,7 @@ describe("CanvasMapBackground", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
     );
   });
 
@@ -36,7 +36,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       const images = container.querySelectorAll('[data-testid="konva-image"]');
@@ -48,7 +48,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       expect(mockStageRef.current?.batchDraw).toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       expect(mockSetIsMapTransitioning).not.toHaveBeenCalledWith(true);
@@ -72,7 +72,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       mockUseCanvas.mockReturnValue({
@@ -84,7 +84,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       await waitFor(() => {
@@ -97,7 +97,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       mockUseCanvas.mockReturnValue({
@@ -109,12 +109,12 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       await waitFor(() => {
         const images = container.querySelectorAll(
-          '[data-testid="konva-image"]'
+          '[data-testid="konva-image"]',
         );
 
         expect(images.length).toBe(2);
@@ -128,7 +128,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       const image = container.querySelector('[data-testid="konva-image"]');
@@ -145,7 +145,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       const image = container.querySelector('[data-testid="konva-image"]');
@@ -159,7 +159,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 100, y: 200 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       const image = container.querySelector('[data-testid="konva-image"]');
@@ -173,7 +173,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={mapPosition}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       const image = container.querySelector('[data-testid="konva-image"]');
@@ -188,7 +188,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       const image = container.querySelector('[data-testid="konva-image"]');
@@ -202,7 +202,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -217,7 +217,7 @@ describe("CanvasMapBackground", () => {
           <CanvasMapBackground
             mapPosition={{ x: 0, y: 0 }}
             stageRef={nullStageRef}
-          />
+          />,
         );
       }).not.toThrow();
     });
@@ -229,7 +229,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       expect(() => unmount()).not.toThrow();
@@ -240,7 +240,7 @@ describe("CanvasMapBackground", () => {
         <CanvasMapBackground
           mapPosition={{ x: 0, y: 0 }}
           stageRef={mockStageRef}
-        />
+        />,
       );
 
       const maps = ["bind", "haven", "split"];
@@ -258,7 +258,7 @@ describe("CanvasMapBackground", () => {
           <CanvasMapBackground
             mapPosition={{ x: 0, y: 0 }}
             stageRef={mockStageRef}
-          />
+          />,
         );
       }
 

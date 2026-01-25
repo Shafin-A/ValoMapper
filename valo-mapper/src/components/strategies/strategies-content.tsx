@@ -77,7 +77,7 @@ export const StrategiesContent = ({
                     updateStrategy({
                       strategyId: convertFolderOrStrategyId(
                         item.id,
-                        "strategy"
+                        "strategy",
                       ),
                       name: newName,
                     })
@@ -86,13 +86,13 @@ export const StrategiesContent = ({
                     deleteStrategy({
                       strategyId: convertFolderOrStrategyId(
                         item.id,
-                        "strategy"
+                        "strategy",
                       ),
                     })
                   }
                 />
               </Link>
-            )
+            ),
           )}
         </div>
       )}

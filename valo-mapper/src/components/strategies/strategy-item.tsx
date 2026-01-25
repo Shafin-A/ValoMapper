@@ -47,7 +47,7 @@ export const StrategyItem = ({
       }}
       className={cn(
         "relative flex flex-col w-56 rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900 transition-all cursor-pointer group select-none",
-        className
+        className,
       )}
     >
       <div className="relative h-32 w-full bg-zinc-950">

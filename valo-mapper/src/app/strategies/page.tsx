@@ -48,7 +48,7 @@ const MyStrategiesPage = () => {
       ? null
       : convertFolderOrStrategyId(
           navigationPath[navigationPath.length - 1].id,
-          "folder"
+          "folder",
         );
 
   if (authLoading) {

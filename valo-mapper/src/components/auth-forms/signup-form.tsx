@@ -64,7 +64,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
       setError("");
 
       toast.success(
-        "Account created! Please check your email and verify your account before logging in."
+        "Account created! Please check your email and verify your account before logging in.",
       );
     } catch (err) {
       if (err instanceof FirebaseError) {

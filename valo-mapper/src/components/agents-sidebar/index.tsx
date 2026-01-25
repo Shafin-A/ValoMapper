@@ -68,13 +68,13 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
 
   const handleIconClick = <T extends AgentCanvas | AbilityCanvas>(
     icon: Agent | AbilityIconItem,
-    setIconsOnCanvas: Dispatch<SetStateAction<T[]>>
+    setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
   ) => {
     const isSameIcon = selectedCanvasIcon?.name === icon.name;
 
     if (isSameIcon) {
       setIconsOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== TEMP_DRAG_ID)
+        prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
       );
       setSelectedCanvasIcon(null);
     } else {

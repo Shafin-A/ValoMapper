@@ -36,7 +36,7 @@ describe("LineupViewContent", () => {
       <LineupViewContent
         {...defaultProps}
         images={["image1.jpg", "image2.jpg"]}
-      />
+      />,
     );
 
     expect(screen.getByText("Lineup Images")).toBeInTheDocument();
@@ -57,14 +57,14 @@ describe("LineupViewContent", () => {
         {...defaultProps}
         youtubeLink="https://youtube.com/watch?v=test123"
         youtubeEmbedUrl="https://www.youtube.com/embed/test123"
-      />
+      />,
     );
 
     expect(screen.getByText("YouTube Video")).toBeInTheDocument();
     expect(screen.getByTitle("YouTube video player")).toBeInTheDocument();
     expect(screen.getByTitle("YouTube video player")).toHaveAttribute(
       "src",
-      "https://www.youtube.com/embed/test123"
+      "https://www.youtube.com/embed/test123",
     );
   });
 
@@ -81,15 +81,15 @@ describe("LineupViewContent", () => {
         {...defaultProps}
         youtubeLink="https://invalid-youtube-link.com"
         isInvalidYoutubeLink={true}
-      />
+      />,
     );
 
     expect(screen.getByText("YouTube Link")).toBeInTheDocument();
     expect(
-      screen.getByText("https://invalid-youtube-link.com")
+      screen.getByText("https://invalid-youtube-link.com"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Could not embed video. Click link to open in new tab.")
+      screen.getByText("Could not embed video. Click link to open in new tab."),
     ).toBeInTheDocument();
   });
 
@@ -100,13 +100,13 @@ describe("LineupViewContent", () => {
         youtubeLink="https://youtube.com/watch?v=test"
         youtubeEmbedUrl="https://www.youtube.com/embed/test"
         isInvalidYoutubeLink={false}
-      />
+      />,
     );
 
     expect(
       screen.queryByText(
-        "Could not embed video. Click link to open in new tab."
-      )
+        "Could not embed video. Click link to open in new tab.",
+      ),
     ).not.toBeInTheDocument();
   });
 
@@ -115,12 +115,12 @@ describe("LineupViewContent", () => {
       <LineupViewContent
         {...defaultProps}
         notes="Aim at the corner of the box"
-      />
+      />,
     );
 
     expect(screen.getByText("Notes")).toBeInTheDocument();
     expect(
-      screen.getByText("Aim at the corner of the box")
+      screen.getByText("Aim at the corner of the box"),
     ).toBeInTheDocument();
   });
 
@@ -143,7 +143,7 @@ describe("LineupViewContent", () => {
         {...defaultProps}
         images={["image1.jpg", "image2.jpg", "image3.jpg"]}
         onOpenFullscreen={onOpenFullscreen}
-      />
+      />,
     );
 
     const expandButtons = screen.getAllByRole("button");
@@ -168,11 +168,11 @@ describe("LineupViewContent", () => {
         images={[]}
         youtubeLink=""
         notes=""
-      />
+      />,
     );
 
     expect(
-      screen.getByText("No details available for this lineup.")
+      screen.getByText("No details available for this lineup."),
     ).toBeInTheDocument();
   });
 
@@ -180,7 +180,7 @@ describe("LineupViewContent", () => {
     render(<LineupViewContent {...defaultProps} images={["image1.jpg"]} />);
 
     expect(
-      screen.queryByText("No details available for this lineup.")
+      screen.queryByText("No details available for this lineup."),
     ).not.toBeInTheDocument();
   });
 
@@ -190,11 +190,11 @@ describe("LineupViewContent", () => {
         {...defaultProps}
         youtubeLink="https://youtube.com/watch?v=test"
         youtubeEmbedUrl="https://www.youtube.com/embed/test"
-      />
+      />,
     );
 
     expect(
-      screen.queryByText("No details available for this lineup.")
+      screen.queryByText("No details available for this lineup."),
     ).not.toBeInTheDocument();
   });
 
@@ -202,7 +202,7 @@ describe("LineupViewContent", () => {
     render(<LineupViewContent {...defaultProps} notes="Some notes" />);
 
     expect(
-      screen.queryByText("No details available for this lineup.")
+      screen.queryByText("No details available for this lineup."),
     ).not.toBeInTheDocument();
   });
 
@@ -212,13 +212,13 @@ describe("LineupViewContent", () => {
         {...defaultProps}
         youtubeLink="https://youtube.com/watch?v=test"
         youtubeEmbedUrl="https://www.youtube.com/embed/test"
-      />
+      />,
     );
 
     const iframe = screen.getByTitle("YouTube video player");
     expect(iframe).toHaveAttribute(
       "allow",
-      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
     );
   });
 
@@ -228,7 +228,7 @@ describe("LineupViewContent", () => {
         {...defaultProps}
         youtubeLink="youtube.com/watch?v=test"
         isInvalidYoutubeLink={true}
-      />
+      />,
     );
 
     const link = screen.getByRole("link");
@@ -241,7 +241,7 @@ describe("LineupViewContent", () => {
       <LineupViewContent
         {...defaultProps}
         images={["img1.jpg", "img2.jpg", "img3.jpg"]}
-      />
+      />,
     );
 
     const images = screen.getAllByTestId("mock-image");
@@ -261,7 +261,7 @@ describe("LineupViewContent", () => {
     const notesContainer = screen.getByText((_content, element) => {
       return Boolean(
         element?.classList.contains("whitespace-pre-wrap") &&
-          element?.textContent?.includes("Line 1")
+        element?.textContent?.includes("Line 1"),
       );
     });
     expect(notesContainer).toHaveClass("whitespace-pre-wrap");

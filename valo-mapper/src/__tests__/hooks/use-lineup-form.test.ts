@@ -217,7 +217,7 @@ describe("useLineupForm", () => {
     });
 
     expect(result.current.youtubeLink).toBe(
-      "https://youtube.com/watch?v=abc123"
+      "https://youtube.com/watch?v=abc123",
     );
   });
 

@@ -15,13 +15,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const debouncedSetAllyColor = useMemo(
     () =>
       debounce((color: string) => onSettingsChange({ allyColor: color }), 16),
-    [onSettingsChange]
+    [onSettingsChange],
   );
 
   const debouncedSetEnemyColor = useMemo(
     () =>
       debounce((color: string) => onSettingsChange({ enemyColor: color }), 16),
-    [onSettingsChange]
+    [onSettingsChange],
   );
 
   return (

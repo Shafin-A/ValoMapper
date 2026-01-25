@@ -43,7 +43,7 @@ export const TourAutoAdvance = () => {
     if (isTourOpen && currentStep === 3 && !autoAdvanceState.step3Advanced) {
       const checkAbilitiesPanel = setInterval(() => {
         const abilitiesButton = document.querySelector(
-          '[data-tour="brimstone-abilities-button"][data-state="on"]'
+          '[data-tour="brimstone-abilities-button"][data-state="on"]',
         );
         if (abilitiesButton) {
           setTimeout(() => {

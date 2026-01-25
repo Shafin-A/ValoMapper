@@ -45,7 +45,7 @@ export const useFirebaseAuth = () => {
     const userCredential = await signInWithEmailAndPassword(
       auth,
       email,
-      password
+      password,
     );
 
     return userCredential.user;
@@ -55,7 +55,7 @@ export const useFirebaseAuth = () => {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
-      password
+      password,
     );
 
     return userCredential.user;

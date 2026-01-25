@@ -52,7 +52,7 @@ describe("POST /api/users", () => {
         }),
         body: JSON.stringify(mockUserData),
         signal: expect.any(AbortSignal),
-      })
+      }),
     );
     expect(data).toEqual(mockUserData);
   });

@@ -46,7 +46,7 @@ describe("Strategies API Routes", () => {
         expect.objectContaining({
           method: "GET",
           signal: expect.any(AbortSignal),
-        })
+        }),
       );
     });
 
@@ -120,7 +120,7 @@ describe("Strategies API Routes", () => {
           method: "POST",
           body: JSON.stringify(newStrategy),
           signal: expect.any(AbortSignal),
-        })
+        }),
       );
     });
 

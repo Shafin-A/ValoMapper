@@ -14,7 +14,7 @@ export const POST = async () => {
     if (!response.ok) {
       return Response.json(
         { error: "Failed to create lobby" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -25,7 +25,7 @@ export const POST = async () => {
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;

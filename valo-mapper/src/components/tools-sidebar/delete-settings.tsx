@@ -35,10 +35,10 @@ export const DeleteSettings = () => {
 
   const resetAgents = async () => {
     const connectedAgentIds = new Set(
-      connectingLines.flatMap((line) => [line.fromId, line.toId])
+      connectingLines.flatMap((line) => [line.fromId, line.toId]),
     );
     setAgentsOnCanvas((prev) =>
-      prev.filter((agent) => connectedAgentIds.has(agent.id))
+      prev.filter((agent) => connectedAgentIds.has(agent.id)),
     );
     if (users.length > 1) await saveCanvasStateAsync();
     notifyCanvasUpdated("agents_deleted");
@@ -46,10 +46,10 @@ export const DeleteSettings = () => {
 
   const resetAbilities = async () => {
     const connectedAbilityIds = new Set(
-      connectingLines.flatMap((line) => [line.fromId, line.toId])
+      connectingLines.flatMap((line) => [line.fromId, line.toId]),
     );
     setAbilitiesOnCanvas((prev) =>
-      prev.filter((ability) => connectedAbilityIds.has(ability.id))
+      prev.filter((ability) => connectedAbilityIds.has(ability.id)),
     );
     setToolIconsOnCanvas([]);
     if (users.length > 1) await saveCanvasStateAsync();
@@ -76,13 +76,13 @@ export const DeleteSettings = () => {
 
   const resetLineups = async () => {
     const connectedIds = new Set(
-      connectingLines.flatMap((line) => [line.fromId, line.toId])
+      connectingLines.flatMap((line) => [line.fromId, line.toId]),
     );
     setAgentsOnCanvas((prev) =>
-      prev.filter((agent) => !connectedIds.has(agent.id))
+      prev.filter((agent) => !connectedIds.has(agent.id)),
     );
     setAbilitiesOnCanvas((prev) =>
-      prev.filter((ability) => !connectedIds.has(ability.id))
+      prev.filter((ability) => !connectedIds.has(ability.id)),
     );
     setConnectingLines([]);
     if (users.length > 1) await saveCanvasStateAsync();

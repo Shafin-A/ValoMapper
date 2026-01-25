@@ -23,7 +23,7 @@ export const useCanvasDrawing = (
   eraserSettings: EraserSettings,
   drawLines: DrawLine[],
   setDrawLines: Dispatch<SetStateAction<DrawLine[]>>,
-  setCurrentStroke: Dispatch<SetStateAction<DrawLine | null>>
+  setCurrentStroke: Dispatch<SetStateAction<DrawLine | null>>,
 ) => {
   const { notifyLineDrawn, notifyLineRemoved } = useCollaborativeCanvas();
   const drawingBufferRef = useRef<Vector2d[]>([]);
@@ -56,7 +56,7 @@ export const useCanvasDrawing = (
         drawingBufferRef.current[drawingBufferRef.current.length - 1];
       const distance = Math.sqrt(
         Math.pow(worldPos.x - lastPoint.x, 2) +
-          Math.pow(worldPos.y - lastPoint.y, 2)
+          Math.pow(worldPos.y - lastPoint.y, 2),
       );
 
       if (distance > 5) {
@@ -66,11 +66,11 @@ export const useCanvasDrawing = (
           const currentSegment = [lastPoint, worldPos];
           const intersectingLineIndices = getIntersectingLines(
             currentSegment,
-            drawLines
+            drawLines,
           );
 
           const newIntersections = intersectingLineIndices.filter(
-            (index) => !erasedLinesRef.current.has(index)
+            (index) => !erasedLinesRef.current.has(index),
           );
 
           if (newIntersections.length > 0) {
@@ -85,7 +85,7 @@ export const useCanvasDrawing = (
             });
 
             setDrawLines((prev) =>
-              prev.filter((_, index) => !newIntersections.includes(index))
+              prev.filter((_, index) => !newIntersections.includes(index)),
             );
           }
         }

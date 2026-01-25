@@ -44,7 +44,7 @@ describe("RoleTabs", () => {
     return render(
       <Tabs defaultValue={selectedRole}>
         <RoleTabs selectedRole={selectedRole} />
-      </Tabs>
+      </Tabs>,
     );
   };
 
@@ -94,7 +94,7 @@ describe("AgentsGrid", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
     );
   });
 
@@ -122,7 +122,7 @@ describe("AgentsGrid", () => {
     await user.click(jettImage);
 
     expect(mockOnAgentClick).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Jett", role: "Duelist" })
+      expect.objectContaining({ name: "Jett", role: "Duelist" }),
     );
   });
 
@@ -144,7 +144,7 @@ describe("AgentsGrid", () => {
     } as unknown as ReturnType<typeof useCanvas>);
 
     render(
-      <AgentsGrid {...defaultProps} selectedRole="Duelist" onMap={true} />
+      <AgentsGrid {...defaultProps} selectedRole="Duelist" onMap={true} />,
     );
 
     expect(screen.getByText("No duelist agents on map")).toBeInTheDocument();
@@ -167,7 +167,7 @@ describe("AgentAbilities", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
     );
   });
 
@@ -176,7 +176,7 @@ describe("AgentAbilities", () => {
 
     expect(screen.getByRole("button", { name: /close/i })).toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "Stim Beacon" })
+      screen.getByRole("img", { name: "Stim Beacon" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Incendiary" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Sky Smoke" })).toBeInTheDocument();
@@ -184,7 +184,7 @@ describe("AgentAbilities", () => {
 
   it("should not render when agent is null", () => {
     const { container } = render(
-      <AgentAbilities {...defaultProps} agent={null} />
+      <AgentAbilities {...defaultProps} agent={null} />,
     );
 
     expect(container.firstChild).toBeNull();
@@ -192,7 +192,7 @@ describe("AgentAbilities", () => {
 
   it("should not render when sidebar is closed", () => {
     const { container } = render(
-      <AgentAbilities {...defaultProps} sidebarOpen={false} />
+      <AgentAbilities {...defaultProps} sidebarOpen={false} />,
     );
 
     expect(container.firstChild).toBeNull();

@@ -23,7 +23,7 @@ export const GET = async (request: Request) => {
     if (!response.ok) {
       return Response.json(
         { error: "Failed to fetch folders" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -34,7 +34,7 @@ export const GET = async (request: Request) => {
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;
@@ -73,7 +73,7 @@ export const POST = async (request: Request) => {
     if (!response.ok) {
       return Response.json(
         { error: "Failed to create folder" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -84,7 +84,7 @@ export const POST = async (request: Request) => {
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;

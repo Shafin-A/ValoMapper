@@ -23,7 +23,7 @@ export const GET = async (request: Request) => {
     if (!response.ok) {
       return Response.json(
         { error: "Failed to fetch user" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -34,7 +34,7 @@ export const GET = async (request: Request) => {
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;
@@ -73,7 +73,7 @@ export const PUT = async (request: Request) => {
     if (!response.ok) {
       return Response.json(
         { error: "Failed to update user" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -84,7 +84,7 @@ export const PUT = async (request: Request) => {
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;
@@ -116,7 +116,7 @@ export const DELETE = async (request: Request) => {
     if (!response.ok) {
       return Response.json(
         { error: "Failed to delete user" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -126,7 +126,7 @@ export const DELETE = async (request: Request) => {
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;

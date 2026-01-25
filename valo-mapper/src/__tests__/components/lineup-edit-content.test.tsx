@@ -31,7 +31,7 @@ jest.mock(
         </button>
       </div>
     ),
-  })
+  }),
 );
 
 jest.mock("@/lib/utils", () => ({
@@ -71,7 +71,7 @@ describe("LineupEditContent", () => {
       <LineupEditContent
         {...defaultProps}
         youtubeLink="https://youtube.com/watch?v=test123"
-      />
+      />,
     );
 
     const input = screen.getByLabelText("YouTube Link") as HTMLInputElement;
@@ -80,7 +80,7 @@ describe("LineupEditContent", () => {
 
   it("should display current notes value", () => {
     render(
-      <LineupEditContent {...defaultProps} notes="Aim at the corner of box" />
+      <LineupEditContent {...defaultProps} notes="Aim at the corner of box" />,
     );
 
     const textarea = screen.getByLabelText("Notes") as HTMLTextAreaElement;
@@ -100,7 +100,7 @@ describe("LineupEditContent", () => {
       <LineupEditContent
         {...defaultProps}
         onYoutubeLinkChange={onYoutubeLinkChange}
-      />
+      />,
     );
 
     const input = screen.getByLabelText("YouTube Link");
@@ -109,14 +109,14 @@ describe("LineupEditContent", () => {
     });
 
     expect(onYoutubeLinkChange).toHaveBeenCalledWith(
-      "https://youtube.com/watch?v=newvideo"
+      "https://youtube.com/watch?v=newvideo",
     );
   });
 
   it("should call onNotesChange when notes textarea changes", () => {
     const onNotesChange = jest.fn();
     render(
-      <LineupEditContent {...defaultProps} onNotesChange={onNotesChange} />
+      <LineupEditContent {...defaultProps} onNotesChange={onNotesChange} />,
     );
 
     const textarea = screen.getByLabelText("Notes");
@@ -131,7 +131,7 @@ describe("LineupEditContent", () => {
       <LineupEditContent
         {...defaultProps}
         onLineColorChange={onLineColorChange}
-      />
+      />,
     );
 
     const colorInput = screen.getByLabelText("Line Color");
@@ -145,7 +145,7 @@ describe("LineupEditContent", () => {
       <LineupEditContent
         {...defaultProps}
         images={["image1", "image2", "image3"]}
-      />
+      />,
     );
 
     expect(screen.getByTestId("image-count")).toHaveTextContent("3");
@@ -163,7 +163,7 @@ describe("LineupEditContent", () => {
   it("should call onImageRemove when image is removed via LineupImageUpload", () => {
     const onImageRemove = jest.fn();
     render(
-      <LineupEditContent {...defaultProps} onImageRemove={onImageRemove} />
+      <LineupEditContent {...defaultProps} onImageRemove={onImageRemove} />,
     );
 
     fireEvent.click(screen.getByTestId("remove-image"));
@@ -174,7 +174,7 @@ describe("LineupEditContent", () => {
   it("should call onImageExpand when image is expanded via LineupImageUpload", () => {
     const onImageExpand = jest.fn();
     render(
-      <LineupEditContent {...defaultProps} onImageExpand={onImageExpand} />
+      <LineupEditContent {...defaultProps} onImageExpand={onImageExpand} />,
     );
 
     fireEvent.click(screen.getByTestId("expand-image"));
@@ -188,7 +188,7 @@ describe("LineupEditContent", () => {
     const input = screen.getByLabelText("YouTube Link");
     expect(input).toHaveAttribute(
       "placeholder",
-      "https://www.youtube.com/watch?v=..."
+      "https://www.youtube.com/watch?v=...",
     );
   });
 
@@ -198,7 +198,7 @@ describe("LineupEditContent", () => {
     const textarea = screen.getByLabelText("Notes");
     expect(textarea).toHaveAttribute(
       "placeholder",
-      "Add any notes about this lineup..."
+      "Add any notes about this lineup...",
     );
   });
 
@@ -220,7 +220,7 @@ describe("LineupEditContent", () => {
     render(<LineupEditContent {...defaultProps} />);
 
     const youtubeInput = screen.getByLabelText(
-      "YouTube Link"
+      "YouTube Link",
     ) as HTMLInputElement;
     const notesTextarea = screen.getByLabelText("Notes") as HTMLTextAreaElement;
 

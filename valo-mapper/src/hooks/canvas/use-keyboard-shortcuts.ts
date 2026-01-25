@@ -87,7 +87,7 @@ export const useKeyboardShortcuts = ({
     const handleModifierShortcuts = (
       key: string,
       e: KeyboardEvent,
-      shiftKey: boolean
+      shiftKey: boolean,
     ): boolean => {
       if (key === "z") {
         if (shiftKey) {
@@ -135,38 +135,38 @@ export const useKeyboardShortcuts = ({
 
     const handleDeleteHoveredElement = (
       key: string,
-      e: KeyboardEvent
+      e: KeyboardEvent,
     ): boolean => {
       if (key !== "e") return false;
       if (!hoveredElementId || isDrawMode || editingTextId) return false;
 
       const connectedLine = connectingLines.find(
         (line) =>
-          line.fromId === hoveredElementId || line.toId === hoveredElementId
+          line.fromId === hoveredElementId || line.toId === hoveredElementId,
       );
 
       setImagesOnCanvas((prev) =>
-        prev.filter((img) => img.id !== hoveredElementId)
+        prev.filter((img) => img.id !== hoveredElementId),
       );
       setTextsOnCanvas((prev) =>
-        prev.filter((txt) => txt.id !== hoveredElementId)
+        prev.filter((txt) => txt.id !== hoveredElementId),
       );
 
       setAgentsOnCanvas((prev) => {
         const filtered = prev.filter((agent) => agent.id !== hoveredElementId);
         if (connectedLine && connectedLine.fromId === hoveredElementId) {
           setAbilitiesOnCanvas((abilities) =>
-            abilities.filter((ability) => ability.id !== connectedLine.toId)
+            abilities.filter((ability) => ability.id !== connectedLine.toId),
           );
           setConnectingLines((lines) =>
-            lines.filter((line) => line.id !== connectedLine.id)
+            lines.filter((line) => line.id !== connectedLine.id),
           );
         } else if (connectedLine && connectedLine.toId === hoveredElementId) {
           setAbilitiesOnCanvas((abilities) =>
-            abilities.filter((ability) => ability.id !== connectedLine.fromId)
+            abilities.filter((ability) => ability.id !== connectedLine.fromId),
           );
           setConnectingLines((lines) =>
-            lines.filter((line) => line.id !== connectedLine.id)
+            lines.filter((line) => line.id !== connectedLine.id),
           );
         }
         return filtered;
@@ -174,28 +174,28 @@ export const useKeyboardShortcuts = ({
 
       setAbilitiesOnCanvas((prev) => {
         const filtered = prev.filter(
-          (ability) => ability.id !== hoveredElementId
+          (ability) => ability.id !== hoveredElementId,
         );
         if (connectedLine && connectedLine.fromId === hoveredElementId) {
           setAgentsOnCanvas((agents) =>
-            agents.filter((agent) => agent.id !== connectedLine.toId)
+            agents.filter((agent) => agent.id !== connectedLine.toId),
           );
           setConnectingLines((lines) =>
-            lines.filter((line) => line.id !== connectedLine.id)
+            lines.filter((line) => line.id !== connectedLine.id),
           );
         } else if (connectedLine && connectedLine.toId === hoveredElementId) {
           setAgentsOnCanvas((agents) =>
-            agents.filter((agent) => agent.id !== connectedLine.fromId)
+            agents.filter((agent) => agent.id !== connectedLine.fromId),
           );
           setConnectingLines((lines) =>
-            lines.filter((line) => line.id !== connectedLine.id)
+            lines.filter((line) => line.id !== connectedLine.id),
           );
         }
         return filtered;
       });
 
       setToolIconsOnCanvas((prev) =>
-        prev.filter((toolIcon) => toolIcon.id !== hoveredElementId)
+        prev.filter((toolIcon) => toolIcon.id !== hoveredElementId),
       );
       setHoveredElementId(null);
       e.preventDefault();
@@ -243,7 +243,7 @@ export const useKeyboardShortcuts = ({
     const handleEraserModeToggle = (
       key: string,
       e: KeyboardEvent,
-      shiftKey: boolean
+      shiftKey: boolean,
     ): boolean => {
       if (key === "w" && shiftKey) {
         updateEraserSettings({

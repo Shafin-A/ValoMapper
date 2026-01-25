@@ -115,7 +115,7 @@ export const CanvasXIcon = ({
       }
       onDragEnd?.(e);
     },
-    [draggable, onDragEnd]
+    [draggable, onDragEnd],
   );
 
   const handleInteractionStart = useCallback(
@@ -187,7 +187,7 @@ export const CanvasXIcon = ({
       stage.on("touchmove.interaction", handleInteractionMove);
       stage.on("touchend.interaction", handleInteractionEnd);
     },
-    [id, isListening, onInteractionEnd, onRotationChange, setAbilitiesOnCanvas]
+    [id, isListening, onInteractionEnd, onRotationChange, setAbilitiesOnCanvas],
   );
 
   const handleRotationHandleMouseOver = () => {

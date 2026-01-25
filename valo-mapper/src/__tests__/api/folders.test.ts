@@ -45,7 +45,7 @@ describe("Folders API Routes", () => {
         `${process.env.API_URL}/folders`,
         expect.objectContaining({
           signal: expect.any(AbortSignal),
-        })
+        }),
       );
     });
 

@@ -82,7 +82,7 @@ interface CanvasContextType {
   transitionToPhase: (
     transitionFrom: PhaseState,
     transitionTo: PhaseState,
-    duration: number
+    duration: number,
   ) => Promise<void>;
   registerNode: (id: string, node: Konva.Node) => void;
   unregisterNode: (id: string) => void;

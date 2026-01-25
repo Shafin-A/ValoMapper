@@ -183,7 +183,7 @@ export const CanvasArcIcon = ({
       stage.on("touchmove.interaction", handleInteractionMove);
       stage.on("touchend.interaction", handleInteractionEnd);
     },
-    [id, isListening, onInteractionEnd, setAbilitiesOnCanvas]
+    [id, isListening, onInteractionEnd, setAbilitiesOnCanvas],
   );
 
   const radians = (currentRotation * Math.PI) / 180;

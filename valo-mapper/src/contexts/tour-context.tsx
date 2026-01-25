@@ -60,7 +60,7 @@ export const TourProvider = ({ children }: { children: React.ReactNode }) => {
       if (typeof window !== "undefined") {
         localStorage.setItem(
           "valomapper-tour-completed",
-          user.tourCompleted ? "true" : "false"
+          user.tourCompleted ? "true" : "false",
         );
       }
     }

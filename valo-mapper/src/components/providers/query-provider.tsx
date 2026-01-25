@@ -16,7 +16,7 @@ export default function QueryProvider({
             staleTime: 60 * 1000, // 1 minute
           },
         },
-      })
+      }),
   );
 
   return (

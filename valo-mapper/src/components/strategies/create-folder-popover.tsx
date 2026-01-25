@@ -31,7 +31,7 @@ export const CreateFolderPopover = ({
           setOpen(false);
           onSuccess?.();
         },
-      }
+      },
     );
   };
 

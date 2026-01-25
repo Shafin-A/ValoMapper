@@ -12,12 +12,12 @@ import { useCallback, useMemo } from "react";
 
 const resolveValue = <T>(
   value: T[] | ((prev: T[]) => T[]),
-  currentValue: T[]
+  currentValue: T[],
 ): T[] => (typeof value === "function" ? value(currentValue) : value);
 
 export const useCanvasItems = (
   currentPhase: PhaseState,
-  updateCurrentPhase: (updates: Partial<PhaseState>) => void
+  updateCurrentPhase: (updates: Partial<PhaseState>) => void,
 ) => {
   const {
     textsOnCanvas,
@@ -31,20 +31,20 @@ export const useCanvasItems = (
 
   const setToolIconsOnCanvas = useCallback(
     (
-      value: ToolIconCanvas[] | ((prev: ToolIconCanvas[]) => ToolIconCanvas[])
+      value: ToolIconCanvas[] | ((prev: ToolIconCanvas[]) => ToolIconCanvas[]),
     ) => {
       updateCurrentPhase({
         toolIconsOnCanvas: resolveValue(value, toolIconsOnCanvas),
       });
     },
-    [toolIconsOnCanvas, updateCurrentPhase]
+    [toolIconsOnCanvas, updateCurrentPhase],
   );
 
   const setTextsOnCanvas = useCallback(
     (value: TextCanvas[] | ((prev: TextCanvas[]) => TextCanvas[])) => {
       updateCurrentPhase({ textsOnCanvas: resolveValue(value, textsOnCanvas) });
     },
-    [textsOnCanvas, updateCurrentPhase]
+    [textsOnCanvas, updateCurrentPhase],
   );
 
   const setImagesOnCanvas = useCallback(
@@ -53,7 +53,7 @@ export const useCanvasItems = (
         imagesOnCanvas: resolveValue(value, imagesOnCanvas),
       });
     },
-    [imagesOnCanvas, updateCurrentPhase]
+    [imagesOnCanvas, updateCurrentPhase],
   );
 
   const setAgentsOnCanvas = useCallback(
@@ -62,7 +62,7 @@ export const useCanvasItems = (
         agentsOnCanvas: resolveValue(value, agentsOnCanvas),
       });
     },
-    [agentsOnCanvas, updateCurrentPhase]
+    [agentsOnCanvas, updateCurrentPhase],
   );
 
   const setAbilitiesOnCanvas = useCallback(
@@ -71,25 +71,25 @@ export const useCanvasItems = (
         abilitiesOnCanvas: resolveValue(value, abilitiesOnCanvas),
       });
     },
-    [abilitiesOnCanvas, updateCurrentPhase]
+    [abilitiesOnCanvas, updateCurrentPhase],
   );
 
   const setDrawLines = useCallback(
     (value: DrawLine[] | ((prev: DrawLine[]) => DrawLine[])) => {
       updateCurrentPhase({ drawLines: resolveValue(value, drawLines) });
     },
-    [drawLines, updateCurrentPhase]
+    [drawLines, updateCurrentPhase],
   );
 
   const setConnectingLines = useCallback(
     (
-      value: ConnectingLine[] | ((prev: ConnectingLine[]) => ConnectingLine[])
+      value: ConnectingLine[] | ((prev: ConnectingLine[]) => ConnectingLine[]),
     ) => {
       updateCurrentPhase({
         connectingLines: resolveValue(value, connectingLines),
       });
     },
-    [connectingLines, updateCurrentPhase]
+    [connectingLines, updateCurrentPhase],
   );
 
   return useMemo(
@@ -124,6 +124,6 @@ export const useCanvasItems = (
       setTextsOnCanvas,
       toolIconsOnCanvas,
       setToolIconsOnCanvas,
-    ]
+    ],
   );
 };

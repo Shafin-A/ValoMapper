@@ -14,7 +14,7 @@ const createEmptyPhaseState = (): PhaseState => ({
 export const usePhaseManager = () => {
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [phases, setPhases] = useState<PhaseState[]>(
-    Array.from({ length: 10 }, () => createEmptyPhaseState())
+    Array.from({ length: 10 }, () => createEmptyPhaseState()),
   );
   const [editedPhases, setEditedPhases] = useState<Set<number>>(new Set([0]));
 
@@ -29,7 +29,7 @@ export const usePhaseManager = () => {
         return newPhases;
       });
     },
-    []
+    [],
   );
 
   const currentPhase = phases[currentPhaseIndex];
@@ -46,7 +46,7 @@ export const usePhaseManager = () => {
       });
       setEditedPhases((prev) => new Set(prev).add(currentPhaseIndex));
     },
-    [currentPhaseIndex, setPhasesWithRef]
+    [currentPhaseIndex, setPhasesWithRef],
   );
 
   const switchToPhase = useCallback(
@@ -55,7 +55,7 @@ export const usePhaseManager = () => {
 
       if (!editedPhases.has(index)) {
         const editedPhasesBeforeCurrent = Array.from(editedPhases).filter(
-          (p) => p < index
+          (p) => p < index,
         );
         const highestEditedPhase =
           editedPhasesBeforeCurrent.length > 0
@@ -73,7 +73,7 @@ export const usePhaseManager = () => {
 
       setCurrentPhaseIndex(index);
     },
-    [editedPhases, phases, setPhasesWithRef]
+    [editedPhases, phases, setPhasesWithRef],
   );
 
   const deletePhase = useCallback(
@@ -90,7 +90,7 @@ export const usePhaseManager = () => {
         return newSet;
       });
     },
-    [setPhasesWithRef]
+    [setPhasesWithRef],
   );
 
   const duplicatePhase = useCallback(
@@ -106,7 +106,7 @@ export const usePhaseManager = () => {
         setCurrentPhaseIndex(index + 1);
       }
     },
-    [phases, setPhasesWithRef]
+    [phases, setPhasesWithRef],
   );
 
   const resetAllPhases = useCallback(() => {

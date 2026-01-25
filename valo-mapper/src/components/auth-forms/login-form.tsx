@@ -66,7 +66,7 @@ export const LoginForm = ({
 
       if (!firebaseUser.emailVerified) {
         setError(
-          "Please verify your email before signing in. Check your inbox for the verification link."
+          "Please verify your email before signing in. Check your inbox for the verification link.",
         );
 
         await logout();

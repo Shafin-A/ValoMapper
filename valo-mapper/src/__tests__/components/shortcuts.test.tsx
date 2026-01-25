@@ -33,7 +33,7 @@ describe("Shortcuts", () => {
 
     expect(screen.getByText("Toggle Eraser Tool On/Off")).toBeInTheDocument();
     expect(
-      screen.getByText("Toggle Erase Entire Line On/Off")
+      screen.getByText("Toggle Erase Entire Line On/Off"),
     ).toBeInTheDocument();
   });
 
@@ -41,10 +41,10 @@ describe("Shortcuts", () => {
     render(<Shortcuts />);
 
     expect(
-      screen.getByText("Previous Phase (if not at first phase)")
+      screen.getByText("Previous Phase (if not at first phase)"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Next Phase (if not at last phase)")
+      screen.getByText("Next Phase (if not at last phase)"),
     ).toBeInTheDocument();
   });
 
@@ -65,7 +65,7 @@ describe("Shortcuts", () => {
     expect(categoryHeaders).toHaveLength(4);
 
     const shortcutItems = container.querySelectorAll(
-      ".flex.items-start.justify-between"
+      ".flex.items-start.justify-between",
     );
     expect(shortcutItems.length).toBeGreaterThan(0);
   });

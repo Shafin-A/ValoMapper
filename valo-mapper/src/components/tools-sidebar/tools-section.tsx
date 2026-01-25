@@ -165,7 +165,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
   }, [stageRef]);
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -226,7 +226,8 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
       const drawLayer = layers.find((layer) => {
         const children = layer.getChildren();
         return children.some(
-          (child) => child.getClassName() === "Group" && child.opacity() === 0.5
+          (child) =>
+            child.getClassName() === "Group" && child.opacity() === 0.5,
         );
       });
 
@@ -236,7 +237,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
           .getChildren()
           .find(
             (child) =>
-              child.getClassName() === "Group" && child.opacity() === 0.5
+              child.getClassName() === "Group" && child.opacity() === 0.5,
           ) as Group | null;
 
         if (deleteZone) {
@@ -375,8 +376,8 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
                 {isUpdatingLobby
                   ? "Syncing..."
                   : !isAuthenticated
-                  ? "Log in to save"
-                  : "Save"}
+                    ? "Log in to save"
+                    : "Save"}
               </TooltipContent>
             </Tooltip>
 
@@ -406,10 +407,10 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               {isUpdatingLobby
                 ? "Syncing..."
                 : isErrorUpdatingLobby
-                ? `Sync failed`
-                : hasUnsavedChanges
-                ? "Sync"
-                : "All changes synced"}
+                  ? `Sync failed`
+                  : hasUnsavedChanges
+                    ? "Sync"
+                    : "All changes synced"}
             </TooltipContent>
           </Tooltip>
           <Tooltip>

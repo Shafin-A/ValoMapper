@@ -23,7 +23,7 @@ type StageMock = {
 
 const createStageMock = (
   initialScale = 1,
-  initialPos: { x: number; y: number } = { x: 0, y: 0 }
+  initialPos: { x: number; y: number } = { x: 0, y: 0 },
 ): StageMock => {
   let scale = initialScale;
   let position = { ...initialPos };

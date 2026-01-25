@@ -38,7 +38,7 @@ export const cn = (...inputs: ClassValue[]) => {
 
 export const debounce = <Args extends unknown[], Return>(
   func: (...args: Args) => Return,
-  delay: number
+  delay: number,
 ): ((...args: Args) => void) => {
   let timeoutId: NodeJS.Timeout;
 
@@ -53,13 +53,13 @@ export const mToPixels = (meters: number): number => {
 };
 
 export const isCircleAbility = (
-  action: AbilityAction
+  action: AbilityAction,
 ): action is CircleAbility => {
   return action in CIRCLE_ABILITY_CONFIGS;
 };
 
 export const isAdjustableLineAbility = (
-  action: AbilityAction
+  action: AbilityAction,
 ): action is AdjustableLineAbility => {
   return action in ADJUSTABLE_LINE_ABILITY_CONFIGS;
 };
@@ -69,19 +69,19 @@ export const isLineAbility = (action: AbilityAction): action is LineAbility => {
 };
 
 export const isDoubleLineAbility = (
-  action: AbilityAction
+  action: AbilityAction,
 ): action is DoubleLineAbility => {
   return action in DOUBLE_LINE_ABILITY_CONFIGS;
 };
 
 export const isXLineAbility = (
-  action: AbilityAction
+  action: AbilityAction,
 ): action is XLineAbility => {
   return action in X_LINE_ABILITY_CONFIGS;
 };
 
 export const isCurvableLineAbility = (
-  action: AbilityAction
+  action: AbilityAction,
 ): action is CurvableLineAbility => {
   return action in CURVABLE_LINE_ABILITY_CONFIGS;
 };
@@ -97,7 +97,7 @@ export const isAgent = (obj: unknown): obj is Agent => {
 };
 
 export const getNextId = (
-  type: "agent" | "ability" | "text" | "image" | "tool"
+  type: "agent" | "ability" | "text" | "image" | "tool",
 ) => {
   const uuid = crypto.randomUUID();
   return `${type}-${uuid}`;
@@ -108,13 +108,13 @@ export const handleMouseOverGrabCursor = (e: KonvaEventObject<MouseEvent>) => {
 };
 
 export const handleMouseOverPointerCursor = (
-  e: KonvaEventObject<MouseEvent>
+  e: KonvaEventObject<MouseEvent>,
 ) => {
   e.target.getStage()!.container().style.cursor = "pointer";
 };
 
 export const handleMouseOutDefaultCursor = (
-  e: KonvaEventObject<MouseEvent>
+  e: KonvaEventObject<MouseEvent>,
 ) => {
   e.target.getStage()!.container().style.cursor = "default";
 };
@@ -123,7 +123,7 @@ export const doLinesIntersect = (
   p1: Vector2d,
   p2: Vector2d,
   p3: Vector2d,
-  p4: Vector2d
+  p4: Vector2d,
 ) => {
   const denominator =
     (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y);
@@ -142,10 +142,10 @@ export const doLinesIntersect = (
 
 export const doesEraserIntersect = (
   eraserPoints: Vector2d[],
-  existingStrokes: DrawLine[]
+  existingStrokes: DrawLine[],
 ) => {
   const existingPencilStrokes = existingStrokes.filter(
-    (stroke) => stroke.tool === "pencil"
+    (stroke) => stroke.tool === "pencil",
   );
 
   for (const stroke of existingPencilStrokes) {
@@ -168,12 +168,12 @@ export const doesEraserIntersect = (
 
 export const getIntersectingLines = (
   eraserPoints: Vector2d[],
-  existingStrokes: DrawLine[]
+  existingStrokes: DrawLine[],
 ): number[] => {
   const intersectingIndices: number[] = [];
 
   const drawableStrokes = existingStrokes.filter(
-    (stroke) => stroke.tool !== "eraser"
+    (stroke) => stroke.tool !== "eraser",
   );
 
   for (
@@ -219,7 +219,7 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
   setConnectingLines?: Dispatch<SetStateAction<ConnectingLine[]>>,
   onDeleteConnected?: (connectedId: string) => void,
   onItemRemoved?: (id: string) => void,
-  onItemMoved?: (item: T) => void
+  onItemMoved?: (item: T) => void,
 ) => {
   const node = e.target;
   const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
@@ -234,7 +234,7 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
   if (isOverDeleteGroup) {
     if (connectingLines && setConnectingLines) {
       const connectedLine = connectingLines.find(
-        (line) => line.fromId === icon.id || line.toId === icon.id
+        (line) => line.fromId === icon.id || line.toId === icon.id,
       );
 
       if (connectedLine && onDeleteConnected) {
@@ -244,7 +244,7 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
             : connectedLine.fromId;
         onDeleteConnected(connectedId);
         setConnectingLines((prev) =>
-          prev.filter((line) => line.id !== connectedLine.id)
+          prev.filter((line) => line.id !== connectedLine.id),
         );
       }
     }
@@ -273,7 +273,7 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
 export const handleDragMove = (
   e: KonvaEventObject<DragEvent>,
   deleteGroupRef?: React.RefObject<Konva.Group | null>,
-  nodeRef?: Konva.Node | null
+  nodeRef?: Konva.Node | null,
 ) => {
   if (!deleteGroupRef?.current) return;
 
@@ -358,7 +358,7 @@ export const getRelativeTime = (date: Date) => {
 
 export const buildTree = (
   folders: Folder[],
-  strategies: Strategy[]
+  strategies: Strategy[],
 ): StrategyData[] => {
   const folderMap = new Map<number, StrategyData>();
   const rootItems: StrategyData[] = [];
@@ -409,7 +409,7 @@ export const buildTree = (
 
 export const flattenData = (
   data: StrategyData,
-  result: Record<string, StrategyData> = {}
+  result: Record<string, StrategyData> = {},
 ): Record<string, StrategyData> => {
   result[data.id] = data;
   if (data.children) {
@@ -420,7 +420,7 @@ export const flattenData = (
 
 export const buildLocationPath = (
   selectedId: string,
-  data: Record<string, StrategyData>
+  data: Record<string, StrategyData>,
 ): Array<{ id: string; name: string }> => {
   const parts: Array<{ id: string; name: string }> = [];
   let currentId: string | undefined = selectedId;
@@ -430,7 +430,7 @@ export const buildLocationPath = (
     if (item) {
       parts.unshift({ id: currentId, name: item.name });
       const parent = Object.values(data).find((d) =>
-        d.children?.some((c) => c.id === currentId)
+        d.children?.some((c) => c.id === currentId),
       );
       currentId = parent?.id;
     } else {
@@ -444,14 +444,14 @@ export const buildLocationPath = (
 
 export const convertFolderOrStrategyId = (
   id: string,
-  type: "folder" | "strategy"
+  type: "folder" | "strategy",
 ) => {
   return Number(id.replace(type + "-", ""));
 };
 
 export const getFolderOrStrategyId = (
   id: string,
-  type: "folder" | "strategy"
+  type: "folder" | "strategy",
 ) => (id === "root" ? undefined : convertFolderOrStrategyId(id, type));
 
 export const capitalize = (s: string) =>

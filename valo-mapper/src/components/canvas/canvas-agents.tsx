@@ -52,10 +52,10 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
             setConnectingLines,
             (connectedId) =>
               setAbilitiesOnCanvas((prev) =>
-                prev.filter((a) => a.id !== connectedId)
+                prev.filter((a) => a.id !== connectedId),
               ),
             notifyAgentRemoved,
-            notifyAgentMoved
+            notifyAgentMoved,
           );
         }}
         width={agentsSettings.scale}

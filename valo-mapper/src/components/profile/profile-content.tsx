@@ -183,7 +183,7 @@ export const ProfileContent = () => {
           refetch();
           setIsEditing(false);
         },
-      }
+      },
     );
   };
 

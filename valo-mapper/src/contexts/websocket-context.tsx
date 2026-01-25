@@ -46,62 +46,62 @@ interface WebSocketContextType {
 
   broadcastAgentAdded: (
     agent: AgentMessageData["agent"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastAgentMoved: (
     agent: AgentMessageData["agent"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastAgentRemoved: (id: string, phaseIndex: number) => void;
   broadcastAbilityAdded: (
     ability: AbilityMessageData["ability"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastAbilityMoved: (
     ability: AbilityMessageData["ability"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastAbilityRemoved: (id: string, phaseIndex: number) => void;
   broadcastLineDrawn: (
     line: DrawLineMessageData["line"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastLineRemoved: (id: string, phaseIndex: number) => void;
   broadcastConnLineAdded: (
     line: ConnectingLineMessageData["line"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastConnLineUpdated: (
     line: ConnectingLineMessageData["line"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastConnLineRemoved: (id: string, phaseIndex: number) => void;
   broadcastTextAdded: (
     text: TextMessageData["text"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastTextUpdated: (
     text: TextMessageData["text"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastTextRemoved: (id: string, phaseIndex: number) => void;
   broadcastImageAdded: (
     image: ImageMessageData["image"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastImageMoved: (
     image: ImageMoveMessageData["image"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastImageRemoved: (id: string, phaseIndex: number) => void;
   broadcastLobbyUpdated: (reason: string, username: string) => void;
   broadcastToolIconAdded: (
     toolIcon: ToolIconMessageData["toolIcon"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastToolIconMoved: (
     toolIcon: ToolIconMessageData["toolIcon"],
-    phaseIndex: number
+    phaseIndex: number,
   ) => void;
   broadcastToolIconRemoved: (id: string, phaseIndex: number) => void;
   broadcastMapChanged: (selectedMap: MapChangedData["selectedMap"]) => void;
@@ -110,7 +110,7 @@ interface WebSocketContextType {
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const WebSocketProvider: FC<{ children: ReactNode }> = ({
@@ -166,7 +166,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
               const exists = prev.find((a) => a.id === agentData.agent.id);
               if (exists) {
                 return prev.map((a) =>
-                  a.id === agentData.agent.id ? agentData.agent : a
+                  a.id === agentData.agent.id ? agentData.agent : a,
                 );
               }
               return [...prev, agentData.agent];
@@ -178,7 +178,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
           if (isCurrentPhase) {
             const removeData = data as RemoveElementData;
             setAgentsOnCanvas((prev) =>
-              prev.filter((a) => a.id !== removeData.id)
+              prev.filter((a) => a.id !== removeData.id),
             );
           }
           break;
@@ -191,7 +191,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
               const exists = prev.find((a) => a.id === abilityData.ability.id);
               if (exists) {
                 return prev.map((a) =>
-                  a.id === abilityData.ability.id ? abilityData.ability : a
+                  a.id === abilityData.ability.id ? abilityData.ability : a,
                 );
               }
               return [...prev, abilityData.ability];
@@ -203,7 +203,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
           if (isCurrentPhase) {
             const removeData = data as RemoveElementData;
             setAbilitiesOnCanvas((prev) =>
-              prev.filter((a) => a.id !== removeData.id)
+              prev.filter((a) => a.id !== removeData.id),
             );
           }
           break;
@@ -215,7 +215,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
               const exists = prev.find((l) => l.id === lineData.line.id);
               if (exists) {
                 return prev.map((l) =>
-                  l.id === lineData.line.id ? lineData.line : l
+                  l.id === lineData.line.id ? lineData.line : l,
                 );
               }
               return [...prev, lineData.line];
@@ -238,7 +238,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
               const exists = prev.find((l) => l.id === connLineData.line.id);
               if (exists) {
                 return prev.map((l) =>
-                  l.id === connLineData.line.id ? connLineData.line : l
+                  l.id === connLineData.line.id ? connLineData.line : l,
                 );
               }
               return [...prev, connLineData.line];
@@ -250,7 +250,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
           if (isCurrentPhase) {
             const removeData = data as RemoveElementData;
             setConnectingLines((prev) =>
-              prev.filter((l) => l.id !== removeData.id)
+              prev.filter((l) => l.id !== removeData.id),
             );
           }
           break;
@@ -263,7 +263,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
               const exists = prev.find((t) => t.id === textData.text.id);
               if (exists) {
                 return prev.map((t) =>
-                  t.id === textData.text.id ? textData.text : t
+                  t.id === textData.text.id ? textData.text : t,
                 );
               }
               return [...prev, textData.text];
@@ -275,7 +275,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
           if (isCurrentPhase) {
             const removeData = data as RemoveElementData;
             setTextsOnCanvas((prev) =>
-              prev.filter((t) => t.id !== removeData.id)
+              prev.filter((t) => t.id !== removeData.id),
             );
           }
           break;
@@ -287,7 +287,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
               const exists = prev.find((i) => i.id === imageData.image.id);
               if (exists) {
                 return prev.map((i) =>
-                  i.id === imageData.image.id ? imageData.image : i
+                  i.id === imageData.image.id ? imageData.image : i,
                 );
               }
               return [...prev, imageData.image];
@@ -308,8 +308,8 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
                       width: imageMoveData.image.width,
                       height: imageMoveData.image.height,
                     }
-                  : i
-              )
+                  : i,
+              ),
             );
           }
           break;
@@ -318,7 +318,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
           if (isCurrentPhase) {
             const removeData = data as RemoveElementData;
             setImagesOnCanvas((prev) =>
-              prev.filter((i) => i.id !== removeData.id)
+              prev.filter((i) => i.id !== removeData.id),
             );
           }
           break;
@@ -337,11 +337,11 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
             const toolIconData = data as ToolIconMessageData;
             setToolIconsOnCanvas((prev) => {
               const exists = prev.find(
-                (t) => t.id === toolIconData.toolIcon.id
+                (t) => t.id === toolIconData.toolIcon.id,
               );
               if (exists) {
                 return prev.map((t) =>
-                  t.id === toolIconData.toolIcon.id ? toolIconData.toolIcon : t
+                  t.id === toolIconData.toolIcon.id ? toolIconData.toolIcon : t,
                 );
               }
               return [...prev, toolIconData.toolIcon];
@@ -353,7 +353,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
           if (isCurrentPhase) {
             const removeData = data as RemoveElementData;
             setToolIconsOnCanvas((prev) =>
-              prev.filter((t) => t.id !== removeData.id)
+              prev.filter((t) => t.id !== removeData.id),
             );
           }
           break;
@@ -409,7 +409,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       setImagesOnCanvas,
       setToolIconsOnCanvas,
       switchToPhase,
-    ]
+    ],
   );
 
   const { status, users, cursors, sendMessage, sendCursorPosition } =
@@ -425,10 +425,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<AgentMessageData>(
         WS_MESSAGE_TYPES.AGENT_ADDED,
         { agent },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastAgentMoved = useCallback(
@@ -436,10 +436,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<AgentMessageData>(
         WS_MESSAGE_TYPES.AGENT_MOVED,
         { agent },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastAgentRemoved = useCallback(
@@ -447,10 +447,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<RemoveElementData>(
         WS_MESSAGE_TYPES.AGENT_REMOVED,
         { id },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastAbilityAdded = useCallback(
@@ -458,10 +458,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<AbilityMessageData>(
         WS_MESSAGE_TYPES.ABILITY_ADDED,
         { ability },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastAbilityMoved = useCallback(
@@ -469,10 +469,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<AbilityMessageData>(
         WS_MESSAGE_TYPES.ABILITY_MOVED,
         { ability },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastAbilityRemoved = useCallback(
@@ -480,10 +480,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<RemoveElementData>(
         WS_MESSAGE_TYPES.ABILITY_REMOVED,
         { id },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastLineDrawn = useCallback(
@@ -491,10 +491,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<DrawLineMessageData>(
         WS_MESSAGE_TYPES.LINE_DRAWN,
         { line },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastLineRemoved = useCallback(
@@ -502,10 +502,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<RemoveElementData>(
         WS_MESSAGE_TYPES.LINE_REMOVED,
         { id },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastConnLineAdded = useCallback(
@@ -513,10 +513,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<ConnectingLineMessageData>(
         WS_MESSAGE_TYPES.CONN_LINE_ADDED,
         { line },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastConnLineUpdated = useCallback(
@@ -524,10 +524,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<ConnectingLineMessageData>(
         WS_MESSAGE_TYPES.CONN_LINE_UPDATED,
         { line },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastConnLineRemoved = useCallback(
@@ -535,10 +535,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<RemoveElementData>(
         WS_MESSAGE_TYPES.CONN_LINE_REMOVED,
         { id },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastTextAdded = useCallback(
@@ -546,10 +546,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<TextMessageData>(
         WS_MESSAGE_TYPES.TEXT_ADDED,
         { text },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastTextUpdated = useCallback(
@@ -557,10 +557,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<TextMessageData>(
         WS_MESSAGE_TYPES.TEXT_UPDATED,
         { text },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastTextRemoved = useCallback(
@@ -568,10 +568,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<RemoveElementData>(
         WS_MESSAGE_TYPES.TEXT_REMOVED,
         { id },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastImageAdded = useCallback(
@@ -579,10 +579,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<ImageMessageData>(
         WS_MESSAGE_TYPES.IMAGE_ADDED,
         { image },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastImageMoved = useCallback(
@@ -590,10 +590,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<ImageMoveMessageData>(
         WS_MESSAGE_TYPES.IMAGE_MOVED,
         { image },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastImageRemoved = useCallback(
@@ -601,10 +601,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<RemoveElementData>(
         WS_MESSAGE_TYPES.IMAGE_REMOVED,
         { id },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastLobbyUpdated = useCallback(
@@ -614,7 +614,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
         username,
       });
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastStateSync = useCallback(() => {
@@ -629,7 +629,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     onUndoRedoCallback.current = () => {
       const currentState = getCurrentStateForSync();
       const hasImages = currentState.phases.some(
-        (phase) => phase.imagesOnCanvas && phase.imagesOnCanvas.length > 0
+        (phase) => phase.imagesOnCanvas && phase.imagesOnCanvas.length > 0,
       );
 
       if (hasImages) {
@@ -661,10 +661,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<ToolIconMessageData>(
         WS_MESSAGE_TYPES.TOOL_ICON_ADDED,
         { toolIcon },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastToolIconMoved = useCallback(
@@ -672,10 +672,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<ToolIconMessageData>(
         WS_MESSAGE_TYPES.TOOL_ICON_MOVED,
         { toolIcon },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastToolIconRemoved = useCallback(
@@ -683,10 +683,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<RemoveElementData>(
         WS_MESSAGE_TYPES.TOOL_ICON_REMOVED,
         { id },
-        phaseIndex
+        phaseIndex,
       );
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastMapChanged = useCallback(
@@ -695,14 +695,14 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
         selectedMap,
       });
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastSideChanged = useCallback(
     (mapSide: SideChangedData["mapSide"]) => {
       sendMessage<SideChangedData>(WS_MESSAGE_TYPES.SIDE_CHANGED, { mapSide });
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const broadcastPhaseChanged = useCallback(
@@ -711,7 +711,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
         phaseIndex,
       });
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const value = useMemo<WebSocketContextType>(
@@ -774,7 +774,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       broadcastMapChanged,
       broadcastSideChanged,
       broadcastPhaseChanged,
-    ]
+    ],
   );
 
   return (

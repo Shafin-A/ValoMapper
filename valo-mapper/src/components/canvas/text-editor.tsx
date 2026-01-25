@@ -101,7 +101,7 @@ export const TextEditor = ({
         window.removeEventListener("click", handleOutsideClick);
       };
     },
-    [textNode, text, onChange, onClose]
+    [textNode, text, onChange, onClose],
   );
 
   return (

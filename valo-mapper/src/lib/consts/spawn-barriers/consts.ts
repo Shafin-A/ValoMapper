@@ -164,7 +164,7 @@ export const MAP_SPAWN_BARRIERS: Record<string, MapSpawnBarrierData> = {
 };
 
 export const getMapSpawnBarriers = (
-  mapId: string
+  mapId: string,
 ): MapSpawnBarrierData | undefined => {
   return MAP_SPAWN_BARRIERS[mapId];
 };

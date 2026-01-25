@@ -13,7 +13,7 @@ import { useCallback, useRef } from "react";
 export const useCanvasZoom = (
   stageRef: React.RefObject<Stage | null>,
   baseScale: number,
-  isDrawMode: boolean
+  isDrawMode: boolean,
 ) => {
   const pinchInitialDistanceRef = useRef<number | null>(null);
   const pinchInitialScaleRef = useRef<number | null>(null);
@@ -82,7 +82,7 @@ export const useCanvasZoom = (
 
       const clampedZoomScale = Math.max(
         MIN_ZOOM_SCALE,
-        Math.min(MAX_ZOOM_SCALE, newZoomScale)
+        Math.min(MAX_ZOOM_SCALE, newZoomScale),
       );
 
       const newTotalScale = baseScale * clampedZoomScale;
@@ -97,7 +97,7 @@ export const useCanvasZoom = (
 
       handleDragMove();
     },
-    [handleDragMove, stageRef, baseScale]
+    [handleDragMove, stageRef, baseScale],
   );
 
   const handleTouchStart = useCallback(
@@ -133,7 +133,7 @@ export const useCanvasZoom = (
         y: (worldPoints[0].y + worldPoints[1].y) / 2,
       };
     },
-    [stageRef]
+    [stageRef],
   );
 
   const handleTouchMove = useCallback(
@@ -168,7 +168,7 @@ export const useCanvasZoom = (
 
       const clampedZoomScale = Math.max(
         MIN_ZOOM_SCALE,
-        Math.min(MAX_ZOOM_SCALE, newTotalScaleRaw / baseScale)
+        Math.min(MAX_ZOOM_SCALE, newTotalScaleRaw / baseScale),
       );
       const newTotalScale = clampedZoomScale * baseScale;
 
@@ -187,7 +187,7 @@ export const useCanvasZoom = (
       stage.position(newPos);
       handleDragMove();
     },
-    [baseScale, handleDragMove, stageRef]
+    [baseScale, handleDragMove, stageRef],
   );
 
   const handleTouchEnd = useCallback(
@@ -203,7 +203,7 @@ export const useCanvasZoom = (
         }
       }
     },
-    [isDrawMode, stageRef]
+    [isDrawMode, stageRef],
   );
 
   return {

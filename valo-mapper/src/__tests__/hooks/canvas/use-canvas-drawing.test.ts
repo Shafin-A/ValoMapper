@@ -47,8 +47,8 @@ describe("useCanvasDrawing", () => {
         { size: 5, mode: "pixel" },
         [],
         jest.fn(),
-        setCurrentStroke
-      )
+        setCurrentStroke,
+      ),
     );
 
     act(() => {
@@ -61,7 +61,7 @@ describe("useCanvasDrawing", () => {
         id: "tool-id",
         tool: "pencil",
         points: [{ x: 10, y: 20 }],
-      })
+      }),
     );
   });
 
@@ -113,8 +113,8 @@ describe("useCanvasDrawing", () => {
         { size: 5, mode: "line" },
         drawLines,
         setDrawLines,
-        jest.fn()
-      )
+        jest.fn(),
+      ),
     );
 
     act(() => {
@@ -147,8 +147,8 @@ describe("useCanvasDrawing", () => {
         { size: 3, mode: "pixel" },
         [],
         setDrawLines,
-        setCurrentStroke
-      )
+        setCurrentStroke,
+      ),
     );
 
     act(() => {

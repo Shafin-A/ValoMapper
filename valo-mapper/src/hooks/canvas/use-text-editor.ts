@@ -4,7 +4,7 @@ import Konva from "konva";
 import { RefObject, useCallback, useRef } from "react";
 
 export const useTextEditor = (
-  transformerRefs: RefObject<Map<string, Konva.Transformer>>
+  transformerRefs: RefObject<Map<string, Konva.Transformer>>,
 ) => {
   const { textsOnCanvas, setTextsOnCanvas, isDrawMode, setEditingTextId } =
     useCanvas();
@@ -22,7 +22,7 @@ export const useTextEditor = (
         }
       }
     },
-    [transformerRefs]
+    [transformerRefs],
   );
 
   const handleTextClick = useCallback(
@@ -30,7 +30,7 @@ export const useTextEditor = (
       if (isDrawMode) return;
       setEditingTextId(textId);
     },
-    [isDrawMode, setEditingTextId]
+    [isDrawMode, setEditingTextId],
   );
 
   const handleTextTransform = useCallback((textId: string) => {
@@ -59,12 +59,12 @@ export const useTextEditor = (
           height: textNode.height(),
         };
         setTextsOnCanvas((prev) =>
-          prev.map((item) => (item.id === textId ? updatedText : item))
+          prev.map((item) => (item.id === textId ? updatedText : item)),
         );
         notifyTextUpdated(updatedText);
       }
     },
-    [setTextsOnCanvas, textsOnCanvas, notifyTextUpdated]
+    [setTextsOnCanvas, textsOnCanvas, notifyTextUpdated],
   );
 
   const handleTextChange = (textId: string, newText: string) => {
@@ -72,7 +72,7 @@ export const useTextEditor = (
     if (textItem) {
       const updatedText = { ...textItem, text: newText };
       setTextsOnCanvas((prev) =>
-        prev.map((item) => (item.id === textId ? updatedText : item))
+        prev.map((item) => (item.id === textId ? updatedText : item)),
       );
       notifyTextUpdated(updatedText);
     }

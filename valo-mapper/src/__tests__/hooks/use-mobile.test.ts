@@ -164,7 +164,7 @@ describe("useIsMobile", () => {
     expect(removeEventListenerMock).toHaveBeenCalledTimes(1);
     expect(removeEventListenerMock).toHaveBeenCalledWith(
       "change",
-      expect.any(Function)
+      expect.any(Function),
     );
   });
 });

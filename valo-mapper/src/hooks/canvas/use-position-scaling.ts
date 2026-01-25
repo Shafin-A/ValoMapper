@@ -13,7 +13,7 @@ export const usePositionScaling = (
   setAgentsOnCanvas: React.Dispatch<React.SetStateAction<AgentCanvas[]>>,
   abilitiesOnCanvas: AbilityCanvas[],
   setAbilitiesOnCanvas: React.Dispatch<React.SetStateAction<AbilityCanvas[]>>,
-  mapSize: number
+  mapSize: number,
 ) => {
   const lastProcessedDimensions = useRef({ width: 0, height: 0 });
 

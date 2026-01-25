@@ -20,7 +20,7 @@ const duplicateItem = <T extends BaseCanvasItem>(
   items: T[],
   itemId: string,
   setItems: Dispatch<SetStateAction<T[]>>,
-  idPrefix: ItemType
+  idPrefix: ItemType,
 ): T | null => {
   const item = items.find((i) => i.id === itemId);
   if (item) {
@@ -38,7 +38,7 @@ const duplicateItem = <T extends BaseCanvasItem>(
 
 const deleteItem = <T extends BaseCanvasItem>(
   itemId: string,
-  setItems: Dispatch<SetStateAction<T[]>>
+  setItems: Dispatch<SetStateAction<T[]>>,
 ): void => {
   setItems((prev) => prev.filter((item) => item.id !== itemId));
 };
@@ -65,7 +65,7 @@ export const useCanvasContextMenu = (
   setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>,
   connectingLines: ConnectingLine[],
   setConnectingLines: Dispatch<SetStateAction<ConnectingLine[]>>,
-  saveCanvasStateAsync?: () => Promise<void>
+  saveCanvasStateAsync?: () => Promise<void>,
 ) => {
   const {
     notifyAgentAdded,
@@ -112,19 +112,19 @@ export const useCanvasContextMenu = (
       if (!targetId) return;
 
       const isAgentItem = agentsOnCanvas.some(
-        (agent) => agent.id.toString() === targetId
+        (agent) => agent.id.toString() === targetId,
       );
       const isAbilityItem = abilitiesOnCanvas.some(
-        (ability) => ability.id.toString() === targetId
+        (ability) => ability.id.toString() === targetId,
       );
       const isTextItem = textsOnCanvas.some(
-        (text) => text.id.toString() === targetId
+        (text) => text.id.toString() === targetId,
       );
       const isImageItem = imagesOnCanvas.some(
-        (image) => image.id.toString() === targetId
+        (image) => image.id.toString() === targetId,
       );
       const isToolIconItem = toolIconsOnCanvas.some(
-        (toolIcon) => toolIcon.id === targetId
+        (toolIcon) => toolIcon.id === targetId,
       );
 
       if (
@@ -160,7 +160,7 @@ export const useCanvasContextMenu = (
       textsOnCanvas,
       imagesOnCanvas,
       toolIconsOnCanvas,
-    ]
+    ],
   );
 
   const handlePopoverOpenChange = useCallback((open: boolean) => {
@@ -178,7 +178,7 @@ export const useCanvasContextMenu = (
           agentsOnCanvas,
           itemId,
           setAgentsOnCanvas,
-          itemType
+          itemType,
         );
         if (newAgent) notifyAgentAdded(newAgent as AgentCanvas);
         break;
@@ -188,7 +188,7 @@ export const useCanvasContextMenu = (
           abilitiesOnCanvas,
           itemId,
           setAbilitiesOnCanvas,
-          itemType
+          itemType,
         );
         if (newAbility) notifyAbilityAdded(newAbility as AbilityCanvas);
         break;
@@ -198,7 +198,7 @@ export const useCanvasContextMenu = (
           textsOnCanvas,
           itemId,
           setTextsOnCanvas,
-          itemType
+          itemType,
         );
         if (newText) notifyTextAdded(newText as TextCanvas);
         break;
@@ -208,7 +208,7 @@ export const useCanvasContextMenu = (
           imagesOnCanvas,
           itemId,
           setImagesOnCanvas,
-          itemType
+          itemType,
         );
         if (newImage) {
           if (users.length > 1) await saveCanvasStateAsync?.();
@@ -221,7 +221,7 @@ export const useCanvasContextMenu = (
           toolIconsOnCanvas,
           itemId,
           setToolIconsOnCanvas,
-          itemType
+          itemType,
         );
         if (newToolIcon) notifyToolIconAdded(newToolIcon as ToolIconCanvas);
         break;
@@ -256,7 +256,7 @@ export const useCanvasContextMenu = (
     const { itemId, itemType } = contextMenu;
 
     const connectedLine = connectingLines.find(
-      (line) => line.fromId === itemId || line.toId === itemId
+      (line) => line.fromId === itemId || line.toId === itemId,
     );
 
     switch (itemType) {
@@ -271,7 +271,7 @@ export const useCanvasContextMenu = (
           deleteItem(connectedId, setAbilitiesOnCanvas);
           notifyAbilityRemoved(connectedId);
           setConnectingLines((prev) =>
-            prev.filter((line) => line.id !== connectedLine.id)
+            prev.filter((line) => line.id !== connectedLine.id),
           );
           notifyConnLineRemoved(connectedLine.id);
         }
@@ -287,7 +287,7 @@ export const useCanvasContextMenu = (
           deleteItem(connectedId, setAgentsOnCanvas);
           notifyAgentRemoved(connectedId);
           setConnectingLines((prev) =>
-            prev.filter((line) => line.id !== connectedLine.id)
+            prev.filter((line) => line.id !== connectedLine.id),
           );
           notifyConnLineRemoved(connectedLine.id);
         }
@@ -334,7 +334,7 @@ export const useCanvasContextMenu = (
       if (agent) {
         const updatedAgent = { ...agent, isAlly: !agent.isAlly };
         setAgentsOnCanvas((prev) =>
-          prev.map((a) => (a.id === itemId ? updatedAgent : a))
+          prev.map((a) => (a.id === itemId ? updatedAgent : a)),
         );
         notifyAgentMoved(updatedAgent);
       }
@@ -343,7 +343,7 @@ export const useCanvasContextMenu = (
       if (ability) {
         const updatedAbility = { ...ability, isAlly: !ability.isAlly };
         setAbilitiesOnCanvas((prev) =>
-          prev.map((a) => (a.id === itemId ? updatedAbility : a))
+          prev.map((a) => (a.id === itemId ? updatedAbility : a)),
         );
         notifyAbilityMoved(updatedAbility);
       }

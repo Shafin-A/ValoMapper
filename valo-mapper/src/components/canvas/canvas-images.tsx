@@ -42,7 +42,7 @@ export const CanvasImages = ({
 
   const handleImageMouseEnter = (
     e: Konva.KonvaEventObject<MouseEvent>,
-    imageId: string
+    imageId: string,
   ) => {
     if (!selectedCanvasIcon) {
       hookHandleImageMouseEnter(e, imageId);
@@ -51,7 +51,7 @@ export const CanvasImages = ({
   };
 
   const handleImageMouseLeaveInternal = (
-    e: Konva.KonvaEventObject<MouseEvent>
+    e: Konva.KonvaEventObject<MouseEvent>,
   ) => {
     handleImageMouseLeave(e);
     if (!selectedCanvasIcon) {
@@ -101,7 +101,7 @@ export const CanvasImages = ({
                 y: movedItem.y,
                 width: movedItem.width,
                 height: movedItem.height,
-              })
+              }),
           );
         }}
         onMouseEnter={(e) => handleImageMouseEnter(e, imageItem.id)}

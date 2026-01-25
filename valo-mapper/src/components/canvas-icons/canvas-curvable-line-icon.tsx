@@ -133,7 +133,7 @@ export const CanvasCurvableLineIcon = ({
       }
       onDragEnd?.(e);
     },
-    [draggable, onDragEnd]
+    [draggable, onDragEnd],
   );
 
   const updateAbilitiesState = useCallback(
@@ -150,7 +150,7 @@ export const CanvasCurvableLineIcon = ({
 
       onInteractionEnd?.({ currentPath: finalPath });
     },
-    [id, onInteractionEnd, setAbilitiesOnCanvas]
+    [id, onInteractionEnd, setAbilitiesOnCanvas],
   );
 
   const handlePathDrawing = useCallback(
@@ -200,7 +200,7 @@ export const CanvasCurvableLineIcon = ({
 
         const lastPoint = newPath[newPath.length - 1];
         const distance = Math.sqrt(
-          Math.pow(localX - lastPoint.x, 2) + Math.pow(localY - lastPoint.y, 2)
+          Math.pow(localX - lastPoint.x, 2) + Math.pow(localY - lastPoint.y, 2),
         );
 
         if (distance > 5) {
@@ -212,7 +212,7 @@ export const CanvasCurvableLineIcon = ({
             const remaining = maxDistance - calculatePathDistance(newPath);
             const direction = Math.atan2(
               localY - lastPoint.y,
-              localX - lastPoint.x
+              localX - lastPoint.x,
             );
             const finalPoint = {
               x: lastPoint.x + remaining * Math.cos(direction),
@@ -248,7 +248,7 @@ export const CanvasCurvableLineIcon = ({
       path,
       updateAbilitiesState,
       width,
-    ]
+    ],
   );
 
   const handleMouseOver = () => {
@@ -271,7 +271,7 @@ export const CanvasCurvableLineIcon = ({
   const endPoint = getEndPoint();
   const progressPercentage = Math.min(
     (currentDistance / maxDistance) * 100,
-    100
+    100,
   );
   const constraintReached = progressPercentage >= 100;
 

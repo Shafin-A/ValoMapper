@@ -39,7 +39,7 @@ describe("POST /api/lobbies", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: expect.any(AbortSignal),
-      })
+      }),
     );
     expect(data).toEqual(mockResponse);
   });

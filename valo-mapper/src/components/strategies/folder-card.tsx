@@ -39,7 +39,7 @@ export const FolderCard = ({
       }}
       className={cn(
         "relative w-56 h-56 cursor-pointer select-none transition-transform duration-200",
-        className
+        className,
       )}
     >
       <svg

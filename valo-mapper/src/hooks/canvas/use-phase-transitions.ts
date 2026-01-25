@@ -37,7 +37,7 @@ export const usePhaseTransitions = () => {
 
         fromPhase.agentsOnCanvas.forEach((fromAgent) => {
           const existsInToPhase = toPhase.agentsOnCanvas.some(
-            (a) => a.id === fromAgent.id
+            (a) => a.id === fromAgent.id,
           );
 
           if (!existsInToPhase) {
@@ -63,7 +63,7 @@ export const usePhaseTransitions = () => {
         }, duration);
       });
     },
-    []
+    [],
   );
 
   return {

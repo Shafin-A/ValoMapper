@@ -11,7 +11,7 @@ export const useLineupForm = () => {
 
   const debouncedSetLineColor = useMemo(
     () => debounce((color: string) => setLineColor(color), 16),
-    []
+    [],
   );
 
   const handleAgentChange = useCallback((agentName: string) => {

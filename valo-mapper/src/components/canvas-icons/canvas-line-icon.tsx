@@ -145,7 +145,7 @@ export const CanvasLineIcon = ({
       }
       onDragEnd?.(e);
     },
-    [draggable, onDragEnd]
+    [draggable, onDragEnd],
   );
 
   const handleInteractionStart = useCallback(
@@ -188,7 +188,7 @@ export const CanvasLineIcon = ({
 
           const clampedDistance = Math.max(
             minLength,
-            Math.min(maxLength, adjustedDistance)
+            Math.min(maxLength, adjustedDistance),
           );
 
           rotationRef.current = angle;
@@ -253,7 +253,7 @@ export const CanvasLineIcon = ({
       onLengthChange,
       onRotationChange,
       setAbilitiesOnCanvas,
-    ]
+    ],
   );
 
   const handleRotationHandleMouseOver = () => {

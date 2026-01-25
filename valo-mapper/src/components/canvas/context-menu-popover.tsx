@@ -92,12 +92,12 @@ export const ContextMenuPopover = ({
               itemType === "agent"
                 ? "Agent"
                 : itemType === "ability"
-                ? "Ability"
-                : itemType === "image"
-                ? "Image"
-                : itemType === "tool"
-                ? "Icon"
-                : "Text"
+                  ? "Ability"
+                  : itemType === "image"
+                    ? "Image"
+                    : itemType === "tool"
+                      ? "Icon"
+                      : "Text"
             }`}
           >
             <Button variant="ghost" size="sm" onClick={onDuplicate}>
@@ -136,12 +136,12 @@ export const ContextMenuPopover = ({
               itemType === "agent"
                 ? "Agent"
                 : itemType === "ability"
-                ? "Ability"
-                : itemType === "image"
-                ? "Image"
-                : itemType === "tool"
-                ? "Icon"
-                : "Text"
+                  ? "Ability"
+                  : itemType === "image"
+                    ? "Image"
+                    : itemType === "tool"
+                      ? "Icon"
+                      : "Text"
             }`}
           >
             <Button variant="destructiveGhost" size="sm" onClick={onDelete}>

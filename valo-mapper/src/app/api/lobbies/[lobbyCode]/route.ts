@@ -1,6 +1,6 @@
 export const GET = async (
   request: Request,
-  { params }: { params: Promise<{ lobbyCode: string }> }
+  { params }: { params: Promise<{ lobbyCode: string }> },
 ) => {
   const { lobbyCode } = await params;
 
@@ -12,7 +12,7 @@ export const GET = async (
       `${process.env.API_URL}/lobbies/${lobbyCode}`,
       {
         signal: controller.signal,
-      }
+      },
     );
 
     clearTimeout(timeoutId);
@@ -25,7 +25,7 @@ export const GET = async (
               ? "Lobby not found"
               : "Failed to fetch lobby",
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -36,7 +36,7 @@ export const GET = async (
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;
@@ -45,7 +45,7 @@ export const GET = async (
 
 export const PATCH = async (
   request: Request,
-  { params }: { params: Promise<{ lobbyCode: string }> }
+  { params }: { params: Promise<{ lobbyCode: string }> },
 ) => {
   const { lobbyCode } = await params;
 
@@ -64,7 +64,7 @@ export const PATCH = async (
         },
         body: JSON.stringify(body),
         signal: controller.signal,
-      }
+      },
     );
 
     clearTimeout(timeoutId);
@@ -72,7 +72,7 @@ export const PATCH = async (
     if (!response.ok) {
       return Response.json(
         { error: "Failed to update lobby" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -83,7 +83,7 @@ export const PATCH = async (
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;

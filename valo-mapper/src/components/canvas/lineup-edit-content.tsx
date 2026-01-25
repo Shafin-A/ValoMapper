@@ -32,7 +32,7 @@ export const LineupEditContent = ({
 }: LineupEditContentProps) => {
   const debouncedSetLineColor = useMemo(
     () => debounce((color: string) => onLineColorChange(color), 16),
-    [onLineColorChange]
+    [onLineColorChange],
   );
 
   return (

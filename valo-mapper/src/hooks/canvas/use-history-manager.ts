@@ -45,10 +45,10 @@ export const useHistoryManager = ({
     const currentPhase = currentState.phases[currentState.currentPhaseIndex];
 
     const hasTempAgents = currentPhase.agentsOnCanvas.some(
-      (agent) => agent.id === TEMP_DRAG_ID
+      (agent) => agent.id === TEMP_DRAG_ID,
     );
     const hasTempAbilities = currentPhase.abilitiesOnCanvas.some(
-      (ability) => ability.id === TEMP_DRAG_ID
+      (ability) => ability.id === TEMP_DRAG_ID,
     );
 
     if (hasTempAgents || hasTempAbilities) {
@@ -99,7 +99,7 @@ export const useHistoryManager = ({
         isUpdatingFromHistory.current = false;
       }, 10);
     },
-    [applyState]
+    [applyState],
   );
 
   const undo = useCallback(() => {

@@ -107,7 +107,7 @@ export const LineupViewDialog = ({
 
     if (hasImages) {
       setConnectingLines((prev) =>
-        prev.map((l) => (l.id === line.id ? updatedLine : l))
+        prev.map((l) => (l.id === line.id ? updatedLine : l)),
       );
       if (users.length > 1) {
         await saveCanvasStateAsync();
@@ -115,7 +115,7 @@ export const LineupViewDialog = ({
       notifyLineupWithImagesAdded();
     } else {
       setConnectingLines((prev) =>
-        prev.map((l) => (l.id === line.id ? updatedLine : l))
+        prev.map((l) => (l.id === line.id ? updatedLine : l)),
       );
       notifyConnLineUpdated(updatedLine);
     }

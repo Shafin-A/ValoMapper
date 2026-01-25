@@ -52,7 +52,7 @@ describe("useHistoryManager", () => {
 
   it("should initialize with empty history", () => {
     const { result } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     expect(result.current.history).toEqual([]);
@@ -62,7 +62,7 @@ describe("useHistoryManager", () => {
 
   it("should save state to history manually", () => {
     const { result } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     act(() => {
@@ -75,7 +75,7 @@ describe("useHistoryManager", () => {
 
   it("should enable undo after saving state", () => {
     const { result } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     act(() => {
@@ -97,7 +97,7 @@ describe("useHistoryManager", () => {
 
   it("should undo to previous state", () => {
     const { result } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     const state1 = { ...mockState, currentPhaseIndex: 0 };
@@ -126,7 +126,7 @@ describe("useHistoryManager", () => {
 
   it("should redo after undo", () => {
     const { result } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     const state1 = { ...mockState, currentPhaseIndex: 0 };
@@ -165,7 +165,7 @@ describe("useHistoryManager", () => {
 
   it("should limit history to 50 entries", () => {
     const { result } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     for (let i = 0; i < 52; i++) {
@@ -183,7 +183,7 @@ describe("useHistoryManager", () => {
 
   it("should clear redo history when new state is saved after undo", () => {
     const { result } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     for (let i = 0; i < 3; i++) {
@@ -218,7 +218,7 @@ describe("useHistoryManager", () => {
 
   it("should not undo beyond first state", () => {
     const { result } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     act(() => {
@@ -234,7 +234,7 @@ describe("useHistoryManager", () => {
 
   it("should not redo beyond last state", () => {
     const { result } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     act(() => {
@@ -250,7 +250,7 @@ describe("useHistoryManager", () => {
 
   it("should not save duplicate states automatically", () => {
     const { result, rerender } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     // Trigger automatic save via useEffect
@@ -273,7 +273,7 @@ describe("useHistoryManager", () => {
   it("should not save state with temp drag items", () => {
     getCurrentState.mockReturnValue(mockState);
     const { result, rerender } = renderHook(() =>
-      useHistoryManager({ getCurrentState, applyState })
+      useHistoryManager({ getCurrentState, applyState }),
     );
 
     // Trigger initial auto-save

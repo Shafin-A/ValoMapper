@@ -2,7 +2,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
-    public statusText: string
+    public statusText: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -11,7 +11,7 @@ export class ApiError extends Error {
 
 const parseErrorMessage = async (
   response: Response,
-  fallbackMessage: string
+  fallbackMessage: string,
 ): Promise<string> => {
   try {
     const data = await response.json();
@@ -27,7 +27,7 @@ interface FetchOptions extends Omit<RequestInit, "headers"> {
 
 export const apiFetch = async <T>(
   url: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
 ): Promise<T> => {
   const { token, ...fetchOptions } = options;
 
@@ -44,7 +44,7 @@ export const apiFetch = async <T>(
   if (!response.ok) {
     const message = await parseErrorMessage(
       response,
-      `Request failed: ${response.statusText}`
+      `Request failed: ${response.statusText}`,
     );
     throw new ApiError(message, response.status, response.statusText);
   }

@@ -1,6 +1,6 @@
 export const DELETE = async (
   request: Request,
-  { params }: { params: Promise<{ folderId: string }> }
+  { params }: { params: Promise<{ folderId: string }> },
 ) => {
   const authHeader = request.headers.get("Authorization");
 
@@ -28,7 +28,7 @@ export const DELETE = async (
     if (!response.ok) {
       return Response.json(
         { error: "Failed to delete folder" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -38,7 +38,7 @@ export const DELETE = async (
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;
@@ -47,7 +47,7 @@ export const DELETE = async (
 
 export const PATCH = async (
   request: Request,
-  { params }: { params: Promise<{ folderId: string }> }
+  { params }: { params: Promise<{ folderId: string }> },
 ) => {
   const authHeader = request.headers.get("Authorization");
 
@@ -82,7 +82,7 @@ export const PATCH = async (
     if (!response.ok) {
       return Response.json(
         { error: "Failed to update folder" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -93,7 +93,7 @@ export const PATCH = async (
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },
-        { status: 504 }
+        { status: 504 },
       );
     }
     throw error;

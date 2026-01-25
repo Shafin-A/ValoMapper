@@ -15,10 +15,10 @@ export const CanvasConnectingLines: React.FC<CanvasConnectingLinesProps> = ({
   const itemsById = useMemo(() => {
     const map = new Map<string, { x: number; y: number }>();
     agentsOnCanvas.forEach((agent) =>
-      map.set(agent.id, { x: agent.x, y: agent.y })
+      map.set(agent.id, { x: agent.x, y: agent.y }),
     );
     abilitiesOnCanvas.forEach((ability) =>
-      map.set(ability.id, { x: ability.x, y: ability.y })
+      map.set(ability.id, { x: ability.x, y: ability.y }),
     );
     return map;
   }, [agentsOnCanvas, abilitiesOnCanvas]);

@@ -15,7 +15,7 @@ export const DrawSettings = () => {
 
   const debouncedSetColor = useMemo(
     () => debounce((color: string) => updateDrawSettings({ color }), 16),
-    [updateDrawSettings]
+    [updateDrawSettings],
   );
 
   return (

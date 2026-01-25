@@ -52,10 +52,10 @@ describe("CanvasSpawnBarriers", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
     );
     mockUseSettings.mockReturnValue(
-      defaultSettingsMock as unknown as ReturnType<typeof useSettings>
+      defaultSettingsMock as unknown as ReturnType<typeof useSettings>,
     );
     mockGetMapSpawnBarriers.mockReturnValue(mockBarrierData);
   });
@@ -63,7 +63,7 @@ describe("CanvasSpawnBarriers", () => {
   describe("Visibility", () => {
     it("should render spawn barriers when showSpawnBarriers is true", () => {
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -77,7 +77,7 @@ describe("CanvasSpawnBarriers", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -91,7 +91,7 @@ describe("CanvasSpawnBarriers", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -102,7 +102,7 @@ describe("CanvasSpawnBarriers", () => {
       mockGetMapSpawnBarriers.mockReturnValue(undefined);
 
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -113,7 +113,7 @@ describe("CanvasSpawnBarriers", () => {
   describe("Barrier Rendering", () => {
     it("should render correct number of barriers", () => {
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');
@@ -122,7 +122,7 @@ describe("CanvasSpawnBarriers", () => {
 
     it("should apply ally color to ally barriers", () => {
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');
@@ -131,7 +131,7 @@ describe("CanvasSpawnBarriers", () => {
 
     it("should apply enemy color to enemy barriers", () => {
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');
@@ -140,7 +140,7 @@ describe("CanvasSpawnBarriers", () => {
 
     it("should set barrier opacity", () => {
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');
@@ -151,7 +151,7 @@ describe("CanvasSpawnBarriers", () => {
 
     it("should set barrier stroke width", () => {
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');
@@ -171,7 +171,7 @@ describe("CanvasSpawnBarriers", () => {
       } as unknown as ReturnType<typeof useSettings>);
 
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');
@@ -187,7 +187,7 @@ describe("CanvasSpawnBarriers", () => {
       } as unknown as ReturnType<typeof useSettings>);
 
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');
@@ -198,7 +198,7 @@ describe("CanvasSpawnBarriers", () => {
   describe("Map Side Handling", () => {
     it("should handle defense side positioning", () => {
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -212,7 +212,7 @@ describe("CanvasSpawnBarriers", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const group = container.querySelector('[data-testid="konva-group"]');
@@ -223,7 +223,7 @@ describe("CanvasSpawnBarriers", () => {
   describe("Transition Behavior", () => {
     it("should hide immediately when transition starts", () => {
       const { container, rerender } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       let group = container.querySelector('[data-testid="konva-group"]');
@@ -247,7 +247,7 @@ describe("CanvasSpawnBarriers", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container, rerender } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       let group = container.querySelector('[data-testid="konva-group"]');
@@ -286,7 +286,7 @@ describe("CanvasSpawnBarriers", () => {
       } as unknown as ReturnType<typeof useCanvas>);
 
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');
@@ -306,7 +306,7 @@ describe("CanvasSpawnBarriers", () => {
       mockGetMapSpawnBarriers.mockReturnValue(multiBarrierData);
 
       const { container } = render(
-        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />
+        <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');

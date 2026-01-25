@@ -52,7 +52,7 @@ export const useImageTransform = () => {
           height: newHeight,
         };
         setImagesOnCanvas((prev) =>
-          prev.map((item) => (item.id === imageId ? updatedImage : item))
+          prev.map((item) => (item.id === imageId ? updatedImage : item)),
         );
         notifyImageMoved({
           id: imageId,
@@ -63,12 +63,12 @@ export const useImageTransform = () => {
         });
       }
     },
-    [setImagesOnCanvas, imagesOnCanvas, notifyImageMoved]
+    [setImagesOnCanvas, imagesOnCanvas, notifyImageMoved],
   );
 
   const handleImageMouseEnter = (
     e: KonvaEventObject<MouseEvent>,
-    imageId: string
+    imageId: string,
   ) => {
     if (editingTextId) return;
     handleMouseOverGrabCursor(e);
