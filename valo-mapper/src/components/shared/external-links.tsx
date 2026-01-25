@@ -1,7 +1,9 @@
 "use client";
 
-import { Coffee } from "lucide-react";
+import { useState } from "react";
+import { Coffee, Menu } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -43,35 +45,57 @@ export const ExternalLinks = ({
   links = defaultLinks,
   className = "",
 }: ExternalLinksProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <div
-      className={`fixed bottom-8 right-8 z-50 flex flex-row gap-4 ${className}`}
+      className={`fixed bottom-8 right-8 z-50 flex flex-row-reverse gap-4 ${className}`}
     >
+      <Button
+        onClick={() => setIsExpanded(!isExpanded)}
+        variant="default"
+        size="icon"
+        className={`rounded-full shadow-lg transition-transform duration-300 size-12 cursor-pointer ${
+          isExpanded ? "translate-y-[-60px]" : ""
+        }`}
+        aria-label={isExpanded ? "Hide external links" : "Show external links"}
+      >
+        <Menu className="size-6" />
+      </Button>
       {links.map((link, index) => (
-        <Tooltip key={index}>
-          <TooltipTrigger asChild>
-            <Link
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors block"
-              aria-label={link.ariaLabel}
-            >
-              {link.icon ? (
-                <link.icon size={24} />
-              ) : link.svgDataUrl ? (
-                <Image
-                  src={link.svgDataUrl}
-                  alt="Discord icon"
-                  height={24}
-                  width={24}
-                  style={{ filter: "brightness(0) invert(1)" }}
-                />
-              ) : null}
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="top">{link.tooltip}</TooltipContent>
-        </Tooltip>
+        <div
+          key={index}
+          className={`transition-all duration-300 ${
+            isExpanded
+              ? "translate-x-0 opacity-100 pointer-events-auto"
+              : "translate-x-full opacity-0 pointer-events-none"
+          }`}
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors block"
+                aria-label={link.ariaLabel}
+              >
+                {link.icon ? (
+                  <link.icon size={24} />
+                ) : link.svgDataUrl ? (
+                  <Image
+                    src={link.svgDataUrl}
+                    alt="Discord icon"
+                    height={24}
+                    width={24}
+                    style={{ filter: "brightness(0) invert(1)" }}
+                  />
+                ) : null}
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="top">{link.tooltip}</TooltipContent>
+          </Tooltip>
+        </div>
       ))}
     </div>
   );
