@@ -16,7 +16,7 @@ export const HelpTab = () => {
         It's designed to be simple and practical. Draw your plan, share it, and refer to it in game. \
         You can even create folders to organize your strategies and easily switch between them. \n\n\
         Whether you're coordinating with a team or organizing your own ideas, ValoMapper keeps everything in one place.\n\n\
-        ValoMapper is not endorsed by Riot Games and is not affiliated with Riot Games in any way. Riot Games and all associated properties are trademarks or registered trademarks of Riot Games, Inc. \n\n",
+        ValoMapper isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc. \n\n",
     },
     {
       name: "Keyboard Shortcuts",

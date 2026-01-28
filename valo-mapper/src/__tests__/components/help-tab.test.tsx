@@ -144,7 +144,7 @@ describe("HelpTab", () => {
   it("should render text content for About tab", () => {
     render(<HelpTab />);
 
-    expect(screen.getByText(/not endorsed by Riot Games/i)).toBeInTheDocument();
+    expect(screen.getByText(/endorsed by Riot Games/i)).toBeInTheDocument();
   });
 
   it("should render all tabs in vertical orientation", () => {
