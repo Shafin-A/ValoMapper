@@ -2,7 +2,7 @@ export const PrivacyPolicy = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Dec 23rd, 2025
+        <strong>Last Updated:</strong> Mar 4th, 2026
       </div>
 
       <p>
@@ -16,6 +16,16 @@ export const PrivacyPolicy = () => {
         By using ValoMapper, you agree to the terms described in this Privacy
         Policy.
       </p>
+
+      <div className="bg-muted p-4 rounded-md border border-muted-foreground/20">
+        <p className="font-semibold mb-2">Riot Sign-On Opt-In</p>
+        <p>
+          By linking your Riot account, you agree to make your gameplay data
+          visible through ValoMapper. Players who have not opted in will not
+          have their data displayed. We will never show other players&apos;
+          information without their explicit consent.
+        </p>
+      </div>
 
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">1. Information We Collect</h3>
