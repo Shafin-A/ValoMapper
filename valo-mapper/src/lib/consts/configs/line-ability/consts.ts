@@ -15,7 +15,7 @@ export const CURVABLE_LINE_ABILITY_CONFIGS: Record<
   }
 > = {
   harbor_wall: {
-    maxDistance: 50,
+    maxDistance: 60,
     stroke: "#5c98a1",
   },
   phoenix_wall: {
