@@ -53,7 +53,7 @@ func (u *User) Save() error {
 
 	err = conn.QueryRow(context.Background(), `INSERT INTO users (firebase_uid, email, email_verified, name, tour_completed, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-		ON CONFLICT (firebase_uid) DO NOTHING
+		ON CONFLICT ON CONSTRAINT users_firebase_uid_key DO NOTHING
 		RETURNING id, created_at, updated_at`, u.FirebaseUID, u.Email, u.EmailVerified, u.Name, u.TourCompleted).Scan(
 		&u.ID,
 		&u.CreatedAt,

@@ -82,7 +82,24 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 		t.Fatalf("Failed to ping test database: %v", err)
 	}
 
+	// set global for helper functions that use db.GetDB
 	db.DB = pool
+
+	if orig, err := os.Getwd(); err == nil {
+		// look for go.mod upwards to determine repo root
+		dir := orig
+		for range 5 {
+			if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+				break
+			}
+			dir = filepath.Dir(dir)
+		}
+		_ = os.Chdir(dir)
+		if migErr := db.RunMigrations(connStr); migErr != nil {
+			t.Fatalf("Failed to run migrations on test database: %v", migErr)
+		}
+		_ = os.Chdir(orig)
+	}
 
 	return pool
 }

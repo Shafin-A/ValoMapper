@@ -4,7 +4,7 @@ This directory contains comprehensive tests for the ValoMapper Go backend API.
 
 ## Test Structure
 
-```
+```bash
 valo-mapper-api/
 ├── testutils/          # Test utilities and helpers
 │   ├── db.go          # Database setup helpers
@@ -37,17 +37,20 @@ valo-mapper-api/
 ## Running Tests
 
 ### Run All Tests
+
 ```bash
 cd valo-mapper-api
 go test ./...
 ```
 
 ### Run Unit Tests Only (No Database)
+
 ```bash
 go test -short ./...
 ```
 
 ### Run With Coverage
+
 ```bash
 go test -cover ./...
 go test -coverprofile=coverage.out ./...
@@ -55,6 +58,7 @@ go tool cover -html=coverage.out
 ```
 
 ### Run Specific Package
+
 ```bash
 go test ./handlers
 go test ./models
@@ -63,11 +67,13 @@ go test ./middleware
 ```
 
 ### Run With Verbose Output
+
 ```bash
 go test -v ./...
 ```
 
 ### Run Integration Tests Only
+
 ```bash
 go test -run Integration ./...
 ```
@@ -76,17 +82,20 @@ go test -run Integration ./...
 
 ### Local Development
 
-1. **Create test database:**
+**Create test database:**
+
 ```sql
 CREATE DATABASE valomapper_test;
 ```
 
-2. **Copy environment file:**
+**Copy environment file:**
+
 ```bash
 cp .env.example .env.test
 ```
 
-3. **Update `.env.test` with test database credentials:**
+**Update `.env.test` with test database credentials:**
+
 ```env
 DB_NAME=valomapper_test
 DB_HOST=localhost
@@ -95,7 +104,13 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 ```
 
-4. **Run migrations on test database:**
+**Run migrations on test database (optional):**
+
+The `testutils.SetupTestDB` helper now automatically runs all migrations for
+you when the database connection is created, so you typically don't need to
+perform this step manually. However, if you prefer to prepare the database
+ahead of time or are debugging migration problems you can still run:
+
 ```bash
 # Set environment to test database
 export DB_NAME=valomapper_test
@@ -109,6 +124,7 @@ Tests automatically run on GitHub Actions with a PostgreSQL service container. N
 ## Test Categories
 
 ### Unit Tests
+
 - **Utils**: Error handling, HTTP utilities
 - **Middleware**: Request ID generation
 - **Handlers**: Business logic with mocked dependencies
@@ -116,6 +132,7 @@ Tests automatically run on GitHub Actions with a PostgreSQL service container. N
 - **Lobby**: Code generation uniqueness and format validation
 
 ### Integration Tests
+
 - **Database**: Connection, queries, transactions
 - **Handlers**: Full request/response cycle with real database
 - **Models**: CRUD operations (User, Strategy, Folder, Lobby, Canvas, Map)
@@ -132,6 +149,7 @@ Tests automatically run on GitHub Actions with a PostgreSQL service container. N
 ### Mocking
 
 We use mocks for:
+
 - **Firebase Authentication**: `testutils.MockFirebaseAuth`
 - **Database Queries**: SQL mocks where appropriate
 - **HTTP Requests**: `httptest.ResponseRecorder`
@@ -146,17 +164,17 @@ func TestMyHandler(t *testing.T) {
     t.Run("unit test", func(t *testing.T) {
         req := testutils.MakeRequest(t, "POST", "/api/test", body, "token")
         w := httptest.NewRecorder()
-        
+
         MyHandler(w, req)
-        
+
         testutils.AssertStatusCode(t, w, http.StatusOK)
     })
-    
+
     // For integration test (with database)
     if testing.Short() {
         t.Skip("Skipping integration test")
     }
-    
+
     t.Run("integration test", func(t *testing.T) {
         pool := testutils.SetupTestDB(t)
         defer testutils.CleanupTestDB(t, pool)
@@ -169,17 +187,17 @@ func TestModelSave(t *testing.T) {
     if testing.Short() {
         t.Skip("Skipping integration test")
     }
-    
+
     pool := testutils.SetupTestDB(t)
     defer testutils.CleanupTestDB(t, pool)
-    
+
     t.Run("creates model successfully", func(t *testing.T) {
         testutils.TruncateTables(t, pool, "table_name")
-        
+
         model := &Model{
             Field: "value",
         }
-        
+
         err := model.Save()
         require.NoError(t, err)
         assert.NotZero(t, model.ID)
@@ -203,6 +221,7 @@ See `models/user_test.go`, `models/strategy_test.go`, `models/folder_test.go`, `
 ## Continuous Integration
 
 The GitHub Actions workflow (`.github/workflows/go-tests.yml`) runs:
+
 - ✅ Unit tests
 - ✅ Integration tests
 - ✅ Code linting
@@ -210,6 +229,7 @@ The GitHub Actions workflow (`.github/workflows/go-tests.yml`) runs:
 - ✅ Build verification
 
 Tests run automatically on:
+
 - Push to `main` or `develop` branches
 - Pull requests to `main` or `develop`
 
@@ -218,6 +238,7 @@ Tests run automatically on:
 Target coverage: **70%+**
 
 Current coverage can be viewed:
+
 - Locally: `go test -cover ./...`
 - CI: Check GitHub Actions artifacts
 - Codecov: Coverage reports uploaded to Codecov (if configured)
@@ -225,6 +246,7 @@ Current coverage can be viewed:
 ## Troubleshooting
 
 ### Tests Can't Connect to Database
+
 ```bash
 # Check PostgreSQL is running
 psql -h localhost -U postgres -d valomapper_test
@@ -234,6 +256,7 @@ echo $DB_NAME
 ```
 
 ### Integration Tests Failing
+
 ```bash
 # Run only unit tests
 go test -short ./...
@@ -243,5 +266,6 @@ psql -h localhost -U postgres -d valomapper_test -c "\dt"
 ```
 
 ### Mock Firebase Auth Issues
+
 - Ensure `serviceAccountKey.json` exists (can be dummy for unit tests)
 - Use `testutils.MockFirebaseAuth` for unit tests

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 	"valo-mapper-api/db"
@@ -77,6 +78,22 @@ func setupTestDB(t *testing.T) *pgxpool.Pool {
 	}
 
 	db.DB = pool
+
+	// run migrations so schema is up-to-date
+	if orig, err := os.Getwd(); err == nil {
+		dir := orig
+		for i := 0; i < 5; i++ {
+			if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+				break
+			}
+			dir = filepath.Dir(dir)
+		}
+		_ = os.Chdir(dir)
+		if migErr := db.RunMigrations(connStr); migErr != nil {
+			t.Fatalf("Failed to run migrations on test database: %v", migErr)
+		}
+		_ = os.Chdir(orig)
+	}
 
 	return pool
 }
