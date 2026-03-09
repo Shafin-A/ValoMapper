@@ -49,9 +49,9 @@ func TestCreateUser(t *testing.T) {
 		var user models.User
 		testutils.ParseJSONResponse(t, w, &user)
 
-		assert.Equal(t, "firebase-uid-123", user.FirebaseUID)
-		assert.Equal(t, "Test User", user.Name)
-		assert.Equal(t, "test@example.com", user.Email)
+		assert.Equal(t, "firebase-uid-123", *user.FirebaseUID)
+		assert.Equal(t, strPtr("Test User"), user.Name)
+		assert.Equal(t, "test@example.com", *user.Email)
 		assert.NotZero(t, user.ID)
 		assert.False(t, user.TourCompleted)
 	})
@@ -96,11 +96,11 @@ func TestGetUser(t *testing.T) {
 
 	t.Run("successfully retrieves user", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -154,17 +154,17 @@ func TestUpdateUser(t *testing.T) {
 
 	t.Run("successfully updates user name", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
 
 		reqBody := UpdateUserRequest{
-			Name:          "Updated Name",
+			Name:          strPtr("Updated Name"),
 			TourCompleted: ptrBool(true),
 		}
 
@@ -178,14 +178,14 @@ func TestUpdateUser(t *testing.T) {
 		var user models.User
 		testutils.ParseJSONResponse(t, w, &user)
 
-		assert.Equal(t, "Updated Name", user.Name)
+		assert.Equal(t, strPtr("Updated Name"), user.Name)
 		assert.Equal(t, testUser.ID, user.ID)
 		assert.True(t, user.TourCompleted)
 	})
 
 	t.Run("rejects missing authorization", func(t *testing.T) {
 		reqBody := UpdateUserRequest{
-			Name: "New Name",
+			Name: strPtr("New Name"),
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPut, "/api/users", reqBody, "")
@@ -222,11 +222,11 @@ func TestDeleteUser(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-uid-delete-test")
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -234,7 +234,7 @@ func TestDeleteUser(t *testing.T) {
 		deleteUserCalled := false
 		mockAuth.DeleteUserFunc = func(ctx context.Context, uid string) error {
 			deleteUserCalled = true
-			assert.Equal(t, testUser.FirebaseUID, uid)
+			assert.Equal(t, *testUser.FirebaseUID, uid)
 			return nil
 		}
 
@@ -246,7 +246,7 @@ func TestDeleteUser(t *testing.T) {
 		assert.Equal(t, http.StatusNoContent, w.Code)
 		assert.True(t, deleteUserCalled, "DeleteUser should have been called on Firebase Auth")
 
-		deletedUser, err := models.GetUserByFirebaseUID(testUser.FirebaseUID)
+		deletedUser, err := models.GetUserByFirebaseUID(*testUser.FirebaseUID)
 		if err != nil {
 			assert.Contains(t, err.Error(), "no rows")
 		} else {

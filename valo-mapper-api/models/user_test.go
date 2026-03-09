@@ -19,9 +19,9 @@ func TestUserSave(t *testing.T) {
 		truncateTables(t, pool, "users")
 
 		user := &User{
-			FirebaseUID:   "test-uid-123",
-			Email:         "test@example.com",
-			Name:          "Test User",
+			FirebaseUID:   strPtr("test-uid-123"),
+			Email:         strPtr("test@example.com"),
+			Name:          strPtr("Test User"),
 			EmailVerified: true,
 			TourCompleted: true,
 		}
@@ -31,9 +31,9 @@ func TestUserSave(t *testing.T) {
 		assert.NotZero(t, user.ID)
 		assert.NotZero(t, user.CreatedAt)
 		assert.NotZero(t, user.UpdatedAt)
-		assert.Equal(t, "test-uid-123", user.FirebaseUID)
-		assert.Equal(t, "test@example.com", user.Email)
-		assert.Equal(t, "Test User", user.Name)
+		assert.Equal(t, "test-uid-123", *user.FirebaseUID)
+		assert.Equal(t, "test@example.com", *user.Email)
+		assert.Equal(t, strPtr("Test User"), user.Name)
 		assert.True(t, user.EmailVerified)
 		assert.True(t, user.TourCompleted)
 	})
@@ -43,9 +43,9 @@ func TestUserSave(t *testing.T) {
 
 		// Create first user
 		user1 := &User{
-			FirebaseUID:   "duplicate-uid",
-			Email:         "first@example.com",
-			Name:          "First User",
+			FirebaseUID:   strPtr("duplicate-uid"),
+			Email:         strPtr("first@example.com"),
+			Name:          strPtr("First User"),
 			EmailVerified: true,
 		}
 		err := user1.Save()
@@ -54,9 +54,9 @@ func TestUserSave(t *testing.T) {
 
 		// Try to create second user with same UID
 		user2 := &User{
-			FirebaseUID:   "duplicate-uid",
-			Email:         "second@example.com",
-			Name:          "Second User",
+			FirebaseUID:   strPtr("duplicate-uid"),
+			Email:         strPtr("second@example.com"),
+			Name:          strPtr("Second User"),
 			EmailVerified: false,
 		}
 		err = user2.Save()
@@ -64,17 +64,17 @@ func TestUserSave(t *testing.T) {
 
 		// Should load existing user data
 		assert.Equal(t, firstID, user2.ID)
-		assert.Equal(t, "first@example.com", user2.Email)
-		assert.Equal(t, "First User", user2.Name)
+		assert.Equal(t, "first@example.com", *user2.Email)
+		assert.Equal(t, strPtr("First User"), user2.Name)
 	})
 
 	t.Run("creates user with unverified email", func(t *testing.T) {
 		truncateTables(t, pool, "users")
 
 		user := &User{
-			FirebaseUID:   "unverified-uid",
-			Email:         "unverified@example.com",
-			Name:          "Unverified User",
+			FirebaseUID:   strPtr("unverified-uid"),
+			Email:         strPtr("unverified@example.com"),
+			Name:          strPtr("Unverified User"),
 			EmailVerified: false,
 		}
 
@@ -98,9 +98,9 @@ func TestUserUpdate(t *testing.T) {
 
 		// Create user
 		user := &User{
-			FirebaseUID:   "update-test-uid",
-			Email:         "old@example.com",
-			Name:          "Old Name",
+			FirebaseUID:   strPtr("update-test-uid"),
+			Email:         strPtr("old@example.com"),
+			Name:          strPtr("Old Name"),
 			EmailVerified: false,
 			TourCompleted: false,
 		}
@@ -110,8 +110,8 @@ func TestUserUpdate(t *testing.T) {
 		originalUpdatedAt := user.UpdatedAt
 
 		// Update user
-		user.Email = "new@example.com"
-		user.Name = "New Name"
+		user.Email = strPtr("new@example.com")
+		user.Name = strPtr("New Name")
 		user.EmailVerified = true
 		user.TourCompleted = true
 
@@ -120,11 +120,11 @@ func TestUserUpdate(t *testing.T) {
 		assert.True(t, user.UpdatedAt.After(originalUpdatedAt))
 
 		// Verify changes persisted
-		loaded := &User{FirebaseUID: "update-test-uid"}
+		loaded := &User{FirebaseUID: strPtr("update-test-uid")}
 		err = loaded.LoadByFirebaseUID()
 		require.NoError(t, err)
-		assert.Equal(t, "new@example.com", loaded.Email)
-		assert.Equal(t, "New Name", loaded.Name)
+		assert.Equal(t, "new@example.com", *loaded.Email)
+		assert.Equal(t, strPtr("New Name"), loaded.Name)
 		assert.True(t, loaded.EmailVerified)
 		assert.True(t, loaded.TourCompleted)
 	})
@@ -133,9 +133,9 @@ func TestUserUpdate(t *testing.T) {
 		truncateTables(t, pool, "users")
 
 		user := &User{
-			FirebaseUID:   "non-existent-uid",
-			Email:         "test@example.com",
-			Name:          "Test",
+			FirebaseUID:   strPtr("non-existent-uid"),
+			Email:         strPtr("test@example.com"),
+			Name:          strPtr("Test"),
 			EmailVerified: false,
 		}
 
@@ -157,9 +157,9 @@ func TestUserDelete(t *testing.T) {
 
 		// Create user
 		user := &User{
-			FirebaseUID:   "delete-test-uid",
-			Email:         "delete@example.com",
-			Name:          "Delete User",
+			FirebaseUID:   strPtr("delete-test-uid"),
+			Email:         strPtr("delete@example.com"),
+			Name:          strPtr("Delete User"),
 			EmailVerified: true,
 		}
 		err := user.Save()
@@ -170,7 +170,7 @@ func TestUserDelete(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify user is gone
-		loaded := &User{FirebaseUID: "delete-test-uid"}
+		loaded := &User{FirebaseUID: strPtr("delete-test-uid")}
 		err = loaded.LoadByFirebaseUID()
 		assert.Error(t, err)
 	})
@@ -179,7 +179,7 @@ func TestUserDelete(t *testing.T) {
 		truncateTables(t, pool, "users")
 
 		user := &User{
-			FirebaseUID: "non-existent-delete-uid",
+			FirebaseUID: strPtr("non-existent-delete-uid"),
 		}
 
 		err := user.Delete()
@@ -200,22 +200,22 @@ func TestUserLoadByFirebaseUID(t *testing.T) {
 
 		// Create user
 		created := &User{
-			FirebaseUID:   "load-test-uid",
-			Email:         "load@example.com",
-			Name:          "Load User",
+			FirebaseUID:   strPtr("load-test-uid"),
+			Email:         strPtr("load@example.com"),
+			Name:          strPtr("Load User"),
 			EmailVerified: true,
 		}
 		err := created.Save()
 		require.NoError(t, err)
 
 		// Load user
-		loaded := &User{FirebaseUID: "load-test-uid"}
+		loaded := &User{FirebaseUID: strPtr("load-test-uid")}
 		err = loaded.LoadByFirebaseUID()
 		require.NoError(t, err)
 
 		assert.Equal(t, created.ID, loaded.ID)
-		assert.Equal(t, "load@example.com", loaded.Email)
-		assert.Equal(t, "Load User", loaded.Name)
+		assert.Equal(t, "load@example.com", *loaded.Email)
+		assert.Equal(t, strPtr("Load User"), loaded.Name)
 		assert.True(t, loaded.EmailVerified)
 		assert.NotZero(t, loaded.CreatedAt)
 		assert.NotZero(t, loaded.UpdatedAt)
@@ -224,7 +224,7 @@ func TestUserLoadByFirebaseUID(t *testing.T) {
 	t.Run("returns error for non-existent user", func(t *testing.T) {
 		truncateTables(t, pool, "users")
 
-		user := &User{FirebaseUID: "non-existent-load-uid"}
+		user := &User{FirebaseUID: strPtr("non-existent-load-uid")}
 		err := user.LoadByFirebaseUID()
 		assert.Error(t, err)
 	})
@@ -243,9 +243,9 @@ func TestGetUserByFirebaseUID(t *testing.T) {
 
 		// Create user
 		created := &User{
-			FirebaseUID:   "get-test-uid",
-			Email:         "get@example.com",
-			Name:          "Get User",
+			FirebaseUID:   strPtr("get-test-uid"),
+			Email:         strPtr("get@example.com"),
+			Name:          strPtr("Get User"),
 			EmailVerified: true,
 		}
 		err := created.Save()
@@ -257,8 +257,8 @@ func TestGetUserByFirebaseUID(t *testing.T) {
 		require.NotNil(t, user)
 
 		assert.Equal(t, created.ID, user.ID)
-		assert.Equal(t, "get@example.com", user.Email)
-		assert.Equal(t, "Get User", user.Name)
+		assert.Equal(t, "get@example.com", *user.Email)
+		assert.Equal(t, strPtr("Get User"), user.Name)
 		assert.True(t, user.EmailVerified)
 	})
 

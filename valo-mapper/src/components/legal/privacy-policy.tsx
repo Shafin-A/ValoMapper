@@ -2,7 +2,7 @@ export const PrivacyPolicy = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Mar 4th, 2026
+        <strong>Last Updated:</strong> Mar 9th, 2026
       </div>
 
       <p>
@@ -20,9 +20,9 @@ export const PrivacyPolicy = () => {
       <div className="bg-muted p-4 rounded-md border border-muted-foreground/20">
         <p className="font-semibold mb-2">Riot Sign-On Opt-In</p>
         <p>
-          By linking your Riot account, you agree to make your gameplay data
-          visible through ValoMapper. Players who have not opted in will not
-          have their data displayed. We will never show other players&apos;
+          By signing in with your Riot account, you agree to make your gameplay
+          data visible through ValoMapper. Players who have not opted in will
+          not have their data displayed. We will never show other players&apos;
           information without their explicit consent.
         </p>
       </div>
@@ -41,13 +41,20 @@ export const PrivacyPolicy = () => {
             <li>Username</li>
             <li>Email address</li>
             <li>Password (securely hashed via Firebase Authentication)</li>
+            <li>
+              Or you may choose to sign in with Riot Sign-On (RSO); in that case
+              we receive a Firebase custom token and store your RSO subject ID
+              and tokens.
+            </li>
           </ul>
           <p className="mb-3">
             Your email and authentication credentials are stored in Firebase
             Authentication. We also maintain a reference to your account in our
             PostgreSQL database, which includes your username, user ID, Firebase
             ID, email address, email verification status, and account
-            creation/update timestamps.
+            creation/update timestamps. If you sign in with RSO, the only
+            personal identifier stored is your Riot subject ID, and tokens used
+            strictly for authentication and optional future features.
           </p>
 
           <p className="font-semibold mb-1">Strategy Content</p>

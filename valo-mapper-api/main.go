@@ -11,6 +11,7 @@ import (
 	"time"
 	"valo-mapper-api/db"
 	"valo-mapper-api/firebase"
+	"valo-mapper-api/handlers"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/routes"
 	"valo-mapper-api/scheduler"
@@ -34,6 +35,9 @@ func main() {
 		"DB_PASSWORD",
 		"DB_NAME",
 		"GOOGLE_APPLICATION_CREDENTIALS",
+		"RSO_CLIENT_ID",
+		"RSO_CLIENT_SECRET",
+		"RSO_REDIRECT_URI",
 	}
 
 	var missingVars []string
@@ -56,6 +60,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize Firebase: %v", err)
 	}
+
+	rsoclient := os.Getenv("RSO_CLIENT_ID")
+	rsosecret := os.Getenv("RSO_CLIENT_SECRET")
+	rsoredirect := os.Getenv("RSO_REDIRECT_URI")
+	handlers.InitializeRSOConfig(rsoclient, rsosecret, rsoredirect)
 
 	conn, err := db.GetDB()
 	if err != nil {

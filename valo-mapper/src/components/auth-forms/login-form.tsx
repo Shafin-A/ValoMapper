@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { generateRSOAuthLink } from "@/lib/rso";
 import { Home } from "lucide-react";
 import { useUser } from "@/hooks/api/use-user";
 
@@ -55,6 +56,14 @@ export const LoginForm = ({
       setLoading(false);
     }
   }, [isUserError, userError]);
+
+  const rsoClientId = process.env.NEXT_PUBLIC_RSO_CLIENT_ID || "";
+
+  const redirectParam = searchParams.get("redirect") || "/";
+  const stateValue = `redirect=${encodeURIComponent(redirectParam)}`;
+  const rsoLink = rsoClientId
+    ? generateRSOAuthLink(rsoClientId, stateValue)
+    : "#";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,6 +167,18 @@ export const LoginForm = ({
                   Don&apos;t have an account?{" "}
                   <Link href="/signup">Sign up</Link>
                 </FieldDescription>
+              </Field>
+              <Field>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  asChild
+                  disabled={!rsoClientId}
+                >
+                  <a href={rsoLink}>
+                    {rsoClientId ? "Sign in with Riot" : "Riot not configured"}
+                  </a>
+                </Button>
               </Field>
             </FieldGroup>
           </form>

@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 	"time"
 	"valo-mapper-api/db"
@@ -100,7 +101,15 @@ func TruncateTables(t *testing.T, pool *pgxpool.Pool, tables ...string) {
 	t.Helper()
 
 	ctx := context.Background()
-	for _, table := range tables {
+	// sort table names to make lock acquisition order deterministic across
+	// processes. Concurrent truncates on the same set of tables can deadlock if
+	// the orders differ, so this simple step ensures all callers use the same
+	// sequence regardless of how the slice was provided.
+	sorted := make([]string, len(tables))
+	copy(sorted, tables)
+	// alphabetical sort is sufficient
+	sort.Strings(sorted)
+	for _, table := range sorted {
 		_, err := pool.Exec(ctx, fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table))
 		if err != nil {
 			t.Logf("Warning: Failed to truncate table %s: %v", table, err)

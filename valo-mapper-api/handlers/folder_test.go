@@ -28,11 +28,11 @@ func TestCreateFolder(t *testing.T) {
 
 	t.Run("successfully creates folder", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -59,11 +59,11 @@ func TestCreateFolder(t *testing.T) {
 
 	t.Run("successfully creates folder with parent", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -92,11 +92,11 @@ func TestCreateFolder(t *testing.T) {
 
 	t.Run("rejects missing folder name", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -151,11 +151,11 @@ func TestGetFolders(t *testing.T) {
 
 	t.Run("successfully retrieves user folders", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -183,11 +183,11 @@ func TestGetFolders(t *testing.T) {
 		testUser2 := testutils.CreateTestUser(t, pool, "firebase-uid-no-folders")
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser2.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser2.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser2.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser2.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -239,11 +239,11 @@ func TestUpdateFolder(t *testing.T) {
 
 	t.Run("successfully updates folder name", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -271,11 +271,11 @@ func TestUpdateFolder(t *testing.T) {
 
 	t.Run("successfully updates parent folder", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -303,11 +303,11 @@ func TestUpdateFolder(t *testing.T) {
 
 	t.Run("returns 404 for non-existent folder", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -330,11 +330,11 @@ func TestUpdateFolder(t *testing.T) {
 		folder := testutils.CreateTestFolder(t, pool, otherUser.ID, "Other User's Folder")
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -354,11 +354,11 @@ func TestUpdateFolder(t *testing.T) {
 
 	t.Run("rejects invalid folder ID", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -417,11 +417,11 @@ func TestDeleteFolder(t *testing.T) {
 
 	t.Run("successfully deletes folder", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -441,11 +441,11 @@ func TestDeleteFolder(t *testing.T) {
 
 	t.Run("returns 404 for non-existent folder", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -463,11 +463,11 @@ func TestDeleteFolder(t *testing.T) {
 		folder := testutils.CreateTestFolder(t, pool, otherUser.ID, "Other User's Folder")
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -482,11 +482,11 @@ func TestDeleteFolder(t *testing.T) {
 
 	t.Run("rejects invalid folder ID", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}

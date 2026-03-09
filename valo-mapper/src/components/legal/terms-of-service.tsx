@@ -2,7 +2,7 @@ export const TermsOfService = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Mar 4th, 2026
+        <strong>Last Updated:</strong> Mar 9th, 2026
       </div>
 
       <p>
@@ -45,10 +45,10 @@ export const TermsOfService = () => {
         <div className="bg-muted p-4 rounded-md border border-muted-foreground/20 mt-4">
           <p className="font-semibold mb-2">Riot Sign-On Opt-In</p>
           <p>
-            By linking your Riot account, you agree to make your gameplay data
-            visible through ValoMapper. Players who have not opted in will not
-            have their data displayed. We will never show other players&apos;
-            information without their explicit consent.
+            By signing in with your Riot account, you agree to make your
+            gameplay data visible through ValoMapper. Players who have not opted
+            in will not have their data displayed. We will never show other
+            players&apos; information without their explicit consent.
           </p>
         </div>
       </section>
@@ -72,7 +72,10 @@ export const TermsOfService = () => {
             To access certain features of ValoMapper, you may need to create an
             account. You agree to provide accurate, current, and complete
             information during registration and to update such information as
-            necessary.
+            necessary. You can create an account using email/password through
+            Firebase authentication, or alternatively by signing in with Riot
+            Sign-On (RSO). In the latter case a Firebase custom token will be
+            generated for you and used for authentication.
           </p>
 
           <p className="font-semibold mb-1">4.2 Account Security</p>

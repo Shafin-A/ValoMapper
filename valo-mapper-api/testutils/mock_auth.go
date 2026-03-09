@@ -10,6 +10,8 @@ import (
 type FirebaseAuthInterface interface {
 	VerifyIDToken(ctx context.Context, idToken string) (*auth.Token, error)
 	GetUser(ctx context.Context, uid string) (*auth.UserRecord, error)
+	DeleteUser(ctx context.Context, uid string) error
+	CustomToken(ctx context.Context, uid string) (string, error)
 }
 
 // MockFirebaseAuth is a mock implementation of Firebase Auth for testing
@@ -17,6 +19,7 @@ type MockFirebaseAuth struct {
 	VerifyTokenFunc func(ctx context.Context, idToken string) (*auth.Token, error)
 	GetUserFunc     func(ctx context.Context, uid string) (*auth.UserRecord, error)
 	DeleteUserFunc  func(ctx context.Context, uid string) error
+	CustomTokenFunc func(ctx context.Context, uid string) (string, error)
 }
 
 // VerifyIDToken mocks token verification
@@ -51,6 +54,14 @@ func (m *MockFirebaseAuth) DeleteUser(ctx context.Context, uid string) error {
 	return nil
 }
 
+// CustomToken mocks custom token generation
+func (m *MockFirebaseAuth) CustomToken(ctx context.Context, uid string) (string, error) {
+	if m.CustomTokenFunc != nil {
+		return m.CustomTokenFunc(ctx, uid)
+	}
+	return "mock-custom-token", nil
+}
+
 // NewMockFirebaseAuth creates a new mock Firebase Auth client
 func NewMockFirebaseAuth() FirebaseAuthInterface {
 	return &MockFirebaseAuth{}
@@ -63,5 +74,10 @@ func (m *MockFirebaseAuth) WithVerifyToken(fn func(ctx context.Context, idToken 
 
 func (m *MockFirebaseAuth) WithGetUser(fn func(ctx context.Context, uid string) (*auth.UserRecord, error)) FirebaseAuthInterface {
 	m.GetUserFunc = fn
+	return m
+}
+
+func (m *MockFirebaseAuth) WithCustomToken(fn func(ctx context.Context, uid string) (string, error)) FirebaseAuthInterface {
+	m.CustomTokenFunc = fn
 	return m
 }

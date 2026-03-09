@@ -123,9 +123,9 @@ func createTestUser(t *testing.T, pool *pgxpool.Pool, firebaseUID string) *User 
 
 	return &User{
 		ID:            userID,
-		FirebaseUID:   firebaseUID,
-		Email:         "test@example.com",
-		Name:          "Test User",
+		FirebaseUID:   strPtr(firebaseUID),
+		Email:         strPtr("test@example.com"),
+		Name:          strPtr("Test User"),
 		EmailVerified: true,
 		CreatedAt:     createdAt,
 		UpdatedAt:     updatedAt,

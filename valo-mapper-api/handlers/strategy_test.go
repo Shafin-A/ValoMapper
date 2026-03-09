@@ -27,12 +27,15 @@ func TestCreateStrategy(t *testing.T) {
 	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-strategy-test")
 
 	t.Run("successfully creates strategy", func(t *testing.T) {
+		// isolate subtest by clearing strategy-related tables
+		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -62,12 +65,15 @@ func TestCreateStrategy(t *testing.T) {
 	})
 
 	t.Run("successfully creates strategy with folder", func(t *testing.T) {
+		// reset tables to avoid collisions with previous subtests
+		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -98,11 +104,11 @@ func TestCreateStrategy(t *testing.T) {
 
 	t.Run("rejects missing lobby code", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -122,11 +128,11 @@ func TestCreateStrategy(t *testing.T) {
 
 	t.Run("rejects missing strategy name", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -148,11 +154,11 @@ func TestCreateStrategy(t *testing.T) {
 
 	t.Run("rejects non-existent lobby", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -172,11 +178,11 @@ func TestCreateStrategy(t *testing.T) {
 
 	t.Run("rejects duplicate strategy", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -238,11 +244,11 @@ func TestGetStrategies(t *testing.T) {
 
 	t.Run("successfully retrieves user strategies", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -272,11 +278,11 @@ func TestGetStrategies(t *testing.T) {
 		testUser2 := testutils.CreateTestUser(t, pool, "firebase-uid-folder-strategies")
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser2.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser2.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser2.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser2.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -312,11 +318,11 @@ func TestGetStrategies(t *testing.T) {
 		testUser3 := testutils.CreateTestUser(t, pool, "firebase-uid-no-strategies")
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser3.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser3.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser3.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser3.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -336,11 +342,11 @@ func TestGetStrategies(t *testing.T) {
 
 	t.Run("rejects invalid folder ID", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -386,12 +392,15 @@ func TestUpdateStrategy(t *testing.T) {
 	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-update-strategy")
 
 	t.Run("successfully updates strategy name", func(t *testing.T) {
+		// reset strategy-related tables to avoid cross-test pollution
+		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -419,12 +428,15 @@ func TestUpdateStrategy(t *testing.T) {
 	})
 
 	t.Run("successfully updates strategy folder", func(t *testing.T) {
+		// clear out previous strategies and lobbies so we get fresh codes
+		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -452,12 +464,15 @@ func TestUpdateStrategy(t *testing.T) {
 	})
 
 	t.Run("returns 404 for non-existent strategy", func(t *testing.T) {
+		// ensure tables cleared so ID definitely doesn't exist
+		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -481,11 +496,11 @@ func TestUpdateStrategy(t *testing.T) {
 		strategy := testutils.CreateTestStrategy(t, pool, otherUser.ID, lobby.Code)
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -505,11 +520,11 @@ func TestUpdateStrategy(t *testing.T) {
 
 	t.Run("rejects invalid strategy ID", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -569,11 +584,11 @@ func TestDeleteStrategy(t *testing.T) {
 
 	t.Run("successfully deletes strategy", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -594,11 +609,11 @@ func TestDeleteStrategy(t *testing.T) {
 
 	t.Run("returns 404 for non-existent strategy", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -617,11 +632,11 @@ func TestDeleteStrategy(t *testing.T) {
 		strategy := testutils.CreateTestStrategy(t, pool, otherUser.ID, lobby.Code)
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}
@@ -636,11 +651,11 @@ func TestDeleteStrategy(t *testing.T) {
 
 	t.Run("rejects invalid strategy ID", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: testUser.FirebaseUID}, nil
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
 		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
 			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: testUser.Email},
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
 				EmailVerified: true,
 			}, nil
 		}

@@ -10,6 +10,11 @@ import (
 	"valo-mapper-api/utils"
 )
 
+// strPtr is a helper function to convert a string to a *string
+func strPtr(s string) *string {
+	return &s
+}
+
 type CreateUserRequest struct {
 	FirebaseUID string `json:"firebaseUid"`
 	Name        string `json:"name"`
@@ -17,8 +22,8 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Name          string `json:"name"`
-	TourCompleted *bool  `json:"tourCompleted,omitempty"`
+	Name          *string `json:"name,omitempty"`
+	TourCompleted *bool   `json:"tourCompleted,omitempty"`
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
@@ -46,9 +51,9 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	}
 
 	user := &models.User{
-		FirebaseUID:   req.FirebaseUID,
-		Name:          req.Name,
-		Email:         req.Email,
+		FirebaseUID:   strPtr(req.FirebaseUID),
+		Name:          strPtr(req.Name),
+		Email:         strPtr(req.Email),
 		EmailVerified: false,
 	}
 
@@ -98,7 +103,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	}
 	defer r.Body.Close()
 
-	if req.Name != "" {
+	if req.Name != nil && *req.Name != "" {
 		user.Name = req.Name
 	}
 
@@ -131,7 +136,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	if err := firebaseAuth.DeleteUser(context.Background(), user.FirebaseUID); err != nil {
+	if err := firebaseAuth.DeleteUser(context.Background(), *user.FirebaseUID); err != nil {
 		utils.SendJSONError(w, utils.NewInternal("User deleted from database but Firebase deletion failed", err), middleware.GetRequestID(r))
 		return
 	}

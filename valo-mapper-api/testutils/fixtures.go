@@ -9,14 +9,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// strPtr is a helper function to convert a string to a *string
+func strPtr(s string) *string {
+	return &s
+}
+
 // CreateTestUser creates a test user in the database
 func CreateTestUser(t *testing.T, pool *pgxpool.Pool, firebaseUID string) *models.User {
 	t.Helper()
 
 	user := &models.User{
-		FirebaseUID:   firebaseUID,
-		Email:         "test@example.com",
-		Name:          "Test User",
+		FirebaseUID:   strPtr(firebaseUID),
+		Email:         strPtr("test@example.com"),
+		Name:          strPtr("Test User"),
 		EmailVerified: true,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
@@ -73,6 +78,18 @@ func CreateTestLobbyWithCode(t *testing.T, pool *pgxpool.Pool, code string) *mod
 	}
 
 	ctx := context.Background()
+
+	// ensure selected map exists to satisfy foreign key
+	if _, err := pool.Exec(ctx,
+		`INSERT INTO maps (id, text, text_color)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (id) DO NOTHING`,
+		lobby.CanvasState.SelectedMap.ID,
+		lobby.CanvasState.SelectedMap.Text,
+		lobby.CanvasState.SelectedMap.TextColor,
+	); err != nil {
+		t.Fatalf("Failed to ensure map exists: %v", err)
+	}
 
 	err := pool.QueryRow(ctx,
 		`INSERT INTO lobbies (code, selected_map_id, map_side, current_phase_index, edited_phases, created_at, updated_at)

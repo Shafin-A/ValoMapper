@@ -15,6 +15,7 @@ type FirebaseAuthInterface interface {
 	VerifyIDToken(ctx context.Context, idToken string) (*auth.Token, error)
 	GetUser(ctx context.Context, uid string) (*auth.UserRecord, error)
 	DeleteUser(ctx context.Context, uid string) error
+	CustomToken(ctx context.Context, uid string) (string, error)
 }
 
 type FirebaseAuthClient struct {
