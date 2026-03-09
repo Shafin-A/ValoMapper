@@ -57,6 +57,9 @@ export const LoginForm = ({
     }
   }, [isUserError, userError]);
 
+  console.log("rsoClientId", process.env.NEXT_PUBLIC_RSO_CLIENT_ID);
+  console.log("rsoRedirectUri", process.env.NEXT_PUBLIC_RSO_REDIRECT_URI);
+
   const rsoClientId = process.env.NEXT_PUBLIC_RSO_CLIENT_ID || "";
 
   const redirectParam = searchParams.get("redirect") || "/";
@@ -179,6 +182,11 @@ export const LoginForm = ({
                     {rsoClientId ? "Sign in with Riot" : "Riot not configured"}
                   </a>
                 </Button>
+                {
+                  <p className="mt-2 text-sm text-red-600 wrap-break-word">
+                    Debug link: <a href={rsoLink}>{rsoLink}</a>
+                  </p>
+                }
               </Field>
             </FieldGroup>
           </form>
