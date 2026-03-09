@@ -71,13 +71,47 @@ export const exchangeCodeForTokens = async (
   return response.json();
 };
 
+export const normalizeOrigin = (origin: string): string => {
+  // in dev `window.location.origin` is often `http://0.0.0.0:3000` (or with
+  // https).  Browsers can't navigate to 0.0.0.0, so replace that segment
+  // with "localhost" while preserving any port or scheme.
+  if (/^https?:\/\/0\.0\.0\.0/.test(origin)) {
+    return origin.replace("0.0.0.0", "localhost");
+  }
+  return origin;
+};
+
 export const generateRSOAuthLink = (
   clientId: string,
   state?: string,
 ): string => {
-  const redirectUri =
+  const fallbackOrigin = normalizeOrigin(window.location.origin);
+
+  let redirectUri =
     process.env.NEXT_PUBLIC_RSO_REDIRECT_URI ||
-    `${window.location.origin}/api/auth/rso/callback`;
+    `${fallbackOrigin}/api/auth/rso/callback`;
+
+  // if the URI itself contains 0.0.0.0 (perhaps from a misconfigured env),
+  // normalize its origin as well.
+  try {
+    const parsed = new URL(redirectUri);
+    const normalized = normalizeOrigin(parsed.origin);
+    if (normalized !== parsed.origin) {
+      // no-op
+      redirectUri = redirectUri.replace(parsed.origin, normalized);
+    }
+  } catch {
+    // ignore invalid URLs, fallbackUri stays as-is
+  }
+
+  // debug: log origin and computed URI so we can detect odd values in prod
+  if (process.env.NODE_ENV !== "test") {
+    console.debug("RSO auth link computed", {
+      origin: window.location.origin,
+      fallbackOrigin,
+      redirectUri,
+    });
+  }
 
   return getRSOAuthorizationUrl(clientId, redirectUri, state);
 };
