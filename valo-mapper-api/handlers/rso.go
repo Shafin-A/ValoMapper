@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -51,6 +51,11 @@ func InitializeRSOConfig(clientID, clientSecret, redirectURI string) {
 		TokenURL:     "https://auth.riotgames.com/token",
 		UserinfoURL:  "https://auth.riotgames.com/userinfo",
 	}
+}
+
+func hashRSOSub(sub string) string {
+	hash := sha256.Sum256([]byte(sub))
+	return fmt.Sprintf("%x", hash)
 }
 
 var exchangeCodeForTokensFunc = exchangeCodeForTokens
@@ -115,8 +120,6 @@ func getUserInfoFromRSO(accessToken string) (*RSOUserInfoResponse, error) {
 		return nil, err
 	}
 
-	log.Printf("RSO userInfo: sub=%q, cpid=%q", userInfo.Sub, userInfo.CPID)
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get user info from RSO: %v", resp.Status)
 	}
@@ -154,14 +157,16 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		return
 	}
 
-	user, err := models.GetUserByRSOSubject(userInfo.Sub)
+	hashedSub := hashRSOSub(userInfo.Sub)
+
+	user, err := models.GetUserByRSOSubject(hashedSub)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Failed to query RSO user", err), middleware.GetRequestID(r))
 		return
 	}
 
 	if user == nil {
-		user, err = models.CreateUserWithRSO(userInfo.Sub, tokens.AccessToken, tokens.RefreshToken, tokens.IDToken)
+		user, err = models.CreateUserWithRSO(hashedSub, tokens.AccessToken, tokens.RefreshToken, tokens.IDToken)
 		if err != nil {
 			utils.SendJSONError(w, utils.NewInternal("Failed to create RSO user", err), middleware.GetRequestID(r))
 			return
@@ -170,7 +175,7 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		_ = user.UpdateRSOTokens(tokens.AccessToken, tokens.RefreshToken)
 	}
 
-	customToken, err := firebaseAuth.CustomToken(context.Background(), userInfo.Sub)
+	customToken, err := firebaseAuth.CustomToken(context.Background(), hashedSub)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Failed to create firebase custom token", err), middleware.GetRequestID(r))
 		return
