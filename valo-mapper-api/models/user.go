@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"log"
 	"time"
 	"valo-mapper-api/db"
 
@@ -155,10 +154,6 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 		&user.RSOIDToken,
 		&user.RSOLinkedAt,
 	)
-
-	if err != nil {
-		log.Printf("GetUserByRSOSubject error: %v (type: %T)", err, err)
-	}
 
 	if err == pgx.ErrNoRows {
 		return nil, nil

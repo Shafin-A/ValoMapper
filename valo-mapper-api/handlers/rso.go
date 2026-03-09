@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -113,6 +114,8 @@ func getUserInfoFromRSO(accessToken string) (*RSOUserInfoResponse, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
 		return nil, err
 	}
+
+	log.Printf("RSO userInfo: sub=%q, cpid=%q", userInfo.Sub, userInfo.CPID)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get user info from RSO: %v", resp.Status)
