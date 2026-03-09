@@ -1,5 +1,5 @@
 import { generateRSOAuthLink, parseRSORedirect } from "@/lib/rso";
-import { GET } from "@/app/api/auth/rso-callback/route";
+import { GET } from "@/app/api/auth/rso/callback/route";
 
 describe("RSO helpers", () => {
   beforeEach(() => {
@@ -10,7 +10,7 @@ describe("RSO helpers", () => {
     const link = generateRSOAuthLink("my-client");
     expect(link).toContain("https://auth.riotgames.com/authorize");
     // redirect uri should be encoded and include the api path
-    expect(link).toMatch(/redirect_uri=.*%2Fapi%2Fauth%2Frso-callback/);
+    expect(link).toMatch(/redirect_uri=.*%2Fapi%2Fauth%2Frso%2Fcallback/);
     expect(link).toMatch(/client_id=my-client/);
   });
 
@@ -39,10 +39,10 @@ describe("state encoding and parsing", () => {
   });
 });
 
-describe("/api/auth/rso-callback route", () => {
+describe("/api/auth/rso/callback route", () => {
   it("GET should redirect to client page preserving params", async () => {
     const req = new Request(
-      "https://example.com/api/auth/rso-callback?code=abc123&state=xyz",
+      "https://example.com/api/auth/rso/callback?code=abc123&state=xyz",
     );
     const res = await GET(req as Request);
     expect(res.status).toBe(307);

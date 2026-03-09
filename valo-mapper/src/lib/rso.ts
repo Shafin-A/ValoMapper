@@ -55,7 +55,7 @@ export const exchangeCodeForTokens = async (
 ): Promise<RSOExchangeResponse> => {
   const body = { code };
 
-  const response = await fetch("/api/auth/rso-callback", {
+  const response = await fetch("/api/auth/rso/callback", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -77,7 +77,7 @@ export const generateRSOAuthLink = (
 ): string => {
   const redirectUri =
     process.env.NEXT_PUBLIC_RSO_REDIRECT_URI ||
-    `${window.location.origin}/api/auth/rso-callback`;
+    `${window.location.origin}/api/auth/rso/callback`;
 
   return getRSOAuthorizationUrl(clientId, redirectUri, state);
 };
