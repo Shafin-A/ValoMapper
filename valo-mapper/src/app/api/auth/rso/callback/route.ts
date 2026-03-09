@@ -17,17 +17,21 @@ export const GET = async (request: Request) => {
   const query = params.toString();
   if (query) redirectPath += `?${query}`;
 
-  const abs = new URL(redirectPath, request.url);
-  // build a raw Response so that Location header is available in tests
+  // we intentionally do **not** use the request.url host when
+  // computing the Location header.  On platforms like Fly the internal
+  // host may be reported as 0.0.0.0, so building an absolute URL would
+  // send the browser there.  Instead we simply return a relative path
+  // which the browser will resolve against whatever host the user is
+  // currently on.
   const res = new Response(null, {
     status: 307,
     headers: {
-      Location: abs.toString(),
+      Location: redirectPath,
     },
   });
-  // attach computed redirect for verification in unit tests
+  // expose the path for unit tests
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (res as any).redirectPath = abs.toString();
+  (res as any).redirectPath = redirectPath;
   return res;
 };
 

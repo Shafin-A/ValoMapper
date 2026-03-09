@@ -46,13 +46,11 @@ describe("/api/auth/rso/callback route", () => {
     );
     const res = await GET(req as Request);
     expect(res.status).toBe(307);
-    // inspect headers directly
-    console.log("res.headers object", res.headers);
     // our handler adds a `redirectPath` property for testing
     const redirectPath = (res as unknown as { redirectPath?: string })
       .redirectPath;
-    expect(redirectPath).toBe(
-      "https://example.com/auth/rso-callback?code=abc123&state=xyz",
-    );
+    expect(redirectPath).toBe("/auth/rso-callback?code=abc123&state=xyz");
+    // Location header isn't guaranteed in this environment,
+    // but redirectPath already reflects what we'd send.
   });
 });
