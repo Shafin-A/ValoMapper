@@ -173,7 +173,7 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		return
 	}
 
-	utils.SendJSON(w, http.StatusOK, map[string]interface{}{
+	utils.SendJSON(w, http.StatusOK, map[string]any{
 		"customToken": customToken,
 		"user":        user,
 	}, middleware.GetRequestID(r))
