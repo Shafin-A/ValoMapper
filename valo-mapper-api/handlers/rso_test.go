@@ -26,50 +26,10 @@ func makeIDTokenFromClaims(t *testing.T, claims map[string]any) string {
 	return fmt.Sprintf("header.%s.signature", encodedPayload)
 }
 
-func TestExtractRSODisplayName_Fallbacks(t *testing.T) {
-	t.Run("prefers game name and tag from user info", func(t *testing.T) {
-		name := extractRSODisplayName(&RSOUserInfoResponse{
-			GameName: "RiotTester",
-			TagLine:  "EUW",
-		}, "")
-
-		if name != "RiotTester#EUW" {
-			t.Fatalf("expected RiotTester#EUW got %q", name)
-		}
-	})
-
-	t.Run("uses account object camelCase fields", func(t *testing.T) {
-		name := extractRSODisplayName(&RSOUserInfoResponse{
-			Acct: map[string]any{
-				"gameName": "AcctName",
-				"tagLine":  "NA1",
-			},
-		}, "")
-
-		if name != "AcctName#NA1" {
-			t.Fatalf("expected AcctName#NA1 got %q", name)
-		}
-	})
-
-	t.Run("falls back to user info name", func(t *testing.T) {
-		name := extractRSODisplayName(&RSOUserInfoResponse{Name: "Riot Display"}, "")
-
-		if name != "Riot Display" {
-			t.Fatalf("expected Riot Display got %q", name)
-		}
-	})
-
-	t.Run("falls back to preferred username and normalizes game tag", func(t *testing.T) {
-		name := extractRSODisplayName(&RSOUserInfoResponse{PreferredUsername: "  RiotTester # EUW  "}, "")
-
-		if name != "RiotTester#EUW" {
-			t.Fatalf("expected RiotTester#EUW got %q", name)
-		}
-	})
-
-	t.Run("falls back to id token name claim", func(t *testing.T) {
+func TestExtractNameFromIDToken_Fallbacks(t *testing.T) {
+	t.Run("uses id token name claim", func(t *testing.T) {
 		idToken := makeIDTokenFromClaims(t, map[string]any{"name": "Token Name"})
-		name := extractRSODisplayName(nil, idToken)
+		name := extractNameFromIDToken(idToken)
 
 		if name != "Token Name" {
 			t.Fatalf("expected Token Name got %q", name)
@@ -83,7 +43,7 @@ func TestExtractRSODisplayName_Fallbacks(t *testing.T) {
 				"tagLine":   "APAC",
 			},
 		})
-		name := extractRSODisplayName(nil, idToken)
+		name := extractNameFromIDToken(idToken)
 
 		if name != "TokenGame#APAC" {
 			t.Fatalf("expected TokenGame#APAC got %q", name)
@@ -105,7 +65,7 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		return &RSOTokenResponse{AccessToken: "at", RefreshToken: "rt", IDToken: "idt"}, nil
 	}
 	getUserInfoFromRSOFunc = func(_ string) (*RSOUserInfoResponse, error) {
-		return &RSOUserInfoResponse{Sub: "sublogin", CPID: "NA1", GameName: "RiotTester", TagLine: "EUW"}, nil
+		return &RSOUserInfoResponse{Sub: "sublogin", GameName: "RiotTester", TagLine: "EUW"}, nil
 	}
 
 	// mock firebase auth implementation returning static token
@@ -181,7 +141,7 @@ func TestHandleRSOCallback_UsesAccountEndpointFallback(t *testing.T) {
 		return &RSOTokenResponse{AccessToken: "at", RefreshToken: "rt", IDToken: makeIDTokenFromClaims(t, map[string]any{"sub": "sub-empty"})}, nil
 	}
 	getUserInfoFromRSOFunc = func(_ string) (*RSOUserInfoResponse, error) {
-		return &RSOUserInfoResponse{Sub: "sub-empty", CPID: "NA1"}, nil
+		return &RSOUserInfoResponse{Sub: "sub-empty"}, nil
 	}
 	getAccountInfoFromRSOFunc = func(_ string) (*RSOAccountResponse, error) {
 		return &RSOAccountResponse{GameName: "FromAccountAPI", TagLine: "NA1"}, nil

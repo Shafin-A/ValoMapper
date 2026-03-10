@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -26,14 +25,9 @@ type RSOTokenResponse struct {
 }
 
 type RSOUserInfoResponse struct {
-	Sub               string `json:"sub"`
-	CPID              string `json:"cpid"`
-	Name              string `json:"name"`
-	PreferredUsername string `json:"preferred_username"`
-	Nickname          string `json:"nickname"`
-	GameName          string `json:"game_name"`
-	TagLine           string `json:"tag_line"`
-	Acct              any    `json:"acct"`
+	Sub      string `json:"sub"`
+	GameName string `json:"game_name"`
+	TagLine  string `json:"tag_line"`
 }
 
 type RSOAccountResponse struct {
@@ -166,75 +160,6 @@ func decodeJWTClaims(jwtToken string) map[string]any {
 	return claims
 }
 
-func isRSODebugLoggingEnabled() bool {
-	return true
-}
-
-func shortDebugValue(value string) string {
-	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
-		return "<empty>"
-	}
-
-	const maxLen = 64
-	if len(trimmed) <= maxLen {
-		return trimmed
-	}
-
-	return trimmed[:maxLen] + "..."
-}
-
-func summarizeAcctForDebug(acct any) string {
-	switch value := acct.(type) {
-	case nil:
-		return "<missing>"
-	case string:
-		return fmt.Sprintf("string:%q", shortDebugValue(value))
-	case map[string]any:
-		return fmt.Sprintf(
-			"object:game_name=%q tag_line=%q name=%q preferred_username=%q nickname=%q",
-			shortDebugValue(getFirstStringValue(value, "game_name", "gameName")),
-			shortDebugValue(getFirstStringValue(value, "tag_line", "tagLine", "tagline")),
-			shortDebugValue(getFirstStringValue(value, "name", "username")),
-			shortDebugValue(getFirstStringValue(value, "preferred_username", "preferredUsername")),
-			shortDebugValue(getFirstStringValue(value, "nickname")),
-		)
-	default:
-		return fmt.Sprintf("%T", acct)
-	}
-}
-
-func summarizeIDTokenForDebug(idToken string) string {
-	claims := decodeJWTClaims(idToken)
-	if claims == nil {
-		return "<unavailable>"
-	}
-
-	acctSummary := "<missing>"
-	if acct, ok := claims["acct"]; ok {
-		acctSummary = summarizeAcctForDebug(acct)
-	}
-
-	return fmt.Sprintf(
-		"game_name=%q tag_line=%q name=%q preferred_username=%q nickname=%q acct=%s",
-		shortDebugValue(getFirstStringValue(claims, "game_name", "gameName")),
-		shortDebugValue(getFirstStringValue(claims, "tag_line", "tagLine", "tagline")),
-		shortDebugValue(getFirstStringValue(claims, "name", "username")),
-		shortDebugValue(getFirstStringValue(claims, "preferred_username", "preferredUsername")),
-		shortDebugValue(getFirstStringValue(claims, "nickname")),
-		acctSummary,
-	)
-}
-
-func shortHashPrefix(value string) string {
-	const prefixLength = 12
-	if len(value) <= prefixLength {
-		return value
-	}
-
-	return value[:prefixLength]
-}
-
 func extractNameFromIDToken(idToken string) string {
 	claims := decodeJWTClaims(idToken)
 	if claims == nil {
@@ -255,33 +180,6 @@ func extractNameFromIDToken(idToken string) string {
 	}
 
 	return normalizeDisplayName(getFirstStringValue(claims, "name", "preferred_username", "preferredUsername", "nickname", "username"))
-}
-
-func extractRSODisplayName(userInfo *RSOUserInfoResponse, idToken string) string {
-	if userInfo != nil {
-		displayName := buildGameTagDisplayName(userInfo.GameName, userInfo.TagLine)
-		if displayName != "" {
-			return displayName
-		}
-
-		if acctName := nameFromAccountValue(userInfo.Acct); acctName != "" {
-			return acctName
-		}
-
-		if name := normalizeDisplayName(userInfo.Name); name != "" {
-			return name
-		}
-
-		if preferredUsername := normalizeDisplayName(userInfo.PreferredUsername); preferredUsername != "" {
-			return preferredUsername
-		}
-
-		if nickname := normalizeDisplayName(userInfo.Nickname); nickname != "" {
-			return nickname
-		}
-	}
-
-	return extractNameFromIDToken(idToken)
 }
 
 var exchangeCodeForTokensFunc = exchangeCodeForTokens
@@ -429,38 +327,21 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 	}
 
 	hashedSub := hashRSOSub(userInfo.Sub)
-	displayName := extractRSODisplayName(userInfo, tokens.IDToken)
+	displayName := buildGameTagDisplayName(userInfo.GameName, userInfo.TagLine)
 
 	accountDisplayName := ""
-	accountLookupStatus := "not_attempted"
 	if displayName == "" {
-		accountLookupStatus = "failed"
 		accountInfo, accountErr := getAccountInfoFromRSOFunc(tokens.AccessToken)
 		if accountErr == nil && accountInfo != nil {
 			accountDisplayName = buildGameTagDisplayName(accountInfo.GameName, accountInfo.TagLine)
 			if accountDisplayName != "" {
 				displayName = accountDisplayName
-				accountLookupStatus = "ok"
 			}
 		}
 	}
 
-	if isRSODebugLoggingEnabled() {
-		log.Printf(
-			"[request=%s] RSO debug: sub_hash_prefix=%s userinfo{game_name=%q tag_line=%q name=%q preferred_username=%q nickname=%q acct=%s} id_token{%s} account_me{status=%s display_name=%q} extracted_display_name=%q",
-			middleware.GetRequestID(r),
-			shortHashPrefix(hashedSub),
-			shortDebugValue(userInfo.GameName),
-			shortDebugValue(userInfo.TagLine),
-			shortDebugValue(userInfo.Name),
-			shortDebugValue(userInfo.PreferredUsername),
-			shortDebugValue(userInfo.Nickname),
-			summarizeAcctForDebug(userInfo.Acct),
-			summarizeIDTokenForDebug(tokens.IDToken),
-			accountLookupStatus,
-			shortDebugValue(accountDisplayName),
-			shortDebugValue(displayName),
-		)
+	if displayName == "" {
+		displayName = extractNameFromIDToken(tokens.IDToken)
 	}
 
 	var namePtr *string
