@@ -67,6 +67,9 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 	getUserInfoFromRSOFunc = func(_ string) (*RSOUserInfoResponse, error) {
 		return &RSOUserInfoResponse{Sub: "sublogin", GameName: "RiotTester", TagLine: "EUW"}, nil
 	}
+	getAccountInfoFromRSOFunc = func(_ string) (*RSOAccountResponse, error) {
+		return &RSOAccountResponse{PUUID: "puuid-login", GameName: "RiotTester", TagLine: "EUW"}, nil
+	}
 
 	// mock firebase auth implementation returning static token
 	mockAuth := &testutils.MockFirebaseAuth{}
@@ -100,8 +103,8 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to load RSO user: %v", err)
 		}
-		if user == nil || user.FirebaseUID == nil || *user.FirebaseUID != hashRSOSub("sublogin") {
-			t.Fatalf("expected firebase_uid to be linked for RSO user")
+		if user == nil || user.FirebaseUID == nil || *user.FirebaseUID != "puuid-login" {
+			t.Fatalf("expected firebase_uid to use account endpoint puuid")
 		}
 		if user.Name == nil || *user.Name != "RiotTester#EUW" {
 			t.Fatalf("expected name to be set from RSO game_name and tag_line")
@@ -144,7 +147,7 @@ func TestHandleRSOCallback_UsesAccountEndpointFallback(t *testing.T) {
 		return &RSOUserInfoResponse{Sub: "sub-empty"}, nil
 	}
 	getAccountInfoFromRSOFunc = func(_ string) (*RSOAccountResponse, error) {
-		return &RSOAccountResponse{GameName: "FromAccountAPI", TagLine: "NA1"}, nil
+		return &RSOAccountResponse{PUUID: "puuid-empty", GameName: "FromAccountAPI", TagLine: "NA1"}, nil
 	}
 
 	mockAuth := &testutils.MockFirebaseAuth{}
@@ -175,5 +178,57 @@ func TestHandleRSOCallback_UsesAccountEndpointFallback(t *testing.T) {
 	}
 	if user.Name == nil || *user.Name != "FromAccountAPI#NA1" {
 		t.Fatalf("expected name to be set from account endpoint fallback, got %#v", user.Name)
+	}
+	if user.FirebaseUID == nil || *user.FirebaseUID != "puuid-empty" {
+		t.Fatalf("expected firebase uid to be set from account endpoint puuid")
+	}
+}
+
+func TestHandleRSOCallback_FallsBackToHashedSubWhenPUUIDUnavailable(t *testing.T) {
+	originalExchangeFunc := exchangeCodeForTokensFunc
+	originalGetUserInfoFunc := getUserInfoFromRSOFunc
+	originalGetAccountInfoFunc := getAccountInfoFromRSOFunc
+	t.Cleanup(func() {
+		exchangeCodeForTokensFunc = originalExchangeFunc
+		getUserInfoFromRSOFunc = originalGetUserInfoFunc
+		getAccountInfoFromRSOFunc = originalGetAccountInfoFunc
+	})
+
+	exchangeCodeForTokensFunc = func(_ string) (*RSOTokenResponse, error) {
+		return &RSOTokenResponse{AccessToken: "at", RefreshToken: "rt", IDToken: makeIDTokenFromClaims(t, map[string]any{"sub": "sub-no-puuid"})}, nil
+	}
+	getUserInfoFromRSOFunc = func(_ string) (*RSOUserInfoResponse, error) {
+		return &RSOUserInfoResponse{Sub: "sub-no-puuid"}, nil
+	}
+	getAccountInfoFromRSOFunc = func(_ string) (*RSOAccountResponse, error) {
+		return nil, fmt.Errorf("account endpoint unavailable")
+	}
+
+	mockAuth := &testutils.MockFirebaseAuth{}
+	mockAuth.CustomTokenFunc = func(ctx context.Context, uid string) (string, error) {
+		return "custom-123", nil
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "users")
+
+	body := RSORequest{Code: "code"}
+	buf, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", "/", bytes.NewReader(buf))
+	rec := httptest.NewRecorder()
+
+	HandleRSOCallback(rec, req, mockAuth)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rec.Code)
+	}
+
+	hashedSub := hashRSOSub("sub-no-puuid")
+	user, err := models.GetUserByRSOSubject(hashedSub)
+	if err != nil {
+		t.Fatalf("failed to load RSO user: %v", err)
+	}
+	if user == nil || user.FirebaseUID == nil || *user.FirebaseUID != hashedSub {
+		t.Fatalf("expected firebase uid to fall back to hashed sub when puuid is unavailable")
 	}
 }

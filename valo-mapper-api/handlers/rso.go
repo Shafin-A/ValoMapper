@@ -328,14 +328,17 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 
 	hashedSub := hashRSOSub(userInfo.Sub)
 	displayName := buildGameTagDisplayName(userInfo.GameName, userInfo.TagLine)
+	firebaseUID := hashedSub
 
-	accountDisplayName := ""
-	if displayName == "" {
-		accountInfo, accountErr := getAccountInfoFromRSOFunc(tokens.AccessToken)
-		if accountErr == nil && accountInfo != nil {
-			accountDisplayName = buildGameTagDisplayName(accountInfo.GameName, accountInfo.TagLine)
-			if accountDisplayName != "" {
-				displayName = accountDisplayName
+	accountInfo, accountErr := getAccountInfoFromRSOFunc(tokens.AccessToken)
+	if accountErr == nil && accountInfo != nil {
+		if puuid := strings.TrimSpace(accountInfo.PUUID); puuid != "" {
+			firebaseUID = puuid
+		}
+
+		if displayName == "" {
+			if accountName := buildGameTagDisplayName(accountInfo.GameName, accountInfo.TagLine); accountName != "" {
+				displayName = accountName
 			}
 		}
 	}
@@ -356,7 +359,7 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 	}
 
 	if user == nil {
-		user, err = models.CreateUserWithRSO(hashedSub, hashedSub, namePtr, tokens.AccessToken, tokens.RefreshToken, tokens.IDToken)
+		user, err = models.CreateUserWithRSO(firebaseUID, hashedSub, namePtr, tokens.AccessToken, tokens.RefreshToken, tokens.IDToken)
 		if err != nil {
 			utils.SendJSONError(w, utils.NewInternal("Failed to create RSO user", err), middleware.GetRequestID(r))
 			return
@@ -366,8 +369,8 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 			_ = user.UpdateName(*namePtr)
 		}
 
-		if user.FirebaseUID == nil || *user.FirebaseUID == "" {
-			if err := user.SetFirebaseUID(hashedSub); err != nil {
+		if user.FirebaseUID == nil || strings.TrimSpace(*user.FirebaseUID) == "" || strings.TrimSpace(*user.FirebaseUID) != firebaseUID {
+			if err := user.SetFirebaseUID(firebaseUID); err != nil {
 				utils.SendJSONError(w, utils.NewInternal("Failed to link RSO user with firebase uid", err), middleware.GetRequestID(r))
 				return
 			}
@@ -375,7 +378,7 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		_ = user.UpdateRSOTokens(tokens.AccessToken, tokens.RefreshToken)
 	}
 
-	customToken, err := firebaseAuth.CustomToken(context.Background(), hashedSub)
+	customToken, err := firebaseAuth.CustomToken(context.Background(), firebaseUID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Failed to create firebase custom token", err), middleware.GetRequestID(r))
 		return
