@@ -3,7 +3,9 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +13,83 @@ import (
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 )
+
+func makeIDTokenFromClaims(t *testing.T, claims map[string]any) string {
+	t.Helper()
+
+	payload, err := json.Marshal(claims)
+	if err != nil {
+		t.Fatalf("failed to marshal claims: %v", err)
+	}
+
+	encodedPayload := base64.RawURLEncoding.EncodeToString(payload)
+	return fmt.Sprintf("header.%s.signature", encodedPayload)
+}
+
+func TestExtractRSODisplayName_Fallbacks(t *testing.T) {
+	t.Run("prefers game name and tag from user info", func(t *testing.T) {
+		name := extractRSODisplayName(&RSOUserInfoResponse{
+			GameName: "RiotTester",
+			TagLine:  "EUW",
+		}, "")
+
+		if name != "RiotTester#EUW" {
+			t.Fatalf("expected RiotTester#EUW got %q", name)
+		}
+	})
+
+	t.Run("uses account object camelCase fields", func(t *testing.T) {
+		name := extractRSODisplayName(&RSOUserInfoResponse{
+			Acct: map[string]any{
+				"gameName": "AcctName",
+				"tagLine":  "NA1",
+			},
+		}, "")
+
+		if name != "AcctName#NA1" {
+			t.Fatalf("expected AcctName#NA1 got %q", name)
+		}
+	})
+
+	t.Run("falls back to user info name", func(t *testing.T) {
+		name := extractRSODisplayName(&RSOUserInfoResponse{Name: "Riot Display"}, "")
+
+		if name != "Riot Display" {
+			t.Fatalf("expected Riot Display got %q", name)
+		}
+	})
+
+	t.Run("falls back to preferred username and normalizes game tag", func(t *testing.T) {
+		name := extractRSODisplayName(&RSOUserInfoResponse{PreferredUsername: "  RiotTester # EUW  "}, "")
+
+		if name != "RiotTester#EUW" {
+			t.Fatalf("expected RiotTester#EUW got %q", name)
+		}
+	})
+
+	t.Run("falls back to id token name claim", func(t *testing.T) {
+		idToken := makeIDTokenFromClaims(t, map[string]any{"name": "Token Name"})
+		name := extractRSODisplayName(nil, idToken)
+
+		if name != "Token Name" {
+			t.Fatalf("expected Token Name got %q", name)
+		}
+	})
+
+	t.Run("uses id token acct object with mixed key styles", func(t *testing.T) {
+		idToken := makeIDTokenFromClaims(t, map[string]any{
+			"acct": map[string]any{
+				"game_name": "TokenGame",
+				"tagLine":   "APAC",
+			},
+		})
+		name := extractRSODisplayName(nil, idToken)
+
+		if name != "TokenGame#APAC" {
+			t.Fatalf("expected TokenGame#APAC got %q", name)
+		}
+	})
+}
 
 func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 	exchangeCodeForTokensFunc = func(_ string) (*RSOTokenResponse, error) {
