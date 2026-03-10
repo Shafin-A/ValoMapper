@@ -107,14 +107,5 @@ export const generateRSOAuthLink = (
     // ignore invalid URLs, fallbackUri stays as-is
   }
 
-  // debug: log origin and computed URI so we can detect odd values in prod
-  if (process.env.NODE_ENV !== "test") {
-    console.debug("RSO auth link computed", {
-      origin: window.location.origin,
-      fallbackOrigin,
-      redirectUri,
-    });
-  }
-
   return getRSOAuthorizationUrl(clientId, redirectUri, state, prompt);
 };
