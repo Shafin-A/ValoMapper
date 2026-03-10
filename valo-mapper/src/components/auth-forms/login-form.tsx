@@ -144,7 +144,7 @@ export const LoginForm = ({
                     {rsoClientId ? "Sign in with Riot" : "Riot not configured"}
                   </a>
                 </Button>
-                <FieldDescription>
+                <FieldDescription className="mt-2 text-center text-xs text-muted-foreground">
                   By signing in, your profile becomes public. Players who
                   haven&apos;t opted in won&apos;t have their data shown.
                 </FieldDescription>
