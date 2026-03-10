@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { generateRSOAuthLink } from "@/lib/rso";
+import { sanitizeRedirectPath } from "@/lib/rso";
 import { Home } from "lucide-react";
 import { useUser } from "@/hooks/api/use-user";
 
@@ -47,7 +47,7 @@ export const LoginForm = ({
 
   useEffect(() => {
     if (user && !isUserLoading) {
-      const redirectTo = searchParams.get("redirect") || "/";
+      const redirectTo = sanitizeRedirectPath(searchParams.get("redirect"));
       router.push(redirectTo);
     }
   }, [user, isUserLoading, router, searchParams]);
@@ -62,9 +62,9 @@ export const LoginForm = ({
   const rsoClientId = process.env.NEXT_PUBLIC_RSO_CLIENT_ID || "";
 
   const redirectParam = searchParams.get("redirect") || "/";
-  const stateValue = `redirect=${encodeURIComponent(redirectParam)}`;
+  const safeRedirectParam = sanitizeRedirectPath(redirectParam);
   const rsoLink = rsoClientId
-    ? generateRSOAuthLink(rsoClientId, stateValue)
+    ? `/api/auth/rso/start?redirect=${encodeURIComponent(safeRedirectParam)}`
     : "#";
 
   const handleSubmit = async (e: React.FormEvent) => {

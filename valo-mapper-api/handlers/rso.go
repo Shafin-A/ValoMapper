@@ -9,10 +9,13 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
 )
+
+const rsoHTTPTimeout = 10 * time.Second
 
 type RSOTokenResponse struct {
 	AccessToken  string `json:"access_token"`
@@ -194,7 +197,7 @@ func exchangeCodeForTokens(code string) (*RSOTokenResponse, error) {
 	formData.Set("code", code)
 	formData.Set("redirect_uri", rsoConfig.RedirectURI)
 
-	req, err := http.NewRequest("POST", rsoConfig.TokenURL, strings.NewReader(formData.Encode()))
+	req, err := http.NewRequestWithContext(context.Background(), "POST", rsoConfig.TokenURL, strings.NewReader(formData.Encode()))
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +206,7 @@ func exchangeCodeForTokens(code string) (*RSOTokenResponse, error) {
 	req.Header.Set("Authorization", "Basic "+auth)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: rsoHTTPTimeout}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -227,14 +230,14 @@ var getUserInfoFromRSOFunc = getUserInfoFromRSO
 var getAccountInfoFromRSOFunc = getAccountInfoFromRSO
 
 func getUserInfoFromRSO(accessToken string) (*RSOUserInfoResponse, error) {
-	req, err := http.NewRequest("GET", rsoConfig.UserinfoURL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), "GET", rsoConfig.UserinfoURL, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: rsoHTTPTimeout}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -254,11 +257,11 @@ func getUserInfoFromRSO(accessToken string) (*RSOUserInfoResponse, error) {
 }
 
 func getAccountInfoFromRSO(accessToken string) (*RSOAccountResponse, error) {
-	client := &http.Client{}
+	client := &http.Client{Timeout: rsoHTTPTimeout}
 	var lastErr error
 
 	for _, accountURL := range rsoAccountMeURLs {
-		req, err := http.NewRequest("GET", accountURL, nil)
+		req, err := http.NewRequestWithContext(context.Background(), "GET", accountURL, nil)
 		if err != nil {
 			lastErr = err
 			continue

@@ -23,9 +23,9 @@ type User struct {
 	UpdatedAt       time.Time  `json:"updatedAt"`
 	TourCompleted   bool       `json:"tourCompleted"`
 	RSOSubjectID    *string    `json:"rsoSubjectId,omitempty"`
-	RSOAccessToken  *string    `json:"rsoAccessToken,omitempty"`
-	RSORefreshToken *string    `json:"rsoRefreshToken,omitempty"`
-	RSOIDToken      *string    `json:"rsoIdToken,omitempty"`
+	RSOAccessToken  *string    `json:"-"`
+	RSORefreshToken *string    `json:"-"`
+	RSOIDToken      *string    `json:"-"`
 	RSOLinkedAt     *time.Time `json:"rsoLinkedAt,omitempty"`
 }
 

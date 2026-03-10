@@ -2,7 +2,7 @@ export const PrivacyPolicy = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Mar 9th, 2026
+        <strong>Last Updated:</strong> Mar 10th, 2026
       </div>
 
       <p>
@@ -43,8 +43,7 @@ export const PrivacyPolicy = () => {
             <li>Password (securely hashed via Firebase Authentication)</li>
             <li>
               Or you may choose to sign in with Riot Sign-On (RSO); in that case
-              we receive a Firebase custom token and store your RSO subject ID
-              and tokens.
+              we receive a Firebase custom token and store your RSO subject ID.
             </li>
           </ul>
           <p className="mb-3">
@@ -53,8 +52,10 @@ export const PrivacyPolicy = () => {
             PostgreSQL database, which includes your username, user ID, Firebase
             ID, email address, email verification status, and account
             creation/update timestamps. If you sign in with RSO, the only
-            personal identifier stored is your Riot subject ID, and tokens used
-            strictly for authentication and optional future features.
+            personal identifier stored is your Riot subject ID. RSO access,
+            refresh, and identity tokens are stored server-side and are used
+            strictly for authentication and optional future features. These
+            tokens are not exposed in browser-facing API responses.
           </p>
 
           <p className="font-semibold mb-1">Strategy Content</p>
@@ -109,6 +110,10 @@ export const PrivacyPolicy = () => {
         </p>
         <ul className="list-disc list-inside space-y-1 ml-4 mb-3">
           <li>Session management</li>
+          <li>
+            A short-lived, essential OAuth state cookie used to protect Riot
+            Sign-On against CSRF during login
+          </li>
           <li>
             Temporary notification messages (e.g., success toasts after actions)
           </li>

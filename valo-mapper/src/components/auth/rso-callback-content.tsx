@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { exchangeCodeForTokens, parseRSORedirect } from "@/lib/rso";
+import { exchangeCodeForTokens, sanitizeRedirectPath } from "@/lib/rso";
 import { toast } from "sonner";
 
 export const RSOCallbackContent = () => {
@@ -23,6 +23,14 @@ export const RSOCallbackContent = () => {
       }
 
       const code = searchParams.get("code");
+      const callbackError = searchParams.get("error");
+      const redirectTo = sanitizeRedirectPath(searchParams.get("redirect"));
+
+      if (callbackError) {
+        setErrorMessage("Riot sign-in session expired. Please try again.");
+        setStatus("error");
+        return;
+      }
 
       if (!code) {
         setStatus("no_code");
@@ -45,9 +53,6 @@ export const RSOCallbackContent = () => {
           );
           toast.success("Logged in with Riot account!");
           setStatus("success");
-
-          const state = searchParams.get("state") || undefined;
-          const redirectTo = parseRSORedirect(state);
 
           setTimeout(() => {
             router.push(redirectTo);

@@ -35,13 +35,35 @@ export const parseRSORedirect = (state?: string): string => {
   if (state.startsWith(prefix)) {
     const encoded = state.slice(prefix.length);
     try {
-      return decodeURIComponent(encoded) || "/";
+      return sanitizeRedirectPath(decodeURIComponent(encoded));
     } catch {
       return "/";
     }
   }
 
   return "/";
+};
+
+export const sanitizeRedirectPath = (input?: string | null): string => {
+  if (!input) {
+    return "/";
+  }
+
+  const value = input.trim();
+
+  if (!value.startsWith("/")) {
+    return "/";
+  }
+
+  if (value.startsWith("//")) {
+    return "/";
+  }
+
+  if (value.includes("\\") || /[\r\n]/.test(value)) {
+    return "/";
+  }
+
+  return value;
 };
 
 export interface RSOExchangeResponse {

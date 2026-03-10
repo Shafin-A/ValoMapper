@@ -1,38 +1,43 @@
-// The API route receives the authorization code from the client page and
-// forwards it to the backend service.  In addition, we now support GET
-// requests so that we can accept the OAuth redirect URI that **must** point
-// at `/api/auth/rso/callback`.  The provider will perform a GET with
-// `?code=...`, so we simply redirect that to the client page above.
+import {
+  clearStateCookieHeader,
+  validateStateFromRequest,
+} from "../start/route";
 
 export const GET = async (request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
+  const validationResult = validateStateFromRequest(request, state);
 
-  // preserve query parameters when redirecting to the real page
   let redirectPath = "/auth/rso-callback";
   const params = new URLSearchParams();
-  if (code) params.set("code", code);
-  if (state) params.set("state", state);
+  if (!validationResult.isValid) {
+    params.set("error", "invalid_state");
+  } else {
+    if (code) {
+      params.set("code", code);
+    }
+    if (validationResult.redirectPath) {
+      params.set("redirect", validationResult.redirectPath);
+    }
+  }
   const query = params.toString();
   if (query) redirectPath += `?${query}`;
 
-  // we intentionally do **not** use the request.url host when
-  // computing the Location header.  On platforms like Fly the internal
-  // host may be reported as 0.0.0.0, so building an absolute URL would
-  // send the browser there.  Instead we simply return a relative path
-  // which the browser will resolve against whatever host the user is
-  // currently on.
+  // Keep this relative to avoid bad internal hosts (e.g. 0.0.0.0 on Fly).
   const res = new Response(null, {
     status: 307,
     headers: {
       Location: redirectPath,
     },
   });
-  // expose the path for unit tests
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (res as any).redirectPath = redirectPath;
-  return res;
+
+  type RedirectTestResponse = Response & { redirectPath?: string };
+  const responseForTests = res as RedirectTestResponse;
+  responseForTests.redirectPath = redirectPath;
+
+  clearStateCookieHeader(responseForTests);
+  return responseForTests;
 };
 
 export const POST = async (request: Request) => {
