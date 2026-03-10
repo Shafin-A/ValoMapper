@@ -9,12 +9,14 @@ export const getRSOAuthorizationUrl = (
   clientId: string,
   redirectUri: string,
   state?: string,
+  prompt: string = "login",
 ): string => {
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
     scope: "openid offline_access",
+    prompt,
   });
 
   if (state) {
@@ -84,6 +86,7 @@ export const normalizeOrigin = (origin: string): string => {
 export const generateRSOAuthLink = (
   clientId: string,
   state?: string,
+  prompt: string = "login",
 ): string => {
   const fallbackOrigin = normalizeOrigin(window.location.origin);
 
@@ -113,5 +116,5 @@ export const generateRSOAuthLink = (
     });
   }
 
-  return getRSOAuthorizationUrl(clientId, redirectUri, state);
+  return getRSOAuthorizationUrl(clientId, redirectUri, state, prompt);
 };

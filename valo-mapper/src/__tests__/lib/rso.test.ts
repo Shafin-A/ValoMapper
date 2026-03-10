@@ -12,6 +12,7 @@ describe("RSO helpers", () => {
     // redirect uri should be encoded and include the api path
     expect(link).toMatch(/redirect_uri=.*%2Fapi%2Fauth%2Frso%2Fcallback/);
     expect(link).toMatch(/client_id=my-client/);
+    expect(link).toMatch(/prompt=login/);
   });
 
   test("generateRSOAuthLink respects NEXT_PUBLIC_RSO_REDIRECT_URI", () => {
