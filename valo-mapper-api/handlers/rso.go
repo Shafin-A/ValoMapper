@@ -25,8 +25,14 @@ type RSOTokenResponse struct {
 }
 
 type RSOUserInfoResponse struct {
-	Sub  string `json:"sub"`
-	CPID string `json:"cpid"`
+	Sub               string `json:"sub"`
+	CPID              string `json:"cpid"`
+	Name              string `json:"name"`
+	PreferredUsername string `json:"preferred_username"`
+	Nickname          string `json:"nickname"`
+	GameName          string `json:"game_name"`
+	TagLine           string `json:"tag_line"`
+	Acct              any    `json:"acct"`
 }
 
 type RSORequest struct {
@@ -56,6 +62,95 @@ func InitializeRSOConfig(clientID, clientSecret, redirectURI string) {
 func hashRSOSub(sub string) string {
 	hash := sha256.Sum256([]byte(sub))
 	return fmt.Sprintf("%x", hash)
+}
+
+func buildGameTagDisplayName(gameName, tagLine string) string {
+	trimmedGameName := strings.TrimSpace(gameName)
+	trimmedTagLine := strings.TrimSpace(tagLine)
+	if trimmedGameName == "" || trimmedTagLine == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("%s#%s", trimmedGameName, trimmedTagLine)
+}
+
+func nameFromAccountValue(acct any) string {
+	switch value := acct.(type) {
+	case string:
+		parts := strings.SplitN(strings.TrimSpace(value), "#", 2)
+		if len(parts) != 2 {
+			return ""
+		}
+		return buildGameTagDisplayName(parts[0], parts[1])
+	case map[string]any:
+		return buildGameTagDisplayName(
+			getStringValue(value, "game_name"),
+			getStringValue(value, "tag_line"),
+		)
+	default:
+		return ""
+	}
+}
+
+func getStringValue(input map[string]any, key string) string {
+	value, ok := input[key]
+	if !ok {
+		return ""
+	}
+
+	stringValue, ok := value.(string)
+	if !ok {
+		return ""
+	}
+
+	return strings.TrimSpace(stringValue)
+}
+
+func extractNameFromIDToken(idToken string) string {
+	parts := strings.Split(idToken, ".")
+	if len(parts) < 2 {
+		return ""
+	}
+
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		paddedPayload := parts[1] + strings.Repeat("=", (4-len(parts[1])%4)%4)
+		payload, err = base64.URLEncoding.DecodeString(paddedPayload)
+		if err != nil {
+			return ""
+		}
+	}
+
+	claims := map[string]any{}
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return ""
+	}
+
+	if acct, ok := claims["acct"]; ok {
+		if acctName := nameFromAccountValue(acct); acctName != "" {
+			return acctName
+		}
+	}
+
+	return buildGameTagDisplayName(
+		getStringValue(claims, "game_name"),
+		getStringValue(claims, "tag_line"),
+	)
+}
+
+func extractRSODisplayName(userInfo *RSOUserInfoResponse, idToken string) string {
+	if userInfo != nil {
+		displayName := buildGameTagDisplayName(userInfo.GameName, userInfo.TagLine)
+		if displayName != "" {
+			return displayName
+		}
+
+		if acctName := nameFromAccountValue(userInfo.Acct); acctName != "" {
+			return acctName
+		}
+	}
+
+	return extractNameFromIDToken(idToken)
 }
 
 var exchangeCodeForTokensFunc = exchangeCodeForTokens
@@ -158,6 +253,12 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 	}
 
 	hashedSub := hashRSOSub(userInfo.Sub)
+	displayName := extractRSODisplayName(userInfo, tokens.IDToken)
+
+	var namePtr *string
+	if displayName != "" {
+		namePtr = &displayName
+	}
 
 	user, err := models.GetUserByRSOSubject(hashedSub)
 	if err != nil {
@@ -166,12 +267,16 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 	}
 
 	if user == nil {
-		user, err = models.CreateUserWithRSO(hashedSub, hashedSub, tokens.AccessToken, tokens.RefreshToken, tokens.IDToken)
+		user, err = models.CreateUserWithRSO(hashedSub, hashedSub, namePtr, tokens.AccessToken, tokens.RefreshToken, tokens.IDToken)
 		if err != nil {
 			utils.SendJSONError(w, utils.NewInternal("Failed to create RSO user", err), middleware.GetRequestID(r))
 			return
 		}
 	} else {
+		if namePtr != nil && (user.Name == nil || strings.TrimSpace(*user.Name) != *namePtr) {
+			_ = user.UpdateName(*namePtr)
+		}
+
 		if user.FirebaseUID == nil || *user.FirebaseUID == "" {
 			if err := user.SetFirebaseUID(hashedSub); err != nil {
 				utils.SendJSONError(w, utils.NewInternal("Failed to link RSO user with firebase uid", err), middleware.GetRequestID(r))

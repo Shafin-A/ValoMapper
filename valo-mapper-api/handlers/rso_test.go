@@ -17,7 +17,7 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		return &RSOTokenResponse{AccessToken: "at", RefreshToken: "rt", IDToken: "idt"}, nil
 	}
 	getUserInfoFromRSOFunc = func(_ string) (*RSOUserInfoResponse, error) {
-		return &RSOUserInfoResponse{Sub: "sublogin", CPID: "NA1"}, nil
+		return &RSOUserInfoResponse{Sub: "sublogin", CPID: "NA1", GameName: "RiotTester", TagLine: "EUW"}, nil
 	}
 
 	// mock firebase auth implementation returning static token
@@ -54,6 +54,9 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		}
 		if user == nil || user.FirebaseUID == nil || *user.FirebaseUID != hashRSOSub("sublogin") {
 			t.Fatalf("expected firebase_uid to be linked for RSO user")
+		}
+		if user.Name == nil || *user.Name != "RiotTester#EUW" {
+			t.Fatalf("expected name to be set from RSO game_name and tag_line")
 		}
 	}
 
