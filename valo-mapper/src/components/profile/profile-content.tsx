@@ -159,6 +159,11 @@ export const ProfileContent = () => {
     );
   }
 
+  const isRSOUser = Boolean(
+    (user as { rsoSubjectId?: string | null }).rsoSubjectId,
+  );
+  const currentUserName = user.name?.trim() || "";
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
   };
@@ -231,9 +236,15 @@ export const ProfileContent = () => {
                 id="name"
                 value={name}
                 onChange={handleNameChange}
-                disabled={!isEditing || isUpdatingUser}
+                disabled={isRSOUser || !isEditing || isUpdatingUser}
                 placeholder="Your name"
               />
+              {isRSOUser && (
+                <p className="text-xs text-muted-foreground">
+                  Managed by Riot Sign-On. This name updates from your Riot Game
+                  Name and Tagline.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -245,6 +256,11 @@ export const ProfileContent = () => {
                 disabled
                 className="bg-muted"
               />
+              {isRSOUser && (
+                <p className="text-xs text-muted-foreground">
+                  Email is managed by Riot Sign-On.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2">
@@ -274,9 +290,14 @@ export const ProfileContent = () => {
             <div className="flex gap-2 pt-4">
               {!isEditing ? (
                 <>
-                  <Button onClick={() => setIsEditing(true)} className="flex-1">
-                    Edit Profile
-                  </Button>
+                  {!isRSOUser && (
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="flex-1"
+                    >
+                      Edit Profile
+                    </Button>
+                  )}
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -299,7 +320,7 @@ export const ProfileContent = () => {
                     disabled={
                       isUpdatingUser ||
                       !name.trim() ||
-                      name.trim() === user.name.trim()
+                      name.trim() === currentUserName
                     }
                     className="flex-1"
                   >
