@@ -12,6 +12,7 @@ Before setting up the project, ensure you have:
 - Go
 - PostgreSQL
 - A Firebase project with a service account key
+- Riot Sign-On (RSO) OAuth app credentials (client ID/secret)
 
 ## Getting Started
 
@@ -29,7 +30,16 @@ Before setting up the project, ensure you have:
    NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+
+   # Riot Sign-On (optional for frontend, required for Riot login button)
+   NEXT_PUBLIC_RSO_CLIENT_ID=your_rso_client_id
+   # Keep this aligned with your backend RSO_REDIRECT_URI callback
+   NEXT_PUBLIC_RSO_REDIRECT_URI=http://localhost:3000/api/auth/rso/callback
+
+   # Internal Next.js API routes call the Go backend at this URL
    API_URL=http://localhost:8080
+
+   # WebSocket URL for lobby collaboration
    NEXT_PUBLIC_WS_URL=ws://localhost:8080
    ```
 
@@ -61,8 +71,17 @@ Before setting up the project, ensure you have:
    DB_USER=postgres
    DB_PASSWORD=your_db_password
    DB_NAME=valo-mapper
+
+   # Path to Firebase service account JSON
    GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json
+
+   # Comma-separated CORS origins (defaults to localhost:3000 if omitted)
    ALLOWED_ORIGINS=http://localhost:3000
+
+   # Riot Sign-On (required by backend startup)
+   RSO_CLIENT_ID=your_rso_client_id
+   RSO_CLIENT_SECRET=your_rso_client_secret
+   RSO_REDIRECT_URI=http://localhost:3000/api/auth/rso/callback
    ```
 
 3. Ensure PostgreSQL is running and a database named `valo-mapper` exists.
@@ -100,8 +119,8 @@ ValoMapper is configured for deployment on Fly.io using Docker containers.
    ```
 
 4. **Configure secrets**:
-   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`
-   - Frontend: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `API_URL`, `NEXT_PUBLIC_WS_URL`
+   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`
+   - Frontend: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_RSO_CLIENT_ID`, `NEXT_PUBLIC_RSO_REDIRECT_URI`, `API_URL`, `NEXT_PUBLIC_WS_URL`
 
 5. **Deploy**:
 
