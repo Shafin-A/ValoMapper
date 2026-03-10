@@ -36,6 +36,12 @@ type RSOUserInfoResponse struct {
 	Acct              any    `json:"acct"`
 }
 
+type RSOAccountResponse struct {
+	PUUID    string `json:"puuid"`
+	GameName string `json:"gameName"`
+	TagLine  string `json:"tagLine"`
+}
+
 type RSORequest struct {
 	Code string `json:"code"`
 }
@@ -49,6 +55,12 @@ type RSOConfig struct {
 }
 
 var rsoConfig *RSOConfig
+
+var rsoAccountMeURLs = []string{
+	"https://americas.api.riotgames.com/riot/account/v1/accounts/me",
+	"https://europe.api.riotgames.com/riot/account/v1/accounts/me",
+	"https://asia.api.riotgames.com/riot/account/v1/accounts/me",
+}
 
 func InitializeRSOConfig(clientID, clientSecret, redirectURI string) {
 	rsoConfig = &RSOConfig{
@@ -314,6 +326,8 @@ func exchangeCodeForTokens(code string) (*RSOTokenResponse, error) {
 
 var getUserInfoFromRSOFunc = getUserInfoFromRSO
 
+var getAccountInfoFromRSOFunc = getAccountInfoFromRSO
+
 func getUserInfoFromRSO(accessToken string) (*RSOUserInfoResponse, error) {
 	req, err := http.NewRequest("GET", rsoConfig.UserinfoURL, nil)
 	if err != nil {
@@ -339,6 +353,49 @@ func getUserInfoFromRSO(accessToken string) (*RSOUserInfoResponse, error) {
 	}
 
 	return &userInfo, nil
+}
+
+func getAccountInfoFromRSO(accessToken string) (*RSOAccountResponse, error) {
+	client := &http.Client{}
+	var lastErr error
+
+	for _, accountURL := range rsoAccountMeURLs {
+		req, err := http.NewRequest("GET", accountURL, nil)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		req.Header.Set("Authorization", "Bearer "+accessToken)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		var accountResp RSOAccountResponse
+		decodeErr := json.NewDecoder(resp.Body).Decode(&accountResp)
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			lastErr = fmt.Errorf("failed to get account info from RSO at %s: %v", accountURL, resp.Status)
+			continue
+		}
+
+		if decodeErr != nil {
+			lastErr = decodeErr
+			continue
+		}
+
+		return &accountResp, nil
+	}
+
+	if lastErr == nil {
+		lastErr = fmt.Errorf("failed to get account info from RSO")
+	}
+
+	return nil, lastErr
 }
 
 func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
@@ -374,9 +431,23 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 	hashedSub := hashRSOSub(userInfo.Sub)
 	displayName := extractRSODisplayName(userInfo, tokens.IDToken)
 
+	accountDisplayName := ""
+	accountLookupStatus := "not_attempted"
+	if displayName == "" {
+		accountLookupStatus = "failed"
+		accountInfo, accountErr := getAccountInfoFromRSOFunc(tokens.AccessToken)
+		if accountErr == nil && accountInfo != nil {
+			accountDisplayName = buildGameTagDisplayName(accountInfo.GameName, accountInfo.TagLine)
+			if accountDisplayName != "" {
+				displayName = accountDisplayName
+				accountLookupStatus = "ok"
+			}
+		}
+	}
+
 	if isRSODebugLoggingEnabled() {
 		log.Printf(
-			"[request=%s] RSO debug: sub_hash_prefix=%s userinfo{game_name=%q tag_line=%q name=%q preferred_username=%q nickname=%q acct=%s} id_token{%s} extracted_display_name=%q",
+			"[request=%s] RSO debug: sub_hash_prefix=%s userinfo{game_name=%q tag_line=%q name=%q preferred_username=%q nickname=%q acct=%s} id_token{%s} account_me{status=%s display_name=%q} extracted_display_name=%q",
 			middleware.GetRequestID(r),
 			shortHashPrefix(hashedSub),
 			shortDebugValue(userInfo.GameName),
@@ -386,6 +457,8 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 			shortDebugValue(userInfo.Nickname),
 			summarizeAcctForDebug(userInfo.Acct),
 			summarizeIDTokenForDebug(tokens.IDToken),
+			accountLookupStatus,
+			shortDebugValue(accountDisplayName),
 			shortDebugValue(displayName),
 		)
 	}

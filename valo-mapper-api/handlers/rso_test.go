@@ -92,6 +92,15 @@ func TestExtractRSODisplayName_Fallbacks(t *testing.T) {
 }
 
 func TestHandleRSOCallback_LoginFlow(t *testing.T) {
+	originalExchangeFunc := exchangeCodeForTokensFunc
+	originalGetUserInfoFunc := getUserInfoFromRSOFunc
+	originalGetAccountInfoFunc := getAccountInfoFromRSOFunc
+	t.Cleanup(func() {
+		exchangeCodeForTokensFunc = originalExchangeFunc
+		getUserInfoFromRSOFunc = originalGetUserInfoFunc
+		getAccountInfoFromRSOFunc = originalGetAccountInfoFunc
+	})
+
 	exchangeCodeForTokensFunc = func(_ string) (*RSOTokenResponse, error) {
 		return &RSOTokenResponse{AccessToken: "at", RefreshToken: "rt", IDToken: "idt"}, nil
 	}
@@ -155,5 +164,56 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		if resp["customToken"] != "custom-123" {
 			t.Errorf("unexpected custom token on second login %v", resp)
 		}
+	}
+}
+
+func TestHandleRSOCallback_UsesAccountEndpointFallback(t *testing.T) {
+	originalExchangeFunc := exchangeCodeForTokensFunc
+	originalGetUserInfoFunc := getUserInfoFromRSOFunc
+	originalGetAccountInfoFunc := getAccountInfoFromRSOFunc
+	t.Cleanup(func() {
+		exchangeCodeForTokensFunc = originalExchangeFunc
+		getUserInfoFromRSOFunc = originalGetUserInfoFunc
+		getAccountInfoFromRSOFunc = originalGetAccountInfoFunc
+	})
+
+	exchangeCodeForTokensFunc = func(_ string) (*RSOTokenResponse, error) {
+		return &RSOTokenResponse{AccessToken: "at", RefreshToken: "rt", IDToken: makeIDTokenFromClaims(t, map[string]any{"sub": "sub-empty"})}, nil
+	}
+	getUserInfoFromRSOFunc = func(_ string) (*RSOUserInfoResponse, error) {
+		return &RSOUserInfoResponse{Sub: "sub-empty", CPID: "NA1"}, nil
+	}
+	getAccountInfoFromRSOFunc = func(_ string) (*RSOAccountResponse, error) {
+		return &RSOAccountResponse{GameName: "FromAccountAPI", TagLine: "NA1"}, nil
+	}
+
+	mockAuth := &testutils.MockFirebaseAuth{}
+	mockAuth.CustomTokenFunc = func(ctx context.Context, uid string) (string, error) {
+		return "custom-123", nil
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "users")
+
+	body := RSORequest{Code: "code"}
+	buf, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", "/", bytes.NewReader(buf))
+	rec := httptest.NewRecorder()
+
+	HandleRSOCallback(rec, req, mockAuth)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rec.Code)
+	}
+
+	user, err := models.GetUserByRSOSubject(hashRSOSub("sub-empty"))
+	if err != nil {
+		t.Fatalf("failed to load RSO user: %v", err)
+	}
+	if user == nil {
+		t.Fatalf("expected RSO user to be created")
+	}
+	if user.Name == nil || *user.Name != "FromAccountAPI#NA1" {
+		t.Fatalf("expected name to be set from account endpoint fallback, got %#v", user.Name)
 	}
 }
