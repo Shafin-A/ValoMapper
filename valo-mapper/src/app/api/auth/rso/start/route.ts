@@ -106,6 +106,15 @@ const buildAuthorizeURL = (
   return url;
 };
 
+const createRedirectResponse = (location: string): Response => {
+  return new Response(null, {
+    status: 307,
+    headers: {
+      Location: location,
+    },
+  });
+};
+
 export const GET = async (request: Request) => {
   const requestURL = new URL(request.url);
   const redirectPath = sanitizeRedirectPath(
@@ -114,10 +123,8 @@ export const GET = async (request: Request) => {
   const clientId = process.env.NEXT_PUBLIC_RSO_CLIENT_ID;
 
   if (!clientId) {
-    return Response.redirect(
-      new URL("/login?error=rso_not_configured", requestURL),
-      307,
-    );
+    const loginURL = new URL("/login?error=rso_not_configured", requestURL);
+    return createRedirectResponse(loginURL.toString());
   }
 
   const callbackUri =
@@ -126,7 +133,7 @@ export const GET = async (request: Request) => {
 
   const nonce = randomBytes(24).toString("hex");
   const authorizeURL = buildAuthorizeURL(clientId, callbackUri, nonce);
-  const response = Response.redirect(authorizeURL, 307);
+  const response = createRedirectResponse(authorizeURL.toString());
 
   setStateCookie(response, { nonce, redirectPath });
   return response;
