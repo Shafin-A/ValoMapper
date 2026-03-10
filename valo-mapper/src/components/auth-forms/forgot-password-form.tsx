@@ -106,6 +106,22 @@ export const ForgotPasswordForm = ({
                   Remember your password?{" "}
                   <Link href="/login">Back to login</Link>
                 </FieldDescription>
+
+                <FieldDescription className="mt-2 text-center text-xs text-muted-foreground">
+                  <Link
+                    href="/terms-of-service"
+                    className="underline underline-offset-4"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy-policy"
+                    className="underline underline-offset-4"
+                  >
+                    Privacy Policy
+                  </Link>
+                </FieldDescription>
               </Field>
             </FieldGroup>
           </form>

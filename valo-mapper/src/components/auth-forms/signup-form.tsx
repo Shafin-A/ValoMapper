@@ -180,6 +180,22 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                 <FieldDescription className="px-6 text-center">
                   Already have an account? <Link href="/login">Login</Link>
                 </FieldDescription>
+
+                <FieldDescription className="mt-2 text-center text-xs text-muted-foreground">
+                  <Link
+                    href="/terms-of-service"
+                    className="underline underline-offset-4"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy-policy"
+                    className="underline underline-offset-4"
+                  >
+                    Privacy Policy
+                  </Link>
+                </FieldDescription>
               </Field>
             </FieldGroup>
           </FieldGroup>

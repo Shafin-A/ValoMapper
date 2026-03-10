@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { FirebaseError } from "firebase/app";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
+  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -114,15 +116,42 @@ export const LoginForm = ({
                 <Home />
               </Link>
             </Button>
-            Login to your account
+            Sign in to your account
           </CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Sign in using one of the methods below
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
+              <Field>
+                <Button
+                  className="w-full bg-[#d3362f] border border-[#d3362f] hover:bg-[#d3362f]/80 text-white"
+                  asChild
+                  disabled={!rsoClientId}
+                >
+                  <a
+                    href={rsoLink}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <Image
+                      src="/riot_fist.svg"
+                      alt="Riot logo"
+                      width={24}
+                      height={24}
+                    />
+                    {rsoClientId ? "Sign in with Riot" : "Riot not configured"}
+                  </a>
+                </Button>
+                <FieldDescription>
+                  By signing in, your profile becomes public. Players who
+                  haven&apos;t opted in won&apos;t have their data shown.
+                </FieldDescription>
+              </Field>
+              <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+                OR
+              </FieldSeparator>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
@@ -167,18 +196,22 @@ export const LoginForm = ({
                   Don&apos;t have an account?{" "}
                   <Link href="/signup">Sign up</Link>
                 </FieldDescription>
-              </Field>
-              <Field>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  asChild
-                  disabled={!rsoClientId}
-                >
-                  <a href={rsoLink}>
-                    {rsoClientId ? "Sign in with Riot" : "Riot not configured"}
-                  </a>
-                </Button>
+
+                <FieldDescription className="mt-2 text-center text-xs text-muted-foreground">
+                  <Link
+                    href="/terms-of-service"
+                    className="underline underline-offset-4"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy-policy"
+                    className="underline underline-offset-4"
+                  >
+                    Privacy Policy
+                  </Link>
+                </FieldDescription>
               </Field>
             </FieldGroup>
           </form>
