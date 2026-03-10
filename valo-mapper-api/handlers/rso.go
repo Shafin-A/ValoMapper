@@ -166,12 +166,18 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 	}
 
 	if user == nil {
-		user, err = models.CreateUserWithRSO(hashedSub, tokens.AccessToken, tokens.RefreshToken, tokens.IDToken)
+		user, err = models.CreateUserWithRSO(hashedSub, hashedSub, tokens.AccessToken, tokens.RefreshToken, tokens.IDToken)
 		if err != nil {
 			utils.SendJSONError(w, utils.NewInternal("Failed to create RSO user", err), middleware.GetRequestID(r))
 			return
 		}
 	} else {
+		if user.FirebaseUID == nil || *user.FirebaseUID == "" {
+			if err := user.SetFirebaseUID(hashedSub); err != nil {
+				utils.SendJSONError(w, utils.NewInternal("Failed to link RSO user with firebase uid", err), middleware.GetRequestID(r))
+				return
+			}
+		}
 		_ = user.UpdateRSOTokens(tokens.AccessToken, tokens.RefreshToken)
 	}
 

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 )
 
@@ -45,6 +46,14 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		_ = json.NewDecoder(rec.Body).Decode(&resp)
 		if resp["customToken"] != "custom-123" {
 			t.Errorf("unexpected custom token %v", resp)
+		}
+
+		user, err := models.GetUserByRSOSubject(hashRSOSub("sublogin"))
+		if err != nil {
+			t.Fatalf("failed to load RSO user: %v", err)
+		}
+		if user == nil || user.FirebaseUID == nil || *user.FirebaseUID != hashRSOSub("sublogin") {
+			t.Fatalf("expected firebase_uid to be linked for RSO user")
 		}
 	}
 

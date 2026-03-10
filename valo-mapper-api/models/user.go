@@ -164,14 +164,15 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 	return user, nil
 }
 
-// CreateUserWithRSO creates a new user record with an RSO subject and optional tokens.
-func CreateUserWithRSO(subjectID, accessToken, refreshToken, idToken string) (*User, error) {
+// CreateUserWithRSO creates a new user record with Firebase UID, RSO subject and optional tokens.
+func CreateUserWithRSO(firebaseUID, subjectID, accessToken, refreshToken, idToken string) (*User, error) {
 	conn, err := db.GetDB()
 	if err != nil {
 		return nil, err
 	}
 
 	u := &User{
+		FirebaseUID:     &firebaseUID,
 		RSOSubjectID:    &subjectID,
 		RSOAccessToken:  &accessToken,
 		RSORefreshToken: &refreshToken,
@@ -179,12 +180,33 @@ func CreateUserWithRSO(subjectID, accessToken, refreshToken, idToken string) (*U
 	}
 
 	err = conn.QueryRow(context.Background(), `
-		INSERT INTO users (rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, NOW(), NOW(), NOW())
+		INSERT INTO users (firebase_uid, rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), NOW())
 		RETURNING id, created_at, updated_at
-	`, subjectID, accessToken, refreshToken, idToken).Scan(&u.ID, &u.CreatedAt, &u.UpdatedAt)
+	`, firebaseUID, subjectID, accessToken, refreshToken, idToken).Scan(&u.ID, &u.CreatedAt, &u.UpdatedAt)
 
 	return u, err
+}
+
+// SetFirebaseUID links a legacy RSO record with a Firebase UID for auth lookups.
+func (u *User) SetFirebaseUID(firebaseUID string) error {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	err = conn.QueryRow(context.Background(), `
+		UPDATE users
+		SET firebase_uid = $1, updated_at = NOW()
+		WHERE id = $2
+		RETURNING updated_at
+	`, firebaseUID, u.ID).Scan(&u.UpdatedAt)
+
+	if err == nil {
+		u.FirebaseUID = &firebaseUID
+	}
+
+	return err
 }
 
 // UpdateRSOTokens updates the access and refresh tokens for an RSO account
