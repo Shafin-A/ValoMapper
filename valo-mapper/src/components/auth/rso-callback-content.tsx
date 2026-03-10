@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { exchangeCodeForTokens, parseRSORedirect } from "@/lib/rso";
@@ -9,7 +9,8 @@ import { toast } from "sonner";
 export const RSOCallbackContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading } = useFirebaseAuth();
+  const { loading } = useFirebaseAuth();
+  const processedCodeRef = useRef<string | null>(null);
   const [status, setStatus] = useState<
     "loading" | "success" | "error" | "no_code"
   >("loading");
@@ -27,6 +28,11 @@ export const RSOCallbackContent = () => {
         setStatus("no_code");
         return;
       }
+
+      if (processedCodeRef.current === code) {
+        return;
+      }
+      processedCodeRef.current = code;
 
       try {
         const result = await exchangeCodeForTokens(code);
@@ -61,7 +67,7 @@ export const RSOCallbackContent = () => {
     };
 
     processCallback();
-  }, [user, loading, searchParams, router]);
+  }, [loading, searchParams, router]);
 
   return (
     <div className="space-y-4 text-center">
