@@ -188,3 +188,24 @@ func CountStrategiesByUserID(userID int) (int, error) {
 
 	return count, nil
 }
+
+func DeleteExcessStrategiesForUser(userID int, keepCount int) (int64, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return 0, err
+	}
+
+	tag, err := conn.Exec(context.Background(),
+		`DELETE FROM strategies
+		WHERE user_id = $1
+		AND (
+			SELECT COUNT(*) FROM strategies s2
+			WHERE s2.user_id = $1 AND s2.id > strategies.id
+		) >= $2`,
+		userID, keepCount)
+	if err != nil {
+		return 0, err
+	}
+
+	return tag.RowsAffected(), nil
+}

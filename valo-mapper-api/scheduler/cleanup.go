@@ -9,10 +9,11 @@ import (
 )
 
 type CleanupScheduler struct {
-	db           *pgxpool.Pool
-	interval     time.Duration
-	stopChan     chan struct{}
-	cleanupQuery string
+	db                       *pgxpool.Pool
+	interval                 time.Duration
+	stopChan                 chan struct{}
+	cleanupQuery             string
+	subscriptionCleanupQuery string
 }
 
 func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupScheduler {
@@ -24,11 +25,27 @@ func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupSched
 			FROM strategies
 		)`
 
+	subscriptionCleanupQuery := `
+		DELETE FROM strategies
+		WHERE id IN (
+			SELECT s.id
+			FROM strategies s
+			JOIN users u ON u.id = s.user_id
+			WHERE u.is_subscribed = false
+			AND u.subscription_ended_at IS NOT NULL
+			AND u.subscription_ended_at < NOW() - INTERVAL '14 days'
+			AND (
+				SELECT COUNT(*) FROM strategies s2
+				WHERE s2.user_id = s.user_id AND s2.id > s.id
+			) >= 3
+		)`
+
 	return &CleanupScheduler{
-		db:           db,
-		interval:     interval,
-		stopChan:     make(chan struct{}),
-		cleanupQuery: cleanupQuery,
+		db:                       db,
+		interval:                 interval,
+		stopChan:                 make(chan struct{}),
+		cleanupQuery:             cleanupQuery,
+		subscriptionCleanupQuery: subscriptionCleanupQuery,
 	}
 }
 
@@ -68,7 +85,14 @@ func (cs *CleanupScheduler) runCleanup() {
 		log.Printf("ERROR: Cleanup failed: %v", err)
 		return
 	}
+	log.Printf("Cleanup completed: %d lobbies deleted", cmdTag.RowsAffected())
 
-	rowsAffected := cmdTag.RowsAffected()
-	log.Printf("Cleanup completed: %d lobbies deleted", rowsAffected)
+	log.Println("Running cleanup for downgraded user strategies...")
+
+	cmdTag, err = cs.db.Exec(ctx, cs.subscriptionCleanupQuery)
+	if err != nil {
+		log.Printf("ERROR: Subscription cleanup failed: %v", err)
+		return
+	}
+	log.Printf("Subscription cleanup completed: %d excess strategies deleted", cmdTag.RowsAffected())
 }

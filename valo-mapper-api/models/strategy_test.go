@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -458,5 +459,87 @@ func TestCountStrategiesByUserID(t *testing.T) {
 		count, err := CountStrategiesByUserID(user.ID)
 		require.NoError(t, err)
 		assert.Equal(t, 0, count)
+	})
+}
+
+func TestDeleteExcessStrategiesForUser(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	pool := setupTestDB(t)
+	defer cleanupTestDB(t, pool)
+
+	t.Run("deletes strategies beyond keep count keeping most recent", func(t *testing.T) {
+		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
+
+		user := createTestUser(t, pool, "excess-user-1")
+		var savedIDs []int
+		for i := 1; i <= 5; i++ {
+			lobbyCode := fmt.Sprintf("EXC%d", i)
+			createTestLobby(t, pool, lobbyCode)
+			strategy := &Strategy{
+				UserID:    user.ID,
+				LobbyCode: lobbyCode,
+				Name:      fmt.Sprintf("Strategy %d", i),
+			}
+			err := strategy.Save()
+			require.NoError(t, err)
+			savedIDs = append(savedIDs, strategy.ID)
+		}
+
+		deleted, err := DeleteExcessStrategiesForUser(user.ID, 3)
+		require.NoError(t, err)
+		assert.Equal(t, int64(2), deleted)
+
+		remaining, err := GetStrategiesByUserID(user.ID)
+		require.NoError(t, err)
+		assert.Len(t, remaining, 3)
+
+		// The 3 most recently created (highest IDs) must be kept
+		remainingIDs := make(map[int]bool, len(remaining))
+		for _, s := range remaining {
+			remainingIDs[s.ID] = true
+		}
+		assert.True(t, remainingIDs[savedIDs[4]], "5th created should be kept")
+		assert.True(t, remainingIDs[savedIDs[3]], "4th created should be kept")
+		assert.True(t, remainingIDs[savedIDs[2]], "3rd created should be kept")
+		assert.False(t, remainingIDs[savedIDs[1]], "2nd created should be deleted")
+		assert.False(t, remainingIDs[savedIDs[0]], "1st created should be deleted")
+	})
+
+	t.Run("does nothing when user has exactly keep count strategies", func(t *testing.T) {
+		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
+
+		user := createTestUser(t, pool, "excess-user-2")
+		for i := 1; i <= 3; i++ {
+			lobbyCode := fmt.Sprintf("FEW%d", i)
+			createTestLobby(t, pool, lobbyCode)
+			strategy := &Strategy{
+				UserID:    user.ID,
+				LobbyCode: lobbyCode,
+				Name:      fmt.Sprintf("Strategy %d", i),
+			}
+			err := strategy.Save()
+			require.NoError(t, err)
+		}
+
+		deleted, err := DeleteExcessStrategiesForUser(user.ID, 3)
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), deleted)
+
+		remaining, err := GetStrategiesByUserID(user.ID)
+		require.NoError(t, err)
+		assert.Len(t, remaining, 3)
+	})
+
+	t.Run("does nothing when user has no strategies", func(t *testing.T) {
+		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
+
+		user := createTestUser(t, pool, "excess-user-3")
+
+		deleted, err := DeleteExcessStrategiesForUser(user.ID, 3)
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), deleted)
 	})
 }
