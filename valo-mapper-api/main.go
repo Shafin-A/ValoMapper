@@ -38,6 +38,7 @@ func main() {
 		"RSO_CLIENT_ID",
 		"RSO_CLIENT_SECRET",
 		"RSO_REDIRECT_URI",
+		"INTERNAL_API_KEY",
 	}
 
 	var missingVars []string

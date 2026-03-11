@@ -130,6 +130,45 @@ func GetUserByFirebaseUID(uid string) (*User, error) {
 	return user, nil
 }
 
+func GetUserByID(id int) (*User, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{}
+	err = conn.QueryRow(context.Background(), `
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, created_at, updated_at,
+		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
+		FROM users
+		WHERE id = $1
+	`, id).Scan(
+		&user.ID,
+		&user.FirebaseUID,
+		&user.Email,
+		&user.EmailVerified,
+		&user.Name,
+		&user.TourCompleted,
+		&user.IsSubscribed,
+		&user.SubscriptionEndedAt,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.RSOSubjectID,
+		&user.RSOAccessToken,
+		&user.RSORefreshToken,
+		&user.RSOIDToken,
+		&user.RSOLinkedAt,
+	)
+
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 // GetUserByRSOSubject returns the user associated with the given RSO subject ID.
 func GetUserByRSOSubject(subject string) (*User, error) {
 	conn, err := db.GetDB()
@@ -254,6 +293,27 @@ func (u *User) UpdateRSOTokens(accessToken, refreshToken string) error {
 	if err == nil {
 		u.RSOAccessToken = &accessToken
 		u.RSORefreshToken = &refreshToken
+	}
+
+	return err
+}
+
+func (u *User) UpdateSubscriptionStatus(isSubscribed bool, subscriptionEndedAt *time.Time) error {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	err = conn.QueryRow(context.Background(), `
+		UPDATE users
+		SET is_subscribed = $1, subscription_ended_at = $2, updated_at = NOW()
+		WHERE id = $3
+		RETURNING updated_at
+	`, isSubscribed, subscriptionEndedAt, u.ID).Scan(&u.UpdatedAt)
+
+	if err == nil {
+		u.IsSubscribed = isSubscribed
+		u.SubscriptionEndedAt = subscriptionEndedAt
 	}
 
 	return err

@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
@@ -24,6 +27,12 @@ type CreateUserRequest struct {
 type UpdateUserRequest struct {
 	Name          *string `json:"name,omitempty"`
 	TourCompleted *bool   `json:"tourCompleted,omitempty"`
+}
+
+type UpdateUserSubscriptionRequest struct {
+	UserID       *int    `json:"userId,omitempty"`
+	FirebaseUID  *string `json:"firebaseUid,omitempty"`
+	IsSubscribed *bool   `json:"isSubscribed"`
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
@@ -144,4 +153,73 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAuthInterface) {
+	if r.Method != http.MethodPatch {
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
+		return
+	}
+
+	configuredKey := os.Getenv("INTERNAL_API_KEY")
+	if configuredKey == "" {
+		utils.SendJSONError(w, utils.NewInternal("Internal API key is not configured", nil), middleware.GetRequestID(r))
+		return
+	}
+
+	providedKey := r.Header.Get("X-Internal-API-Key")
+	if subtle.ConstantTimeCompare([]byte(providedKey), []byte(configuredKey)) != 1 {
+		utils.SendJSONError(w, utils.NewForbidden("Forbidden"), middleware.GetRequestID(r))
+		return
+	}
+
+	var req UpdateUserSubscriptionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
+		return
+	}
+	defer r.Body.Close()
+
+	if req.IsSubscribed == nil {
+		utils.SendJSONError(w, utils.NewBadRequest("isSubscribed is required"), middleware.GetRequestID(r))
+		return
+	}
+
+	hasUserID := req.UserID != nil
+	hasFirebaseUID := req.FirebaseUID != nil && *req.FirebaseUID != ""
+	if hasUserID == hasFirebaseUID {
+		utils.SendJSONError(w, utils.NewBadRequest("Provide exactly one identifier: userId or firebaseUid"), middleware.GetRequestID(r))
+		return
+	}
+
+	var user *models.User
+	var err error
+	if hasUserID {
+		user, err = models.GetUserByID(*req.UserID)
+	} else {
+		user, err = models.GetUserByFirebaseUID(*req.FirebaseUID)
+	}
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve user", err), middleware.GetRequestID(r))
+		return
+	}
+	if user == nil {
+		utils.SendJSONError(w, utils.NewNotFound("User not found"), middleware.GetRequestID(r))
+		return
+	}
+
+	var subscriptionEndedAt *time.Time
+	if *req.IsSubscribed {
+		subscriptionEndedAt = nil
+	} else {
+		now := time.Now().UTC()
+		subscriptionEndedAt = &now
+	}
+
+	if err := user.UpdateSubscriptionStatus(*req.IsSubscribed, subscriptionEndedAt); err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Unable to update subscription", err), middleware.GetRequestID(r))
+		return
+	}
+
+	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }

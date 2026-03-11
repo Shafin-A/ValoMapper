@@ -82,6 +82,11 @@ Before setting up the project, ensure you have:
    RSO_CLIENT_ID=your_rso_client_id
    RSO_CLIENT_SECRET=your_rso_client_secret
    RSO_REDIRECT_URI=http://localhost:3000/api/auth/rso/callback
+
+   # Internal key used by protected server-to-server endpoints
+   # Generate with PowerShell:
+   # $bytes = New-Object byte[] 32; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes); -join ($bytes | ForEach-Object { $_.ToString("x2") })
+   INTERNAL_API_KEY=your_internal_api_key
    ```
 
 3. Ensure PostgreSQL is running and a database named `valo-mapper` exists.
@@ -119,7 +124,7 @@ ValoMapper is configured for deployment on Fly.io using Docker containers.
    ```
 
 4. **Configure secrets**:
-   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`
+   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`, `INTERNAL_API_KEY`
    - Frontend: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_RSO_CLIENT_ID`, `NEXT_PUBLIC_RSO_REDIRECT_URI`, `API_URL`, `NEXT_PUBLIC_WS_URL`
 
 5. **Deploy**:

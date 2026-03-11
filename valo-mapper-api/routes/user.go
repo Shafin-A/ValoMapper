@@ -27,4 +27,8 @@ func RegisterUserRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 	users.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
 		handlers.DeleteUser(w, r, authClient)
 	}).Methods("DELETE")
+
+	users.HandleFunc("/subscription", func(w http.ResponseWriter, r *http.Request) {
+		handlers.UpdateUserSubscription(w, r, authClient)
+	}).Methods("PATCH")
 }
