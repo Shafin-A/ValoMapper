@@ -419,3 +419,44 @@ func TestGetStrategiesByFolderID(t *testing.T) {
 		assert.Empty(t, strategies)
 	})
 }
+
+func TestCountStrategiesByUserID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	pool := setupTestDB(t)
+	defer cleanupTestDB(t, pool)
+
+	t.Run("returns total strategies for user", func(t *testing.T) {
+		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
+
+		user := createTestUser(t, pool, "count-user")
+
+		for i := 1; i <= 3; i++ {
+			lobbyCode := "COUNT" + string(rune('0'+i))
+			createTestLobby(t, pool, lobbyCode)
+			strategy := &Strategy{
+				UserID:    user.ID,
+				LobbyCode: lobbyCode,
+				Name:      "Count Strategy " + string(rune('0'+i)),
+			}
+			err := strategy.Save()
+			require.NoError(t, err)
+		}
+
+		count, err := CountStrategiesByUserID(user.ID)
+		require.NoError(t, err)
+		assert.Equal(t, 3, count)
+	})
+
+	t.Run("returns zero when user has no strategies", func(t *testing.T) {
+		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
+
+		user := createTestUser(t, pool, "count-empty-user")
+
+		count, err := CountStrategiesByUserID(user.ID)
+		require.NoError(t, err)
+		assert.Equal(t, 0, count)
+	})
+}

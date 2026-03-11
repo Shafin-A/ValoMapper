@@ -71,8 +71,23 @@ export const POST = async (request: Request) => {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      let errorMessage = "Failed to create strategy";
+
+      try {
+        const errorData = await response.json();
+        if (
+          errorData &&
+          typeof errorData.error === "string" &&
+          errorData.error.trim() !== ""
+        ) {
+          errorMessage = errorData.error;
+        }
+      } catch {
+        // fall back to generic message when backend response has no JSON body
+      }
+
       return Response.json(
-        { error: "Failed to create strategy" },
+        { error: errorMessage },
         { status: response.status },
       );
     }

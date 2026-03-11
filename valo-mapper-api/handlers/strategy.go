@@ -24,6 +24,8 @@ type UpdateStrategyRequest struct {
 	Name     *string `json:"name,omitempty"`
 }
 
+const freeStrategyLimit = 3
+
 type StrategyResponse struct {
 	ID            int       `json:"id"`
 	UserID        int       `json:"userId"`
@@ -82,6 +84,18 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 	if lobby == nil {
 		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 		return
+	}
+
+	if !user.IsSubscribed {
+		strategyCount, err := models.CountStrategiesByUserID(user.ID)
+		if err != nil {
+			utils.SendJSONError(w, utils.NewInternal("Unable to validate strategy limit", err), middleware.GetRequestID(r))
+			return
+		}
+		if strategyCount >= freeStrategyLimit {
+			utils.SendJSONError(w, utils.NewForbidden("Free plan limit reached (3 saved strategies). Upgrade for unlimited saves."), middleware.GetRequestID(r))
+			return
+		}
 	}
 
 	strategy := &models.Strategy{

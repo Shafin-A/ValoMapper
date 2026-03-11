@@ -165,5 +165,37 @@ describe("Strategies API Routes", () => {
       expect(response.status).toBe(500);
       expect(data).toEqual({ error: "Failed to create strategy" });
     });
+
+    it("should pass through backend entitlement errors", async () => {
+      const mockRequest = new Request("http://localhost/api/strategies", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-token",
+        },
+        body: JSON.stringify({ name: "Test" }),
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: async () => ({
+          error:
+            "Free plan limit reached (3 saved strategies). Upgrade for unlimited saves.",
+        }),
+      });
+
+      const responsePromise = POST(mockRequest);
+      jest.runAllTimers();
+
+      const response = await responsePromise;
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data).toEqual({
+        error:
+          "Free plan limit reached (3 saved strategies). Upgrade for unlimited saves.",
+      });
+    });
   });
 });

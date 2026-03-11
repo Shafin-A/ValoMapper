@@ -168,3 +168,23 @@ func GetStrategiesByFolderID(userID int, folderID int) ([]Strategy, error) {
 
 	return strategies, nil
 }
+
+func CountStrategiesByUserID(userID int) (int, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return 0, err
+	}
+
+	var count int
+	err = conn.QueryRow(context.Background(),
+		`SELECT COUNT(*)
+		FROM strategies
+		WHERE user_id = $1`,
+		userID,
+	).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}

@@ -22,6 +22,7 @@ type User struct {
 	CreatedAt       time.Time  `json:"createdAt"`
 	UpdatedAt       time.Time  `json:"updatedAt"`
 	TourCompleted   bool       `json:"tourCompleted"`
+	IsSubscribed    bool       `json:"isSubscribed"`
 	RSOSubjectID    *string    `json:"rsoSubjectId,omitempty"`
 	RSOAccessToken  *string    `json:"-"`
 	RSORefreshToken *string    `json:"-"`
@@ -51,10 +52,10 @@ func (u *User) Save() error {
 		return err
 	}
 
-	err = conn.QueryRow(context.Background(), `INSERT INTO users (firebase_uid, email, email_verified, name, tour_completed, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+	err = conn.QueryRow(context.Background(), `INSERT INTO users (firebase_uid, email, email_verified, name, tour_completed, is_subscribed, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
 		ON CONFLICT ON CONSTRAINT users_firebase_uid_key DO NOTHING
-		RETURNING id, created_at, updated_at`, u.FirebaseUID, u.Email, u.EmailVerified, u.Name, u.TourCompleted).Scan(
+		RETURNING id, created_at, updated_at`, u.FirebaseUID, u.Email, u.EmailVerified, u.Name, u.TourCompleted, u.IsSubscribed).Scan(
 		&u.ID,
 		&u.CreatedAt,
 		&u.UpdatedAt,
@@ -88,7 +89,7 @@ func (u *User) LoadByFirebaseUID() error {
 	}
 
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE firebase_uid = $1
@@ -99,6 +100,7 @@ func (u *User) LoadByFirebaseUID() error {
 		&u.EmailVerified,
 		&u.Name,
 		&u.TourCompleted,
+		&u.IsSubscribed,
 		&u.CreatedAt,
 		&u.UpdatedAt,
 		&u.RSOSubjectID,
@@ -135,7 +137,7 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 
 	user := &User{}
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE rso_subject_id = $1
@@ -146,6 +148,7 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 		&user.EmailVerified,
 		&user.Name,
 		&user.TourCompleted,
+		&user.IsSubscribed,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.RSOSubjectID,

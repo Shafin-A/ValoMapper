@@ -203,6 +203,74 @@ func TestCreateStrategy(t *testing.T) {
 		assert.Equal(t, http.StatusConflict, w.Code)
 	})
 
+	t.Run("rejects creating a fourth strategy for free users", func(t *testing.T) {
+		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		for i := 0; i < 3; i++ {
+			lobby := testutils.CreateTestLobby(t, pool)
+			testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
+		}
+
+		fourthLobby := testutils.CreateTestLobby(t, pool)
+		reqBody := CreateStrategyRequest{
+			LobbyCode: fourthLobby.Code,
+			Name:      "Fourth Strategy",
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
+		w := httptest.NewRecorder()
+
+		CreateStrategy(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
+
+	t.Run("allows subscribed users to save more than three strategies", func(t *testing.T) {
+		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+
+		subscribedUser := testutils.CreateTestUser(t, pool, "firebase-uid-subscribed-strategy-test")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, subscribedUser.ID)
+		assert.NoError(t, err)
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *subscribedUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *subscribedUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		for i := 0; i < 3; i++ {
+			lobby := testutils.CreateTestLobby(t, pool)
+			testutils.CreateTestStrategy(t, pool, subscribedUser.ID, lobby.Code)
+		}
+
+		fourthLobby := testutils.CreateTestLobby(t, pool)
+		reqBody := CreateStrategyRequest{
+			LobbyCode: fourthLobby.Code,
+			Name:      "Subscribed Fourth Strategy",
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
+		w := httptest.NewRecorder()
+
+		CreateStrategy(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+	})
+
 	t.Run("rejects missing authorization", func(t *testing.T) {
 		lobby := testutils.CreateTestLobby(t, pool)
 
