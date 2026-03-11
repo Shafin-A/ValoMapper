@@ -332,6 +332,7 @@ export type User = {
   createdAt: Date;
   updatedAt: Date;
   tourCompleted?: boolean;
+  isSubscribed?: boolean;
 };
 
 export type ItemType = "agent" | "ability" | "text" | "image" | "tool";

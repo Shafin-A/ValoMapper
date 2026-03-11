@@ -13,6 +13,8 @@ export const VIRTUAL_HEIGHT = 1440;
 
 export const CONTEXT_MENU_DUPLICATE_OFFSET = 20;
 
+export const FREE_STRATEGY_LIMIT = 3;
+
 export const ROLE_ICONS: Record<string, string> = {
   Controller: "/roles/controller.png",
   Duelist: "/roles/duelist.png",

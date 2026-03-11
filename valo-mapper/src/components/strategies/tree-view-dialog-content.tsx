@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import { StrategyData } from "@/lib/types";
 import { useFolders } from "@/hooks/api/use-folder";
+import { useUser } from "@/hooks/api/use-user";
 import { TreeView } from "./tree-view";
 import { useCreateStrategy } from "@/hooks/api/use-create-strategy";
 import { useParams } from "next/navigation";
@@ -38,6 +39,7 @@ import {
 } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import Link from "next/link";
+import { FREE_STRATEGY_LIMIT } from "@/lib/consts";
 
 const renderBreadcrumbs = (parts: Array<{ id: string; name: string }>) => {
   if (parts.length === 0) {
@@ -106,6 +108,7 @@ export const TreeViewDialogContent = ({
   const [selectedLocation, setSelectedLocation] = useState<string>("root");
 
   const { data, isLoading, isError, refetch: refetchFolders } = useFolders();
+  const { data: user, isLoading: isUserLoading } = useUser();
 
   const { mutate: createStrategy, isPending } = useCreateStrategy();
   const params = useParams();
@@ -134,8 +137,17 @@ export const TreeViewDialogContent = ({
   };
 
   const flatData = flattenData(strategyData._virtual_root);
+  const strategyCount = Object.values(flatData).filter(
+    (item) => item.type === "strategy",
+  ).length;
+  const isFreeUserAtStrategyLimit =
+    !!user && !user.isSubscribed && strategyCount >= FREE_STRATEGY_LIMIT;
 
   const handleSave = () => {
+    if (isFreeUserAtStrategyLimit || isUserLoading) {
+      return;
+    }
+
     const folderId = getFolderOrStrategyId(selectedLocation, "folder");
 
     createStrategy({
@@ -203,6 +215,26 @@ export const TreeViewDialogContent = ({
         </Alert>
       )}
 
+      {isFreeUserAtStrategyLimit && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Free plan limit reached</AlertTitle>
+          <AlertDescription>
+            <p>
+              You currently have {strategyCount} saved strategies. Free users
+              can keep up to {FREE_STRATEGY_LIMIT}.
+            </p>
+            <p>
+              Delete a saved strategy in{" "}
+              <Link className="underline" href="/strategies">
+                My Strategies
+              </Link>{" "}
+              or upgrade to save more.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-4 py-4">
         <div className="space-y-2">
           <Label htmlFor="name">Strategy Name</Label>
@@ -211,7 +243,7 @@ export const TreeViewDialogContent = ({
             placeholder="eg. B Site Rush"
             value={strategyName}
             onChange={(e) => setStrategyName(e.target.value)}
-            disabled={isLoading || isPending}
+            disabled={isLoading || isPending || isUserLoading}
           />
         </div>
 
@@ -249,7 +281,12 @@ export const TreeViewDialogContent = ({
         <Button
           onClick={handleSave}
           disabled={
-            !strategyName.trim() || isLoading || isPending || isStrategyInFolder
+            !strategyName.trim() ||
+            isLoading ||
+            isPending ||
+            isUserLoading ||
+            isStrategyInFolder ||
+            isFreeUserAtStrategyLimit
           }
         >
           Save Strategy

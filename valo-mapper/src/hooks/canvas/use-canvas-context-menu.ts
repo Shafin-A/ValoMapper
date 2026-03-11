@@ -1,4 +1,4 @@
-import { CONTEXT_MENU_DUPLICATE_OFFSET } from "@/lib/consts/misc/consts";
+import { CONTEXT_MENU_DUPLICATE_OFFSET } from "@/lib/consts";
 import {
   AbilityCanvas,
   AgentCanvas,
