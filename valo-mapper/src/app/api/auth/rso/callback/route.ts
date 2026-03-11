@@ -43,6 +43,10 @@ export const GET = async (request: Request) => {
 export const POST = async (request: Request) => {
   const body = await request.json();
 
+  if (!body) {
+    return Response.json({ error: "No request body" }, { status: 400 });
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 

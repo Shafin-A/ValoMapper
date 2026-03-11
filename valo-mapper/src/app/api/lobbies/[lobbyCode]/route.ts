@@ -11,6 +11,10 @@ export const GET = async (
     const response = await fetch(
       `${process.env.API_URL}/lobbies/${lobbyCode}`,
       {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
         signal: controller.signal,
       },
     );
@@ -50,6 +54,10 @@ export const PATCH = async (
   const { lobbyCode } = await params;
 
   const body = await request.json();
+
+  if (!body) {
+    return Response.json({ error: "No request body" }, { status: 400 });
+  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
