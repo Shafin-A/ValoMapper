@@ -87,6 +87,9 @@ Before setting up the project, ensure you have:
    # Generate with PowerShell:
    # $bytes = New-Object byte[] 32; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes); -join ($bytes | ForEach-Object { $_.ToString("x2") })
    INTERNAL_API_KEY=your_internal_api_key
+
+   # Stripe webhook signing secret (from Stripe Dashboard or Stripe CLI)
+   STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
    ```
 
 3. Ensure PostgreSQL is running and a database named `valo-mapper` exists.
@@ -97,6 +100,8 @@ Before setting up the project, ensure you have:
    ```sh
    go run main.go
    ```
+
+   Note: Stripe subscription webhook events map back to users via metadata. Include either `userId` or `firebaseUid` metadata when creating/updating subscriptions in Stripe.
 
 ## Deployment
 
@@ -124,7 +129,7 @@ ValoMapper is configured for deployment on Fly.io using Docker containers.
    ```
 
 4. **Configure secrets**:
-   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`, `INTERNAL_API_KEY`
+   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`, `INTERNAL_API_KEY`, `STRIPE_WEBHOOK_SECRET`
    - Frontend: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_RSO_CLIENT_ID`, `NEXT_PUBLIC_RSO_REDIRECT_URI`, `API_URL`, `NEXT_PUBLIC_WS_URL`
 
 5. **Deploy**:

@@ -208,18 +208,22 @@ func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAu
 		return
 	}
 
+	if err := applySubscriptionStatusUpdate(user, *req.IsSubscribed); err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Unable to update subscription", err), middleware.GetRequestID(r))
+		return
+	}
+
+	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
+}
+
+func applySubscriptionStatusUpdate(user *models.User, isSubscribed bool) error {
 	var subscriptionEndedAt *time.Time
-	if *req.IsSubscribed {
+	if isSubscribed {
 		subscriptionEndedAt = nil
 	} else {
 		now := time.Now().UTC()
 		subscriptionEndedAt = &now
 	}
 
-	if err := user.UpdateSubscriptionStatus(*req.IsSubscribed, subscriptionEndedAt); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to update subscription", err), middleware.GetRequestID(r))
-		return
-	}
-
-	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
+	return user.UpdateSubscriptionStatus(isSubscribed, subscriptionEndedAt)
 }

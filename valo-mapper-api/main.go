@@ -39,6 +39,7 @@ func main() {
 		"RSO_CLIENT_SECRET",
 		"RSO_REDIRECT_URI",
 		"INTERNAL_API_KEY",
+		"STRIPE_WEBHOOK_SECRET",
 	}
 
 	var missingVars []string
