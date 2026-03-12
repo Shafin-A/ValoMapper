@@ -15,6 +15,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const integrationTestDBLockKey int64 = 4891375021
+
 // SetupTestDB creates a connection to the test database
 func SetupTestDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
@@ -80,6 +82,12 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 
 	if err := pool.Ping(ctx); err != nil {
 		t.Fatalf("Failed to ping test database: %v", err)
+	}
+
+	// Serialize DB-mutating integration tests across packages because they all
+	// share the same physical test database.
+	if _, err := pool.Exec(context.Background(), `SELECT pg_advisory_lock($1)`, integrationTestDBLockKey); err != nil {
+		t.Fatalf("Failed to acquire integration test database lock: %v", err)
 	}
 
 	// set global for helper functions that use db.GetDB

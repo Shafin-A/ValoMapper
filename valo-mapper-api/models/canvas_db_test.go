@@ -2,11 +2,35 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func createCanvasTestLobby(t *testing.T, pool *pgxpool.Pool) (*Lobby, string) {
+	t.Helper()
+
+	mapID := fmt.Sprintf("canvas-map-%s", GenerateLobbyCode())
+	_, err := pool.Exec(context.Background(),
+		`INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3)`,
+		mapID, "Canvas Test Map", "#00FF00",
+	)
+	require.NoError(t, err)
+
+	lobby := &Lobby{
+		Code: GenerateLobbyCode(),
+		CanvasState: &FullCanvasState{
+			SelectedMap: MapOption{ID: mapID},
+		},
+	}
+	err = lobby.Save()
+	require.NoError(t, err)
+
+	return lobby, mapID
+}
 
 func TestGetAllCanvasPhases(t *testing.T) {
 	if testing.Short() {
@@ -17,22 +41,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 	defer cleanupTestDB(t, pool)
 
 	t.Run("returns empty phases for new lobby", func(t *testing.T) {
-		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
-
-		// Insert test map
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('ascent', 'Ascent', '#FF0000')`)
-		require.NoError(t, err)
-
-		// Create a lobby
-		lobby := &Lobby{
-			Code: GenerateLobbyCode(),
-			CanvasState: &FullCanvasState{
-				SelectedMap: MapOption{ID: "ascent"},
-			},
-		}
-		err = lobby.Save()
-		require.NoError(t, err)
+		lobby, _ := createCanvasTestLobby(t, pool)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
@@ -51,26 +60,11 @@ func TestGetAllCanvasPhases(t *testing.T) {
 	})
 
 	t.Run("returns phases with saved canvas data", func(t *testing.T) {
-		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
-
-		// Insert test map
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('ascent', 'Ascent', '#FF0000')`)
-		require.NoError(t, err)
-
-		// Create a lobby
-		lobby := &Lobby{
-			Code: GenerateLobbyCode(),
-			CanvasState: &FullCanvasState{
-				SelectedMap: MapOption{ID: "ascent"},
-			},
-		}
-		err = lobby.Save()
-		require.NoError(t, err)
+		lobby, mapID := createCanvasTestLobby(t, pool)
 
 		// Create canvas state with data in phases 0 and 1
 		canvasState := FullCanvasState{
-			SelectedMap: MapOption{ID: "ascent"},
+			SelectedMap: MapOption{ID: mapID},
 			MapSide:     "attack",
 			Phases:      make([]PhaseState, 10),
 		}
@@ -140,7 +134,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 		}
 
 		// Save canvas state
-		err = SaveCanvasState(lobby.Code, canvasState)
+		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
 		// Retrieve phases
@@ -215,26 +209,11 @@ func TestSaveCanvasState(t *testing.T) {
 	defer cleanupTestDB(t, pool)
 
 	t.Run("saves canvas state successfully", func(t *testing.T) {
-		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
-
-		// Insert test map
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
-		require.NoError(t, err)
-
-		// Create a lobby
-		lobby := &Lobby{
-			Code: GenerateLobbyCode(),
-			CanvasState: &FullCanvasState{
-				SelectedMap: MapOption{ID: "bind"},
-			},
-		}
-		err = lobby.Save()
-		require.NoError(t, err)
+		lobby, mapID := createCanvasTestLobby(t, pool)
 
 		// Create canvas state
 		canvasState := FullCanvasState{
-			SelectedMap: MapOption{ID: "bind"},
+			SelectedMap: MapOption{ID: mapID},
 			MapSide:     "defend",
 			Phases:      make([]PhaseState, 10),
 		}
@@ -258,7 +237,7 @@ func TestSaveCanvasState(t *testing.T) {
 		}
 
 		// Save
-		err = SaveCanvasState(lobby.Code, canvasState)
+		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
 		// Verify
@@ -269,21 +248,7 @@ func TestSaveCanvasState(t *testing.T) {
 	})
 
 	t.Run("updates existing canvas state", func(t *testing.T) {
-		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
-
-		// Insert test map
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
-		require.NoError(t, err)
-
-		lobby := &Lobby{
-			Code: GenerateLobbyCode(),
-			CanvasState: &FullCanvasState{
-				SelectedMap: MapOption{ID: "bind"},
-			},
-		}
-		err = lobby.Save()
-		require.NoError(t, err)
+		lobby, _ := createCanvasTestLobby(t, pool)
 
 		// First save
 		canvasState := FullCanvasState{
@@ -306,7 +271,7 @@ func TestSaveCanvasState(t *testing.T) {
 			}
 		}
 
-		err = SaveCanvasState(lobby.Code, canvasState)
+		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
 		// Update with new data
@@ -329,21 +294,7 @@ func TestSaveCanvasState(t *testing.T) {
 	})
 
 	t.Run("handles ability with current path", func(t *testing.T) {
-		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
-
-		// Insert test map
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
-		require.NoError(t, err)
-
-		lobby := &Lobby{
-			Code: GenerateLobbyCode(),
-			CanvasState: &FullCanvasState{
-				SelectedMap: MapOption{ID: "bind"},
-			},
-		}
-		err = lobby.Save()
-		require.NoError(t, err)
+		lobby, _ := createCanvasTestLobby(t, pool)
 
 		canvasState := FullCanvasState{
 			Phases: make([]PhaseState, 10),
@@ -381,7 +332,7 @@ func TestSaveCanvasState(t *testing.T) {
 			}
 		}
 
-		err = SaveCanvasState(lobby.Code, canvasState)
+		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -393,21 +344,7 @@ func TestSaveCanvasState(t *testing.T) {
 	})
 
 	t.Run("handles draw line with points", func(t *testing.T) {
-		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
-
-		// Insert test map
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
-		require.NoError(t, err)
-
-		lobby := &Lobby{
-			Code: GenerateLobbyCode(),
-			CanvasState: &FullCanvasState{
-				SelectedMap: MapOption{ID: "bind"},
-			},
-		}
-		err = lobby.Save()
-		require.NoError(t, err)
+		lobby, _ := createCanvasTestLobby(t, pool)
 
 		canvasState := FullCanvasState{
 			Phases: make([]PhaseState, 10),
@@ -443,7 +380,7 @@ func TestSaveCanvasState(t *testing.T) {
 			}
 		}
 
-		err = SaveCanvasState(lobby.Code, canvasState)
+		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -455,21 +392,7 @@ func TestSaveCanvasState(t *testing.T) {
 	})
 
 	t.Run("saves multiple types of items across different phases", func(t *testing.T) {
-		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
-
-		// Insert test map
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
-		require.NoError(t, err)
-
-		lobby := &Lobby{
-			Code: GenerateLobbyCode(),
-			CanvasState: &FullCanvasState{
-				SelectedMap: MapOption{ID: "bind"},
-			},
-		}
-		err = lobby.Save()
-		require.NoError(t, err)
+		lobby, _ := createCanvasTestLobby(t, pool)
 
 		canvasState := FullCanvasState{
 			Phases: make([]PhaseState, 10),
@@ -510,7 +433,7 @@ func TestSaveCanvasState(t *testing.T) {
 			}
 		}
 
-		err = SaveCanvasState(lobby.Code, canvasState)
+		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -532,21 +455,7 @@ func TestSaveCanvasState(t *testing.T) {
 	})
 
 	t.Run("saves and retrieves connecting lines with lineup data", func(t *testing.T) {
-		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
-
-		// Insert test map
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
-		require.NoError(t, err)
-
-		lobby := &Lobby{
-			Code: GenerateLobbyCode(),
-			CanvasState: &FullCanvasState{
-				SelectedMap: MapOption{ID: "bind"},
-			},
-		}
-		err = lobby.Save()
-		require.NoError(t, err)
+		lobby, _ := createCanvasTestLobby(t, pool)
 
 		canvasState := FullCanvasState{
 			Phases: make([]PhaseState, 10),
@@ -587,7 +496,7 @@ func TestSaveCanvasState(t *testing.T) {
 			}
 		}
 
-		err = SaveCanvasState(lobby.Code, canvasState)
+		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -619,21 +528,7 @@ func TestSaveCanvasState(t *testing.T) {
 	})
 
 	t.Run("updates connecting lines correctly", func(t *testing.T) {
-		truncateTables(t, pool, "canvas_agents", "canvas_abilities", "canvas_draw_lines",
-			"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines", "lobbies", "maps")
-
-		// Insert test map
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ('bind', 'Bind', '#00FF00')`)
-		require.NoError(t, err)
-
-		lobby := &Lobby{
-			Code: GenerateLobbyCode(),
-			CanvasState: &FullCanvasState{
-				SelectedMap: MapOption{ID: "bind"},
-			},
-		}
-		err = lobby.Save()
-		require.NoError(t, err)
+		lobby, _ := createCanvasTestLobby(t, pool)
 
 		// First save with one connecting line
 		canvasState := FullCanvasState{
@@ -663,7 +558,7 @@ func TestSaveCanvasState(t *testing.T) {
 			}
 		}
 
-		err = SaveCanvasState(lobby.Code, canvasState)
+		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
 		// Update with new connecting line
