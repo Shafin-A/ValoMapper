@@ -230,6 +230,7 @@ export const TreeViewDialogContent = ({
               You currently have {strategyCount} saved strategies. Free users
               can keep up to {FREE_STRATEGY_LIMIT}.
             </p>
+            <p>ValoMapper Pro unlocks unlimited saved strategies.</p>
             <p>
               Delete a saved strategy in{" "}
               <Link className="underline" href="/strategies">
@@ -244,7 +245,7 @@ export const TreeViewDialogContent = ({
                 {isCheckoutPending && (
                   <Loader2 className="h-3 w-3 animate-spin" />
                 )}
-                upgrade to save more
+                upgrade to ValoMapper Pro
               </button>
               .
             </p>

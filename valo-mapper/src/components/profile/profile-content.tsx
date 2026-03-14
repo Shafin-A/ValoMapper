@@ -162,6 +162,7 @@ export const ProfileContent = () => {
   const isRSOUser = Boolean(
     (user as { rsoSubjectId?: string | null }).rsoSubjectId,
   );
+  const hasValoMapperPro = Boolean(user.isSubscribed);
   const currentUserName = user.name?.trim() || "";
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -261,6 +262,27 @@ export const ProfileContent = () => {
                   Email is managed by Riot Sign-On.
                 </p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-xs font-semibold">Subscription</div>
+              <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                <span className="text-sm">ValoMapper Pro</span>
+                <span
+                  className={`text-xs font-semibold ${
+                    hasValoMapperPro
+                      ? "text-green-600"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {hasValoMapperPro ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {hasValoMapperPro
+                  ? "Your ValoMapper Pro subscription is active."
+                  : "You are currently on the free plan."}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2">

@@ -93,7 +93,7 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 			return
 		}
 		if strategyCount >= freeStrategyLimit {
-			utils.SendJSONError(w, utils.NewForbidden("Free plan limit reached (3 saved strategies). Upgrade for unlimited saves."), middleware.GetRequestID(r))
+			utils.SendJSONError(w, utils.NewForbidden("Free plan limit reached (3 saved strategies). Upgrade to ValoMapper Pro for unlimited saves."), middleware.GetRequestID(r))
 			return
 		}
 	}

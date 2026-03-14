@@ -10,10 +10,10 @@ const BillingSuccessPage = () => {
           <CheckCircle2 className="h-16 w-16 text-green-500" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">You&apos;re subscribed!</h1>
+          <h1 className="text-3xl font-bold">Welcome to ValoMapper Pro!</h1>
           <p className="text-muted-foreground">
-            Thanks for upgrading. Your subscription is now active and you can
-            save unlimited strategies.
+            Thanks for upgrading. Your ValoMapper Pro subscription is now
+            active.
           </p>
           <p className="text-sm text-muted-foreground">
             It may take a moment for your account to reflect the change.
