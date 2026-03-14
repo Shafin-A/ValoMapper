@@ -372,9 +372,9 @@ export const ProfileContent = () => {
                             Cancel your subscription?
                           </AlertDialogTitle>
                           <AlertDialogDescription>
-                            Your Stripe subscription will be set to cancel at
-                            the end of your current billing period. You will
-                            keep ValoMapper Pro access until then.
+                            Your subscription will be set to cancel at the end
+                            of your current billing period. You will keep
+                            ValoMapper Pro access until then.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
