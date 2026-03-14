@@ -15,8 +15,85 @@ import (
 	"valo-mapper-api/utils"
 
 	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/checkout/session"
 	"github.com/stripe/stripe-go/v82/webhook"
 )
+
+var createStripeCheckoutSessionFn = session.New
+
+type CreateCheckoutSessionResponse struct {
+	SessionID string `json:"sessionId"`
+	URL       string `json:"url"`
+}
+
+func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+	requestID := middleware.GetRequestID(r)
+
+	if r.Method != http.MethodPost {
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), requestID)
+		return
+	}
+
+	user, err := authenticateRequest(r, firebaseAuth)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
+		return
+	}
+
+	stripeSecretKey := strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
+	stripePriceID := strings.TrimSpace(os.Getenv("STRIPE_PRICE_ID"))
+	if stripeSecretKey == "" || stripePriceID == "" {
+		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
+		return
+	}
+
+	stripe.Key = stripeSecretKey
+
+	metadata := map[string]string{
+		"userId": strconv.Itoa(user.ID),
+	}
+	if user.FirebaseUID != nil {
+		firebaseUID := strings.TrimSpace(*user.FirebaseUID)
+		if firebaseUID != "" {
+			metadata["firebaseUid"] = firebaseUID
+		}
+	}
+
+	params := &stripe.CheckoutSessionParams{
+		Mode:              stripe.String(string(stripe.CheckoutSessionModeSubscription)),
+		SuccessURL:        stripe.String(checkoutRedirectURL("STRIPE_CHECKOUT_SUCCESS_URL", "/billing/success")),
+		CancelURL:         stripe.String(checkoutRedirectURL("STRIPE_CHECKOUT_CANCEL_URL", "/billing/cancel")),
+		ClientReferenceID: stripe.String(strconv.Itoa(user.ID)),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			{
+				Price:    stripe.String(stripePriceID),
+				Quantity: stripe.Int64(1),
+			},
+		},
+		Metadata: metadata,
+		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
+			Metadata: metadata,
+		},
+	}
+
+	if user.Email != nil {
+		email := strings.TrimSpace(*user.Email)
+		if email != "" {
+			params.CustomerEmail = stripe.String(email)
+		}
+	}
+
+	checkoutSession, err := createStripeCheckoutSessionFn(params)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Unable to create checkout session", err), requestID)
+		return
+	}
+
+	utils.SendJSON(w, http.StatusOK, CreateCheckoutSessionResponse{
+		SessionID: checkoutSession.ID,
+		URL:       checkoutSession.URL,
+	}, requestID)
+}
 
 func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
@@ -192,6 +269,29 @@ func firstNonEmptyMetadataValue(metadata map[string]string, keys ...string) stri
 	}
 
 	return ""
+}
+
+func checkoutRedirectURL(envVarName, fallbackPath string) string {
+	configured := strings.TrimSpace(os.Getenv(envVarName))
+	if configured != "" {
+		return configured
+	}
+
+	origin := firstAllowedOrigin()
+	origin = strings.TrimRight(origin, "/")
+	return origin + fallbackPath
+}
+
+func firstAllowedOrigin() string {
+	origins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
+	for _, origin := range origins {
+		trimmed := strings.TrimSpace(origin)
+		if trimmed != "" {
+			return trimmed
+		}
+	}
+
+	return "http://localhost:3000"
 }
 
 func claimStripeWebhookEvent(ctx context.Context, eventID, eventType string) (bool, error) {
