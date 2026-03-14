@@ -199,6 +199,283 @@ func TestCreateCheckoutSession(t *testing.T) {
 	})
 }
 
+func TestCancelSubscription(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+
+	testutils.TruncateTables(t, pool, "users")
+
+	mockAuth := &testutils.MockFirebaseAuth{}
+	originalUpdateFn := updateStripeSubscriptionFn
+	originalFindSubscriptionFn := findCancelableStripeSubscriptionIDForUserFn
+	defer func() {
+		updateStripeSubscriptionFn = originalUpdateFn
+		findCancelableStripeSubscriptionIDForUserFn = originalFindSubscriptionFn
+	}()
+
+	t.Run("schedules cancellation at period end and keeps access active", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-cancel-uid-scheduled")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, subscription_ended_at = NULL WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		cancelAt := time.Now().UTC().Add(24 * time.Hour)
+		findCancelableStripeSubscriptionIDForUserFn = func(user *models.User) (string, error) {
+			return "sub_scheduled_123", nil
+		}
+		updateStripeSubscriptionFn = func(id string, params *stripe.SubscriptionParams) (*stripe.Subscription, error) {
+			assert.Equal(t, "sub_scheduled_123", id)
+			if assert.NotNil(t, params) {
+				assert.Equal(t, true, stripe.BoolValue(params.CancelAtPeriodEnd))
+			}
+
+			return &stripe.Subscription{
+				ID:                id,
+				Status:            stripe.SubscriptionStatusActive,
+				CancelAtPeriodEnd: true,
+				CancelAt:          cancelAt.Unix(),
+			}, nil
+		}
+
+		originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
+		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_cancel")
+		defer func() {
+			if hadSecret {
+				_ = os.Setenv("STRIPE_SECRET_KEY", originalSecret)
+				return
+			}
+			_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		}()
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		CancelSubscription(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response CancelSubscriptionResponse
+		testutils.ParseJSONResponse(t, w, &response)
+		assert.Equal(t, "sub_scheduled_123", response.SubscriptionID)
+		assert.Equal(t, string(stripe.SubscriptionStatusActive), response.Status)
+		assert.True(t, response.CancelAtPeriodEnd)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.True(t, updatedUser.IsSubscribed)
+			if assert.NotNil(t, updatedUser.SubscriptionEndedAt) {
+				assert.WithinDuration(t, cancelAt, *updatedUser.SubscriptionEndedAt, time.Second)
+			}
+		}
+	})
+
+	t.Run("rejects unauthenticated requests", func(t *testing.T) {
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "")
+		w := httptest.NewRecorder()
+
+		CancelSubscription(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("rejects users without active subscription", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-cancel-uid-1")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		CancelSubscription(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("returns internal error when stripe config is missing", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-cancel-uid-2")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
+		_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		defer func() {
+			if hadSecret {
+				_ = os.Setenv("STRIPE_SECRET_KEY", originalSecret)
+				return
+			}
+			_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		}()
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		CancelSubscription(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
+func TestResumeSubscription(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+
+	testutils.TruncateTables(t, pool, "users")
+
+	mockAuth := &testutils.MockFirebaseAuth{}
+	originalUpdateFn := updateStripeSubscriptionFn
+	originalFindScheduledFn := findScheduledCancellationSubscriptionIDForUserFn
+	defer func() {
+		updateStripeSubscriptionFn = originalUpdateFn
+		findScheduledCancellationSubscriptionIDForUserFn = originalFindScheduledFn
+	}()
+
+	t.Run("resumes scheduled cancellation and clears end date", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-resume-uid-scheduled")
+		futureEnd := time.Now().UTC().Add(24 * time.Hour)
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, subscription_ended_at = $2 WHERE id = $1`, testUser.ID, futureEnd)
+		assert.NoError(t, err)
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		findScheduledCancellationSubscriptionIDForUserFn = func(user *models.User) (string, error) {
+			return "sub_resume_123", nil
+		}
+		updateStripeSubscriptionFn = func(id string, params *stripe.SubscriptionParams) (*stripe.Subscription, error) {
+			assert.Equal(t, "sub_resume_123", id)
+			if assert.NotNil(t, params) {
+				assert.Equal(t, false, stripe.BoolValue(params.CancelAtPeriodEnd))
+			}
+
+			return &stripe.Subscription{
+				ID:                id,
+				Status:            stripe.SubscriptionStatusActive,
+				CancelAtPeriodEnd: false,
+				CancelAt:          0,
+			}, nil
+		}
+
+		originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
+		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_resume")
+		defer func() {
+			if hadSecret {
+				_ = os.Setenv("STRIPE_SECRET_KEY", originalSecret)
+				return
+			}
+			_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		}()
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/resume-subscription", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		ResumeSubscription(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response CancelSubscriptionResponse
+		testutils.ParseJSONResponse(t, w, &response)
+		assert.Equal(t, "sub_resume_123", response.SubscriptionID)
+		assert.Equal(t, string(stripe.SubscriptionStatusActive), response.Status)
+		assert.False(t, response.CancelAtPeriodEnd)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.True(t, updatedUser.IsSubscribed)
+			assert.Nil(t, updatedUser.SubscriptionEndedAt)
+		}
+	})
+
+	t.Run("rejects unauthenticated requests", func(t *testing.T) {
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/resume-subscription", nil, "")
+		w := httptest.NewRecorder()
+
+		ResumeSubscription(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("returns bad request when no scheduled cancellation exists", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-resume-uid-none")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, subscription_ended_at = NULL WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		findScheduledCancellationSubscriptionIDForUserFn = func(user *models.User) (string, error) {
+			return "", errStripeScheduledCancellationNotFound
+		}
+
+		originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
+		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_resume")
+		defer func() {
+			if hadSecret {
+				_ = os.Setenv("STRIPE_SECRET_KEY", originalSecret)
+				return
+			}
+			_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		}()
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/resume-subscription", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		ResumeSubscription(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+}
+
 func TestHandleStripeWebhook(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -241,6 +518,39 @@ func TestHandleStripeWebhook(t *testing.T) {
 		assert.NotNil(t, updatedUser)
 		assert.True(t, updatedUser.IsSubscribed)
 		assert.Nil(t, updatedUser.SubscriptionEndedAt)
+	})
+
+	t.Run("stores scheduled cancellation date from updated event", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-scheduled")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, subscription_ended_at = NULL WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+
+		cancelAt := time.Now().UTC().Add(48 * time.Hour)
+		payload := buildStripeEventPayload(t, "", "customer.subscription.updated", map[string]any{
+			"id":                   "sub_scheduled_webhook",
+			"object":               "subscription",
+			"status":               "active",
+			"cancel_at_period_end": true,
+			"cancel_at":            cancelAt.Unix(),
+			"metadata": map[string]string{
+				"firebaseUid": *testUser.FirebaseUID,
+			},
+		})
+
+		req := newSignedStripeWebhookRequest(payload, webhookSecret)
+		w := httptest.NewRecorder()
+
+		HandleStripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		assert.NotNil(t, updatedUser)
+		assert.True(t, updatedUser.IsSubscribed)
+		if assert.NotNil(t, updatedUser.SubscriptionEndedAt) {
+			assert.WithinDuration(t, cancelAt, *updatedUser.SubscriptionEndedAt, time.Second)
+		}
 	})
 
 	t.Run("downgrades user subscription from deleted event", func(t *testing.T) {

@@ -33,18 +33,29 @@ import {
 import { useUpdateUser } from "@/hooks/api/use-update-user";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { AlertCircle, LogOut, Home, Trash2 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { AlertCircle, Loader2, LogOut, Home, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 import { useDeleteUser } from "@/hooks/api/use-delete-user";
+import { useCreateCheckoutSession } from "@/hooks/api/use-create-checkout-session";
+import { useCancelSubscription } from "@/hooks/api/use-cancel-subscription";
+import { useResumeSubscription } from "@/hooks/api/use-resume-subscription";
 
 export const ProfileContent = () => {
   const { data: user, isLoading, refetch } = useUser();
   const { logout, user: firebaseUser } = useFirebaseAuth();
   const { mutate: updateUser, isPending: isUpdatingUser } = useUpdateUser();
   const { mutate: deleteUser, isPending: isDeletingUser } = useDeleteUser();
+  const { mutate: createCheckoutSession, isPending: isCheckoutPending } =
+    useCreateCheckoutSession();
+  const { mutate: cancelSubscription, isPending: isCancelPending } =
+    useCancelSubscription();
+  const { mutate: resumeSubscription, isPending: isResumePending } =
+    useResumeSubscription();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [name, setName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -163,7 +174,16 @@ export const ProfileContent = () => {
     (user as { rsoSubjectId?: string | null }).rsoSubjectId,
   );
   const hasValoMapperPro = Boolean(user.isSubscribed);
+  const subscriptionEndsAt = user.subscriptionEndedAt
+    ? new Date(user.subscriptionEndedAt)
+    : null;
+  const hasScheduledCancellation =
+    hasValoMapperPro &&
+    subscriptionEndsAt !== null &&
+    !Number.isNaN(subscriptionEndsAt.getTime());
   const currentUserName = user.name?.trim() || "";
+  const searchQuery = searchParams.toString();
+  const returnToPath = searchQuery ? `${pathname}?${searchQuery}` : pathname;
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
@@ -209,6 +229,26 @@ export const ProfileContent = () => {
       onSuccess: async () => {
         await logout();
         router.push("/");
+      },
+    });
+  };
+
+  const handleUpgrade = () => {
+    createCheckoutSession({ returnTo: returnToPath });
+  };
+
+  const handleCancelSubscription = () => {
+    cancelSubscription(undefined, {
+      onSuccess: () => {
+        refetch();
+      },
+    });
+  };
+
+  const handleResumeSubscription = () => {
+    resumeSubscription(undefined, {
+      onSuccess: () => {
+        refetch();
       },
     });
   };
@@ -270,19 +310,100 @@ export const ProfileContent = () => {
                 <span className="text-sm">ValoMapper Pro</span>
                 <span
                   className={`text-xs font-semibold ${
-                    hasValoMapperPro
-                      ? "text-green-600"
-                      : "text-muted-foreground"
+                    hasScheduledCancellation
+                      ? "text-amber-600"
+                      : hasValoMapperPro
+                        ? "text-green-600"
+                        : "text-muted-foreground"
                   }`}
                 >
-                  {hasValoMapperPro ? "Active" : "Inactive"}
+                  {hasScheduledCancellation
+                    ? "Cancels at Period End"
+                    : hasValoMapperPro
+                      ? "Active"
+                      : "Inactive"}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {hasValoMapperPro
-                  ? "Your ValoMapper Pro subscription is active."
-                  : "You are currently on the free plan."}
+                {hasScheduledCancellation && subscriptionEndsAt
+                  ? `Your ValoMapper Pro subscription is active until ${subscriptionEndsAt.toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      },
+                    )}.`
+                  : hasValoMapperPro
+                    ? "Your ValoMapper Pro subscription is active."
+                    : "You are currently on the free plan."}
               </p>
+              <div className="pt-1">
+                {hasValoMapperPro ? (
+                  hasScheduledCancellation ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleResumeSubscription}
+                      disabled={isResumePending}
+                    >
+                      {isResumePending && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Undo Cancellation
+                    </Button>
+                  ) : (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={isCancelPending || isResumePending}
+                        >
+                          {isCancelPending && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Cancel Subscription
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Cancel your subscription?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Your Stripe subscription will be set to cancel at
+                            the end of your current billing period. You will
+                            keep ValoMapper Pro access until then.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>
+                            Keep Subscription
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleCancelSubscription}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/70"
+                          >
+                            Confirm Cancel
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={handleUpgrade}
+                    disabled={isCheckoutPending}
+                  >
+                    {isCheckoutPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Upgrade to Pro
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2">
