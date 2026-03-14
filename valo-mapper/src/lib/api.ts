@@ -9,12 +9,13 @@ export class ApiError extends Error {
   }
 }
 
-const parseErrorMessage = async (
+const parseErrorResponse = async (
   response: Response,
   fallbackMessage: string,
 ): Promise<string> => {
   try {
     const data = await response.json();
+
     return data.error || data.message || fallbackMessage;
   } catch {
     return fallbackMessage;
@@ -42,7 +43,7 @@ export const apiFetch = async <T>(
   });
 
   if (!response.ok) {
-    const message = await parseErrorMessage(
+    const message = await parseErrorResponse(
       response,
       `Request failed: ${response.statusText}`,
     );

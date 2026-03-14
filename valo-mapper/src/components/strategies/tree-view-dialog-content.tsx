@@ -40,6 +40,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import Link from "next/link";
 import { FREE_STRATEGY_LIMIT } from "@/lib/consts";
+import { useCreateCheckoutSession } from "@/hooks/api/use-create-checkout-session";
 
 const renderBreadcrumbs = (parts: Array<{ id: string; name: string }>) => {
   if (parts.length === 0) {
@@ -111,6 +112,8 @@ export const TreeViewDialogContent = ({
   const { data: user, isLoading: isUserLoading } = useUser();
 
   const { mutate: createStrategy, isPending } = useCreateStrategy();
+  const { mutate: createCheckoutSession, isPending: isCheckoutPending } =
+    useCreateCheckoutSession();
   const params = useParams();
   const lobbyCode =
     typeof params?.lobbyCode === "string" ? params.lobbyCode : "";
@@ -229,7 +232,18 @@ export const TreeViewDialogContent = ({
               <Link className="underline" href="/strategies">
                 My Strategies
               </Link>{" "}
-              or upgrade to save more.
+              or{" "}
+              <button
+                onClick={() => createCheckoutSession()}
+                disabled={isCheckoutPending}
+                className="underline font-medium inline-flex items-center gap-1 disabled:opacity-50"
+              >
+                {isCheckoutPending && (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                )}
+                upgrade to save more
+              </button>
+              .
             </p>
           </AlertDescription>
         </Alert>

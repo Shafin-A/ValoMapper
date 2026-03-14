@@ -1,48 +1,19 @@
+import { proxyToBackend } from "@/lib/api-proxy";
+
 export const DELETE = async (
   request: Request,
   { params }: { params: Promise<{ folderId: string }> },
 ) => {
   const authHeader = request.headers.get("Authorization");
-
-  if (!authHeader) {
+  if (!authHeader)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   const { folderId } = await params;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-  try {
-    const response = await fetch(`${process.env.API_URL}/folders/${folderId}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: authHeader,
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return Response.json(
-        { error: "Failed to delete folder" },
-        { status: response.status },
-      );
-    }
-
-    return Response.json({ success: true });
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error instanceof Error && error.name === "AbortError") {
-      return Response.json(
-        { error: "Request timed out. Please try again." },
-        { status: 504 },
-      );
-    }
-    throw error;
-  }
+  return proxyToBackend(`/folders/${folderId}`, {
+    method: "DELETE",
+    token: authHeader,
+    errorMessage: "Failed to delete folder",
+  });
 };
 
 export const PATCH = async (
@@ -50,52 +21,18 @@ export const PATCH = async (
   { params }: { params: Promise<{ folderId: string }> },
 ) => {
   const authHeader = request.headers.get("Authorization");
-
-  if (!authHeader) {
+  if (!authHeader)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   const { folderId } = await params;
-
   const body = await request.json();
-
-  if (!body) {
+  if (!body)
     return Response.json({ error: "No request body" }, { status: 400 });
-  }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-  try {
-    const response = await fetch(`${process.env.API_URL}/folders/${folderId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: authHeader,
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      return Response.json(
-        { error: "Failed to update folder" },
-        { status: response.status },
-      );
-    }
-
-    const data = await response.json();
-    return Response.json(data);
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error instanceof Error && error.name === "AbortError") {
-      return Response.json(
-        { error: "Request timed out. Please try again." },
-        { status: 504 },
-      );
-    }
-    throw error;
-  }
+  return proxyToBackend(`/folders/${folderId}`, {
+    method: "PATCH",
+    token: authHeader,
+    body,
+    errorMessage: "Failed to update folder",
+  });
 };

@@ -36,8 +36,8 @@ Before setting up the project, ensure you have:
    # Keep this aligned with your backend RSO_REDIRECT_URI callback
    NEXT_PUBLIC_RSO_REDIRECT_URI=http://localhost:3000/api/auth/rso/callback
 
-   # Internal Next.js API routes call the Go backend at this URL
-   API_URL=http://localhost:8080
+   # Internal Next.js API routes call the Go backend API base at this URL
+   API_URL=http://localhost:8080/api
 
    # WebSocket URL for lobby collaboration
    NEXT_PUBLIC_WS_URL=ws://localhost:8080
