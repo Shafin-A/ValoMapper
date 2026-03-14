@@ -13,6 +13,7 @@ import (
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stripe/stripe-go/v82/webhook"
 )
@@ -25,7 +26,7 @@ func TestHandleStripeWebhook(t *testing.T) {
 	pool := testutils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(t, pool)
 
-	testutils.TruncateTables(t, pool, "users")
+	testutils.TruncateTables(t, pool, "users", "stripe_webhook_events")
 
 	const webhookSecret = "whsec_test_secret"
 	originalSecret, hadOriginal := os.LookupEnv("STRIPE_WEBHOOK_SECRET")
@@ -85,7 +86,7 @@ func TestHandleStripeWebhook(t *testing.T) {
 	})
 
 	t.Run("ignores unsupported event types", func(t *testing.T) {
-		payload := buildStripeEventPayload(t, "invoice.paid", map[string]any{
+		payload := buildStripeEventPayload(t, "", "invoice.paid", map[string]any{
 			"id":     "in_test",
 			"object": "invoice",
 		})
@@ -129,6 +130,37 @@ func TestHandleStripeWebhook(t *testing.T) {
 		assert.Equal(t, "ignored", response["status"])
 		assert.Equal(t, "missing-user-identifier", response["reason"])
 	})
+
+	t.Run("ignores duplicate event deliveries", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-duplicate")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = FALSE, subscription_ended_at = NOW() WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+
+		payload := buildStripeSubscriptionEventPayloadWithID(t, "evt_duplicate_delivery", "customer.subscription.updated", "active", map[string]string{
+			"firebaseUid": *testUser.FirebaseUID,
+		})
+
+		firstReq := newSignedStripeWebhookRequest(payload, webhookSecret)
+		firstResp := httptest.NewRecorder()
+		HandleStripeWebhook(firstResp, firstReq)
+		assert.Equal(t, http.StatusOK, firstResp.Code)
+
+		secondReq := newSignedStripeWebhookRequest(payload, webhookSecret)
+		secondResp := httptest.NewRecorder()
+		HandleStripeWebhook(secondResp, secondReq)
+		assert.Equal(t, http.StatusOK, secondResp.Code)
+
+		var response map[string]string
+		testutils.ParseJSONResponse(t, secondResp, &response)
+		assert.Equal(t, "ignored", response["status"])
+		assert.Equal(t, "duplicate-event", response["reason"])
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		assert.NotNil(t, updatedUser)
+		assert.True(t, updatedUser.IsSubscribed)
+		assert.Nil(t, updatedUser.SubscriptionEndedAt)
+	})
 }
 
 func newSignedStripeWebhookRequest(payload []byte, secret string) *http.Request {
@@ -147,6 +179,12 @@ func newSignedStripeWebhookRequest(payload []byte, secret string) *http.Request 
 func buildStripeSubscriptionEventPayload(t *testing.T, eventType, status string, metadata map[string]string) []byte {
 	t.Helper()
 
+	return buildStripeSubscriptionEventPayloadWithID(t, "", eventType, status, metadata)
+}
+
+func buildStripeSubscriptionEventPayloadWithID(t *testing.T, eventID, eventType, status string, metadata map[string]string) []byte {
+	t.Helper()
+
 	subscriptionObject := map[string]any{
 		"id":       "sub_test",
 		"object":   "subscription",
@@ -154,14 +192,18 @@ func buildStripeSubscriptionEventPayload(t *testing.T, eventType, status string,
 		"metadata": metadata,
 	}
 
-	return buildStripeEventPayload(t, eventType, subscriptionObject)
+	return buildStripeEventPayload(t, eventID, eventType, subscriptionObject)
 }
 
-func buildStripeEventPayload(t *testing.T, eventType string, dataObject map[string]any) []byte {
+func buildStripeEventPayload(t *testing.T, eventID, eventType string, dataObject map[string]any) []byte {
 	t.Helper()
 
+	if eventID == "" {
+		eventID = "evt_" + uuid.NewString()
+	}
+
 	payload, err := json.Marshal(map[string]any{
-		"id":   "evt_test",
+		"id":   eventID,
 		"type": eventType,
 		"data": map[string]any{
 			"object": dataObject,

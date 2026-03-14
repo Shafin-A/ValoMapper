@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"valo-mapper-api/db"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
@@ -50,8 +52,32 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	eventID := strings.TrimSpace(event.ID)
+	if eventID == "" {
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid Stripe event payload"), requestID)
+		return
+	}
+
+	claimed, err := claimStripeWebhookEvent(r.Context(), eventID, string(event.Type))
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Unable to process Stripe event", err), requestID)
+		return
+	}
+	if !claimed {
+		log.Printf("[request=%s] Stripe webhook duplicate ignored: eventID=%s eventType=%s", requestID, eventID, event.Type)
+		utils.SendJSON(w, http.StatusOK, map[string]string{
+			"status":  "ignored",
+			"reason":  "duplicate-event",
+			"eventId": eventID,
+		}, requestID)
+		return
+	}
+
 	processed, reason, err := processStripeSubscriptionEvent(event)
 	if err != nil {
+		if releaseErr := releaseStripeWebhookEventClaim(r.Context(), eventID); releaseErr != nil {
+			log.Printf("[request=%s] failed to release Stripe webhook event claim eventID=%s: %v", requestID, eventID, releaseErr)
+		}
 		utils.SendJSONError(w, utils.NewInternal("Unable to process Stripe event", err), requestID)
 		return
 	}
@@ -166,4 +192,32 @@ func firstNonEmptyMetadataValue(metadata map[string]string, keys ...string) stri
 	}
 
 	return ""
+}
+
+func claimStripeWebhookEvent(ctx context.Context, eventID, eventType string) (bool, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return false, err
+	}
+
+	cmdTag, err := conn.Exec(ctx, `
+		INSERT INTO stripe_webhook_events (event_id, event_type, processed_at)
+		VALUES ($1, $2, NOW())
+		ON CONFLICT (event_id) DO NOTHING
+	`, eventID, eventType)
+	if err != nil {
+		return false, err
+	}
+
+	return cmdTag.RowsAffected() == 1, nil
+}
+
+func releaseStripeWebhookEventClaim(ctx context.Context, eventID string) error {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Exec(ctx, `DELETE FROM stripe_webhook_events WHERE event_id = $1`, eventID)
+	return err
 }
