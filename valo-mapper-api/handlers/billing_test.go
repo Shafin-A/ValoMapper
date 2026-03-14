@@ -73,6 +73,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 
 	t.Run("creates checkout session with subscription metadata", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-1")
+		const returnToPath = "/ABCD123?tab=map"
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
 			return &auth.Token{UID: *testUser.FirebaseUID}, nil
@@ -93,7 +94,9 @@ func TestCreateCheckoutSession(t *testing.T) {
 			}, nil
 		}
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", nil, "valid-token")
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", map[string]string{
+			"returnTo": returnToPath,
+		}, "valid-token")
 		w := httptest.NewRecorder()
 
 		CreateCheckoutSession(w, req, mockAuth)
@@ -107,6 +110,8 @@ func TestCreateCheckoutSession(t *testing.T) {
 
 		if assert.NotNil(t, capturedParams) {
 			assert.Equal(t, string(stripe.CheckoutSessionModeSubscription), stripe.StringValue(capturedParams.Mode))
+			assert.Equal(t, "http://localhost:3000/checkout/success?returnTo=%2FABCD123%3Ftab%3Dmap", stripe.StringValue(capturedParams.SuccessURL))
+			assert.Equal(t, "http://localhost:3000/checkout/cancel?returnTo=%2FABCD123%3Ftab%3Dmap", stripe.StringValue(capturedParams.CancelURL))
 			if assert.Len(t, capturedParams.LineItems, 1) {
 				assert.Equal(t, "price_test_checkout", stripe.StringValue(capturedParams.LineItems[0].Price))
 				assert.Equal(t, int64(1), stripe.Int64Value(capturedParams.LineItems[0].Quantity))
@@ -117,6 +122,42 @@ func TestCreateCheckoutSession(t *testing.T) {
 				assert.Equal(t, strconv.Itoa(testUser.ID), capturedParams.SubscriptionData.Metadata["userId"])
 				assert.Equal(t, *testUser.FirebaseUID, capturedParams.SubscriptionData.Metadata["firebaseUid"])
 			}
+		}
+	})
+
+	t.Run("ignores invalid returnTo values", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-3")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		var capturedParams *stripe.CheckoutSessionParams
+		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+			capturedParams = params
+			return &stripe.CheckoutSession{
+				ID:  "cs_test_invalid_return_to",
+				URL: "https://checkout.stripe.com/c/pay/cs_test_invalid_return_to",
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", map[string]string{
+			"returnTo": "https://evil.example",
+		}, "valid-token")
+		w := httptest.NewRecorder()
+
+		CreateCheckoutSession(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		if assert.NotNil(t, capturedParams) {
+			assert.Equal(t, "http://localhost:3000/checkout/success", stripe.StringValue(capturedParams.SuccessURL))
+			assert.Equal(t, "http://localhost:3000/checkout/cancel", stripe.StringValue(capturedParams.CancelURL))
 		}
 	})
 

@@ -1,8 +1,19 @@
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
+import { normalizeBillingReturnPath } from "@/lib/billing-return-path";
 
 const BillingCancelPage = () => {
+  const searchParams = useSearchParams();
+  const returnToPath = normalizeBillingReturnPath(
+    searchParams.get("returnTo"),
+    "/",
+  );
+  const isReturningToLobby = returnToPath !== "/";
+
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-md text-center space-y-6">
@@ -18,7 +29,9 @@ const BillingCancelPage = () => {
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button variant="outline" asChild>
-            <Link href="/">Back to Home</Link>
+            <Link href={returnToPath}>
+              {isReturningToLobby ? "Back to your strategy" : "Back to Home"}
+            </Link>
           </Button>
           <Button asChild>
             <Link href="/strategies">My Strategies</Link>

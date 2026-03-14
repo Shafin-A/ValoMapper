@@ -32,7 +32,7 @@ import { useUser } from "@/hooks/api/use-user";
 import { TreeView } from "./tree-view";
 import { useCreateStrategy } from "@/hooks/api/use-create-strategy";
 import { useCanvas } from "@/contexts/canvas-context";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import {
   buildLocationPath,
   flattenData,
@@ -117,8 +117,12 @@ export const TreeViewDialogContent = ({
     useCreateCheckoutSession();
   const { saveCanvasState } = useCanvas();
   const params = useParams();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const lobbyCode =
     typeof params?.lobbyCode === "string" ? params.lobbyCode : "";
+  const searchQuery = searchParams.toString();
+  const returnToPath = searchQuery ? `${pathname}?${searchQuery}` : pathname;
 
   const isStrategyInFolder = data?.some((s) => s.lobbyCode === lobbyCode);
 
@@ -238,7 +242,9 @@ export const TreeViewDialogContent = ({
               </Link>{" "}
               or{" "}
               <button
-                onClick={() => createCheckoutSession()}
+                onClick={() =>
+                  createCheckoutSession({ returnTo: returnToPath })
+                }
                 disabled={isCheckoutPending}
                 className="underline font-medium inline-flex items-center gap-1 disabled:opacity-50"
               >

@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -26,6 +28,10 @@ type CreateCheckoutSessionResponse struct {
 	URL       string `json:"url"`
 }
 
+type CreateCheckoutSessionRequest struct {
+	ReturnTo string `json:"returnTo"`
+}
+
 func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	requestID := middleware.GetRequestID(r)
 
@@ -37,6 +43,12 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
+		return
+	}
+
+	checkoutRequest, err := parseCreateCheckoutSessionRequest(r)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), requestID)
 		return
 	}
 
@@ -59,10 +71,18 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		}
 	}
 
+	returnTo := sanitizeCheckoutReturnTo(checkoutRequest.ReturnTo)
+	successURL := checkoutRedirectURL("STRIPE_CHECKOUT_SUCCESS_URL", "/billing/success")
+	cancelURL := checkoutRedirectURL("STRIPE_CHECKOUT_CANCEL_URL", "/billing/cancel")
+	if returnTo != "" {
+		successURL = appendReturnToQuery(successURL, returnTo)
+		cancelURL = appendReturnToQuery(cancelURL, returnTo)
+	}
+
 	params := &stripe.CheckoutSessionParams{
 		Mode:              stripe.String(string(stripe.CheckoutSessionModeSubscription)),
-		SuccessURL:        stripe.String(checkoutRedirectURL("STRIPE_CHECKOUT_SUCCESS_URL", "/billing/success")),
-		CancelURL:         stripe.String(checkoutRedirectURL("STRIPE_CHECKOUT_CANCEL_URL", "/billing/cancel")),
+		SuccessURL:        stripe.String(successURL),
+		CancelURL:         stripe.String(cancelURL),
 		ClientReferenceID: stripe.String(strconv.Itoa(user.ID)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
@@ -269,6 +289,60 @@ func firstNonEmptyMetadataValue(metadata map[string]string, keys ...string) stri
 	}
 
 	return ""
+}
+
+func parseCreateCheckoutSessionRequest(r *http.Request) (CreateCheckoutSessionRequest, error) {
+	request := CreateCheckoutSessionRequest{}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return request, err
+	}
+
+	if len(bytes.TrimSpace(body)) == 0 {
+		return request, nil
+	}
+
+	if err := json.Unmarshal(body, &request); err != nil {
+		return CreateCheckoutSessionRequest{}, err
+	}
+
+	return request, nil
+}
+
+func sanitizeCheckoutReturnTo(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return ""
+	}
+
+	if strings.ContainsAny(trimmed, "\r\n") {
+		return ""
+	}
+
+	if !strings.HasPrefix(trimmed, "/") || strings.HasPrefix(trimmed, "//") {
+		return ""
+	}
+
+	parsed, err := url.Parse(trimmed)
+	if err != nil || parsed.IsAbs() {
+		return ""
+	}
+
+	return trimmed
+}
+
+func appendReturnToQuery(baseURL, returnTo string) string {
+	parsed, err := url.Parse(baseURL)
+	if err != nil {
+		return baseURL
+	}
+
+	query := parsed.Query()
+	query.Set("returnTo", returnTo)
+	parsed.RawQuery = query.Encode()
+
+	return parsed.String()
 }
 
 func checkoutRedirectURL(envVarName, fallbackPath string) string {
