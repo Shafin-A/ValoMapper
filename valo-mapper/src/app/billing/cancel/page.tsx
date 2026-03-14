@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
-import { normalizeBillingReturnPath } from "@/lib/billing-return-path";
+import {
+  getBillingCancelReturnLabel,
+  normalizeBillingReturnPath,
+} from "@/lib/billing-return-path";
 
 const BillingCancelPage = () => {
   const searchParams = useSearchParams();
@@ -12,7 +15,10 @@ const BillingCancelPage = () => {
     searchParams.get("returnTo"),
     "/",
   );
-  const isReturningToLobby = returnToPath !== "/";
+  const returnLabel = getBillingCancelReturnLabel(returnToPath);
+  const secondaryHref = returnToPath === "/strategies" ? "/" : "/strategies";
+  const secondaryLabel =
+    secondaryHref === "/" ? "Back to Home" : "My Strategies";
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -29,12 +35,10 @@ const BillingCancelPage = () => {
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button variant="outline" asChild>
-            <Link href={returnToPath}>
-              {isReturningToLobby ? "Back to your strategy" : "Back to Home"}
-            </Link>
+            <Link href={returnToPath}>{returnLabel}</Link>
           </Button>
           <Button asChild>
-            <Link href="/strategies">My Strategies</Link>
+            <Link href={secondaryHref}>{secondaryLabel}</Link>
           </Button>
         </div>
       </div>

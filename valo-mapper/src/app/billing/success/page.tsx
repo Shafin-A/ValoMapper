@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
-import { normalizeBillingReturnPath } from "@/lib/billing-return-path";
+import {
+  getBillingSuccessReturnLabel,
+  normalizeBillingReturnPath,
+} from "@/lib/billing-return-path";
 
 const BillingSuccessPage = () => {
   const searchParams = useSearchParams();
@@ -12,7 +15,7 @@ const BillingSuccessPage = () => {
     searchParams.get("returnTo"),
     "/strategies",
   );
-  const isReturningToLobby = returnToPath !== "/strategies";
+  const returnLabel = getBillingSuccessReturnLabel(returnToPath);
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -31,11 +34,7 @@ const BillingSuccessPage = () => {
           </p>
         </div>
         <Button asChild>
-          <Link href={returnToPath}>
-            {isReturningToLobby
-              ? "Back to your strategy"
-              : "Go to My Strategies"}
-          </Link>
+          <Link href={returnToPath}>{returnLabel}</Link>
         </Button>
       </div>
     </div>
