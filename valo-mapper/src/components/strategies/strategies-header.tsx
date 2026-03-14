@@ -1,5 +1,5 @@
 import { Separator } from "@radix-ui/react-separator";
-import { Home, FolderOpen } from "lucide-react";
+import { Home, FolderOpen, Loader2 } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -8,6 +8,7 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreateFolderPopover } from "./create-folder-popover";
 import Link from "next/link";
@@ -17,6 +18,13 @@ interface StrategiesHeaderProps {
   currentFolderId: number | null;
   refetch: () => void;
   navigateToBreadcrumb: (index: number) => void;
+  isUserLoading: boolean;
+  hasValoMapperPro: boolean;
+  hasScheduledCancellation: boolean;
+  strategyCount: number;
+  freeStrategyLimit: number;
+  onUpgrade: () => void;
+  isUpgradePending: boolean;
 }
 
 export const StrategiesHeader = ({
@@ -24,7 +32,43 @@ export const StrategiesHeader = ({
   currentFolderId,
   refetch,
   navigateToBreadcrumb,
+  isUserLoading,
+  hasValoMapperPro,
+  hasScheduledCancellation,
+  strategyCount,
+  freeStrategyLimit,
+  onUpgrade,
+  isUpgradePending,
 }: StrategiesHeaderProps) => {
+  const isFreePlan = !isUserLoading && !hasValoMapperPro;
+  const hasReachedFreeLimit = isFreePlan && strategyCount >= freeStrategyLimit;
+
+  const planLabel = isUserLoading
+    ? "Loading"
+    : hasScheduledCancellation
+      ? "Pro (Cancels at Period End)"
+      : hasValoMapperPro
+        ? "Pro Active"
+        : "Free";
+
+  const planBadgeVariant = isUserLoading
+    ? "outline"
+    : hasScheduledCancellation
+      ? "secondary"
+      : hasValoMapperPro
+        ? "default"
+        : "outline";
+
+  const planBadgeClassName = isUserLoading
+    ? "text-muted-foreground"
+    : hasScheduledCancellation
+      ? "text-amber-700"
+      : hasValoMapperPro
+        ? "bg-primary text-white"
+        : "";
+
+  const savedBadgeVariant = hasReachedFreeLimit ? "destructive" : "secondary";
+
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
@@ -69,6 +113,29 @@ export const StrategiesHeader = ({
           ))}
         </BreadcrumbList>
       </Breadcrumb>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Plan:</span>
+          <Badge variant={planBadgeVariant} className={planBadgeClassName}>
+            {planLabel}
+          </Badge>
+        </div>
+
+        {isFreePlan && (
+          <>
+            <Badge variant={savedBadgeVariant}>
+              Saved {strategyCount}/{freeStrategyLimit}
+            </Badge>
+            <Button size="sm" onClick={onUpgrade} disabled={isUpgradePending}>
+              {isUpgradePending && (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              )}
+              Upgrade to Pro
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   );
 };

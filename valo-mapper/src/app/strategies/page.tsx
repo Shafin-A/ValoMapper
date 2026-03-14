@@ -5,23 +5,52 @@ import { StrategiesHeader } from "@/components/strategies/strategies-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCreateCheckoutSession } from "@/hooks/api/use-create-checkout-session";
 import { useFolders } from "@/hooks/api/use-folder";
+import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { FREE_STRATEGY_LIMIT } from "@/lib/consts";
 import { StrategyData } from "@/lib/types";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
 import { Suspense, useState } from "react";
 import { convertFolderOrStrategyId } from "@/lib/utils";
 import Link from "next/link";
 
+const countStrategies = (items: StrategyData[]): number => {
+  return items.reduce((total, item) => {
+    if (item.type === "strategy") {
+      return total + 1;
+    }
+
+    if (!item.children || item.children.length === 0) {
+      return total;
+    }
+
+    return total + countStrategies(item.children);
+  }, 0);
+};
+
 const MyStrategiesPage = () => {
   const { user, loading: authLoading } = useFirebaseAuth();
   const { data, isLoading, isError, error, refetch } = useFolders();
+  const { data: userProfile, isLoading: isUserProfileLoading } = useUser();
+  const { mutate: createCheckoutSession, isPending: isCheckoutPending } =
+    useCreateCheckoutSession();
 
   const [navigationPath, setNavigationPath] = useState<
     { id: string; name: string }[]
   >([{ id: "root", name: "My Strategies" }]);
 
   const treeData = data || [];
+  const strategyCount = countStrategies(treeData);
+  const hasValoMapperPro = Boolean(userProfile?.isSubscribed);
+  const subscriptionEndsAt = userProfile?.subscriptionEndedAt
+    ? new Date(userProfile.subscriptionEndedAt)
+    : null;
+  const hasScheduledCancellation =
+    hasValoMapperPro &&
+    subscriptionEndsAt !== null &&
+    !Number.isNaN(subscriptionEndsAt.getTime());
 
   const getCurrentItems = (): StrategyData[] => {
     if (navigationPath.length === 1) return treeData;
@@ -136,6 +165,13 @@ const MyStrategiesPage = () => {
             currentFolderId={currentFolderId}
             refetch={refetch}
             navigateToBreadcrumb={navigateToBreadcrumb}
+            isUserLoading={isUserProfileLoading}
+            hasValoMapperPro={hasValoMapperPro}
+            hasScheduledCancellation={hasScheduledCancellation}
+            strategyCount={strategyCount}
+            freeStrategyLimit={FREE_STRATEGY_LIMIT}
+            onUpgrade={() => createCheckoutSession({ returnTo: "/strategies" })}
+            isUpgradePending={isCheckoutPending}
           />
 
           <StrategiesContent
