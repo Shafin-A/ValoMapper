@@ -31,6 +31,7 @@ import { useFolders } from "@/hooks/api/use-folder";
 import { useUser } from "@/hooks/api/use-user";
 import { TreeView } from "./tree-view";
 import { useCreateStrategy } from "@/hooks/api/use-create-strategy";
+import { useCanvas } from "@/contexts/canvas-context";
 import { useParams } from "next/navigation";
 import {
   buildLocationPath,
@@ -114,6 +115,7 @@ export const TreeViewDialogContent = ({
   const { mutate: createStrategy, isPending } = useCreateStrategy();
   const { mutate: createCheckoutSession, isPending: isCheckoutPending } =
     useCreateCheckoutSession();
+  const { saveCanvasState } = useCanvas();
   const params = useParams();
   const lobbyCode =
     typeof params?.lobbyCode === "string" ? params.lobbyCode : "";
@@ -153,6 +155,7 @@ export const TreeViewDialogContent = ({
 
     const folderId = getFolderOrStrategyId(selectedLocation, "folder");
 
+    saveCanvasState();
     createStrategy({
       name: strategyName,
       lobbyCode: lobbyCode || "",
