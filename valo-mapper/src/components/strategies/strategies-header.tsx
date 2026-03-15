@@ -1,5 +1,5 @@
 import { Separator } from "@radix-ui/react-separator";
-import { Home, FolderOpen, Loader2 } from "lucide-react";
+import { Home, FolderOpen } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreateFolderPopover } from "./create-folder-popover";
+import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
 import Link from "next/link";
 
 interface StrategiesHeaderProps {
@@ -23,8 +24,7 @@ interface StrategiesHeaderProps {
   hasScheduledCancellation: boolean;
   strategyCount: number;
   freeStrategyLimit: number;
-  onUpgrade: () => void;
-  isUpgradePending: boolean;
+  upgradeReturnToPath: string;
 }
 
 export const StrategiesHeader = ({
@@ -37,8 +37,7 @@ export const StrategiesHeader = ({
   hasScheduledCancellation,
   strategyCount,
   freeStrategyLimit,
-  onUpgrade,
-  isUpgradePending,
+  upgradeReturnToPath,
 }: StrategiesHeaderProps) => {
   const isFreePlan = !isUserLoading && !hasValoMapperPro;
   const hasReachedFreeLimit = isFreePlan && strategyCount >= freeStrategyLimit;
@@ -127,12 +126,10 @@ export const StrategiesHeader = ({
             <Badge variant={savedBadgeVariant}>
               Saved {strategyCount}/{freeStrategyLimit}
             </Badge>
-            <Button size="sm" onClick={onUpgrade} disabled={isUpgradePending}>
-              {isUpgradePending && (
-                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-              )}
-              Upgrade to Pro
-            </Button>
+            <CheckoutPlanDialog
+              returnToPath={upgradeReturnToPath}
+              trigger={<Button size="sm">Upgrade to Pro</Button>}
+            />
           </>
         )}
       </div>

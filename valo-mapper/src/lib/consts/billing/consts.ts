@@ -1,0 +1,33 @@
+export type CheckoutPlan = "monthly" | "yearly";
+
+export interface CheckoutPlanOption {
+  id: CheckoutPlan;
+  label: string;
+  cadence: string;
+  priceLabel: string;
+  currencyCode: string;
+  checkoutDescription: string;
+}
+
+export const DEFAULT_CHECKOUT_PLAN: CheckoutPlan = "monthly";
+
+export const CHECKOUT_PLAN_OPTIONS: CheckoutPlanOption[] = [
+  {
+    id: "monthly",
+    label: "ValoMapper Pro Monthly",
+    cadence: "Billed every month",
+    priceLabel: "$4.99/month",
+    currencyCode: "USD",
+    checkoutDescription:
+      "Flexible monthly billing. Cancel anytime from your profile.",
+  },
+  {
+    id: "yearly",
+    label: "ValoMapper Pro Yearly",
+    cadence: "Billed once per year",
+    priceLabel: "$44.99/year",
+    currencyCode: "USD",
+    checkoutDescription:
+      "Lower effective monthly cost with one annual payment and auto-renewal. Cancel anytime from your profile.",
+  },
+];

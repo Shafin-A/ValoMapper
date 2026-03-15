@@ -37,12 +37,14 @@ func TestCreateCheckoutSession(t *testing.T) {
 	}()
 
 	originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
-	originalPrice, hadPrice := os.LookupEnv("STRIPE_PRICE_ID")
+	originalMonthlyPrice, hadMonthlyPrice := os.LookupEnv("STRIPE_PRICE_ID_MONTHLY")
+	originalYearlyPrice, hadYearlyPrice := os.LookupEnv("STRIPE_PRICE_ID_YEARLY")
 	originalSuccessURL, hadSuccessURL := os.LookupEnv("STRIPE_CHECKOUT_SUCCESS_URL")
 	originalCancelURL, hadCancelURL := os.LookupEnv("STRIPE_CHECKOUT_CANCEL_URL")
 
 	_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_checkout")
-	_ = os.Setenv("STRIPE_PRICE_ID", "price_test_checkout")
+	_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_test_checkout")
+	_ = os.Unsetenv("STRIPE_PRICE_ID_YEARLY")
 	_ = os.Setenv("STRIPE_CHECKOUT_SUCCESS_URL", "http://localhost:3000/checkout/success")
 	_ = os.Setenv("STRIPE_CHECKOUT_CANCEL_URL", "http://localhost:3000/checkout/cancel")
 
@@ -52,10 +54,15 @@ func TestCreateCheckoutSession(t *testing.T) {
 		} else {
 			_ = os.Unsetenv("STRIPE_SECRET_KEY")
 		}
-		if hadPrice {
-			_ = os.Setenv("STRIPE_PRICE_ID", originalPrice)
+		if hadMonthlyPrice {
+			_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", originalMonthlyPrice)
 		} else {
-			_ = os.Unsetenv("STRIPE_PRICE_ID")
+			_ = os.Unsetenv("STRIPE_PRICE_ID_MONTHLY")
+		}
+		if hadYearlyPrice {
+			_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", originalYearlyPrice)
+		} else {
+			_ = os.Unsetenv("STRIPE_PRICE_ID_YEARLY")
 		}
 		if hadSuccessURL {
 			_ = os.Setenv("STRIPE_CHECKOUT_SUCCESS_URL", originalSuccessURL)
@@ -125,6 +132,75 @@ func TestCreateCheckoutSession(t *testing.T) {
 		}
 	})
 
+	t.Run("uses yearly plan price when requested", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-yearly")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_test_checkout")
+		_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", "price_test_checkout_yearly")
+		defer os.Unsetenv("STRIPE_PRICE_ID_YEARLY")
+
+		var capturedParams *stripe.CheckoutSessionParams
+		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+			capturedParams = params
+			return &stripe.CheckoutSession{
+				ID:  "cs_test_yearly",
+				URL: "https://checkout.stripe.com/c/pay/cs_test_yearly",
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", map[string]string{
+			"plan": "yearly",
+		}, "valid-token")
+		w := httptest.NewRecorder()
+
+		CreateCheckoutSession(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		if assert.NotNil(t, capturedParams) {
+			if assert.Len(t, capturedParams.LineItems, 1) {
+				assert.Equal(t, "price_test_checkout_yearly", stripe.StringValue(capturedParams.LineItems[0].Price))
+			}
+			assert.Equal(t, "yearly", capturedParams.Metadata["plan"])
+		}
+	})
+
+	t.Run("rejects unsupported checkout plan", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-invalid-plan")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+			return &stripe.CheckoutSession{ID: "should-not-run"}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", map[string]string{
+			"plan": "lifetime",
+		}, "valid-token")
+		w := httptest.NewRecorder()
+
+		CreateCheckoutSession(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
 	t.Run("ignores invalid returnTo values", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-3")
 
@@ -184,7 +260,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			return &auth.UserRecord{UserInfo: &auth.UserInfo{UID: uid, Email: *testUser.Email}, EmailVerified: true}, nil
 		}
 
-		_ = os.Unsetenv("STRIPE_PRICE_ID")
+		_ = os.Unsetenv("STRIPE_PRICE_ID_MONTHLY")
 		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
 			return &stripe.CheckoutSession{ID: "should-not-run"}, nil
 		}
@@ -195,7 +271,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		CreateCheckoutSession(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		_ = os.Setenv("STRIPE_PRICE_ID", "price_test_checkout")
+		_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_test_checkout")
 	})
 }
 

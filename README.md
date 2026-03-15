@@ -88,9 +88,12 @@ Before setting up the project, ensure you have:
    # $bytes = New-Object byte[] 32; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes); -join ($bytes | ForEach-Object { $_.ToString("x2") })
    INTERNAL_API_KEY=your_internal_api_key
 
-   # Stripe secret key + recurring price ID (used by checkout-session endpoint)
+   # Stripe secret key + recurring price IDs (used by checkout-session endpoint)
    STRIPE_SECRET_KEY=sk_test_your_secret_key
-   STRIPE_PRICE_ID=price_your_recurring_price_id
+   # Required for monthly checkout
+   STRIPE_PRICE_ID_MONTHLY=price_your_monthly_price_id
+   # Required for yearly checkout
+   STRIPE_PRICE_ID_YEARLY=price_your_yearly_price_id
 
    # Stripe webhook signing secret (from Stripe Dashboard or Stripe CLI)
    STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
@@ -135,7 +138,7 @@ ValoMapper is configured for deployment on Fly.io using Docker containers.
    ```
 
 4. **Configure secrets**:
-   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`, `INTERNAL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`, `INTERNAL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID_MONTHLY`, `STRIPE_PRICE_ID_YEARLY`, `STRIPE_WEBHOOK_SECRET`
    - Frontend: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_RSO_CLIENT_ID`, `NEXT_PUBLIC_RSO_REDIRECT_URI`, `API_URL`, `NEXT_PUBLIC_WS_URL`
 
 5. **Deploy**:

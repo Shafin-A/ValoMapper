@@ -34,6 +34,15 @@ var errStripeCustomerNotFound = errors.New("stripe-customer-not-found")
 var errStripeSubscriptionNotFound = errors.New("stripe-subscription-not-found")
 var errStripeScheduledCancellationNotFound = errors.New("stripe-scheduled-cancellation-not-found")
 var errUserEmailMissing = errors.New("user-email-missing")
+var errUnsupportedCheckoutPlan = errors.New("unsupported-checkout-plan")
+var errCheckoutPlanUnavailable = errors.New("checkout-plan-unavailable")
+
+type checkoutPlan string
+
+const (
+	checkoutPlanMonthly checkoutPlan = "monthly"
+	checkoutPlanYearly  checkoutPlan = "yearly"
+)
 
 type CreateCheckoutSessionResponse struct {
 	SessionID string `json:"sessionId"`
@@ -42,6 +51,7 @@ type CreateCheckoutSessionResponse struct {
 
 type CreateCheckoutSessionRequest struct {
 	ReturnTo string `json:"returnTo"`
+	Plan     string `json:"plan"`
 }
 
 type CancelSubscriptionResponse struct {
@@ -71,8 +81,19 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 	}
 
 	stripeSecretKey := strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
-	stripePriceID := strings.TrimSpace(os.Getenv("STRIPE_PRICE_ID"))
-	if stripeSecretKey == "" || stripePriceID == "" {
+	if stripeSecretKey == "" {
+		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
+		return
+	}
+
+	selectedPlan, err := parseCheckoutPlan(checkoutRequest.Plan)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewBadRequest("Unsupported checkout plan"), requestID)
+		return
+	}
+
+	stripePriceID, err := checkoutPriceIDForPlan(selectedPlan)
+	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
 		return
 	}
@@ -81,6 +102,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 
 	metadata := map[string]string{
 		"userId": strconv.Itoa(user.ID),
+		"plan":   string(selectedPlan),
 	}
 	if user.FirebaseUID != nil {
 		firebaseUID := strings.TrimSpace(*user.FirebaseUID)
@@ -503,6 +525,40 @@ func parseCreateCheckoutSessionRequest(r *http.Request) (CreateCheckoutSessionRe
 	}
 
 	return request, nil
+}
+
+func parseCheckoutPlan(raw string) (checkoutPlan, error) {
+	normalized := strings.ToLower(strings.TrimSpace(raw))
+
+	switch normalized {
+	case "", string(checkoutPlanMonthly):
+		return checkoutPlanMonthly, nil
+	case string(checkoutPlanYearly):
+		return checkoutPlanYearly, nil
+	default:
+		return "", errUnsupportedCheckoutPlan
+	}
+}
+
+func checkoutPriceIDForPlan(plan checkoutPlan) (string, error) {
+	switch plan {
+	case checkoutPlanMonthly:
+		monthly := strings.TrimSpace(os.Getenv("STRIPE_PRICE_ID_MONTHLY"))
+		if monthly == "" {
+			return "", errCheckoutPlanUnavailable
+		}
+
+		return monthly, nil
+	case checkoutPlanYearly:
+		yearly := strings.TrimSpace(os.Getenv("STRIPE_PRICE_ID_YEARLY"))
+		if yearly == "" {
+			return "", errCheckoutPlanUnavailable
+		}
+
+		return yearly, nil
+	default:
+		return "", errUnsupportedCheckoutPlan
+	}
 }
 
 func sanitizeCheckoutReturnTo(raw string) string {

@@ -38,17 +38,15 @@ import { AlertCircle, Loader2, LogOut, Home, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 import { useDeleteUser } from "@/hooks/api/use-delete-user";
-import { useCreateCheckoutSession } from "@/hooks/api/use-create-checkout-session";
 import { useCancelSubscription } from "@/hooks/api/use-cancel-subscription";
 import { useResumeSubscription } from "@/hooks/api/use-resume-subscription";
+import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
 
 export const ProfileContent = () => {
   const { data: user, isLoading, refetch } = useUser();
   const { logout, user: firebaseUser } = useFirebaseAuth();
   const { mutate: updateUser, isPending: isUpdatingUser } = useUpdateUser();
   const { mutate: deleteUser, isPending: isDeletingUser } = useDeleteUser();
-  const { mutate: createCheckoutSession, isPending: isCheckoutPending } =
-    useCreateCheckoutSession();
   const { mutate: cancelSubscription, isPending: isCancelPending } =
     useCancelSubscription();
   const { mutate: resumeSubscription, isPending: isResumePending } =
@@ -233,10 +231,6 @@ export const ProfileContent = () => {
     });
   };
 
-  const handleUpgrade = () => {
-    createCheckoutSession({ returnTo: returnToPath });
-  };
-
   const handleCancelSubscription = () => {
     cancelSubscription(undefined, {
       onSuccess: () => {
@@ -392,16 +386,10 @@ export const ProfileContent = () => {
                     </AlertDialog>
                   )
                 ) : (
-                  <Button
-                    size="sm"
-                    onClick={handleUpgrade}
-                    disabled={isCheckoutPending}
-                  >
-                    {isCheckoutPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Upgrade to Pro
-                  </Button>
+                  <CheckoutPlanDialog
+                    returnToPath={returnToPath}
+                    trigger={<Button size="sm">Upgrade to Pro</Button>}
+                  />
                 )}
               </div>
             </div>

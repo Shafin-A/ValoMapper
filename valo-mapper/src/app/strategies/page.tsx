@@ -5,7 +5,6 @@ import { StrategiesHeader } from "@/components/strategies/strategies-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCreateCheckoutSession } from "@/hooks/api/use-create-checkout-session";
 import { useFolders } from "@/hooks/api/use-folder";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -39,8 +38,6 @@ const MyStrategiesPage = () => {
   const { user, loading: authLoading } = useFirebaseAuth();
   const { data, isLoading, isError, error, refetch } = useFolders();
   const { data: userProfile, isLoading: isUserProfileLoading } = useUser();
-  const { mutate: createCheckoutSession, isPending: isCheckoutPending } =
-    useCreateCheckoutSession();
 
   const [navigationPath, setNavigationPath] = useState<
     { id: string; name: string }[]
@@ -199,8 +196,7 @@ const MyStrategiesPage = () => {
             hasScheduledCancellation={hasScheduledCancellation}
             strategyCount={strategyCount}
             freeStrategyLimit={FREE_STRATEGY_LIMIT}
-            onUpgrade={() => createCheckoutSession({ returnTo: "/strategies" })}
-            isUpgradePending={isCheckoutPending}
+            upgradeReturnToPath="/strategies"
           />
 
           {strategyCleanupGracePeriod && (
