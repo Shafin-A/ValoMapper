@@ -367,6 +367,8 @@ func processStripeSubscriptionEvent(event stripe.Event) (bool, string, error) {
 		subscription.Status,
 		subscription.CancelAtPeriodEnd,
 		subscription.CancelAt,
+		subscription.EndedAt,
+		subscription.CanceledAt,
 	)
 	if err := user.UpdateSubscriptionStatus(isSubscribed, subscriptionEndedAt); err != nil {
 		return false, "", err
@@ -404,9 +406,14 @@ func deriveSubscriptionState(
 	status stripe.SubscriptionStatus,
 	cancelAtPeriodEnd bool,
 	cancelAt int64,
+	downgradedEndedAtCandidates ...int64,
 ) (bool, *time.Time) {
 	isSubscribed := stripeSubscriptionRepresentsActiveAccess(eventType, status)
 	if !isSubscribed {
+		if stripeEndedAt := firstPositiveUnixTime(downgradedEndedAtCandidates...); stripeEndedAt != nil {
+			return false, stripeEndedAt
+		}
+
 		now := time.Now().UTC()
 		return false, &now
 	}
@@ -417,6 +424,19 @@ func deriveSubscriptionState(
 	}
 
 	return true, nil
+}
+
+func firstPositiveUnixTime(values ...int64) *time.Time {
+	for _, value := range values {
+		if value <= 0 {
+			continue
+		}
+
+		ts := time.Unix(value, 0).UTC()
+		return &ts
+	}
+
+	return nil
 }
 
 func resolveUserFromStripeMetadata(metadata map[string]string) (*models.User, string, error) {
