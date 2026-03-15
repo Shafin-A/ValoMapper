@@ -13,6 +13,14 @@ import (
 	"github.com/stripe/stripe-go/v82/price"
 )
 
+// GetBillingPlans godoc
+// @Summary Get billing plans
+// @Description Returns Stripe-backed monthly and yearly pricing details.
+// @Tags billing
+// @Produce json
+// @Success 200 {object} BillingPlansResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/billing/plans [get]
 func GetBillingPlans(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 

@@ -35,6 +35,21 @@ type UpdateUserSubscriptionRequest struct {
 	IsSubscribed *bool   `json:"isSubscribed"`
 }
 
+// CreateUser godoc
+// @Summary Create user profile
+// @Description Creates a user profile linked to the authenticated Firebase UID.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body CreateUserRequest true "Create user request"
+// @Success 201 {object} models.User
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/users [post]
 func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPost {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
@@ -78,6 +93,16 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	utils.SendJSON(w, http.StatusCreated, user, middleware.GetRequestID(r))
 }
 
+// GetUser godoc
+// @Summary Get current user
+// @Description Returns the authenticated user's profile.
+// @Tags users
+// @Produce json
+// @Success 200 {object} models.User
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/users/me [get]
 func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodGet {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
@@ -93,6 +118,19 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthIn
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
 
+// UpdateUser godoc
+// @Summary Update current user
+// @Description Updates profile fields for the authenticated user.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body UpdateUserRequest true "Update user request"
+// @Success 200 {object} models.User
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/users/me [put]
 func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPut {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
@@ -128,6 +166,15 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
 
+// DeleteUser godoc
+// @Summary Delete current user
+// @Description Deletes the authenticated user from the application and Firebase.
+// @Tags users
+// @Success 204 {string} string "No Content"
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/users/me [delete]
 func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodDelete {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
@@ -155,6 +202,21 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// UpdateUserSubscription godoc
+// @Summary Update user subscription status
+// @Description Internal endpoint to update a user's subscription status by userId or firebaseUid.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param X-Internal-API-Key header string true "Internal API key"
+// @Param request body UpdateUserSubscriptionRequest true "Subscription update request"
+// @Success 200 {object} models.User
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security InternalAPIKey
+// @Router /api/users/subscription [patch]
 func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAuthInterface) {
 	if r.Method != http.MethodPatch {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))

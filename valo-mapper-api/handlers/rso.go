@@ -299,6 +299,18 @@ func getAccountInfoFromRSO(accessToken string) (*RSOAccountResponse, error) {
 	return nil, lastErr
 }
 
+// HandleRSOCallback godoc
+// @Summary Exchange RSO code for Firebase custom token
+// @Description Exchanges a Riot authorization code and returns a Firebase custom token plus user data.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RSORequest true "RSO authorization code"
+// @Success 200 {object} RSOCallbackResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/auth/rso/callback [post]
 func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPost {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))

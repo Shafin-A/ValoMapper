@@ -18,6 +18,20 @@ import (
 	"github.com/stripe/stripe-go/v82"
 )
 
+// CreateCheckoutSession godoc
+// @Summary Create Stripe checkout session
+// @Description Creates a Stripe checkout session for a monthly or yearly plan.
+// @Tags billing
+// @Accept json
+// @Produce json
+// @Param request body CreateCheckoutSessionRequest false "Checkout request"
+// @Success 200 {object} CreateCheckoutSessionResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/billing/checkout-session [post]
 func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	requestID := middleware.GetRequestID(r)
 

@@ -11,6 +11,14 @@ import (
 	"valo-mapper-api/utils"
 )
 
+// CreateLobby godoc
+// @Summary Create lobby
+// @Description Creates a new lobby initialized with default map and empty phases.
+// @Tags lobbies
+// @Produce json
+// @Success 201 {object} models.Lobby
+// @Failure 500 {object} ErrorResponse
+// @Router /api/lobbies [post]
 func CreateLobby(w http.ResponseWriter, r *http.Request) {
 	var err error
 
@@ -64,6 +72,17 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 	utils.SendJSON(w, http.StatusCreated, lobby, middleware.GetRequestID(r))
 }
 
+// GetLobby godoc
+// @Summary Get lobby
+// @Description Retrieves lobby and full canvas phases by lobby code.
+// @Tags lobbies
+// @Produce json
+// @Param code path string true "Lobby code"
+// @Success 200 {object} models.Lobby
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/lobbies/{code} [get]
 func GetLobby(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
@@ -98,6 +117,19 @@ type UpdateLobbyRequest struct {
 	CanvasState *models.FullCanvasState `json:"canvasState"`
 }
 
+// UpdateLobby godoc
+// @Summary Update lobby canvas state
+// @Description Updates lobby canvas state by lobby code.
+// @Tags lobbies
+// @Accept json
+// @Produce json
+// @Param code path string true "Lobby code"
+// @Param request body UpdateLobbyRequest true "Canvas update request"
+// @Success 200 {object} models.Lobby
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/lobbies/{code} [patch]
 func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPatch {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))

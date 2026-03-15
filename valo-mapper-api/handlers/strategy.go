@@ -48,6 +48,22 @@ func NewStrategyResponse(strategy *models.Strategy, lobby *models.Lobby) *Strate
 	}
 }
 
+// CreateStrategy godoc
+// @Summary Create strategy
+// @Description Saves a lobby as a strategy for the authenticated user.
+// @Tags strategies
+// @Accept json
+// @Produce json
+// @Param request body CreateStrategyRequest true "Create strategy request"
+// @Success 201 {object} StrategyResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/strategies [post]
 func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPost {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
@@ -119,6 +135,18 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 	utils.SendJSON(w, http.StatusCreated, response, middleware.GetRequestID(r))
 }
 
+// GetStrategies godoc
+// @Summary List strategies
+// @Description Lists strategies for the authenticated user, optionally filtered by folderId.
+// @Tags strategies
+// @Produce json
+// @Param folderId query int false "Folder ID filter"
+// @Success 200 {array} StrategyResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/strategies [get]
 func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodGet {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
@@ -192,6 +220,22 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth Firebase
 	utils.SendJSON(w, http.StatusOK, responses, middleware.GetRequestID(r))
 }
 
+// UpdateStrategy godoc
+// @Summary Update strategy
+// @Description Updates strategy name and/or folder assignment.
+// @Tags strategies
+// @Accept json
+// @Produce json
+// @Param id path int true "Strategy ID"
+// @Param request body UpdateStrategyRequest true "Update strategy request"
+// @Success 200 {object} StrategyResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/strategies/{id} [patch]
 func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodPatch {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
@@ -261,6 +305,19 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 	utils.SendJSON(w, http.StatusOK, response, middleware.GetRequestID(r))
 }
 
+// DeleteStrategy godoc
+// @Summary Delete strategy
+// @Description Deletes a strategy owned by the authenticated user.
+// @Tags strategies
+// @Param id path int true "Strategy ID"
+// @Success 204 {string} string "No Content"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/strategies/{id} [delete]
 func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	if r.Method != http.MethodDelete {
 		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))

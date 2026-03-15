@@ -12,6 +12,18 @@ import (
 	"github.com/stripe/stripe-go/v82"
 )
 
+// CancelSubscription godoc
+// @Summary Cancel current subscription
+// @Description Schedules cancellation at period end for the authenticated user's active subscription.
+// @Tags billing
+// @Produce json
+// @Success 200 {object} CancelSubscriptionResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/billing/cancel-subscription [post]
 func CancelSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	requestID := middleware.GetRequestID(r)
 
@@ -76,6 +88,17 @@ func CancelSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 	}, requestID)
 }
 
+// ResumeSubscription godoc
+// @Summary Resume current subscription
+// @Description Removes a scheduled cancellation from the authenticated user's active subscription.
+// @Tags billing
+// @Produce json
+// @Success 200 {object} CancelSubscriptionResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/billing/resume-subscription [post]
 func ResumeSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	requestID := middleware.GetRequestID(r)
 

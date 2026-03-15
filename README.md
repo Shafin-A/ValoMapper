@@ -111,6 +111,38 @@ Before setting up the project, ensure you have:
    go run main.go
    ```
 
+### Backend API Docs (Swagger)
+
+The Go API serves interactive Swagger UI at:
+
+```text
+http://localhost:8080/swagger/index.html
+```
+
+Generated OpenAPI files are committed under `valo-mapper-api/docs/`:
+
+- `docs.go`
+- `swagger.json`
+- `swagger.yaml`
+
+When backend handlers/routes change, regenerate docs from `valo-mapper-api/`:
+
+```sh
+go install github.com/swaggo/swag/cmd/swag@v1.16.6
+swag init -g main.go -o docs
+```
+
+### Backend CI Swagger Drift Check
+
+The Go CI workflow validates that generated Swagger files are up to date. It regenerates docs and fails if `valo-mapper-api/docs/docs.go`, `valo-mapper-api/docs/swagger.json`, or `valo-mapper-api/docs/swagger.yaml` would change.
+
+Equivalent local validation:
+
+```sh
+swag init -g main.go -o docs
+git diff --exit-code -- docs/docs.go docs/swagger.json docs/swagger.yaml
+```
+
 ## Deployment
 
 ValoMapper is configured for deployment on Fly.io using Docker containers.

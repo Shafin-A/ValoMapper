@@ -1,0 +1,1205 @@
+basePath: /
+definitions:
+  handlers.BillingPlanPriceResponse:
+    properties:
+      currency:
+        type: string
+      interval:
+        type: string
+      intervalCount:
+        type: integer
+      plan:
+        type: string
+      priceId:
+        type: string
+      unitAmount:
+        type: integer
+      unitAmountDecimal:
+        type: string
+    type: object
+  handlers.BillingPlansResponse:
+    properties:
+      monthly:
+        $ref: '#/definitions/handlers.BillingPlanPriceResponse'
+      yearly:
+        $ref: '#/definitions/handlers.BillingPlanPriceResponse'
+    type: object
+  handlers.CancelSubscriptionResponse:
+    properties:
+      cancelAtPeriodEnd:
+        type: boolean
+      status:
+        type: string
+      subscriptionId:
+        type: string
+    type: object
+  handlers.CreateCheckoutSessionRequest:
+    properties:
+      plan:
+        type: string
+      returnTo:
+        type: string
+    type: object
+  handlers.CreateCheckoutSessionResponse:
+    properties:
+      sessionId:
+        type: string
+      url:
+        type: string
+    type: object
+  handlers.CreateFolderRequest:
+    properties:
+      name:
+        type: string
+      parentFolderId:
+        type: integer
+    type: object
+  handlers.CreateStrategyRequest:
+    properties:
+      folderId:
+        type: integer
+      lobbyCode:
+        type: string
+      name:
+        type: string
+    type: object
+  handlers.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      firebaseUid:
+        type: string
+      name:
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      error:
+        type: string
+      requestId:
+        type: string
+    type: object
+  handlers.RSOCallbackResponse:
+    properties:
+      customToken:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  handlers.RSORequest:
+    properties:
+      code:
+        type: string
+    type: object
+  handlers.StrategyResponse:
+    properties:
+      folderId:
+        type: integer
+      id:
+        type: integer
+      lobbyCode:
+        type: string
+      name:
+        type: string
+      selectedMapId:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: integer
+    type: object
+  handlers.StripeWebhookResponse:
+    properties:
+      eventId:
+        type: string
+      eventType:
+        type: string
+      reason:
+        type: string
+      status:
+        type: string
+    type: object
+  handlers.UpdateFolderRequest:
+    properties:
+      name:
+        type: string
+      parentFolderId:
+        type: integer
+    type: object
+  handlers.UpdateLobbyRequest:
+    properties:
+      canvasState:
+        $ref: '#/definitions/models.FullCanvasState'
+    type: object
+  handlers.UpdateStrategyRequest:
+    properties:
+      folderId:
+        type: integer
+      name:
+        type: string
+    type: object
+  handlers.UpdateUserRequest:
+    properties:
+      name:
+        type: string
+      tourCompleted:
+        type: boolean
+    type: object
+  handlers.UpdateUserSubscriptionRequest:
+    properties:
+      firebaseUid:
+        type: string
+      isSubscribed:
+        type: boolean
+      userId:
+        type: integer
+    type: object
+  models.CanvasAbility:
+    properties:
+      action:
+        type: string
+      currentLength:
+        type: number
+      currentPath:
+        items:
+          $ref: '#/definitions/models.Position'
+        type: array
+      currentRotation:
+        type: number
+      id:
+        type: string
+      isAlly:
+        type: boolean
+      name:
+        type: string
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  models.CanvasAgent:
+    properties:
+      id:
+        type: string
+      isAlly:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  models.CanvasConnectingLine:
+    properties:
+      fromId:
+        type: string
+      id:
+        type: string
+      notes:
+        type: string
+      strokeColor:
+        type: string
+      strokeWidth:
+        type: number
+      toId:
+        type: string
+      uploadedImages:
+        items:
+          type: string
+        type: array
+      youtubeLink:
+        type: string
+    type: object
+  models.CanvasDrawLine:
+    properties:
+      color:
+        type: string
+      id:
+        type: string
+      isArrowHead:
+        type: boolean
+      isDashed:
+        type: boolean
+      points:
+        items:
+          $ref: '#/definitions/models.Position'
+        type: array
+      size:
+        type: number
+      tool:
+        type: string
+    type: object
+  models.CanvasImage:
+    properties:
+      height:
+        type: number
+      id:
+        type: string
+      src:
+        type: string
+      width:
+        type: number
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  models.CanvasText:
+    properties:
+      height:
+        type: number
+      id:
+        type: string
+      text:
+        type: string
+      width:
+        type: number
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  models.CanvasToolIcon:
+    properties:
+      height:
+        type: number
+      id:
+        type: string
+      width:
+        type: number
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  models.Folder:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      parentFolderId:
+        type: integer
+      updatedAt:
+        type: string
+      userId:
+        type: integer
+    type: object
+  models.FullCanvasState:
+    properties:
+      abilitiesSettings:
+        $ref: '#/definitions/models.IconSettings'
+      agentsSettings:
+        $ref: '#/definitions/models.IconSettings'
+      currentPhaseIndex:
+        type: integer
+      editedPhases:
+        items:
+          type: integer
+        type: array
+      mapSide:
+        type: string
+      phases:
+        items:
+          $ref: '#/definitions/models.PhaseState'
+        type: array
+      selectedMap:
+        $ref: '#/definitions/models.MapOption'
+    type: object
+  models.IconSettings:
+    properties:
+      allyColor:
+        type: string
+      borderOpacity:
+        type: number
+      borderWidth:
+        type: integer
+      enemyColor:
+        type: string
+      radius:
+        type: integer
+      scale:
+        type: integer
+    type: object
+  models.Lobby:
+    properties:
+      canvasState:
+        $ref: '#/definitions/models.FullCanvasState'
+      createdAt:
+        type: string
+      lobbyCode:
+        type: string
+      mapSide:
+        type: string
+      selectedMapId:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.MapOption:
+    properties:
+      id:
+        type: string
+      text:
+        type: string
+      textColor:
+        type: string
+    type: object
+  models.PhaseState:
+    properties:
+      abilitiesOnCanvas:
+        items:
+          $ref: '#/definitions/models.CanvasAbility'
+        type: array
+      agentsOnCanvas:
+        items:
+          $ref: '#/definitions/models.CanvasAgent'
+        type: array
+      connectingLines:
+        items:
+          $ref: '#/definitions/models.CanvasConnectingLine'
+        type: array
+      drawLines:
+        items:
+          $ref: '#/definitions/models.CanvasDrawLine'
+        type: array
+      imagesOnCanvas:
+        items:
+          $ref: '#/definitions/models.CanvasImage'
+        type: array
+      textsOnCanvas:
+        items:
+          $ref: '#/definitions/models.CanvasText'
+        type: array
+      toolIconsOnCanvas:
+        items:
+          $ref: '#/definitions/models.CanvasToolIcon'
+        type: array
+    type: object
+  models.Position:
+    properties:
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  models.User:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      emailVerified:
+        type: boolean
+      firebaseUid:
+        type: string
+      id:
+        type: integer
+      isSubscribed:
+        type: boolean
+      name:
+        type: string
+      rsoLinkedAt:
+        type: string
+      rsoSubjectId:
+        type: string
+      subscriptionEndedAt:
+        type: string
+      tourCompleted:
+        type: boolean
+      updatedAt:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API for ValoMapper backend services.
+  title: ValoMapper API
+  version: "1.0"
+paths:
+  /api/auth/rso/callback:
+    post:
+      consumes:
+      - application/json
+      description: Exchanges a Riot authorization code and returns a Firebase custom
+        token plus user data.
+      parameters:
+      - description: RSO authorization code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RSORequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RSOCallbackResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Exchange RSO code for Firebase custom token
+      tags:
+      - auth
+  /api/billing/cancel-subscription:
+    post:
+      description: Schedules cancellation at period end for the authenticated user's
+        active subscription.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.CancelSubscriptionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel current subscription
+      tags:
+      - billing
+  /api/billing/checkout-session:
+    post:
+      consumes:
+      - application/json
+      description: Creates a Stripe checkout session for a monthly or yearly plan.
+      parameters:
+      - description: Checkout request
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/handlers.CreateCheckoutSessionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.CreateCheckoutSessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Stripe checkout session
+      tags:
+      - billing
+  /api/billing/plans:
+    get:
+      description: Returns Stripe-backed monthly and yearly pricing details.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.BillingPlansResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get billing plans
+      tags:
+      - billing
+  /api/billing/resume-subscription:
+    post:
+      description: Removes a scheduled cancellation from the authenticated user's
+        active subscription.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.CancelSubscriptionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Resume current subscription
+      tags:
+      - billing
+  /api/billing/webhook:
+    post:
+      consumes:
+      - application/json
+      description: Validates and processes Stripe subscription-related webhook events.
+      parameters:
+      - description: Stripe webhook signature
+        in: header
+        name: Stripe-Signature
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.StripeWebhookResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Stripe webhook receiver
+      tags:
+      - billing
+  /api/folders:
+    get:
+      description: Lists folders for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Folder'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List folders
+      tags:
+      - folders
+    post:
+      consumes:
+      - application/json
+      description: Creates a folder for the authenticated user.
+      parameters:
+      - description: Create folder request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateFolderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Folder'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create folder
+      tags:
+      - folders
+  /api/folders/{id}:
+    delete:
+      description: Deletes a folder owned by the authenticated user.
+      parameters:
+      - description: Folder ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete folder
+      tags:
+      - folders
+    patch:
+      consumes:
+      - application/json
+      description: Updates folder name or parent for the authenticated user.
+      parameters:
+      - description: Folder ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update folder request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateFolderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Folder'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update folder
+      tags:
+      - folders
+  /api/lobbies:
+    post:
+      description: Creates a new lobby initialized with default map and empty phases.
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Lobby'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Create lobby
+      tags:
+      - lobbies
+  /api/lobbies/{code}:
+    get:
+      description: Retrieves lobby and full canvas phases by lobby code.
+      parameters:
+      - description: Lobby code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Lobby'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get lobby
+      tags:
+      - lobbies
+    patch:
+      consumes:
+      - application/json
+      description: Updates lobby canvas state by lobby code.
+      parameters:
+      - description: Lobby code
+        in: path
+        name: code
+        required: true
+        type: string
+      - description: Canvas update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateLobbyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Lobby'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Update lobby canvas state
+      tags:
+      - lobbies
+  /api/strategies:
+    get:
+      description: Lists strategies for the authenticated user, optionally filtered
+        by folderId.
+      parameters:
+      - description: Folder ID filter
+        in: query
+        name: folderId
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.StrategyResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List strategies
+      tags:
+      - strategies
+    post:
+      consumes:
+      - application/json
+      description: Saves a lobby as a strategy for the authenticated user.
+      parameters:
+      - description: Create strategy request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateStrategyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.StrategyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create strategy
+      tags:
+      - strategies
+  /api/strategies/{id}:
+    delete:
+      description: Deletes a strategy owned by the authenticated user.
+      parameters:
+      - description: Strategy ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete strategy
+      tags:
+      - strategies
+    patch:
+      consumes:
+      - application/json
+      description: Updates strategy name and/or folder assignment.
+      parameters:
+      - description: Strategy ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update strategy request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateStrategyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.StrategyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update strategy
+      tags:
+      - strategies
+  /api/users:
+    post:
+      consumes:
+      - application/json
+      description: Creates a user profile linked to the authenticated Firebase UID.
+      parameters:
+      - description: Create user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create user profile
+      tags:
+      - users
+  /api/users/me:
+    delete:
+      description: Deletes the authenticated user from the application and Firebase.
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete current user
+      tags:
+      - users
+    get:
+      description: Returns the authenticated user's profile.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Updates profile fields for the authenticated user.
+      parameters:
+      - description: Update user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update current user
+      tags:
+      - users
+  /api/users/subscription:
+    patch:
+      consumes:
+      - application/json
+      description: Internal endpoint to update a user's subscription status by userId
+        or firebaseUid.
+      parameters:
+      - description: Internal API key
+        in: header
+        name: X-Internal-API-Key
+        required: true
+        type: string
+      - description: Subscription update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateUserSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - InternalAPIKey: []
+      summary: Update user subscription status
+      tags:
+      - users
+  /health:
+    get:
+      description: Checks API and database connectivity.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "503":
+          description: Database unavailable
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - health
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Firebase bearer token in the form "Bearer <token>".
+    in: header
+    name: Authorization
+    type: apiKey
+  InternalAPIKey:
+    description: Internal service API key.
+    in: header
+    name: X-Internal-API-Key
+    type: apiKey
+swagger: "2.0"

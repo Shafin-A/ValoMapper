@@ -15,6 +15,17 @@ import (
 	"github.com/stripe/stripe-go/v82/webhook"
 )
 
+// HandleStripeWebhook godoc
+// @Summary Stripe webhook receiver
+// @Description Validates and processes Stripe subscription-related webhook events.
+// @Tags billing
+// @Accept json
+// @Produce json
+// @Param Stripe-Signature header string true "Stripe webhook signature"
+// @Success 200 {object} StripeWebhookResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/billing/webhook [post]
 func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 

@@ -17,11 +17,28 @@ import (
 	"valo-mapper-api/scheduler"
 	"valo-mapper-api/websocket"
 
+	_ "valo-mapper-api/docs"
+
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"golang.org/x/time/rate"
 )
+
+// @title ValoMapper API
+// @version 1.0
+// @description API for ValoMapper backend services.
+// @BasePath /
+// @schemes http https
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Firebase bearer token in the form "Bearer <token>".
+// @securityDefinitions.apikey InternalAPIKey
+// @in header
+// @name X-Internal-API-Key
+// @description Internal service API key.
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -84,6 +101,7 @@ func main() {
 
 	r := mux.NewRouter()
 	routes.SetupRoutes(r, firebaseAuth, hub)
+	r.PathPrefix("/swagger/").HandlerFunc(httpSwagger.WrapHandler)
 
 	rateLimiter := middleware.NewIPRateLimiter(rate.Limit(10), 20)
 
