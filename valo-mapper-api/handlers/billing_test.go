@@ -275,6 +275,111 @@ func TestCreateCheckoutSession(t *testing.T) {
 	})
 }
 
+func TestGetBillingPlans(t *testing.T) {
+	originalGetPriceFn := getStripePriceFn
+	defer func() {
+		getStripePriceFn = originalGetPriceFn
+	}()
+
+	originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
+	originalMonthly, hadMonthly := os.LookupEnv("STRIPE_PRICE_ID_MONTHLY")
+	originalYearly, hadYearly := os.LookupEnv("STRIPE_PRICE_ID_YEARLY")
+
+	defer func() {
+		if hadSecret {
+			_ = os.Setenv("STRIPE_SECRET_KEY", originalSecret)
+		} else {
+			_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		}
+
+		if hadMonthly {
+			_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", originalMonthly)
+		} else {
+			_ = os.Unsetenv("STRIPE_PRICE_ID_MONTHLY")
+		}
+
+		if hadYearly {
+			_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", originalYearly)
+		} else {
+			_ = os.Unsetenv("STRIPE_PRICE_ID_YEARLY")
+		}
+	}()
+
+	t.Run("returns monthly and yearly plans", func(t *testing.T) {
+		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_checkout")
+		_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_monthly_test")
+		_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", "price_yearly_test")
+
+		getStripePriceFn = func(id string, params *stripe.PriceParams) (*stripe.Price, error) {
+			switch id {
+			case "price_monthly_test":
+				return &stripe.Price{
+					ID:                id,
+					Currency:          stripe.CurrencyUSD,
+					UnitAmount:        499,
+					UnitAmountDecimal: 499,
+					Recurring: &stripe.PriceRecurring{
+						Interval:      stripe.PriceRecurringIntervalMonth,
+						IntervalCount: 1,
+					},
+				}, nil
+			case "price_yearly_test":
+				return &stripe.Price{
+					ID:                id,
+					Currency:          stripe.CurrencyUSD,
+					UnitAmount:        4499,
+					UnitAmountDecimal: 4499,
+					Recurring: &stripe.PriceRecurring{
+						Interval:      stripe.PriceRecurringIntervalYear,
+						IntervalCount: 1,
+					},
+				}, nil
+			default:
+				return nil, fmt.Errorf("unexpected price id: %s", id)
+			}
+		}
+
+		req := httptest.NewRequest(http.MethodGet, "/api/billing/plans", nil)
+		w := httptest.NewRecorder()
+
+		GetBillingPlans(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response BillingPlansResponse
+		testutils.ParseJSONResponse(t, w, &response)
+
+		assert.Equal(t, "monthly", response.Monthly.Plan)
+		assert.Equal(t, "price_monthly_test", response.Monthly.PriceID)
+		assert.Equal(t, "USD", response.Monthly.Currency)
+		assert.Equal(t, int64(499), response.Monthly.UnitAmount)
+		assert.Equal(t, "month", response.Monthly.Interval)
+
+		assert.Equal(t, "yearly", response.Yearly.Plan)
+		assert.Equal(t, "price_yearly_test", response.Yearly.PriceID)
+		assert.Equal(t, "USD", response.Yearly.Currency)
+		assert.Equal(t, int64(4499), response.Yearly.UnitAmount)
+		assert.Equal(t, "year", response.Yearly.Interval)
+	})
+
+	t.Run("returns internal error when stripe config is missing", func(t *testing.T) {
+		_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_monthly_test")
+		_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", "price_yearly_test")
+
+		getStripePriceFn = func(id string, params *stripe.PriceParams) (*stripe.Price, error) {
+			return &stripe.Price{}, nil
+		}
+
+		req := httptest.NewRequest(http.MethodGet, "/api/billing/plans", nil)
+		w := httptest.NewRecorder()
+
+		GetBillingPlans(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
 func TestCancelSubscription(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")

@@ -21,11 +21,13 @@ import (
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/checkout/session"
 	"github.com/stripe/stripe-go/v82/customer"
+	"github.com/stripe/stripe-go/v82/price"
 	"github.com/stripe/stripe-go/v82/subscription"
 	"github.com/stripe/stripe-go/v82/webhook"
 )
 
 var createStripeCheckoutSessionFn = session.New
+var getStripePriceFn = price.Get
 var updateStripeSubscriptionFn = subscription.Update
 var findCancelableStripeSubscriptionIDForUserFn = findCancelableStripeSubscriptionIDForUser
 var findScheduledCancellationSubscriptionIDForUserFn = findScheduledCancellationSubscriptionIDForUser
@@ -58,6 +60,79 @@ type CancelSubscriptionResponse struct {
 	SubscriptionID    string `json:"subscriptionId"`
 	Status            string `json:"status"`
 	CancelAtPeriodEnd bool   `json:"cancelAtPeriodEnd"`
+}
+
+type BillingPlanPriceResponse struct {
+	Plan              string `json:"plan"`
+	PriceID           string `json:"priceId"`
+	Currency          string `json:"currency"`
+	UnitAmount        int64  `json:"unitAmount"`
+	UnitAmountDecimal string `json:"unitAmountDecimal"`
+	Interval          string `json:"interval"`
+	IntervalCount     int64  `json:"intervalCount"`
+}
+
+type BillingPlansResponse struct {
+	Monthly BillingPlanPriceResponse `json:"monthly"`
+	Yearly  BillingPlanPriceResponse `json:"yearly"`
+}
+
+func GetBillingPlans(w http.ResponseWriter, r *http.Request) {
+	requestID := middleware.GetRequestID(r)
+
+	if r.Method != http.MethodGet {
+		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), requestID)
+		return
+	}
+
+	stripeSecretKey := strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
+	if stripeSecretKey == "" {
+		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
+		return
+	}
+
+	monthlyPriceID, err := checkoutPriceIDForPlan(checkoutPlanMonthly)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
+		return
+	}
+
+	yearlyPriceID, err := checkoutPriceIDForPlan(checkoutPlanYearly)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
+		return
+	}
+
+	stripe.Key = stripeSecretKey
+
+	monthlyPrice, err := getStripePriceFn(monthlyPriceID, nil)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Unable to fetch Stripe billing plans", err), requestID)
+		return
+	}
+
+	yearlyPrice, err := getStripePriceFn(yearlyPriceID, nil)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Unable to fetch Stripe billing plans", err), requestID)
+		return
+	}
+
+	monthlyResponse, err := buildBillingPlanPriceResponse(checkoutPlanMonthly, monthlyPrice)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Stripe billing plan configuration is invalid", err), requestID)
+		return
+	}
+
+	yearlyResponse, err := buildBillingPlanPriceResponse(checkoutPlanYearly, yearlyPrice)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Stripe billing plan configuration is invalid", err), requestID)
+		return
+	}
+
+	utils.SendJSON(w, http.StatusOK, BillingPlansResponse{
+		Monthly: monthlyResponse,
+		Yearly:  yearlyResponse,
+	}, requestID)
 }
 
 func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
@@ -559,6 +634,36 @@ func checkoutPriceIDForPlan(plan checkoutPlan) (string, error) {
 	default:
 		return "", errUnsupportedCheckoutPlan
 	}
+}
+
+func buildBillingPlanPriceResponse(plan checkoutPlan, stripePrice *stripe.Price) (BillingPlanPriceResponse, error) {
+	if stripePrice == nil {
+		return BillingPlanPriceResponse{}, errCheckoutPlanUnavailable
+	}
+
+	if stripePrice.Recurring == nil {
+		return BillingPlanPriceResponse{}, errCheckoutPlanUnavailable
+	}
+
+	expectedInterval := string(stripe.PriceRecurringIntervalMonth)
+	if plan == checkoutPlanYearly {
+		expectedInterval = string(stripe.PriceRecurringIntervalYear)
+	}
+
+	actualInterval := string(stripePrice.Recurring.Interval)
+	if actualInterval != expectedInterval {
+		return BillingPlanPriceResponse{}, errCheckoutPlanUnavailable
+	}
+
+	return BillingPlanPriceResponse{
+		Plan:              string(plan),
+		PriceID:           strings.TrimSpace(stripePrice.ID),
+		Currency:          strings.ToUpper(string(stripePrice.Currency)),
+		UnitAmount:        stripePrice.UnitAmount,
+		UnitAmountDecimal: strconv.FormatFloat(stripePrice.UnitAmountDecimal, 'f', -1, 64),
+		Interval:          actualInterval,
+		IntervalCount:     stripePrice.Recurring.IntervalCount,
+	}, nil
 }
 
 func sanitizeCheckoutReturnTo(raw string) string {

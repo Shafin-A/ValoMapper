@@ -16,6 +16,10 @@ func RegisterBillingRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 		handlers.CreateCheckoutSession(w, r, authClient)
 	}).Methods("POST")
 
+	billing.HandleFunc("/plans", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetBillingPlans(w, r)
+	}).Methods("GET")
+
 	billing.HandleFunc("/cancel-subscription", func(w http.ResponseWriter, r *http.Request) {
 		handlers.CancelSubscription(w, r, authClient)
 	}).Methods("POST")

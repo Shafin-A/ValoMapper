@@ -23,8 +23,10 @@ import { useCreateCheckoutSession } from "@/hooks/api/use-create-checkout-sessio
 import {
   CHECKOUT_PLAN_OPTIONS,
   DEFAULT_CHECKOUT_PLAN,
+  type CheckoutPlanOption,
   type CheckoutPlan,
 } from "@/lib/consts";
+import { useBillingPlans } from "@/hooks/api/use-billing-plans";
 
 interface CheckoutPlanDialogProps {
   returnToPath: string;
@@ -42,13 +44,58 @@ export const CheckoutPlanDialog = ({
 
   const { mutate: createCheckoutSession, isPending } =
     useCreateCheckoutSession();
+  const { data: billingPlans } = useBillingPlans();
+
+  const resolvedPlanOptions = useMemo<CheckoutPlanOption[]>(() => {
+    const formatPriceLabel = (
+      unitAmount: number,
+      currency: string,
+      interval: string,
+      intervalCount: number,
+    ) => {
+      const amount = unitAmount / 100;
+      const formattedAmount = new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: currency.toUpperCase(),
+      }).format(amount);
+
+      if (intervalCount > 1) {
+        return `${formattedAmount}/${intervalCount} ${interval}s`;
+      }
+
+      return `${formattedAmount}/${interval}`;
+    };
+
+    const planMap = {
+      monthly: billingPlans?.monthly,
+      yearly: billingPlans?.yearly,
+    };
+
+    return CHECKOUT_PLAN_OPTIONS.map((option) => {
+      const livePlan = planMap[option.id];
+      if (!livePlan) {
+        return option;
+      }
+
+      return {
+        ...option,
+        priceLabel: formatPriceLabel(
+          livePlan.unitAmount,
+          livePlan.currency,
+          livePlan.interval,
+          livePlan.intervalCount,
+        ),
+        currencyCode: livePlan.currency.toUpperCase(),
+      };
+    });
+  }, [billingPlans]);
 
   const selectedPlanOption = useMemo(() => {
     return (
-      CHECKOUT_PLAN_OPTIONS.find((option) => option.id === selectedPlan) ??
-      CHECKOUT_PLAN_OPTIONS[0]
+      resolvedPlanOptions.find((option) => option.id === selectedPlan) ??
+      resolvedPlanOptions[0]
     );
-  }, [selectedPlan]);
+  }, [selectedPlan, resolvedPlanOptions]);
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
@@ -86,7 +133,7 @@ export const CheckoutPlanDialog = ({
                 <SelectValue placeholder="Select a plan" />
               </SelectTrigger>
               <SelectContent>
-                {CHECKOUT_PLAN_OPTIONS.map((option) => (
+                {resolvedPlanOptions.map((option) => (
                   <SelectItem key={option.id} value={option.id}>
                     {option.label} ({option.priceLabel})
                   </SelectItem>
