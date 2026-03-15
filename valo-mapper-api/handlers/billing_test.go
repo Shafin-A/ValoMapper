@@ -225,6 +225,39 @@ func TestCreateCheckoutSession(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
+	t.Run("rejects checkout when user already subscribed", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-already-subscribed")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+			return &stripe.Price{ID: "price_should_not_be_used"}, nil
+		}
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+			return &stripe.CheckoutSession{ID: "should-not-run"}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", map[string]string{
+			"plan": "monthly",
+		}, "valid-token")
+		w := httptest.NewRecorder()
+
+		CreateCheckoutSession(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusConflict, w.Code)
+	})
+
 	t.Run("ignores invalid returnTo values", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-3")
 

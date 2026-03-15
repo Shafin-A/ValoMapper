@@ -139,6 +139,11 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		return
 	}
 
+	if user.IsSubscribed {
+		utils.SendJSONError(w, utils.NewConflict("Active subscription already exists", nil), requestID)
+		return
+	}
+
 	checkoutRequest, err := parseCreateCheckoutSessionRequest(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), requestID)
