@@ -91,6 +91,11 @@ func getIP(r *http.Request) string {
 func RateLimitMiddleware(limiter *IPRateLimiter) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/api/billing/webhook" || r.URL.Path == "/api/billing/webhook/" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			ip := getIP(r)
 			ipLimiter := limiter.GetLimiter(ip)
 

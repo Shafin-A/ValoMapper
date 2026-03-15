@@ -139,3 +139,22 @@ func TestRateLimitMiddleware_RetryAfterHeader(t *testing.T) {
 		t.Error("expected Retry-After header on rate limited response")
 	}
 }
+
+func TestRateLimitMiddleware_ExemptsStripeWebhook(t *testing.T) {
+	limiter := NewIPRateLimiter(rate.Limit(1), 1)
+
+	handler := RateLimitMiddleware(limiter)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	for i := 0; i < 3; i++ {
+		req := httptest.NewRequest("POST", "/api/billing/webhook", nil)
+		req.RemoteAddr = "10.10.10.10:1234"
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Fatalf("webhook request %d expected status 200, got %d", i+1, rr.Code)
+		}
+	}
+}
