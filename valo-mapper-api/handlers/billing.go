@@ -21,7 +21,6 @@ import (
 
 	"github.com/stripe/stripe-go/v82"
 	"github.com/stripe/stripe-go/v82/checkout/session"
-	"github.com/stripe/stripe-go/v82/customer"
 	"github.com/stripe/stripe-go/v82/price"
 	"github.com/stripe/stripe-go/v82/subscription"
 	"github.com/stripe/stripe-go/v82/webhook"
@@ -33,10 +32,9 @@ var updateStripeSubscriptionFn = subscription.Update
 var findCancelableStripeSubscriptionIDForUserFn = findCancelableStripeSubscriptionIDForUser
 var findScheduledCancellationSubscriptionIDForUserFn = findScheduledCancellationSubscriptionIDForUser
 
-var errStripeCustomerNotFound = errors.New("stripe-customer-not-found")
+var errStripeCustomerIDMissing = errors.New("stripe-customer-id-missing")
 var errStripeSubscriptionNotFound = errors.New("stripe-subscription-not-found")
 var errStripeScheduledCancellationNotFound = errors.New("stripe-scheduled-cancellation-not-found")
-var errUserEmailMissing = errors.New("user-email-missing")
 var errUnsupportedCheckoutPlan = errors.New("unsupported-checkout-plan")
 var errCheckoutPlanUnavailable = errors.New("checkout-plan-unavailable")
 
@@ -203,10 +201,10 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		},
 	}
 
-	if user.Email != nil {
-		email := strings.TrimSpace(*user.Email)
-		if email != "" {
-			params.CustomerEmail = stripe.String(email)
+	if user.StripeCustomerID != nil {
+		stripeCustomerID := strings.TrimSpace(*user.StripeCustomerID)
+		if stripeCustomerID != "" {
+			params.Customer = stripe.String(stripeCustomerID)
 		}
 	}
 
@@ -252,9 +250,7 @@ func CancelSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 	subscriptionID, err := findCancelableStripeSubscriptionIDForUserFn(user)
 	if err != nil {
 		switch {
-		case errors.Is(err, errUserEmailMissing):
-			utils.SendJSONError(w, utils.NewBadRequest("Email is required to manage subscriptions"), requestID)
-		case errors.Is(err, errStripeCustomerNotFound), errors.Is(err, errStripeSubscriptionNotFound):
+		case errors.Is(err, errStripeCustomerIDMissing), errors.Is(err, errStripeSubscriptionNotFound):
 			utils.SendJSONError(w, utils.NewNotFound("Active Stripe subscription not found"), requestID)
 		default:
 			utils.SendJSONError(w, utils.NewInternal("Unable to locate Stripe subscription", err), requestID)
@@ -318,9 +314,7 @@ func ResumeSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 	subscriptionID, err := findScheduledCancellationSubscriptionIDForUserFn(user)
 	if err != nil {
 		switch {
-		case errors.Is(err, errUserEmailMissing):
-			utils.SendJSONError(w, utils.NewBadRequest("Email is required to manage subscriptions"), requestID)
-		case errors.Is(err, errStripeCustomerNotFound), errors.Is(err, errStripeScheduledCancellationNotFound):
+		case errors.Is(err, errStripeCustomerIDMissing), errors.Is(err, errStripeScheduledCancellationNotFound):
 			utils.SendJSONError(w, utils.NewBadRequest("No scheduled cancellation found"), requestID)
 		default:
 			utils.SendJSONError(w, utils.NewInternal("Unable to locate Stripe subscription", err), requestID)
@@ -451,6 +445,20 @@ func processStripeSubscriptionEvent(event stripe.Event) (bool, string, error) {
 		return false, reason, nil
 	}
 
+	stripeCustomerID := stripeSubscriptionCustomerID(&subscription)
+	if stripeCustomerID != "" {
+		currentStripeCustomerID := ""
+		if user.StripeCustomerID != nil {
+			currentStripeCustomerID = strings.TrimSpace(*user.StripeCustomerID)
+		}
+
+		if currentStripeCustomerID != stripeCustomerID {
+			if err := user.UpdateStripeCustomerID(stripeCustomerID); err != nil {
+				return false, "", err
+			}
+		}
+	}
+
 	isSubscribed, subscriptionEndedAt := deriveSubscriptionState(
 		event.Type,
 		subscription.Status,
@@ -464,6 +472,14 @@ func processStripeSubscriptionEvent(event stripe.Event) (bool, string, error) {
 	}
 
 	return true, "", nil
+}
+
+func stripeSubscriptionCustomerID(stripeSubscription *stripe.Subscription) string {
+	if stripeSubscription == nil || stripeSubscription.Customer == nil {
+		return ""
+	}
+
+	return strings.TrimSpace(stripeSubscription.Customer.ID)
 }
 
 func isSupportedStripeSubscriptionEvent(eventType stripe.EventType) bool {
@@ -759,52 +775,21 @@ func appendReturnToQuery(baseURL, returnTo string) string {
 }
 
 func findCancelableStripeSubscriptionIDForUser(user *models.User) (string, error) {
-	if user.Email == nil || strings.TrimSpace(*user.Email) == "" {
-		return "", errUserEmailMissing
+	if user.StripeCustomerID == nil || strings.TrimSpace(*user.StripeCustomerID) == "" {
+		return "", errStripeCustomerIDMissing
 	}
 
-	email := strings.TrimSpace(*user.Email)
-	stripeCustomerID, err := findStripeCustomerIDByEmail(email)
-	if err != nil {
-		return "", err
-	}
-
+	stripeCustomerID := strings.TrimSpace(*user.StripeCustomerID)
 	return findCancelableStripeSubscriptionIDByCustomer(stripeCustomerID)
 }
 
 func findScheduledCancellationSubscriptionIDForUser(user *models.User) (string, error) {
-	if user.Email == nil || strings.TrimSpace(*user.Email) == "" {
-		return "", errUserEmailMissing
+	if user.StripeCustomerID == nil || strings.TrimSpace(*user.StripeCustomerID) == "" {
+		return "", errStripeCustomerIDMissing
 	}
 
-	email := strings.TrimSpace(*user.Email)
-	stripeCustomerID, err := findStripeCustomerIDByEmail(email)
-	if err != nil {
-		return "", err
-	}
-
+	stripeCustomerID := strings.TrimSpace(*user.StripeCustomerID)
 	return findScheduledCancellationSubscriptionIDByCustomer(stripeCustomerID)
-}
-
-func findStripeCustomerIDByEmail(email string) (string, error) {
-	customerIter := customer.List(&stripe.CustomerListParams{
-		Email: stripe.String(email),
-	})
-
-	for customerIter.Next() {
-		stripeCustomer := customerIter.Customer()
-		if stripeCustomer == nil || stripeCustomer.Deleted {
-			continue
-		}
-
-		return stripeCustomer.ID, nil
-	}
-
-	if err := customerIter.Err(); err != nil {
-		return "", err
-	}
-
-	return "", errStripeCustomerNotFound
 }
 
 func findCancelableStripeSubscriptionIDByCustomer(stripeCustomerID string) (string, error) {

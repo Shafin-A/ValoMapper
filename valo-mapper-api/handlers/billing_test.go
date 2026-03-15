@@ -563,6 +563,41 @@ func TestCancelSubscription(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
+
+	t.Run("returns not found when stripe customer id is missing", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-cancel-uid-missing-customer")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, stripe_customer_id = NULL WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+
+		findCancelableStripeSubscriptionIDForUserFn = originalFindSubscriptionFn
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
+		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_cancel")
+		defer func() {
+			if hadSecret {
+				_ = os.Setenv("STRIPE_SECRET_KEY", originalSecret)
+				return
+			}
+			_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		}()
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		CancelSubscription(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
 }
 
 func TestResumeSubscription(t *testing.T) {
@@ -692,6 +727,42 @@ func TestResumeSubscription(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
+
+	t.Run("returns bad request when stripe customer id is missing", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-resume-uid-missing-customer")
+		futureEnd := time.Now().UTC().Add(24 * time.Hour)
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, subscription_ended_at = $2, stripe_customer_id = NULL WHERE id = $1`, testUser.ID, futureEnd)
+		assert.NoError(t, err)
+
+		findScheduledCancellationSubscriptionIDForUserFn = originalFindScheduledFn
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
+		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_resume")
+		defer func() {
+			if hadSecret {
+				_ = os.Setenv("STRIPE_SECRET_KEY", originalSecret)
+				return
+			}
+			_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		}()
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/resume-subscription", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		ResumeSubscription(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
 }
 
 func TestHandleStripeWebhook(t *testing.T) {
@@ -736,6 +807,39 @@ func TestHandleStripeWebhook(t *testing.T) {
 		assert.NotNil(t, updatedUser)
 		assert.True(t, updatedUser.IsSubscribed)
 		assert.Nil(t, updatedUser.SubscriptionEndedAt)
+	})
+
+	t.Run("stores stripe customer id from subscription event", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-customer")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET stripe_customer_id = NULL WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+
+		payload := buildStripeEventPayload(t, "", "customer.subscription.updated", map[string]any{
+			"id":                   "sub_test_customer",
+			"object":               "subscription",
+			"status":               "active",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"customer":             "cus_test_saved",
+			"metadata": map[string]string{
+				"userId": fmt.Sprintf("%d", testUser.ID),
+			},
+		})
+
+		req := newSignedStripeWebhookRequest(payload, webhookSecret)
+		w := httptest.NewRecorder()
+
+		HandleStripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			if assert.NotNil(t, updatedUser.StripeCustomerID) {
+				assert.Equal(t, "cus_test_saved", *updatedUser.StripeCustomerID)
+			}
+		}
 	})
 
 	t.Run("stores scheduled cancellation date from updated event", func(t *testing.T) {

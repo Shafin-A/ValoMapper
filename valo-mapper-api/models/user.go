@@ -24,6 +24,7 @@ type User struct {
 	TourCompleted       bool       `json:"tourCompleted"`
 	IsSubscribed        bool       `json:"isSubscribed"`
 	SubscriptionEndedAt *time.Time `json:"subscriptionEndedAt,omitempty"`
+	StripeCustomerID    *string    `json:"-"`
 	RSOSubjectID        *string    `json:"rsoSubjectId,omitempty"`
 	RSOAccessToken      *string    `json:"-"`
 	RSORefreshToken     *string    `json:"-"`
@@ -90,7 +91,7 @@ func (u *User) LoadByFirebaseUID() error {
 	}
 
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE firebase_uid = $1
@@ -103,6 +104,7 @@ func (u *User) LoadByFirebaseUID() error {
 		&u.TourCompleted,
 		&u.IsSubscribed,
 		&u.SubscriptionEndedAt,
+		&u.StripeCustomerID,
 		&u.CreatedAt,
 		&u.UpdatedAt,
 		&u.RSOSubjectID,
@@ -138,7 +140,7 @@ func GetUserByID(id int) (*User, error) {
 
 	user := &User{}
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE id = $1
@@ -151,6 +153,7 @@ func GetUserByID(id int) (*User, error) {
 		&user.TourCompleted,
 		&user.IsSubscribed,
 		&user.SubscriptionEndedAt,
+		&user.StripeCustomerID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.RSOSubjectID,
@@ -178,7 +181,7 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 
 	user := &User{}
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE rso_subject_id = $1
@@ -191,6 +194,7 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 		&user.TourCompleted,
 		&user.IsSubscribed,
 		&user.SubscriptionEndedAt,
+		&user.StripeCustomerID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.RSOSubjectID,
@@ -314,6 +318,26 @@ func (u *User) UpdateSubscriptionStatus(isSubscribed bool, subscriptionEndedAt *
 	if err == nil {
 		u.IsSubscribed = isSubscribed
 		u.SubscriptionEndedAt = subscriptionEndedAt
+	}
+
+	return err
+}
+
+func (u *User) UpdateStripeCustomerID(stripeCustomerID string) error {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	err = conn.QueryRow(context.Background(), `
+		UPDATE users
+		SET stripe_customer_id = $1, updated_at = NOW()
+		WHERE id = $2
+		RETURNING updated_at
+	`, stripeCustomerID, u.ID).Scan(&u.UpdatedAt)
+
+	if err == nil {
+		u.StripeCustomerID = &stripeCustomerID
 	}
 
 	return err
