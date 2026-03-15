@@ -7,6 +7,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCreateFolder } from "@/hooks/api/use-create-folder";
 import { CreateFolderForm } from "./create-folder-form";
 import { Plus } from "lucide-react";
@@ -14,11 +19,15 @@ import { Plus } from "lucide-react";
 interface CreateFolderPopoverProps {
   parentFolderId: number | null;
   onSuccess?: () => void;
+  disabled?: boolean;
+  disabledTooltip?: string;
 }
 
 export const CreateFolderPopover = ({
   parentFolderId,
   onSuccess,
+  disabled = false,
+  disabledTooltip = "Active subscription required to create folders",
 }: CreateFolderPopoverProps) => {
   const [open, setOpen] = useState(false);
   const { mutate: createFolder, isPending } = useCreateFolder();
@@ -34,6 +43,22 @@ export const CreateFolderPopover = ({
       },
     );
   };
+
+  if (disabled) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <Button disabled>
+              <Plus />
+              New Folder
+            </Button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{disabledTooltip}</TooltipContent>
+      </Tooltip>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

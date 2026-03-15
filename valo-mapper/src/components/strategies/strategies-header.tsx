@@ -19,6 +19,7 @@ interface StrategiesHeaderProps {
   currentFolderId: number | null;
   refetch: () => void;
   navigateToBreadcrumb: (index: number) => void;
+  canManageFolders: boolean;
   isUserLoading: boolean;
   hasValoMapperPro: boolean;
   hasScheduledCancellation: boolean;
@@ -32,6 +33,7 @@ export const StrategiesHeader = ({
   currentFolderId,
   refetch,
   navigateToBreadcrumb,
+  canManageFolders,
   isUserLoading,
   hasValoMapperPro,
   hasScheduledCancellation,
@@ -86,6 +88,8 @@ export const StrategiesHeader = ({
         <CreateFolderPopover
           parentFolderId={currentFolderId}
           onSuccess={refetch}
+          disabled={!canManageFolders}
+          disabledTooltip="Active subscription required to create folders"
         />
       </div>
 

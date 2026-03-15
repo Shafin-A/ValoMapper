@@ -7,6 +7,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { FolderPen, MoreVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -17,6 +22,8 @@ interface FolderCardProps {
   onClick?: () => void;
   onRename?: (newName: string) => void;
   onDelete?: () => void;
+  actionsDisabled?: boolean;
+  actionsDisabledTooltip?: string;
   className?: string;
 }
 
@@ -25,6 +32,8 @@ export const FolderCard = ({
   onClick,
   onRename,
   onDelete,
+  actionsDisabled = false,
+  actionsDisabledTooltip = "Active subscription required to edit folders",
   className,
 }: FolderCardProps) => {
   const [openDropdown, setOpenDropdown] = useState(false);
@@ -52,51 +61,66 @@ export const FolderCard = ({
 
       <div className="absolute inset-0 flex flex-col justify-between p-3">
         <Dialog open={openRenameDialog} onOpenChange={setOpenRenameDialog}>
-          <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                onClick={(e) => e.stopPropagation()}
-                className="self-end mt-10 rounded-full"
-              >
-                <MoreVertical size={18} />
-              </Button>
-            </DropdownMenuTrigger>
+          {actionsDisabled ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={(e) => e.stopPropagation()}
+                  className="self-end mt-10 rounded-full"
+                >
+                  <MoreVertical size={18} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{actionsDisabledTooltip}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={(e) => e.stopPropagation()}
+                  className="self-end mt-10 rounded-full"
+                >
+                  <MoreVertical size={18} />
+                </Button>
+              </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-              align="end"
-              onCloseAutoFocus={(event) => {
-                if (openRenameDialog || openDeleteDialog) {
-                  event.preventDefault(); // Prevent dropdown from stealing focus when dialog is opening
-                }
-              }}
-            >
-              <DialogTrigger asChild>
+              <DropdownMenuContent
+                align="end"
+                onCloseAutoFocus={(event) => {
+                  if (openRenameDialog || openDeleteDialog) {
+                    event.preventDefault(); // Prevent dropdown from stealing focus when dialog is opening
+                  }
+                }}
+              >
+                <DialogTrigger asChild>
+                  <DropdownMenuItem
+                    onClick={(e) => e.stopPropagation()}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setOpenRenameDialog(true);
+                      setOpenDropdown(false);
+                    }}
+                  >
+                    <FolderPen />
+                    Rename
+                  </DropdownMenuItem>
+                </DialogTrigger>
                 <DropdownMenuItem
                   onClick={(e) => e.stopPropagation()}
                   onSelect={(e) => {
                     e.preventDefault();
-                    setOpenRenameDialog(true);
+                    setOpenDeleteDialog(true);
                     setOpenDropdown(false);
                   }}
                 >
-                  <FolderPen />
-                  Rename
+                  <Trash2 className="text-destructive" />
+                  <span className="text-destructive">Delete</span>
                 </DropdownMenuItem>
-              </DialogTrigger>
-              <DropdownMenuItem
-                onClick={(e) => e.stopPropagation()}
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setOpenDeleteDialog(true);
-                  setOpenDropdown(false);
-                }}
-              >
-                <Trash2 className="text-destructive" />
-                <span className="text-destructive">Delete</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <RenameDialog
             currentName={name}

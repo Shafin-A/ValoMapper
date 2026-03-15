@@ -19,11 +19,13 @@ import { StrategyItem } from "./strategy-item";
 interface StrategiesContentProps {
   currentItems: StrategyData[];
   navigateToFolder: (folderId: string, folderName: string) => void;
+  canManageFolders: boolean;
 }
 
 export const StrategiesContent = ({
   currentItems,
   navigateToFolder,
+  canManageFolders,
 }: StrategiesContentProps) => {
   const { mutate: updateFolder } = useUpdateFolder();
   const { mutate: updateStrategy } = useUpdateStrategy();
@@ -53,6 +55,8 @@ export const StrategiesContent = ({
                 key={item.id}
                 name={item.name}
                 onClick={() => navigateToFolder(item.id, item.name)}
+                actionsDisabled={!canManageFolders}
+                actionsDisabledTooltip="Active subscription required to rename or delete folders"
                 onRename={(newName) =>
                   updateFolder({
                     folderId: convertFolderOrStrategyId(item.id, "folder"),

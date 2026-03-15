@@ -46,6 +46,7 @@ const MyStrategiesPage = () => {
   const treeData = data || [];
   const strategyCount = countStrategies(treeData);
   const hasValoMapperPro = Boolean(userProfile?.isSubscribed);
+  const canManageFolders = !isUserProfileLoading && hasValoMapperPro;
 
   const subscriptionEndsAt = userProfile?.subscriptionEndedAt
     ? new Date(userProfile.subscriptionEndedAt)
@@ -191,6 +192,7 @@ const MyStrategiesPage = () => {
             currentFolderId={currentFolderId}
             refetch={refetch}
             navigateToBreadcrumb={navigateToBreadcrumb}
+            canManageFolders={canManageFolders}
             isUserLoading={isUserProfileLoading}
             hasValoMapperPro={hasValoMapperPro}
             hasScheduledCancellation={hasScheduledCancellation}
@@ -251,6 +253,7 @@ const MyStrategiesPage = () => {
           <StrategiesContent
             currentItems={currentItems}
             navigateToFolder={navigateToFolder}
+            canManageFolders={canManageFolders}
           />
         </Suspense>
       </div>
