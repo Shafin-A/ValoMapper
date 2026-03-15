@@ -2,14 +2,14 @@ export const PrivacyPolicy = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Mar 10th, 2026
+        <strong>Last Updated:</strong> Mar 15th, 2026
       </div>
 
       <p>
         ValoMapper (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is a
-        free website that helps players create and share strategies for
-        VALORANT. This Privacy Policy explains what information we collect, how
-        we use it, and the choices you have.
+        website that helps players create and share strategies for VALORANT.
+        This Privacy Policy explains what information we collect, how we use it,
+        and the choices you have.
       </p>
 
       <p>
@@ -56,6 +56,26 @@ export const PrivacyPolicy = () => {
             refresh, and identity tokens are stored server-side and are used
             strictly for authentication and optional future features. These
             tokens are not exposed in browser-facing API responses.
+          </p>
+
+          <p className="font-semibold mb-1">Billing Information</p>
+          <p className="mb-2">
+            If you purchase a paid subscription, we store limited billing and
+            subscription records, including:
+          </p>
+          <ul className="list-disc list-inside space-y-1 ml-4 mb-3">
+            <li>Selected plan and billing interval</li>
+            <li>Stripe customer ID and Stripe subscription ID</li>
+            <li>Subscription status and relevant billing-period timestamps</li>
+            <li>
+              Limited Stripe metadata used to associate a subscription with your
+              ValoMapper account
+            </li>
+          </ul>
+          <p className="mb-3">
+            Payment card details are collected and processed directly by Stripe.
+            ValoMapper does not store full payment card numbers or card security
+            codes.
           </p>
 
           <p className="font-semibold mb-1">Strategy Content</p>
@@ -139,6 +159,7 @@ export const PrivacyPolicy = () => {
             Send account-related communications (such as email verification via
             Firebase)
           </li>
+          <li>Process subscriptions and manage billing state</li>
           <li>Implement security measures and rate limiting</li>
         </ul>
         <p className="font-semibold">
@@ -171,6 +192,10 @@ export const PrivacyPolicy = () => {
               authentication and account management
             </li>
             <li>
+              <strong>Stripe</strong> - for payment processing and subscription
+              management
+            </li>
+            <li>
               <strong>PostgreSQL Database</strong> (Fly.io Postgres) - for
               storing user references and lobby data
             </li>
@@ -181,6 +206,10 @@ export const PrivacyPolicy = () => {
           <p className="mb-3">
             These providers have access only to information necessary to perform
             their services and are obligated to protect your data.
+          </p>
+          <p className="mb-3">
+            When you start checkout, billing information is submitted directly
+            to Stripe and handled under Stripe&apos;s own privacy terms.
           </p>
 
           <p className="font-semibold mb-1">Legal Requirements</p>

@@ -2,7 +2,7 @@ export const TermsOfService = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Mar 9th, 2026
+        <strong>Last Updated:</strong> Mar 15th, 2026
       </div>
 
       <p>
@@ -30,10 +30,10 @@ export const TermsOfService = () => {
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">2. Description of Service</h3>
         <p>
-          ValoMapper is a free online tool that allows users to create, save,
-          and share strategic maps and plans for the game VALORANT. The Service
-          includes features for drawing, annotating, and organizing game
-          strategies through shareable lobbies.
+          ValoMapper is an online tool that allows users to create, save, and
+          share strategic maps and plans for the game VALORANT. The Service
+          includes free and paid features for drawing, annotating, and
+          organizing game strategies through shareable lobbies.
         </p>
         <p className="font-semibold">
           ValoMapper is an independent fan-made tool and is not endorsed by,
@@ -161,8 +161,9 @@ export const TermsOfService = () => {
           <p className="font-semibold mb-1">5.5 Reporting Violations</p>
           <p>
             If you encounter content that violates these Terms or is otherwise
-            inappropriate, please report it to us at [Your Contact Email]. We
-            will review reports and take appropriate action as necessary.
+            inappropriate, please report it to us at
+            valomappercontact@gmail.com. We will review reports and take
+            appropriate action as necessary.
           </p>
         </div>
       </section>
@@ -324,6 +325,11 @@ export const TermsOfService = () => {
           content, goods, or services available on or through any such websites
           or services.
         </p>
+        <p>
+          Payment processing and subscription management for paid features are
+          provided by Stripe. By purchasing a subscription, you also agree to
+          Stripe&apos;s applicable terms and policies.
+        </p>
       </section>
 
       <section className="space-y-4">
@@ -334,16 +340,55 @@ export const TermsOfService = () => {
           impose limits on certain features or restrict access to parts or all
           of the Service without notice or liability.
         </p>
-        <p>
-          ValoMapper is currently a free service. We reserve the right to
-          introduce paid features, subscriptions, or other monetization methods
-          in the future. If we do so, we will provide notice and update these
-          Terms accordingly.
-        </p>
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">13. Changes to Terms</h3>
+        <h3 className="text-lg font-semibold">13. Billing and Subscriptions</h3>
+        <div>
+          <p className="font-semibold mb-1">13.1 Billing Provider</p>
+          <p className="mb-3">
+            Paid subscriptions are processed by Stripe. We do not store full
+            payment card numbers or card security codes on ValoMapper servers.
+          </p>
+
+          <p className="font-semibold mb-1">13.2 Recurring Billing</p>
+          <p className="mb-3">
+            ValoMapper Pro subscriptions renew automatically on a recurring
+            monthly or yearly basis (depending on your selected plan) unless you
+            cancel before renewal.
+          </p>
+
+          <p className="font-semibold mb-1">13.3 Cancellation</p>
+          <p className="mb-3">
+            You can cancel your subscription from your account profile. Unless
+            required otherwise by applicable law, cancellation takes effect at
+            the end of your current billing period, and access to paid features
+            continues until that period ends.
+          </p>
+
+          <p className="font-semibold mb-1">13.4 Refunds</p>
+          <p className="mb-3">
+            Except where required by law, subscription fees are non-refundable
+            once charged.
+          </p>
+
+          <p className="font-semibold mb-1">13.5 Price Changes</p>
+          <p className="mb-3">
+            We may change subscription pricing from time to time. If we change
+            pricing, we will provide reasonable notice before the new price
+            takes effect.
+          </p>
+
+          <p className="font-semibold mb-1">13.6 Failed Payments</p>
+          <p>
+            If a payment fails or your billing method cannot be charged, we may
+            suspend or remove access to paid features until billing is resolved.
+          </p>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold">14. Changes to Terms</h3>
         <p>
           We may revise these Terms from time to time. The most current version
           will always be available on this page with an updated &quot;Last
@@ -359,11 +404,11 @@ export const TermsOfService = () => {
 
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">
-          14. Governing Law and Disputes
+          15. Governing Law and Disputes
         </h3>
 
         <div>
-          <p className="font-semibold mb-1">14.1 Governing Law</p>
+          <p className="font-semibold mb-1">15.1 Governing Law</p>
           <p className="mb-3">
             These Terms shall be governed by and construed in accordance with
             the laws of the Province of Ontario and the federal laws of Canada
@@ -371,7 +416,7 @@ export const TermsOfService = () => {
             provisions.
           </p>
 
-          <p className="font-semibold mb-1">14.2 Jurisdiction</p>
+          <p className="font-semibold mb-1">15.2 Jurisdiction</p>
           <p>
             You agree that any legal action or proceeding arising out of or
             relating to these Terms or the Service shall be brought exclusively
@@ -382,7 +427,7 @@ export const TermsOfService = () => {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">15. Severability</h3>
+        <h3 className="text-lg font-semibold">16. Severability</h3>
         <p>
           If any provision of these Terms is found to be invalid or
           unenforceable, the remaining provisions shall remain in full force and
@@ -393,7 +438,7 @@ export const TermsOfService = () => {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">16. Entire Agreement</h3>
+        <h3 className="text-lg font-semibold">17. Entire Agreement</h3>
         <p>
           These Terms, together with our Privacy Policy, constitute the entire
           agreement between you and ValoMapper regarding the use of the Service
@@ -403,7 +448,7 @@ export const TermsOfService = () => {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">17. Contact Information</h3>
+        <h3 className="text-lg font-semibold">18. Contact Information</h3>
         <p>
           If you have any questions about these Terms of Service, please contact
           us at:
@@ -412,7 +457,7 @@ export const TermsOfService = () => {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">18. Acknowledgment</h3>
+        <h3 className="text-lg font-semibold">19. Acknowledgment</h3>
         <p>
           BY USING VALOMAPPER, YOU ACKNOWLEDGE THAT YOU HAVE READ THESE TERMS OF
           SERVICE, UNDERSTAND THEM, AND AGREE TO BE BOUND BY THEM.
