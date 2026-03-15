@@ -140,11 +140,6 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		return
 	}
 
-	if user.IsSubscribed {
-		utils.SendJSONError(w, utils.NewConflict("Active subscription already exists", nil), requestID)
-		return
-	}
-
 	checkoutRequest, err := parseCreateCheckoutSessionRequest(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), requestID)
@@ -158,6 +153,19 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 	}
 
 	stripe.Key = stripeSecretKey
+
+	if user.IsSubscribed {
+		recovered, err := recoverStaleStripeSubscriptionForCheckout(user)
+		if err != nil {
+			utils.SendJSONError(w, utils.NewInternal("Unable to verify subscription state", err), requestID)
+			return
+		}
+
+		if !recovered && user.IsSubscribed {
+			utils.SendJSONError(w, utils.NewConflict("Active subscription already exists", nil), requestID)
+			return
+		}
+	}
 
 	selectedPlan, err := parseCheckoutPlan(checkoutRequest.Plan)
 	if err != nil {
@@ -215,6 +223,18 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 	}
 
 	checkoutSession, err := createStripeCheckoutSessionFn(params)
+	if err != nil && params.Customer != nil {
+		recovered, recoverErr := recoverStaleStripeCustomerIDForCheckout(user, err)
+		if recoverErr != nil {
+			utils.SendJSONError(w, utils.NewInternal("Unable to create checkout session", recoverErr), requestID)
+			return
+		}
+
+		if recovered {
+			params.Customer = nil
+			checkoutSession, err = createStripeCheckoutSessionFn(params)
+		}
+	}
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to create checkout session", err), requestID)
 		return
@@ -451,32 +471,16 @@ func processStripeSubscriptionEvent(event stripe.Event) (bool, string, error) {
 		return false, reason, nil
 	}
 
+	nextStripeCustomerID := user.StripeCustomerID
 	stripeCustomerID := stripeSubscriptionCustomerID(&subscription)
 	if stripeCustomerID != "" {
-		currentStripeCustomerID := ""
-		if user.StripeCustomerID != nil {
-			currentStripeCustomerID = strings.TrimSpace(*user.StripeCustomerID)
-		}
-
-		if currentStripeCustomerID != stripeCustomerID {
-			if err := user.UpdateStripeCustomerID(stripeCustomerID); err != nil {
-				return false, "", err
-			}
-		}
+		nextStripeCustomerID = &stripeCustomerID
 	}
 
+	nextStripeSubscriptionID := user.StripeSubscriptionID
 	stripeSubscriptionID := strings.TrimSpace(subscription.ID)
 	if stripeSubscriptionID != "" {
-		currentStripeSubscriptionID := ""
-		if user.StripeSubscriptionID != nil {
-			currentStripeSubscriptionID = strings.TrimSpace(*user.StripeSubscriptionID)
-		}
-
-		if currentStripeSubscriptionID != stripeSubscriptionID {
-			if err := user.UpdateStripeSubscriptionID(stripeSubscriptionID); err != nil {
-				return false, "", err
-			}
-		}
+		nextStripeSubscriptionID = &stripeSubscriptionID
 	}
 
 	isSubscribed, subscriptionEndedAt := deriveSubscriptionState(
@@ -487,7 +491,7 @@ func processStripeSubscriptionEvent(event stripe.Event) (bool, string, error) {
 		subscription.EndedAt,
 		subscription.CanceledAt,
 	)
-	if err := user.UpdateSubscriptionStatus(isSubscribed, subscriptionEndedAt); err != nil {
+	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt); err != nil {
 		return false, "", err
 	}
 
@@ -872,6 +876,10 @@ func findStripeSubscriptionForUser(user *models.User) (*stripe.Subscription, err
 	if err != nil {
 		var stripeErr *stripe.Error
 		if errors.As(err, &stripeErr) && stripeErr.Code == stripe.ErrorCodeResourceMissing {
+			if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, user.IsSubscribed, user.SubscriptionEndedAt); updateErr != nil {
+				return nil, updateErr
+			}
+
 			return nil, errStripeSubscriptionNotFound
 		}
 
@@ -883,6 +891,95 @@ func findStripeSubscriptionForUser(user *models.User) (*stripe.Subscription, err
 	}
 
 	return stripeSubscription, nil
+}
+
+func recoverStaleStripeSubscriptionForCheckout(user *models.User) (bool, error) {
+	if user == nil || !user.IsSubscribed {
+		return false, nil
+	}
+
+	if user.StripeSubscriptionID == nil || strings.TrimSpace(*user.StripeSubscriptionID) == "" {
+		return false, nil
+	}
+
+	stripeSubscriptionID := strings.TrimSpace(*user.StripeSubscriptionID)
+	stripeSubscription, err := getStripeSubscriptionFn(stripeSubscriptionID, nil)
+	if err != nil {
+		if !isStripeResourceMissingError(err) {
+			return false, err
+		}
+
+		now := time.Now().UTC()
+		if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, false, &now); updateErr != nil {
+			return false, updateErr
+		}
+
+		return true, nil
+	}
+
+	if stripeSubscription == nil {
+		return false, nil
+	}
+
+	isSubscribed, subscriptionEndedAt := deriveSubscriptionState(
+		stripe.EventTypeCustomerSubscriptionUpdated,
+		stripeSubscription.Status,
+		stripeSubscription.CancelAtPeriodEnd,
+		stripeSubscription.CancelAt,
+		stripeSubscription.EndedAt,
+		stripeSubscription.CanceledAt,
+	)
+
+	nextStripeCustomerID := user.StripeCustomerID
+	stripeCustomerID := stripeSubscriptionCustomerID(stripeSubscription)
+	if stripeCustomerID != "" {
+		nextStripeCustomerID = &stripeCustomerID
+	}
+
+	nextStripeSubscriptionID := user.StripeSubscriptionID
+	normalizedSubscriptionID := strings.TrimSpace(stripeSubscription.ID)
+	if normalizedSubscriptionID != "" {
+		nextStripeSubscriptionID = &normalizedSubscriptionID
+	}
+
+	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt); err != nil {
+		return false, err
+	}
+
+	return !isSubscribed, nil
+}
+
+func recoverStaleStripeCustomerIDForCheckout(user *models.User, checkoutErr error) (bool, error) {
+	if user == nil || user.StripeCustomerID == nil || strings.TrimSpace(*user.StripeCustomerID) == "" {
+		return false, nil
+	}
+
+	if !isStripeResourceMissingError(checkoutErr) {
+		return false, nil
+	}
+
+	if err := user.UpdateStripeBillingState(nil, user.StripeSubscriptionID, user.IsSubscribed, user.SubscriptionEndedAt); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func isStripeResourceMissingError(err error) bool {
+	var stripeErr *stripe.Error
+	if !errors.As(err, &stripeErr) {
+		return false
+	}
+
+	if stripeErr.Code == stripe.ErrorCodeResourceMissing {
+		return true
+	}
+
+	if strings.Contains(strings.ToLower(strings.TrimSpace(stripeErr.Msg)), "no such customer") {
+		return true
+	}
+
+	return false
 }
 
 func isCancelableStripeSubscriptionStatus(status stripe.SubscriptionStatus) bool {

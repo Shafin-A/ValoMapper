@@ -448,3 +448,49 @@ func (u *User) UpdateStripeSubscriptionID(stripeSubscriptionID string) error {
 
 	return err
 }
+
+func (u *User) UpdateStripeBillingState(
+	stripeCustomerID *string,
+	stripeSubscriptionID *string,
+	isSubscribed bool,
+	subscriptionEndedAt *time.Time,
+) error {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	err = tx.QueryRow(ctx, `
+		UPDATE users
+		SET stripe_customer_id = $1,
+		    stripe_subscription_id = $2,
+		    is_subscribed = $3,
+		    subscription_ended_at = $4,
+		    updated_at = NOW()
+		WHERE id = $5
+		RETURNING updated_at
+	`, stripeCustomerID, stripeSubscriptionID, isSubscribed, subscriptionEndedAt, u.ID).Scan(&u.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	u.StripeCustomerID = stripeCustomerID
+	u.StripeSubscriptionID = stripeSubscriptionID
+	u.IsSubscribed = isSubscribed
+	u.SubscriptionEndedAt = subscriptionEndedAt
+
+	return nil
+}

@@ -33,9 +33,11 @@ func TestCreateCheckoutSession(t *testing.T) {
 
 	originalCreateFn := createStripeCheckoutSessionFn
 	originalFindPriceForPlanFn := findStripePriceForPlanFn
+	originalGetSubscriptionFn := getStripeSubscriptionFn
 	defer func() {
 		createStripeCheckoutSessionFn = originalCreateFn
 		findStripePriceForPlanFn = originalFindPriceForPlanFn
+		getStripeSubscriptionFn = originalGetSubscriptionFn
 	}()
 
 	originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
@@ -256,6 +258,125 @@ func TestCreateCheckoutSession(t *testing.T) {
 		CreateCheckoutSession(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusConflict, w.Code)
+	})
+
+	t.Run("recovers stale stripe subscription id and allows checkout", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-stale-subscription")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, stripe_subscription_id = $2 WHERE id = $1`, testUser.ID, "sub_stale_checkout")
+		assert.NoError(t, err)
+
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+			switch plan {
+			case checkoutPlanMonthly:
+				return &stripe.Price{ID: "price_test_checkout"}, nil
+			case checkoutPlanYearly:
+				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
+			default:
+				return nil, errCheckoutPlanUnavailable
+			}
+		}
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		staleSubscriptionErr := &stripe.Error{Code: stripe.ErrorCodeResourceMissing, Msg: "No such subscription"}
+		getStripeSubscriptionFn = func(id string, params *stripe.SubscriptionParams) (*stripe.Subscription, error) {
+			assert.Equal(t, "sub_stale_checkout", id)
+			return nil, staleSubscriptionErr
+		}
+
+		checkoutCreateCalls := 0
+		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+			checkoutCreateCalls++
+			return &stripe.CheckoutSession{
+				ID:  "cs_test_recovered_stale_subscription",
+				URL: "https://checkout.stripe.com/c/pay/cs_test_recovered_stale_subscription",
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", map[string]string{
+			"plan": "monthly",
+		}, "valid-token")
+		w := httptest.NewRecorder()
+
+		CreateCheckoutSession(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, 1, checkoutCreateCalls)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.False(t, updatedUser.IsSubscribed)
+			assert.Nil(t, updatedUser.StripeSubscriptionID)
+		}
+	})
+
+	t.Run("retries checkout when stored stripe customer id is stale", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-stale-customer")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET stripe_customer_id = $2 WHERE id = $1`, testUser.ID, "cus_stale_checkout")
+		assert.NoError(t, err)
+
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+			switch plan {
+			case checkoutPlanMonthly:
+				return &stripe.Price{ID: "price_test_checkout"}, nil
+			case checkoutPlanYearly:
+				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
+			default:
+				return nil, errCheckoutPlanUnavailable
+			}
+		}
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		createCalls := 0
+		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+			createCalls++
+			if createCalls == 1 {
+				if assert.NotNil(t, params.Customer) {
+					assert.Equal(t, "cus_stale_checkout", stripe.StringValue(params.Customer))
+				}
+				return nil, &stripe.Error{Code: stripe.ErrorCodeResourceMissing, Msg: "No such customer"}
+			}
+
+			assert.Nil(t, params.Customer)
+			return &stripe.CheckoutSession{
+				ID:  "cs_test_retry_without_customer",
+				URL: "https://checkout.stripe.com/c/pay/cs_test_retry_without_customer",
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", map[string]string{
+			"plan": "monthly",
+		}, "valid-token")
+		w := httptest.NewRecorder()
+
+		CreateCheckoutSession(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, 2, createCalls)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.Nil(t, updatedUser.StripeCustomerID)
+		}
 	})
 
 	t.Run("ignores invalid returnTo values", func(t *testing.T) {
