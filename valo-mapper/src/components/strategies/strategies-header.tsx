@@ -47,7 +47,7 @@ export const StrategiesHeader = ({
     : hasScheduledCancellation
       ? "Pro (Cancels at Period End)"
       : hasValoMapperPro
-        ? "Pro Active"
+        ? "Pro"
         : "Free";
 
   const planBadgeVariant = isUserLoading
