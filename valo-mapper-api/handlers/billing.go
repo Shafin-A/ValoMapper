@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -27,7 +28,7 @@ import (
 )
 
 var createStripeCheckoutSessionFn = session.New
-var getStripePriceFn = price.Get
+var findStripePriceForPlanFn = findStripePriceForPlan
 var updateStripeSubscriptionFn = subscription.Update
 var findCancelableStripeSubscriptionIDForUserFn = findCancelableStripeSubscriptionIDForUser
 var findScheduledCancellationSubscriptionIDForUserFn = findScheduledCancellationSubscriptionIDForUser
@@ -44,6 +45,9 @@ type checkoutPlan string
 const (
 	checkoutPlanMonthly checkoutPlan = "monthly"
 	checkoutPlanYearly  checkoutPlan = "yearly"
+
+	defaultMonthlyPriceLookupKey = "standard_monthly"
+	defaultYearlyPriceLookupKey  = "standard_yearly"
 )
 
 type CreateCheckoutSessionResponse struct {
@@ -91,29 +95,17 @@ func GetBillingPlans(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monthlyPriceID, err := checkoutPriceIDForPlan(checkoutPlanMonthly)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
-		return
-	}
-
-	yearlyPriceID, err := checkoutPriceIDForPlan(checkoutPlanYearly)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
-		return
-	}
-
 	stripe.Key = stripeSecretKey
 
-	monthlyPrice, err := getStripePriceFn(monthlyPriceID, nil)
+	monthlyPrice, err := findStripePriceForPlanFn(checkoutPlanMonthly)
 	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to fetch Stripe billing plans", err), requestID)
+		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
 		return
 	}
 
-	yearlyPrice, err := getStripePriceFn(yearlyPriceID, nil)
+	yearlyPrice, err := findStripePriceForPlanFn(checkoutPlanYearly)
 	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to fetch Stripe billing plans", err), requestID)
+		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
 		return
 	}
 
@@ -161,6 +153,8 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		return
 	}
 
+	stripe.Key = stripeSecretKey
+
 	selectedPlan, err := parseCheckoutPlan(checkoutRequest.Plan)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Unsupported checkout plan"), requestID)
@@ -172,8 +166,6 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
 		return
 	}
-
-	stripe.Key = stripeSecretKey
 
 	metadata := map[string]string{
 		"userId": strconv.Itoa(user.ID),
@@ -616,24 +608,89 @@ func parseCheckoutPlan(raw string) (checkoutPlan, error) {
 }
 
 func checkoutPriceIDForPlan(plan checkoutPlan) (string, error) {
+	stripePrice, err := findStripePriceForPlanFn(plan)
+	if err != nil {
+		return "", err
+	}
+
+	priceID := strings.TrimSpace(stripePrice.ID)
+	if priceID == "" {
+		return "", errCheckoutPlanUnavailable
+	}
+
+	return priceID, nil
+}
+
+func checkoutLookupKeyForPlan(plan checkoutPlan) (string, error) {
 	switch plan {
 	case checkoutPlanMonthly:
-		monthly := strings.TrimSpace(os.Getenv("STRIPE_PRICE_ID_MONTHLY"))
-		if monthly == "" {
-			return "", errCheckoutPlanUnavailable
+		lookupKey := strings.TrimSpace(os.Getenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY"))
+		if lookupKey == "" {
+			lookupKey = defaultMonthlyPriceLookupKey
 		}
 
-		return monthly, nil
+		return lookupKey, nil
 	case checkoutPlanYearly:
-		yearly := strings.TrimSpace(os.Getenv("STRIPE_PRICE_ID_YEARLY"))
-		if yearly == "" {
-			return "", errCheckoutPlanUnavailable
+		lookupKey := strings.TrimSpace(os.Getenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY"))
+		if lookupKey == "" {
+			lookupKey = defaultYearlyPriceLookupKey
 		}
 
-		return yearly, nil
+		return lookupKey, nil
 	default:
 		return "", errUnsupportedCheckoutPlan
 	}
+}
+
+func expectedIntervalForPlan(plan checkoutPlan) (stripe.PriceRecurringInterval, error) {
+	switch plan {
+	case checkoutPlanMonthly:
+		return stripe.PriceRecurringIntervalMonth, nil
+	case checkoutPlanYearly:
+		return stripe.PriceRecurringIntervalYear, nil
+	default:
+		return "", errUnsupportedCheckoutPlan
+	}
+}
+
+func findStripePriceForPlan(plan checkoutPlan) (*stripe.Price, error) {
+	lookupKey, err := checkoutLookupKeyForPlan(plan)
+	if err != nil {
+		return nil, err
+	}
+
+	expectedInterval, err := expectedIntervalForPlan(plan)
+	if err != nil {
+		return nil, err
+	}
+
+	priceIter := price.List(&stripe.PriceListParams{
+		Active:     stripe.Bool(true),
+		LookupKeys: stripe.StringSlice([]string{lookupKey}),
+	})
+
+	for priceIter.Next() {
+		stripePrice := priceIter.Price()
+		if stripePrice == nil || stripePrice.Recurring == nil {
+			continue
+		}
+
+		if stripePrice.Recurring.Interval != expectedInterval {
+			continue
+		}
+
+		if strings.TrimSpace(stripePrice.LookupKey) != lookupKey {
+			continue
+		}
+
+		return stripePrice, nil
+	}
+
+	if err := priceIter.Err(); err != nil {
+		return nil, err
+	}
+
+	return nil, fmt.Errorf("%w: lookup key %s", errCheckoutPlanUnavailable, lookupKey)
 }
 
 func buildBillingPlanPriceResponse(plan checkoutPlan, stripePrice *stripe.Price) (BillingPlanPriceResponse, error) {

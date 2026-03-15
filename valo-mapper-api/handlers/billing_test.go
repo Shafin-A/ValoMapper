@@ -32,19 +32,21 @@ func TestCreateCheckoutSession(t *testing.T) {
 	testutils.TruncateTables(t, pool, "users")
 
 	originalCreateFn := createStripeCheckoutSessionFn
+	originalFindPriceForPlanFn := findStripePriceForPlanFn
 	defer func() {
 		createStripeCheckoutSessionFn = originalCreateFn
+		findStripePriceForPlanFn = originalFindPriceForPlanFn
 	}()
 
 	originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
-	originalMonthlyPrice, hadMonthlyPrice := os.LookupEnv("STRIPE_PRICE_ID_MONTHLY")
-	originalYearlyPrice, hadYearlyPrice := os.LookupEnv("STRIPE_PRICE_ID_YEARLY")
+	originalMonthlyLookupKey, hadMonthlyLookupKey := os.LookupEnv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY")
+	originalYearlyLookupKey, hadYearlyLookupKey := os.LookupEnv("STRIPE_PRICE_LOOKUP_KEY_YEARLY")
 	originalSuccessURL, hadSuccessURL := os.LookupEnv("STRIPE_CHECKOUT_SUCCESS_URL")
 	originalCancelURL, hadCancelURL := os.LookupEnv("STRIPE_CHECKOUT_CANCEL_URL")
 
 	_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_checkout")
-	_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_test_checkout")
-	_ = os.Unsetenv("STRIPE_PRICE_ID_YEARLY")
+	_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY", "standard_monthly")
+	_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY", "standard_yearly")
 	_ = os.Setenv("STRIPE_CHECKOUT_SUCCESS_URL", "http://localhost:3000/checkout/success")
 	_ = os.Setenv("STRIPE_CHECKOUT_CANCEL_URL", "http://localhost:3000/checkout/cancel")
 
@@ -54,15 +56,15 @@ func TestCreateCheckoutSession(t *testing.T) {
 		} else {
 			_ = os.Unsetenv("STRIPE_SECRET_KEY")
 		}
-		if hadMonthlyPrice {
-			_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", originalMonthlyPrice)
+		if hadMonthlyLookupKey {
+			_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY", originalMonthlyLookupKey)
 		} else {
-			_ = os.Unsetenv("STRIPE_PRICE_ID_MONTHLY")
+			_ = os.Unsetenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY")
 		}
-		if hadYearlyPrice {
-			_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", originalYearlyPrice)
+		if hadYearlyLookupKey {
+			_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY", originalYearlyLookupKey)
 		} else {
-			_ = os.Unsetenv("STRIPE_PRICE_ID_YEARLY")
+			_ = os.Unsetenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY")
 		}
 		if hadSuccessURL {
 			_ = os.Setenv("STRIPE_CHECKOUT_SUCCESS_URL", originalSuccessURL)
@@ -81,6 +83,17 @@ func TestCreateCheckoutSession(t *testing.T) {
 	t.Run("creates checkout session with subscription metadata", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-1")
 		const returnToPath = "/ABCD123?tab=map"
+
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+			switch plan {
+			case checkoutPlanMonthly:
+				return &stripe.Price{ID: "price_test_checkout"}, nil
+			case checkoutPlanYearly:
+				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
+			default:
+				return nil, errCheckoutPlanUnavailable
+			}
+		}
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
 			return &auth.Token{UID: *testUser.FirebaseUID}, nil
@@ -135,6 +148,17 @@ func TestCreateCheckoutSession(t *testing.T) {
 	t.Run("uses yearly plan price when requested", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-yearly")
 
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+			switch plan {
+			case checkoutPlanMonthly:
+				return &stripe.Price{ID: "price_test_checkout"}, nil
+			case checkoutPlanYearly:
+				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
+			default:
+				return nil, errCheckoutPlanUnavailable
+			}
+		}
+
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
 			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
@@ -144,10 +168,6 @@ func TestCreateCheckoutSession(t *testing.T) {
 				EmailVerified: true,
 			}, nil
 		}
-
-		_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_test_checkout")
-		_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", "price_test_checkout_yearly")
-		defer os.Unsetenv("STRIPE_PRICE_ID_YEARLY")
 
 		var capturedParams *stripe.CheckoutSessionParams
 		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
@@ -177,6 +197,10 @@ func TestCreateCheckoutSession(t *testing.T) {
 	t.Run("rejects unsupported checkout plan", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-invalid-plan")
 
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+			return &stripe.Price{ID: "price_test_checkout"}, nil
+		}
+
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
 			return &auth.Token{UID: *testUser.FirebaseUID}, nil
 		}
@@ -203,6 +227,17 @@ func TestCreateCheckoutSession(t *testing.T) {
 
 	t.Run("ignores invalid returnTo values", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-3")
+
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+			switch plan {
+			case checkoutPlanMonthly:
+				return &stripe.Price{ID: "price_test_checkout"}, nil
+			case checkoutPlanYearly:
+				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
+			default:
+				return nil, errCheckoutPlanUnavailable
+			}
+		}
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
 			return &auth.Token{UID: *testUser.FirebaseUID}, nil
@@ -260,7 +295,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			return &auth.UserRecord{UserInfo: &auth.UserInfo{UID: uid, Email: *testUser.Email}, EmailVerified: true}, nil
 		}
 
-		_ = os.Unsetenv("STRIPE_PRICE_ID_MONTHLY")
+		_ = os.Unsetenv("STRIPE_SECRET_KEY")
 		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
 			return &stripe.CheckoutSession{ID: "should-not-run"}, nil
 		}
@@ -271,19 +306,19 @@ func TestCreateCheckoutSession(t *testing.T) {
 		CreateCheckoutSession(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_test_checkout")
+		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_checkout")
 	})
 }
 
 func TestGetBillingPlans(t *testing.T) {
-	originalGetPriceFn := getStripePriceFn
+	originalFindPriceForPlanFn := findStripePriceForPlanFn
 	defer func() {
-		getStripePriceFn = originalGetPriceFn
+		findStripePriceForPlanFn = originalFindPriceForPlanFn
 	}()
 
 	originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
-	originalMonthly, hadMonthly := os.LookupEnv("STRIPE_PRICE_ID_MONTHLY")
-	originalYearly, hadYearly := os.LookupEnv("STRIPE_PRICE_ID_YEARLY")
+	originalMonthlyLookupKey, hadMonthlyLookupKey := os.LookupEnv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY")
+	originalYearlyLookupKey, hadYearlyLookupKey := os.LookupEnv("STRIPE_PRICE_LOOKUP_KEY_YEARLY")
 
 	defer func() {
 		if hadSecret {
@@ -292,29 +327,30 @@ func TestGetBillingPlans(t *testing.T) {
 			_ = os.Unsetenv("STRIPE_SECRET_KEY")
 		}
 
-		if hadMonthly {
-			_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", originalMonthly)
+		if hadMonthlyLookupKey {
+			_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY", originalMonthlyLookupKey)
 		} else {
-			_ = os.Unsetenv("STRIPE_PRICE_ID_MONTHLY")
+			_ = os.Unsetenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY")
 		}
 
-		if hadYearly {
-			_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", originalYearly)
+		if hadYearlyLookupKey {
+			_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY", originalYearlyLookupKey)
 		} else {
-			_ = os.Unsetenv("STRIPE_PRICE_ID_YEARLY")
+			_ = os.Unsetenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY")
 		}
 	}()
 
 	t.Run("returns monthly and yearly plans", func(t *testing.T) {
 		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_checkout")
-		_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_monthly_test")
-		_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", "price_yearly_test")
+		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY", "standard_monthly")
+		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY", "standard_yearly")
 
-		getStripePriceFn = func(id string, params *stripe.PriceParams) (*stripe.Price, error) {
-			switch id {
-			case "price_monthly_test":
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+			switch plan {
+			case checkoutPlanMonthly:
 				return &stripe.Price{
-					ID:                id,
+					ID:                "price_monthly_test",
+					LookupKey:         "standard_monthly",
 					Currency:          stripe.CurrencyUSD,
 					UnitAmount:        499,
 					UnitAmountDecimal: 499,
@@ -323,9 +359,10 @@ func TestGetBillingPlans(t *testing.T) {
 						IntervalCount: 1,
 					},
 				}, nil
-			case "price_yearly_test":
+			case checkoutPlanYearly:
 				return &stripe.Price{
-					ID:                id,
+					ID:                "price_yearly_test",
+					LookupKey:         "standard_yearly",
 					Currency:          stripe.CurrencyUSD,
 					UnitAmount:        4499,
 					UnitAmountDecimal: 4499,
@@ -335,7 +372,7 @@ func TestGetBillingPlans(t *testing.T) {
 					},
 				}, nil
 			default:
-				return nil, fmt.Errorf("unexpected price id: %s", id)
+				return nil, fmt.Errorf("unexpected plan: %s", plan)
 			}
 		}
 
@@ -364,10 +401,10 @@ func TestGetBillingPlans(t *testing.T) {
 
 	t.Run("returns internal error when stripe config is missing", func(t *testing.T) {
 		_ = os.Unsetenv("STRIPE_SECRET_KEY")
-		_ = os.Setenv("STRIPE_PRICE_ID_MONTHLY", "price_monthly_test")
-		_ = os.Setenv("STRIPE_PRICE_ID_YEARLY", "price_yearly_test")
+		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY", "standard_monthly")
+		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY", "standard_yearly")
 
-		getStripePriceFn = func(id string, params *stripe.PriceParams) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
 			return &stripe.Price{}, nil
 		}
 
