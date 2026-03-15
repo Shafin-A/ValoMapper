@@ -79,7 +79,7 @@ export const RSOCallbackContent = () => {
       {status === "loading" && (
         <>
           <h1 className="text-2xl font-bold">Signing you in with Riot...</h1>
-          <p className="text-muted-foreground">
+          <p className="text-foreground/75">
             Please wait while we complete the login.
           </p>
         </>
@@ -88,19 +88,17 @@ export const RSOCallbackContent = () => {
       {status === "success" && (
         <>
           <h1 className="text-2xl font-bold text-green-600">Success!</h1>
-          <p className="text-muted-foreground">
+          <p className="text-foreground/75">
             You have been signed in using your Riot account.
           </p>
-          <p className="text-sm text-muted-foreground">
-            Redirecting you now...
-          </p>
+          <p className="text-sm text-foreground/65">Redirecting you now...</p>
         </>
       )}
 
       {status === "error" && (
         <>
           <h1 className="text-2xl font-bold text-red-600">Error</h1>
-          <p className="text-muted-foreground">{errorMessage}</p>
+          <p className="text-foreground/75">{errorMessage}</p>
           <button
             onClick={() => router.push("/profile")}
             className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
@@ -115,7 +113,7 @@ export const RSOCallbackContent = () => {
           <h1 className="text-2xl font-bold text-yellow-600">
             No Authorization Code
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-foreground/75">
             It looks like the Riot login was cancelled.
           </p>
           <button

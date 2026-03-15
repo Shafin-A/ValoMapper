@@ -313,7 +313,7 @@ export const ProfileContent = () => {
                     hasScheduledCancellation
                       ? "text-amber-600"
                       : hasValoMapperPro
-                        ? "text-green-600"
+                        ? "text-primary"
                         : "text-muted-foreground"
                   }`}
                 >

@@ -10,6 +10,11 @@ import { useFolders } from "@/hooks/api/use-folder";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { FREE_STRATEGY_LIMIT } from "@/lib/consts";
+import {
+  getStrategyCleanupGracePeriod,
+  getStrategyRetentionPreview,
+  summarizeStrategyNames,
+} from "@/lib/strategy-cleanup";
 import { StrategyData } from "@/lib/types";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
 import { Suspense, useState } from "react";
@@ -44,13 +49,37 @@ const MyStrategiesPage = () => {
   const treeData = data || [];
   const strategyCount = countStrategies(treeData);
   const hasValoMapperPro = Boolean(userProfile?.isSubscribed);
+
   const subscriptionEndsAt = userProfile?.subscriptionEndedAt
     ? new Date(userProfile.subscriptionEndedAt)
     : null;
+
   const hasScheduledCancellation =
     hasValoMapperPro &&
     subscriptionEndsAt !== null &&
-    !Number.isNaN(subscriptionEndsAt.getTime());
+    !Number.isNaN(subscriptionEndsAt.getTime()) &&
+    subscriptionEndsAt.getTime() > Date.now();
+
+  const strategyCleanupGracePeriod = getStrategyCleanupGracePeriod(
+    hasValoMapperPro,
+    subscriptionEndsAt,
+  );
+
+  const { kept: keptStrategies, deleted: deletedStrategies } =
+    getStrategyRetentionPreview(treeData);
+
+  const { visibleNames: keptStrategyNames } = summarizeStrategyNames(
+    keptStrategies,
+    FREE_STRATEGY_LIMIT,
+  );
+
+  const {
+    visibleNames: deletedStrategyNames,
+    hiddenCount: hiddenDeletedStrategiesCount,
+  } = summarizeStrategyNames(deletedStrategies);
+
+  const keptStrategiesPreview = keptStrategyNames.join(", ");
+  const deletedStrategiesPreview = deletedStrategyNames.join(", ");
 
   const getCurrentItems = (): StrategyData[] => {
     if (navigationPath.length === 1) return treeData;
@@ -173,6 +202,55 @@ const MyStrategiesPage = () => {
             onUpgrade={() => createCheckoutSession({ returnTo: "/strategies" })}
             isUpgradePending={isCheckoutPending}
           />
+
+          {strategyCleanupGracePeriod && (
+            <Alert className="mb-4 border-amber-200 bg-stone-50 text-stone-900 shadow-sm dark:border-amber-900/70 dark:bg-zinc-900 dark:text-zinc-100">
+              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <AlertTitle>Cancellation grace period active</AlertTitle>
+              <AlertDescription className="space-y-1 text-stone-700 dark:text-zinc-300">
+                <p>
+                  Your account is now on the free plan. Cleanup runs after your
+                  grace period on{" "}
+                  {strategyCleanupGracePeriod.endsAt.toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    },
+                  )}
+                  .
+                </p>
+                <p>
+                  {strategyCleanupGracePeriod.daysRemaining} day
+                  {strategyCleanupGracePeriod.daysRemaining === 1
+                    ? ""
+                    : "s"}{" "}
+                  remaining. After grace ends, we keep your{" "}
+                  {FREE_STRATEGY_LIMIT} most recently saved strategies and
+                  remove older ones.
+                </p>
+                {keptStrategiesPreview && (
+                  <p>
+                    <span className="font-medium">Will be kept:</span>{" "}
+                    {keptStrategiesPreview}.
+                  </p>
+                )}
+                {deletedStrategies.length > 0 ? (
+                  <p>
+                    <span className="font-medium">Will be deleted:</span>{" "}
+                    {deletedStrategiesPreview}
+                    {hiddenDeletedStrategiesCount > 0
+                      ? ` and ${hiddenDeletedStrategiesCount} more`
+                      : ""}
+                    .
+                  </p>
+                ) : (
+                  <p>No strategies are currently scheduled for deletion.</p>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
 
           <StrategiesContent
             currentItems={currentItems}
