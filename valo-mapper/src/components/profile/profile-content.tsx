@@ -171,12 +171,12 @@ export const ProfileContent = () => {
   const isRSOUser = Boolean(
     (user as { rsoSubjectId?: string | null }).rsoSubjectId,
   );
-  const hasValoMapperPro = Boolean(user.isSubscribed);
+  const hasValoMapperPremium = Boolean(user.isSubscribed);
   const subscriptionEndsAt = user.subscriptionEndedAt
     ? new Date(user.subscriptionEndedAt)
     : null;
   const hasScheduledCancellation =
-    hasValoMapperPro &&
+    hasValoMapperPremium &&
     subscriptionEndsAt !== null &&
     !Number.isNaN(subscriptionEndsAt.getTime());
   const currentUserName = user.name?.trim() || "";
@@ -301,26 +301,26 @@ export const ProfileContent = () => {
             <div className="space-y-2">
               <div className="text-xs font-semibold">Subscription</div>
               <div className="flex items-center justify-between rounded-md border px-3 py-2">
-                <span className="text-sm">ValoMapper Pro</span>
+                <span className="text-sm">ValoMapper Premium</span>
                 <span
                   className={`text-xs font-semibold ${
                     hasScheduledCancellation
                       ? "text-amber-600"
-                      : hasValoMapperPro
+                      : hasValoMapperPremium
                         ? "text-primary"
                         : "text-muted-foreground"
                   }`}
                 >
                   {hasScheduledCancellation
                     ? "Cancels at Period End"
-                    : hasValoMapperPro
+                    : hasValoMapperPremium
                       ? "Active"
                       : "Inactive"}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
                 {hasScheduledCancellation && subscriptionEndsAt
-                  ? `Your ValoMapper Pro subscription is active until ${subscriptionEndsAt.toLocaleDateString(
+                  ? `Your ValoMapper Premium subscription is active until ${subscriptionEndsAt.toLocaleDateString(
                       "en-US",
                       {
                         year: "numeric",
@@ -328,12 +328,12 @@ export const ProfileContent = () => {
                         day: "numeric",
                       },
                     )}.`
-                  : hasValoMapperPro
-                    ? "Your ValoMapper Pro subscription is active."
+                  : hasValoMapperPremium
+                    ? "Your ValoMapper Premium subscription is active."
                     : "You are currently on the free plan."}
               </p>
               <div className="pt-1">
-                {hasValoMapperPro ? (
+                {hasValoMapperPremium ? (
                   hasScheduledCancellation ? (
                     <Button
                       size="sm"
@@ -368,7 +368,7 @@ export const ProfileContent = () => {
                           <AlertDialogDescription>
                             Your subscription will be set to cancel at the end
                             of your current billing period. You will keep
-                            ValoMapper Pro access until then.
+                            ValoMapper Premium access until then.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -388,7 +388,7 @@ export const ProfileContent = () => {
                 ) : (
                   <CheckoutPlanDialog
                     returnToPath={returnToPath}
-                    trigger={<Button size="sm">Upgrade to Pro</Button>}
+                    trigger={<Button size="sm">Upgrade to Premium</Button>}
                   />
                 )}
               </div>

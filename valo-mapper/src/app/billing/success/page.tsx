@@ -24,9 +24,9 @@ const BillingSuccessPage = () => {
           <CheckCircle2 className="h-16 w-16 text-primary" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Welcome to ValoMapper Pro!</h1>
+          <h1 className="text-3xl font-bold">Welcome to ValoMapper Premium!</h1>
           <p className="text-foreground/85">
-            Thanks for upgrading. Your ValoMapper Pro subscription is now
+            Thanks for upgrading. Your ValoMapper Premium subscription is now
             active.
           </p>
           <p className="text-sm text-foreground/70">

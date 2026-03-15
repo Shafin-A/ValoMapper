@@ -353,7 +353,7 @@ export const TermsOfService = () => {
 
           <p className="font-semibold mb-1">13.2 Recurring Billing</p>
           <p className="mb-3">
-            ValoMapper Pro subscriptions renew automatically on a recurring
+            ValoMapper Premium subscriptions renew automatically on a recurring
             monthly or yearly basis (depending on your selected plan) unless you
             cancel before renewal.
           </p>

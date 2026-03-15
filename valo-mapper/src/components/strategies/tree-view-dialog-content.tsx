@@ -232,7 +232,7 @@ export const TreeViewDialogContent = ({
               You currently have {strategyCount} saved strategies. Free users
               can keep up to {FREE_STRATEGY_LIMIT}.
             </p>
-            <p>ValoMapper Pro unlocks unlimited saved strategies.</p>
+            <p>ValoMapper Premium unlocks unlimited saved strategies.</p>
             <p>
               Delete a saved strategy in{" "}
               <Link className="underline" href="/strategies">
@@ -246,7 +246,7 @@ export const TreeViewDialogContent = ({
                     type="button"
                     className="underline font-medium inline-flex items-center gap-1"
                   >
-                    upgrade to ValoMapper Pro
+                    upgrade to ValoMapper Premium
                   </button>
                 }
               />

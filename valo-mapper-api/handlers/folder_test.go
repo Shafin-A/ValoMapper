@@ -129,7 +129,7 @@ func TestCreateFolder(t *testing.T) {
 		}
 
 		reqBody := CreateFolderRequest{
-			Name: "Pro Folder",
+			Name: "Premium Folder",
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")

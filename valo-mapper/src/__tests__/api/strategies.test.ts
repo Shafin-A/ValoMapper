@@ -181,7 +181,7 @@ describe("Strategies API Routes", () => {
         status: 403,
         json: async () => ({
           error:
-            "Free plan limit reached (3 saved strategies). Upgrade to ValoMapper Pro for unlimited saves.",
+            "Free plan limit reached (3 saved strategies). Upgrade to ValoMapper Premium for unlimited saves.",
         }),
       });
 
@@ -194,7 +194,7 @@ describe("Strategies API Routes", () => {
       expect(response.status).toBe(403);
       expect(data).toEqual({
         error:
-          "Free plan limit reached (3 saved strategies). Upgrade to ValoMapper Pro for unlimited saves.",
+          "Free plan limit reached (3 saved strategies). Upgrade to ValoMapper Premium for unlimited saves.",
       });
     });
   });

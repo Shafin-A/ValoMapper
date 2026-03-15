@@ -47,10 +47,10 @@ const getStrategySortKey = (id: string): number | null => {
 };
 
 export const getStrategyCleanupGracePeriod = (
-  hasValoMapperPro: boolean,
+  hasValoMapperPremium: boolean,
   subscriptionEndedAt: Date | null,
 ): StrategyCleanupGracePeriod | null => {
-  if (hasValoMapperPro || subscriptionEndedAt === null) {
+  if (hasValoMapperPremium || subscriptionEndedAt === null) {
     return null;
   }
 

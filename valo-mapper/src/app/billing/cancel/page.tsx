@@ -29,8 +29,8 @@ const BillingCancelPage = () => {
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Checkout Cancelled</h1>
           <p className="text-foreground/80">
-            No charges were made. You can upgrade to ValoMapper Pro anytime to
-            unlock unlimited strategy saves.
+            No charges were made. You can upgrade to ValoMapper Premium anytime
+            to unlock unlimited strategy saves.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">

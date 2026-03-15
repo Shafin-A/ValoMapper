@@ -21,7 +21,7 @@ interface StrategiesHeaderProps {
   navigateToBreadcrumb: (index: number) => void;
   canManageFolders: boolean;
   isUserLoading: boolean;
-  hasValoMapperPro: boolean;
+  hasValoMapperPremium: boolean;
   hasScheduledCancellation: boolean;
   strategyCount: number;
   freeStrategyLimit: number;
@@ -35,28 +35,28 @@ export const StrategiesHeader = ({
   navigateToBreadcrumb,
   canManageFolders,
   isUserLoading,
-  hasValoMapperPro,
+  hasValoMapperPremium,
   hasScheduledCancellation,
   strategyCount,
   freeStrategyLimit,
   upgradeReturnToPath,
 }: StrategiesHeaderProps) => {
-  const isFreePlan = !isUserLoading && !hasValoMapperPro;
+  const isFreePlan = !isUserLoading && !hasValoMapperPremium;
   const hasReachedFreeLimit = isFreePlan && strategyCount >= freeStrategyLimit;
 
   const planLabel = isUserLoading
     ? "Loading"
     : hasScheduledCancellation
-      ? "Pro (Cancels at Period End)"
-      : hasValoMapperPro
-        ? "Pro"
+      ? "Premium (Cancels at Period End)"
+      : hasValoMapperPremium
+        ? "Premium"
         : "Free";
 
   const planBadgeVariant = isUserLoading
     ? "outline"
     : hasScheduledCancellation
       ? "secondary"
-      : hasValoMapperPro
+      : hasValoMapperPremium
         ? "default"
         : "outline";
 
@@ -64,7 +64,7 @@ export const StrategiesHeader = ({
     ? "text-muted-foreground"
     : hasScheduledCancellation
       ? "text-amber-700"
-      : hasValoMapperPro
+      : hasValoMapperPremium
         ? "bg-primary text-white"
         : "";
 
@@ -132,7 +132,7 @@ export const StrategiesHeader = ({
             </Badge>
             <CheckoutPlanDialog
               returnToPath={upgradeReturnToPath}
-              trigger={<Button size="sm">Upgrade to Pro</Button>}
+              trigger={<Button size="sm">Upgrade to Premium</Button>}
             />
           </>
         )}

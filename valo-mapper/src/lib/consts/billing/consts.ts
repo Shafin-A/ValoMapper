@@ -14,7 +14,7 @@ export const DEFAULT_CHECKOUT_PLAN: CheckoutPlan = "monthly";
 export const CHECKOUT_PLAN_OPTIONS: CheckoutPlanOption[] = [
   {
     id: "monthly",
-    label: "ValoMapper Pro Monthly",
+    label: "ValoMapper Premium Monthly",
     cadence: "Billed every month",
     priceLabel: "$4.99/month",
     currencyCode: "USD",
@@ -23,7 +23,7 @@ export const CHECKOUT_PLAN_OPTIONS: CheckoutPlanOption[] = [
   },
   {
     id: "yearly",
-    label: "ValoMapper Pro Yearly",
+    label: "ValoMapper Premium Yearly",
     cadence: "Billed once per year",
     priceLabel: "$44.99/year",
     currencyCode: "USD",

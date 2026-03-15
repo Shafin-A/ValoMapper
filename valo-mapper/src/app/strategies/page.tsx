@@ -45,21 +45,21 @@ const MyStrategiesPage = () => {
 
   const treeData = data || [];
   const strategyCount = countStrategies(treeData);
-  const hasValoMapperPro = Boolean(userProfile?.isSubscribed);
-  const canManageFolders = !isUserProfileLoading && hasValoMapperPro;
+  const hasValoMapperPremium = Boolean(userProfile?.isSubscribed);
+  const canManageFolders = !isUserProfileLoading && hasValoMapperPremium;
 
   const subscriptionEndsAt = userProfile?.subscriptionEndedAt
     ? new Date(userProfile.subscriptionEndedAt)
     : null;
 
   const hasScheduledCancellation =
-    hasValoMapperPro &&
+    hasValoMapperPremium &&
     subscriptionEndsAt !== null &&
     !Number.isNaN(subscriptionEndsAt.getTime()) &&
     subscriptionEndsAt.getTime() > Date.now();
 
   const strategyCleanupGracePeriod = getStrategyCleanupGracePeriod(
-    hasValoMapperPro,
+    hasValoMapperPremium,
     subscriptionEndsAt,
   );
 
@@ -194,7 +194,7 @@ const MyStrategiesPage = () => {
             navigateToBreadcrumb={navigateToBreadcrumb}
             canManageFolders={canManageFolders}
             isUserLoading={isUserProfileLoading}
-            hasValoMapperPro={hasValoMapperPro}
+            hasValoMapperPremium={hasValoMapperPremium}
             hasScheduledCancellation={hasScheduledCancellation}
             strategyCount={strategyCount}
             freeStrategyLimit={FREE_STRATEGY_LIMIT}
