@@ -21,6 +21,17 @@ type UpdateFolderRequest struct {
 	ParentFolderID *int    `json:"parentFolderId,omitempty"`
 }
 
+const folderSubscriptionRequiredMessage = "Active subscription required to manage folders"
+
+func requireFolderSubscription(w http.ResponseWriter, r *http.Request, user *models.User) bool {
+	if user.IsSubscribed {
+		return true
+	}
+
+	utils.SendJSONError(w, utils.NewForbidden(folderSubscriptionRequiredMessage), middleware.GetRequestID(r))
+	return false
+}
+
 // CreateFolder godoc
 // @Summary Create folder
 // @Description Creates a folder for the authenticated user.
@@ -31,6 +42,7 @@ type UpdateFolderRequest struct {
 // @Success 201 {object} models.Folder
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/folders [post]
@@ -43,6 +55,10 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+		return
+	}
+
+	if !requireFolderSubscription(w, r, user) {
 		return
 	}
 
@@ -135,6 +151,10 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		return
 	}
 
+	if !requireFolderSubscription(w, r, user) {
+		return
+	}
+
 	path := r.URL.Path
 	idStr := strings.TrimPrefix(path, "/api/folders/")
 	id, err := strconv.Atoi(idStr)
@@ -202,6 +222,10 @@ func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+		return
+	}
+
+	if !requireFolderSubscription(w, r, user) {
 		return
 	}
 

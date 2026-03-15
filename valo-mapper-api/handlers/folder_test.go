@@ -25,6 +25,8 @@ func TestCreateFolder(t *testing.T) {
 
 	mockAuth := &testutils.MockFirebaseAuth{}
 	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-folder-test")
+	_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
+	assert.NoError(t, err)
 
 	t.Run("successfully creates folder", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
@@ -113,6 +115,31 @@ func TestCreateFolder(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
+	t.Run("rejects users without active subscription", func(t *testing.T) {
+		freeUser := testutils.CreateTestUser(t, pool, "firebase-uid-folder-free-user")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *freeUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *freeUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		reqBody := CreateFolderRequest{
+			Name: "Pro Folder",
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
+		w := httptest.NewRecorder()
+
+		CreateFolder(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
+
 	t.Run("rejects missing authorization", func(t *testing.T) {
 		reqBody := CreateFolderRequest{
 			Name: "Test Folder",
@@ -148,6 +175,8 @@ func TestGetFolders(t *testing.T) {
 
 	mockAuth := &testutils.MockFirebaseAuth{}
 	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-get-folders")
+	_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
+	assert.NoError(t, err)
 
 	t.Run("successfully retrieves user folders", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
@@ -181,6 +210,8 @@ func TestGetFolders(t *testing.T) {
 
 	t.Run("returns empty array when no folders", func(t *testing.T) {
 		testUser2 := testutils.CreateTestUser(t, pool, "firebase-uid-no-folders")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser2.ID)
+		assert.NoError(t, err)
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
 			return &auth.Token{UID: *testUser2.FirebaseUID}, nil
@@ -203,6 +234,40 @@ func TestGetFolders(t *testing.T) {
 		testutils.ParseJSONResponse(t, w, &folders)
 
 		assert.Empty(t, folders)
+	})
+
+	t.Run("allows users without active subscription", func(t *testing.T) {
+		freeUser := testutils.CreateTestUser(t, pool, "firebase-uid-get-folders-free-user")
+		otherUser := testutils.CreateTestUser(t, pool, "firebase-uid-get-folders-other-user")
+
+		freeUserFolder := testutils.CreateTestFolder(t, pool, freeUser.ID, "Free User Folder")
+		testutils.CreateTestFolder(t, pool, otherUser.ID, "Other User Folder")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *freeUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *freeUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodGet, "/api/folders", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		GetFolders(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var folders []models.Folder
+		testutils.ParseJSONResponse(t, w, &folders)
+
+		if assert.Len(t, folders, 1) {
+			assert.Equal(t, freeUserFolder.ID, folders[0].ID)
+			assert.Equal(t, freeUserFolder.Name, folders[0].Name)
+			assert.Equal(t, freeUser.ID, folders[0].UserID)
+		}
 	})
 
 	t.Run("rejects missing authorization", func(t *testing.T) {
@@ -236,6 +301,8 @@ func TestUpdateFolder(t *testing.T) {
 
 	mockAuth := &testutils.MockFirebaseAuth{}
 	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-update-folder")
+	_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
+	assert.NoError(t, err)
 
 	t.Run("successfully updates folder name", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
@@ -376,6 +443,33 @@ func TestUpdateFolder(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
+	t.Run("rejects users without active subscription", func(t *testing.T) {
+		freeUser := testutils.CreateTestUser(t, pool, "firebase-uid-update-folder-free-user")
+		folder := testutils.CreateTestFolder(t, pool, freeUser.ID, "Free User Folder")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *freeUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *freeUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		newName := "Blocked Update"
+		reqBody := UpdateFolderRequest{
+			Name: &newName,
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "valid-token")
+		w := httptest.NewRecorder()
+
+		UpdateFolder(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
+
 	t.Run("rejects missing authorization", func(t *testing.T) {
 		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Test Folder")
 
@@ -414,6 +508,8 @@ func TestDeleteFolder(t *testing.T) {
 
 	mockAuth := &testutils.MockFirebaseAuth{}
 	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-delete-folder")
+	_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
+	assert.NoError(t, err)
 
 	t.Run("successfully deletes folder", func(t *testing.T) {
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
@@ -497,6 +593,28 @@ func TestDeleteFolder(t *testing.T) {
 		DeleteFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("rejects users without active subscription", func(t *testing.T) {
+		freeUser := testutils.CreateTestUser(t, pool, "firebase-uid-delete-folder-free-user")
+		folder := testutils.CreateTestFolder(t, pool, freeUser.ID, "Free User Folder")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *freeUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *freeUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		DeleteFolder(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
 
 	t.Run("rejects missing authorization", func(t *testing.T) {
