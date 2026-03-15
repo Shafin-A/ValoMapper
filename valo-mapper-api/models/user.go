@@ -217,6 +217,88 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 	return user, nil
 }
 
+func GetUserByStripeSubscriptionID(stripeSubscriptionID string) (*User, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{}
+	err = conn.QueryRow(context.Background(), `
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, created_at, updated_at,
+		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
+		FROM users
+		WHERE stripe_subscription_id = $1
+	`, stripeSubscriptionID).Scan(
+		&user.ID,
+		&user.FirebaseUID,
+		&user.Email,
+		&user.EmailVerified,
+		&user.Name,
+		&user.TourCompleted,
+		&user.IsSubscribed,
+		&user.SubscriptionEndedAt,
+		&user.StripeCustomerID,
+		&user.StripeSubscriptionID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.RSOSubjectID,
+		&user.RSOAccessToken,
+		&user.RSORefreshToken,
+		&user.RSOIDToken,
+		&user.RSOLinkedAt,
+	)
+
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{}
+	err = conn.QueryRow(context.Background(), `
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, created_at, updated_at,
+		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
+		FROM users
+		WHERE stripe_customer_id = $1
+	`, stripeCustomerID).Scan(
+		&user.ID,
+		&user.FirebaseUID,
+		&user.Email,
+		&user.EmailVerified,
+		&user.Name,
+		&user.TourCompleted,
+		&user.IsSubscribed,
+		&user.SubscriptionEndedAt,
+		&user.StripeCustomerID,
+		&user.StripeSubscriptionID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.RSOSubjectID,
+		&user.RSOAccessToken,
+		&user.RSORefreshToken,
+		&user.RSOIDToken,
+		&user.RSOLinkedAt,
+	)
+
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 // CreateUserWithRSO creates a new user record with Firebase UID, RSO subject and optional profile data.
 func CreateUserWithRSO(firebaseUID, subjectID string, name *string, accessToken, refreshToken, idToken string) (*User, error) {
 	conn, err := db.GetDB()

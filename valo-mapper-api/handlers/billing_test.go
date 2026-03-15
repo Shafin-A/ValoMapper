@@ -977,6 +977,68 @@ func TestHandleStripeWebhook(t *testing.T) {
 		}
 	})
 
+	t.Run("resolves user by stripe subscription id when metadata is missing", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-sub-fallback")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = FALSE, subscription_ended_at = NOW(), stripe_subscription_id = $2, stripe_customer_id = NULL WHERE id = $1`, testUser.ID, "sub_fallback_only")
+		assert.NoError(t, err)
+
+		payload := buildStripeEventPayload(t, "", "customer.subscription.updated", map[string]any{
+			"id":                   "sub_fallback_only",
+			"object":               "subscription",
+			"status":               "active",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"metadata":             map[string]string{},
+		})
+
+		req := newSignedStripeWebhookRequest(payload, webhookSecret)
+		w := httptest.NewRecorder()
+
+		HandleStripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.True(t, updatedUser.IsSubscribed)
+			assert.Nil(t, updatedUser.SubscriptionEndedAt)
+		}
+	})
+
+	t.Run("resolves user by stripe customer id when metadata is missing", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-customer-fallback")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = FALSE, subscription_ended_at = NOW(), stripe_customer_id = $2, stripe_subscription_id = NULL WHERE id = $1`, testUser.ID, "cus_fallback_only")
+		assert.NoError(t, err)
+
+		payload := buildStripeEventPayload(t, "", "customer.subscription.updated", map[string]any{
+			"id":                   "sub_new_from_fallback",
+			"object":               "subscription",
+			"status":               "active",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"customer":             "cus_fallback_only",
+			"metadata":             map[string]string{},
+		})
+
+		req := newSignedStripeWebhookRequest(payload, webhookSecret)
+		w := httptest.NewRecorder()
+
+		HandleStripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.True(t, updatedUser.IsSubscribed)
+			assert.Nil(t, updatedUser.SubscriptionEndedAt)
+			if assert.NotNil(t, updatedUser.StripeSubscriptionID) {
+				assert.Equal(t, "sub_new_from_fallback", *updatedUser.StripeSubscriptionID)
+			}
+		}
+	})
+
 	t.Run("stores scheduled cancellation date from updated event", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-scheduled")
 		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, subscription_ended_at = NULL WHERE id = $1`, testUser.ID)

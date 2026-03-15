@@ -443,7 +443,7 @@ func processStripeSubscriptionEvent(event stripe.Event) (bool, string, error) {
 		return false, "invalid-subscription-payload", err
 	}
 
-	user, reason, err := resolveUserFromStripeMetadata(subscription.Metadata)
+	user, reason, err := resolveUserFromStripeSubscription(&subscription)
 	if err != nil {
 		return false, "", err
 	}
@@ -500,6 +500,48 @@ func stripeSubscriptionCustomerID(stripeSubscription *stripe.Subscription) strin
 	}
 
 	return strings.TrimSpace(stripeSubscription.Customer.ID)
+}
+
+func resolveUserFromStripeSubscription(subscription *stripe.Subscription) (*models.User, string, error) {
+	if subscription == nil {
+		return nil, "invalid-subscription-payload", nil
+	}
+
+	user, reason, err := resolveUserFromStripeMetadata(subscription.Metadata)
+	if err != nil {
+		return nil, "", err
+	}
+	if user != nil {
+		return user, "", nil
+	}
+
+	stripeSubscriptionID := strings.TrimSpace(subscription.ID)
+	if stripeSubscriptionID != "" {
+		userBySubscriptionID, lookupErr := models.GetUserByStripeSubscriptionID(stripeSubscriptionID)
+		if lookupErr != nil {
+			return nil, "", lookupErr
+		}
+		if userBySubscriptionID != nil {
+			return userBySubscriptionID, "", nil
+		}
+	}
+
+	stripeCustomerID := stripeSubscriptionCustomerID(subscription)
+	if stripeCustomerID != "" {
+		userByCustomerID, lookupErr := models.GetUserByStripeCustomerID(stripeCustomerID)
+		if lookupErr != nil {
+			return nil, "", lookupErr
+		}
+		if userByCustomerID != nil {
+			return userByCustomerID, "", nil
+		}
+	}
+
+	if reason != "" {
+		return nil, reason, nil
+	}
+
+	return nil, "user-not-found", nil
 }
 
 func isSupportedStripeSubscriptionEvent(eventType stripe.EventType) bool {
