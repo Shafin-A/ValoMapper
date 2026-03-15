@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+# Regenerate Swagger docs only when Swagger-relevant backend source files are staged.
+staged_api_files="$(git diff --cached --name-only --diff-filter=ACMR)"
+swagger_inputs="$(echo "$staged_api_files" | grep -E '^valo-mapper-api/(main\.go|handlers/.*\.go|routes/.*\.go|models/.*\.go)$' | grep -E -v '^valo-mapper-api/(handlers|routes|models)/.*_test\.go$' || true)"
+if [ -n "$swagger_inputs" ]; then
+  echo "[pre-commit] Regenerating Swagger docs..."
+
+  cd "$repo_root/valo-mapper-api"
+  if command -v swag >/dev/null 2>&1; then
+    swag init -g main.go -o docs
+  else
+    go run github.com/swaggo/swag/cmd/swag@v1.16.6 init -g main.go -o docs
+  fi
+
+  cd "$repo_root"
+  git add valo-mapper-api/docs/docs.go valo-mapper-api/docs/swagger.json valo-mapper-api/docs/swagger.yaml
+  echo "[pre-commit] Swagger docs updated and staged."
+fi

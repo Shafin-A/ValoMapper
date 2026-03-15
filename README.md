@@ -143,6 +143,26 @@ swag init -g main.go -o docs
 git diff --exit-code -- docs/docs.go docs/swagger.json docs/swagger.yaml
 ```
 
+### Local Pre-Commit Hook
+
+This repository includes a versioned Git pre-commit hook at `.githooks/pre-commit` that regenerates Swagger docs and stages generated files only when Swagger-relevant backend source files are staged (`valo-mapper-api/main.go`, `valo-mapper-api/handlers/*.go`, `valo-mapper-api/routes/*.go`, `valo-mapper-api/models/*.go`, excluding `*_test.go`).
+
+One-time setup per local clone:
+
+PowerShell (Windows):
+
+```sh
+./scripts/setup-git-hooks.ps1
+```
+
+Bash (macOS/Linux/Git Bash):
+
+```sh
+./scripts/setup-git-hooks.sh
+```
+
+This sets `core.hooksPath` to `.githooks` in the local repo config.
+
 ## Deployment
 
 ValoMapper is configured for deployment on Fly.io using Docker containers.
