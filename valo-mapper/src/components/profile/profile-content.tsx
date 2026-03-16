@@ -244,6 +244,7 @@ export const ProfileContent = () => {
       : "Owner");
   const stackOwnerDisplayEmail = stackOwner?.email?.trim() || "No email";
   const stackSeatCount = (stackOwner ? 1 : 0) + stackMembers.length;
+  const isActiveStackMember = isStackPlan && !canManageStack;
   const hasPendingStackInvite = Boolean(pendingStackInvite);
   const isPendingInviteAction =
     isAcceptingStackInvite || isDecliningStackInvite;
@@ -437,10 +438,19 @@ export const ProfileContent = () => {
   };
 
   const handleDeclinePendingInvite = () => {
-    leaveStack(undefined, {
+    leaveStack("pending-invite", {
       onSuccess: () => {
         refetch();
         refetchPendingStackInvite();
+      },
+    });
+  };
+
+  const handleLeaveActiveStack = () => {
+    leaveStack("active-membership", {
+      onSuccess: () => {
+        refetch();
+        refetchStackMembers();
       },
     });
   };
@@ -607,6 +617,37 @@ export const ProfileContent = () => {
                     <p className="text-xs text-muted-foreground">
                       Loading stack billing permissions...
                     </p>
+                  ) : isActiveStackMember ? (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isDecliningStackInvite}
+                        >
+                          {isDecliningStackInvite && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Leave Stack
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Leave this stack?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            You will lose Premium Stack access immediately after
+                            leaving unless you have your own active personal
+                            subscription.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Stay in Stack</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleLeaveActiveStack}>
+                            Leave Stack
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   ) : hasScheduledCancellation ? (
                     <Button
                       size="sm"
