@@ -214,10 +214,6 @@ func GetUserByFirebaseUID(uid string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	user.capturePersonalBillingState()
-	if err := user.refreshEffectiveSubscriptionState(); err != nil {
-		return nil, err
-	}
 	return user, nil
 }
 

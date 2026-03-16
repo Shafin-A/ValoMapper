@@ -29,6 +29,8 @@ type StackMember struct {
 	// Populated via JOIN when listing members
 	MemberEmail *string `json:"memberEmail,omitempty"`
 	MemberName  *string `json:"memberName,omitempty"`
+	OwnerEmail  *string `json:"ownerEmail,omitempty"`
+	OwnerName   *string `json:"ownerName,omitempty"`
 }
 
 // GetStackMembersForOwner returns all stack members (pending and active) for the given owner.
@@ -76,11 +78,14 @@ func GetStackMemberByMemberUserID(memberUserID int) (*StackMember, error) {
 
 	m := &StackMember{}
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, owner_user_id, member_user_id, status, invited_at, joined_at
-		FROM stack_members
+		SELECT sm.id, sm.owner_user_id, sm.member_user_id, sm.status, sm.invited_at, sm.joined_at,
+		       owner.email, owner.name
+		FROM stack_members sm
+		JOIN users owner ON owner.id = sm.owner_user_id
 		WHERE member_user_id = $1
 	`, memberUserID).Scan(
 		&m.ID, &m.OwnerUserID, &m.MemberUserID, &m.Status, &m.InvitedAt, &m.JoinedAt,
+		&m.OwnerEmail, &m.OwnerName,
 	)
 	if err == pgx.ErrNoRows {
 		return nil, nil

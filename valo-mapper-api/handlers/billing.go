@@ -80,7 +80,14 @@ type InviteStackMemberRequest struct {
 	FirebaseUID string `json:"firebaseUid"`
 }
 
+type StackOwnerResponse struct {
+	UserID int     `json:"userId"`
+	Email  *string `json:"email,omitempty"`
+	Name   *string `json:"name,omitempty"`
+}
+
 type StackMembersResponse struct {
+	Owner     StackOwnerResponse   `json:"owner"`
 	Members   []models.StackMember `json:"members"`
 	CanManage bool                 `json:"canManage"`
 }

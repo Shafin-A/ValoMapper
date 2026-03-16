@@ -53,6 +53,9 @@ import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
 import { useStackMembers } from "@/hooks/api/use-stack-members";
 import { useInviteStackMember } from "@/hooks/api/use-invite-stack-member";
 import { useRemoveStackMember } from "@/hooks/api/use-remove-stack-member";
+import { usePendingStackInvite } from "@/hooks/api/use-pending-stack-invite";
+import { useAcceptStackInvite } from "@/hooks/api/use-accept-stack-invite";
+import { useLeaveStack } from "@/hooks/api/use-leave-stack";
 
 export const ProfileContent = () => {
   const { data: user, isLoading, refetch } = useUser();
@@ -67,10 +70,20 @@ export const ProfileContent = () => {
     useInviteStackMember();
   const { mutate: removeStackMember, isPending: isRemovingStackMember } =
     useRemoveStackMember();
+  const { mutate: acceptStackInvite, isPending: isAcceptingStackInvite } =
+    useAcceptStackInvite();
+  const { mutate: leaveStack, isPending: isDecliningStackInvite } =
+    useLeaveStack();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isStackPlan = user?.subscriptionPlan === "stack";
+  const canCheckPendingInvite = Boolean(user) && !isStackPlan;
+  const {
+    data: pendingStackInvite,
+    isLoading: isPendingStackInviteLoading,
+    refetch: refetchPendingStackInvite,
+  } = usePendingStackInvite(canCheckPendingInvite);
   const {
     data: stackMembersData,
     isLoading: isStackMembersLoading,
@@ -215,9 +228,33 @@ export const ProfileContent = () => {
   const currentUserName = user.name?.trim() || "";
   const searchQuery = searchParams.toString();
   const returnToPath = searchQuery ? `${pathname}?${searchQuery}` : pathname;
-  const canManageStack = stackMembersData?.canManage === true;
+  const canManageStackFromApi = stackMembersData?.canManage === true;
   const stackMembers = stackMembersData?.members ?? [];
+  const hasSelfActiveStackMembership = stackMembers.some(
+    (member) => member.memberUserId === user.id && member.status === "active",
+  );
+  const canManageStack = canManageStackFromApi && !hasSelfActiveStackMembership;
   const stackRoleLabel = canManageStack ? "Stack Owner" : "Stack Member";
+  const stackOwner = stackMembersData?.owner;
+  const stackOwnerDisplayName =
+    stackOwner?.name?.trim() ||
+    stackOwner?.email?.trim() ||
+    (typeof stackOwner?.userId === "number"
+      ? `User #${stackOwner.userId}`
+      : "Owner");
+  const stackOwnerDisplayEmail = stackOwner?.email?.trim() || "No email";
+  const stackSeatCount = (stackOwner ? 1 : 0) + stackMembers.length;
+  const hasPendingStackInvite = Boolean(pendingStackInvite);
+  const isPendingInviteAction =
+    isAcceptingStackInvite || isDecliningStackInvite;
+  const pendingInviteSentAt = pendingStackInvite?.invitedAt
+    ? new Date(pendingStackInvite.invitedAt)
+    : null;
+  const pendingInviteOwnerDisplay = pendingStackInvite
+    ? pendingStackInvite.ownerName?.trim() ||
+      pendingStackInvite.ownerEmail?.trim() ||
+      `User #${pendingStackInvite.ownerUserId}`
+    : null;
 
   const subscriptionLabel = (() => {
     if (!hasValoMapperPremium) {
@@ -266,7 +303,7 @@ export const ProfileContent = () => {
     if (isStackPlan) {
       return canManageStack
         ? "You are the stack owner for this Premium Stack plan."
-        : "You are covered under a stack owner's Premium Stack plan.";
+        : `You are covered under ${stackOwnerDisplayName}'s Premium Stack plan.`;
     }
 
     if (isYearlyPlan) {
@@ -385,6 +422,29 @@ export const ProfileContent = () => {
     });
   };
 
+  const handleAcceptPendingInvite = () => {
+    if (!pendingStackInvite) {
+      return;
+    }
+
+    acceptStackInvite(pendingStackInvite.id, {
+      onSuccess: () => {
+        refetch();
+        refetchPendingStackInvite();
+        refetchStackMembers();
+      },
+    });
+  };
+
+  const handleDeclinePendingInvite = () => {
+    leaveStack(undefined, {
+      onSuccess: () => {
+        refetch();
+        refetchPendingStackInvite();
+      },
+    });
+  };
+
   return (
     <div className="w-full">
       <Card>
@@ -460,6 +520,66 @@ export const ProfileContent = () => {
               </p>
             </div>
 
+            {!isStackPlan &&
+              (isPendingStackInviteLoading || hasPendingStackInvite) && (
+                <Alert className="border-amber-200 bg-stone-50 text-stone-900 shadow-sm dark:border-amber-900/70 dark:bg-zinc-900 dark:text-zinc-100">
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <AlertTitle>Pending Stack Invite</AlertTitle>
+                  <AlertDescription className="space-y-2 text-stone-700 dark:text-zinc-300">
+                    {isPendingStackInviteLoading ? (
+                      <p className="text-xs">Checking for pending invites...</p>
+                    ) : (
+                      <>
+                        <p className="text-xs">
+                          {`You have a pending invite to join ${pendingInviteOwnerDisplay}'s Premium Stack.`}
+                          {pendingInviteSentAt &&
+                          !Number.isNaN(pendingInviteSentAt.getTime())
+                            ? ` Sent ${pendingInviteSentAt.toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )}.`
+                            : ""}
+                        </p>
+                        <p className="text-xs">
+                          Accepting will activate stack membership and any
+                          personal paid subscription will be scheduled to cancel
+                          at period end.
+                        </p>
+                        <div className="flex gap-2 pt-1">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleAcceptPendingInvite}
+                            disabled={isPendingInviteAction}
+                          >
+                            {isAcceptingStackInvite && (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            Accept Invite
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={handleDeclinePendingInvite}
+                            disabled={isPendingInviteAction}
+                          >
+                            {isDecliningStackInvite && (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            Decline
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
+
             <div className="space-y-2">
               <div className="text-xs font-semibold">Subscription</div>
               <div className="flex items-center justify-between rounded-md border px-3 py-2">
@@ -486,10 +606,6 @@ export const ProfileContent = () => {
                   isStackPlan && isStackMembersLoading ? (
                     <p className="text-xs text-muted-foreground">
                       Loading stack billing permissions...
-                    </p>
-                  ) : isStackPlan && !canManageStack ? (
-                    <p className="text-xs text-muted-foreground">
-                      Your stack owner manages billing for your stack access.
                     </p>
                   ) : hasScheduledCancellation ? (
                     <Button
@@ -555,7 +671,9 @@ export const ProfileContent = () => {
               <div className="space-y-3 rounded-md border p-3">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
-                  <p className="text-sm font-medium">Premium Stack Members</p>
+                  <p className="text-sm font-medium">
+                    Premium Stack Members ({stackSeatCount}/6)
+                  </p>
                 </div>
 
                 {canManageStack && (
@@ -605,17 +723,31 @@ export const ProfileContent = () => {
                   <p className="text-xs text-destructive">
                     Failed to load stack members: {stackMembersError.message}
                   </p>
-                ) : stackMembers.length === 0 ? (
+                ) : !stackOwner && stackMembers.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
-                    No additional stack members yet.
+                    No stack members found.
                   </p>
                 ) : (
                   <div className="space-y-2">
+                    {stackOwner && (
+                      <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {stackOwnerDisplayName}
+                            {" (Owner)"}
+                            {stackOwner.userId === user.id ? " (You)" : ""}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {stackOwnerDisplayEmail}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     {stackMembers.map((member) => {
                       const displayName =
                         member.memberName?.trim() || "Unnamed";
-                      const displayEmail =
-                        member.memberEmail?.trim() || "No email";
+                      const displayEmail = member.memberEmail?.trim() || "";
+                      const isCurrentUser = member.memberUserId === user.id;
 
                       return (
                         <div
@@ -625,13 +757,16 @@ export const ProfileContent = () => {
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium">
                               {displayName}
+                              {isCurrentUser ? " (You)" : ""}
                             </p>
                             <p className="truncate text-xs text-muted-foreground">
                               {displayEmail}
                             </p>
-                            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                              {member.status}
-                            </p>
+                            {member.status === "pending" && (
+                              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                                {member.status}
+                              </p>
+                            )}
                           </div>
                           {canManageStack && (
                             <Button

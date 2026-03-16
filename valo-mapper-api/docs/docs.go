@@ -1706,6 +1706,23 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.StackMember"
                     }
+                },
+                "owner": {
+                    "$ref": "#/definitions/handlers.StackOwnerResponse"
+                }
+            }
+        },
+        "handlers.StackOwnerResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
                 }
             }
         },
@@ -2186,6 +2203,12 @@ const docTemplate = `{
                 },
                 "memberUserId": {
                     "type": "integer"
+                },
+                "ownerEmail": {
+                    "type": "string"
+                },
+                "ownerName": {
+                    "type": "string"
                 },
                 "ownerUserId": {
                     "type": "integer"

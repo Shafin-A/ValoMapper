@@ -108,6 +108,17 @@ definitions:
         items:
           $ref: '#/definitions/models.StackMember'
         type: array
+      owner:
+        $ref: '#/definitions/handlers.StackOwnerResponse'
+    type: object
+  handlers.StackOwnerResponse:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      userId:
+        type: integer
     type: object
   handlers.StrategyResponse:
     properties:
@@ -421,6 +432,10 @@ definitions:
         type: string
       memberUserId:
         type: integer
+      ownerEmail:
+        type: string
+      ownerName:
+        type: string
       ownerUserId:
         type: integer
       status:

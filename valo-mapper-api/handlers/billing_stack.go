@@ -52,7 +52,18 @@ func GetStackMembers(w http.ResponseWriter, r *http.Request, firebaseAuth Fireba
 		return
 	}
 
-	utils.SendJSON(w, http.StatusOK, StackMembersResponse{Members: members, CanManage: canManage}, requestID)
+	ownerResponse := StackOwnerResponse{UserID: ownerUserID}
+	owner, err := models.GetUserByID(ownerUserID)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Failed to fetch stack owner", err), requestID)
+		return
+	}
+	if owner != nil {
+		ownerResponse.Name = owner.Name
+		ownerResponse.Email = owner.Email
+	}
+
+	utils.SendJSON(w, http.StatusOK, StackMembersResponse{Owner: ownerResponse, Members: members, CanManage: canManage}, requestID)
 }
 
 // InviteStackMember godoc
