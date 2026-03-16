@@ -18,7 +18,7 @@ import (
 
 // GetStackMembers godoc
 // @Summary Get stack members
-// @Description Returns pending and active stack members for the authenticated stack owner.
+// @Description Returns pending and active stack members for the authenticated stack context. Stack owners and active stack members can view the roster.
 // @Tags billing
 // @Produce json
 // @Success 200 {object} StackMembersResponse
@@ -36,18 +36,23 @@ func GetStackMembers(w http.ResponseWriter, r *http.Request, firebaseAuth Fireba
 		return
 	}
 
-	if !isStackOwner(user) {
-		utils.SendJSONError(w, utils.NewForbidden(errNotStackOwner.Error()), requestID)
+	ownerUserID, canManage, err := resolveStackViewContext(user)
+	if err != nil {
+		if errors.Is(err, errNotInStack) {
+			utils.SendJSONError(w, utils.NewForbidden(errNotInStack.Error()), requestID)
+			return
+		}
+		utils.SendJSONError(w, utils.NewInternal("Failed to resolve stack context", err), requestID)
 		return
 	}
 
-	members, err := models.GetStackMembersForOwner(user.ID)
+	members, err := models.GetStackMembersForOwner(ownerUserID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Failed to fetch stack members", err), requestID)
 		return
 	}
 
-	utils.SendJSON(w, http.StatusOK, StackMembersResponse{Members: members}, requestID)
+	utils.SendJSON(w, http.StatusOK, StackMembersResponse{Members: members, CanManage: canManage}, requestID)
 }
 
 // InviteStackMember godoc
@@ -320,6 +325,26 @@ func GetPendingStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth 
 // isStackOwner returns true if the user has an active stack subscription.
 func isStackOwner(user *models.User) bool {
 	return user != nil && user.HasActivePersonalPlan(string(checkoutPlanStack))
+}
+
+func resolveStackViewContext(user *models.User) (int, bool, error) {
+	if user == nil {
+		return 0, false, errNotInStack
+	}
+
+	if isStackOwner(user) {
+		return user.ID, true, nil
+	}
+
+	membership, err := models.GetStackMemberByMemberUserID(user.ID)
+	if err != nil {
+		return 0, false, err
+	}
+	if membership == nil || membership.Status != models.StackMemberStatusActive {
+		return 0, false, errNotInStack
+	}
+
+	return membership.OwnerUserID, false, nil
 }
 
 func schedulePersonalSubscriptionCancellationForStackJoin(user *models.User) error {

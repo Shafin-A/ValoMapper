@@ -23,6 +23,7 @@ interface StrategiesHeaderProps {
   isUserLoading: boolean;
   hasValoMapperPremium: boolean;
   hasScheduledCancellation: boolean;
+  subscriptionPlan: "monthly" | "yearly" | "stack" | null;
   premiumTrialDaysLeft: number | null;
   strategyCount: number;
   freeStrategyLimit: number;
@@ -38,6 +39,7 @@ export const StrategiesHeader = ({
   isUserLoading,
   hasValoMapperPremium,
   hasScheduledCancellation,
+  subscriptionPlan,
   premiumTrialDaysLeft,
   strategyCount,
   freeStrategyLimit,
@@ -47,6 +49,7 @@ export const StrategiesHeader = ({
   const hasReachedFreeLimit = isFreePlan && strategyCount >= freeStrategyLimit;
   const hasActivePremiumTrial =
     hasValoMapperPremium &&
+    subscriptionPlan === "monthly" &&
     premiumTrialDaysLeft !== null &&
     premiumTrialDaysLeft > 0;
   const trialLabelSuffix =

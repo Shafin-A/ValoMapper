@@ -102,6 +102,8 @@ definitions:
     type: object
   handlers.StackMembersResponse:
     properties:
+      canManage:
+        type: boolean
       members:
         items:
           $ref: '#/definitions/models.StackMember'
@@ -736,7 +738,7 @@ paths:
   /api/billing/stack/members:
     get:
       description: Returns pending and active stack members for the authenticated
-        stack owner.
+        stack context. Stack owners and active stack members can view the roster.
       produces:
       - application/json
       responses:

@@ -100,7 +100,7 @@ func TestInviteStackMember_RejectsTargetWhoOwnsStackPlan(t *testing.T) {
 	assert.Equal(t, 0, count)
 }
 
-func TestGetStackMembers_RequiresStackOwner(t *testing.T) {
+func TestGetStackMembers_AllowsActiveStackMemberViewOnly(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
@@ -109,15 +109,34 @@ func TestGetStackMembers_RequiresStackOwner(t *testing.T) {
 	defer testutils.CleanupTestDB(t, pool)
 	testutils.TruncateTables(t, pool, "stack_members", "users")
 
-	user := createStackTestUser(t, pool, "regular-user-uid", "regular-user@example.com")
-	mockAuth := newMockAuthForUser(user)
+	owner := createStackTestUser(t, pool, "owner-view-uid", "owner-view@example.com")
+	member := createStackTestUser(t, pool, "member-view-uid", "member-view@example.com")
+
+	_, err := pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = TRUE, subscription_plan = $1
+		WHERE id = $2
+	`, string(checkoutPlanStack), owner.ID)
+	require.NoError(t, err)
+
+	invite, err := models.CreateStackInvite(owner.ID, member.ID)
+	require.NoError(t, err)
+	require.NoError(t, models.AcceptStackInvite(invite.ID, member.ID))
+
+	mockAuth := newMockAuthForUser(member)
 
 	req := testutils.MakeRequest(t, http.MethodGet, "/api/billing/stack/members", nil, "valid-token")
 	w := httptest.NewRecorder()
 
 	GetStackMembers(w, req, mockAuth)
 
-	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var resp StackMembersResponse
+	testutils.ParseJSONResponse(t, w, &resp)
+	assert.False(t, resp.CanManage)
+	require.Len(t, resp.Members, 1)
+	assert.Equal(t, member.ID, resp.Members[0].MemberUserID)
 }
 
 func TestAcceptStackInvite_ActivatesMembership(t *testing.T) {

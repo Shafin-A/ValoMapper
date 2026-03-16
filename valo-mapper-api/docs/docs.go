@@ -436,7 +436,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns pending and active stack members for the authenticated stack owner.",
+                "description": "Returns pending and active stack members for the authenticated stack context. Stack owners and active stack members can view the roster.",
                 "produces": [
                     "application/json"
                 ],
@@ -1698,6 +1698,9 @@ const docTemplate = `{
         "handlers.StackMembersResponse": {
             "type": "object",
             "properties": {
+                "canManage": {
+                    "type": "boolean"
+                },
                 "members": {
                     "type": "array",
                     "items": {

@@ -201,6 +201,7 @@ const MyStrategiesPage = () => {
             isUserLoading={isUserProfileLoading}
             hasValoMapperPremium={hasValoMapperPremium}
             hasScheduledCancellation={hasScheduledCancellation}
+            subscriptionPlan={userProfile?.subscriptionPlan ?? null}
             premiumTrialDaysLeft={premiumTrialDaysLeft}
             strategyCount={strategyCount}
             freeStrategyLimit={FREE_STRATEGY_LIMIT}

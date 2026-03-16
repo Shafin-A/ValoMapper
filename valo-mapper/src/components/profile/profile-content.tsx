@@ -34,13 +34,25 @@ import { useUpdateUser } from "@/hooks/api/use-update-user";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, Loader2, LogOut, Home, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  Copy,
+  Home,
+  Loader2,
+  LogOut,
+  Trash2,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 import { useDeleteUser } from "@/hooks/api/use-delete-user";
 import { useCancelSubscription } from "@/hooks/api/use-cancel-subscription";
 import { useResumeSubscription } from "@/hooks/api/use-resume-subscription";
 import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
+import { useStackMembers } from "@/hooks/api/use-stack-members";
+import { useInviteStackMember } from "@/hooks/api/use-invite-stack-member";
+import { useRemoveStackMember } from "@/hooks/api/use-remove-stack-member";
 
 export const ProfileContent = () => {
   const { data: user, isLoading, refetch } = useUser();
@@ -51,11 +63,23 @@ export const ProfileContent = () => {
     useCancelSubscription();
   const { mutate: resumeSubscription, isPending: isResumePending } =
     useResumeSubscription();
+  const { mutate: inviteStackMember, isPending: isInvitingStackMember } =
+    useInviteStackMember();
+  const { mutate: removeStackMember, isPending: isRemovingStackMember } =
+    useRemoveStackMember();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isStackPlan = user?.subscriptionPlan === "stack";
+  const {
+    data: stackMembersData,
+    isLoading: isStackMembersLoading,
+    error: stackMembersError,
+    refetch: refetchStackMembers,
+  } = useStackMembers(isStackPlan);
 
   const [name, setName] = useState("");
+  const [inviteFirebaseUid, setInviteFirebaseUid] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -171,6 +195,8 @@ export const ProfileContent = () => {
   const isRSOUser = Boolean(
     (user as { rsoSubjectId?: string | null }).rsoSubjectId,
   );
+  const isMonthlyPlan = user.subscriptionPlan === "monthly";
+  const isYearlyPlan = user.subscriptionPlan === "yearly";
   const hasValoMapperPremium = Boolean(user.isSubscribed);
   const premiumTrialDaysLeft =
     typeof user.premiumTrialDaysLeft === "number" &&
@@ -178,7 +204,7 @@ export const ProfileContent = () => {
       ? user.premiumTrialDaysLeft
       : null;
   const hasActivePremiumTrial =
-    hasValoMapperPremium && premiumTrialDaysLeft !== null;
+    hasValoMapperPremium && isMonthlyPlan && premiumTrialDaysLeft !== null;
   const subscriptionEndsAt = user.subscriptionEndedAt
     ? new Date(user.subscriptionEndedAt)
     : null;
@@ -189,9 +215,91 @@ export const ProfileContent = () => {
   const currentUserName = user.name?.trim() || "";
   const searchQuery = searchParams.toString();
   const returnToPath = searchQuery ? `${pathname}?${searchQuery}` : pathname;
+  const canManageStack = stackMembersData?.canManage === true;
+  const stackMembers = stackMembersData?.members ?? [];
+  const stackRoleLabel = canManageStack ? "Stack Owner" : "Stack Member";
+
+  const subscriptionLabel = (() => {
+    if (!hasValoMapperPremium) {
+      return "Free";
+    }
+
+    if (hasActivePremiumTrial) {
+      return `Trial (${premiumTrialDaysLeft} day${premiumTrialDaysLeft === 1 ? "" : "s"} left)`;
+    }
+
+    if (isStackPlan) {
+      return isStackMembersLoading ? "Stack (Loading...)" : stackRoleLabel;
+    }
+
+    if (isYearlyPlan) {
+      return "Yearly";
+    }
+
+    if (isMonthlyPlan) {
+      return "Monthly";
+    }
+
+    return "Premium";
+  })();
+
+  const subscriptionSummary = (() => {
+    if (!hasValoMapperPremium) {
+      return "You are currently on the free plan.";
+    }
+
+    if (hasScheduledCancellation && subscriptionEndsAt) {
+      return `${subscriptionLabel} access remains active until ${subscriptionEndsAt.toLocaleDateString(
+        "en-US",
+        {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        },
+      )}.`;
+    }
+
+    if (hasActivePremiumTrial) {
+      return `You are currently on a Premium trial with ${premiumTrialDaysLeft} day${premiumTrialDaysLeft === 1 ? "" : "s"} remaining.`;
+    }
+
+    if (isStackPlan) {
+      return canManageStack
+        ? "You are the stack owner for this Premium Stack plan."
+        : "You are covered under a stack owner's Premium Stack plan.";
+    }
+
+    if (isYearlyPlan) {
+      return "Your Yearly Premium subscription is active.";
+    }
+
+    if (isMonthlyPlan) {
+      return "Your Monthly Premium subscription is active.";
+    }
+
+    return "Your ValoMapper Premium subscription is active.";
+  })();
+
+  const subscriptionBadgeText = hasScheduledCancellation
+    ? `${subscriptionLabel} (Cancels at Period End)`
+    : subscriptionLabel;
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
+  };
+
+  const handleCopyFirebaseUid = async () => {
+    if (!user.firebaseUid) {
+      toast.error("UID is unavailable");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(user.firebaseUid);
+      toast.success("UID copied");
+    } catch {
+      toast.error("Failed to copy UID");
+    }
   };
 
   const handleSave = async () => {
@@ -254,6 +362,29 @@ export const ProfileContent = () => {
     });
   };
 
+  const handleInviteStackMember = () => {
+    const trimmedUid = inviteFirebaseUid.trim();
+    if (!trimmedUid) {
+      toast.error("Enter a UID to invite");
+      return;
+    }
+
+    inviteStackMember(trimmedUid, {
+      onSuccess: () => {
+        setInviteFirebaseUid("");
+        refetchStackMembers();
+      },
+    });
+  };
+
+  const handleRemoveStackMember = (stackMemberId: number) => {
+    removeStackMember(stackMemberId, {
+      onSuccess: () => {
+        refetchStackMembers();
+      },
+    });
+  };
+
   return (
     <div className="w-full">
       <Card>
@@ -306,6 +437,30 @@ export const ProfileContent = () => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="firebase-uid">UID</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="firebase-uid"
+                  value={user.firebaseUid || ""}
+                  disabled
+                  className="bg-muted font-mono text-xs"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopyFirebaseUid}
+                  disabled={!user.firebaseUid}
+                  aria-label="Copy UID"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Share this UID with a stack owner so they can invite you.
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <div className="text-xs font-semibold">Subscription</div>
               <div className="flex items-center justify-between rounded-md border px-3 py-2">
                 <span className="text-sm">ValoMapper Premium</span>
@@ -320,34 +475,23 @@ export const ProfileContent = () => {
                           : "text-muted-foreground"
                   }`}
                 >
-                  {hasScheduledCancellation
-                    ? "Cancels at Period End"
-                    : hasActivePremiumTrial
-                      ? `Trial (${premiumTrialDaysLeft} day${premiumTrialDaysLeft === 1 ? "" : "s"} left)`
-                      : hasValoMapperPremium
-                        ? "Active"
-                        : "Inactive"}
+                  {subscriptionBadgeText}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {hasScheduledCancellation && subscriptionEndsAt
-                  ? `Your ValoMapper Premium subscription is active until ${subscriptionEndsAt.toLocaleDateString(
-                      "en-US",
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      },
-                    )}.`
-                  : hasActivePremiumTrial
-                    ? `You are currently on a Premium trial with ${premiumTrialDaysLeft} day${premiumTrialDaysLeft === 1 ? "" : "s"} remaining. Billing will resume after your trial period.`
-                    : hasValoMapperPremium
-                      ? "Your ValoMapper Premium subscription is active."
-                      : "You are currently on the free plan."}
+                {subscriptionSummary}
               </p>
               <div className="pt-1">
                 {hasValoMapperPremium ? (
-                  hasScheduledCancellation ? (
+                  isStackPlan && isStackMembersLoading ? (
+                    <p className="text-xs text-muted-foreground">
+                      Loading stack billing permissions...
+                    </p>
+                  ) : isStackPlan && !canManageStack ? (
+                    <p className="text-xs text-muted-foreground">
+                      Your stack owner manages billing for your stack access.
+                    </p>
+                  ) : hasScheduledCancellation ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -406,6 +550,110 @@ export const ProfileContent = () => {
                 )}
               </div>
             </div>
+
+            {isStackPlan && (
+              <div className="space-y-3 rounded-md border p-3">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-medium">Premium Stack Members</p>
+                </div>
+
+                {canManageStack && (
+                  <div className="space-y-2">
+                    <Label htmlFor="stack-invite-uid">Invite by UID</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="stack-invite-uid"
+                        value={inviteFirebaseUid}
+                        onChange={(e) => setInviteFirebaseUid(e.target.value)}
+                        placeholder="Enter UID"
+                        disabled={isInvitingStackMember}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleInviteStackMember();
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleInviteStackMember}
+                        disabled={
+                          isInvitingStackMember || !inviteFirebaseUid.trim()
+                        }
+                      >
+                        {isInvitingStackMember ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <UserPlus className="mr-2 h-4 w-4" />
+                        )}
+                        Invite
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Add members with their UID.
+                    </p>
+                  </div>
+                )}
+
+                {isStackMembersLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : stackMembersError ? (
+                  <p className="text-xs text-destructive">
+                    Failed to load stack members: {stackMembersError.message}
+                  </p>
+                ) : stackMembers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    No additional stack members yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {stackMembers.map((member) => {
+                      const displayName =
+                        member.memberName?.trim() || "Unnamed";
+                      const displayEmail =
+                        member.memberEmail?.trim() || "No email";
+
+                      return (
+                        <div
+                          key={member.id}
+                          className="flex items-center justify-between rounded-md border px-3 py-2"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">
+                              {displayName}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {displayEmail}
+                            </p>
+                            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                              {member.status}
+                            </p>
+                          </div>
+                          {canManageStack && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleRemoveStackMember(member.id)}
+                              disabled={isRemovingStackMember}
+                            >
+                              {isRemovingStackMember && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              )}
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div className="space-y-2">

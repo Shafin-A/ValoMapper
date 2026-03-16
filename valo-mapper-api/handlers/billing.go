@@ -10,6 +10,7 @@ import (
 
 var (
 	errNotStackOwner        = errors.New("not-stack-owner")
+	errNotInStack           = errors.New("not-in-stack")
 	errStackFull            = errors.New("stack-full")
 	errTargetAlreadyInStack = errors.New("target-already-in-stack")
 	errCannotInviteSelf     = errors.New("cannot-invite-self")
@@ -80,5 +81,6 @@ type InviteStackMemberRequest struct {
 }
 
 type StackMembersResponse struct {
-	Members []models.StackMember `json:"members"`
+	Members   []models.StackMember `json:"members"`
+	CanManage bool                 `json:"canManage"`
 }

@@ -334,8 +334,25 @@ export type User = {
   tourCompleted?: boolean;
   isSubscribed?: boolean;
   subscriptionEndedAt?: Date | string | null;
+  subscriptionPlan?: "monthly" | "yearly" | "stack" | null;
   premiumTrialEligible?: boolean;
   premiumTrialDaysLeft?: number;
+};
+
+export type StackMember = {
+  id: number;
+  ownerUserId: number;
+  memberUserId: number;
+  status: "pending" | "active";
+  invitedAt: Date | string;
+  joinedAt?: Date | string | null;
+  memberEmail?: string | null;
+  memberName?: string | null;
+};
+
+export type StackMembersResponse = {
+  members: StackMember[];
+  canManage: boolean;
 };
 
 export type ItemType = "agent" | "ability" | "text" | "image" | "tool";
