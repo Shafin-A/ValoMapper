@@ -290,6 +290,8 @@ func parseCheckoutPlan(raw string) (checkoutPlan, error) {
 		return checkoutPlanMonthly, nil
 	case string(checkoutPlanYearly):
 		return checkoutPlanYearly, nil
+	case string(checkoutPlanStack):
+		return checkoutPlanStack, nil
 	default:
 		return "", errUnsupportedCheckoutPlan
 	}
@@ -368,7 +370,7 @@ func firstAllowedOrigin() string {
 }
 
 func recoverStaleStripeSubscriptionForCheckout(user *models.User) (bool, error) {
-	if user == nil || !user.IsSubscribed {
+	if user == nil || !user.HasActivePersonalSubscription() {
 		return false, nil
 	}
 
@@ -384,7 +386,7 @@ func recoverStaleStripeSubscriptionForCheckout(user *models.User) (bool, error) 
 		}
 
 		now := time.Now().UTC()
-		if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, false, &now); updateErr != nil {
+		if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, false, &now, nil); updateErr != nil {
 			return false, updateErr
 		}
 
@@ -416,7 +418,12 @@ func recoverStaleStripeSubscriptionForCheckout(user *models.User) (bool, error) 
 		nextStripeSubscriptionID = &normalizedSubscriptionID
 	}
 
-	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt); err != nil {
+	updatedPlan := user.PersonalSubscriptionPlan
+	if !isSubscribed {
+		updatedPlan = nil
+	}
+
+	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, updatedPlan); err != nil {
 		return false, err
 	}
 
@@ -432,7 +439,7 @@ func recoverStaleStripeCustomerIDForCheckout(user *models.User, checkoutErr erro
 		return false, nil
 	}
 
-	if err := user.UpdateStripeBillingState(nil, user.StripeSubscriptionID, user.IsSubscribed, user.SubscriptionEndedAt); err != nil {
+	if err := user.UpdateStripeBillingState(nil, user.StripeSubscriptionID, user.PersonalIsSubscribed, user.PersonalSubscriptionEndedAt, user.PersonalSubscriptionPlan); err != nil {
 		return false, err
 	}
 

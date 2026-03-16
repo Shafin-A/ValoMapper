@@ -2,9 +2,17 @@ package handlers
 
 import (
 	"errors"
+	"valo-mapper-api/models"
 
 	"github.com/stripe/stripe-go/v82/checkout/session"
 	"github.com/stripe/stripe-go/v82/subscription"
+)
+
+var (
+	errNotStackOwner        = errors.New("not-stack-owner")
+	errStackFull            = errors.New("stack-full")
+	errTargetAlreadyInStack = errors.New("target-already-in-stack")
+	errCannotInviteSelf     = errors.New("cannot-invite-self")
 )
 
 var createStripeCheckoutSessionFn = session.New
@@ -25,9 +33,13 @@ type checkoutPlan string
 const (
 	checkoutPlanMonthly checkoutPlan = "monthly"
 	checkoutPlanYearly  checkoutPlan = "yearly"
+	checkoutPlanStack   checkoutPlan = "stack"
 
 	defaultMonthlyPriceLookupKey = "standard_monthly"
 	defaultYearlyPriceLookupKey  = "standard_yearly"
+	defaultStackPriceLookupKey   = "standard_stack"
+
+	StackMaxMembers = 6
 )
 
 type CreateCheckoutSessionResponse struct {
@@ -60,4 +72,13 @@ type BillingPlanPriceResponse struct {
 type BillingPlansResponse struct {
 	Monthly BillingPlanPriceResponse `json:"monthly"`
 	Yearly  BillingPlanPriceResponse `json:"yearly"`
+	Stack   BillingPlanPriceResponse `json:"stack"`
+}
+
+type InviteStackMemberRequest struct {
+	FirebaseUID string `json:"firebaseUid"`
+}
+
+type StackMembersResponse struct {
+	Members []models.StackMember `json:"members"`
 }

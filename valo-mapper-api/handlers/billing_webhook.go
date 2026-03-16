@@ -143,7 +143,13 @@ func processStripeSubscriptionEvent(event stripe.Event) (bool, string, error) {
 		subscription.EndedAt,
 		subscription.CanceledAt,
 	)
-	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt); err != nil {
+
+	var subscriptionPlan *string
+	if planVal := strings.TrimSpace(subscription.Metadata["plan"]); planVal != "" && isSubscribed {
+		subscriptionPlan = &planVal
+	}
+
+	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, subscriptionPlan); err != nil {
 		return false, "", err
 	}
 

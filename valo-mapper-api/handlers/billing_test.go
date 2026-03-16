@@ -550,6 +550,7 @@ func TestGetBillingPlans(t *testing.T) {
 	originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
 	originalMonthlyLookupKey, hadMonthlyLookupKey := os.LookupEnv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY")
 	originalYearlyLookupKey, hadYearlyLookupKey := os.LookupEnv("STRIPE_PRICE_LOOKUP_KEY_YEARLY")
+	originalStackLookupKey, hadStackLookupKey := os.LookupEnv("STRIPE_PRICE_LOOKUP_KEY_STACK")
 
 	defer func() {
 		if hadSecret {
@@ -569,12 +570,19 @@ func TestGetBillingPlans(t *testing.T) {
 		} else {
 			_ = os.Unsetenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY")
 		}
+
+		if hadStackLookupKey {
+			_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_STACK", originalStackLookupKey)
+		} else {
+			_ = os.Unsetenv("STRIPE_PRICE_LOOKUP_KEY_STACK")
+		}
 	}()
 
-	t.Run("returns monthly and yearly plans", func(t *testing.T) {
+	t.Run("returns monthly, yearly, and stack plans", func(t *testing.T) {
 		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_checkout")
 		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY", "standard_monthly")
 		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY", "standard_yearly")
+		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_STACK", "standard_stack")
 
 		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
 			switch plan {
@@ -597,6 +605,18 @@ func TestGetBillingPlans(t *testing.T) {
 					Currency:          stripe.CurrencyUSD,
 					UnitAmount:        4499,
 					UnitAmountDecimal: 4499,
+					Recurring: &stripe.PriceRecurring{
+						Interval:      stripe.PriceRecurringIntervalYear,
+						IntervalCount: 1,
+					},
+				}, nil
+			case checkoutPlanStack:
+				return &stripe.Price{
+					ID:                "price_stack_test",
+					LookupKey:         "standard_stack",
+					Currency:          stripe.CurrencyUSD,
+					UnitAmount:        12499,
+					UnitAmountDecimal: 12499,
 					Recurring: &stripe.PriceRecurring{
 						Interval:      stripe.PriceRecurringIntervalYear,
 						IntervalCount: 1,
@@ -628,6 +648,12 @@ func TestGetBillingPlans(t *testing.T) {
 		assert.Equal(t, "USD", response.Yearly.Currency)
 		assert.Equal(t, int64(4499), response.Yearly.UnitAmount)
 		assert.Equal(t, "year", response.Yearly.Interval)
+
+		assert.Equal(t, "stack", response.Stack.Plan)
+		assert.Equal(t, "price_stack_test", response.Stack.PriceID)
+		assert.Equal(t, "USD", response.Stack.Currency)
+		assert.Equal(t, int64(12499), response.Stack.UnitAmount)
+		assert.Equal(t, "year", response.Stack.Interval)
 	})
 
 	t.Run("returns internal error when stripe config is missing", func(t *testing.T) {

@@ -31,4 +31,29 @@ func RegisterBillingRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 	billing.HandleFunc("/webhook", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandleStripeWebhook(w, r)
 	}).Methods("POST")
+
+	// Stack management routes
+	billing.HandleFunc("/stack/members", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetStackMembers(w, r, authClient)
+	}).Methods("GET")
+
+	billing.HandleFunc("/stack/invite", func(w http.ResponseWriter, r *http.Request) {
+		handlers.InviteStackMember(w, r, authClient)
+	}).Methods("POST")
+
+	billing.HandleFunc("/stack/members/{id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+		handlers.RemoveStackMember(w, r, authClient)
+	}).Methods("DELETE")
+
+	billing.HandleFunc("/stack/accept/{id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+		handlers.AcceptStackInvite(w, r, authClient)
+	}).Methods("POST")
+
+	billing.HandleFunc("/stack/leave", func(w http.ResponseWriter, r *http.Request) {
+		handlers.LeaveStack(w, r, authClient)
+	}).Methods("DELETE")
+
+	billing.HandleFunc("/stack/pending-invite", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetPendingStackInvite(w, r, authClient)
+	}).Methods("GET")
 }

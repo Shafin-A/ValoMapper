@@ -61,9 +61,22 @@ func GetBillingPlans(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	stackPrice, err := findStripePriceForPlanFn(checkoutPlanStack)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
+		return
+	}
+
+	stackResponse, err := buildBillingPlanPriceResponse(checkoutPlanStack, stackPrice)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Stripe billing plan configuration is invalid", err), requestID)
+		return
+	}
+
 	utils.SendJSON(w, http.StatusOK, BillingPlansResponse{
 		Monthly: monthlyResponse,
 		Yearly:  yearlyResponse,
+		Stack:   stackResponse,
 	}, requestID)
 }
 
@@ -83,6 +96,13 @@ func checkoutLookupKeyForPlan(plan checkoutPlan) (string, error) {
 		}
 
 		return lookupKey, nil
+	case checkoutPlanStack:
+		lookupKey := strings.TrimSpace(os.Getenv("STRIPE_PRICE_LOOKUP_KEY_STACK"))
+		if lookupKey == "" {
+			lookupKey = defaultStackPriceLookupKey
+		}
+
+		return lookupKey, nil
 	default:
 		return "", errUnsupportedCheckoutPlan
 	}
@@ -92,7 +112,7 @@ func expectedIntervalForPlan(plan checkoutPlan) (stripe.PriceRecurringInterval, 
 	switch plan {
 	case checkoutPlanMonthly:
 		return stripe.PriceRecurringIntervalMonth, nil
-	case checkoutPlanYearly:
+	case checkoutPlanYearly, checkoutPlanStack:
 		return stripe.PriceRecurringIntervalYear, nil
 	default:
 		return "", errUnsupportedCheckoutPlan
@@ -149,7 +169,7 @@ func buildBillingPlanPriceResponse(plan checkoutPlan, stripePrice *stripe.Price)
 	}
 
 	expectedInterval := string(stripe.PriceRecurringIntervalMonth)
-	if plan == checkoutPlanYearly {
+	if plan == checkoutPlanYearly || plan == checkoutPlanStack {
 		expectedInterval = string(stripe.PriceRecurringIntervalYear)
 	}
 

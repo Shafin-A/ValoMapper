@@ -21,6 +21,8 @@ definitions:
     properties:
       monthly:
         $ref: '#/definitions/handlers.BillingPlanPriceResponse'
+      stack:
+        $ref: '#/definitions/handlers.BillingPlanPriceResponse'
       yearly:
         $ref: '#/definitions/handlers.BillingPlanPriceResponse'
     type: object
@@ -81,6 +83,11 @@ definitions:
       requestId:
         type: string
     type: object
+  handlers.InviteStackMemberRequest:
+    properties:
+      firebaseUid:
+        type: string
+    type: object
   handlers.RSOCallbackResponse:
     properties:
       customToken:
@@ -92,6 +99,13 @@ definitions:
     properties:
       code:
         type: string
+    type: object
+  handlers.StackMembersResponse:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/models.StackMember'
+        type: array
     type: object
   handlers.StrategyResponse:
     properties:
@@ -390,6 +404,26 @@ definitions:
       "y":
         type: number
     type: object
+  models.StackMember:
+    properties:
+      id:
+        type: integer
+      invitedAt:
+        type: string
+      joinedAt:
+        type: string
+      memberEmail:
+        description: Populated via JOIN when listing members
+        type: string
+      memberName:
+        type: string
+      memberUserId:
+        type: integer
+      ownerUserId:
+        type: integer
+      status:
+        type: string
+    type: object
   models.User:
     properties:
       createdAt:
@@ -415,6 +449,8 @@ definitions:
       rsoSubjectId:
         type: string
       subscriptionEndedAt:
+        type: string
+      subscriptionPlan:
         type: string
       tourCompleted:
         type: boolean
@@ -576,6 +612,221 @@ paths:
       security:
       - BearerAuth: []
       summary: Resume current subscription
+      tags:
+      - billing
+  /api/billing/stack/accept/{id}:
+    post:
+      description: Accepts a pending stack invite for the authenticated user and schedules
+        cancellation of any personal Stripe subscription.
+      parameters:
+      - description: Stack invite ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Accept stack invite
+      tags:
+      - billing
+  /api/billing/stack/invite:
+    post:
+      consumes:
+      - application/json
+      description: Invites a user by Firebase UID to join the authenticated stack
+        owner's plan.
+      parameters:
+      - description: Invite request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.InviteStackMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.StackMember'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Invite user to stack
+      tags:
+      - billing
+  /api/billing/stack/leave:
+    delete:
+      description: Leaves the stack that the authenticated user currently belongs
+        to.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Leave current stack
+      tags:
+      - billing
+  /api/billing/stack/members:
+    get:
+      description: Returns pending and active stack members for the authenticated
+        stack owner.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.StackMembersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get stack members
+      tags:
+      - billing
+  /api/billing/stack/members/{id}:
+    delete:
+      description: Removes a member invite or active member from the authenticated
+        stack owner's stack.
+      parameters:
+      - description: Stack member record ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove stack member
+      tags:
+      - billing
+  /api/billing/stack/pending-invite:
+    get:
+      description: Returns the pending stack invite for the authenticated user if
+        one exists.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.StackMember'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get pending stack invite
       tags:
       - billing
   /api/billing/webhook:

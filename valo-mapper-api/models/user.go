@@ -14,30 +14,99 @@ func strPtr(s string) *string {
 }
 
 type User struct {
-	ID                    int        `json:"id"`
-	FirebaseUID           *string    `json:"firebaseUid,omitempty"`
-	Email                 *string    `json:"email,omitempty"`
-	EmailVerified         bool       `json:"emailVerified"`
-	Name                  *string    `json:"name,omitempty"`
-	CreatedAt             time.Time  `json:"createdAt"`
-	UpdatedAt             time.Time  `json:"updatedAt"`
-	TourCompleted         bool       `json:"tourCompleted"`
-	IsSubscribed          bool       `json:"isSubscribed"`
-	SubscriptionEndedAt   *time.Time `json:"subscriptionEndedAt,omitempty"`
-	StripeCustomerID      *string    `json:"-"`
-	StripeSubscriptionID  *string    `json:"-"`
-	PremiumTrialClaimedAt *time.Time `json:"-"`
-	PremiumTrialEligible  bool       `json:"premiumTrialEligible"`
-	PremiumTrialDaysLeft  *int       `json:"premiumTrialDaysLeft,omitempty"`
-	RSOSubjectID          *string    `json:"rsoSubjectId,omitempty"`
-	RSOAccessToken        *string    `json:"-"`
-	RSORefreshToken       *string    `json:"-"`
-	RSOIDToken            *string    `json:"-"`
-	RSOLinkedAt           *time.Time `json:"rsoLinkedAt,omitempty"`
+	ID                          int        `json:"id"`
+	FirebaseUID                 *string    `json:"firebaseUid,omitempty"`
+	Email                       *string    `json:"email,omitempty"`
+	EmailVerified               bool       `json:"emailVerified"`
+	Name                        *string    `json:"name,omitempty"`
+	CreatedAt                   time.Time  `json:"createdAt"`
+	UpdatedAt                   time.Time  `json:"updatedAt"`
+	TourCompleted               bool       `json:"tourCompleted"`
+	IsSubscribed                bool       `json:"isSubscribed"`
+	SubscriptionEndedAt         *time.Time `json:"subscriptionEndedAt,omitempty"`
+	SubscriptionPlan            *string    `json:"subscriptionPlan,omitempty"`
+	PersonalIsSubscribed        bool       `json:"-"`
+	PersonalSubscriptionEndedAt *time.Time `json:"-"`
+	PersonalSubscriptionPlan    *string    `json:"-"`
+	StripeCustomerID            *string    `json:"-"`
+	StripeSubscriptionID        *string    `json:"-"`
+	PremiumTrialClaimedAt       *time.Time `json:"-"`
+	PremiumTrialEligible        bool       `json:"premiumTrialEligible"`
+	PremiumTrialDaysLeft        *int       `json:"premiumTrialDaysLeft,omitempty"`
+	RSOSubjectID                *string    `json:"rsoSubjectId,omitempty"`
+	RSOAccessToken              *string    `json:"-"`
+	RSORefreshToken             *string    `json:"-"`
+	RSOIDToken                  *string    `json:"-"`
+	RSOLinkedAt                 *time.Time `json:"rsoLinkedAt,omitempty"`
 }
 
 func (u *User) RefreshPremiumTrialEligibility() {
 	u.PremiumTrialEligible = !u.IsSubscribed && u.PremiumTrialClaimedAt == nil
+}
+
+func (u *User) HasActivePersonalSubscription() bool {
+	return u != nil && u.PersonalIsSubscribed
+}
+
+func (u *User) HasActivePersonalPlan(plan string) bool {
+	return u.HasActivePersonalSubscription() && u.PersonalSubscriptionPlan != nil && *u.PersonalSubscriptionPlan == plan
+}
+
+func (u *User) capturePersonalBillingState() {
+	if u == nil {
+		return
+	}
+
+	u.PersonalIsSubscribed = u.IsSubscribed
+	u.PersonalSubscriptionEndedAt = u.SubscriptionEndedAt
+	u.PersonalSubscriptionPlan = u.SubscriptionPlan
+}
+
+func laterSubscriptionEndedAt(first, second *time.Time) *time.Time {
+	if first == nil || second == nil {
+		return nil
+	}
+
+	if second.After(*first) {
+		return second
+	}
+
+	return first
+}
+
+func (u *User) refreshEffectiveSubscriptionState() error {
+	if u == nil {
+		return nil
+	}
+
+	hasStackAccess, stackSubscriptionEndedAt, err := GetActiveStackAccessState(u.ID)
+	if err != nil {
+		return err
+	}
+
+	personalIsSubscribed := u.PersonalIsSubscribed
+
+	switch {
+	case personalIsSubscribed && hasStackAccess:
+		u.IsSubscribed = true
+		u.SubscriptionEndedAt = laterSubscriptionEndedAt(u.PersonalSubscriptionEndedAt, stackSubscriptionEndedAt)
+		u.SubscriptionPlan = u.PersonalSubscriptionPlan
+	case personalIsSubscribed:
+		u.IsSubscribed = true
+		u.SubscriptionEndedAt = u.PersonalSubscriptionEndedAt
+		u.SubscriptionPlan = u.PersonalSubscriptionPlan
+	case hasStackAccess:
+		stackPlan := "stack"
+		u.IsSubscribed = true
+		u.SubscriptionEndedAt = stackSubscriptionEndedAt
+		u.SubscriptionPlan = &stackPlan
+	default:
+		u.IsSubscribed = false
+		u.SubscriptionEndedAt = u.PersonalSubscriptionEndedAt
+		u.SubscriptionPlan = u.PersonalSubscriptionPlan
+	}
+
+	return nil
 }
 
 func (u *User) Update() error {
@@ -99,7 +168,7 @@ func (u *User) LoadByFirebaseUID() error {
 	}
 
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, premium_trial_claimed_at, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE firebase_uid = $1
@@ -114,6 +183,7 @@ func (u *User) LoadByFirebaseUID() error {
 		&u.SubscriptionEndedAt,
 		&u.StripeCustomerID,
 		&u.StripeSubscriptionID,
+		&u.SubscriptionPlan,
 		&u.PremiumTrialClaimedAt,
 		&u.CreatedAt,
 		&u.UpdatedAt,
@@ -123,8 +193,13 @@ func (u *User) LoadByFirebaseUID() error {
 		&u.RSOIDToken,
 		&u.RSOLinkedAt,
 	)
+	if err != nil {
+		return err
+	}
 
-	return err
+	u.capturePersonalBillingState()
+
+	return u.refreshEffectiveSubscriptionState()
 }
 
 func GetUserByFirebaseUID(uid string) (*User, error) {
@@ -139,6 +214,10 @@ func GetUserByFirebaseUID(uid string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	user.capturePersonalBillingState()
+	if err := user.refreshEffectiveSubscriptionState(); err != nil {
+		return nil, err
+	}
 	return user, nil
 }
 
@@ -150,7 +229,7 @@ func GetUserByID(id int) (*User, error) {
 
 	user := &User{}
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, premium_trial_claimed_at, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE id = $1
@@ -165,6 +244,7 @@ func GetUserByID(id int) (*User, error) {
 		&user.SubscriptionEndedAt,
 		&user.StripeCustomerID,
 		&user.StripeSubscriptionID,
+		&user.SubscriptionPlan,
 		&user.PremiumTrialClaimedAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -179,6 +259,10 @@ func GetUserByID(id int) (*User, error) {
 		return nil, nil
 	}
 	if err != nil {
+		return nil, err
+	}
+	user.capturePersonalBillingState()
+	if err := user.refreshEffectiveSubscriptionState(); err != nil {
 		return nil, err
 	}
 	return user, nil
@@ -193,7 +277,7 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 
 	user := &User{}
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, premium_trial_claimed_at, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE rso_subject_id = $1
@@ -208,6 +292,7 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 		&user.SubscriptionEndedAt,
 		&user.StripeCustomerID,
 		&user.StripeSubscriptionID,
+		&user.SubscriptionPlan,
 		&user.PremiumTrialClaimedAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -224,6 +309,10 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	user.capturePersonalBillingState()
+	if err := user.refreshEffectiveSubscriptionState(); err != nil {
+		return nil, err
+	}
 	return user, nil
 }
 
@@ -235,7 +324,7 @@ func GetUserByStripeSubscriptionID(stripeSubscriptionID string) (*User, error) {
 
 	user := &User{}
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, premium_trial_claimed_at, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE stripe_subscription_id = $1
@@ -250,6 +339,7 @@ func GetUserByStripeSubscriptionID(stripeSubscriptionID string) (*User, error) {
 		&user.SubscriptionEndedAt,
 		&user.StripeCustomerID,
 		&user.StripeSubscriptionID,
+		&user.SubscriptionPlan,
 		&user.PremiumTrialClaimedAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -266,6 +356,10 @@ func GetUserByStripeSubscriptionID(stripeSubscriptionID string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	user.capturePersonalBillingState()
+	if err := user.refreshEffectiveSubscriptionState(); err != nil {
+		return nil, err
+	}
 	return user, nil
 }
 
@@ -277,7 +371,7 @@ func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
 
 	user := &User{}
 	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, premium_trial_claimed_at, created_at, updated_at,
+		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, subscription_ended_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
 		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
 		FROM users
 		WHERE stripe_customer_id = $1
@@ -292,6 +386,7 @@ func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
 		&user.SubscriptionEndedAt,
 		&user.StripeCustomerID,
 		&user.StripeSubscriptionID,
+		&user.SubscriptionPlan,
 		&user.PremiumTrialClaimedAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -306,6 +401,10 @@ func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
 		return nil, nil
 	}
 	if err != nil {
+		return nil, err
+	}
+	user.capturePersonalBillingState()
+	if err := user.refreshEffectiveSubscriptionState(); err != nil {
 		return nil, err
 	}
 	return user, nil
@@ -408,14 +507,24 @@ func (u *User) UpdateSubscriptionStatus(isSubscribed bool, subscriptionEndedAt *
 
 	err = conn.QueryRow(context.Background(), `
 		UPDATE users
-		SET is_subscribed = $1, subscription_ended_at = $2, updated_at = NOW()
+		SET is_subscribed = $1,
+		    subscription_ended_at = $2,
+		    subscription_plan = CASE WHEN $1 THEN subscription_plan ELSE NULL END,
+		    updated_at = NOW()
 		WHERE id = $3
 		RETURNING updated_at
 	`, isSubscribed, subscriptionEndedAt, u.ID).Scan(&u.UpdatedAt)
 
 	if err == nil {
-		u.IsSubscribed = isSubscribed
-		u.SubscriptionEndedAt = subscriptionEndedAt
+		u.PersonalIsSubscribed = isSubscribed
+		u.PersonalSubscriptionEndedAt = subscriptionEndedAt
+		if !isSubscribed {
+			u.PersonalSubscriptionPlan = nil
+		}
+		u.IsSubscribed = u.PersonalIsSubscribed
+		u.SubscriptionEndedAt = u.PersonalSubscriptionEndedAt
+		u.SubscriptionPlan = u.PersonalSubscriptionPlan
+		return u.refreshEffectiveSubscriptionState()
 	}
 
 	return err
@@ -522,6 +631,7 @@ func (u *User) UpdateStripeBillingState(
 	stripeSubscriptionID *string,
 	isSubscribed bool,
 	subscriptionEndedAt *time.Time,
+	subscriptionPlan *string,
 ) error {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -543,10 +653,11 @@ func (u *User) UpdateStripeBillingState(
 		    stripe_subscription_id = $2,
 		    is_subscribed = $3,
 		    subscription_ended_at = $4,
+		    subscription_plan = $5,
 		    updated_at = NOW()
-		WHERE id = $5
+		WHERE id = $6
 		RETURNING updated_at
-	`, stripeCustomerID, stripeSubscriptionID, isSubscribed, subscriptionEndedAt, u.ID).Scan(&u.UpdatedAt)
+	`, stripeCustomerID, stripeSubscriptionID, isSubscribed, subscriptionEndedAt, subscriptionPlan, u.ID).Scan(&u.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -557,8 +668,12 @@ func (u *User) UpdateStripeBillingState(
 
 	u.StripeCustomerID = stripeCustomerID
 	u.StripeSubscriptionID = stripeSubscriptionID
-	u.IsSubscribed = isSubscribed
-	u.SubscriptionEndedAt = subscriptionEndedAt
+	u.PersonalIsSubscribed = isSubscribed
+	u.PersonalSubscriptionEndedAt = subscriptionEndedAt
+	u.PersonalSubscriptionPlan = subscriptionPlan
+	u.IsSubscribed = u.PersonalIsSubscribed
+	u.SubscriptionEndedAt = u.PersonalSubscriptionEndedAt
+	u.SubscriptionPlan = u.PersonalSubscriptionPlan
 
-	return nil
+	return u.refreshEffectiveSubscriptionState()
 }

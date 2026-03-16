@@ -38,7 +38,7 @@ func CancelSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 		return
 	}
 
-	if !user.IsSubscribed {
+	if !user.HasActivePersonalSubscription() {
 		utils.SendJSONError(w, utils.NewBadRequest("No active subscription to cancel"), requestID)
 		return
 	}
@@ -113,7 +113,7 @@ func ResumeSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 		return
 	}
 
-	if !user.IsSubscribed {
+	if !user.HasActivePersonalSubscription() {
 		utils.SendJSONError(w, utils.NewBadRequest("No active subscription to resume"), requestID)
 		return
 	}
@@ -199,7 +199,7 @@ func findStripeSubscriptionForUser(user *models.User) (*stripe.Subscription, err
 	if err != nil {
 		var stripeErr *stripe.Error
 		if errors.As(err, &stripeErr) && stripeErr.Code == stripe.ErrorCodeResourceMissing {
-			if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, user.IsSubscribed, user.SubscriptionEndedAt); updateErr != nil {
+			if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, user.PersonalIsSubscribed, user.PersonalSubscriptionEndedAt, user.PersonalSubscriptionPlan); updateErr != nil {
 				return nil, updateErr
 			}
 
