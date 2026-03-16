@@ -1266,6 +1266,9 @@
                 },
                 "returnTo": {
                     "type": "string"
+                },
+                "startWithTrial": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1828,6 +1831,12 @@
                 },
                 "name": {
                     "type": "string"
+                },
+                "premiumTrialDaysLeft": {
+                    "type": "integer"
+                },
+                "premiumTrialEligible": {
+                    "type": "boolean"
                 },
                 "rsoLinkedAt": {
                     "type": "string"

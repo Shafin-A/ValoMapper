@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,12 +12,20 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"valo-mapper-api/db"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
 
 	"github.com/stripe/stripe-go/v82"
 )
+
+const (
+	defaultCheckoutPremiumTrialDays int64 = 14
+	checkoutUserLockNamespace       int   = 80741
+)
+
+var errCheckoutActiveSubscriptionExists = errors.New("checkout-active-subscription-exists")
 
 // CreateCheckoutSession godoc
 // @Summary Create Stripe checkout session
@@ -60,19 +69,6 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 
 	stripe.Key = stripeSecretKey
 
-	if user.IsSubscribed {
-		recovered, err := recoverStaleStripeSubscriptionForCheckout(user)
-		if err != nil {
-			utils.SendJSONError(w, utils.NewInternal("Unable to verify subscription state", err), requestID)
-			return
-		}
-
-		if !recovered && user.IsSubscribed {
-			utils.SendJSONError(w, utils.NewConflict("Active subscription already exists", nil), requestID)
-			return
-		}
-	}
-
 	selectedPlan, err := parseCheckoutPlan(checkoutRequest.Plan)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Unsupported checkout plan"), requestID)
@@ -85,17 +81,6 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		return
 	}
 
-	metadata := map[string]string{
-		"userId": strconv.Itoa(user.ID),
-		"plan":   string(selectedPlan),
-	}
-	if user.FirebaseUID != nil {
-		firebaseUID := strings.TrimSpace(*user.FirebaseUID)
-		if firebaseUID != "" {
-			metadata["firebaseUid"] = firebaseUID
-		}
-	}
-
 	returnTo := sanitizeCheckoutReturnTo(checkoutRequest.ReturnTo)
 	successURL := checkoutRedirectURL("STRIPE_CHECKOUT_SUCCESS_URL", "/billing/success")
 	cancelURL := checkoutRedirectURL("STRIPE_CHECKOUT_CANCEL_URL", "/billing/cancel")
@@ -104,44 +89,21 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		cancelURL = appendReturnToQuery(cancelURL, returnTo)
 	}
 
-	params := &stripe.CheckoutSessionParams{
-		Mode:              stripe.String(string(stripe.CheckoutSessionModeSubscription)),
-		SuccessURL:        stripe.String(successURL),
-		CancelURL:         stripe.String(cancelURL),
-		ClientReferenceID: stripe.String(strconv.Itoa(user.ID)),
-		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			{
-				Price:    stripe.String(stripePriceID),
-				Quantity: stripe.Int64(1),
-			},
-		},
-		Metadata: metadata,
-		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
-			Metadata: metadata,
-		},
-	}
-
-	if user.StripeCustomerID != nil {
-		stripeCustomerID := strings.TrimSpace(*user.StripeCustomerID)
-		if stripeCustomerID != "" {
-			params.Customer = stripe.String(stripeCustomerID)
-		}
-	}
-
-	checkoutSession, err := createStripeCheckoutSessionFn(params)
-	if err != nil && params.Customer != nil {
-		recovered, recoverErr := recoverStaleStripeCustomerIDForCheckout(user, err)
-		if recoverErr != nil {
-			utils.SendJSONError(w, utils.NewInternal("Unable to create checkout session", recoverErr), requestID)
+	checkoutSession, err := createCheckoutSessionWithUserLock(
+		r.Context(),
+		user.ID,
+		selectedPlan,
+		checkoutRequest.StartWithTrial,
+		stripePriceID,
+		successURL,
+		cancelURL,
+	)
+	if err != nil {
+		if errors.Is(err, errCheckoutActiveSubscriptionExists) {
+			utils.SendJSONError(w, utils.NewConflict("Active subscription already exists", nil), requestID)
 			return
 		}
 
-		if recovered {
-			params.Customer = nil
-			checkoutSession, err = createStripeCheckoutSessionFn(params)
-		}
-	}
-	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to create checkout session", err), requestID)
 		return
 	}
@@ -150,6 +112,155 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		SessionID: checkoutSession.ID,
 		URL:       checkoutSession.URL,
 	}, requestID)
+}
+
+func createCheckoutSessionWithUserLock(
+	ctx context.Context,
+	userID int,
+	selectedPlan checkoutPlan,
+	startWithTrial bool,
+	stripePriceID string,
+	successURL string,
+	cancelURL string,
+) (*stripe.CheckoutSession, error) {
+	var checkoutSession *stripe.CheckoutSession
+
+	err := withCheckoutUserLock(ctx, userID, func() error {
+		user, err := models.GetUserByID(userID)
+		if err != nil {
+			return err
+		}
+		if user == nil {
+			return errors.New("checkout-user-not-found")
+		}
+
+		if user.IsSubscribed {
+			recovered, err := recoverStaleStripeSubscriptionForCheckout(user)
+			if err != nil {
+				return err
+			}
+
+			if !recovered && user.IsSubscribed {
+				return errCheckoutActiveSubscriptionExists
+			}
+		}
+
+		metadata := map[string]string{
+			"userId": strconv.Itoa(user.ID),
+			"plan":   string(selectedPlan),
+		}
+		if user.FirebaseUID != nil {
+			firebaseUID := strings.TrimSpace(*user.FirebaseUID)
+			if firebaseUID != "" {
+				metadata["firebaseUid"] = firebaseUID
+			}
+		}
+
+		params := &stripe.CheckoutSessionParams{
+			Mode:              stripe.String(string(stripe.CheckoutSessionModeSubscription)),
+			SuccessURL:        stripe.String(successURL),
+			CancelURL:         stripe.String(cancelURL),
+			ClientReferenceID: stripe.String(strconv.Itoa(user.ID)),
+			LineItems: []*stripe.CheckoutSessionLineItemParams{
+				{
+					Price:    stripe.String(stripePriceID),
+					Quantity: stripe.Int64(1),
+				},
+			},
+			Metadata: metadata,
+			SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
+				Metadata: metadata,
+			},
+		}
+
+		trialDays := checkoutPremiumTrialDays()
+		trialClaimed := false
+		trialEligible := trialDays > 0 && selectedPlan == checkoutPlanMonthly && !user.IsSubscribed && startWithTrial
+		if trialEligible {
+			trialClaimed, err = user.ClaimPremiumTrial()
+			if err != nil {
+				return err
+			}
+			if trialClaimed {
+				params.SubscriptionData.TrialPeriodDays = stripe.Int64(trialDays)
+				metadata["trialApplied"] = "true"
+				metadata["trialDays"] = strconv.FormatInt(trialDays, 10)
+			}
+		}
+
+		if user.StripeCustomerID != nil {
+			stripeCustomerID := strings.TrimSpace(*user.StripeCustomerID)
+			if stripeCustomerID != "" {
+				params.Customer = stripe.String(stripeCustomerID)
+			}
+		}
+
+		checkoutSession, err = createStripeCheckoutSessionFn(params)
+		if err != nil && params.Customer != nil {
+			recovered, recoverErr := recoverStaleStripeCustomerIDForCheckout(user, err)
+			if recoverErr != nil {
+				if trialClaimed {
+					_ = user.ReleasePremiumTrialClaim()
+				}
+				return recoverErr
+			}
+
+			if recovered {
+				params.Customer = nil
+				checkoutSession, err = createStripeCheckoutSessionFn(params)
+			}
+		}
+		if err != nil {
+			if trialClaimed {
+				_ = user.ReleasePremiumTrialClaim()
+			}
+
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return checkoutSession, nil
+}
+
+func withCheckoutUserLock(ctx context.Context, userID int, fn func() error) error {
+	pool, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	if _, err := conn.Exec(ctx, "SELECT pg_advisory_lock($1, $2)", checkoutUserLockNamespace, userID); err != nil {
+		return err
+	}
+	defer func() {
+		_, _ = conn.Exec(context.Background(), "SELECT pg_advisory_unlock($1, $2)", checkoutUserLockNamespace, userID)
+	}()
+
+	return fn()
+}
+
+func checkoutPremiumTrialDays() int64 {
+	configured := strings.TrimSpace(os.Getenv("STRIPE_PREMIUM_TRIAL_DAYS"))
+	if configured == "" {
+		return defaultCheckoutPremiumTrialDays
+	}
+
+	parsed, err := strconv.ParseInt(configured, 10, 64)
+	if err != nil || parsed < 0 {
+		return defaultCheckoutPremiumTrialDays
+	}
+
+	return parsed
 }
 
 func parseCreateCheckoutSessionRequest(r *http.Request) (CreateCheckoutSessionRequest, error) {

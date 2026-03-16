@@ -1269,6 +1269,9 @@ const docTemplate = `{
                 },
                 "returnTo": {
                     "type": "string"
+                },
+                "startWithTrial": {
+                    "type": "boolean"
                 }
             }
         },
@@ -1831,6 +1834,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "premiumTrialDaysLeft": {
+                    "type": "integer"
+                },
+                "premiumTrialEligible": {
+                    "type": "boolean"
                 },
                 "rsoLinkedAt": {
                     "type": "string"

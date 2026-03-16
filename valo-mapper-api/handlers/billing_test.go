@@ -45,12 +45,14 @@ func TestCreateCheckoutSession(t *testing.T) {
 	originalYearlyLookupKey, hadYearlyLookupKey := os.LookupEnv("STRIPE_PRICE_LOOKUP_KEY_YEARLY")
 	originalSuccessURL, hadSuccessURL := os.LookupEnv("STRIPE_CHECKOUT_SUCCESS_URL")
 	originalCancelURL, hadCancelURL := os.LookupEnv("STRIPE_CHECKOUT_CANCEL_URL")
+	originalTrialDays, hadTrialDays := os.LookupEnv("STRIPE_PREMIUM_TRIAL_DAYS")
 
 	_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_checkout")
 	_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY", "standard_monthly")
 	_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY", "standard_yearly")
 	_ = os.Setenv("STRIPE_CHECKOUT_SUCCESS_URL", "http://localhost:3000/checkout/success")
 	_ = os.Setenv("STRIPE_CHECKOUT_CANCEL_URL", "http://localhost:3000/checkout/cancel")
+	_ = os.Setenv("STRIPE_PREMIUM_TRIAL_DAYS", "14")
 
 	defer func() {
 		if hadSecret {
@@ -77,6 +79,11 @@ func TestCreateCheckoutSession(t *testing.T) {
 			_ = os.Setenv("STRIPE_CHECKOUT_CANCEL_URL", originalCancelURL)
 		} else {
 			_ = os.Unsetenv("STRIPE_CHECKOUT_CANCEL_URL")
+		}
+		if hadTrialDays {
+			_ = os.Setenv("STRIPE_PREMIUM_TRIAL_DAYS", originalTrialDays)
+		} else {
+			_ = os.Unsetenv("STRIPE_PREMIUM_TRIAL_DAYS")
 		}
 	}()
 
@@ -143,11 +150,12 @@ func TestCreateCheckoutSession(t *testing.T) {
 			if assert.NotNil(t, capturedParams.SubscriptionData) {
 				assert.Equal(t, strconv.Itoa(testUser.ID), capturedParams.SubscriptionData.Metadata["userId"])
 				assert.Equal(t, *testUser.FirebaseUID, capturedParams.SubscriptionData.Metadata["firebaseUid"])
+				assert.Nil(t, capturedParams.SubscriptionData.TrialPeriodDays)
 			}
 		}
 	})
 
-	t.Run("uses yearly plan price when requested", func(t *testing.T) {
+	t.Run("uses yearly plan price when requested without trial", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-yearly")
 
 		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
@@ -193,6 +201,75 @@ func TestCreateCheckoutSession(t *testing.T) {
 				assert.Equal(t, "price_test_checkout_yearly", stripe.StringValue(capturedParams.LineItems[0].Price))
 			}
 			assert.Equal(t, "yearly", capturedParams.Metadata["plan"])
+			if assert.NotNil(t, capturedParams.SubscriptionData) {
+				assert.Nil(t, capturedParams.SubscriptionData.TrialPeriodDays)
+			}
+		}
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.Nil(t, updatedUser.PremiumTrialClaimedAt)
+		}
+	})
+
+	t.Run("applies trial only on first checkout for a user", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-first-time-trial-only")
+
+		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+			switch plan {
+			case checkoutPlanMonthly:
+				return &stripe.Price{ID: "price_test_checkout"}, nil
+			case checkoutPlanYearly:
+				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
+			default:
+				return nil, errCheckoutPlanUnavailable
+			}
+		}
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		capturedParams := make([]*stripe.CheckoutSessionParams, 0, 2)
+		createStripeCheckoutSessionFn = func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+			capturedParams = append(capturedParams, params)
+			return &stripe.CheckoutSession{
+				ID:  fmt.Sprintf("cs_test_trial_only_%d", len(capturedParams)),
+				URL: fmt.Sprintf("https://checkout.stripe.com/c/pay/cs_test_trial_only_%d", len(capturedParams)),
+			}, nil
+		}
+
+		for i := 0; i < 2; i++ {
+			req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", map[string]any{
+				"plan":           "monthly",
+				"startWithTrial": true,
+			}, "valid-token")
+			w := httptest.NewRecorder()
+
+			CreateCheckoutSession(w, req, mockAuth)
+			assert.Equal(t, http.StatusOK, w.Code)
+		}
+
+		if assert.Len(t, capturedParams, 2) {
+			if assert.NotNil(t, capturedParams[0].SubscriptionData) {
+				assert.Equal(t, int64(14), stripe.Int64Value(capturedParams[0].SubscriptionData.TrialPeriodDays))
+			}
+			if assert.NotNil(t, capturedParams[1].SubscriptionData) {
+				assert.Nil(t, capturedParams[1].SubscriptionData.TrialPeriodDays)
+			}
+		}
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.NotNil(t, updatedUser.PremiumTrialClaimedAt)
 		}
 	})
 

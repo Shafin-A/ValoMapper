@@ -39,6 +39,8 @@ definitions:
         type: string
       returnTo:
         type: string
+      startWithTrial:
+        type: boolean
     type: object
   handlers.CreateCheckoutSessionResponse:
     properties:
@@ -404,6 +406,10 @@ definitions:
         type: boolean
       name:
         type: string
+      premiumTrialDaysLeft:
+        type: integer
+      premiumTrialEligible:
+        type: boolean
       rsoLinkedAt:
         type: string
       rsoSubjectId:

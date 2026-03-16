@@ -36,8 +36,9 @@ type CreateCheckoutSessionResponse struct {
 }
 
 type CreateCheckoutSessionRequest struct {
-	ReturnTo string `json:"returnTo"`
-	Plan     string `json:"plan"`
+	ReturnTo       string `json:"returnTo"`
+	Plan           string `json:"plan"`
+	StartWithTrial bool   `json:"startWithTrial"`
 }
 
 type CancelSubscriptionResponse struct {

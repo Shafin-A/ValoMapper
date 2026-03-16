@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"encoding/json"
+	"math"
 	"net/http"
 	"os"
 	"strings"
@@ -12,6 +13,32 @@ import (
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
 )
+
+func enrichUserBillingState(user *models.User) {
+	if user == nil {
+		return
+	}
+
+	user.RefreshPremiumTrialEligibility()
+	user.PremiumTrialDaysLeft = nil
+
+	if user.PremiumTrialClaimedAt == nil {
+		return
+	}
+
+	trialDays := checkoutPremiumTrialDays()
+	if trialDays <= 0 {
+		return
+	}
+
+	trialEndsAt := user.PremiumTrialClaimedAt.UTC().Add(time.Duration(trialDays) * 24 * time.Hour)
+	remainingDays := int(math.Ceil(trialEndsAt.Sub(time.Now().UTC()).Hours() / 24))
+	if remainingDays <= 0 {
+		return
+	}
+
+	user.PremiumTrialDaysLeft = &remainingDays
+}
 
 // strPtr is a helper function to convert a string to a *string
 func strPtr(s string) *string {
@@ -90,6 +117,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
+	enrichUserBillingState(user)
+
 	utils.SendJSON(w, http.StatusCreated, user, middleware.GetRequestID(r))
 }
 
@@ -114,6 +143,8 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthIn
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
+
+	enrichUserBillingState(user)
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
@@ -162,6 +193,8 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		utils.SendJSONError(w, utils.NewInternal("Unable to update user", err), middleware.GetRequestID(r))
 		return
 	}
+
+	enrichUserBillingState(user)
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
@@ -274,6 +307,8 @@ func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAu
 		utils.SendJSONError(w, utils.NewInternal("Unable to update subscription", err), middleware.GetRequestID(r))
 		return
 	}
+
+	enrichUserBillingState(user)
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
