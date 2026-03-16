@@ -14,6 +14,7 @@ interface CheckoutSessionResponse {
 interface CreateCheckoutSessionRequest {
   returnTo?: string;
   plan?: CheckoutPlan;
+  startWithTrial?: boolean;
 }
 
 export const useCreateCheckoutSession = () => {
@@ -30,6 +31,9 @@ export const useCreateCheckoutSession = () => {
       }
       if (request.plan) {
         payload.plan = request.plan;
+      }
+      if (request.startWithTrial) {
+        payload.startWithTrial = true;
       }
 
       const body =

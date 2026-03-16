@@ -47,6 +47,11 @@ const MyStrategiesPage = () => {
   const strategyCount = countStrategies(treeData);
   const hasValoMapperPremium = Boolean(userProfile?.isSubscribed);
   const canManageFolders = !isUserProfileLoading && hasValoMapperPremium;
+  const premiumTrialDaysLeft =
+    typeof userProfile?.premiumTrialDaysLeft === "number" &&
+    userProfile.premiumTrialDaysLeft > 0
+      ? userProfile.premiumTrialDaysLeft
+      : null;
 
   const subscriptionEndsAt = userProfile?.subscriptionEndedAt
     ? new Date(userProfile.subscriptionEndedAt)
@@ -196,6 +201,7 @@ const MyStrategiesPage = () => {
             isUserLoading={isUserProfileLoading}
             hasValoMapperPremium={hasValoMapperPremium}
             hasScheduledCancellation={hasScheduledCancellation}
+            premiumTrialDaysLeft={premiumTrialDaysLeft}
             strategyCount={strategyCount}
             freeStrategyLimit={FREE_STRATEGY_LIMIT}
             upgradeReturnToPath="/strategies"

@@ -8,6 +8,7 @@ import {
   getBillingSuccessReturnLabel,
   normalizeBillingReturnPath,
 } from "@/lib/billing-return-path";
+import { PREMIUM_TRIAL_DAYS } from "@/lib/consts";
 
 const BillingSuccessPage = () => {
   const searchParams = useSearchParams();
@@ -30,7 +31,12 @@ const BillingSuccessPage = () => {
             active.
           </p>
           <p className="text-sm text-foreground/70">
-            It may take a moment for your account to reflect the change.
+            If you chose to start on trial, monthly billing begins automatically
+            after
+            {` ${PREMIUM_TRIAL_DAYS} days`}.
+          </p>
+          <p className="text-sm text-foreground/70">
+            It may take a moment for your account status to refresh.
           </p>
         </div>
         <Button asChild>

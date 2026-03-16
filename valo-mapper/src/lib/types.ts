@@ -334,6 +334,8 @@ export type User = {
   tourCompleted?: boolean;
   isSubscribed?: boolean;
   subscriptionEndedAt?: Date | string | null;
+  premiumTrialEligible?: boolean;
+  premiumTrialDaysLeft?: number;
 };
 
 export type ItemType = "agent" | "ability" | "text" | "image" | "tool";

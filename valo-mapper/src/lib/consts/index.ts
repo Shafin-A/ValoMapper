@@ -15,6 +15,7 @@ export { STRATEGY_CLEANUP_GRACE_PERIOD_DAYS } from "./misc/consts";
 export {
   CHECKOUT_PLAN_OPTIONS,
   DEFAULT_CHECKOUT_PLAN,
+  PREMIUM_TRIAL_DAYS,
   type CheckoutPlan,
   type CheckoutPlanOption,
 } from "./billing/consts";

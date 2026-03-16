@@ -23,6 +23,7 @@ interface StrategiesHeaderProps {
   isUserLoading: boolean;
   hasValoMapperPremium: boolean;
   hasScheduledCancellation: boolean;
+  premiumTrialDaysLeft: number | null;
   strategyCount: number;
   freeStrategyLimit: number;
   upgradeReturnToPath: string;
@@ -37,36 +38,51 @@ export const StrategiesHeader = ({
   isUserLoading,
   hasValoMapperPremium,
   hasScheduledCancellation,
+  premiumTrialDaysLeft,
   strategyCount,
   freeStrategyLimit,
   upgradeReturnToPath,
 }: StrategiesHeaderProps) => {
   const isFreePlan = !isUserLoading && !hasValoMapperPremium;
   const hasReachedFreeLimit = isFreePlan && strategyCount >= freeStrategyLimit;
+  const hasActivePremiumTrial =
+    hasValoMapperPremium &&
+    premiumTrialDaysLeft !== null &&
+    premiumTrialDaysLeft > 0;
+  const trialLabelSuffix =
+    premiumTrialDaysLeft === 1
+      ? "1 day left"
+      : `${premiumTrialDaysLeft} days left`;
 
   const planLabel = isUserLoading
     ? "Loading"
-    : hasScheduledCancellation
-      ? "Premium (Cancels at Period End)"
-      : hasValoMapperPremium
-        ? "Premium"
-        : "Free";
+    : hasActivePremiumTrial
+      ? `Premium Trial (${trialLabelSuffix})`
+      : hasScheduledCancellation
+        ? "Premium (Cancels at Period End)"
+        : hasValoMapperPremium
+          ? "Premium"
+          : "Free";
 
   const planBadgeVariant = isUserLoading
     ? "outline"
-    : hasScheduledCancellation
+    : hasActivePremiumTrial
       ? "secondary"
-      : hasValoMapperPremium
-        ? "default"
-        : "outline";
+      : hasScheduledCancellation
+        ? "secondary"
+        : hasValoMapperPremium
+          ? "default"
+          : "outline";
 
   const planBadgeClassName = isUserLoading
     ? "text-muted-foreground"
-    : hasScheduledCancellation
-      ? "text-amber-700"
-      : hasValoMapperPremium
-        ? "bg-primary text-white"
-        : "";
+    : hasActivePremiumTrial
+      ? "text-emerald-700"
+      : hasScheduledCancellation
+        ? "text-amber-700"
+        : hasValoMapperPremium
+          ? "bg-primary text-white"
+          : "";
 
   const savedBadgeVariant = hasReachedFreeLimit ? "destructive" : "secondary";
 

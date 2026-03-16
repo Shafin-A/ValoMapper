@@ -172,6 +172,13 @@ export const ProfileContent = () => {
     (user as { rsoSubjectId?: string | null }).rsoSubjectId,
   );
   const hasValoMapperPremium = Boolean(user.isSubscribed);
+  const premiumTrialDaysLeft =
+    typeof user.premiumTrialDaysLeft === "number" &&
+    user.premiumTrialDaysLeft > 0
+      ? user.premiumTrialDaysLeft
+      : null;
+  const hasActivePremiumTrial =
+    hasValoMapperPremium && premiumTrialDaysLeft !== null;
   const subscriptionEndsAt = user.subscriptionEndedAt
     ? new Date(user.subscriptionEndedAt)
     : null;
@@ -306,16 +313,20 @@ export const ProfileContent = () => {
                   className={`text-xs font-semibold ${
                     hasScheduledCancellation
                       ? "text-amber-600"
-                      : hasValoMapperPremium
-                        ? "text-primary"
-                        : "text-muted-foreground"
+                      : hasActivePremiumTrial
+                        ? "text-emerald-700"
+                        : hasValoMapperPremium
+                          ? "text-primary"
+                          : "text-muted-foreground"
                   }`}
                 >
                   {hasScheduledCancellation
                     ? "Cancels at Period End"
-                    : hasValoMapperPremium
-                      ? "Active"
-                      : "Inactive"}
+                    : hasActivePremiumTrial
+                      ? `Trial (${premiumTrialDaysLeft} day${premiumTrialDaysLeft === 1 ? "" : "s"} left)`
+                      : hasValoMapperPremium
+                        ? "Active"
+                        : "Inactive"}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -328,9 +339,11 @@ export const ProfileContent = () => {
                         day: "numeric",
                       },
                     )}.`
-                  : hasValoMapperPremium
-                    ? "Your ValoMapper Premium subscription is active."
-                    : "You are currently on the free plan."}
+                  : hasActivePremiumTrial
+                    ? `You are currently on a Premium trial with ${premiumTrialDaysLeft} day${premiumTrialDaysLeft === 1 ? "" : "s"} remaining. Billing will resume after your trial period.`
+                    : hasValoMapperPremium
+                      ? "Your ValoMapper Premium subscription is active."
+                      : "You are currently on the free plan."}
               </p>
               <div className="pt-1">
                 {hasValoMapperPremium ? (

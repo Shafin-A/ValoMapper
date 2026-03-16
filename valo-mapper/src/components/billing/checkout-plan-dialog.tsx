@@ -23,10 +23,12 @@ import { useCreateCheckoutSession } from "@/hooks/api/use-create-checkout-sessio
 import {
   CHECKOUT_PLAN_OPTIONS,
   DEFAULT_CHECKOUT_PLAN,
+  PREMIUM_TRIAL_DAYS,
   type CheckoutPlanOption,
   type CheckoutPlan,
 } from "@/lib/consts";
 import { useBillingPlans } from "@/hooks/api/use-billing-plans";
+import { useUser } from "@/hooks/api/use-user";
 
 interface CheckoutPlanDialogProps {
   returnToPath: string;
@@ -41,10 +43,35 @@ export const CheckoutPlanDialog = ({
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(
     DEFAULT_CHECKOUT_PLAN,
   );
+  const [checkoutIntent, setCheckoutIntent] = useState<"trial" | "paid" | null>(
+    null,
+  );
 
   const { mutate: createCheckoutSession, isPending } =
     useCreateCheckoutSession();
   const { data: billingPlans } = useBillingPlans();
+  const { data: userProfile } = useUser();
+  const premiumTrialDays = Math.max(
+    0,
+    billingPlans?.premiumTrialDays ?? PREMIUM_TRIAL_DAYS,
+  );
+
+  const isMonthlyPlan = selectedPlan === "monthly";
+  const trialEligible = userProfile?.premiumTrialEligible === true;
+  const isMonthlyTrialOffer = isMonthlyPlan && premiumTrialDays > 0;
+  const showTrialButton = isMonthlyTrialOffer && trialEligible;
+
+  const trialHeadline = showTrialButton
+    ? `${premiumTrialDays}-day free trial available`
+    : isMonthlyPlan
+      ? "Monthly billing starts immediately"
+      : "Yearly billing starts immediately";
+
+  const trialDescription = showTrialButton
+    ? "Choose Try out for free below to start with trial. After trial, billing continues on the monthly plan."
+    : isMonthlyPlan
+      ? "Your monthly billing starts immediately after checkout."
+      : "Yearly billing begins at checkout and renews yearly until canceled.";
 
   const resolvedPlanOptions = useMemo<CheckoutPlanOption[]>(() => {
     const formatPriceLabel = (
@@ -101,14 +128,24 @@ export const CheckoutPlanDialog = ({
     setOpen(isOpen);
     if (isOpen) {
       setSelectedPlan(DEFAULT_CHECKOUT_PLAN);
+      setCheckoutIntent(null);
     }
   };
 
-  const handleContinue = () => {
-    createCheckoutSession({
-      returnTo: returnToPath,
-      plan: selectedPlan,
-    });
+  const handleContinue = (withTrial: boolean) => {
+    setCheckoutIntent(withTrial ? "trial" : "paid");
+    createCheckoutSession(
+      {
+        returnTo: returnToPath,
+        plan: selectedPlan,
+        startWithTrial: showTrialButton && withTrial,
+      },
+      {
+        onSettled: () => {
+          setCheckoutIntent(null);
+        },
+      },
+    );
   };
 
   return (
@@ -158,6 +195,11 @@ export const CheckoutPlanDialog = ({
             </p>
           </div>
 
+          <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-100">
+            <p className="font-medium">{trialHeadline}</p>
+            <p className="mt-1 text-xs opacity-90">{trialDescription}</p>
+          </div>
+
           <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900 dark:border-green-900/60 dark:bg-green-950/30 dark:text-green-200">
             <p className="inline-flex items-center gap-2 font-medium">
               <ShieldCheck className="h-4 w-4" />
@@ -178,9 +220,23 @@ export const CheckoutPlanDialog = ({
           >
             Back
           </Button>
-          <Button onClick={handleContinue} disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Continue to secure checkout
+          {showTrialButton && (
+            <Button
+              variant="outline"
+              onClick={() => handleContinue(true)}
+              disabled={isPending}
+            >
+              {isPending && checkoutIntent === "trial" && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Try out for free
+            </Button>
+          )}
+          <Button onClick={() => handleContinue(false)} disabled={isPending}>
+            {isPending && checkoutIntent === "paid" && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            {showTrialButton ? "Subscribe now" : "Continue to secure checkout"}
           </Button>
         </DialogFooter>
       </DialogContent>

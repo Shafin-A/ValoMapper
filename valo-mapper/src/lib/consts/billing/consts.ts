@@ -1,5 +1,7 @@
 export type CheckoutPlan = "monthly" | "yearly";
 
+export const PREMIUM_TRIAL_DAYS = 14;
+
 export interface CheckoutPlanOption {
   id: CheckoutPlan;
   label: string;
