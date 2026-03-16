@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch, DEFAULT_RETRY_CONFIG } from "@/lib/api";
 
 export interface BillingPlanPrice {
-  plan: "monthly" | "yearly";
+  plan: "monthly" | "yearly" | "stack";
   priceId: string;
   currency: string;
   unitAmount: number;
@@ -14,6 +14,7 @@ export interface BillingPlanPrice {
 export interface BillingPlansResponse {
   monthly: BillingPlanPrice;
   yearly: BillingPlanPrice;
+  stack: BillingPlanPrice;
   premiumTrialDays?: number;
 }
 

@@ -1,4 +1,4 @@
-export type CheckoutPlan = "monthly" | "yearly";
+export type CheckoutPlan = "monthly" | "yearly" | "stack";
 
 export const PREMIUM_TRIAL_DAYS = 14;
 
@@ -31,5 +31,14 @@ export const CHECKOUT_PLAN_OPTIONS: CheckoutPlanOption[] = [
     currencyCode: "USD",
     checkoutDescription:
       "Lower effective monthly cost with one annual payment and auto-renewal. Cancel anytime from your profile.",
+  },
+  {
+    id: "stack",
+    label: "ValoMapper Premium Stack",
+    cadence: "Billed once per year",
+    priceLabel: "$124.99/year",
+    currencyCode: "USD",
+    checkoutDescription:
+      "Perfect for 5 stacks + 1 extra member that want to share their plan. Cancel anytime from your profile.",
   },
 ];

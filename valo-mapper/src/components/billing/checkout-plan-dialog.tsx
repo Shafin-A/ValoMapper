@@ -57,6 +57,7 @@ export const CheckoutPlanDialog = ({
   );
 
   const isMonthlyPlan = selectedPlan === "monthly";
+  const isStackPlan = selectedPlan === "stack";
   const trialEligible = userProfile?.premiumTrialEligible === true;
   const isMonthlyTrialOffer = isMonthlyPlan && premiumTrialDays > 0;
   const showTrialButton = isMonthlyTrialOffer && trialEligible;
@@ -65,13 +66,17 @@ export const CheckoutPlanDialog = ({
     ? `${premiumTrialDays}-day free trial available`
     : isMonthlyPlan
       ? "Monthly billing starts immediately"
-      : "Yearly billing starts immediately";
+      : isStackPlan
+        ? "Stack billing starts immediately"
+        : "Yearly billing starts immediately";
 
   const trialDescription = showTrialButton
     ? "Choose Try out for free below to start with trial. After trial, billing continues on the monthly plan."
     : isMonthlyPlan
       ? "Your monthly billing starts immediately after checkout."
-      : "Yearly billing begins at checkout and renews yearly until canceled.";
+      : isStackPlan
+        ? "Your yearly stack billing begins at checkout and covers up to 6 total members. Only the stack owner pays for the billing plan. Billing renews yearly until canceled."
+        : "Yearly billing begins at checkout and renews yearly until canceled.";
 
   const resolvedPlanOptions = useMemo<CheckoutPlanOption[]>(() => {
     const formatPriceLabel = (
@@ -96,6 +101,7 @@ export const CheckoutPlanDialog = ({
     const planMap = {
       monthly: billingPlans?.monthly,
       yearly: billingPlans?.yearly,
+      stack: billingPlans?.stack,
     };
 
     return CHECKOUT_PLAN_OPTIONS.map((option) => {
