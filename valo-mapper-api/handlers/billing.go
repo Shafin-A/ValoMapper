@@ -25,8 +25,6 @@ var getStripeSubscriptionFn = subscription.Get
 var findCancelableStripeSubscriptionIDForUserFn func(*models.User) (string, error)
 var findScheduledCancellationSubscriptionIDForUserFn func(*models.User) (string, error)
 
-var errStripeSubscriptionIDMissing = services.ErrStripeSubscriptionIDMissing
-var errStripeSubscriptionNotFound = services.ErrStripeSubscriptionNotFound
 var errStripeScheduledCancellationNotFound = services.ErrStripeScheduledCancellationNotFound
 var errUnsupportedCheckoutPlan = services.ErrUnsupportedCheckoutPlan
 var errCheckoutPlanUnavailable = services.ErrCheckoutPlanUnavailable

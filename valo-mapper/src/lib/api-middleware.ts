@@ -42,14 +42,13 @@ type DynamicAuthHandler<T> = (
   authHeader: string,
 ) => Promise<Response> | Response;
 
-export function withAuthRequired(handler: StaticAuthHandler): (
-  request: Request,
-) => Promise<Response>;
+export function withAuthRequired(
+  handler: StaticAuthHandler,
+): (request: Request) => Promise<Response>;
 
-export function withAuthRequired<T>(handler: DynamicAuthHandler<T>): (
-  request: Request,
-  param: T,
-) => Promise<Response>;
+export function withAuthRequired<T>(
+  handler: DynamicAuthHandler<T>,
+): (request: Request, param: T) => Promise<Response>;
 
 export function withAuthRequired<T>(
   handler: StaticAuthHandler | DynamicAuthHandler<T>,
