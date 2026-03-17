@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,6 +14,8 @@ import (
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const rsoHTTPTimeout = 10 * time.Second
@@ -141,26 +144,21 @@ func getStringValue(input map[string]any, key string) string {
 }
 
 func decodeJWTClaims(jwtToken string) map[string]any {
-	parts := strings.Split(jwtToken, ".")
-	if len(parts) < 2 {
-		return nil
-	}
-
-	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	// Parse the JWT without verification since it's already verified by Firebase
+	token, _, err := jwt.NewParser().ParseUnverified(jwtToken, jwt.MapClaims{})
 	if err != nil {
-		paddedPayload := parts[1] + strings.Repeat("=", (4-len(parts[1])%4)%4)
-		payload, err = base64.URLEncoding.DecodeString(paddedPayload)
-		if err != nil {
-			return nil
-		}
-	}
-
-	claims := map[string]any{}
-	if err := json.Unmarshal(payload, &claims); err != nil {
 		return nil
 	}
 
-	return claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil
+	}
+
+	result := make(map[string]any)
+	maps.Copy(result, claims)
+
+	return result
 }
 
 func extractNameFromIDToken(idToken string) string {

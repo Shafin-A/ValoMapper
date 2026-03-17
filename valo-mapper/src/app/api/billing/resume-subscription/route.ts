@@ -1,13 +1,10 @@
+import { withAuthRequired } from "@/lib/api-middleware";
 import { proxyToBackend } from "@/lib/api-proxy";
 
-export const POST = async (request: Request) => {
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader)
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-
+export const POST = withAuthRequired(async (_request, authHeader) => {
   return proxyToBackend("/billing/resume-subscription", {
     method: "POST",
     token: authHeader,
     errorMessage: "Failed to resume subscription",
   });
-};
+});

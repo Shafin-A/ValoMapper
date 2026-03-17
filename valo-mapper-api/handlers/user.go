@@ -83,7 +83,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	token, err := verifyFirebaseToken(r, firebaseAuth)
+	token, err := VerifyFirebaseToken(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Invalid or missing authentication"), middleware.GetRequestID(r))
 		return

@@ -12,28 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testVerifyFirebaseToken(r *http.Request, authClient testutils.FirebaseAuthInterface) (*auth.Token, error) {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return nil, errors.New("missing authorization header")
-	}
-
-	idToken := authHeader[7:] // Strip "Bearer "
-
-	token, err := authClient.VerifyIDToken(context.Background(), idToken)
-	if err != nil {
-		return nil, errors.New("invalid or expired token")
-	}
-
-	return token, nil
-}
-
 func TestVerifyFirebaseToken(t *testing.T) {
 	t.Run("missing authorization header", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		mockAuth := &testutils.MockFirebaseAuth{}
 
-		token, err := testVerifyFirebaseToken(req, mockAuth)
+		token, err := VerifyFirebaseToken(req, mockAuth)
 
 		assert.Nil(t, token)
 		assert.EqualError(t, err, "missing authorization header")
@@ -49,7 +33,7 @@ func TestVerifyFirebaseToken(t *testing.T) {
 			return &auth.Token{UID: "user-123"}, nil
 		}
 
-		token, err := testVerifyFirebaseToken(req, mockAuth)
+		token, err := VerifyFirebaseToken(req, mockAuth)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, token)
@@ -65,7 +49,7 @@ func TestVerifyFirebaseToken(t *testing.T) {
 			return nil, errors.New("token verification failed")
 		}
 
-		token, err := testVerifyFirebaseToken(req, mockAuth)
+		token, err := VerifyFirebaseToken(req, mockAuth)
 
 		assert.Nil(t, token)
 		assert.EqualError(t, err, "invalid or expired token")
@@ -82,7 +66,7 @@ func TestVerifyFirebaseToken(t *testing.T) {
 			return &auth.Token{UID: "user-123"}, nil
 		}
 
-		_, err := testVerifyFirebaseToken(req, mockAuth)
+		_, err := VerifyFirebaseToken(req, mockAuth)
 
 		assert.NoError(t, err)
 		assert.Equal(t, "test-token-123", capturedToken)

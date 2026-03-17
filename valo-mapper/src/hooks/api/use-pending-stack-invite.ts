@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch, ApiError, DEFAULT_RETRY_CONFIG } from "@/lib/api";
+import { apiFetchWithAuth, ApiError, DEFAULT_RETRY_CONFIG } from "@/lib/api";
 import { StackMember } from "@/lib/types";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 
@@ -9,15 +9,10 @@ export const usePendingStackInvites = (enabled: boolean) => {
   return useQuery<StackMember[]>({
     queryKey: ["stack-pending-invites"],
     queryFn: async () => {
-      const token = await getIdToken();
-      if (!token) throw new Error("User not authenticated");
-
       try {
-        return await apiFetch<StackMember[]>(
+        return await apiFetchWithAuth<StackMember[]>(
           "/api/billing/stack/pending-invites",
-          {
-            token,
-          },
+          getIdToken,
         );
       } catch (error) {
         // Backward compatibility for clients during rollout.

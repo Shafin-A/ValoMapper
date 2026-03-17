@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useFirebaseAuth } from "../use-firebase-auth";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api";
+import { apiFetchWithAuth } from "@/lib/api";
 import { User } from "@/lib/types";
 
 interface UpdateUserData {
@@ -15,16 +15,11 @@ export const useUpdateUser = () => {
   const { getIdToken } = useFirebaseAuth();
 
   const mutation = useMutation({
-    mutationFn: async (data: UpdateUserData) => {
-      const token = await getIdToken();
-      if (!token) throw new Error("User not authenticated");
-
-      return apiFetch<User>("/api/users/me", {
+    mutationFn: (data: UpdateUserData) =>
+      apiFetchWithAuth<User>("/api/users/me", getIdToken, {
         method: "PUT",
-        token,
         body: JSON.stringify(data),
-      });
-    },
+      }),
     onSuccess: () => {
       toast.success("Profile updated successfully");
     },

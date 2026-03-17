@@ -1,13 +1,10 @@
+import { withAuthRequired } from "@/lib/api-middleware";
 import { proxyToBackend } from "@/lib/api-proxy";
 
-export const DELETE = async (request: Request) => {
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader)
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-
+export const DELETE = withAuthRequired(async (_request, authHeader) => {
   return proxyToBackend("/billing/stack/leave", {
     method: "DELETE",
     token: authHeader,
     errorMessage: "Failed to leave stack",
   });
-};
+});

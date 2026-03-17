@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { apiFetch } from "@/lib/api";
+import { apiFetchWithAuth } from "@/lib/api";
 
 interface DeleteStrategyParams {
   strategyId: number;
@@ -12,15 +12,10 @@ export const useDeleteStrategy = () => {
   const { getIdToken } = useFirebaseAuth();
 
   const { mutate, isPending, isError } = useMutation({
-    mutationFn: async ({ strategyId }: DeleteStrategyParams) => {
-      const token = await getIdToken();
-      if (!token) throw new Error("User not authenticated");
-
-      return apiFetch<null>(`/api/strategies/${strategyId}`, {
+    mutationFn: ({ strategyId }: DeleteStrategyParams) =>
+      apiFetchWithAuth<null>(`/api/strategies/${strategyId}`, getIdToken, {
         method: "DELETE",
-        token,
-      });
-    },
+      }),
     onSuccess: () => {
       toast.success("Strategy deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["folders-and-strategies"] });

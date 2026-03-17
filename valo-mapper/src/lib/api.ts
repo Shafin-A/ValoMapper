@@ -57,6 +57,38 @@ export const apiFetch = async <T>(
   return response.json();
 };
 
+/**
+ * Helper to make authenticated API calls with automatic token retrieval
+ * Consolidates the token fetching pattern used across React hooks
+ *
+ * @param url - The API endpoint URL
+ * @param getToken - Function that returns the auth token (e.g., from Firebase)
+ * @param options - Additional fetch options
+ * @returns The parsed response
+ * @throws ApiError if the request fails or token is unavailable
+ *
+ * @example
+ * ```typescript
+ * const cancel = await apiFetchWithAuth<CancelResponse>(
+ *   "/api/billing/cancel-subscription",
+ *   () => getIdToken(),
+ *   { method: "POST" }
+ * );
+ * ```
+ */
+export const apiFetchWithAuth = async <T>(
+  url: string,
+  getToken: () => Promise<string | null>,
+  options: FetchOptions = {},
+): Promise<T> => {
+  const token = await getToken();
+  if (!token) {
+    throw new ApiError("User not authenticated", 401, "Unauthorized");
+  }
+
+  return apiFetch<T>(url, { ...options, token });
+};
+
 export const DEFAULT_RETRY_CONFIG = {
   retry: (failureCount: number, error: Error) => {
     if (

@@ -26,7 +26,7 @@ func NewFirebaseAuthClient(client *auth.Client) FirebaseAuthInterface {
 	return &FirebaseAuthClient{Client: client}
 }
 
-func verifyFirebaseToken(r *http.Request, firebaseAuth FirebaseAuthInterface) (*auth.Token, error) {
+func VerifyFirebaseToken(r *http.Request, firebaseAuth FirebaseAuthInterface) (*auth.Token, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return nil, errors.New("missing authorization header")
@@ -43,7 +43,7 @@ func verifyFirebaseToken(r *http.Request, firebaseAuth FirebaseAuthInterface) (*
 }
 
 func authenticateRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*models.User, error) {
-	token, err := verifyFirebaseToken(r, firebaseAuth)
+	token, err := VerifyFirebaseToken(r, firebaseAuth)
 	if err != nil {
 		return nil, err
 	}

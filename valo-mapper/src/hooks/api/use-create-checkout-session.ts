@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { apiFetch } from "@/lib/api";
+import { apiFetchWithAuth } from "@/lib/api";
 import { type CheckoutPlan } from "@/lib/consts";
 
 interface CheckoutSessionResponse {
@@ -21,10 +21,7 @@ export const useCreateCheckoutSession = () => {
   const { getIdToken } = useFirebaseAuth();
 
   return useMutation({
-    mutationFn: async (request: CreateCheckoutSessionRequest = {}) => {
-      const token = await getIdToken();
-      if (!token) throw new Error("User not authenticated");
-
+    mutationFn: (request: CreateCheckoutSessionRequest = {}) => {
       const payload: CreateCheckoutSessionRequest = {};
       if (request.returnTo) {
         payload.returnTo = request.returnTo;
@@ -39,11 +36,11 @@ export const useCreateCheckoutSession = () => {
       const body =
         Object.keys(payload).length > 0 ? JSON.stringify(payload) : undefined;
 
-      return apiFetch<CheckoutSessionResponse>(
+      return apiFetchWithAuth<CheckoutSessionResponse>(
         "/api/billing/checkout-session",
+        getIdToken,
         {
           method: "POST",
-          token,
           ...(body ? { body } : {}),
         },
       );

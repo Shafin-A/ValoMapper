@@ -1,10 +1,7 @@
+import { withAuthRequired } from "@/lib/api-middleware";
 import { proxyToBackend } from "@/lib/api-proxy";
 
-export const POST = async (request: Request) => {
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader)
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-
+export const POST = withAuthRequired(async (request, authHeader) => {
   let requestBody: unknown;
   try {
     const rawBody = await request.text();
@@ -21,4 +18,4 @@ export const POST = async (request: Request) => {
     body: requestBody,
     errorMessage: "Failed to invite stack member",
   });
-};
+});

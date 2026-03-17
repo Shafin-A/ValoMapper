@@ -1,7 +1,7 @@
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { apiFetch } from "@/lib/api";
+import { apiFetchWithAuth } from "@/lib/api";
 import { Strategy } from "@/lib/types";
 
 interface UpdateStrategyParams {
@@ -14,16 +14,11 @@ export const useUpdateStrategy = () => {
   const { getIdToken } = useFirebaseAuth();
 
   const { mutate, isPending, isError } = useMutation({
-    mutationFn: async ({ strategyId, name }: UpdateStrategyParams) => {
-      const token = await getIdToken();
-      if (!token) throw new Error("User not authenticated");
-
-      return apiFetch<Strategy>(`/api/strategies/${strategyId}`, {
+    mutationFn: ({ strategyId, name }: UpdateStrategyParams) =>
+      apiFetchWithAuth<Strategy>(`/api/strategies/${strategyId}`, getIdToken, {
         method: "PATCH",
-        token,
         body: JSON.stringify({ name }),
-      });
-    },
+      }),
     onSuccess: (data) => {
       toast.success(`Strategy "${data.name}" updated successfully!`);
       queryClient.invalidateQueries({ queryKey: ["folders-and-strategies"] });
