@@ -1,19 +1,49 @@
-import { render, screen } from "@testing-library/react";
+import { render as rtlRender, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/layout/site-header";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useUser } from "@/hooks/api/use-user";
+import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
+import { useWebSocket } from "@/contexts/websocket-context";
 import { usePathname } from "next/navigation";
 import { User } from "@/lib/types";
 
 // Mock the hooks
 jest.mock("@/hooks/use-firebase-auth");
 jest.mock("@/hooks/api/use-user");
+jest.mock("@/hooks/api/use-pending-stack-invite", () => ({
+  usePendingStackInvites: jest.fn(),
+}));
+jest.mock("@/contexts/websocket-context", () => ({
+  useWebSocket: jest.fn(),
+}));
 
 const mockUseFirebaseAuth = useFirebaseAuth as jest.MockedFunction<
   typeof useFirebaseAuth
 >;
 const mockUseUser = useUser as jest.MockedFunction<typeof useUser>;
+const mockUsePendingStackInvites =
+  usePendingStackInvites as jest.MockedFunction<typeof usePendingStackInvites>;
+const mockUseWebSocket = useWebSocket as jest.MockedFunction<
+  typeof useWebSocket
+>;
 const mockUsePathname = jest.mocked(usePathname);
+
+const renderSiteHeader = (props: React.ComponentProps<typeof SiteHeader>) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  return rtlRender(<SiteHeader {...props} />, { wrapper });
+};
 
 describe("SiteHeader", () => {
   const mockSetLeftSidebarOpen = jest.fn();
@@ -30,6 +60,12 @@ describe("SiteHeader", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUsePathname.mockReturnValue("/");
+    mockUseWebSocket.mockReturnValue({
+      users: [],
+    } as unknown as ReturnType<typeof useWebSocket>);
+    mockUsePendingStackInvites.mockReturnValue({
+      data: [],
+    } as unknown as ReturnType<typeof usePendingStackInvites>);
     mockUseFirebaseAuth.mockReturnValue({
       user: null,
       loading: false,
@@ -49,7 +85,7 @@ describe("SiteHeader", () => {
       refetch: jest.fn(),
     });
 
-    render(<SiteHeader {...defaultProps} />);
+    renderSiteHeader(defaultProps);
 
     expect(screen.getByText("ValoMapper")).toBeInTheDocument();
   });
@@ -63,7 +99,7 @@ describe("SiteHeader", () => {
       refetch: jest.fn(),
     });
 
-    render(<SiteHeader {...defaultProps} />);
+    renderSiteHeader(defaultProps);
 
     const buttons = screen.getAllByRole("button");
 
@@ -80,7 +116,7 @@ describe("SiteHeader", () => {
       refetch: jest.fn(),
     });
 
-    render(<SiteHeader {...defaultProps} />);
+    renderSiteHeader(defaultProps);
 
     expect(screen.getByText("ValoMapper")).toBeInTheDocument();
   });
@@ -94,7 +130,7 @@ describe("SiteHeader", () => {
       refetch: jest.fn(),
     });
 
-    render(<SiteHeader {...defaultProps} />);
+    renderSiteHeader(defaultProps);
 
     expect(screen.getByText("ValoMapper")).toBeInTheDocument();
   });
@@ -117,7 +153,7 @@ describe("SiteHeader", () => {
       refetch: jest.fn(),
     });
 
-    render(<SiteHeader {...defaultProps} />);
+    renderSiteHeader(defaultProps);
 
     expect(screen.getByText("ValoMapper")).toBeInTheDocument();
   });

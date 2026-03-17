@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import {
@@ -10,10 +7,22 @@ import {
 } from "@/lib/billing-return-path";
 import { PREMIUM_TRIAL_DAYS } from "@/lib/consts";
 
-const BillingSuccessPage = () => {
-  const searchParams = useSearchParams();
+type BillingSuccessPageProps = {
+  searchParams?: Promise<{
+    returnTo?: string | string[];
+  }>;
+};
+
+const getSearchParamValue = (value: string | string[] | undefined) => {
+  return Array.isArray(value) ? value[0] : value;
+};
+
+const BillingSuccessPage = async ({
+  searchParams,
+}: BillingSuccessPageProps) => {
+  const resolvedSearchParams = await searchParams;
   const returnToPath = normalizeBillingReturnPath(
-    searchParams.get("returnTo"),
+    getSearchParamValue(resolvedSearchParams?.returnTo),
     "/strategies",
   );
   const returnLabel = getBillingSuccessReturnLabel(returnToPath);

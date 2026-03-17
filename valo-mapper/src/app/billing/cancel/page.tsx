@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
 import {
@@ -9,10 +6,20 @@ import {
   normalizeBillingReturnPath,
 } from "@/lib/billing-return-path";
 
-const BillingCancelPage = () => {
-  const searchParams = useSearchParams();
+type BillingCancelPageProps = {
+  searchParams?: Promise<{
+    returnTo?: string | string[];
+  }>;
+};
+
+const getSearchParamValue = (value: string | string[] | undefined) => {
+  return Array.isArray(value) ? value[0] : value;
+};
+
+const BillingCancelPage = async ({ searchParams }: BillingCancelPageProps) => {
+  const resolvedSearchParams = await searchParams;
   const returnToPath = normalizeBillingReturnPath(
-    searchParams.get("returnTo"),
+    getSearchParamValue(resolvedSearchParams?.returnTo),
     "/",
   );
   const returnLabel = getBillingCancelReturnLabel(returnToPath);
