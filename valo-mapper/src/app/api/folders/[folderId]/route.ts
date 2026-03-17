@@ -2,7 +2,11 @@ import { withAuthRequired } from "@/lib/api-middleware";
 import { proxyToBackend } from "@/lib/api-proxy";
 
 export const DELETE = withAuthRequired(
-  async (_request, { params }, authHeader) => {
+  async (
+    _request: Request,
+    { params }: { params: Promise<{ folderId: string }> },
+    authHeader: string,
+  ) => {
     const { folderId } = await params;
     return proxyToBackend(`/folders/${folderId}`, {
       method: "DELETE",
@@ -13,7 +17,11 @@ export const DELETE = withAuthRequired(
 );
 
 export const PATCH = withAuthRequired(
-  async (request, { params }, authHeader) => {
+  async (
+    request: Request,
+    { params }: { params: Promise<{ folderId: string }> },
+    authHeader: string,
+  ) => {
     const { folderId } = await params;
     const body = await request.json();
     if (!body)

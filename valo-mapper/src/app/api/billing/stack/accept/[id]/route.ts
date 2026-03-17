@@ -2,7 +2,11 @@ import { withAuthRequired } from "@/lib/api-middleware";
 import { proxyToBackend } from "@/lib/api-proxy";
 
 export const POST = withAuthRequired(
-  async (_request, { params }, authHeader) => {
+  async (
+    _request: Request,
+    { params }: { params: Promise<{ id: string }> },
+    authHeader: string,
+  ) => {
     const { id } = await params;
 
     return proxyToBackend(`/billing/stack/accept/${id}`, {

@@ -31,13 +31,29 @@
  *   }
  * );
  */
-export const withAuthRequired = <T = any>(
-  handler: (
-    request: Request,
-    param?: T,
-    authHeader?: string,
-  ) => Promise<Response> | Response,
-) => {
+type StaticAuthHandler = (
+  request: Request,
+  authHeader: string,
+) => Promise<Response> | Response;
+
+type DynamicAuthHandler<T> = (
+  request: Request,
+  param: T,
+  authHeader: string,
+) => Promise<Response> | Response;
+
+export function withAuthRequired(handler: StaticAuthHandler): (
+  request: Request,
+) => Promise<Response>;
+
+export function withAuthRequired<T>(handler: DynamicAuthHandler<T>): (
+  request: Request,
+  param: T,
+) => Promise<Response>;
+
+export function withAuthRequired<T>(
+  handler: StaticAuthHandler | DynamicAuthHandler<T>,
+) {
   return async (request: Request, param?: T): Promise<Response> => {
     const authHeader = request.headers.get("Authorization");
 
@@ -47,8 +63,8 @@ export const withAuthRequired = <T = any>(
 
     // Call handler with param if it exists (dynamic routes), otherwise just request and authHeader
     if (param !== undefined) {
-      return handler(request, param, authHeader);
+      return (handler as DynamicAuthHandler<T>)(request, param, authHeader);
     }
-    return (handler as any)(request, authHeader);
+    return (handler as StaticAuthHandler)(request, authHeader);
   };
-};
+}
