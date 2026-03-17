@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"valo-mapper-api/middleware"
-	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
 )
 
@@ -19,17 +19,6 @@ type CreateFolderRequest struct {
 type UpdateFolderRequest struct {
 	Name           *string `json:"name,omitempty"`
 	ParentFolderID *int    `json:"parentFolderId,omitempty"`
-}
-
-const folderSubscriptionRequiredMessage = "Active subscription required to manage folders"
-
-func requireFolderSubscription(w http.ResponseWriter, r *http.Request, user *models.User) bool {
-	if user.IsSubscribed {
-		return true
-	}
-
-	utils.SendJSONError(w, utils.NewForbidden(folderSubscriptionRequiredMessage), middleware.GetRequestID(r))
-	return false
 }
 
 // CreateFolder godoc
@@ -58,10 +47,6 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		return
 	}
 
-	if !requireFolderSubscription(w, r, user) {
-		return
-	}
-
 	var req CreateFolderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
@@ -69,19 +54,17 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 	}
 	defer r.Body.Close()
 
-	if req.Name == "" {
-		utils.SendJSONError(w, utils.NewBadRequest("Folder name is required"), middleware.GetRequestID(r))
-		return
-	}
-
-	folder := &models.Folder{
-		UserID:         user.ID,
+	folderService := services.NewFolderService()
+	folder, err := folderService.CreateFolder(user, services.CreateFolderRequest{
 		Name:           req.Name,
 		ParentFolderID: req.ParentFolderID,
-	}
-
-	if err := folder.Save(); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to create folder", err), middleware.GetRequestID(r))
+	})
+	if err != nil {
+		if err.Error() == "active subscription required to manage folders" {
+			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
+			return
+		}
+		utils.SendJSONError(w, utils.NewBadRequest(err.Error()), middleware.GetRequestID(r))
 		return
 	}
 
@@ -110,14 +93,11 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	folders, err := models.GetFoldersByUserID(user.ID)
+	folderService := services.NewFolderService()
+	folders, err := folderService.GetFolders(user.ID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folders", err), middleware.GetRequestID(r))
 		return
-	}
-
-	if folders == nil {
-		folders = []models.Folder{}
 	}
 
 	utils.SendJSON(w, http.StatusOK, folders, middleware.GetRequestID(r))
@@ -151,10 +131,6 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		return
 	}
 
-	if !requireFolderSubscription(w, r, user) {
-		return
-	}
-
 	path := r.URL.Path
 	idStr := strings.TrimPrefix(path, "/api/folders/")
 	id, err := strconv.Atoi(idStr)
@@ -170,29 +146,24 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 	}
 	defer r.Body.Close()
 
-	folder, err := models.GetFolderByID(id)
+	folderService := services.NewFolderService()
+	folder, err := folderService.UpdateFolder(user, id, services.UpdateFolderRequest{
+		Name:           req.Name,
+		ParentFolderID: req.ParentFolderID,
+	})
 	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folder", err), middleware.GetRequestID(r))
-		return
-	}
-	if folder == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	if folder.UserID != user.ID {
-		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
-		return
-	}
-
-	if req.Name != nil {
-		folder.Name = *req.Name
-	}
-	if req.ParentFolderID != nil {
-		folder.ParentFolderID = req.ParentFolderID
-	}
-
-	if err := folder.Update(); err != nil {
+		if err.Error() == "active subscription required to manage folders" {
+			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
+			return
+		}
+		if err.Error() == "folder not found" {
+			utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
+			return
+		}
+		if err.Error() == "you do not have access to this folder" {
+			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
+			return
+		}
 		utils.SendJSONError(w, utils.NewInternal("Unable to update folder", err), middleware.GetRequestID(r))
 		return
 	}
@@ -225,10 +196,6 @@ func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		return
 	}
 
-	if !requireFolderSubscription(w, r, user) {
-		return
-	}
-
 	path := r.URL.Path
 	idStr := strings.TrimPrefix(path, "/api/folders/")
 	id, err := strconv.Atoi(idStr)
@@ -237,22 +204,20 @@ func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		return
 	}
 
-	folder, err := models.GetFolderByID(id)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folder", err), middleware.GetRequestID(r))
-		return
-	}
-	if folder == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	if folder.UserID != user.ID {
-		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
-		return
-	}
-
-	if err := folder.Delete(); err != nil {
+	folderService := services.NewFolderService()
+	if err := folderService.DeleteFolder(user, id); err != nil {
+		if err.Error() == "active subscription required to manage folders" {
+			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
+			return
+		}
+		if err.Error() == "folder not found" {
+			utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
+			return
+		}
+		if err.Error() == "you do not have access to this folder" {
+			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
+			return
+		}
 		utils.SendJSONError(w, utils.NewInternal("Unable to delete folder", err), middleware.GetRequestID(r))
 		return
 	}

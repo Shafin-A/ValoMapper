@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 	"valo-mapper-api/middleware"
-	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
 
 	"github.com/stripe/stripe-go/v82"
@@ -50,34 +50,23 @@ func CancelSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 	}
 
 	stripe.Key = stripeSecretKey
+	billingServiceDeps := services.BillingServiceDependencies{
+		UpdateStripeSubscriptionFn: updateStripeSubscriptionFn,
+		GetStripeSubscriptionFn:    getStripeSubscriptionFn,
+	}
+	if findCancelableStripeSubscriptionIDForUserFn != nil {
+		billingServiceDeps.FindCancelableStripeSubscriptionIDForUserFn = findCancelableStripeSubscriptionIDForUserFn
+	}
+	billingService := services.NewBillingService(billingServiceDeps)
 
-	subscriptionID, err := findCancelableStripeSubscriptionIDForUserFn(user)
+	updatedSubscription, err := billingService.CancelSubscription(user)
 	if err != nil {
 		switch {
-		case errors.Is(err, errStripeSubscriptionIDMissing), errors.Is(err, errStripeSubscriptionNotFound):
+		case errors.Is(err, services.ErrStripeSubscriptionIDMissing), errors.Is(err, services.ErrStripeSubscriptionNotFound):
 			utils.SendJSONError(w, utils.NewNotFound("Active Stripe subscription not found"), requestID)
 		default:
-			utils.SendJSONError(w, utils.NewInternal("Unable to locate Stripe subscription", err), requestID)
+			utils.SendJSONError(w, utils.NewInternal("Unable to cancel subscription", err), requestID)
 		}
-		return
-	}
-
-	updatedSubscription, err := updateStripeSubscriptionFn(subscriptionID, &stripe.SubscriptionParams{
-		CancelAtPeriodEnd: stripe.Bool(true),
-	})
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to cancel subscription", err), requestID)
-		return
-	}
-
-	isSubscribed, subscriptionEndedAt := deriveSubscriptionState(
-		stripe.EventTypeCustomerSubscriptionUpdated,
-		updatedSubscription.Status,
-		updatedSubscription.CancelAtPeriodEnd,
-		updatedSubscription.CancelAt,
-	)
-	if err := user.UpdateSubscriptionStatus(isSubscribed, subscriptionEndedAt); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to update subscription", err), requestID)
 		return
 	}
 
@@ -125,34 +114,23 @@ func ResumeSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 	}
 
 	stripe.Key = stripeSecretKey
+	billingServiceDeps := services.BillingServiceDependencies{
+		UpdateStripeSubscriptionFn: updateStripeSubscriptionFn,
+		GetStripeSubscriptionFn:    getStripeSubscriptionFn,
+	}
+	if findScheduledCancellationSubscriptionIDForUserFn != nil {
+		billingServiceDeps.FindScheduledCancellationSubscriptionIDForUserFn = findScheduledCancellationSubscriptionIDForUserFn
+	}
+	billingService := services.NewBillingService(billingServiceDeps)
 
-	subscriptionID, err := findScheduledCancellationSubscriptionIDForUserFn(user)
+	updatedSubscription, err := billingService.ResumeSubscription(user)
 	if err != nil {
 		switch {
-		case errors.Is(err, errStripeSubscriptionIDMissing), errors.Is(err, errStripeSubscriptionNotFound), errors.Is(err, errStripeScheduledCancellationNotFound):
+		case errors.Is(err, services.ErrStripeSubscriptionIDMissing), errors.Is(err, services.ErrStripeSubscriptionNotFound), errors.Is(err, services.ErrStripeScheduledCancellationNotFound):
 			utils.SendJSONError(w, utils.NewBadRequest("No scheduled cancellation found"), requestID)
 		default:
-			utils.SendJSONError(w, utils.NewInternal("Unable to locate Stripe subscription", err), requestID)
+			utils.SendJSONError(w, utils.NewInternal("Unable to resume subscription", err), requestID)
 		}
-		return
-	}
-
-	updatedSubscription, err := updateStripeSubscriptionFn(subscriptionID, &stripe.SubscriptionParams{
-		CancelAtPeriodEnd: stripe.Bool(false),
-	})
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to resume subscription", err), requestID)
-		return
-	}
-
-	isSubscribed, subscriptionEndedAt := deriveSubscriptionState(
-		stripe.EventTypeCustomerSubscriptionUpdated,
-		updatedSubscription.Status,
-		updatedSubscription.CancelAtPeriodEnd,
-		updatedSubscription.CancelAt,
-	)
-	if err := user.UpdateSubscriptionStatus(isSubscribed, subscriptionEndedAt); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to update subscription", err), requestID)
 		return
 	}
 
@@ -161,70 +139,4 @@ func ResumeSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 		Status:            string(updatedSubscription.Status),
 		CancelAtPeriodEnd: updatedSubscription.CancelAtPeriodEnd,
 	}, requestID)
-}
-
-func findCancelableStripeSubscriptionIDForUser(user *models.User) (string, error) {
-	stripeSubscription, err := findStripeSubscriptionForUser(user)
-	if err != nil {
-		return "", err
-	}
-
-	if !isCancelableStripeSubscriptionStatus(stripeSubscription.Status) {
-		return "", errStripeSubscriptionNotFound
-	}
-
-	return strings.TrimSpace(stripeSubscription.ID), nil
-}
-
-func findScheduledCancellationSubscriptionIDForUser(user *models.User) (string, error) {
-	stripeSubscription, err := findStripeSubscriptionForUser(user)
-	if err != nil {
-		return "", err
-	}
-
-	if !stripeSubscription.CancelAtPeriodEnd || !isCancelableStripeSubscriptionStatus(stripeSubscription.Status) {
-		return "", errStripeScheduledCancellationNotFound
-	}
-
-	return strings.TrimSpace(stripeSubscription.ID), nil
-}
-
-func findStripeSubscriptionForUser(user *models.User) (*stripe.Subscription, error) {
-	if user.StripeSubscriptionID == nil || strings.TrimSpace(*user.StripeSubscriptionID) == "" {
-		return nil, errStripeSubscriptionIDMissing
-	}
-
-	stripeSubscriptionID := strings.TrimSpace(*user.StripeSubscriptionID)
-	stripeSubscription, err := getStripeSubscriptionFn(stripeSubscriptionID, nil)
-	if err != nil {
-		var stripeErr *stripe.Error
-		if errors.As(err, &stripeErr) && stripeErr.Code == stripe.ErrorCodeResourceMissing {
-			if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, user.PersonalIsSubscribed, user.PersonalSubscriptionEndedAt, user.PersonalSubscriptionPlan); updateErr != nil {
-				return nil, updateErr
-			}
-
-			return nil, errStripeSubscriptionNotFound
-		}
-
-		return nil, err
-	}
-
-	if stripeSubscription == nil || strings.TrimSpace(stripeSubscription.ID) == "" {
-		return nil, errStripeSubscriptionNotFound
-	}
-
-	return stripeSubscription, nil
-}
-
-func isCancelableStripeSubscriptionStatus(status stripe.SubscriptionStatus) bool {
-	switch status {
-	case stripe.SubscriptionStatusActive,
-		stripe.SubscriptionStatusTrialing,
-		stripe.SubscriptionStatusPastDue,
-		stripe.SubscriptionStatusUnpaid,
-		stripe.SubscriptionStatusIncomplete:
-		return true
-	default:
-		return false
-	}
 }

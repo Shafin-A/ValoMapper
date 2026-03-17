@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 
 	"github.com/stripe/stripe-go/v82/checkout/session"
 	"github.com/stripe/stripe-go/v82/subscription"
@@ -21,14 +22,14 @@ var createStripeCheckoutSessionFn = session.New
 var findStripePriceForPlanFn = findStripePriceForPlan
 var updateStripeSubscriptionFn = subscription.Update
 var getStripeSubscriptionFn = subscription.Get
-var findCancelableStripeSubscriptionIDForUserFn = findCancelableStripeSubscriptionIDForUser
-var findScheduledCancellationSubscriptionIDForUserFn = findScheduledCancellationSubscriptionIDForUser
+var findCancelableStripeSubscriptionIDForUserFn func(*models.User) (string, error)
+var findScheduledCancellationSubscriptionIDForUserFn func(*models.User) (string, error)
 
-var errStripeSubscriptionIDMissing = errors.New("stripe-subscription-id-missing")
-var errStripeSubscriptionNotFound = errors.New("stripe-subscription-not-found")
-var errStripeScheduledCancellationNotFound = errors.New("stripe-scheduled-cancellation-not-found")
-var errUnsupportedCheckoutPlan = errors.New("unsupported-checkout-plan")
-var errCheckoutPlanUnavailable = errors.New("checkout-plan-unavailable")
+var errStripeSubscriptionIDMissing = services.ErrStripeSubscriptionIDMissing
+var errStripeSubscriptionNotFound = services.ErrStripeSubscriptionNotFound
+var errStripeScheduledCancellationNotFound = services.ErrStripeScheduledCancellationNotFound
+var errUnsupportedCheckoutPlan = services.ErrUnsupportedCheckoutPlan
+var errCheckoutPlanUnavailable = services.ErrCheckoutPlanUnavailable
 
 type checkoutPlan string
 

@@ -7,9 +7,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
 
 	"github.com/gorilla/mux"
@@ -36,9 +36,10 @@ func GetStackMembers(w http.ResponseWriter, r *http.Request, firebaseAuth Fireba
 		return
 	}
 
-	ownerUserID, canManage, err := resolveStackViewContext(user)
+	stackService := services.NewStackService()
+	ownerUserID, canManage, err := stackService.GetStackViewContext(user)
 	if err != nil {
-		if errors.Is(err, errNotInStack) {
+		if err.Error() == errNotInStack.Error() {
 			utils.SendJSONError(w, utils.NewForbidden(errNotInStack.Error()), requestID)
 			return
 		}
@@ -46,7 +47,7 @@ func GetStackMembers(w http.ResponseWriter, r *http.Request, firebaseAuth Fireba
 		return
 	}
 
-	members, err := models.GetStackMembersForOwner(ownerUserID)
+	members, err := stackService.GetStackMembers(ownerUserID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Failed to fetch stack members", err), requestID)
 		return
@@ -92,81 +93,41 @@ func InviteStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		return
 	}
 
-	if !isStackOwner(user) {
-		utils.SendJSONError(w, utils.NewForbidden(errNotStackOwner.Error()), requestID)
-		return
-	}
-
 	var req InviteStackMemberRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), requestID)
 		return
 	}
 
-	targetFirebaseUID := strings.TrimSpace(req.FirebaseUID)
-	if targetFirebaseUID == "" {
-		utils.SendJSONError(w, utils.NewBadRequest("firebase-uid-required"), requestID)
-		return
-	}
-
-	target, err := models.GetUserByFirebaseUID(targetFirebaseUID)
+	stackService := services.NewStackService()
+	invite, err := stackService.InviteStackMember(user, services.InviteStackMemberRequest{FirebaseUID: req.FirebaseUID})
 	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Failed to look up user", err), requestID)
-		return
-	}
-	if target == nil {
-		utils.SendJSONError(w, utils.NewNotFound("user-not-found"), requestID)
-		return
-	}
-
-	if target.ID == user.ID {
-		utils.SendJSONError(w, utils.NewBadRequest(errCannotInviteSelf.Error()), requestID)
-		return
-	}
-
-	if isStackOwner(target) {
-		utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInStack.Error(), nil), requestID)
-		return
-	}
-
-	existingActiveMembership, err := models.GetActiveStackMemberByMemberUserID(target.ID)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Failed to check existing membership", err), requestID)
-		return
-	}
-	if existingActiveMembership != nil {
-		utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInStack.Error(), nil), requestID)
-		return
-	}
-
-	existingPendingInvite, err := models.GetPendingStackInviteByOwnerAndMember(user.ID, target.ID)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Failed to check existing pending invite", err), requestID)
-		return
-	}
-	if existingPendingInvite != nil {
-		utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInvited.Error(), nil), requestID)
-		return
-	}
-
-	total, err := models.GetTotalStackMemberCount(user.ID)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Failed to count stack members", err), requestID)
-		return
-	}
-	if total >= StackMaxMembers {
-		utils.SendJSONError(w, &utils.HTTPError{Status: http.StatusUnprocessableEntity, Message: errStackFull.Error()}, requestID)
-		return
-	}
-
-	invite, err := models.CreateStackInvite(user.ID, target.ID)
-	if err != nil {
-		if errors.Is(err, models.ErrStackInviteAlreadyExists) {
+		switch err.Error() {
+		case errNotStackOwner.Error():
+			utils.SendJSONError(w, utils.NewForbidden(errNotStackOwner.Error()), requestID)
+			return
+		case "firebase-uid-required":
+			utils.SendJSONError(w, utils.NewBadRequest("firebase-uid-required"), requestID)
+			return
+		case "user-not-found":
+			utils.SendJSONError(w, utils.NewNotFound("user-not-found"), requestID)
+			return
+		case errCannotInviteSelf.Error():
+			utils.SendJSONError(w, utils.NewBadRequest(errCannotInviteSelf.Error()), requestID)
+			return
+		case errTargetAlreadyInStack.Error():
+			utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInStack.Error(), nil), requestID)
+			return
+		case errTargetAlreadyInvited.Error():
 			utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInvited.Error(), nil), requestID)
 			return
+		case errStackFull.Error():
+			utils.SendJSONError(w, &utils.HTTPError{Status: http.StatusUnprocessableEntity, Message: errStackFull.Error()}, requestID)
+			return
+		default:
+			utils.SendJSONError(w, utils.NewInternal("Failed to create invite", err), requestID)
+			return
 		}
-		utils.SendJSONError(w, utils.NewInternal("Failed to create invite", err), requestID)
-		return
 	}
 
 	utils.SendJSON(w, http.StatusCreated, invite, requestID)
@@ -195,19 +156,19 @@ func RemoveStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		return
 	}
 
-	if !isStackOwner(user) {
-		utils.SendJSONError(w, utils.NewForbidden(errNotStackOwner.Error()), requestID)
-		return
-	}
-
 	memberID, err := parseIDVar(r, "id")
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("invalid-id"), requestID)
 		return
 	}
 
-	if err := models.RemoveStackMember(user.ID, memberID); err != nil {
-		if errors.Is(err, models.ErrStackMemberNotFound) {
+	stackService := services.NewStackService()
+	if err := stackService.RemoveStackMember(user, memberID); err != nil {
+		if err.Error() == errNotStackOwner.Error() {
+			utils.SendJSONError(w, utils.NewForbidden(errNotStackOwner.Error()), requestID)
+			return
+		}
+		if err.Error() == "stack-member-not-found" {
 			utils.SendJSONError(w, utils.NewNotFound("stack-member-not-found"), requestID)
 			return
 		}
@@ -247,40 +208,52 @@ func AcceptStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		return
 	}
 
-	invite, err := models.GetStackMemberByID(inviteID)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Failed to look up invite", err), requestID)
-		return
-	}
-	if invite == nil {
-		utils.SendJSONError(w, utils.NewNotFound("stack-invite-not-found"), requestID)
-		return
-	}
-	if invite.MemberUserID != user.ID {
-		utils.SendJSONError(w, utils.NewForbidden("forbidden"), requestID)
-		return
-	}
-
-	if err := models.AcceptStackInvite(inviteID, user.ID); err != nil {
-		if errors.Is(err, models.ErrStackInviteNotFound) {
+	stackService := services.NewStackService()
+	if err := stackService.AcceptStackInvite(user, inviteID); err != nil {
+		switch err.Error() {
+		case "stack-invite-not-found":
 			utils.SendJSONError(w, utils.NewNotFound("stack-invite-not-found"), requestID)
 			return
-		}
-		if errors.Is(err, models.ErrStackMemberAlreadyActive) {
+		case "forbidden":
+			utils.SendJSONError(w, utils.NewForbidden("forbidden"), requestID)
+			return
+		case errTargetAlreadyInStack.Error():
 			utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInStack.Error(), nil), requestID)
 			return
+		default:
+			utils.SendJSONError(w, utils.NewInternal("Failed to accept invite", err), requestID)
+			return
 		}
-		utils.SendJSONError(w, utils.NewInternal("Failed to accept invite", err), requestID)
-		return
 	}
 
-	if err := schedulePersonalSubscriptionCancellationForStackJoin(user); err != nil {
-		revertErr := models.LeaveStack(user.ID)
-		if revertErr != nil {
-			err = errors.Join(err, revertErr)
+	// Only handle subscription cancellation if user has an active personal subscription
+	if user.HasActivePersonalSubscription() && user.StripeSubscriptionID != nil && strings.TrimSpace(*user.StripeSubscriptionID) != "" {
+		stripeSecretKey := strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
+		if stripeSecretKey == "" {
+			revertErr := models.LeaveStack(user.ID)
+			if revertErr != nil {
+				err = errors.Join(errors.New("stripe checkout is not configured"), revertErr)
+			} else {
+				err = errors.New("stripe checkout is not configured")
+			}
+			utils.SendJSONError(w, utils.NewInternal("Failed to finalize stack invite acceptance", err), requestID)
+			return
 		}
-		utils.SendJSONError(w, utils.NewInternal("Failed to finalize stack invite acceptance", err), requestID)
-		return
+
+		stripe.Key = stripeSecretKey
+		billingService := services.NewBillingService(services.BillingServiceDependencies{
+			UpdateStripeSubscriptionFn: updateStripeSubscriptionFn,
+			GetStripeSubscriptionFn:    getStripeSubscriptionFn,
+		})
+
+		if err := billingService.SchedulePersonalSubscriptionCancellationForStackJoin(user); err != nil {
+			revertErr := models.LeaveStack(user.ID)
+			if revertErr != nil {
+				err = errors.Join(err, revertErr)
+			}
+			utils.SendJSONError(w, utils.NewInternal("Failed to finalize stack invite acceptance", err), requestID)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)
@@ -306,8 +279,9 @@ func LeaveStack(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	if err := models.LeaveStack(user.ID); err != nil {
-		if errors.Is(err, models.ErrStackMemberNotFound) {
+	stackService := services.NewStackService()
+	if err := stackService.LeaveStack(user); err != nil {
+		if err.Error() == "not-in-stack" {
 			utils.SendJSONError(w, utils.NewNotFound("not-in-stack"), requestID)
 			return
 		}
@@ -346,9 +320,14 @@ func DeclineStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 		return
 	}
 
-	if err := models.DeclineStackInvite(inviteID, user.ID); err != nil {
-		if errors.Is(err, models.ErrStackInviteNotFound) {
+	stackService := services.NewStackService()
+	if err := stackService.DeclineStackInvite(user, inviteID); err != nil {
+		if err.Error() == "stack-invite-not-found" {
 			utils.SendJSONError(w, utils.NewNotFound("stack-invite-not-found"), requestID)
+			return
+		}
+		if err.Error() == "forbidden" {
+			utils.SendJSONError(w, utils.NewForbidden("forbidden"), requestID)
 			return
 		}
 		utils.SendJSONError(w, utils.NewInternal("Failed to decline stack invite", err), requestID)
@@ -377,122 +356,14 @@ func GetPendingStackInvites(w http.ResponseWriter, r *http.Request, firebaseAuth
 		return
 	}
 
-	invites, err := models.GetPendingStackInvitesByMemberUserID(user.ID)
+	stackService := services.NewStackService()
+	invites, err := stackService.GetPendingInvites(user.ID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Failed to fetch pending invites", err), requestID)
 		return
 	}
 
 	utils.SendJSON(w, http.StatusOK, invites, requestID)
-}
-
-// isStackOwner returns true if the user has an active stack subscription.
-func isStackOwner(user *models.User) bool {
-	return user != nil && user.HasActivePersonalPlan(string(checkoutPlanStack))
-}
-
-func resolveStackViewContext(user *models.User) (int, bool, error) {
-	if user == nil {
-		return 0, false, errNotInStack
-	}
-
-	if isStackOwner(user) {
-		return user.ID, true, nil
-	}
-
-	membership, err := models.GetActiveStackMemberByMemberUserID(user.ID)
-	if err != nil {
-		return 0, false, err
-	}
-	if membership == nil || membership.Status != models.StackMemberStatusActive {
-		return 0, false, errNotInStack
-	}
-
-	return membership.OwnerUserID, false, nil
-}
-
-func schedulePersonalSubscriptionCancellationForStackJoin(user *models.User) error {
-	if user == nil || !user.HasActivePersonalSubscription() || user.StripeSubscriptionID == nil || strings.TrimSpace(*user.StripeSubscriptionID) == "" {
-		return nil
-	}
-
-	stripeSecretKey := strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
-	if stripeSecretKey == "" {
-		return errors.New("stripe checkout is not configured")
-	}
-
-	stripe.Key = stripeSecretKey
-
-	stripeSubscriptionID := strings.TrimSpace(*user.StripeSubscriptionID)
-	stripeSubscription, err := getStripeSubscriptionFn(stripeSubscriptionID, nil)
-	if err != nil {
-		if isStripeResourceMissingError(err) {
-			now := time.Now().UTC()
-			return user.UpdateStripeBillingState(user.StripeCustomerID, nil, false, &now, nil)
-		}
-
-		return err
-	}
-
-	if stripeSubscription == nil || strings.TrimSpace(stripeSubscription.ID) == "" {
-		return nil
-	}
-
-	if !isCancelableStripeSubscriptionStatus(stripeSubscription.Status) {
-		return nil
-	}
-
-	if stripeSubscription.CancelAtPeriodEnd {
-		return syncUserPersonalBillingFromStripeSubscription(user, stripeSubscription)
-	}
-
-	updatedSubscription, err := updateStripeSubscriptionFn(strings.TrimSpace(stripeSubscription.ID), &stripe.SubscriptionParams{
-		CancelAtPeriodEnd: stripe.Bool(true),
-	})
-	if err != nil {
-		return err
-	}
-
-	return syncUserPersonalBillingFromStripeSubscription(user, updatedSubscription)
-}
-
-func syncUserPersonalBillingFromStripeSubscription(user *models.User, stripeSubscription *stripe.Subscription) error {
-	if user == nil || stripeSubscription == nil {
-		return nil
-	}
-
-	nextStripeCustomerID := user.StripeCustomerID
-	stripeCustomerID := stripeSubscriptionCustomerID(stripeSubscription)
-	if stripeCustomerID != "" {
-		nextStripeCustomerID = &stripeCustomerID
-	}
-
-	nextStripeSubscriptionID := user.StripeSubscriptionID
-	normalizedSubscriptionID := strings.TrimSpace(stripeSubscription.ID)
-	if normalizedSubscriptionID != "" {
-		nextStripeSubscriptionID = &normalizedSubscriptionID
-	}
-
-	isSubscribed, subscriptionEndedAt := deriveSubscriptionState(
-		stripe.EventTypeCustomerSubscriptionUpdated,
-		stripeSubscription.Status,
-		stripeSubscription.CancelAtPeriodEnd,
-		stripeSubscription.CancelAt,
-		stripeSubscription.EndedAt,
-		stripeSubscription.CanceledAt,
-	)
-
-	updatedPlan := user.PersonalSubscriptionPlan
-	if updatedPlan == nil {
-		if planVal := strings.TrimSpace(stripeSubscription.Metadata["plan"]); planVal != "" {
-			updatedPlan = &planVal
-		}
-	}
-	if !isSubscribed {
-		updatedPlan = nil
-	}
-
-	return user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, updatedPlan)
 }
 
 // parseIDVar extracts a named path variable and converts it to int.

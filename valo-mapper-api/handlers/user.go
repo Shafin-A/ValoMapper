@@ -1,49 +1,16 @@
 package handlers
 
 import (
-	"context"
 	"crypto/subtle"
 	"encoding/json"
-	"math"
 	"net/http"
 	"os"
 	"strings"
-	"time"
+
 	"valo-mapper-api/middleware"
-	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
 )
-
-func enrichUserBillingState(user *models.User) {
-	if user == nil {
-		return
-	}
-
-	user.RefreshPremiumTrialEligibility()
-	user.PremiumTrialDaysLeft = nil
-
-	if user.PremiumTrialClaimedAt == nil {
-		return
-	}
-
-	trialDays := checkoutPremiumTrialDays()
-	if trialDays <= 0 {
-		return
-	}
-
-	trialEndsAt := user.PremiumTrialClaimedAt.UTC().Add(time.Duration(trialDays) * 24 * time.Hour)
-	remainingDays := int(math.Ceil(trialEndsAt.Sub(time.Now().UTC()).Hours() / 24))
-	if remainingDays <= 0 {
-		return
-	}
-
-	user.PremiumTrialDaysLeft = &remainingDays
-}
-
-// strPtr is a helper function to convert a string to a *string
-func strPtr(s string) *string {
-	return &s
-}
 
 type CreateUserRequest struct {
 	FirebaseUID string `json:"firebaseUid"`
@@ -60,6 +27,10 @@ type UpdateUserSubscriptionRequest struct {
 	UserID       *int    `json:"userId,omitempty"`
 	FirebaseUID  *string `json:"firebaseUid,omitempty"`
 	IsSubscribed *bool   `json:"isSubscribed"`
+}
+
+func strPtr(s string) *string {
+	return &s
 }
 
 // CreateUser godoc
@@ -101,23 +72,20 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	user := &models.User{
-		FirebaseUID:   strPtr(req.FirebaseUID),
-		Name:          strPtr(req.Name),
-		Email:         strPtr(req.Email),
-		EmailVerified: false,
-	}
-
-	if err := user.Save(); err != nil {
-		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "already exists") {
+	userService := services.NewUserService()
+	user, err := userService.CreateUser(services.CreateUserRequest{
+		FirebaseUID: req.FirebaseUID,
+		Name:        req.Name,
+		Email:       req.Email,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
 			utils.SendJSONError(w, utils.NewConflict("User already exists", err), middleware.GetRequestID(r))
 			return
 		}
 		utils.SendJSONError(w, utils.NewInternal("Unable to create user", err), middleware.GetRequestID(r))
 		return
 	}
-
-	enrichUserBillingState(user)
 
 	utils.SendJSON(w, http.StatusCreated, user, middleware.GetRequestID(r))
 }
@@ -144,7 +112,8 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthIn
 		return
 	}
 
-	enrichUserBillingState(user)
+	userService := services.NewUserService()
+	userService.EnrichUserBillingState(user)
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
@@ -181,20 +150,16 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	}
 	defer r.Body.Close()
 
-	if req.Name != nil && *req.Name != "" {
-		user.Name = req.Name
-	}
-
-	if req.TourCompleted != nil {
-		user.TourCompleted = *req.TourCompleted
-	}
-
-	if err := user.Update(); err != nil {
+	userService := services.NewUserService()
+	if err := userService.UpdateUser(user, services.UpdateUserRequest{
+		Name:          req.Name,
+		TourCompleted: req.TourCompleted,
+	}); err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to update user", err), middleware.GetRequestID(r))
 		return
 	}
 
-	enrichUserBillingState(user)
+	userService.EnrichUserBillingState(user)
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
@@ -220,13 +185,9 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	if err := user.Delete(); err != nil {
+	userService := services.NewUserService()
+	if err := userService.DeleteUser(user, firebaseAuth); err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to delete user", err), middleware.GetRequestID(r))
-		return
-	}
-
-	if err := firebaseAuth.DeleteUser(context.Background(), *user.FirebaseUID); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("User deleted from database but Firebase deletion failed", err), middleware.GetRequestID(r))
 		return
 	}
 
@@ -287,40 +248,22 @@ func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAu
 		return
 	}
 
-	var user *models.User
-	var err error
-	if hasUserID {
-		user, err = models.GetUserByID(*req.UserID)
-	} else {
-		user, err = models.GetUserByFirebaseUID(*req.FirebaseUID)
-	}
+	userService := services.NewUserService()
+	user, err := userService.UpdateUserSubscription(services.UpdateUserSubscriptionRequest{
+		UserID:       req.UserID,
+		FirebaseUID:  req.FirebaseUID,
+		IsSubscribed: *req.IsSubscribed,
+	})
 	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve user", err), middleware.GetRequestID(r))
-		return
-	}
-	if user == nil {
-		utils.SendJSONError(w, utils.NewNotFound("User not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	if err := applySubscriptionStatusUpdate(user, *req.IsSubscribed); err != nil {
+		if err.Error() == "user not found" {
+			utils.SendJSONError(w, utils.NewNotFound("User not found"), middleware.GetRequestID(r))
+			return
+		}
 		utils.SendJSONError(w, utils.NewInternal("Unable to update subscription", err), middleware.GetRequestID(r))
 		return
 	}
 
-	enrichUserBillingState(user)
+	userService.EnrichUserBillingState(user)
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
-}
-
-func applySubscriptionStatusUpdate(user *models.User, isSubscribed bool) error {
-	var subscriptionEndedAt *time.Time
-	if isSubscribed {
-		subscriptionEndedAt = nil
-	} else {
-		now := time.Now().UTC()
-		subscriptionEndedAt = &now
-	}
-
-	return user.UpdateSubscriptionStatus(isSubscribed, subscriptionEndedAt)
 }

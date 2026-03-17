@@ -9,6 +9,7 @@ import (
 	"strings"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
 
 	"github.com/stripe/stripe-go/v82"
@@ -81,7 +82,8 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	processed, reason, err := processStripeSubscriptionEvent(event)
+	billingService := services.NewBillingService(services.BillingServiceDependencies{})
+	processed, reason, err := billingService.ProcessStripeSubscriptionEvent(event)
 	if err != nil {
 		if releaseErr := models.ReleaseStripeWebhookEventClaim(r.Context(), eventID); releaseErr != nil {
 			log.Printf("[request=%s] failed to release Stripe webhook event claim eventID=%s: %v", requestID, eventID, releaseErr)
@@ -103,75 +105,4 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		"status":    "processed",
 		"eventType": string(event.Type),
 	}, requestID)
-}
-
-func processStripeSubscriptionEvent(event stripe.Event) (bool, string, error) {
-	if !isSupportedStripeSubscriptionEvent(event.Type) {
-		return false, "unsupported-event-type", nil
-	}
-
-	var subscription stripe.Subscription
-	if err := json.Unmarshal(event.Data.Raw, &subscription); err != nil {
-		return false, "invalid-subscription-payload", err
-	}
-
-	user, reason, err := resolveUserFromStripeSubscription(&subscription)
-	if err != nil {
-		return false, "", err
-	}
-	if user == nil {
-		return false, reason, nil
-	}
-
-	nextStripeCustomerID := user.StripeCustomerID
-	stripeCustomerID := stripeSubscriptionCustomerID(&subscription)
-	if stripeCustomerID != "" {
-		nextStripeCustomerID = &stripeCustomerID
-	}
-
-	nextStripeSubscriptionID := user.StripeSubscriptionID
-	stripeSubscriptionID := strings.TrimSpace(subscription.ID)
-	if stripeSubscriptionID != "" {
-		nextStripeSubscriptionID = &stripeSubscriptionID
-	}
-
-	isSubscribed, subscriptionEndedAt := deriveSubscriptionState(
-		event.Type,
-		subscription.Status,
-		subscription.CancelAtPeriodEnd,
-		subscription.CancelAt,
-		subscription.EndedAt,
-		subscription.CanceledAt,
-	)
-
-	var subscriptionPlan *string
-	if planVal := strings.TrimSpace(subscription.Metadata["plan"]); planVal != "" && isSubscribed {
-		subscriptionPlan = &planVal
-	}
-
-	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, subscriptionPlan); err != nil {
-		return false, "", err
-	}
-
-	return true, "", nil
-}
-
-func stripeSubscriptionCustomerID(stripeSubscription *stripe.Subscription) string {
-	if stripeSubscription == nil || stripeSubscription.Customer == nil {
-		return ""
-	}
-
-	return strings.TrimSpace(stripeSubscription.Customer.ID)
-}
-
-func resolveUserFromStripeSubscription(subscription *stripe.Subscription) (*models.User, string, error) {
-	if subscription == nil {
-		return nil, "invalid-subscription-payload", nil
-	}
-
-	return models.ResolveUserForStripeSubscriptionEvent(
-		subscription.Metadata,
-		strings.TrimSpace(subscription.ID),
-		stripeSubscriptionCustomerID(subscription),
-	)
 }

@@ -2,14 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"valo-mapper-api/middleware"
-	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
 )
 
@@ -24,8 +23,6 @@ type UpdateStrategyRequest struct {
 	Name     *string `json:"name,omitempty"`
 }
 
-const freeStrategyLimit = 3
-
 type StrategyResponse struct {
 	ID            int       `json:"id"`
 	UserID        int       `json:"userId"`
@@ -36,15 +33,15 @@ type StrategyResponse struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewStrategyResponse(strategy *models.Strategy, lobby *models.Lobby) *StrategyResponse {
+func newStrategyResponseFromService(strategy *services.StrategyResponse) *StrategyResponse {
 	return &StrategyResponse{
 		ID:            strategy.ID,
 		UserID:        strategy.UserID,
 		FolderID:      strategy.FolderID,
 		Name:          strategy.Name,
-		SelectedMapID: lobby.SelectedMapId,
-		LobbyCode:     lobby.Code,
-		UpdatedAt:     lobby.UpdatedAt,
+		SelectedMapID: strategy.SelectedMapID,
+		LobbyCode:     strategy.LobbyCode,
+		UpdatedAt:     strategy.UpdatedAt,
 	}
 }
 
@@ -83,56 +80,36 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 	}
 	defer r.Body.Close()
 
-	if req.LobbyCode == "" {
-		utils.SendJSONError(w, utils.NewBadRequest("Lobby code is required"), middleware.GetRequestID(r))
-		return
-	}
-	if req.Name == "" {
-		utils.SendJSONError(w, utils.NewBadRequest("Strategy name is required"), middleware.GetRequestID(r))
-		return
-	}
-
-	lobby, err := models.GetLobbyByCode(req.LobbyCode)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
-		return
-	}
-	if lobby == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	if !user.IsSubscribed {
-		strategyCount, err := models.CountStrategiesByUserID(user.ID)
-		if err != nil {
-			utils.SendJSONError(w, utils.NewInternal("Unable to validate strategy limit", err), middleware.GetRequestID(r))
-			return
-		}
-		if strategyCount >= freeStrategyLimit {
-			utils.SendJSONError(w, utils.NewForbidden("Free plan limit reached (3 saved strategies). Upgrade to ValoMapper Premium for unlimited saves."), middleware.GetRequestID(r))
-			return
-		}
-	}
-
-	strategy := &models.Strategy{
-		UserID:    user.ID,
+	strategyService := services.NewStrategyService()
+	response, err := strategyService.CreateStrategy(user, services.CreateStrategyRequest{
 		FolderID:  req.FolderID,
 		LobbyCode: req.LobbyCode,
 		Name:      req.Name,
-	}
-
-	if err := strategy.Save(); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
+	})
+	if err != nil {
+		switch {
+		case err.Error() == "lobby code is required":
+			utils.SendJSONError(w, utils.NewBadRequest("Lobby code is required"), middleware.GetRequestID(r))
+			return
+		case err.Error() == "strategy name is required":
+			utils.SendJSONError(w, utils.NewBadRequest("Strategy name is required"), middleware.GetRequestID(r))
+			return
+		case err.Error() == "lobby not found":
+			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
+			return
+		case strings.HasPrefix(err.Error(), "free plan limit reached"):
+			utils.SendJSONError(w, utils.NewForbidden("Free plan limit reached (3 saved strategies). Upgrade to ValoMapper Premium for unlimited saves."), middleware.GetRequestID(r))
+			return
+		case err.Error() == "you have already saved this lobby":
 			utils.SendJSONError(w, utils.NewConflict("You have already saved this lobby", err), middleware.GetRequestID(r))
 			return
+		default:
+			utils.SendJSONError(w, utils.NewInternal("Unable to create strategy", err), middleware.GetRequestID(r))
+			return
 		}
-		utils.SendJSONError(w, utils.NewInternal("Unable to create strategy", err), middleware.GetRequestID(r))
-		return
 	}
 
-	response := NewStrategyResponse(strategy, lobby)
-
-	utils.SendJSON(w, http.StatusCreated, response, middleware.GetRequestID(r))
+	utils.SendJSON(w, http.StatusCreated, newStrategyResponseFromService(response), middleware.GetRequestID(r))
 }
 
 // GetStrategies godoc
@@ -170,51 +147,16 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth Firebase
 		folderID = &id
 	}
 
-	var strategies []models.Strategy
-	if folderID != nil {
-		strategies, err = models.GetStrategiesByFolderID(user.ID, *folderID)
-	} else {
-		strategies, err = models.GetStrategiesByUserID(user.ID)
-	}
-
+	strategyService := services.NewStrategyService()
+	strategies, err := strategyService.GetStrategies(user.ID, folderID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategies", err), middleware.GetRequestID(r))
 		return
 	}
 
-	lobbyCodes := make([]string, 0, len(strategies))
-	for _, s := range strategies {
-		lobbyCodes = append(lobbyCodes, s.LobbyCode)
-	}
-
-	lobbies, err := models.GetLobbiesByCodes(lobbyCodes)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobbies", err), middleware.GetRequestID(r))
-		return
-	}
-
-	lobbyMap := make(map[string]*models.Lobby)
-	for i := range lobbies {
-		lobbyMap[lobbies[i].Code] = &lobbies[i]
-	}
-
-	var responses []*StrategyResponse
-	var missingLobbies []string
-	for _, s := range strategies {
-		lobby, exists := lobbyMap[s.LobbyCode]
-		if !exists || lobby == nil {
-			missingLobbies = append(missingLobbies, s.LobbyCode)
-			continue
-		}
-		responses = append(responses, NewStrategyResponse(&s, lobby))
-	}
-
-	if len(missingLobbies) > 0 {
-		log.Printf("WARNING: Strategies reference missing lobbies: %v", missingLobbies)
-	}
-
-	if responses == nil {
-		responses = []*StrategyResponse{}
+	responses := make([]*StrategyResponse, 0, len(strategies))
+	for _, strategy := range strategies {
+		responses = append(responses, newStrategyResponseFromService(strategy))
 	}
 
 	utils.SendJSON(w, http.StatusOK, responses, middleware.GetRequestID(r))
@@ -263,46 +205,29 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 	}
 	defer r.Body.Close()
 
-	strategy, err := models.GetStrategyByID(id)
+	strategyService := services.NewStrategyService()
+	response, err := strategyService.UpdateStrategy(user, id, services.UpdateStrategyRequest{
+		FolderID: req.FolderID,
+		Name:     req.Name,
+	})
 	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategy", err), middleware.GetRequestID(r))
-		return
-	}
-	if strategy == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	if strategy.UserID != user.ID {
-		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
-		return
-	}
-
-	if req.Name != nil {
-		strategy.Name = *req.Name
-	}
-	if req.FolderID != nil {
-		strategy.FolderID = req.FolderID
+		switch err.Error() {
+		case "strategy not found":
+			utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
+			return
+		case "you do not have access to this strategy":
+			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
+			return
+		case "lobby not found":
+			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
+			return
+		default:
+			utils.SendJSONError(w, utils.NewInternal("Unable to update strategy", err), middleware.GetRequestID(r))
+			return
+		}
 	}
 
-	if err := strategy.Update(); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to update strategy", err), middleware.GetRequestID(r))
-		return
-	}
-
-	lobby, err := models.GetLobbyByCode(strategy.LobbyCode)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
-		return
-	}
-	if lobby == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	response := NewStrategyResponse(strategy, lobby)
-
-	utils.SendJSON(w, http.StatusOK, response, middleware.GetRequestID(r))
+	utils.SendJSON(w, http.StatusOK, newStrategyResponseFromService(response), middleware.GetRequestID(r))
 }
 
 // DeleteStrategy godoc
@@ -338,24 +263,19 @@ func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		return
 	}
 
-	strategy, err := models.GetStrategyByID(id)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategy", err), middleware.GetRequestID(r))
-		return
-	}
-	if strategy == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
-		return
-	}
-
-	if strategy.UserID != user.ID {
-		utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
-		return
-	}
-
-	if err := strategy.Delete(); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to delete strategy", err), middleware.GetRequestID(r))
-		return
+	strategyService := services.NewStrategyService()
+	if err := strategyService.DeleteStrategy(user, id); err != nil {
+		switch err.Error() {
+		case "strategy not found":
+			utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
+			return
+		case "you do not have access to this strategy":
+			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
+			return
+		default:
+			utils.SendJSONError(w, utils.NewInternal("Unable to delete strategy", err), middleware.GetRequestID(r))
+			return
+		}
 	}
 
 	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))

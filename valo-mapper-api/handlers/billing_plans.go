@@ -1,12 +1,13 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"valo-mapper-api/middleware"
+	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
 
 	"github.com/stripe/stripe-go/v82"
@@ -36,47 +37,50 @@ func GetBillingPlans(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stripe.Key = stripeSecretKey
+	billingService := services.NewBillingService(services.BillingServiceDependencies{
+		FindStripePriceForPlanFn: func(plan services.CheckoutPlan) (*stripe.Price, error) {
+			return findStripePriceForPlanFn(checkoutPlan(plan))
+		},
+	})
 
-	monthlyPrice, err := findStripePriceForPlanFn(checkoutPlanMonthly)
+	plansResponse, err := billingService.GetBillingPlans()
 	if err != nil {
+		if errors.Is(err, services.ErrCheckoutPlanUnavailable) {
+			utils.SendJSONError(w, utils.NewInternal("Stripe billing plan configuration is invalid", err), requestID)
+			return
+		}
 		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
-		return
-	}
-
-	yearlyPrice, err := findStripePriceForPlanFn(checkoutPlanYearly)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
-		return
-	}
-
-	monthlyResponse, err := buildBillingPlanPriceResponse(checkoutPlanMonthly, monthlyPrice)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Stripe billing plan configuration is invalid", err), requestID)
-		return
-	}
-
-	yearlyResponse, err := buildBillingPlanPriceResponse(checkoutPlanYearly, yearlyPrice)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Stripe billing plan configuration is invalid", err), requestID)
-		return
-	}
-
-	stackPrice, err := findStripePriceForPlanFn(checkoutPlanStack)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)
-		return
-	}
-
-	stackResponse, err := buildBillingPlanPriceResponse(checkoutPlanStack, stackPrice)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Stripe billing plan configuration is invalid", err), requestID)
 		return
 	}
 
 	utils.SendJSON(w, http.StatusOK, BillingPlansResponse{
-		Monthly: monthlyResponse,
-		Yearly:  yearlyResponse,
-		Stack:   stackResponse,
+		Monthly: BillingPlanPriceResponse{
+			Plan:              plansResponse.Monthly.Plan,
+			PriceID:           plansResponse.Monthly.PriceID,
+			Currency:          plansResponse.Monthly.Currency,
+			UnitAmount:        plansResponse.Monthly.UnitAmount,
+			UnitAmountDecimal: plansResponse.Monthly.UnitAmountDecimal,
+			Interval:          plansResponse.Monthly.Interval,
+			IntervalCount:     plansResponse.Monthly.IntervalCount,
+		},
+		Yearly: BillingPlanPriceResponse{
+			Plan:              plansResponse.Yearly.Plan,
+			PriceID:           plansResponse.Yearly.PriceID,
+			Currency:          plansResponse.Yearly.Currency,
+			UnitAmount:        plansResponse.Yearly.UnitAmount,
+			UnitAmountDecimal: plansResponse.Yearly.UnitAmountDecimal,
+			Interval:          plansResponse.Yearly.Interval,
+			IntervalCount:     plansResponse.Yearly.IntervalCount,
+		},
+		Stack: BillingPlanPriceResponse{
+			Plan:              plansResponse.Stack.Plan,
+			PriceID:           plansResponse.Stack.PriceID,
+			Currency:          plansResponse.Stack.Currency,
+			UnitAmount:        plansResponse.Stack.UnitAmount,
+			UnitAmountDecimal: plansResponse.Stack.UnitAmountDecimal,
+			Interval:          plansResponse.Stack.Interval,
+			IntervalCount:     plansResponse.Stack.IntervalCount,
+		},
 	}, requestID)
 }
 
@@ -157,34 +161,4 @@ func findStripePriceForPlan(plan checkoutPlan) (*stripe.Price, error) {
 	}
 
 	return nil, fmt.Errorf("%w: lookup key %s", errCheckoutPlanUnavailable, lookupKey)
-}
-
-func buildBillingPlanPriceResponse(plan checkoutPlan, stripePrice *stripe.Price) (BillingPlanPriceResponse, error) {
-	if stripePrice == nil {
-		return BillingPlanPriceResponse{}, errCheckoutPlanUnavailable
-	}
-
-	if stripePrice.Recurring == nil {
-		return BillingPlanPriceResponse{}, errCheckoutPlanUnavailable
-	}
-
-	expectedInterval := string(stripe.PriceRecurringIntervalMonth)
-	if plan == checkoutPlanYearly || plan == checkoutPlanStack {
-		expectedInterval = string(stripe.PriceRecurringIntervalYear)
-	}
-
-	actualInterval := string(stripePrice.Recurring.Interval)
-	if actualInterval != expectedInterval {
-		return BillingPlanPriceResponse{}, errCheckoutPlanUnavailable
-	}
-
-	return BillingPlanPriceResponse{
-		Plan:              string(plan),
-		PriceID:           strings.TrimSpace(stripePrice.ID),
-		Currency:          strings.ToUpper(string(stripePrice.Currency)),
-		UnitAmount:        stripePrice.UnitAmount,
-		UnitAmountDecimal: strconv.FormatFloat(stripePrice.UnitAmountDecimal, 'f', -1, 64),
-		Interval:          actualInterval,
-		IntervalCount:     stripePrice.Recurring.IntervalCount,
-	}, nil
 }
