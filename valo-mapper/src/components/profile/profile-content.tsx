@@ -53,8 +53,9 @@ import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
 import { useStackMembers } from "@/hooks/api/use-stack-members";
 import { useInviteStackMember } from "@/hooks/api/use-invite-stack-member";
 import { useRemoveStackMember } from "@/hooks/api/use-remove-stack-member";
-import { usePendingStackInvite } from "@/hooks/api/use-pending-stack-invite";
+import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
 import { useAcceptStackInvite } from "@/hooks/api/use-accept-stack-invite";
+import { useDeclineStackInvite } from "@/hooks/api/use-decline-stack-invite";
 import { useLeaveStack } from "@/hooks/api/use-leave-stack";
 
 export const ProfileContent = () => {
@@ -72,18 +73,19 @@ export const ProfileContent = () => {
     useRemoveStackMember();
   const { mutate: acceptStackInvite, isPending: isAcceptingStackInvite } =
     useAcceptStackInvite();
-  const { mutate: leaveStack, isPending: isDecliningStackInvite } =
-    useLeaveStack();
+  const { mutate: declineStackInvite, isPending: isDecliningStackInvite } =
+    useDeclineStackInvite();
+  const { mutate: leaveStack, isPending: isLeavingStack } = useLeaveStack();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isStackPlan = user?.subscriptionPlan === "stack";
   const canCheckPendingInvite = Boolean(user) && !isStackPlan;
   const {
-    data: pendingStackInvite,
+    data: pendingStackInvites,
     isLoading: isPendingStackInviteLoading,
-    refetch: refetchPendingStackInvite,
-  } = usePendingStackInvite(canCheckPendingInvite);
+    refetch: refetchPendingStackInvites,
+  } = usePendingStackInvites(canCheckPendingInvite);
   const {
     data: stackMembersData,
     isLoading: isStackMembersLoading,
@@ -245,17 +247,9 @@ export const ProfileContent = () => {
   const stackOwnerDisplayEmail = stackOwner?.email?.trim() || "No email";
   const stackSeatCount = (stackOwner ? 1 : 0) + stackMembers.length;
   const isActiveStackMember = isStackPlan && !canManageStack;
-  const hasPendingStackInvite = Boolean(pendingStackInvite);
+  const hasPendingStackInvites = (pendingStackInvites?.length ?? 0) > 0;
   const isPendingInviteAction =
     isAcceptingStackInvite || isDecliningStackInvite;
-  const pendingInviteSentAt = pendingStackInvite?.invitedAt
-    ? new Date(pendingStackInvite.invitedAt)
-    : null;
-  const pendingInviteOwnerDisplay = pendingStackInvite
-    ? pendingStackInvite.ownerName?.trim() ||
-      pendingStackInvite.ownerEmail?.trim() ||
-      `User #${pendingStackInvite.ownerUserId}`
-    : null;
 
   const subscriptionLabel = (() => {
     if (!hasValoMapperPremium) {
@@ -423,31 +417,27 @@ export const ProfileContent = () => {
     });
   };
 
-  const handleAcceptPendingInvite = () => {
-    if (!pendingStackInvite) {
-      return;
-    }
-
-    acceptStackInvite(pendingStackInvite.id, {
+  const handleAcceptPendingInvite = (inviteId: number) => {
+    acceptStackInvite(inviteId, {
       onSuccess: () => {
         refetch();
-        refetchPendingStackInvite();
+        refetchPendingStackInvites();
         refetchStackMembers();
       },
     });
   };
 
-  const handleDeclinePendingInvite = () => {
-    leaveStack("pending-invite", {
+  const handleDeclinePendingInvite = (inviteId: number) => {
+    declineStackInvite(inviteId, {
       onSuccess: () => {
         refetch();
-        refetchPendingStackInvite();
+        refetchPendingStackInvites();
       },
     });
   };
 
   const handleLeaveActiveStack = () => {
-    leaveStack("active-membership", {
+    leaveStack(undefined, {
       onSuccess: () => {
         refetch();
         refetchStackMembers();
@@ -531,58 +521,87 @@ export const ProfileContent = () => {
             </div>
 
             {!isStackPlan &&
-              (isPendingStackInviteLoading || hasPendingStackInvite) && (
+              (isPendingStackInviteLoading || hasPendingStackInvites) && (
                 <Alert className="border-amber-200 bg-stone-50 text-stone-900 shadow-sm dark:border-amber-900/70 dark:bg-zinc-900 dark:text-zinc-100">
                   <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <AlertTitle>Pending Stack Invite</AlertTitle>
+                  <AlertTitle>
+                    Pending Stack Invite
+                    {(pendingStackInvites?.length ?? 0) > 1 ? "s" : ""}
+                  </AlertTitle>
                   <AlertDescription className="space-y-2 text-stone-700 dark:text-zinc-300">
                     {isPendingStackInviteLoading ? (
                       <p className="text-xs">Checking for pending invites...</p>
                     ) : (
                       <>
                         <p className="text-xs">
-                          {`You have a pending invite to join ${pendingInviteOwnerDisplay}'s Premium Stack.`}
-                          {pendingInviteSentAt &&
-                          !Number.isNaN(pendingInviteSentAt.getTime())
-                            ? ` Sent ${pendingInviteSentAt.toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                },
-                              )}.`
-                            : ""}
+                          You can accept any invite below to join that
+                          owner&apos;s Premium Stack.
                         </p>
                         <p className="text-xs">
                           Accepting will activate stack membership and any
                           personal paid subscription will be scheduled to cancel
                           at period end.
                         </p>
-                        <div className="flex gap-2 pt-1">
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={handleAcceptPendingInvite}
-                            disabled={isPendingInviteAction}
-                          >
-                            {isAcceptingStackInvite && (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            )}
-                            Accept Invite
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={handleDeclinePendingInvite}
-                            disabled={isPendingInviteAction}
-                          >
-                            {isDecliningStackInvite && (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            )}
-                            Decline
-                          </Button>
+                        <div className="space-y-2 pt-1">
+                          {(pendingStackInvites ?? []).map((invite) => {
+                            const sentAt = invite.invitedAt
+                              ? new Date(invite.invitedAt)
+                              : null;
+                            const ownerDisplay =
+                              invite.ownerName?.trim() ||
+                              invite.ownerEmail?.trim() ||
+                              `User #${invite.ownerUserId}`;
+
+                            return (
+                              <div
+                                key={invite.id}
+                                className="rounded-md border border-amber-200/80 bg-background/70 p-2 dark:border-amber-900/70"
+                              >
+                                <p className="text-xs font-medium text-stone-900 dark:text-zinc-100">
+                                  {ownerDisplay}
+                                </p>
+                                {sentAt && !Number.isNaN(sentAt.getTime()) && (
+                                  <p className="text-[11px] text-stone-600 dark:text-zinc-400">
+                                    Invited{" "}
+                                    {sentAt.toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    })}
+                                  </p>
+                                )}
+                                <div className="flex gap-2 pt-2">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleAcceptPendingInvite(invite.id)
+                                    }
+                                    disabled={isPendingInviteAction}
+                                  >
+                                    {isAcceptingStackInvite && (
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    )}
+                                    Accept Invite
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                      handleDeclinePendingInvite(invite.id)
+                                    }
+                                    disabled={isPendingInviteAction}
+                                  >
+                                    {isDecliningStackInvite && (
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    )}
+                                    Decline
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </>
                     )}
@@ -623,9 +642,9 @@ export const ProfileContent = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={isDecliningStackInvite}
+                          disabled={isLeavingStack}
                         >
-                          {isDecliningStackInvite && (
+                          {isLeavingStack && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           )}
                           Leave Stack

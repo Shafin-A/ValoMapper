@@ -129,13 +129,23 @@ func InviteStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		return
 	}
 
-	existing, err := models.GetStackMemberByMemberUserID(target.ID)
+	existingActiveMembership, err := models.GetActiveStackMemberByMemberUserID(target.ID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Failed to check existing membership", err), requestID)
 		return
 	}
-	if existing != nil {
+	if existingActiveMembership != nil {
 		utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInStack.Error(), nil), requestID)
+		return
+	}
+
+	existingPendingInvite, err := models.GetPendingStackInviteByOwnerAndMember(user.ID, target.ID)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Failed to check existing pending invite", err), requestID)
+		return
+	}
+	if existingPendingInvite != nil {
+		utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInvited.Error(), nil), requestID)
 		return
 	}
 
@@ -151,6 +161,10 @@ func InviteStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 
 	invite, err := models.CreateStackInvite(user.ID, target.ID)
 	if err != nil {
+		if errors.Is(err, models.ErrStackInviteAlreadyExists) {
+			utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInvited.Error(), nil), requestID)
+			return
+		}
 		utils.SendJSONError(w, utils.NewInternal("Failed to create invite", err), requestID)
 		return
 	}
@@ -252,6 +266,10 @@ func AcceptStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 			utils.SendJSONError(w, utils.NewNotFound("stack-invite-not-found"), requestID)
 			return
 		}
+		if errors.Is(err, models.ErrStackMemberAlreadyActive) {
+			utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInStack.Error(), nil), requestID)
+			return
+		}
 		utils.SendJSONError(w, utils.NewInternal("Failed to accept invite", err), requestID)
 		return
 	}
@@ -300,18 +318,20 @@ func LeaveStack(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// GetPendingStackInvite godoc
-// @Summary Get pending stack invite
-// @Description Returns the pending stack invite for the authenticated user if one exists.
+// DeclineStackInvite godoc
+// @Summary Decline stack invite
+// @Description Declines a specific pending stack invite for the authenticated user.
 // @Tags billing
 // @Produce json
-// @Success 200 {object} models.StackMember
+// @Param id path int true "Stack invite ID"
+// @Success 204
+// @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
-// @Router /api/billing/stack/pending-invite [get]
-func GetPendingStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+// @Router /api/billing/stack/decline/{id} [post]
+func DeclineStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	requestID := middleware.GetRequestID(r)
 
 	user, err := authenticateRequest(r, firebaseAuth)
@@ -320,17 +340,50 @@ func GetPendingStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		return
 	}
 
-	invite, err := models.GetStackMemberByMemberUserID(user.ID)
+	inviteID, err := parseIDVar(r, "id")
 	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Failed to fetch pending invite", err), requestID)
-		return
-	}
-	if invite == nil || invite.Status != models.StackMemberStatusPending {
-		utils.SendJSONError(w, utils.NewNotFound("no-pending-invite"), requestID)
+		utils.SendJSONError(w, utils.NewBadRequest("invalid-id"), requestID)
 		return
 	}
 
-	utils.SendJSON(w, http.StatusOK, invite, requestID)
+	if err := models.DeclineStackInvite(inviteID, user.ID); err != nil {
+		if errors.Is(err, models.ErrStackInviteNotFound) {
+			utils.SendJSONError(w, utils.NewNotFound("stack-invite-not-found"), requestID)
+			return
+		}
+		utils.SendJSONError(w, utils.NewInternal("Failed to decline stack invite", err), requestID)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// GetPendingStackInvites godoc
+// @Summary Get pending stack invites
+// @Description Returns the pending stack invites for the authenticated user.
+// @Tags billing
+// @Produce json
+// @Success 200 {array} models.StackMember
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/billing/stack/pending-invites [get]
+func GetPendingStackInvites(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+	requestID := middleware.GetRequestID(r)
+
+	user, err := authenticateRequest(r, firebaseAuth)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
+		return
+	}
+
+	invites, err := models.GetPendingStackInvitesByMemberUserID(user.ID)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Failed to fetch pending invites", err), requestID)
+		return
+	}
+
+	utils.SendJSON(w, http.StatusOK, invites, requestID)
 }
 
 // isStackOwner returns true if the user has an active stack subscription.
@@ -347,7 +400,7 @@ func resolveStackViewContext(user *models.User) (int, bool, error) {
 		return user.ID, true, nil
 	}
 
-	membership, err := models.GetStackMemberByMemberUserID(user.ID)
+	membership, err := models.GetActiveStackMemberByMemberUserID(user.ID)
 	if err != nil {
 		return 0, false, err
 	}

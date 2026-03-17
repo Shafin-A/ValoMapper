@@ -13,6 +13,7 @@ var (
 	errNotInStack           = errors.New("not-in-stack")
 	errStackFull            = errors.New("stack-full")
 	errTargetAlreadyInStack = errors.New("target-already-in-stack")
+	errTargetAlreadyInvited = errors.New("target-already-invited")
 	errCannotInviteSelf     = errors.New("cannot-invite-self")
 )
 

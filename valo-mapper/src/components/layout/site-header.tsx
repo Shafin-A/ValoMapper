@@ -25,7 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useWebSocket } from "@/contexts/websocket-context";
-import { usePendingStackInvite } from "@/hooks/api/use-pending-stack-invite";
+import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
@@ -50,9 +50,10 @@ export const SiteHeader = ({
   const { users } = useWebSocket();
   const canCheckPendingInvite =
     !isLoading && Boolean(user) && user?.subscriptionPlan !== "stack";
-  const { data: pendingStackInvite } = usePendingStackInvite(
+  const { data: pendingStackInvites } = usePendingStackInvites(
     canCheckPendingInvite,
   );
+  const pendingStackInviteCount = pendingStackInvites?.length ?? 0;
 
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
@@ -128,10 +129,10 @@ export const SiteHeader = ({
                     <DropdownMenuItem asChild>
                       <Link href="/strategies">My Strategies</Link>
                     </DropdownMenuItem>
-                    {pendingStackInvite && (
+                    {pendingStackInviteCount > 0 && (
                       <DropdownMenuItem asChild>
                         <Link href="/profile" className="text-amber-600">
-                          Pending Stack Invite
+                          Pending Stack Invites ({pendingStackInviteCount})
                         </Link>
                       </DropdownMenuItem>
                     )}

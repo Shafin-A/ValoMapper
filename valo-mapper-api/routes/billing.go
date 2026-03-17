@@ -49,11 +49,20 @@ func RegisterBillingRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 		handlers.AcceptStackInvite(w, r, authClient)
 	}).Methods("POST")
 
+	billing.HandleFunc("/stack/decline/{id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+		handlers.DeclineStackInvite(w, r, authClient)
+	}).Methods("POST")
+
 	billing.HandleFunc("/stack/leave", func(w http.ResponseWriter, r *http.Request) {
 		handlers.LeaveStack(w, r, authClient)
 	}).Methods("DELETE")
 
+	billing.HandleFunc("/stack/pending-invites", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetPendingStackInvites(w, r, authClient)
+	}).Methods("GET")
+
+	// Legacy alias kept for backward compatibility with older clients.
 	billing.HandleFunc("/stack/pending-invite", func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetPendingStackInvite(w, r, authClient)
+		handlers.GetPendingStackInvites(w, r, authClient)
 	}).Methods("GET")
 }

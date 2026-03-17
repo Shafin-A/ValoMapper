@@ -284,6 +284,133 @@ func TestAcceptStackInvite_SchedulesPersonalSubscriptionCancellation(t *testing.
 	assert.Equal(t, models.StackMemberStatusActive, updatedInvite.Status)
 }
 
+func TestInviteStackMember_AllowsMultiplePendingInvitesAcrossOwners(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "stack_members", "users")
+
+	ownerA := createStackTestUser(t, pool, "owner-a-multi-invite-uid", "owner-a-multi-invite@example.com")
+	ownerB := createStackTestUser(t, pool, "owner-b-multi-invite-uid", "owner-b-multi-invite@example.com")
+	member := createStackTestUser(t, pool, "member-multi-invite-uid", "member-multi-invite@example.com")
+
+	_, err := pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = TRUE, subscription_plan = $1
+		WHERE id IN ($2, $3)
+	`, string(checkoutPlanStack), ownerA.ID, ownerB.ID)
+	require.NoError(t, err)
+
+	reqA := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/invite", map[string]string{
+		"firebaseUid": *member.FirebaseUID,
+	}, "valid-token")
+	wA := httptest.NewRecorder()
+	InviteStackMember(wA, reqA, newMockAuthForUser(ownerA))
+	assert.Equal(t, http.StatusCreated, wA.Code)
+
+	reqB := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/invite", map[string]string{
+		"firebaseUid": *member.FirebaseUID,
+	}, "valid-token")
+	wB := httptest.NewRecorder()
+	InviteStackMember(wB, reqB, newMockAuthForUser(ownerB))
+	assert.Equal(t, http.StatusCreated, wB.Code)
+
+	pendingInvites, err := models.GetPendingStackInvitesByMemberUserID(member.ID)
+	require.NoError(t, err)
+	require.Len(t, pendingInvites, 2)
+}
+
+func TestAcceptStackInvite_ClearsOtherPendingInvitesForMember(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "stack_members", "users")
+
+	ownerA := createStackTestUser(t, pool, "owner-a-accept-cleanup-uid", "owner-a-accept-cleanup@example.com")
+	ownerB := createStackTestUser(t, pool, "owner-b-accept-cleanup-uid", "owner-b-accept-cleanup@example.com")
+	member := createStackTestUser(t, pool, "member-accept-cleanup-uid", "member-accept-cleanup@example.com")
+
+	_, err := pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = TRUE, subscription_plan = $1
+		WHERE id IN ($2, $3)
+	`, string(checkoutPlanStack), ownerA.ID, ownerB.ID)
+	require.NoError(t, err)
+
+	inviteA, err := models.CreateStackInvite(ownerA.ID, member.ID)
+	require.NoError(t, err)
+	inviteB, err := models.CreateStackInvite(ownerB.ID, member.ID)
+	require.NoError(t, err)
+
+	req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/accept/"+strconv.Itoa(inviteA.ID), nil, "valid-token")
+	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(inviteA.ID)})
+	w := httptest.NewRecorder()
+
+	AcceptStackInvite(w, req, newMockAuthForUser(member))
+	assert.Equal(t, http.StatusNoContent, w.Code)
+
+	acceptedInvite, err := models.GetStackMemberByID(inviteA.ID)
+	require.NoError(t, err)
+	require.NotNil(t, acceptedInvite)
+	assert.Equal(t, models.StackMemberStatusActive, acceptedInvite.Status)
+
+	removedInvite, err := models.GetStackMemberByID(inviteB.ID)
+	require.NoError(t, err)
+	assert.Nil(t, removedInvite)
+
+	pendingInvites, err := models.GetPendingStackInvitesByMemberUserID(member.ID)
+	require.NoError(t, err)
+	assert.Empty(t, pendingInvites)
+}
+
+func TestDeclineStackInvite_RemovesOnlySelectedInvite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "stack_members", "users")
+
+	ownerA := createStackTestUser(t, pool, "owner-a-decline-uid", "owner-a-decline@example.com")
+	ownerB := createStackTestUser(t, pool, "owner-b-decline-uid", "owner-b-decline@example.com")
+	member := createStackTestUser(t, pool, "member-decline-uid", "member-decline@example.com")
+
+	_, err := pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = TRUE, subscription_plan = $1
+		WHERE id IN ($2, $3)
+	`, string(checkoutPlanStack), ownerA.ID, ownerB.ID)
+	require.NoError(t, err)
+
+	inviteA, err := models.CreateStackInvite(ownerA.ID, member.ID)
+	require.NoError(t, err)
+	inviteB, err := models.CreateStackInvite(ownerB.ID, member.ID)
+	require.NoError(t, err)
+
+	req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/decline/"+strconv.Itoa(inviteA.ID), nil, "valid-token")
+	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(inviteA.ID)})
+	w := httptest.NewRecorder()
+
+	DeclineStackInvite(w, req, newMockAuthForUser(member))
+	assert.Equal(t, http.StatusNoContent, w.Code)
+
+	declinedInvite, err := models.GetStackMemberByID(inviteA.ID)
+	require.NoError(t, err)
+	assert.Nil(t, declinedInvite)
+
+	remainingInvite, err := models.GetStackMemberByID(inviteB.ID)
+	require.NoError(t, err)
+	require.NotNil(t, remainingInvite)
+	assert.Equal(t, models.StackMemberStatusPending, remainingInvite.Status)
+}
+
 func TestStackMembershipAccessDependsOnOwnerStackSubscription(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")

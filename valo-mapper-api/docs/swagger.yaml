@@ -671,6 +671,42 @@ paths:
       summary: Accept stack invite
       tags:
       - billing
+  /api/billing/stack/decline/{id}:
+    post:
+      description: Declines a specific pending stack invite for the authenticated
+        user.
+      parameters:
+      - description: Stack invite ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Decline stack invite
+      tags:
+      - billing
   /api/billing/stack/invite:
     post:
       consumes:
@@ -818,23 +854,20 @@ paths:
       summary: Remove stack member
       tags:
       - billing
-  /api/billing/stack/pending-invite:
+  /api/billing/stack/pending-invites:
     get:
-      description: Returns the pending stack invite for the authenticated user if
-        one exists.
+      description: Returns the pending stack invites for the authenticated user.
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.StackMember'
+            items:
+              $ref: '#/definitions/models.StackMember'
+            type: array
         "401":
           description: Unauthorized
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "404":
-          description: Not Found
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -843,7 +876,7 @@ paths:
             $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Get pending stack invite
+      summary: Get pending stack invites
       tags:
       - billing
   /api/billing/webhook:
