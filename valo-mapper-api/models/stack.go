@@ -277,7 +277,7 @@ func AcceptStackInvite(inviteID, memberUserID int) error {
 	if err == nil {
 		return ErrStackMemberAlreadyActive
 	}
-	if err != nil && err != pgx.ErrNoRows {
+	if err != pgx.ErrNoRows {
 		return err
 	}
 
