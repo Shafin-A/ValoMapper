@@ -46,10 +46,7 @@ export const CheckoutPlanDialog = ({
     useCreateCheckoutSession();
   const { data: billingPlans } = useBillingPlans();
   const { data: userProfile } = useUser();
-  const premiumTrialDays = Math.max(
-    0,
-    billingPlans?.premiumTrialDays ?? PREMIUM_TRIAL_DAYS,
-  );
+  const premiumTrialDays = Math.max(0, PREMIUM_TRIAL_DAYS);
 
   const isMonthlyPlan = selectedPlan === "monthly";
   const isStackPlan = selectedPlan === "stack";

@@ -15,7 +15,6 @@ export interface BillingPlansResponse {
   monthly: BillingPlanPrice;
   yearly: BillingPlanPrice;
   stack: BillingPlanPrice;
-  premiumTrialDays?: number;
 }
 
 export const useBillingPlans = () => {

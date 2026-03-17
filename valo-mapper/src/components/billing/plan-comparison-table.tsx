@@ -69,9 +69,10 @@ export const PlanComparisonTable = ({
       }).format(cents / 100);
 
     const yearlyPerMonth = yearlyAmount / 12;
-    const yearlySavingsPct = Math.round(
-      (1 - yearlyPerMonth / monthlyAmount) * 100,
-    );
+    const yearlySavingsPct =
+      monthlyAmount > 0
+        ? Math.max(0, Math.round((1 - yearlyPerMonth / monthlyAmount) * 100))
+        : 0;
     const stackPerMemberMonth = stackAmount / 12 / 6;
 
     const paidColumns: ComparisonColumn[] = resolvedPlanOptions.map(
@@ -90,7 +91,10 @@ export const PlanComparisonTable = ({
             : option.id === "stack"
               ? `${fmt(stackPerMemberMonth)}/mo per member`
               : "",
-        savingsBadge: option.id === "yearly" ? `Save ${yearlySavingsPct}%` : "",
+        savingsBadge:
+          option.id === "yearly" && yearlySavingsPct > 0
+            ? `Save ${yearlySavingsPct}%`
+            : "",
         isSelected: option.id === selectedPlan,
       }),
     );

@@ -25,14 +25,20 @@ export const CheckoutPlanSelector = ({
   trialHeadline,
   trialDescription,
 }: CheckoutPlanSelectorProps) => {
+  const handlePlanChange = (value: string) => {
+    const isKnownPlan = resolvedPlanOptions.some(
+      (option) => option.id === value,
+    );
+    if (isKnownPlan) {
+      onPlanChange(value as CheckoutPlan);
+    }
+  };
+
   return (
     <>
       <div className="space-y-2">
         <div className="text-sm font-medium">Selected plan</div>
-        <Select
-          value={selectedPlan}
-          onValueChange={(value) => onPlanChange(value as CheckoutPlan)}
-        >
+        <Select value={selectedPlan} onValueChange={handlePlanChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a plan" />
           </SelectTrigger>
