@@ -2,7 +2,9 @@ package firebase
 
 import (
 	"context"
+	"errors"
 	"os"
+	"strings"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
@@ -12,26 +14,16 @@ import (
 func InitFirebaseAuth() (*auth.Client, error) {
 	ctx := context.Background()
 
-	credsEnv := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-	var opt option.ClientOption
-
-	trimmed := ""
-	if len(credsEnv) > 0 {
-		for i := 0; i < len(credsEnv); i++ {
-			if credsEnv[i] != ' ' && credsEnv[i] != '\t' && credsEnv[i] != '\n' && credsEnv[i] != '\r' {
-				trimmed = credsEnv[i:]
-				break
-			}
-		}
+	credsJSON := strings.TrimSpace(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+	if credsJSON == "" {
+		return nil, errors.New("GOOGLE_APPLICATION_CREDENTIALS is required")
 	}
 
-	if len(trimmed) > 0 && trimmed[0] == '{' {
-		opt = option.WithCredentialsJSON([]byte(credsEnv))
-	} else {
-		opt = option.WithCredentialsFile(credsEnv)
+	if !strings.HasPrefix(credsJSON, "{") {
+		return nil, errors.New("GOOGLE_APPLICATION_CREDENTIALS must contain Firebase service account JSON (file paths are not supported)")
 	}
 
-	app, err := firebase.NewApp(ctx, nil, opt)
+	app, err := firebase.NewApp(ctx, nil, option.WithCredentialsJSON([]byte(credsJSON)))
 	if err != nil {
 		return nil, err
 	}

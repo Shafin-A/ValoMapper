@@ -29,9 +29,6 @@ COPY --from=builder /app/main .
 # Copy database migrations
 COPY --from=builder /app/db/migrations ./db/migrations
 
-# Copy service account key if it exists
-COPY serviceAccountKey.json* ./
-
 EXPOSE 8080
 
 CMD ["./main"]

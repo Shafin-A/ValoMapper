@@ -267,5 +267,5 @@ psql -h localhost -U postgres -d valomapper_test -c "\dt"
 
 ### Mock Firebase Auth Issues
 
-- Ensure `serviceAccountKey.json` exists (can be dummy for unit tests)
+- Ensure `GOOGLE_APPLICATION_CREDENTIALS` contains valid JSON (can be dummy for unit tests)
 - Use `testutils.MockFirebaseAuth` for unit tests

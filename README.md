@@ -11,7 +11,7 @@ Before setting up the project, ensure you have:
 - Node.js & npm
 - Go
 - PostgreSQL
-- A Firebase project with a service account key
+- A Firebase project with backend credentials for Firebase Admin
 - Riot Sign-On (RSO) OAuth app credentials (client ID/secret)
 
 ## Getting Started
@@ -72,8 +72,8 @@ Before setting up the project, ensure you have:
    DB_PASSWORD=your_db_password
    DB_NAME=valo-mapper
 
-   # Path to Firebase service account JSON
-   GOOGLE_APPLICATION_CREDENTIALS=./serviceAccountKey.json
+   # Raw Firebase service account JSON (single-line string)
+   GOOGLE_APPLICATION_CREDENTIALS='{"type":"service_account",...}'
 
    # Comma-separated CORS origins (defaults to localhost:3000 if omitted)
    ALLOWED_ORIGINS=http://localhost:3000
@@ -104,9 +104,8 @@ Before setting up the project, ensure you have:
    ```
 
 3. Ensure PostgreSQL is running and a database named `valo-mapper` exists.
-4. Place your Firebase service account JSON (`serviceAccountKey.json`) in `valo-mapper-api/`.
-5. Make sure your Firebase project is configured for authentication.
-6. Build and run the Go server:
+4. Make sure your Firebase project is configured for authentication.
+5. Build and run the Go server:
 
    ```sh
    go run main.go
