@@ -2,7 +2,7 @@ export const TermsOfService = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Mar 15th, 2026
+        <strong>Last Updated:</strong> Mar 18th, 2026
       </div>
 
       <p>
@@ -383,6 +383,30 @@ export const TermsOfService = () => {
           <p>
             If a payment fails or your billing method cannot be charged, we may
             suspend or remove access to paid features until billing is resolved.
+          </p>
+
+          <p className="font-semibold mb-1">13.7 Free Trial</p>
+          <p className="mb-3">
+            Eligible accounts may start a 14-day free trial before their first
+            paid subscription. A trial is a one-time offer per account — once
+            claimed it cannot be used again. At the end of the trial period,
+            your subscription will automatically convert to a paid plan at the
+            applicable rate unless you cancel before the trial expires. By
+            starting a trial you agree to provide valid payment information and
+            authorize the charge upon conversion.
+          </p>
+
+          <p className="font-semibold mb-1">13.8 Stack Plan</p>
+          <p>
+            The Premium Stack plan is a shared annual subscription that allows
+            one account owner to extend Premium access to up to five additional
+            members (six users total). The account owner is solely responsible
+            for payment. Members may accept or decline invitations and may leave
+            the stack at any time from their profile. If the owner cancels or
+            their subscription lapses, all member access granted through that
+            stack ends immediately. Members do not receive refunds or credits if
+            an owner cancels mid-period. The Stack plan is not eligible for the
+            free trial.
           </p>
         </div>
       </section>

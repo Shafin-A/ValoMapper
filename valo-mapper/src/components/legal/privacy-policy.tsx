@@ -2,7 +2,7 @@ export const PrivacyPolicy = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Mar 15th, 2026
+        <strong>Last Updated:</strong> Mar 18th, 2026
       </div>
 
       <p>
@@ -83,7 +83,10 @@ export const PrivacyPolicy = () => {
             When you create strategies in lobbies, we store:
           </p>
           <ul className="list-disc list-inside space-y-1 ml-4 mb-3">
-            <li>Images</li>
+            <li>
+              Images (uploaded images are stored in Tigris, an S3-compatible
+              object storage service)
+            </li>
             <li>Text annotations</li>
             <li>Drawings</li>
             <li>Any other content added to the strategy canvas</li>
@@ -182,6 +185,16 @@ export const PrivacyPolicy = () => {
             publicly accessible.
           </p>
 
+          <p className="font-semibold mb-1">Stack Plan Members</p>
+          <p className="mb-3">
+            If you purchase a Premium Stack plan, you may invite other
+            ValoMapper users to share your subscription. When you send or accept
+            a stack invitation, your ValoMapper username and email address
+            become visible to the stack owner and to other active members of
+            that stack. This information is used solely to identify members
+            within the shared plan and is not shared beyond the stack group.
+          </p>
+
           <p className="font-semibold mb-1">Service Providers</p>
           <p className="mb-2">
             We use trusted third-party services to operate ValoMapper:
@@ -197,7 +210,13 @@ export const PrivacyPolicy = () => {
             </li>
             <li>
               <strong>PostgreSQL Database</strong> (Fly.io Postgres) - for
-              storing user references and lobby data
+              storing user references, lobby metadata, and strategy data
+              (excluding images)
+            </li>
+            <li>
+              <strong>Tigris</strong> - S3-compatible object storage for
+              user-uploaded images (e.g., lineup screenshots added to strategy
+              canvases)
             </li>
             <li>
               <strong>Fly.io</strong> - for website hosting and infrastructure
