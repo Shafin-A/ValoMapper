@@ -7,7 +7,11 @@ import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { buildTree } from "@/lib/utils";
 
 export const useFolders = () => {
-  const { getIdToken } = useFirebaseAuth();
+  const {
+    getIdToken,
+    user: firebaseUser,
+    loading: authLoading,
+  } = useFirebaseAuth();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["folders-and-strategies"],
@@ -19,8 +23,9 @@ export const useFolders = () => {
 
       return buildTree(folders, strategies);
     },
+    enabled: !!firebaseUser && !authLoading,
     ...authQueryOptions,
   });
 
-  return { data, isLoading, isError, error, refetch };
+  return { data, isLoading: authLoading || isLoading, isError, error, refetch };
 };

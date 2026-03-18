@@ -1,18 +1,18 @@
+import { withAuthRequired } from "@/lib/api-middleware";
 import { proxyToBackend } from "@/lib/api-proxy";
 
-export const DELETE = async (
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) => {
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader)
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+export const DELETE = withAuthRequired(
+  async (
+    _request: Request,
+    { params }: { params: Promise<{ id: string }> },
+    authHeader: string,
+  ) => {
+    const { id } = await params;
 
-  const { id } = await params;
-
-  return proxyToBackend(`/billing/stack/members/${id}`, {
-    method: "DELETE",
-    token: authHeader,
-    errorMessage: "Failed to remove stack member",
-  });
-};
+    return proxyToBackend(`/billing/stack/members/${id}`, {
+      method: "DELETE",
+      token: authHeader,
+      errorMessage: "Failed to remove stack member",
+    });
+  },
+);

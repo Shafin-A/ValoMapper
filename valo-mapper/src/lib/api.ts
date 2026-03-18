@@ -26,15 +26,52 @@ interface FetchOptions extends Omit<RequestInit, "headers"> {
   token?: string | null;
 }
 
+const isInvalidTokenString = (value: string): boolean => {
+  const lowered = value.toLowerCase();
+  return (
+    lowered === "undefined" ||
+    lowered === "null" ||
+    lowered === "[object object]"
+  );
+};
+
+const normalizeToken = (token: unknown): string | null => {
+  if (typeof token !== "string") {
+    return null;
+  }
+
+  const trimmed = token.trim();
+  if (!trimmed || isInvalidTokenString(trimmed)) {
+    return null;
+  }
+
+  const bearerMatch = /^bearer\s+(.+)$/i.exec(trimmed);
+  if (bearerMatch) {
+    const bearerToken = bearerMatch[1].trim();
+    if (!bearerToken || isInvalidTokenString(bearerToken)) {
+      return null;
+    }
+
+    return bearerToken;
+  }
+
+  if (/\s/.test(trimmed)) {
+    return null;
+  }
+
+  return trimmed;
+};
+
 export const apiFetch = async <T>(
   url: string,
   options: FetchOptions = {},
 ): Promise<T> => {
   const { token, ...fetchOptions } = options;
+  const normalizedToken = normalizeToken(token);
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(normalizedToken && { Authorization: `Bearer ${normalizedToken}` }),
   };
 
   const response = await fetch(url, {
@@ -81,7 +118,7 @@ export const apiFetchWithAuth = async <T>(
   getToken: () => Promise<string | null>,
   options: FetchOptions = {},
 ): Promise<T> => {
-  const token = await getToken();
+  const token = normalizeToken(await getToken());
   if (!token) {
     throw new ApiError("User not authenticated", 401, "Unauthorized");
   }

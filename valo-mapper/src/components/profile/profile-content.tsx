@@ -59,8 +59,8 @@ export const ProfileContent = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isStackPlan = user?.subscriptionPlan === "stack";
-  const canCheckPendingInvite = Boolean(user) && !isStackPlan;
+  const isStackPlan = !isLoading && user?.subscriptionPlan === "stack";
+  const canCheckPendingInvite = !isLoading && Boolean(user) && !isStackPlan;
   const {
     data: pendingStackInvites,
     isLoading: isPendingStackInviteLoading,
@@ -84,12 +84,12 @@ export const ProfileContent = () => {
     }
   }, [user]);
 
-  if (!firebaseUser && !isLoggingOut && !isDeletingUser) {
-    return <ProfileNotAuthenticatedCard />;
-  }
-
   if (isLoading || isLoggingOut || isDeletingUser) {
     return <ProfileLoadingCard />;
+  }
+
+  if (!firebaseUser) {
+    return <ProfileNotAuthenticatedCard />;
   }
 
   if (!user) {

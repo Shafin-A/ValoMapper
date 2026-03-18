@@ -3,6 +3,7 @@ package handlers
 import (
 	"crypto/subtle"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
@@ -108,7 +109,12 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthIn
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
+			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+			return
+		}
+
+		utils.SendJSONError(w, utils.NewInternal("Unable to load authenticated user", err), middleware.GetRequestID(r))
 		return
 	}
 
@@ -139,7 +145,12 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
+			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+			return
+		}
+
+		utils.SendJSONError(w, utils.NewInternal("Unable to load authenticated user", err), middleware.GetRequestID(r))
 		return
 	}
 
@@ -181,7 +192,12 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
-		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
+			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+			return
+		}
+
+		utils.SendJSONError(w, utils.NewInternal("Unable to load authenticated user", err), middleware.GetRequestID(r))
 		return
 	}
 

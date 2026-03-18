@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
@@ -71,4 +72,98 @@ func TestVerifyFirebaseToken(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "test-token-123", capturedToken)
 	})
+
+	t.Run("accepts lowercase bearer scheme", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("Authorization", "bearer lower-token")
+
+		var capturedToken string
+		mockAuth := &testutils.MockFirebaseAuth{}
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			capturedToken = idToken
+			return &auth.Token{UID: "user-123"}, nil
+		}
+
+		token, err := VerifyFirebaseToken(req, mockAuth)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, token)
+		assert.Equal(t, "lower-token", capturedToken)
+	})
+
+	t.Run("accepts raw token header", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("Authorization", "raw-token-value")
+
+		var capturedToken string
+		mockAuth := &testutils.MockFirebaseAuth{}
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			capturedToken = idToken
+			return &auth.Token{UID: "user-123"}, nil
+		}
+
+		token, err := VerifyFirebaseToken(req, mockAuth)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, token)
+		assert.Equal(t, "raw-token-value", capturedToken)
+	})
+
+	t.Run("rejects non-bearer authorization header", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("Authorization", "Token abc123")
+
+		mockAuth := &testutils.MockFirebaseAuth{}
+
+		token, err := VerifyFirebaseToken(req, mockAuth)
+
+		assert.Nil(t, token)
+		assert.EqualError(t, err, "invalid or expired token")
+	})
+}
+
+func TestAuthenticateRequest_AutoProvisionsMissingUser(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "users")
+
+	const firebaseUID = "new-firebase-user"
+	req := httptest.NewRequest(http.MethodGet, "/api/users/me", nil)
+	req.Header.Set("Authorization", "Bearer valid-token")
+
+	mockAuth := &testutils.MockFirebaseAuth{}
+	mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+		assert.Equal(t, "valid-token", idToken)
+		return &auth.Token{UID: firebaseUID}, nil
+	}
+	mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+		assert.Equal(t, firebaseUID, uid)
+		return &auth.UserRecord{
+			UserInfo: &auth.UserInfo{
+				UID:         uid,
+				Email:       "newuser@example.com",
+				DisplayName: "New User",
+			},
+			EmailVerified: true,
+		}, nil
+	}
+
+	user, err := authenticateRequest(req, mockAuth)
+	assert.NoError(t, err)
+	if assert.NotNil(t, user) {
+		assert.Equal(t, firebaseUID, *user.FirebaseUID)
+		assert.Equal(t, "newuser@example.com", *user.Email)
+		assert.Equal(t, "New User", *user.Name)
+		assert.True(t, user.EmailVerified)
+	}
+
+	persistedUser, err := models.GetUserByFirebaseUID(firebaseUID)
+	assert.NoError(t, err)
+	if assert.NotNil(t, persistedUser) {
+		assert.Equal(t, firebaseUID, *persistedUser.FirebaseUID)
+	}
 }

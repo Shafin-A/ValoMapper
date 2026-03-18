@@ -57,11 +57,67 @@ describe("POST /api/users", () => {
     expect(data).toEqual(mockUserData);
   });
 
+  it("should normalize raw Authorization tokens to Bearer format", async () => {
+    const mockUserData = {
+      uid: "user123",
+      displayName: "Test User",
+      email: "test@example.com",
+    };
+
+    const mockRequest = new Request("http://localhost/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "test-token-without-prefix",
+      },
+      body: JSON.stringify(mockUserData),
+    });
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockUserData,
+    });
+
+    const responsePromise = POST(mockRequest);
+    jest.runAllTimers();
+
+    const response = await responsePromise;
+    const data = await response.json();
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `${process.env.API_URL}/users`,
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Bearer test-token-without-prefix",
+        }),
+      }),
+    );
+    expect(data).toEqual(mockUserData);
+  });
+
   it("should return 401 when Authorization header is missing", async () => {
     const mockRequest = new Request("http://localhost/api/users", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ uid: "test" }),
+    });
+
+    const response = await POST(mockRequest);
+    const data = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(data).toEqual({ error: "Unauthorized" });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("should return 401 for object-like bearer token values", async () => {
+    const mockRequest = new Request("http://localhost/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer [object Object]",
       },
       body: JSON.stringify({ uid: "test" }),
     });

@@ -41,6 +41,40 @@ type DynamicAuthHandler<T> = (
   param: T,
   authHeader: string,
 ) => Promise<Response> | Response;
+const isInvalidTokenValue = (token: string): boolean => {
+  const lowered = token.toLowerCase();
+  return (
+    lowered === "undefined" ||
+    lowered === "null" ||
+    lowered === "[object object]"
+  );
+};
+
+const normalizeAuthHeader = (authHeader: string | null): string | null => {
+  if (!authHeader) {
+    return null;
+  }
+
+  const trimmed = authHeader.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const bearerMatch = /^Bearer\s+(.+)$/i.exec(trimmed);
+  if (bearerMatch) {
+    const token = bearerMatch[1].trim();
+    if (!token || /\s/.test(token) || isInvalidTokenValue(token)) {
+      return null;
+    }
+    return `Bearer ${token}`;
+  }
+
+  if (/\s/.test(trimmed) || isInvalidTokenValue(trimmed)) {
+    return null;
+  }
+
+  return `Bearer ${trimmed}`;
+};
 
 export function withAuthRequired(
   handler: StaticAuthHandler,
@@ -53,17 +87,25 @@ export function withAuthRequired<T>(
 export function withAuthRequired<T>(
   handler: StaticAuthHandler | DynamicAuthHandler<T>,
 ) {
+  const expectsDynamicParam = handler.length >= 3;
+
   return async (request: Request, param?: T): Promise<Response> => {
-    const authHeader = request.headers.get("Authorization");
+    const authHeader = normalizeAuthHeader(
+      request.headers.get("Authorization"),
+    );
 
     if (!authHeader) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Call handler with param if it exists (dynamic routes), otherwise just request and authHeader
-    if (param !== undefined) {
-      return (handler as DynamicAuthHandler<T>)(request, param, authHeader);
+    if (expectsDynamicParam) {
+      return (handler as DynamicAuthHandler<T>)(
+        request,
+        param as T,
+        authHeader,
+      );
     }
+
     return (handler as StaticAuthHandler)(request, authHeader);
   };
 }
