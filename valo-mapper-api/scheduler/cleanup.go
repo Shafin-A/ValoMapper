@@ -17,6 +17,38 @@ type CleanupScheduler struct {
 	stopChan                 chan struct{}
 	cleanupQuery             string
 	subscriptionCleanupQuery string
+	deadRegistrationQuery    string
+}
+
+func buildDeadRegistrationCleanupQuery(retentionWindow string) string {
+	return `
+		DELETE FROM users u
+		WHERE u.created_at < NOW() - INTERVAL '` + retentionWindow + `'
+		AND u.updated_at = u.created_at
+		AND u.firebase_uid IS NULL
+		AND u.email IS NULL
+		AND COALESCE(NULLIF(TRIM(u.name), ''), '') = ''
+		AND u.email_verified = false
+		AND u.tour_completed = false
+		AND u.is_subscribed = false
+		AND u.subscription_ended_at IS NULL
+		AND u.subscription_plan IS NULL
+		AND u.stripe_customer_id IS NULL
+		AND u.stripe_subscription_id IS NULL
+		AND u.premium_trial_claimed_at IS NULL
+		AND u.rso_subject_id IS NOT NULL
+		AND NOT EXISTS (
+			SELECT 1 FROM folders f
+			WHERE f.user_id = u.id
+		)
+		AND NOT EXISTS (
+			SELECT 1 FROM strategies s
+			WHERE s.user_id = u.id
+		)
+		AND NOT EXISTS (
+			SELECT 1 FROM stack_members sm
+			WHERE sm.owner_user_id = u.id OR sm.member_user_id = u.id
+		)`
 }
 
 func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupScheduler {
@@ -43,12 +75,15 @@ func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupSched
 			) >= 3
 		)`
 
+	deadRegistrationQuery := buildDeadRegistrationCleanupQuery("30 days")
+
 	return &CleanupScheduler{
 		db:                       db,
 		interval:                 interval,
 		stopChan:                 make(chan struct{}),
 		cleanupQuery:             cleanupQuery,
 		subscriptionCleanupQuery: subscriptionCleanupQuery,
+		deadRegistrationQuery:    deadRegistrationQuery,
 	}
 }
 
@@ -99,7 +134,25 @@ func (cs *CleanupScheduler) runCleanup() {
 	}
 	log.Printf("Subscription cleanup completed: %d excess strategies deleted", cmdTag.RowsAffected())
 
+	log.Println("Running cleanup for dead registrations...")
+
+	deletedRows, err := cs.runDeadRegistrationCleanup(ctx)
+	if err != nil {
+		log.Printf("ERROR: Dead registration cleanup failed: %v", err)
+		return
+	}
+	log.Printf("Dead registration cleanup completed: %d abandoned users deleted", deletedRows)
+
 	cs.runImageObjectCleanup(ctx)
+}
+
+func (cs *CleanupScheduler) runDeadRegistrationCleanup(ctx context.Context) (int64, error) {
+	cmdTag, err := cs.db.Exec(ctx, cs.deadRegistrationQuery)
+	if err != nil {
+		return 0, err
+	}
+
+	return cmdTag.RowsAffected(), nil
 }
 
 func (cs *CleanupScheduler) runImageObjectCleanup(ctx context.Context) {

@@ -377,6 +377,12 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		displayName = extractNameFromIDToken(tokens.IDToken)
 	}
 
+	customToken, err := firebaseAuth.CustomToken(context.Background(), firebaseUID)
+	if err != nil {
+		utils.SendJSONError(w, utils.NewInternal("Failed to create firebase custom token", err), middleware.GetRequestID(r))
+		return
+	}
+
 	var namePtr *string
 	if displayName != "" {
 		namePtr = &displayName
@@ -406,12 +412,6 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 			}
 		}
 		_ = user.UpdateRSOTokens(tokens.AccessToken, tokens.RefreshToken)
-	}
-
-	customToken, err := firebaseAuth.CustomToken(context.Background(), firebaseUID)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Failed to create firebase custom token", err), middleware.GetRequestID(r))
-		return
 	}
 
 	utils.SendJSON(w, http.StatusOK, map[string]any{

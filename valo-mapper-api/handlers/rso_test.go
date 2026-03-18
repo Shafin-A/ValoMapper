@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -230,5 +231,53 @@ func TestHandleRSOCallback_FallsBackToHashedSubWhenPUUIDUnavailable(t *testing.T
 	}
 	if user == nil || user.FirebaseUID == nil || *user.FirebaseUID != hashedSub {
 		t.Fatalf("expected firebase uid to fall back to hashed sub when puuid is unavailable")
+	}
+}
+
+func TestHandleRSOCallback_DoesNotCreateUserWhenCustomTokenFails(t *testing.T) {
+	originalExchangeFunc := exchangeCodeForTokensFunc
+	originalGetUserInfoFunc := getUserInfoFromRSOFunc
+	originalGetAccountInfoFunc := getAccountInfoFromRSOFunc
+	t.Cleanup(func() {
+		exchangeCodeForTokensFunc = originalExchangeFunc
+		getUserInfoFromRSOFunc = originalGetUserInfoFunc
+		getAccountInfoFromRSOFunc = originalGetAccountInfoFunc
+	})
+
+	exchangeCodeForTokensFunc = func(_ string) (*RSOTokenResponse, error) {
+		return &RSOTokenResponse{AccessToken: "at", RefreshToken: "rt", IDToken: "idt"}, nil
+	}
+	getUserInfoFromRSOFunc = func(_ string) (*RSOUserInfoResponse, error) {
+		return &RSOUserInfoResponse{Sub: "sub-token-failure", GameName: "NoPersist", TagLine: "NA1"}, nil
+	}
+	getAccountInfoFromRSOFunc = func(_ string) (*RSOAccountResponse, error) {
+		return &RSOAccountResponse{PUUID: "puuid-token-failure", GameName: "NoPersist", TagLine: "NA1"}, nil
+	}
+
+	mockAuth := &testutils.MockFirebaseAuth{}
+	mockAuth.CustomTokenFunc = func(ctx context.Context, uid string) (string, error) {
+		return "", errors.New("firebase token generation failed")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "users")
+
+	body := RSORequest{Code: "code"}
+	buf, _ := json.Marshal(body)
+	req := httptest.NewRequest("POST", "/", bytes.NewReader(buf))
+	rec := httptest.NewRecorder()
+
+	HandleRSOCallback(rec, req, mockAuth)
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500 got %d", rec.Code)
+	}
+
+	user, err := models.GetUserByRSOSubject(hashRSOSub("sub-token-failure"))
+	if err != nil {
+		t.Fatalf("failed to query user by RSO subject: %v", err)
+	}
+	if user != nil {
+		t.Fatalf("expected no user to be created when custom token generation fails")
 	}
 }
