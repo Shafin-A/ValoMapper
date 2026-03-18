@@ -25,6 +25,19 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  images: {
+    localPatterns: [
+      {
+        pathname: "/**",
+      },
+    ],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "fly.storage.tigris.dev",
+      },
+    ],
+  },
   async headers() {
     return [
       {

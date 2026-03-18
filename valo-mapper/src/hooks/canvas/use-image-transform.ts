@@ -13,18 +13,40 @@ export const useImageTransform = () => {
   const { notifyImageMoved } = useCollaborativeCanvas();
 
   const [hoveredImageId, setHoveredImageId] = useState<string | null>(null);
+  const [, setImageLoadVersion] = useState(0);
 
   const imageNodeRefs = useRef<Map<string, Konva.Image>>(new Map());
   const imageLoaderRefs = useRef<Map<string, HTMLImageElement>>(new Map());
 
   useEffect(() => {
+    const activeIDs = new Set(imagesOnCanvas.map((item) => item.id));
+
     imagesOnCanvas.forEach((imageItem) => {
-      if (!imageLoaderRefs.current.has(imageItem.id)) {
-        const img = new window.Image();
-        img.src = imageItem.src;
-        imageLoaderRefs.current.set(imageItem.id, img);
+      const existingLoader = imageLoaderRefs.current.get(imageItem.id);
+      if (existingLoader?.src === imageItem.src) {
+        return;
       }
+
+      const img = new window.Image();
+
+      img.onload = () => {
+        imageLoaderRefs.current.set(imageItem.id, img);
+        setImageLoadVersion((prev) => prev + 1);
+      };
+
+      img.onerror = () => {
+        imageLoaderRefs.current.delete(imageItem.id);
+        setImageLoadVersion((prev) => prev + 1);
+      };
+
+      img.src = imageItem.src;
     });
+
+    for (const id of imageLoaderRefs.current.keys()) {
+      if (!activeIDs.has(id)) {
+        imageLoaderRefs.current.delete(id);
+      }
+    }
   }, [imagesOnCanvas]);
 
   const handleImageTransformEnd = useCallback(

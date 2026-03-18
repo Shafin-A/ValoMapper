@@ -75,6 +75,10 @@ export const CanvasImages = ({
   return imagesOnCanvas.map((imageItem) => {
     const imageNode = imageNodeRefs.current.get(imageItem.id);
     const imageLoader = imageLoaderRefs.current.get(imageItem.id);
+    const drawableImage =
+      imageLoader && imageLoader.complete && imageLoader.naturalWidth > 0
+        ? imageLoader
+        : undefined;
 
     return (
       <Group
@@ -120,7 +124,7 @@ export const CanvasImages = ({
               imageNodeRefs.current.delete(imageItem.id);
             }
           }}
-          image={imageLoader}
+          image={drawableImage}
           width={imageItem.width}
           height={imageItem.height}
           onTransformEnd={() => handleImageTransformEnd(imageItem.id)}

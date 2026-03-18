@@ -15,6 +15,7 @@ import (
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/routes"
 	"valo-mapper-api/scheduler"
+	"valo-mapper-api/storage"
 	"valo-mapper-api/websocket"
 
 	_ "valo-mapper-api/docs"
@@ -87,6 +88,10 @@ func main() {
 	rsosecret := os.Getenv("RSO_CLIENT_SECRET")
 	rsoredirect := os.Getenv("RSO_REDIRECT_URI")
 	handlers.InitializeRSOConfig(rsoclient, rsosecret, rsoredirect)
+
+	if err := storage.InitTigris(); err != nil {
+		log.Printf("Warning: Tigris storage not initialized (%v); image uploads will be unavailable", err)
+	}
 
 	conn, err := db.GetDB()
 	if err != nil {

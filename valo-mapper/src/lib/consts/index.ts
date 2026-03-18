@@ -12,6 +12,8 @@ export { MIN_ZOOM_SCALE } from "./misc/consts";
 export { CONTEXT_MENU_DUPLICATE_OFFSET } from "./misc/consts";
 export { FREE_STRATEGY_LIMIT } from "./misc/consts";
 export { STRATEGY_CLEANUP_GRACE_PERIOD_DAYS } from "./misc/consts";
+export { ALLOWED_IMAGE_UPLOAD_MIME_TYPES } from "./misc/consts";
+export { IMAGE_UPLOAD_ACCEPT_ATTR } from "./misc/consts";
 export {
   CHECKOUT_PLAN_OPTIONS,
   DEFAULT_CHECKOUT_PLAN,

@@ -1,8 +1,13 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Upload, X, Expand } from "lucide-react";
+import {
+  ALLOWED_IMAGE_UPLOAD_MIME_TYPES,
+  IMAGE_UPLOAD_ACCEPT_ATTR,
+} from "@/lib/consts";
+import { Upload, X, Expand, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 import {
   Carousel,
   CarouselContent,
@@ -25,28 +30,62 @@ export const LineupImageUpload = ({
   onImageExpand,
 }: LineupImageUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleImageUpload = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = event.target.files;
-    if (files) {
-      const fileArray = Array.from(files);
-      const readers = fileArray.map((file) => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            resolve(reader.result as string);
-          };
-          reader.readAsDataURL(file);
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files);
+    const validFiles = fileArray.filter((file) =>
+      ALLOWED_IMAGE_UPLOAD_MIME_TYPES.includes(
+        file.type.toLowerCase() as (typeof ALLOWED_IMAGE_UPLOAD_MIME_TYPES)[number],
+      ),
+    );
+
+    if (validFiles.length !== fileArray.length) {
+      toast.error(
+        "Some files were skipped. Allowed types: JPEG, PNG, GIF, WEBP.",
+      );
+    }
+
+    if (validFiles.length === 0) {
+      event.target.value = "";
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const uploads = validFiles.map(async (file) => {
+        const formData = new FormData();
+        formData.append("image", file);
+        const response = await fetch("/api/images/upload", {
+          method: "POST",
+          body: formData,
         });
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err?.error ?? "Upload failed");
+        }
+        const data = await response.json();
+        return data.url as string;
       });
 
-      Promise.all(readers).then((newImages) => {
-        onImagesAdd(newImages);
-      });
+      const urls = await Promise.all(uploads);
+      onImagesAdd(urls);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to upload images",
+      );
+    } finally {
+      setIsUploading(false);
+      event.target.value = "";
     }
   };
 
@@ -56,7 +95,7 @@ export const LineupImageUpload = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={IMAGE_UPLOAD_ACCEPT_ATTR}
         multiple
         onChange={handleFileChange}
         className="hidden"
@@ -103,9 +142,14 @@ export const LineupImageUpload = ({
             variant="outline"
             className="w-full"
             onClick={handleImageUpload}
+            disabled={isUploading}
           >
-            <Upload className="h-4 w-4 mr-2" />
-            Add More Images
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4 mr-2" />
+            )}
+            {isUploading ? "Uploading…" : "Add More Images"}
           </Button>
         </div>
       ) : (
@@ -113,10 +157,17 @@ export const LineupImageUpload = ({
           variant="outline"
           className="w-full h-32 border-dashed"
           onClick={handleImageUpload}
+          disabled={isUploading}
         >
           <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <Upload className="h-8 w-8" />
-            <span className="text-sm">Click to upload lineup images</span>
+            {isUploading ? (
+              <Loader2 className="h-8 w-8 animate-spin" />
+            ) : (
+              <Upload className="h-8 w-8" />
+            )}
+            <span className="text-sm">
+              {isUploading ? "Uploading…" : "Click to upload lineup images"}
+            </span>
           </div>
         </Button>
       )}

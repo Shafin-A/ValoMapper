@@ -32,7 +32,6 @@ func RegisterBillingRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 		handlers.HandleStripeWebhook(w, r)
 	}).Methods("POST")
 
-	// Stack management routes
 	billing.HandleFunc("/stack/members", func(w http.ResponseWriter, r *http.Request) {
 		handlers.GetStackMembers(w, r, authClient)
 	}).Methods("GET")
@@ -58,11 +57,6 @@ func RegisterBillingRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 	}).Methods("DELETE")
 
 	billing.HandleFunc("/stack/pending-invites", func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetPendingStackInvites(w, r, authClient)
-	}).Methods("GET")
-
-	// Legacy alias kept for backward compatibility with older clients.
-	billing.HandleFunc("/stack/pending-invite", func(w http.ResponseWriter, r *http.Request) {
 		handlers.GetPendingStackInvites(w, r, authClient)
 	}).Methods("GET")
 }

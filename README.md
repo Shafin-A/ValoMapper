@@ -101,6 +101,14 @@ Before setting up the project, ensure you have:
    # Checkout redirect URLs
    STRIPE_CHECKOUT_SUCCESS_URL=http://localhost:3000/billing/success
    STRIPE_CHECKOUT_CANCEL_URL=http://localhost:3000/billing/cancel
+
+   # Tigris S3-compatible object storage for image uploads
+   # Leave empty/unset to skip image upload features. Set to use Tigris or compatible service.
+   # AWS_ACCESS_KEY_ID=your_tigris_access_key
+   # AWS_SECRET_ACCESS_KEY=your_tigris_secret_key
+   # BUCKET_NAME=your_tigris_bucket_name
+   # AWS_ENDPOINT_URL_S3=https://fly.storage.tigris.dev
+   # AWS_REGION=auto
    ```
 
 3. Ensure PostgreSQL is running and a database named `valo-mapper` exists.
@@ -110,6 +118,8 @@ Before setting up the project, ensure you have:
    ```sh
    go run main.go
    ```
+
+   **Note on image uploads**: Image upload endpoints require Tigris (or S3-compatible) storage to be configured via env vars (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `BUCKET_NAME`). If these are not set, image upload endpoints will return `503 Service Unavailable`.
 
 ### Backend API Docs (Swagger)
 
@@ -188,11 +198,19 @@ ValoMapper is configured for deployment on Fly.io using Docker containers.
    fly postgres create --name valomapper-db --region yyz
    ```
 
-4. **Configure secrets**:
-   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`, `INTERNAL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_LOOKUP_KEY_MONTHLY`, `STRIPE_PRICE_LOOKUP_KEY_YEARLY`, `STRIPE_PRICE_LOOKUP_KEY_STACK`, `STRIPE_WEBHOOK_SECRET`
+4. **Set up Tigris object storage**:
+
+   ```sh
+   fly storage create --name valo-mapper
+   ```
+
+   This creates a Tigris bucket and outputs credentials that you'll use in the next step.
+
+5. **Configure secrets**:
+   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`, `INTERNAL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_LOOKUP_KEY_MONTHLY`, `STRIPE_PRICE_LOOKUP_KEY_YEARLY`, `STRIPE_PRICE_LOOKUP_KEY_STACK`, `STRIPE_WEBHOOK_SECRET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `BUCKET_NAME`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION`
    - Frontend: `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_RSO_CLIENT_ID`, `NEXT_PUBLIC_RSO_REDIRECT_URI`, `API_URL`, `NEXT_PUBLIC_WS_URL`
 
-5. **Deploy**:
+6. **Deploy**:
 
    ```sh
    fly deploy --app valomapper-api

@@ -7,7 +7,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
-import { MAP_SIZE } from "@/lib/consts";
+import {
+  ALLOWED_IMAGE_UPLOAD_MIME_TYPES,
+  IMAGE_UPLOAD_ACCEPT_ATTR,
+  MAP_SIZE,
+} from "@/lib/consts";
 import { VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts/misc/consts";
 import { Tool } from "@/lib/types";
 import { getNextId } from "@/lib/utils";
@@ -170,41 +174,73 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const img = new Image();
-      img.onload = async () => {
-        const maxSize = 500;
-        let width = img.width;
-        let height = img.height;
+    const fileType = file.type.toLowerCase();
+    if (
+      !ALLOWED_IMAGE_UPLOAD_MIME_TYPES.includes(
+        fileType as (typeof ALLOWED_IMAGE_UPLOAD_MIME_TYPES)[number],
+      )
+    ) {
+      toast.error("Unsupported image type. Use JPEG, PNG, GIF, or WEBP.");
+      event.target.value = "";
+      return;
+    }
 
-        if (width >= height && width > maxSize) {
-          height = (height * maxSize) / width;
-          width = maxSize;
-        } else if (height > width && height > maxSize) {
-          width = (width * maxSize) / height;
-          height = maxSize;
-        }
+    let url: string;
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const response = await fetch("/api/images/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error ?? "Upload failed");
+      }
+      const data = await response.json();
+      url = data.url as string;
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to upload image",
+      );
+      event.target.value = "";
+      return;
+    }
 
-        const newImage = {
-          id: getNextId("image"),
-          src: e.target?.result as string,
-          x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-          y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-          width,
-          height,
-        };
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = async () => {
+      URL.revokeObjectURL(objectUrl);
 
-        setImagesOnCanvas((prev) => [...prev, newImage]);
+      const maxSize = 500;
+      let width = img.naturalWidth;
+      let height = img.naturalHeight;
 
-        if (users.length > 1) {
-          await saveCanvasStateAsync();
-        }
-        notifyImageAdded();
+      if (width >= height && width > maxSize) {
+        height = (height * maxSize) / width;
+        width = maxSize;
+      } else if (height > width && height > maxSize) {
+        width = (width * maxSize) / height;
+        height = maxSize;
+      }
+
+      const newImage = {
+        id: getNextId("image"),
+        src: url,
+        x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+        y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+        width,
+        height,
       };
-      img.src = e.target?.result as string;
+
+      setImagesOnCanvas((prev) => [...prev, newImage]);
+
+      if (users.length > 1) {
+        await saveCanvasStateAsync();
+      }
+      notifyImageAdded();
     };
-    reader.readAsDataURL(file);
+    img.src = objectUrl;
 
     event.target.value = "";
   };
@@ -307,7 +343,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={IMAGE_UPLOAD_ACCEPT_ATTR}
         onChange={handleFileChange}
         style={{ display: "none" }}
       />

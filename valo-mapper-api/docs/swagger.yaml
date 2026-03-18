@@ -183,6 +183,13 @@ definitions:
       userId:
         type: integer
     type: object
+  handlers.UploadImageResponse:
+    properties:
+      key:
+        type: string
+      url:
+        type: string
+    type: object
   models.CanvasAbility:
     properties:
       action:
@@ -1059,6 +1066,70 @@ paths:
       summary: Update folder
       tags:
       - folders
+  /api/images/object:
+    get:
+      description: Streams an image by key using backend credentials.
+      parameters:
+      - description: Object key
+        in: query
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Fetch image from object storage
+      tags:
+      - images
+  /api/images/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Accepts a multipart/form-data payload with a single "image" field.
+      parameters:
+      - description: Image file (JPEG/PNG/GIF/WEBP, max 5 MiB)
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UploadImageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Upload image to object storage
+      tags:
+      - images
   /api/lobbies:
     post:
       description: Creates a new lobby initialized with default map and empty phases.

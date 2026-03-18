@@ -1,3 +1,5 @@
+import { fetchBackendWithTimeout } from "./backend-fetch";
+
 interface ProxyOptions {
   method: string;
   token?: string | null;
@@ -9,9 +11,6 @@ export const proxyToBackend = async (
   path: string,
   { method, token, body, errorMessage }: ProxyOptions,
 ): Promise<Response> => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -20,14 +19,11 @@ export const proxyToBackend = async (
   }
 
   try {
-    const backendResponse = await fetch(`${process.env.API_URL}${path}`, {
+    const backendResponse = await fetchBackendWithTimeout(path, {
       method,
       headers,
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-      signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     if (!backendResponse.ok) {
       let errorMsg = errorMessage;
@@ -60,7 +56,6 @@ export const proxyToBackend = async (
       return Response.json({ success: true });
     }
   } catch (error) {
-    clearTimeout(timeoutId);
     if (error instanceof Error && error.name === "AbortError") {
       return Response.json(
         { error: "Request timed out. Please try again." },

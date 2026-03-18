@@ -16,6 +16,16 @@ export const CONTEXT_MENU_DUPLICATE_OFFSET = 20;
 export const FREE_STRATEGY_LIMIT = 3;
 export const STRATEGY_CLEANUP_GRACE_PERIOD_DAYS = 14;
 
+export const ALLOWED_IMAGE_UPLOAD_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+] as const;
+
+export const IMAGE_UPLOAD_ACCEPT_ATTR =
+  "image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp";
+
 export const ROLE_ICONS: Record<string, string> = {
   Controller: "/roles/controller.png",
   Duelist: "/roles/duelist.png",
