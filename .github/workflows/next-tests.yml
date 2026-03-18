@@ -16,6 +16,8 @@ jobs:
   test:
     name: Test Next.js Frontend
     runs-on: ubuntu-latest
+    env:
+      API_URL: "https://valomapper-api.fly.dev/api"
 
     defaults:
       run:
