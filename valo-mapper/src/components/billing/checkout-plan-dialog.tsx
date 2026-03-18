@@ -149,7 +149,7 @@ export const CheckoutPlanDialog = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="w-[95vw] sm:max-w-4xl">
+      <DialogContent className="w-[95vw] max-h-[calc(100dvh-1rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-3 sm:max-w-4xl sm:p-6">
         <DialogHeader>
           <DialogTitle>Review your upgrade</DialogTitle>
           <DialogDescription>
@@ -157,27 +157,30 @@ export const CheckoutPlanDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <PlanComparisonTable
-            resolvedPlanOptions={resolvedPlanOptions}
-            billingPlans={billingPlans}
-            selectedPlan={selectedPlan}
-          />
-          <CheckoutPlanSelector
-            resolvedPlanOptions={resolvedPlanOptions}
-            selectedPlan={selectedPlan}
-            selectedPlanOption={selectedPlanOption}
-            onPlanChange={setSelectedPlan}
-            trialHeadline={trialHeadline}
-            trialDescription={trialDescription}
-          />
+        <div className="min-h-0 overflow-y-auto pr-1">
+          <div className="space-y-4 pb-1">
+            <PlanComparisonTable
+              resolvedPlanOptions={resolvedPlanOptions}
+              billingPlans={billingPlans}
+              selectedPlan={selectedPlan}
+            />
+            <CheckoutPlanSelector
+              resolvedPlanOptions={resolvedPlanOptions}
+              selectedPlan={selectedPlan}
+              selectedPlanOption={selectedPlanOption}
+              onPlanChange={setSelectedPlan}
+              trialHeadline={trialHeadline}
+              trialDescription={trialDescription}
+            />
+          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 border-t bg-background pt-3 sm:flex-row sm:justify-end sm:pt-4">
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
             disabled={isPending}
+            className="w-full sm:w-auto"
           >
             Back
           </Button>
@@ -186,6 +189,7 @@ export const CheckoutPlanDialog = ({
               variant="outline"
               onClick={() => handleContinue(true)}
               disabled={isPending}
+              className="w-full sm:w-auto"
             >
               {isPending && checkoutIntent === "trial" && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -193,7 +197,11 @@ export const CheckoutPlanDialog = ({
               Try out for free
             </Button>
           )}
-          <Button onClick={() => handleContinue(false)} disabled={isPending}>
+          <Button
+            onClick={() => handleContinue(false)}
+            disabled={isPending}
+            className="w-full sm:w-auto"
+          >
             {isPending && checkoutIntent === "paid" && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}

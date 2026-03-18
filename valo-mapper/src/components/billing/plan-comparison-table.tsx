@@ -116,26 +116,28 @@ export const PlanComparisonTable = ({
     <div className="space-y-2">
       <div className="text-sm font-medium">Plans</div>
       <div className="overflow-x-auto rounded-md border">
-        <table className="w-full table-fixed min-w-[720px] border-collapse text-sm">
+        <table className="w-full min-w-[640px] table-auto border-collapse text-[11px] sm:min-w-[720px] sm:table-fixed sm:text-sm">
           <thead className="bg-muted/40 text-left">
             <tr>
-              <th className="w-1/5 px-4 py-3 align-top font-medium">Feature</th>
+              <th className="px-2 py-2.5 align-top font-medium sm:w-1/5 sm:px-4 sm:py-3">
+                Feature
+              </th>
               {comparisonColumns.map((col) => (
                 <th
                   key={col.id}
-                  className={`w-1/5 px-4 py-3 align-top font-medium ${
+                  className={`px-2 py-2.5 align-top font-medium sm:w-1/5 sm:px-4 sm:py-3 ${
                     col.isSelected ? "bg-primary/5" : ""
                   }`}
                 >
                   <div className="flex flex-col gap-1">
                     <div>{col.shortLabel}</div>
                     {col.priceLabel && (
-                      <div className="text-base font-semibold text-foreground">
+                      <div className="text-sm leading-tight font-semibold text-foreground sm:text-base">
                         {col.priceLabel}
                       </div>
                     )}
                     {col.perMonthLabel && (
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-[10px] leading-tight text-muted-foreground sm:text-xs">
                         {col.perMonthLabel}
                       </div>
                     )}
@@ -152,7 +154,7 @@ export const PlanComparisonTable = ({
           <tbody>
             {FEATURE_ROWS.map((feature) => (
               <tr key={feature.label}>
-                <td className="border-t px-4 py-3 align-top">
+                <td className="border-t px-2 py-2.5 align-top sm:px-4 sm:py-3">
                   <div className="space-y-1">
                     <div className="font-medium">{feature.label}</div>
                     <div className="text-xs text-muted-foreground">
@@ -166,7 +168,7 @@ export const PlanComparisonTable = ({
                   return (
                     <td
                       key={col.id}
-                      className={`border-t px-4 py-3 text-center align-middle ${
+                      className={`border-t px-2 py-2.5 text-center align-middle sm:px-4 sm:py-3 ${
                         col.isSelected ? "bg-primary/5" : ""
                       }`}
                     >
