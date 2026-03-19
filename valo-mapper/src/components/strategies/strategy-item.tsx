@@ -58,6 +58,7 @@ export const StrategyItem = ({
           sizes="100%"
           className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
           draggable={false}
+          loading="eager"
         />
 
         <Dialog open={openRenameDialog} onOpenChange={setOpenRenameDialog}>
