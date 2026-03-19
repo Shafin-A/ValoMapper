@@ -28,7 +28,7 @@ export const useCanvasDrawing = (
   const { notifyLineDrawn, notifyLineRemoved } = useCollaborativeCanvas();
   const drawingBufferRef = useRef<Vector2d[]>([]);
   const currentLineRef = useRef<Konva.Line | Konva.Arrow>(null);
-  const erasedLinesRef = useRef<Set<number>>(new Set());
+  const erasedLineIdsRef = useRef<Set<string>>(new Set());
 
   const handleDrawing = useCallback(() => {
     const worldPos = getWorldPointerPosition();
@@ -39,7 +39,7 @@ export const useCanvasDrawing = (
       drawingBufferRef.current = [worldPos];
 
       if (tool === "eraser" && eraserSettings.mode === "line") {
-        erasedLinesRef.current.clear();
+        erasedLineIdsRef.current.clear();
       }
 
       setCurrentStroke({
@@ -69,23 +69,21 @@ export const useCanvasDrawing = (
             drawLines,
           );
 
-          const newIntersections = intersectingLineIndices.filter(
-            (index) => !erasedLinesRef.current.has(index),
-          );
+          const newlyIntersectedLineIds = intersectingLineIndices
+            .map((index) => drawLines[index]?.id)
+            .filter((id): id is string => !!id)
+            .filter((id) => !erasedLineIdsRef.current.has(id));
 
-          if (newIntersections.length > 0) {
-            newIntersections.forEach((index) => {
-              erasedLinesRef.current.add(index);
+          if (newlyIntersectedLineIds.length > 0) {
+            const newIntersectionIdSet = new Set(newlyIntersectedLineIds);
 
-              const removedLine = drawLines[index];
-
-              if (removedLine) {
-                notifyLineRemoved(removedLine.id);
-              }
+            newlyIntersectedLineIds.forEach((id) => {
+              erasedLineIdsRef.current.add(id);
+              notifyLineRemoved(id);
             });
 
             setDrawLines((prev) =>
-              prev.filter((_, index) => !newIntersections.includes(index)),
+              prev.filter((line) => !newIntersectionIdSet.has(line.id)),
             );
           }
         }

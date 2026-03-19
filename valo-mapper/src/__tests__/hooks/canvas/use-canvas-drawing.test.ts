@@ -130,6 +130,82 @@ describe("useCanvasDrawing", () => {
     expect(updateArg[0].id).toBe("a");
   });
 
+  it("continues erasing in line mode after line indices shift", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+      { x: 20, y: 20 },
+    ];
+
+    const getWorldPointerPosition = jest
+      .fn()
+      .mockReturnValueOnce(points[0])
+      .mockReturnValueOnce(points[1])
+      .mockReturnValueOnce(points[2]);
+
+    const isDrawing = { current: false };
+
+    let latestDrawLines: DrawLine[] = [
+      {
+        id: "a",
+        tool: "pencil",
+        points,
+        color: "#000",
+        size: 2,
+        isDashed: false,
+        isArrowHead: false,
+      },
+      {
+        id: "b",
+        tool: "pencil",
+        points,
+        color: "#000",
+        size: 2,
+        isDashed: false,
+        isArrowHead: false,
+      },
+    ];
+
+    const setDrawLines = jest.fn((updater) => {
+      if (typeof updater === "function") {
+        latestDrawLines = updater(latestDrawLines);
+      }
+    });
+
+    // First erase removes line "a" at index 0. After rerender, line "b" also
+    // becomes index 0 and should still be removable in the same erase stroke.
+    mockGetIntersectingLines.mockReturnValue([0]);
+
+    const { result, rerender } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "eraser",
+        { size: 2, color: "#000", isDashed: false, isArrowHead: false },
+        { size: 5, mode: "line" },
+        latestDrawLines,
+        setDrawLines,
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+    });
+
+    expect(latestDrawLines.map((line) => line.id)).toEqual(["b"]);
+
+    rerender();
+
+    act(() => {
+      result.current.handleDrawing();
+    });
+
+    expect(latestDrawLines).toHaveLength(0);
+    expect(setDrawLines).toHaveBeenCalledTimes(2);
+  });
+
   it("adds a stroke on mouse up when eraser pixel intersects", () => {
     const getWorldPointerPosition = jest.fn().mockReturnValue({ x: 0, y: 0 });
     const isDrawing = { current: false };
