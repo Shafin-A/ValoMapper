@@ -531,6 +531,43 @@ func TestUpdateStrategy(t *testing.T) {
 		assert.Equal(t, folder.ID, *response.FolderID)
 	})
 
+	t.Run("successfully moves strategy to root", func(t *testing.T) {
+		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		lobby := testutils.CreateTestLobby(t, pool)
+		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Source Folder")
+		strategy := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
+
+		_, err := pool.Exec(context.Background(), `UPDATE strategies SET folder_id = $1 WHERE id = $2`, folder.ID, strategy.ID)
+		assert.NoError(t, err)
+
+		reqBody := map[string]any{
+			"folderId": nil,
+		}
+
+		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
+		w := httptest.NewRecorder()
+
+		UpdateStrategy(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response StrategyResponse
+		testutils.ParseJSONResponse(t, w, &response)
+
+		assert.Nil(t, response.FolderID)
+	})
+
 	t.Run("returns 404 for non-existent strategy", func(t *testing.T) {
 		// ensure tables cleared so ID definitely doesn't exist
 		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")

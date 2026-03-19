@@ -18,12 +18,14 @@ import { StrategyItem } from "./strategy-item";
 
 interface StrategiesContentProps {
   currentItems: StrategyData[];
+  currentLocationId: string;
   navigateToFolder: (folderId: string, folderName: string) => void;
   canManageFolders: boolean;
 }
 
 export const StrategiesContent = ({
   currentItems,
+  currentLocationId,
   navigateToFolder,
   canManageFolders,
 }: StrategiesContentProps) => {
@@ -72,11 +74,13 @@ export const StrategiesContent = ({
             ) : (
               <Link key={item.id} href={`/${item.lobbyCode}`}>
                 <StrategyItem
+                  strategyId={item.id}
                   name={item.name}
                   selectedMapId={item.selectedMapId ?? ""}
                   updatedAt={
                     item.updatedAt ? new Date(item.updatedAt) : new Date()
                   }
+                  currentLocationId={currentLocationId}
                   onRename={(newName) =>
                     updateStrategy({
                       strategyId: convertFolderOrStrategyId(

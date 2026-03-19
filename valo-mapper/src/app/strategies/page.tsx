@@ -259,6 +259,7 @@ const MyStrategiesPage = () => {
 
           <StrategiesContent
             currentItems={currentItems}
+            currentLocationId={navigationPath[navigationPath.length - 1].id}
             navigateToFolder={navigateToFolder}
             canManageFolders={canManageFolders}
           />

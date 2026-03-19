@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 
 import {
   DialogContent,
@@ -35,6 +35,7 @@ import { useCanvas } from "@/contexts/canvas-context";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 import {
   buildLocationPath,
+  convertFolderOrStrategyId,
   flattenData,
   getFolderOrStrategyId,
 } from "@/lib/utils";
@@ -42,6 +43,7 @@ import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import Link from "next/link";
 import { FREE_STRATEGY_LIMIT } from "@/lib/consts";
 import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
+import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
 
 const renderBreadcrumbs = (parts: Array<{ id: string; name: string }>) => {
   if (parts.length === 0) {
@@ -103,6 +105,19 @@ interface TreeViewDialogContentProps {
   setOpen: (open: boolean) => void;
 }
 
+const getParentFolderLocation = (
+  childId: string,
+  flatData: Record<string, StrategyData>,
+) => {
+  const parentFolder = Object.values(flatData).find(
+    (item) =>
+      item.type === "folder" &&
+      item.children?.some((child) => child.id === childId),
+  );
+
+  return parentFolder?.id ?? "root";
+};
+
 export const TreeViewDialogContent = ({
   setOpen,
 }: TreeViewDialogContentProps) => {
@@ -112,7 +127,10 @@ export const TreeViewDialogContent = ({
   const { data, isLoading, isError, refetch: refetchFolders } = useFolders();
   const { data: user, isLoading: isUserLoading } = useUser();
 
-  const { mutate: createStrategy, isPending } = useCreateStrategy();
+  const { mutate: createStrategy, isPending: isCreatingStrategy } =
+    useCreateStrategy();
+  const { mutate: updateStrategy, isPending: isUpdatingStrategy } =
+    useUpdateStrategy();
   const { saveCanvasState } = useCanvas();
   const params = useParams();
   const pathname = usePathname();
@@ -121,8 +139,6 @@ export const TreeViewDialogContent = ({
     typeof params?.lobbyCode === "string" ? params.lobbyCode : "";
   const searchQuery = searchParams.toString();
   const returnToPath = searchQuery ? `${pathname}?${searchQuery}` : pathname;
-
-  const isStrategyInFolder = data?.some((s) => s.lobbyCode === lobbyCode);
 
   const strategyDataWithoutParent: Record<string, StrategyData> = {
     root: {
@@ -144,42 +160,94 @@ export const TreeViewDialogContent = ({
   };
 
   const flatData = flattenData(strategyData._virtual_root);
+  const existingStrategy = Object.values(flatData).find(
+    (item) => item.type === "strategy" && item.lobbyCode === lobbyCode,
+  );
+  const existingStrategyId = existingStrategy?.id;
+  const existingStrategyName = existingStrategy?.name;
+  const isExistingStrategy = Boolean(existingStrategy);
+  const existingStrategyLocation = existingStrategy
+    ? getParentFolderLocation(existingStrategy.id, flatData)
+    : "root";
+  const existingLocationPath = buildLocationPath(
+    existingStrategyLocation,
+    flatData,
+  );
+  const existingLocationLabel = existingLocationPath
+    .map((part) => part.name)
+    .join(" > ");
   const strategyCount = Object.values(flatData).filter(
     (item) => item.type === "strategy",
   ).length;
   const isFreeUserAtStrategyLimit =
     !!user && !user.isSubscribed && strategyCount >= FREE_STRATEGY_LIMIT;
+  const trimmedStrategyName = strategyName.trim();
+  const isPending = isCreatingStrategy || isUpdatingStrategy;
+  const isSameLocationAsExisting =
+    isExistingStrategy && selectedLocation === existingStrategyLocation;
+  const hasNameChanged = trimmedStrategyName !== (existingStrategyName ?? "");
+  const isNoOpUpdate =
+    isExistingStrategy && !hasNameChanged && isSameLocationAsExisting;
+
+  useEffect(() => {
+    if (!existingStrategyName) {
+      return;
+    }
+
+    setStrategyName(existingStrategyName);
+    setSelectedLocation(existingStrategyLocation);
+  }, [existingStrategyId, existingStrategyName, existingStrategyLocation]);
 
   const handleSave = () => {
-    if (isFreeUserAtStrategyLimit || isUserLoading) {
+    if (!trimmedStrategyName || isUserLoading) {
+      return;
+    }
+
+    if (!isExistingStrategy && isFreeUserAtStrategyLimit) {
+      return;
+    }
+
+    if (isNoOpUpdate) {
       return;
     }
 
     const folderId = getFolderOrStrategyId(selectedLocation, "folder");
 
-    saveCanvasState();
-    createStrategy({
-      name: strategyName,
-      lobbyCode: lobbyCode || "",
-      folderId: folderId,
-    });
+    if (existingStrategy) {
+      updateStrategy({
+        strategyId: convertFolderOrStrategyId(existingStrategy.id, "strategy"),
+        name: trimmedStrategyName,
+        folderId: folderId ?? null,
+        includeFolderId: true,
+      });
+    } else {
+      saveCanvasState();
+      createStrategy({
+        name: trimmedStrategyName,
+        lobbyCode: lobbyCode || "",
+        folderId: folderId,
+      });
+    }
 
     setOpen(false);
     setStrategyName("");
     setSelectedLocation("root");
-    refetchFolders();
   };
 
   const locationPath = buildLocationPath(selectedLocation, flatData);
+  const dialogTitle = isExistingStrategy
+    ? "Update Saved Strategy"
+    : "Save Strategy";
+  const dialogDescription = isExistingStrategy
+    ? "Move this saved strategy to another location or rename it"
+    : "Choose a location to save your new strategy";
 
   if (isError) {
     return (
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Save Strategy</DialogTitle>
-          <DialogDescription>
-            Choose a location to save your new strategy
-          </DialogDescription>
+          <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
         <div className="py-8 text-center">
           <p className="text-muted-foreground mb-4">
@@ -201,29 +269,35 @@ export const TreeViewDialogContent = ({
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
-        <DialogTitle>Save Strategy</DialogTitle>
-        <DialogDescription>
-          Choose a location to save your new strategy
-        </DialogDescription>
+        <DialogTitle>{dialogTitle}</DialogTitle>
+        <DialogDescription>{dialogDescription}</DialogDescription>
       </DialogHeader>
 
-      {isStrategyInFolder && (
-        <Alert variant="destructive">
+      {isExistingStrategy && existingStrategy && (
+        <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Strategy already exists</AlertTitle>
+          <AlertTitle>Strategy already saved</AlertTitle>
           <AlertDescription>
             <p>
-              You have already saved this strategy. Please delete it first in{" "}
+              This strategy is already saved as &quot;{existingStrategy.name}
+              &quot;. You can move it to a different location.
+            </p>
+            <p>
+              Current location:{" "}
+              <span className="font-medium">{existingLocationLabel}</span>
+            </p>
+            <p>
+              You can still manage saved strategies anytime in{" "}
               <Link className="underline" href="/strategies">
                 My Strategies
-              </Link>{" "}
-              to save to a different location.
+              </Link>
+              .
             </p>
           </AlertDescription>
         </Alert>
       )}
 
-      {isFreeUserAtStrategyLimit && (
+      {!isExistingStrategy && isFreeUserAtStrategyLimit && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Free plan limit reached</AlertTitle>
@@ -270,6 +344,12 @@ export const TreeViewDialogContent = ({
 
         <div className="space-y-2">
           <div className="text-sm font-medium">Save Location</div>
+          {isExistingStrategy && isSameLocationAsExisting && (
+            <p className="text-xs text-muted-foreground">
+              This strategy is already in the selected location. Choose another
+              folder to move it.
+            </p>
+          )}
           <Breadcrumb className="mb-4">
             <BreadcrumbList>{renderBreadcrumbs(locationPath)}</BreadcrumbList>
           </Breadcrumb>
@@ -302,15 +382,15 @@ export const TreeViewDialogContent = ({
         <Button
           onClick={handleSave}
           disabled={
-            !strategyName.trim() ||
+            !trimmedStrategyName ||
             isLoading ||
             isPending ||
             isUserLoading ||
-            isStrategyInFolder ||
-            isFreeUserAtStrategyLimit
+            (!isExistingStrategy && isFreeUserAtStrategyLimit) ||
+            isNoOpUpdate
           }
         >
-          Save Strategy
+          {isExistingStrategy ? "Update Strategy" : "Save Strategy"}
         </Button>
       </DialogFooter>
     </DialogContent>

@@ -19,8 +19,9 @@ type CreateStrategyRequest struct {
 }
 
 type UpdateStrategyRequest struct {
-	FolderID *int    `json:"folderId,omitempty"`
-	Name     *string `json:"name,omitempty"`
+	FolderID    *int    `json:"folderId,omitempty"`
+	HasFolderID bool    `json:"-"`
+	Name        *string `json:"name,omitempty"`
 }
 
 type StrategyResponse struct {
@@ -198,17 +199,39 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		return
 	}
 
-	var req UpdateStrategyRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var rawReq map[string]json.RawMessage
+	if err := json.NewDecoder(r.Body).Decode(&rawReq); err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
 	defer r.Body.Close()
 
+	req := UpdateStrategyRequest{}
+
+	if rawName, ok := rawReq["name"]; ok {
+		var name *string
+		if err := json.Unmarshal(rawName, &name); err != nil {
+			utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
+			return
+		}
+		req.Name = name
+	}
+
+	if rawFolderID, ok := rawReq["folderId"]; ok {
+		req.HasFolderID = true
+		var folderID *int
+		if err := json.Unmarshal(rawFolderID, &folderID); err != nil {
+			utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
+			return
+		}
+		req.FolderID = folderID
+	}
+
 	strategyService := services.NewStrategyService()
 	response, err := strategyService.UpdateStrategy(user, id, services.UpdateStrategyRequest{
-		FolderID: req.FolderID,
-		Name:     req.Name,
+		FolderID:    req.FolderID,
+		HasFolderID: req.HasFolderID,
+		Name:        req.Name,
 	})
 	if err != nil {
 		switch err.Error() {

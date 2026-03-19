@@ -6,7 +6,9 @@ import { Strategy } from "@/lib/types";
 
 interface UpdateStrategyParams {
   strategyId: number;
-  name: string;
+  name?: string;
+  folderId?: number | null;
+  includeFolderId?: boolean;
 }
 
 export const useUpdateStrategy = () => {
@@ -14,11 +16,31 @@ export const useUpdateStrategy = () => {
   const { getIdToken } = useFirebaseAuth();
 
   const { mutate, isPending, isError } = useMutation({
-    mutationFn: ({ strategyId, name }: UpdateStrategyParams) =>
-      apiFetchWithAuth<Strategy>(`/api/strategies/${strategyId}`, getIdToken, {
-        method: "PATCH",
-        body: JSON.stringify({ name }),
-      }),
+    mutationFn: ({
+      strategyId,
+      name,
+      folderId,
+      includeFolderId = false,
+    }: UpdateStrategyParams) => {
+      const payload: { name?: string; folderId?: number | null } = {};
+
+      if (typeof name === "string") {
+        payload.name = name;
+      }
+
+      if (includeFolderId) {
+        payload.folderId = folderId ?? null;
+      }
+
+      return apiFetchWithAuth<Strategy>(
+        `/api/strategies/${strategyId}`,
+        getIdToken,
+        {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        },
+      );
+    },
     onSuccess: (data) => {
       toast.success(`Strategy "${data.name}" updated successfully!`);
       queryClient.invalidateQueries({ queryKey: ["folders-and-strategies"] });

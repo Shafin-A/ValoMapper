@@ -8,15 +8,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn, getRelativeTime } from "@/lib/utils";
-import { FolderPen, MoreVertical, Trash2 } from "lucide-react";
+import { FolderInput, FolderPen, MoreVertical, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { DeleteDialog } from "./delete-dialog";
+import MoveStrategyDialogContent from "./move-strategy-dialog-content";
 
 interface StrategyItemProps {
+  strategyId: string;
   name: string;
   selectedMapId: string;
   updatedAt: Date;
+  currentLocationId: string;
   onClick?: () => void;
   onRename?: (newName: string) => void;
   onDelete?: () => void;
@@ -24,9 +27,11 @@ interface StrategyItemProps {
 }
 
 export const StrategyItem = ({
+  strategyId,
   name,
   selectedMapId,
   updatedAt,
+  currentLocationId,
   onClick,
   onRename,
   onDelete,
@@ -35,6 +40,7 @@ export const StrategyItem = ({
   const [openDropdown, setOpenDropdown] = useState(false);
   const [openRenameDialog, setOpenRenameDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openMoveDialog, setOpenMoveDialog] = useState(false);
 
   const mapId = selectedMapId;
   const imageUrl = mapId ? `/maps/listviewicons/${mapId}.webp` : "";
@@ -43,7 +49,8 @@ export const StrategyItem = ({
     <div
       onClick={(e) => {
         e.stopPropagation();
-        if (!openRenameDialog && !openDeleteDialog) onClick?.();
+        if (!openRenameDialog && !openDeleteDialog && !openMoveDialog)
+          onClick?.();
       }}
       className={cn(
         "relative flex flex-col w-56 rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900 transition-all cursor-pointer group select-none",
@@ -76,7 +83,7 @@ export const StrategyItem = ({
             <DropdownMenuContent
               align="end"
               onCloseAutoFocus={(event) => {
-                if (openRenameDialog || openDeleteDialog) {
+                if (openRenameDialog || openDeleteDialog || openMoveDialog) {
                   event.preventDefault(); // Prevent dropdown from stealing focus when dialog is opening
                 }
               }}
@@ -98,6 +105,17 @@ export const StrategyItem = ({
                 onClick={(e) => e.stopPropagation()}
                 onSelect={(e) => {
                   e.preventDefault();
+                  setOpenMoveDialog(true);
+                  setOpenDropdown(false);
+                }}
+              >
+                <FolderInput />
+                Move
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => e.stopPropagation()}
+                onSelect={(e) => {
+                  e.preventDefault();
                   setOpenDeleteDialog(true);
                   setOpenDropdown(false);
                 }}
@@ -115,6 +133,15 @@ export const StrategyItem = ({
               setOpenRenameDialog(false);
             }}
             type="strategy"
+          />
+        </Dialog>
+
+        <Dialog open={openMoveDialog} onOpenChange={setOpenMoveDialog}>
+          <MoveStrategyDialogContent
+            strategyId={strategyId}
+            strategyName={name}
+            currentLocationId={currentLocationId}
+            setOpen={setOpenMoveDialog}
           />
         </Dialog>
 

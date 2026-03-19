@@ -150,8 +150,9 @@ func (ss *StrategyService) GetStrategies(userID int, folderID *int) ([]*Strategy
 
 // UpdateStrategyRequest wraps strategy update input
 type UpdateStrategyRequest struct {
-	FolderID *int
-	Name     *string
+	FolderID    *int
+	HasFolderID bool
+	Name        *string
 }
 
 // UpdateStrategy updates an existing strategy
@@ -171,7 +172,7 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 	if req.Name != nil {
 		strategy.Name = *req.Name
 	}
-	if req.FolderID != nil {
+	if req.HasFolderID {
 		strategy.FolderID = req.FolderID
 	}
 
