@@ -70,6 +70,8 @@ const createCanvasContext = (
     setSelectedCanvasIcon: jest.fn(),
     isSidebarDragActive: false,
     setIsSidebarDragActive: jest.fn(),
+    currentStageScale: 1,
+    setCurrentStageScale: jest.fn(),
     agentsOnCanvas: [],
     setAgentsOnCanvas: jest.fn(),
     abilitiesOnCanvas: [],

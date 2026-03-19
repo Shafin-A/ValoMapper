@@ -18,6 +18,7 @@ import {
   Dispatch,
   PointerEvent as ReactPointerEvent,
   SetStateAction,
+  useEffect,
   useState,
 } from "react";
 import {
@@ -34,7 +35,11 @@ import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
 import { SIDEBAR_WIDTH, TEMP_DRAG_ID } from "@/lib/consts";
 import { useCanvas } from "@/contexts/canvas-context";
+import { getAgentImgSrc, isAgent } from "@/lib/utils";
 import { Loader2, AlertCircle, Info } from "lucide-react";
+import { Layer, Stage } from "react-konva";
+import { AbilityIcon, CanvasIcon } from "@/components/canvas-icons";
+import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import {
   Tooltip,
   TooltipContent,
@@ -54,12 +59,15 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
   } = useSettings();
 
   const {
+    agentsOnCanvas,
+    abilitiesOnCanvas,
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
     isSidebarDragActive,
     setIsSidebarDragActive,
+    currentStageScale,
     isAlly,
     setIsAlly,
     setIsDrawMode,
@@ -72,6 +80,65 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
   const [onMap, setOnMap] = useState(false);
   const [selectedAgentAbilities, setSelectedAgentAbilities] =
     useState<Agent | null>(null);
+  const [dragPreviewPosition, setDragPreviewPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+
+  const tempDragAgent = agentsOnCanvas.find(
+    (agent) => agent.id === TEMP_DRAG_ID,
+  );
+  const tempDragAbility = abilitiesOnCanvas.find(
+    (ability) => ability.id === TEMP_DRAG_ID,
+  );
+
+  const previewScale = currentStageScale > 0 ? currentStageScale : 1;
+
+  const dragPreviewX = dragPreviewPosition
+    ? dragPreviewPosition.x / previewScale
+    : 0;
+  const dragPreviewY = dragPreviewPosition
+    ? dragPreviewPosition.y / previewScale
+    : 0;
+
+  useEffect(() => {
+    if (!isSidebarDragActive) {
+      setDragPreviewPosition(null);
+      return;
+    }
+
+    const handleWindowPointerMove = (event: PointerEvent) => {
+      setDragPreviewPosition({ x: event.clientX, y: event.clientY });
+    };
+
+    const clearDragPreview = () => {
+      setDragPreviewPosition(null);
+    };
+
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", clearDragPreview);
+    window.addEventListener("pointercancel", clearDragPreview);
+
+    return () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", clearDragPreview);
+      window.removeEventListener("pointercancel", clearDragPreview);
+    };
+  }, [isSidebarDragActive]);
+
+  useEffect(() => {
+    const updateViewportSize = () => {
+      setViewportSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    updateViewportSize();
+    window.addEventListener("resize", updateViewportSize);
+
+    return () => {
+      window.removeEventListener("resize", updateViewportSize);
+    };
+  }, []);
 
   const beginIconPlacement = <T extends AgentCanvas | AbilityCanvas>(
     icon: Agent | AbilityIconItem,
@@ -130,6 +197,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
       return;
     }
 
+    setDragPreviewPosition({ x: event.clientX, y: event.clientY });
     setIsDrawMode(false);
     setEditingTextId(null);
     beginIconPlacement(icon, setIconsOnCanvas);
@@ -320,6 +388,69 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
         onAbilityClick={handleAbilityClick}
         onAbilityPointerDown={handleAbilityPointerDown}
       />
+
+      {isSidebarDragActive &&
+        selectedCanvasIcon &&
+        dragPreviewPosition &&
+        viewportSize.width > 0 &&
+        viewportSize.height > 0 && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none fixed z-120"
+            style={{ inset: 0 }}
+          >
+            <Stage
+              width={viewportSize.width}
+              height={viewportSize.height}
+              scaleX={previewScale}
+              scaleY={previewScale}
+            >
+              <Layer listening={false}>
+                {tempDragAgent && isAgent(selectedCanvasIcon) && (
+                  <CanvasIcon
+                    id={TEMP_DRAG_ID}
+                    isAlly={tempDragAgent.isAlly}
+                    x={dragPreviewX}
+                    y={dragPreviewY}
+                    src={getAgentImgSrc(selectedCanvasIcon.name)}
+                    isListening={false}
+                    draggable={false}
+                    width={agentsSettings.scale}
+                    height={agentsSettings.scale}
+                    borderOpacity={agentsSettings.borderOpacity}
+                    strokeWidth={agentsSettings.borderWidth}
+                    radius={agentsSettings.radius}
+                    allyColor={agentsSettings.allyColor}
+                    enemyColor={agentsSettings.enemyColor}
+                  />
+                )}
+
+                {tempDragAbility && !isAgent(selectedCanvasIcon) && (
+                  <AbilityIcon
+                    id={TEMP_DRAG_ID}
+                    isAlly={tempDragAbility.isAlly}
+                    action={tempDragAbility.action}
+                    x={dragPreviewX}
+                    y={dragPreviewY}
+                    rotation={tempDragAbility.currentRotation}
+                    src={ABILITY_LOOKUP[tempDragAbility.name].src}
+                    isListening={false}
+                    draggable={false}
+                    width={abilitiesSettings.scale}
+                    height={abilitiesSettings.scale}
+                    borderOpacity={abilitiesSettings.borderOpacity}
+                    strokeWidth={abilitiesSettings.borderWidth}
+                    radius={abilitiesSettings.radius}
+                    allyColor={abilitiesSettings.allyColor}
+                    enemyColor={abilitiesSettings.enemyColor}
+                    currentPath={tempDragAbility.currentPath}
+                    currentLength={tempDragAbility.currentLength}
+                  />
+                )}
+              </Layer>
+            </Stage>
+          </div>
+        )}
     </SidebarProvider>
   );
 };

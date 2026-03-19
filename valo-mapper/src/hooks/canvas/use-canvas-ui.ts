@@ -25,6 +25,7 @@ export const useCanvasUI = () => {
     Agent | AbilityIconItem | null
   >(null);
   const [isSidebarDragActive, setIsSidebarDragActive] = useState(false);
+  const [currentStageScale, setCurrentStageScale] = useState(1);
 
   const resetEdits = () => {
     setEditingTextId(null);
@@ -60,6 +61,8 @@ export const useCanvasUI = () => {
     setSelectedCanvasIcon,
     isSidebarDragActive,
     setIsSidebarDragActive,
+    currentStageScale,
+    setCurrentStageScale,
     resetEdits,
   };
 };

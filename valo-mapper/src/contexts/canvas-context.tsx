@@ -42,6 +42,8 @@ interface CanvasContextType {
   >;
   isSidebarDragActive: boolean;
   setIsSidebarDragActive: Dispatch<SetStateAction<boolean>>;
+  currentStageScale: number;
+  setCurrentStageScale: Dispatch<SetStateAction<number>>;
   isAlly: boolean;
   setIsAlly: Dispatch<SetStateAction<boolean>>;
   selectedMap: MapOption;

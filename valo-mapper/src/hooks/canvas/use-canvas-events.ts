@@ -21,6 +21,7 @@ export const useCanvasEvents = (
     setSelectedCanvasIcon,
     isSidebarDragActive,
     setIsSidebarDragActive,
+    setCurrentStageScale,
     agentsOnCanvas,
     setAgentsOnCanvas,
     abilitiesOnCanvas,
@@ -105,11 +106,49 @@ export const useCanvasEvents = (
   const {
     deleteGroupRef,
     handleDragMove,
-    handleWheel,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
+    handleWheel: handleZoomWheel,
+    handleTouchStart: handleZoomTouchStart,
+    handleTouchMove: handleZoomTouchMove,
+    handleTouchEnd: handleZoomTouchEnd,
   } = useCanvasZoom(stageRef, baseScale, isDrawMode);
+
+  const syncCurrentStageScale = useCallback(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    setCurrentStageScale(stage.scaleX());
+  }, [stageRef, setCurrentStageScale]);
+
+  const handleWheel = useCallback(
+    (e: Parameters<typeof handleZoomWheel>[0]) => {
+      handleZoomWheel(e);
+      syncCurrentStageScale();
+    },
+    [handleZoomWheel, syncCurrentStageScale],
+  );
+
+  const handleTouchStart = useCallback(
+    (e: Parameters<typeof handleZoomTouchStart>[0]) => {
+      handleZoomTouchStart(e);
+      syncCurrentStageScale();
+    },
+    [handleZoomTouchStart, syncCurrentStageScale],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: Parameters<typeof handleZoomTouchMove>[0]) => {
+      handleZoomTouchMove(e);
+      syncCurrentStageScale();
+    },
+    [handleZoomTouchMove, syncCurrentStageScale],
+  );
+
+  const handleTouchEnd = useCallback(
+    (e: Parameters<typeof handleZoomTouchEnd>[0]) => {
+      handleZoomTouchEnd(e);
+      syncCurrentStageScale();
+    },
+    [handleZoomTouchEnd, syncCurrentStageScale],
+  );
 
   const { handleDrawing, handleMouseUp, currentLineRef } = useCanvasDrawing(
     getWorldPointerPosition,
@@ -298,6 +337,10 @@ export const useCanvasEvents = (
   useEffect(() => {
     setCursorForCurrentTool();
   }, [setCursorForCurrentTool]);
+
+  useEffect(() => {
+    syncCurrentStageScale();
+  }, [syncCurrentStageScale, baseScale]);
 
   useEffect(() => {
     if (!isSidebarDragActive) {

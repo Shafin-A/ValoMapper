@@ -2,6 +2,7 @@ import { CanvasIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import { TEMP_DRAG_ID } from "@/lib/consts";
 import { getAgentImgSrc, handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
 import { Group } from "react-konva";
@@ -22,52 +23,61 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
     unregisterNode,
     setHoveredElementId,
     selectedCanvasIcon,
+    isSidebarDragActive,
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
   const { notifyAgentMoved, notifyAgentRemoved } = useCollaborativeCanvas();
 
-  return agentsOnCanvas.map((agent) => (
-    <Group
-      key={agent.id}
-      onMouseEnter={() => !selectedCanvasIcon && setHoveredElementId(agent.id)}
-      onMouseLeave={() => !selectedCanvasIcon && setHoveredElementId(null)}
-    >
-      <CanvasIcon
-        id={agent.id}
-        isAlly={agent.isAlly}
-        x={agent.x}
-        y={agent.y}
-        src={getAgentImgSrc(agent.name)}
-        draggable={!isDrawMode}
-        isListening={!isDrawMode}
-        onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
-        onDragEnd={(e) => {
-          handleDragEnd(
-            e,
-            agent,
-            setAgentsOnCanvas,
-            deleteGroupRef,
-            connectingLines,
-            setConnectingLines,
-            (connectedId) =>
-              setAbilitiesOnCanvas((prev) =>
-                prev.filter((a) => a.id !== connectedId),
-              ),
-            notifyAgentRemoved,
-            notifyAgentMoved,
-          );
-        }}
-        width={agentsSettings.scale}
-        height={agentsSettings.scale}
-        borderOpacity={agentsSettings.borderOpacity}
-        strokeWidth={agentsSettings.borderWidth}
-        radius={agentsSettings.radius}
-        allyColor={agentsSettings.allyColor}
-        enemyColor={agentsSettings.enemyColor}
-        registerNode={registerNode}
-        unregisterNode={unregisterNode}
-      />
-    </Group>
-  ));
+  return agentsOnCanvas.map((agent) => {
+    if (isSidebarDragActive && agent.id === TEMP_DRAG_ID) {
+      return null;
+    }
+
+    return (
+      <Group
+        key={agent.id}
+        onMouseEnter={() =>
+          !selectedCanvasIcon && setHoveredElementId(agent.id)
+        }
+        onMouseLeave={() => !selectedCanvasIcon && setHoveredElementId(null)}
+      >
+        <CanvasIcon
+          id={agent.id}
+          isAlly={agent.isAlly}
+          x={agent.x}
+          y={agent.y}
+          src={getAgentImgSrc(agent.name)}
+          draggable={!isDrawMode}
+          isListening={!isDrawMode}
+          onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
+          onDragEnd={(e) => {
+            handleDragEnd(
+              e,
+              agent,
+              setAgentsOnCanvas,
+              deleteGroupRef,
+              connectingLines,
+              setConnectingLines,
+              (connectedId) =>
+                setAbilitiesOnCanvas((prev) =>
+                  prev.filter((a) => a.id !== connectedId),
+                ),
+              notifyAgentRemoved,
+              notifyAgentMoved,
+            );
+          }}
+          width={agentsSettings.scale}
+          height={agentsSettings.scale}
+          borderOpacity={agentsSettings.borderOpacity}
+          strokeWidth={agentsSettings.borderWidth}
+          radius={agentsSettings.radius}
+          allyColor={agentsSettings.allyColor}
+          enemyColor={agentsSettings.enemyColor}
+          registerNode={registerNode}
+          unregisterNode={unregisterNode}
+        />
+      </Group>
+    );
+  });
 };
