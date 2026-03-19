@@ -1,11 +1,12 @@
 import { withAuthRequired } from "@/lib/api-middleware";
 import { proxyToBackend } from "@/lib/api-proxy";
 
-export const GET = withAuthRequired(async (_request, authHeader) => {
+export const GET = withAuthRequired(async (request, authHeader) => {
   return proxyToBackend("/strategies", {
     method: "GET",
     token: authHeader,
     errorMessage: "Failed to fetch strategies",
+    request,
   });
 });
 
@@ -19,5 +20,6 @@ export const POST = withAuthRequired(async (request, authHeader) => {
     token: authHeader,
     body,
     errorMessage: "Failed to create strategy",
+    request,
   });
 });

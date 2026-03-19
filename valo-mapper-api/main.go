@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -40,6 +41,46 @@ import (
 // @in header
 // @name X-Internal-API-Key
 // @description Internal service API key.
+
+func getEnvInt(name string, defaultValue int) int {
+	rawValue := strings.TrimSpace(os.Getenv(name))
+	if rawValue == "" {
+		return defaultValue
+	}
+
+	parsedValue, err := strconv.Atoi(rawValue)
+	if err != nil {
+		log.Printf("Invalid %s value %q. Falling back to %d", name, rawValue, defaultValue)
+		return defaultValue
+	}
+
+	if parsedValue <= 0 {
+		log.Printf("Non-positive %s value %q. Falling back to %d", name, rawValue, defaultValue)
+		return defaultValue
+	}
+
+	return parsedValue
+}
+
+func getEnvFloat(name string, defaultValue float64) float64 {
+	rawValue := strings.TrimSpace(os.Getenv(name))
+	if rawValue == "" {
+		return defaultValue
+	}
+
+	parsedValue, err := strconv.ParseFloat(rawValue, 64)
+	if err != nil {
+		log.Printf("Invalid %s value %q. Falling back to %.2f", name, rawValue, defaultValue)
+		return defaultValue
+	}
+
+	if parsedValue <= 0 {
+		log.Printf("Non-positive %s value %q. Falling back to %.2f", name, rawValue, defaultValue)
+		return defaultValue
+	}
+
+	return parsedValue
+}
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -108,7 +149,10 @@ func main() {
 	routes.SetupRoutes(r, firebaseAuth, hub)
 	r.PathPrefix("/swagger/").HandlerFunc(httpSwagger.WrapHandler)
 
-	rateLimiter := middleware.NewIPRateLimiter(rate.Limit(10), 20)
+	rateLimitRPS := getEnvFloat("RATE_LIMIT_RPS", 20)
+	rateLimitBurst := getEnvInt("RATE_LIMIT_BURST", 60)
+	rateLimiter := middleware.NewIPRateLimiter(rate.Limit(rateLimitRPS), rateLimitBurst)
+	log.Printf("Rate limiter configured: %.2f req/s with burst %d", rateLimitRPS, rateLimitBurst)
 
 	var handler http.Handler = r
 	handler = middleware.DBHealthMiddleware(handler)

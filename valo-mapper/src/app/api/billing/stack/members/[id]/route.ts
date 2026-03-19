@@ -3,7 +3,7 @@ import { proxyToBackend } from "@/lib/api-proxy";
 
 export const DELETE = withAuthRequired(
   async (
-    _request: Request,
+    request: Request,
     { params }: { params: Promise<{ id: string }> },
     authHeader: string,
   ) => {
@@ -13,6 +13,7 @@ export const DELETE = withAuthRequired(
       method: "DELETE",
       token: authHeader,
       errorMessage: "Failed to remove stack member",
+      request,
     });
   },
 );

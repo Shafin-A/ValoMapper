@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"log"
+	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -69,20 +71,49 @@ func (i *IPRateLimiter) cleanupLoop() {
 }
 
 func getIP(r *http.Request) string {
+	parseCandidateIP := func(value string) string {
+		trimmed := strings.TrimSpace(value)
+		if trimmed == "" {
+			return ""
+		}
+
+		if host, _, err := net.SplitHostPort(trimmed); err == nil {
+			return strings.TrimSpace(host)
+		}
+
+		return trimmed
+	}
+
 	forwarded := r.Header.Get("X-Forwarded-For")
 
 	if forwarded != "" {
-		for i := 0; i < len(forwarded); i++ {
-			if forwarded[i] == ',' {
-				return forwarded[:i]
+		parts := strings.Split(forwarded, ",")
+		if len(parts) > 0 {
+			if parsed := parseCandidateIP(parts[0]); parsed != "" {
+				return parsed
 			}
 		}
-		return forwarded
+	}
+
+	cfConnectingIP := parseCandidateIP(r.Header.Get("CF-Connecting-IP"))
+	if cfConnectingIP != "" {
+		return cfConnectingIP
+	}
+
+	flyClientIP := parseCandidateIP(r.Header.Get("Fly-Client-IP"))
+	if flyClientIP != "" {
+		return flyClientIP
 	}
 
 	realIP := r.Header.Get("X-Real-IP")
 	if realIP != "" {
-		return realIP
+		if parsed := parseCandidateIP(realIP); parsed != "" {
+			return parsed
+		}
+	}
+
+	if parsed := parseCandidateIP(r.RemoteAddr); parsed != "" {
+		return parsed
 	}
 
 	return r.RemoteAddr

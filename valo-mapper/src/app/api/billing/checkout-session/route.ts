@@ -17,5 +17,6 @@ export const POST = withAuthRequired(async (request, authHeader) => {
     token: authHeader,
     body: requestBody,
     errorMessage: "Failed to create checkout session",
+    request,
   });
 });

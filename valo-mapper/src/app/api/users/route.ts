@@ -11,5 +11,6 @@ export const POST = withAuthRequired(async (request, authHeader) => {
     token: authHeader,
     body,
     errorMessage: "Failed to create user",
+    request,
   });
 });

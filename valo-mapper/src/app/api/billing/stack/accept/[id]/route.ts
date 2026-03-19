@@ -3,7 +3,7 @@ import { proxyToBackend } from "@/lib/api-proxy";
 
 export const POST = withAuthRequired(
   async (
-    _request: Request,
+    request: Request,
     { params }: { params: Promise<{ id: string }> },
     authHeader: string,
   ) => {
@@ -13,6 +13,7 @@ export const POST = withAuthRequired(
       method: "POST",
       token: authHeader,
       errorMessage: "Failed to accept stack invite",
+      request,
     });
   },
 );

@@ -3,7 +3,7 @@ import { proxyToBackend } from "@/lib/api-proxy";
 
 export const DELETE = withAuthRequired(
   async (
-    _request: Request,
+    request: Request,
     { params }: { params: Promise<{ strategyId: string }> },
     authHeader: string,
   ) => {
@@ -12,6 +12,7 @@ export const DELETE = withAuthRequired(
       method: "DELETE",
       token: authHeader,
       errorMessage: "Failed to delete strategy",
+      request,
     });
   },
 );
@@ -32,6 +33,7 @@ export const PATCH = withAuthRequired(
       token: authHeader,
       body,
       errorMessage: "Failed to update strategy",
+      request,
     });
   },
 );

@@ -32,9 +32,19 @@ func TestGetIP(t *testing.T) {
 			expectedIP: "10.0.0.5",
 		},
 		{
+			name:       "CF-Connecting-IP fallback",
+			xRealIP:    "",
+			expectedIP: "203.0.113.10",
+		},
+		{
+			name:       "Fly-Client-IP fallback",
+			xRealIP:    "",
+			expectedIP: "198.51.100.22",
+		},
+		{
 			name:       "RemoteAddr fallback",
 			remoteAddr: "127.0.0.1:8080",
-			expectedIP: "127.0.0.1:8080",
+			expectedIP: "127.0.0.1",
 		},
 		{
 			name:          "X-Forwarded-For takes precedence over X-Real-IP",
@@ -52,6 +62,12 @@ func TestGetIP(t *testing.T) {
 			}
 			if tt.xRealIP != "" {
 				req.Header.Set("X-Real-IP", tt.xRealIP)
+			}
+			if tt.name == "CF-Connecting-IP fallback" {
+				req.Header.Set("CF-Connecting-IP", "203.0.113.10")
+			}
+			if tt.name == "Fly-Client-IP fallback" {
+				req.Header.Set("Fly-Client-IP", "198.51.100.22")
 			}
 			if tt.remoteAddr != "" {
 				req.RemoteAddr = tt.remoteAddr

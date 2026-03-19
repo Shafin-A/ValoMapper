@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CanvasProvider } from "@/contexts/canvas-context";
 import { SettingsProvider } from "@/contexts/settings-context";
 import { WebSocketProvider } from "@/contexts/websocket-context";
+import { FirebaseAuthProvider } from "@/hooks/use-firebase-auth";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -43,14 +44,16 @@ export default function RootLayout({
         >
           <TooltipProvider>
             <QueryProvider>
-              <SettingsProvider>
-                <TourProviderWrapper>
-                  <CanvasProvider>
-                    <WebSocketProvider>{children}</WebSocketProvider>
-                  </CanvasProvider>
-                  <Toaster richColors closeButton />
-                </TourProviderWrapper>
-              </SettingsProvider>
+              <FirebaseAuthProvider>
+                <SettingsProvider>
+                  <TourProviderWrapper>
+                    <CanvasProvider>
+                      <WebSocketProvider>{children}</WebSocketProvider>
+                    </CanvasProvider>
+                    <Toaster richColors closeButton />
+                  </TourProviderWrapper>
+                </SettingsProvider>
+              </FirebaseAuthProvider>
             </QueryProvider>
           </TooltipProvider>
         </ThemeProvider>

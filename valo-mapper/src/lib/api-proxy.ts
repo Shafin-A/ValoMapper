@@ -5,7 +5,33 @@ interface ProxyOptions {
   token?: unknown;
   body?: unknown;
   errorMessage: string;
+  request?: Request;
 }
+
+const FORWARDED_HEADER_NAMES = [
+  "x-forwarded-for",
+  "x-real-ip",
+  "cf-connecting-ip",
+  "fly-client-ip",
+];
+
+const getForwardedHeaders = (request?: Request): Record<string, string> => {
+  if (!request) {
+    return {};
+  }
+
+  const forwardedHeaders: Record<string, string> = {};
+
+  for (const headerName of FORWARDED_HEADER_NAMES) {
+    const headerValue = request.headers.get(headerName);
+    if (headerValue && headerValue.trim() !== "") {
+      forwardedHeaders[headerName] = headerValue;
+    }
+  }
+
+  return forwardedHeaders;
+};
+
 const isInvalidTokenValue = (value: string): boolean => {
   const lowered = value.toLowerCase();
   return (
@@ -48,10 +74,11 @@ const normalizeAuthorizationHeader = (token: unknown): string | null => {
 
 export const proxyToBackend = async (
   path: string,
-  { method, token, body, errorMessage }: ProxyOptions,
+  { method, token, body, errorMessage, request }: ProxyOptions,
 ): Promise<Response> => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    ...getForwardedHeaders(request),
   };
 
   if (token !== undefined && token !== null) {
