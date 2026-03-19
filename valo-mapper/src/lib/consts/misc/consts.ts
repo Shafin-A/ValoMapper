@@ -1,5 +1,3 @@
-import { MapOption } from "@/lib/types";
-
 export const TEMP_DRAG_ID = "temp-drag-id";
 
 export const SIDEBAR_WIDTH = 320;
@@ -75,66 +73,3 @@ export const WEAPONS = {
     { name: "odin", width: 444 / 7, height: 124 / 7 },
   ],
 };
-
-export const MAP_OPTIONS: MapOption[] = [
-  {
-    id: "abyss",
-    text: "Abyss",
-    textColor: "text-white",
-  },
-  {
-    id: "ascent",
-    text: "Ascent",
-    textColor: "text-white",
-  },
-  {
-    id: "bind",
-    text: "Bind",
-    textColor: "text-white",
-  },
-  {
-    id: "breeze",
-    text: "Breeze",
-    textColor: "text-white",
-  },
-  {
-    id: "corrode",
-    text: "Corrode",
-    textColor: "text-white",
-  },
-  {
-    id: "fracture",
-    text: "Fracture",
-    textColor: "text-white",
-  },
-  {
-    id: "haven",
-    text: "Haven",
-    textColor: "text-white",
-  },
-  {
-    id: "icebox",
-    text: "Icebox",
-    textColor: "text-white",
-  },
-  {
-    id: "lotus",
-    text: "Lotus",
-    textColor: "text-white",
-  },
-  {
-    id: "pearl",
-    text: "Pearl",
-    textColor: "text-white",
-  },
-  {
-    id: "split",
-    text: "Split",
-    textColor: "text-white",
-  },
-  {
-    id: "sunset",
-    text: "Sunset",
-    textColor: "text-white",
-  },
-];

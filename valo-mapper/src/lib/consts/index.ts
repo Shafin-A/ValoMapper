@@ -2,7 +2,11 @@ export { PIXELS_PER_METER } from "./misc/consts";
 export { WEAPONS } from "./misc/consts";
 export { LANDING_MESSAGES } from "./misc/consts";
 export { TEMP_DRAG_ID } from "./misc/consts";
-export { MAP_OPTIONS } from "./misc/consts";
+export {
+  MAP_OPTIONS,
+  DEFAULT_MAP_IDS,
+  DEFAULT_MAP_OPTIONS,
+} from "./maps/consts";
 export { SIDEBAR_WIDTH } from "./misc/consts";
 export { SCALE_FACTOR } from "./misc/consts";
 export { MAP_SIZE } from "./misc/consts";

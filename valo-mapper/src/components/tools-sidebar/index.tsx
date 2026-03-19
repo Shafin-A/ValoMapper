@@ -8,7 +8,13 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useSettings } from "@/contexts/settings-context";
-import { MAP_OPTIONS, MAP_SIZE, SIDEBAR_WIDTH } from "@/lib/consts";
+import {
+  MAP_OPTIONS,
+  DEFAULT_MAP_OPTIONS,
+  MAP_SIZE,
+  SIDEBAR_WIDTH,
+} from "@/lib/consts";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MapOption } from "@/lib/types";
 import { Vector2d } from "konva/lib/types";
 import { AlertCircle, Loader2, Info } from "lucide-react";
@@ -72,6 +78,7 @@ export const ToolsSidebar = ({
   const { agentsSettings } = useSettings();
   const { notifyPhaseChanged } = useCollaborativeCanvas();
   const [mapSettingsOpen, setMapSettingsOpen] = useState(false);
+  const [showAllMaps, setShowAllMaps] = useState(false);
 
   useEffect(() => {
     notifyPhaseChangedCallback.current = notifyPhaseChanged;
@@ -255,7 +262,7 @@ export const ToolsSidebar = ({
               </Popover>
             </div>
             <MapSelect
-              mapOptions={MAP_OPTIONS}
+              mapOptions={showAllMaps ? MAP_OPTIONS : DEFAULT_MAP_OPTIONS}
               selectedMap={selectedMap}
               setSelectedMap={setSelectedMap}
               onMapSelect={handleMapSelect}
@@ -266,6 +273,20 @@ export const ToolsSidebar = ({
               onMapRotate={handleRotationToggle}
               disabled={isLoadingLobby || isErrorLobby}
             />
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="show-all-maps"
+                checked={showAllMaps}
+                onCheckedChange={(checked) => setShowAllMaps(checked === true)}
+                disabled={isLoadingLobby || isErrorLobby}
+              />
+              <Label
+                htmlFor="show-all-maps"
+                className="text-xs text-muted-foreground cursor-pointer"
+              >
+                All maps
+              </Label>
+            </div>
           </div>
         </SidebarHeader>
 

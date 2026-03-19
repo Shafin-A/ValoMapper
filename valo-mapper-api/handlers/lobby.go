@@ -22,7 +22,7 @@ import (
 func CreateLobby(w http.ResponseWriter, r *http.Request) {
 	var err error
 
-	defaultMap, err := models.GetMapById("ascent")
+	defaultMap, err := models.GetMapById(models.DefaultMapID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to initialize lobby with default map", err), middleware.GetRequestID(r))
 		return
