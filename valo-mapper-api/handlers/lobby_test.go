@@ -29,7 +29,7 @@ func TestCreateLobby(t *testing.T) {
 	_, err := pool.Exec(context.Background(),
 		`INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3)
 		ON CONFLICT (id) DO NOTHING`,
-		"ascent", "Ascent", "#FFFFFF",
+		models.DefaultMapID, "Default Map", "#FFFFFF",
 	)
 	require.NoError(t, err)
 
@@ -49,7 +49,7 @@ func TestCreateLobby(t *testing.T) {
 		assert.Len(t, lobby.Code, 7, "Lobby code should be 7 characters")
 		assert.NotZero(t, lobby.CreatedAt)
 		assert.NotNil(t, lobby.CanvasState)
-		assert.Equal(t, "ascent", lobby.CanvasState.SelectedMap.ID)
+		assert.Equal(t, models.DefaultMapID, lobby.CanvasState.SelectedMap.ID)
 		assert.Equal(t, "defense", lobby.CanvasState.MapSide)
 		assert.Equal(t, 0, lobby.CanvasState.CurrentPhaseIndex)
 	})
