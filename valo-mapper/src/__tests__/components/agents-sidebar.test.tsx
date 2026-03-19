@@ -87,6 +87,7 @@ describe("AgentsGrid", () => {
     selectedRole: "All" as const,
     onMap: false,
     onAgentClick: mockOnAgentClick,
+    onAgentPointerDown: jest.fn(),
     selectedAgentAbilities: null,
     setSelectedAgentAbilities: mockSetSelectedAgentAbilities,
   };
@@ -162,6 +163,7 @@ describe("AgentAbilities", () => {
     sidebarOpen: true,
     onClose: mockOnClose,
     onAbilityClick: mockOnAbilityClick,
+    onAbilityPointerDown: jest.fn(),
   };
 
   beforeEach(() => {

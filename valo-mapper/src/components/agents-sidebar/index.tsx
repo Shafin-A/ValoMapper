@@ -14,7 +14,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Dispatch, SetStateAction, useState } from "react";
+import {
+  Dispatch,
+  PointerEvent as ReactPointerEvent,
+  SetStateAction,
+  useState,
+} from "react";
 import {
   AbilityCanvas,
   AbilityIconItem,
@@ -53,6 +58,8 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     setAbilitiesOnCanvas,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
+    isSidebarDragActive,
+    setIsSidebarDragActive,
     isAlly,
     setIsAlly,
     setIsDrawMode,
@@ -66,6 +73,28 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
   const [selectedAgentAbilities, setSelectedAgentAbilities] =
     useState<Agent | null>(null);
 
+  const beginIconPlacement = <T extends AgentCanvas | AbilityCanvas>(
+    icon: Agent | AbilityIconItem,
+    setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
+  ) => {
+    setSelectedCanvasIcon(icon);
+
+    const newCanvasIcon = {
+      ...icon,
+      id: TEMP_DRAG_ID,
+      isAlly: isAlly,
+      x: -1000,
+      y: -1000,
+    } as T;
+
+    setIconsOnCanvas((prev) => {
+      const withoutDrag = prev.filter(
+        (canvasIcon) => canvasIcon.id !== TEMP_DRAG_ID,
+      );
+      return [...withoutDrag, newCanvasIcon];
+    });
+  };
+
   const handleIconClick = <T extends AgentCanvas | AbilityCanvas>(
     icon: Agent | AbilityIconItem,
     setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
@@ -73,26 +102,38 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     const isSameIcon = selectedCanvasIcon?.name === icon.name;
 
     if (isSameIcon) {
+      if (isSidebarDragActive) {
+        setIsSidebarDragActive(false);
+        return;
+      }
+
       setIconsOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
+        prev.filter((canvasIcon) => canvasIcon.id !== TEMP_DRAG_ID),
       );
       setSelectedCanvasIcon(null);
     } else {
-      setSelectedCanvasIcon(icon);
-
-      const newCanvasIcon = {
-        ...icon,
-        id: TEMP_DRAG_ID,
-        isAlly: isAlly,
-        x: -1000,
-        y: -1000,
-      } as T;
-
-      setIconsOnCanvas((prev) => {
-        const withoutDrag = prev.filter((icon) => icon.id !== TEMP_DRAG_ID);
-        return [...withoutDrag, newCanvasIcon];
-      });
+      beginIconPlacement(icon, setIconsOnCanvas);
+      setIsSidebarDragActive(false);
     }
+  };
+
+  const handleIconPointerDown = <T extends AgentCanvas | AbilityCanvas>(
+    event: ReactPointerEvent,
+    icon: Agent | AbilityIconItem,
+    setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
+  ) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.preventDefault();
+
+    const isSameIcon = selectedCanvasIcon?.name === icon.name;
+    if (isSameIcon) {
+      return;
+    }
+
+    setIsDrawMode(false);
+    setEditingTextId(null);
+    beginIconPlacement(icon, setIconsOnCanvas);
+    setIsSidebarDragActive(true);
   };
 
   const handleAgentClick = (agent: Agent | null) => {
@@ -103,11 +144,28 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     handleIconClick(agent, setAgentsOnCanvas);
   };
 
+  const handleAgentPointerDown = (
+    event: ReactPointerEvent,
+    agent: Agent | null,
+  ) => {
+    if (!agent) return;
+    setSelectedAgentAbilities(null);
+    handleIconPointerDown(event, agent, setAgentsOnCanvas);
+  };
+
   const handleAbilityClick = (ability: AbilityIconItem | null) => {
     if (!ability) return;
     setIsDrawMode(false);
     setEditingTextId(null);
     handleIconClick(ability, setAbilitiesOnCanvas);
+  };
+
+  const handleAbilityPointerDown = (
+    event: ReactPointerEvent,
+    ability: AbilityIconItem | null,
+  ) => {
+    if (!ability) return;
+    handleIconPointerDown(event, ability, setAbilitiesOnCanvas);
   };
 
   return (
@@ -144,8 +202,8 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
                       delete it
                     </p>
                     <p>
-                      Choose an agent/ability and then click on the map to
-                      position it
+                      Choose an agent/ability, then click the map to place it,
+                      or drag it directly onto the map
                     </p>
                   </div>
                 </TooltipContent>
@@ -197,6 +255,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
                   selectedRole={selectedRole}
                   onMap={onMap}
                   onAgentClick={handleAgentClick}
+                  onAgentPointerDown={handleAgentPointerDown}
                   selectedAgentAbilities={selectedAgentAbilities}
                   setSelectedAgentAbilities={setSelectedAgentAbilities}
                 />
@@ -259,6 +318,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
         sidebarOpen={sidebarOpen}
         onClose={() => setSelectedAgentAbilities(null)}
         onAbilityClick={handleAbilityClick}
+        onAbilityPointerDown={handleAbilityPointerDown}
       />
     </SidebarProvider>
   );

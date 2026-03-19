@@ -24,6 +24,7 @@ interface AgentsGridProps {
   selectedRole: AgentRole | "All";
   onMap: boolean;
   onAgentClick: (agent: Agent | null) => void;
+  onAgentPointerDown: (event: React.PointerEvent, agent: Agent | null) => void;
   selectedAgentAbilities: Agent | null;
   setSelectedAgentAbilities: React.Dispatch<React.SetStateAction<Agent | null>>;
 }
@@ -32,6 +33,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
   selectedRole,
   onMap,
   onAgentClick,
+  onAgentPointerDown,
   selectedAgentAbilities,
   setSelectedAgentAbilities,
 }) => {
@@ -98,12 +100,18 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                       style={{
                         borderColor: isSelected ? borderColor : "transparent",
                         cursor: "pointer",
+                        touchAction: "none",
+                        WebkitTouchCallout: "none",
                       }}
                       src={getAgentImgSrc(agent.name)}
                       alt={agent.name}
                       width={50}
                       height={50}
-                      draggable
+                      draggable={false}
+                      onDragStart={(event) => event.preventDefault()}
+                      onPointerDown={(event) =>
+                        onAgentPointerDown(event, agent)
+                      }
                       onClick={() => onAgentClick(agent)}
                     />
                   </TooltipTrigger>

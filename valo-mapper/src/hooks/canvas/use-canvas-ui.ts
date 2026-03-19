@@ -24,10 +24,12 @@ export const useCanvasUI = () => {
   const [selectedCanvasIcon, setSelectedCanvasIcon] = useState<
     Agent | AbilityIconItem | null
   >(null);
+  const [isSidebarDragActive, setIsSidebarDragActive] = useState(false);
 
   const resetEdits = () => {
     setEditingTextId(null);
     setSelectedCanvasIcon(null);
+    setIsSidebarDragActive(false);
   };
 
   return {
@@ -56,6 +58,8 @@ export const useCanvasUI = () => {
     setShowSpawnBarriers,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
+    isSidebarDragActive,
+    setIsSidebarDragActive,
     resetEdits,
   };
 };

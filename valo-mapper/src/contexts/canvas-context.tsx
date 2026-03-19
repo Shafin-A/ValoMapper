@@ -40,6 +40,8 @@ interface CanvasContextType {
   setSelectedCanvasIcon: Dispatch<
     SetStateAction<Agent | AbilityIconItem | null>
   >;
+  isSidebarDragActive: boolean;
+  setIsSidebarDragActive: Dispatch<SetStateAction<boolean>>;
   isAlly: boolean;
   setIsAlly: Dispatch<SetStateAction<boolean>>;
   selectedMap: MapOption;

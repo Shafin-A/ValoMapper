@@ -16,7 +16,7 @@ export const tourSteps: StepType[] = [
     content: (
       <TourStepContent
         title="Select an Agent"
-        description="Click on Brimstone to select the agent. You can then click anywhere on the canvas to place him in the next step."
+        description="Click on Brimstone to select the agent. You can then click on the canvas to place him or drag him directly onto the canvas in the next step."
         isAutoAdvanceStep
       />
     ),
@@ -31,7 +31,7 @@ export const tourSteps: StepType[] = [
     content: (
       <TourStepContent
         title="Place Agent on Canvas"
-        description={`Now click anywhere on the canvas to place Brimstone. You can drag agents to reposition them after placing. 
+        description={`Now place Brimstone by clicking on the canvas or by dragging him from the sidebar and releasing over the map. You can drag agents to reposition them after placing. 
           
 Delete an agent by dragging them to the trash can or press E while hovering over them.
 
@@ -56,7 +56,7 @@ When you're ready, click Next to continue.`}
     content: (
       <TourStepContent
         title="Select an Ability"
-        description="Click on this ability to select it. You can then click anywhere on the canvas to place it in the next step."
+        description="Click on this ability to select it. You can then click on the canvas to place it or drag it directly onto the map in the next step."
         isAutoAdvanceStep
       />
     ),
@@ -66,7 +66,7 @@ When you're ready, click Next to continue.`}
     content: (
       <TourStepContent
         title="Place Ability on Canvas"
-        description={`Now click anywhere on the canvas to place the ability. Just like agents, you can drag abilities to reposition them after placing.
+        description={`Now place the ability by clicking on the canvas or by dragging it from the sidebar and releasing over the map. Just like agents, you can drag abilities to reposition them after placing.
 
 Delete an ability by dragging them to the trash can or press E while hovering over them.
 

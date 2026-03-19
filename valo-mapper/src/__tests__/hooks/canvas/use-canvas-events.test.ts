@@ -68,6 +68,8 @@ const createCanvasContext = (
   ({
     selectedCanvasIcon: null,
     setSelectedCanvasIcon: jest.fn(),
+    isSidebarDragActive: false,
+    setIsSidebarDragActive: jest.fn(),
     agentsOnCanvas: [],
     setAgentsOnCanvas: jest.fn(),
     abilitiesOnCanvas: [],
@@ -259,6 +261,22 @@ describe("useCanvasEvents", () => {
       y: 8,
     });
     expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
+  });
+
+  it("handles stage pointer up by ending drawing state", () => {
+    mockUseCanvas.mockReturnValue(createCanvasContext());
+
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleStagePointerUp();
+    });
+
+    expect(handleMouseUpMock).toHaveBeenCalledTimes(1);
   });
 
   it("removes the temp drag icon when leaving the stage", () => {

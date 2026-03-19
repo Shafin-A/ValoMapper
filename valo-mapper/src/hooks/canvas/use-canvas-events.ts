@@ -19,6 +19,8 @@ export const useCanvasEvents = (
   const {
     selectedCanvasIcon,
     setSelectedCanvasIcon,
+    isSidebarDragActive,
+    setIsSidebarDragActive,
     agentsOnCanvas,
     setAgentsOnCanvas,
     abilitiesOnCanvas,
@@ -91,11 +93,13 @@ export const useCanvasEvents = (
     }
 
     setSelectedCanvasIcon(null);
+    setIsSidebarDragActive(false);
   }, [
     selectedCanvasIcon,
     setAbilitiesOnCanvas,
     setAgentsOnCanvas,
     setSelectedCanvasIcon,
+    setIsSidebarDragActive,
   ]);
 
   const {
@@ -213,6 +217,10 @@ export const useCanvasEvents = (
       return;
     }
 
+    if (isSidebarDragActive) {
+      return;
+    }
+
     if (selectedCanvasIcon) {
       const worldPos = getWorldPointerPosition();
       if (worldPos) {
@@ -221,11 +229,34 @@ export const useCanvasEvents = (
     }
   }, [
     isDrawMode,
+    isSidebarDragActive,
     selectedCanvasIcon,
     handleDrawing,
     handleIconPlacement,
     getWorldPointerPosition,
   ]);
+
+  const handleStagePointerUp = useCallback(() => {
+    handleMouseUp();
+  }, [handleMouseUp]);
+
+  const updateTempDragPreview = useCallback(
+    (worldPos: Vector2d) => {
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+      }
+
+      frameRef.current = requestAnimationFrame(() => {
+        const stage = stageRef.current;
+        const tempDragIcon = stage?.findOne(`#${TEMP_DRAG_ID}`);
+        if (tempDragIcon) {
+          tempDragIcon.position(worldPos);
+          tempDragIcon.getLayer()?.batchDraw();
+        }
+      });
+    },
+    [stageRef],
+  );
 
   const handleStageMouseMove = useCallback(() => {
     const worldPos = getWorldPointerPosition();
@@ -236,16 +267,7 @@ export const useCanvasEvents = (
     if (isDrawMode && isDrawing.current) {
       handleDrawing();
     } else if (selectedCanvasIcon) {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
-      frameRef.current = requestAnimationFrame(() => {
-        const stage = stageRef.current;
-        const tempDragIcon = stage?.findOne(`#${TEMP_DRAG_ID}`);
-        if (tempDragIcon) {
-          tempDragIcon.position(worldPos);
-        }
-      });
+      updateTempDragPreview(worldPos);
     }
   }, [
     getWorldPointerPosition,
@@ -254,18 +276,20 @@ export const useCanvasEvents = (
     isDrawing,
     selectedCanvasIcon,
     handleDrawing,
-    stageRef,
+    updateTempDragPreview,
   ]);
 
   const handleStageMouseLeave = useCallback(() => {
     handleMouseUp();
-    removeTempDragIcon();
+    if (!isSidebarDragActive) {
+      removeTempDragIcon();
+    }
 
     const stage = stageRef.current;
     if (stage && stage.container) {
       stage.container().style.cursor = "default";
     }
-  }, [handleMouseUp, removeTempDragIcon, stageRef]);
+  }, [handleMouseUp, isSidebarDragActive, removeTempDragIcon, stageRef]);
 
   const handleStageMouseEnter = useCallback(() => {
     setCursorForCurrentTool();
@@ -275,9 +299,77 @@ export const useCanvasEvents = (
     setCursorForCurrentTool();
   }, [setCursorForCurrentTool]);
 
+  useEffect(() => {
+    if (!isSidebarDragActive) {
+      return;
+    }
+
+    const handleWindowPointerMove = (event: PointerEvent) => {
+      const stage = stageRef.current;
+      if (!stage || !selectedCanvasIcon) {
+        return;
+      }
+
+      stage.setPointersPositions(event as unknown as MouseEvent);
+      const worldPos = getWorldPointerPosition();
+      if (!worldPos) {
+        return;
+      }
+
+      updateTempDragPreview(worldPos);
+    };
+
+    const handleWindowPointerUp = (event: PointerEvent) => {
+      const stage = stageRef.current;
+      if (!stage) {
+        setIsSidebarDragActive(false);
+        return;
+      }
+
+      const stageContainer = stage.container();
+      const target = event.target;
+      const isReleasedOverStage =
+        target instanceof Node && stageContainer.contains(target);
+
+      if (isReleasedOverStage && selectedCanvasIcon) {
+        stage.setPointersPositions(event as unknown as MouseEvent);
+        const worldPos = getWorldPointerPosition();
+        if (worldPos) {
+          handleIconPlacement(worldPos);
+        } else {
+          handleIconPlacement();
+        }
+      } else {
+        removeTempDragIcon();
+      }
+
+      setIsSidebarDragActive(false);
+    };
+
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", handleWindowPointerUp);
+    window.addEventListener("pointercancel", handleWindowPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", handleWindowPointerUp);
+      window.removeEventListener("pointercancel", handleWindowPointerUp);
+    };
+  }, [
+    isSidebarDragActive,
+    stageRef,
+    selectedCanvasIcon,
+    getWorldPointerPosition,
+    updateTempDragPreview,
+    handleIconPlacement,
+    removeTempDragIcon,
+    setIsSidebarDragActive,
+  ]);
+
   return {
     handleWheel,
     handleStageClick,
+    handleStagePointerUp,
     handleStageMouseMove,
     handleStageMouseLeave,
     handleStageMouseEnter,

@@ -16,6 +16,10 @@ interface AgentAbilitiesProps {
   sidebarOpen: boolean;
   onClose: () => void;
   onAbilityClick: (ability: AbilityIconItem | null) => void;
+  onAbilityPointerDown: (
+    event: React.PointerEvent,
+    ability: AbilityIconItem | null,
+  ) => void;
 }
 
 const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
@@ -23,6 +27,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   sidebarOpen,
   onClose,
   onAbilityClick,
+  onAbilityPointerDown,
 }) => {
   const { agentsSettings } = useSettings();
 
@@ -67,12 +72,18 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
                   style={{
                     borderColor: isSelected ? borderColor : "transparent",
                     cursor: "pointer",
+                    touchAction: "none",
+                    WebkitTouchCallout: "none",
                   }}
                   src={iconConfig.src}
                   alt={iconConfig.name}
                   width={50}
                   height={50}
-                  draggable
+                  draggable={false}
+                  onDragStart={(event) => event.preventDefault()}
+                  onPointerDown={(event) =>
+                    onAbilityPointerDown(event, iconConfig)
+                  }
                   onClick={() => onAbilityClick(iconConfig)}
                 />
               </TooltipTrigger>
