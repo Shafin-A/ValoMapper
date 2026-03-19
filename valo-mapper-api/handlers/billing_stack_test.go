@@ -455,6 +455,122 @@ func TestStackMembershipAccessDependsOnOwnerStackSubscription(t *testing.T) {
 	require.NotNil(t, updatedMember)
 	assert.False(t, updatedMember.IsSubscribed)
 	assert.Nil(t, updatedMember.SubscriptionPlan)
+	require.NotNil(t, updatedMember.SubscriptionEndedAt)
+}
+
+func TestLeaveStack_StartsAndResetsGraceWindowForStackOnlyMember(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "stack_members", "users")
+
+	owner := createStackTestUser(t, pool, "owner-leave-grace-uid", "owner-leave-grace@example.com")
+	member := createStackTestUser(t, pool, "member-leave-grace-uid", "member-leave-grace@example.com")
+
+	_, err := pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = TRUE, subscription_plan = $1
+		WHERE id = $2
+	`, string(checkoutPlanStack), owner.ID)
+	require.NoError(t, err)
+
+	invite, err := models.CreateStackInvite(owner.ID, member.ID)
+	require.NoError(t, err)
+	require.NoError(t, models.AcceptStackInvite(invite.ID, member.ID))
+
+	oldEndedAt := time.Now().UTC().Add(-10 * 24 * time.Hour)
+	_, err = pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = FALSE,
+		    subscription_plan = NULL,
+		    subscription_ended_at = $2
+		WHERE id = $1
+	`, member.ID, oldEndedAt)
+	require.NoError(t, err)
+
+	beforeLeave := time.Now().UTC()
+	req := testutils.MakeRequest(t, http.MethodDelete, "/api/billing/stack/leave", nil, "valid-token")
+	w := httptest.NewRecorder()
+
+	LeaveStack(w, req, newMockAuthForUser(member))
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
+
+	membership, err := models.GetActiveStackMemberByMemberUserID(member.ID)
+	require.NoError(t, err)
+	assert.Nil(t, membership)
+
+	updatedMember, err := models.GetUserByID(member.ID)
+	require.NoError(t, err)
+	require.NotNil(t, updatedMember)
+	assert.False(t, updatedMember.IsSubscribed)
+	assert.Nil(t, updatedMember.SubscriptionPlan)
+	require.NotNil(t, updatedMember.SubscriptionEndedAt)
+	assert.True(t, updatedMember.SubscriptionEndedAt.After(oldEndedAt))
+	assert.WithinDuration(t, beforeLeave, *updatedMember.SubscriptionEndedAt, 5*time.Second)
+}
+
+func TestRemoveStackMember_StartsAndResetsGraceWindowForStackOnlyMember(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "stack_members", "users")
+
+	owner := createStackTestUser(t, pool, "owner-remove-grace-uid", "owner-remove-grace@example.com")
+	member := createStackTestUser(t, pool, "member-remove-grace-uid", "member-remove-grace@example.com")
+
+	_, err := pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = TRUE, subscription_plan = $1
+		WHERE id = $2
+	`, string(checkoutPlanStack), owner.ID)
+	require.NoError(t, err)
+
+	invite, err := models.CreateStackInvite(owner.ID, member.ID)
+	require.NoError(t, err)
+	require.NoError(t, models.AcceptStackInvite(invite.ID, member.ID))
+
+	oldEndedAt := time.Now().UTC().Add(-6 * 24 * time.Hour)
+	_, err = pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = FALSE,
+		    subscription_plan = NULL,
+		    subscription_ended_at = $2
+		WHERE id = $1
+	`, member.ID, oldEndedAt)
+	require.NoError(t, err)
+
+	membership, err := models.GetActiveStackMemberByMemberUserID(member.ID)
+	require.NoError(t, err)
+	require.NotNil(t, membership)
+
+	beforeRemoval := time.Now().UTC()
+	req := testutils.MakeRequest(t, http.MethodDelete, "/api/billing/stack/members/"+strconv.Itoa(membership.ID), nil, "valid-token")
+	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(membership.ID)})
+	w := httptest.NewRecorder()
+
+	RemoveStackMember(w, req, newMockAuthForUser(owner))
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
+
+	updatedMembership, err := models.GetStackMemberByID(membership.ID)
+	require.NoError(t, err)
+	assert.Nil(t, updatedMembership)
+
+	updatedMember, err := models.GetUserByID(member.ID)
+	require.NoError(t, err)
+	require.NotNil(t, updatedMember)
+	assert.False(t, updatedMember.IsSubscribed)
+	assert.Nil(t, updatedMember.SubscriptionPlan)
+	require.NotNil(t, updatedMember.SubscriptionEndedAt)
+	assert.True(t, updatedMember.SubscriptionEndedAt.After(oldEndedAt))
+	assert.WithinDuration(t, beforeRemoval, *updatedMember.SubscriptionEndedAt, 5*time.Second)
 }
 
 func createStackTestUser(t *testing.T, pool *pgxpool.Pool, firebaseUID, email string) *models.User {

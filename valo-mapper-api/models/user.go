@@ -102,7 +102,11 @@ func (u *User) refreshEffectiveSubscriptionState() error {
 		u.SubscriptionPlan = &stackPlan
 	default:
 		u.IsSubscribed = false
-		u.SubscriptionEndedAt = u.PersonalSubscriptionEndedAt
+		if u.PersonalSubscriptionEndedAt != nil {
+			u.SubscriptionEndedAt = u.PersonalSubscriptionEndedAt
+		} else {
+			u.SubscriptionEndedAt = stackSubscriptionEndedAt
+		}
 		u.SubscriptionPlan = u.PersonalSubscriptionPlan
 	}
 

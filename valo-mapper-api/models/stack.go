@@ -178,17 +178,17 @@ func GetActiveStackAccessState(memberUserID int) (bool, *time.Time, error) {
 		return false, nil, err
 	}
 
+	var ownerIsSubscribed bool
+	var ownerSubscriptionPlan *string
 	var subscriptionEndedAt *time.Time
 	err = conn.QueryRow(context.Background(), `
-		SELECT owner.subscription_ended_at
+		SELECT owner.is_subscribed, owner.subscription_plan, owner.subscription_ended_at
 		FROM stack_members sm
 		JOIN users owner ON owner.id = sm.owner_user_id
 		WHERE sm.member_user_id = $1
 		  AND sm.status = $2
-		  AND owner.is_subscribed = TRUE
-		  AND owner.subscription_plan = $3
 		LIMIT 1
-	`, memberUserID, StackMemberStatusActive, "stack").Scan(&subscriptionEndedAt)
+	`, memberUserID, StackMemberStatusActive).Scan(&ownerIsSubscribed, &ownerSubscriptionPlan, &subscriptionEndedAt)
 	if err == pgx.ErrNoRows {
 		return false, nil, nil
 	}
@@ -196,7 +196,11 @@ func GetActiveStackAccessState(memberUserID int) (bool, *time.Time, error) {
 		return false, nil, err
 	}
 
-	return true, subscriptionEndedAt, nil
+	if ownerIsSubscribed && ownerSubscriptionPlan != nil && *ownerSubscriptionPlan == "stack" {
+		return true, subscriptionEndedAt, nil
+	}
+
+	return false, subscriptionEndedAt, nil
 }
 
 // GetActiveStackMemberCount returns the number of active (accepted) stack members for an owner.
@@ -327,16 +331,31 @@ func RemoveStackMember(ownerUserID, stackMemberID int) error {
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	var deletedID int
+	var deletedMemberUserID int
+	var deletedStatus string
 	err = tx.QueryRow(ctx, `
 		DELETE FROM stack_members
 		WHERE id = $1 AND owner_user_id = $2
-		RETURNING id
-	`, stackMemberID, ownerUserID).Scan(&deletedID)
+		RETURNING id, member_user_id, status
+	`, stackMemberID, ownerUserID).Scan(&deletedID, &deletedMemberUserID, &deletedStatus)
 	if err == pgx.ErrNoRows {
 		return ErrStackMemberNotFound
 	}
 	if err != nil {
 		return err
+	}
+
+	if deletedStatus == StackMemberStatusActive {
+		_, err = tx.Exec(ctx, `
+			UPDATE users
+			SET subscription_ended_at = NOW(),
+			    updated_at = NOW()
+			WHERE id = $1
+			  AND is_subscribed = FALSE
+		`, deletedMemberUserID)
+		if err != nil {
+			return err
+		}
 	}
 
 	return tx.Commit(ctx)
@@ -395,6 +414,17 @@ func LeaveStack(memberUserID int) error {
 	if err == pgx.ErrNoRows {
 		return ErrStackMemberNotFound
 	}
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, `
+		UPDATE users
+		SET subscription_ended_at = NOW(),
+		    updated_at = NOW()
+		WHERE id = $1
+		  AND is_subscribed = FALSE
+	`, memberUserID)
 	if err != nil {
 		return err
 	}
