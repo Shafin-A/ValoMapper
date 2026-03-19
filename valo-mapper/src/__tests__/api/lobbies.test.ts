@@ -2,6 +2,7 @@ import { POST } from "@/app/api/lobbies/route";
 
 describe("POST /api/lobbies", () => {
   const originalFetch = global.fetch;
+  const createRequest = () => new Request("http://localhost/api/lobbies");
   let mockFetch: jest.Mock;
 
   beforeEach(() => {
@@ -26,7 +27,7 @@ describe("POST /api/lobbies", () => {
       json: async () => mockResponse,
     });
 
-    const responsePromise = POST();
+    const responsePromise = POST(createRequest());
 
     jest.runAllTimers();
 
@@ -50,7 +51,7 @@ describe("POST /api/lobbies", () => {
       status: 500,
     });
 
-    const responsePromise = POST();
+    const responsePromise = POST(createRequest());
     jest.runAllTimers();
 
     const response = await responsePromise;
@@ -66,7 +67,7 @@ describe("POST /api/lobbies", () => {
 
     mockFetch.mockRejectedValueOnce(abortError);
 
-    const responsePromise = POST();
+    const responsePromise = POST(createRequest());
 
     jest.advanceTimersByTime(30000);
 
@@ -83,7 +84,7 @@ describe("POST /api/lobbies", () => {
 
     mockFetch.mockRejectedValueOnce(abortError);
 
-    const responsePromise = POST();
+    const responsePromise = POST(createRequest());
     jest.runAllTimers();
 
     const response = await responsePromise;
@@ -102,7 +103,7 @@ describe("POST /api/lobbies", () => {
       json: async () => mockResponse,
     });
 
-    const responsePromise = POST();
+    const responsePromise = POST(createRequest());
     jest.runAllTimers();
 
     await responsePromise;
@@ -118,7 +119,7 @@ describe("POST /api/lobbies", () => {
       status: 500,
     });
 
-    const responsePromise = POST();
+    const responsePromise = POST(createRequest());
     jest.runAllTimers();
 
     await responsePromise;
@@ -137,7 +138,7 @@ describe("POST /api/lobbies", () => {
       });
     });
 
-    const responsePromise = POST();
+    const responsePromise = POST(createRequest());
     jest.runAllTimers();
 
     await responsePromise;
