@@ -15,10 +15,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
+  useCallback,
   Dispatch,
   PointerEvent as ReactPointerEvent,
   SetStateAction,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -49,6 +51,14 @@ import {
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
 }
+
+type PendingSidebarDrag = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  icon: Agent | AbilityIconItem;
+  kind: "agent" | "ability";
+};
 
 export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
   const {
@@ -85,6 +95,9 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     y: number;
   } | null>(null);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+  const pendingSidebarDragRef = useRef<PendingSidebarDrag | null>(null);
+  const didStartSidebarDragRef = useRef(false);
+  const suppressClickUntilRef = useRef(0);
 
   const tempDragAgent = agentsOnCanvas.find(
     (agent) => agent.id === TEMP_DRAG_ID,
@@ -140,32 +153,39 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     };
   }, []);
 
-  const beginIconPlacement = <T extends AgentCanvas | AbilityCanvas>(
-    icon: Agent | AbilityIconItem,
-    setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
-  ) => {
-    setSelectedCanvasIcon(icon);
+  const beginIconPlacement = useCallback(
+    <T extends AgentCanvas | AbilityCanvas>(
+      icon: Agent | AbilityIconItem,
+      setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
+    ) => {
+      setSelectedCanvasIcon(icon);
 
-    const newCanvasIcon = {
-      ...icon,
-      id: TEMP_DRAG_ID,
-      isAlly: isAlly,
-      x: -1000,
-      y: -1000,
-    } as T;
+      const newCanvasIcon = {
+        ...icon,
+        id: TEMP_DRAG_ID,
+        isAlly: isAlly,
+        x: -1000,
+        y: -1000,
+      } as T;
 
-    setIconsOnCanvas((prev) => {
-      const withoutDrag = prev.filter(
-        (canvasIcon) => canvasIcon.id !== TEMP_DRAG_ID,
-      );
-      return [...withoutDrag, newCanvasIcon];
-    });
-  };
+      setIconsOnCanvas((prev) => {
+        const withoutDrag = prev.filter(
+          (canvasIcon) => canvasIcon.id !== TEMP_DRAG_ID,
+        );
+        return [...withoutDrag, newCanvasIcon];
+      });
+    },
+    [isAlly, setSelectedCanvasIcon],
+  );
 
   const handleIconClick = <T extends AgentCanvas | AbilityCanvas>(
     icon: Agent | AbilityIconItem,
     setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
   ) => {
+    if (performance.now() < suppressClickUntilRef.current) {
+      return;
+    }
+
     const isSameIcon = selectedCanvasIcon?.name === icon.name;
 
     if (isSameIcon) {
@@ -184,10 +204,10 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     }
   };
 
-  const handleIconPointerDown = <T extends AgentCanvas | AbilityCanvas>(
+  const handleIconPointerDown = (
     event: ReactPointerEvent,
     icon: Agent | AbilityIconItem,
-    setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
+    kind: "agent" | "ability",
   ) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     event.preventDefault();
@@ -197,11 +217,14 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
       return;
     }
 
-    setDragPreviewPosition({ x: event.clientX, y: event.clientY });
-    setIsDrawMode(false);
-    setEditingTextId(null);
-    beginIconPlacement(icon, setIconsOnCanvas);
-    setIsSidebarDragActive(true);
+    pendingSidebarDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      icon,
+      kind,
+    };
+    didStartSidebarDragRef.current = false;
   };
 
   const handleAgentClick = (agent: Agent | null) => {
@@ -218,7 +241,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
   ) => {
     if (!agent) return;
     setSelectedAgentAbilities(null);
-    handleIconPointerDown(event, agent, setAgentsOnCanvas);
+    handleIconPointerDown(event, agent, "agent");
   };
 
   const handleAbilityClick = (ability: AbilityIconItem | null) => {
@@ -233,8 +256,73 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     ability: AbilityIconItem | null,
   ) => {
     if (!ability) return;
-    handleIconPointerDown(event, ability, setAbilitiesOnCanvas);
+    handleIconPointerDown(event, ability, "ability");
   };
+
+  useEffect(() => {
+    const DRAG_START_DISTANCE_PX = 4;
+
+    const handleWindowPointerMove = (event: PointerEvent) => {
+      const pendingDrag = pendingSidebarDragRef.current;
+      if (!pendingDrag || pendingDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const dx = event.clientX - pendingDrag.startX;
+      const dy = event.clientY - pendingDrag.startY;
+      const dragDistance = Math.hypot(dx, dy);
+
+      if (dragDistance < DRAG_START_DISTANCE_PX) {
+        return;
+      }
+
+      setIsDrawMode(false);
+      setEditingTextId(null);
+      setDragPreviewPosition({ x: event.clientX, y: event.clientY });
+
+      if (pendingDrag.kind === "agent") {
+        beginIconPlacement(pendingDrag.icon as Agent, setAgentsOnCanvas);
+      } else {
+        beginIconPlacement(
+          pendingDrag.icon as AbilityIconItem,
+          setAbilitiesOnCanvas,
+        );
+      }
+
+      setIsSidebarDragActive(true);
+      didStartSidebarDragRef.current = true;
+      pendingSidebarDragRef.current = null;
+    };
+
+    const clearPendingDrag = (event: PointerEvent) => {
+      const pendingDrag = pendingSidebarDragRef.current;
+      if (pendingDrag && pendingDrag.pointerId === event.pointerId) {
+        pendingSidebarDragRef.current = null;
+      }
+
+      if (didStartSidebarDragRef.current) {
+        suppressClickUntilRef.current = performance.now() + 250;
+        didStartSidebarDragRef.current = false;
+      }
+    };
+
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", clearPendingDrag);
+    window.addEventListener("pointercancel", clearPendingDrag);
+
+    return () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", clearPendingDrag);
+      window.removeEventListener("pointercancel", clearPendingDrag);
+    };
+  }, [
+    beginIconPlacement,
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    setEditingTextId,
+    setIsDrawMode,
+    setIsSidebarDragActive,
+  ]);
 
   return (
     <SidebarProvider
