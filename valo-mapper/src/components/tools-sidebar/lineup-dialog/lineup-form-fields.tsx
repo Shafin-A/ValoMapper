@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AGENTS, AGENT_ICON_CONFIGS } from "@/lib/consts";
+import { getAbilityVariants } from "@/lib/consts/configs/agent-icon/consts";
 import { getAgentImgSrc } from "@/lib/utils";
 import Image from "next/image";
 import { LineupImageUpload } from "./lineup-image-upload";
@@ -47,7 +48,7 @@ export const LineupFormFields = ({
   onImageExpand,
 }: LineupFormFieldsProps) => {
   const availableAbilities = selectedAgent
-    ? AGENT_ICON_CONFIGS[selectedAgent] || []
+    ? (AGENT_ICON_CONFIGS[selectedAgent] || []).flatMap(getAbilityVariants)
     : [];
 
   return (
