@@ -3,9 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { RoleTabs } from "@/components/agents-sidebar/role-tabs";
 import { AgentsGrid } from "@/components/agents-sidebar/agents-grid";
 import AgentAbilities from "@/components/agents-sidebar/agent-abilities";
-import { Agent } from "@/lib/types";
+import { Agent, AbilityIconDefinition } from "@/lib/types";
 import { Tabs } from "@/components/ui/tabs";
 import { useCanvas } from "@/contexts/canvas-context";
+import {
+  getAbilityVariants,
+  resolveAbilityVariant,
+} from "@/lib/consts/configs/agent-icon/consts";
 
 jest.mock("@/contexts/settings-context", () => ({
   useSettings: () => ({
@@ -163,6 +167,9 @@ describe("AgentAbilities", () => {
     sidebarOpen: true,
     onClose: mockOnClose,
     onAbilityClick: mockOnAbilityClick,
+    onAbilitySwap: jest.fn(),
+    resolveAbility: (ability: AbilityIconDefinition) =>
+      resolveAbilityVariant(ability, 0),
     onAbilityPointerDown: jest.fn(),
   };
 
@@ -208,5 +215,80 @@ describe("AgentAbilities", () => {
     await user.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it("shows a swap button for abilities with alternate variants", () => {
+    render(
+      <AgentAbilities
+        {...defaultProps}
+        agent={{ name: "Miks", role: "Initiator" }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /swap to m-pulse concuss/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("swap button cycles ability variant and click uses the new variant", async () => {
+    const user = userEvent.setup();
+    const onAbilitySwap = jest.fn();
+    const variantIndices: Record<string, number> = {};
+
+    const resolveAbility = (ability: AbilityIconDefinition) => {
+      const idx = variantIndices[ability.id] ?? 0;
+      return resolveAbilityVariant(ability, idx);
+    };
+
+    const handleAbilitySwap = (ability: AbilityIconDefinition) => {
+      const variants = getAbilityVariants(ability);
+      const current = variantIndices[ability.id] ?? 0;
+      variantIndices[ability.id] = (current + 1) % variants.length;
+      onAbilitySwap(ability);
+    };
+
+    const { rerender } = render(
+      <AgentAbilities
+        {...defaultProps}
+        agent={{ name: "Miks", role: "Initiator" }}
+        onAbilitySwap={handleAbilitySwap}
+        resolveAbility={resolveAbility}
+      />,
+    );
+
+    // default shows M-Pulse Heal
+    expect(
+      screen.getByRole("img", { name: "M-Pulse Heal" }),
+    ).toBeInTheDocument();
+
+    // press swap
+    await user.click(
+      screen.getByRole("button", { name: /swap to m-pulse concuss/i }),
+    );
+
+    // re-render with updated resolve
+    rerender(
+      <AgentAbilities
+        {...defaultProps}
+        agent={{ name: "Miks", role: "Initiator" }}
+        onAbilitySwap={handleAbilitySwap}
+        resolveAbility={resolveAbility}
+      />,
+    );
+
+    // now shows M-Pulse Concuss
+    expect(
+      screen.getByRole("img", { name: "M-Pulse Concuss" }),
+    ).toBeInTheDocument();
+
+    // clicking places M-Pulse Concuss
+    await user.click(screen.getByRole("img", { name: "M-Pulse Concuss" }));
+
+    expect(onAbilitySwap).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "mpulse" }),
+    );
+    expect(mockOnAbilityClick).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "M-Pulse Concuss", action: "miks_stun" }),
+    );
   });
 });

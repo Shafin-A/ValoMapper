@@ -25,6 +25,7 @@ import {
 } from "react";
 import {
   AbilityCanvas,
+  AbilityIconDefinition,
   AbilityIconItem,
   Agent,
   AgentCanvas,
@@ -41,7 +42,11 @@ import { getAgentImgSrc, isAgent } from "@/lib/utils";
 import { Loader2, AlertCircle, Info } from "lucide-react";
 import { Layer, Stage } from "react-konva";
 import { AbilityIcon, CanvasIcon } from "@/components/canvas-icons";
-import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
+import {
+  ABILITY_LOOKUP,
+  getAbilityVariants,
+  resolveAbilityVariant,
+} from "@/lib/consts/configs/agent-icon/consts";
 import {
   Tooltip,
   TooltipContent,
@@ -90,6 +95,9 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
   const [onMap, setOnMap] = useState(false);
   const [selectedAgentAbilities, setSelectedAgentAbilities] =
     useState<Agent | null>(null);
+  const [selectedAbilityVariants, setSelectedAbilityVariants] = useState<
+    Record<string, number>
+  >({});
   const [dragPreviewPosition, setDragPreviewPosition] = useState<{
     x: number;
     y: number;
@@ -178,6 +186,54 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     [isAlly, setSelectedCanvasIcon],
   );
 
+  const resolveAbility = useCallback(
+    (ability: AbilityIconDefinition): AbilityIconItem => {
+      const variantIndex = selectedAbilityVariants[ability.id] ?? 0;
+      return resolveAbilityVariant(ability, variantIndex);
+    },
+    [selectedAbilityVariants],
+  );
+
+  const syncSelectedAbilityAction = useCallback(
+    (resolved: AbilityIconItem) => {
+      if (
+        !selectedCanvasIcon ||
+        isAgent(selectedCanvasIcon) ||
+        selectedCanvasIcon.id !== resolved.id
+      ) {
+        return;
+      }
+
+      setSelectedCanvasIcon(resolved);
+      setAbilitiesOnCanvas((prev) =>
+        prev.map((canvasAbility) =>
+          canvasAbility.id === TEMP_DRAG_ID
+            ? { ...canvasAbility, action: resolved.action, name: resolved.name }
+            : canvasAbility,
+        ),
+      );
+    },
+    [selectedCanvasIcon, setAbilitiesOnCanvas, setSelectedCanvasIcon],
+  );
+
+  const handleAbilitySwap = useCallback(
+    (ability: AbilityIconDefinition) => {
+      const variants = getAbilityVariants(ability);
+      if (variants.length < 2) return;
+
+      const currentIndex = selectedAbilityVariants[ability.id] ?? 0;
+      const nextIndex = (currentIndex + 1) % variants.length;
+
+      setSelectedAbilityVariants((prev) => ({
+        ...prev,
+        [ability.id]: nextIndex,
+      }));
+
+      syncSelectedAbilityAction(variants[nextIndex]);
+    },
+    [selectedAbilityVariants, syncSelectedAbilityAction],
+  );
+
   const handleIconClick = <T extends AgentCanvas | AbilityCanvas>(
     icon: Agent | AbilityIconItem,
     setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
@@ -186,7 +242,13 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
       return;
     }
 
-    const isSameIcon = selectedCanvasIcon?.name === icon.name;
+    const isSameIcon = selectedCanvasIcon
+      ? isAgent(selectedCanvasIcon) && isAgent(icon)
+        ? selectedCanvasIcon.name === icon.name
+        : !isAgent(selectedCanvasIcon) &&
+          !isAgent(icon) &&
+          selectedCanvasIcon.id === icon.id
+      : false;
 
     if (isSameIcon) {
       if (isSidebarDragActive) {
@@ -212,7 +274,13 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     event.preventDefault();
 
-    const isSameIcon = selectedCanvasIcon?.name === icon.name;
+    const isSameIcon = selectedCanvasIcon
+      ? isAgent(selectedCanvasIcon) && isAgent(icon)
+        ? selectedCanvasIcon.name === icon.name
+        : !isAgent(selectedCanvasIcon) &&
+          !isAgent(icon) &&
+          selectedCanvasIcon.id === icon.id
+      : false;
     if (isSameIcon) {
       return;
     }
@@ -474,6 +542,8 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
         sidebarOpen={sidebarOpen}
         onClose={() => setSelectedAgentAbilities(null)}
         onAbilityClick={handleAbilityClick}
+        onAbilitySwap={handleAbilitySwap}
+        resolveAbility={resolveAbility}
         onAbilityPointerDown={handleAbilityPointerDown}
       />
 

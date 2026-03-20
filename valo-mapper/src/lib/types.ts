@@ -83,29 +83,39 @@ export type AbilityIconItem = {
   action: AbilityAction;
 };
 
-export type AbilityIconConfig = AbilityIconItem[];
+export type AbilityAlternate = {
+  id: string;
+  name: string;
+  action: AbilityAction;
+};
+
+export type AbilityIconDefinition = AbilityIconItem & {
+  alternates?: AbilityAlternate[];
+};
+
+export type AbilityIconConfig = AbilityIconDefinition[];
 
 export type AbilityAction =
   | "icon"
+  | "astra_smoke"
   | "astra_stun"
   | "astra_suck"
-  | "astra_smoke"
   | "astra_ult"
   | "breach_aftershock"
   | "breach_stun"
   | "breach_ult"
+  | "brim_molly"
   | "brim_smoke"
   | "brim_stim"
-  | "brim_molly"
   | "brim_ult"
-  | "chamber_trip"
   | "chamber_tp"
+  | "chamber_trip"
   | "clove_meddle"
   | "clove_smoke"
   | "cypher_cage"
   | "cypher_trip"
-  | "deadlock_trip"
   | "deadlock_net"
+  | "deadlock_trip"
   | "deadlock_wall"
   | "fade_eye"
   | "fade_seize"
@@ -113,19 +123,23 @@ export type AbilityAction =
   | "gekko_molly"
   | "harbor_blind"
   | "harbor_cove"
-  | "harbor_wall"
   | "harbor_ult"
-  | "iso_wall"
-  | "iso_vuln"
+  | "harbor_wall"
   | "iso_ult"
+  | "iso_vuln"
+  | "iso_wall"
   | "jett_smoke"
-  | "kayo_molly"
   | "kayo_knife"
+  | "kayo_molly"
   | "kayo_ult"
   | "kj_alarmbot"
   | "kj_molly"
   | "kj_turret"
   | "kj_ult"
+  | "miks_heal"
+  | "miks_smoke"
+  | "miks_stun"
+  | "miks_ult"
   | "neon_stun"
   | "neon_wall"
   | "omen_blind"
@@ -134,25 +148,24 @@ export type AbilityAction =
   | "phoenix_wall"
   | "sage_wall"
   | "skye_heal"
-  | "sova_shock_dart"
   | "sova_dart"
+  | "sova_shock_dart"
   | "sova_ult"
   | "tejo_drone"
-  | "tejo_stun"
   | "tejo_missile"
+  | "tejo_stun"
   | "tejo_ult"
-  | "veto_teleport"
-  | "veto_molly"
   | "veto_interceptor"
+  | "veto_molly"
+  | "veto_teleport"
   | "viper_molly"
   | "viper_smoke"
   | "viper_wall"
   | "vyse_slow"
-  | "vyse_wall"
   | "vyse_ult"
+  | "vyse_wall"
   | "waylay_slow"
   | "waylay_ult";
-
 export type LineAbility = Extract<
   AbilityAction,
   | "astra_ult"
@@ -173,7 +186,7 @@ export type LineAbility = Extract<
   | "waylay_ult"
 >;
 
-export type ArcAbility = Extract<AbilityAction, "kj_turret">;
+export type ArcAbility = Extract<AbilityAction, "kj_turret" | "miks_ult">;
 
 export type XLineAbility = Extract<AbilityAction, "deadlock_wall">;
 
@@ -191,15 +204,15 @@ export type AdjustableLineAbility = Extract<
 
 export type CircleAbility = Extract<
   AbilityAction,
+  | "astra_smoke"
   | "astra_stun"
   | "astra_suck"
-  | "astra_smoke"
+  | "brim_molly"
   | "brim_smoke"
   | "brim_stim"
-  | "brim_molly"
   | "brim_ult"
-  | "chamber_trip"
   | "chamber_tp"
+  | "chamber_trip"
   | "clove_meddle"
   | "clove_smoke"
   | "cypher_cage"
@@ -207,27 +220,30 @@ export type CircleAbility = Extract<
   | "fade_eye"
   | "fade_seize"
   | "gekko_molly"
-  | "harbor_cove"
   | "harbor_blind"
+  | "harbor_cove"
   | "jett_smoke"
-  | "kayo_molly"
   | "kayo_knife"
+  | "kayo_molly"
   | "kayo_ult"
   | "kj_alarmbot"
   | "kj_molly"
   | "kj_ult"
+  | "miks_heal"
+  | "miks_smoke"
+  | "miks_stun"
   | "neon_stun"
   | "omen_smoke"
   | "phoenix_molly"
   | "skye_heal"
-  | "sova_shock_dart"
   | "sova_dart"
+  | "sova_shock_dart"
   | "tejo_drone"
-  | "tejo_stun"
   | "tejo_missile"
-  | "veto_teleport"
-  | "veto_molly"
+  | "tejo_stun"
   | "veto_interceptor"
+  | "veto_molly"
+  | "veto_teleport"
   | "viper_molly"
   | "viper_smoke"
   | "vyse_slow"

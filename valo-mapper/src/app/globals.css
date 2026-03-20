@@ -193,6 +193,7 @@
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0) rotate(var(--rotation));
@@ -214,6 +215,7 @@
 }
 
 @keyframes pulse-scale {
+
   0%,
   100% {
     transform: scale(1) rotate(var(--rotation));
@@ -221,6 +223,30 @@
 
   50% {
     transform: scale(1.25) rotate(var(--rotation));
+  }
+}
+
+@keyframes ability-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes spin-once {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -234,11 +260,8 @@
 
     --d: 2px;
 
-    background: radial-gradient(
-        circle at var(--d) var(--d),
+    background: radial-gradient(circle at var(--d) var(--d),
         var(--foreground) calc(var(--d) - 1px),
-        var(--background) var(--d)
-      )
-      0 0 / 50px 50px;
+        var(--background) var(--d)) 0 0 / 50px 50px;
   }
 }

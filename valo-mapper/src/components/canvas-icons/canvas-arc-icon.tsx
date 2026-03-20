@@ -11,8 +11,13 @@ interface CanvasArcIconProps extends CanvasIconProps {
   arcRadius: number;
   fov: number;
   outerCircleRadius?: number;
+  showOuterArc?: boolean;
+  outerArcThickness?: number;
+  outerArcFill?: string;
+  outerArcOpacity?: number;
   circleStrokeWidth?: number;
   fill: string;
+  useFillGradient?: boolean;
   rotation?: number;
   onInteractionEnd?: (data: { currentRotation: number }) => void;
   showRotationHandle?: boolean;
@@ -37,10 +42,15 @@ export const CanvasArcIcon = ({
   arcRadius,
   strokeWidth,
   outerCircleRadius,
+  showOuterArc = false,
+  outerArcThickness = 1,
+  outerArcFill = "#ffffff",
+  outerArcOpacity = 1,
   allyColor,
   enemyColor,
   circleStrokeWidth = 2,
   fill,
+  useFillGradient = true,
   width,
   height,
   fov,
@@ -191,6 +201,29 @@ export const CanvasArcIcon = ({
   const handleX = rotationHandleDistance * Math.cos(radians);
   const handleY = rotationHandleDistance * Math.sin(radians);
 
+  const gradientFillProps = useFillGradient
+    ? {
+        fillRadialGradientStartPoint: { x: 0, y: 0 },
+        fillRadialGradientEndPoint: { x: 0, y: 0 },
+        fillRadialGradientStartRadius: 0,
+        fillRadialGradientEndRadius: arcRadius,
+        fillRadialGradientColorStops: [
+          0,
+          fill,
+          0.3,
+          fill + "CC",
+          0.5,
+          fill + "66",
+          1,
+          fill + "00",
+        ],
+      }
+    : {};
+
+  const outerArcInnerRadius = arcRadius;
+  const resolvedOuterArcThickness = Math.max(0, outerArcThickness);
+  const outerArcOuterRadius = outerArcInnerRadius + resolvedOuterArcThickness;
+
   const handleRotationHandleMouseOver = () => {
     if (!isListening) return;
     setIsHoveringHandle(true);
@@ -220,21 +253,20 @@ export const CanvasArcIcon = ({
         innerRadius={0}
         outerRadius={arcRadius}
         rotation={currentRotation - fov / 2}
-        fillRadialGradientStartPoint={{ x: 0, y: 0 }}
-        fillRadialGradientEndPoint={{ x: 0, y: 0 }}
-        fillRadialGradientStartRadius={0}
-        fillRadialGradientEndRadius={arcRadius}
-        fillRadialGradientColorStops={[
-          0,
-          fill,
-          0.3,
-          fill + "CC",
-          0.5,
-          fill + "66",
-          1,
-          fill + "00",
-        ]}
+        fill={fill}
+        {...gradientFillProps}
       />
+      {showOuterArc && (
+        <Arc
+          angle={fov}
+          innerRadius={outerArcInnerRadius}
+          outerRadius={outerArcOuterRadius}
+          rotation={currentRotation - fov / 2}
+          fill={outerArcFill}
+          opacity={outerArcOpacity}
+          listening={false}
+        />
+      )}
       {outerCircleRadius && (
         <Circle
           radius={outerCircleRadius}

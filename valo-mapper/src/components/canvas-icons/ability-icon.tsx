@@ -236,10 +236,24 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
   return (
     <CanvasArcIcon
       boxRadius={props.radius}
-      arcRadius={config.arcRadius}
+      arcRadius={mToPixels(config.arcRadius)}
       fov={config.fov}
-      fill={props.isAlly ? props.allyColor : props.enemyColor}
-      outerCircleRadius={mToPixels(config.outerCircleRadius)}
+      fill={config.fill || (props.isAlly ? props.allyColor : props.enemyColor)}
+      useFillGradient={config.useFillGradient !== false}
+      showOuterArc={config.showOuterArc}
+      outerArcThickness={
+        config.outerArcThickness
+          ? mToPixels(config.outerArcThickness)
+          : undefined
+      }
+      outerArcFill={config.outerArcFill}
+      outerArcOpacity={config.outerArcOpacity}
+      outerCircleRadius={
+        config.outerCircleRadius
+          ? mToPixels(config.outerCircleRadius)
+          : undefined
+      }
+      rotationHandleDistance={config.rotationHandleDistance}
       {...props}
     />
   );
@@ -317,6 +331,12 @@ const ABILITY_RENDERERS: Record<
   kj_molly: renderCircleAbility,
   kj_turret: renderArcAbility,
   kj_ult: renderCircleAbility,
+
+  // Miks
+  miks_heal: renderCircleAbility,
+  miks_stun: renderCircleAbility,
+  miks_smoke: renderCircleAbility,
+  miks_ult: renderArcAbility,
 
   // Neon
   neon_stun: renderCircleAbility,

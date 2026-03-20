@@ -109,6 +109,18 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     radius: 34.5,
     colors: { stroke: "#3e8174", fill: "#2d519380" },
   },
+  miks_heal: {
+    radius: 5.5,
+    colors: { stroke: "#92c58e", fill: "#755da580" },
+  },
+  miks_stun: {
+    radius: 5.5,
+    colors: { stroke: "#d39c54", fill: "#541a3a80" },
+  },
+  miks_smoke: {
+    radius: 3.72,
+    colors: { stroke: "#755da5", fill: "#92c58e80" },
+  },
   neon_stun: {
     radius: 5,
     colors: { stroke: "#4eacee", fill: "#fdfea380" },

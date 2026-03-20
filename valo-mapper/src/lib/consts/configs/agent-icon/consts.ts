@@ -1,4 +1,9 @@
-import { AbilityIconConfig, AbilityIconItem } from "@/lib/types";
+import {
+  AbilityAlternate,
+  AbilityIconConfig,
+  AbilityIconDefinition,
+  AbilityIconItem,
+} from "@/lib/types";
 
 export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   Astra: [
@@ -371,6 +376,39 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "kj_ult",
     },
   ],
+  Miks: [
+    {
+      id: "mpulse",
+      src: "/agents/miks/mpulse.png",
+      name: "M-Pulse Heal",
+      action: "miks_heal",
+      alternates: [
+        {
+          id: "mpulse_concuss",
+          name: "M-Pulse Concuss",
+          action: "miks_stun",
+        },
+      ],
+    },
+    {
+      id: "harmonize",
+      src: "/agents/miks/harmonize.png",
+      name: "Harmonize",
+      action: "icon",
+    },
+    {
+      id: "waveform",
+      src: "/agents/miks/waveform.png",
+      name: "Waveform",
+      action: "miks_smoke",
+    },
+    {
+      id: "bassquake",
+      src: "/agents/miks/bassquake.png",
+      name: "Bassquake",
+      action: "miks_ult",
+    },
+  ],
   Neon: [
     {
       id: "fast_lane",
@@ -737,10 +775,34 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   ],
 };
 
+export const getAbilityVariants = (
+  ability: AbilityIconDefinition,
+): AbilityIconItem[] => {
+  const main: AbilityIconItem = {
+    id: ability.id,
+    src: ability.src,
+    name: ability.name,
+    action: ability.action,
+  };
+
+  const alts: AbilityIconItem[] = (ability.alternates ?? []).map(
+    (alt: AbilityAlternate) => ({
+      id: alt.id,
+      src: ability.src,
+      name: alt.name,
+      action: alt.action,
+    }),
+  );
+
+  return [main, ...alts];
+};
+
 export const ABILITY_LOOKUP: Record<string, AbilityIconItem> = Object.values(
   AGENT_ICON_CONFIGS,
 )
-  .flatMap((items: AbilityIconItem[]) => items)
+  .flatMap((items: AbilityIconDefinition[]) =>
+    items.flatMap((item) => getAbilityVariants(item)),
+  )
   .reduce(
     (acc, ability) => {
       acc[ability.name] = ability;
@@ -748,3 +810,15 @@ export const ABILITY_LOOKUP: Record<string, AbilityIconItem> = Object.values(
     },
     {} as Record<string, AbilityIconItem>,
   );
+
+/** Returns the resolved AbilityIconItem for a given variant index (default 0). */
+export const resolveAbilityVariant = (
+  ability: AbilityIconDefinition,
+  variantIndex: number = 0,
+): AbilityIconItem => {
+  const variants = getAbilityVariants(ability);
+  return variants[variantIndex < variants.length ? variantIndex : 0];
+};
+
+// Keep original name as alias used in sidebar
+export const resolveAbilityIconItem = resolveAbilityVariant;
