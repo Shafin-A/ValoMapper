@@ -20,9 +20,13 @@ import { CanvasDrawLines } from "./canvas-draw-lines";
 import { DeleteZone } from "./delete-zone";
 import { CanvasToolIcons } from "./canvas-tool-icons";
 import { useCanvasEvents } from "@/hooks/canvas";
+import {
+  findAbilityDefinitionByAction,
+  getAbilityVariants,
+} from "@/lib/consts/configs/agent-icon/consts";
 import { FullscreenImageModal } from "./fullscreen-image-modal";
 import { LineupViewDialog } from "./lineup-view-dialog";
-import { ConnectingLine } from "@/lib/types";
+import { AbilityCanvas, ConnectingLine } from "@/lib/types";
 
 export interface MapStageHandle {
   stage: KonvaStage | null;
@@ -71,6 +75,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       handleDelete,
       handleDuplicate,
       handleToggleAlly,
+      handleSwapAbility,
       handlePopoverOpenChange,
       handleDragMove,
       contextMenu,
@@ -154,6 +159,17 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
               : null
       : null;
 
+    const canSwapAbility =
+      contextMenu.open &&
+      contextMenu.itemType === "ability" &&
+      currentItem != null &&
+      (() => {
+        const def = findAbilityDefinitionByAction(
+          (currentItem as AbilityCanvas).action,
+        );
+        return def ? getAbilityVariants(def).length > 1 : false;
+      })();
+
     return (
       <div
         style={{
@@ -236,6 +252,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           onOpenChange={handlePopoverOpenChange}
           onDuplicate={handleDuplicate}
           onToggleAlly={handleToggleAlly}
+          onSwapAbility={canSwapAbility ? handleSwapAbility : undefined}
           onDelete={handleDelete}
         />
 

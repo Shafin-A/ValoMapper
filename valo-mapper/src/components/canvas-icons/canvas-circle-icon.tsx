@@ -55,7 +55,7 @@ export const CanvasCircleIcon = ({
         }
       });
     }
-  }, [image, isAlly, mapSide]);
+  }, [image, isAlly, mapSide, stroke, fill, circleRadius]);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;

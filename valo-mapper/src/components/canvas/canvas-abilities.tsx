@@ -33,6 +33,14 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
       return null;
     }
 
+    const lookupEntry = ABILITY_LOOKUP[ability.name];
+    if (!lookupEntry) {
+      console.warn(
+        `[Canvas] ABILITY_LOOKUP missing entry for "${ability.name}", available keys:`,
+        Object.keys(ABILITY_LOOKUP),
+      );
+    }
+
     return (
       <Group
         key={ability.id}
@@ -48,7 +56,7 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
           x={ability.x}
           y={ability.y}
           rotation={ability.currentRotation}
-          src={ABILITY_LOOKUP[ability.name].src}
+          src={lookupEntry?.src}
           draggable={!isDrawMode}
           isListening={!isDrawMode}
           onDragMove={(e) => handleDragMove(e, deleteGroupRef)}

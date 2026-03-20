@@ -12,6 +12,10 @@ import {
 import { getNextId } from "@/lib/utils";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useWebSocket } from "@/contexts/websocket-context";
+import {
+  findAbilityDefinitionByAction,
+  getAbilityVariants,
+} from "@/lib/consts/configs/agent-icon/consts";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
@@ -360,6 +364,39 @@ export const useCanvasContextMenu = (
     notifyAbilityMoved,
   ]);
 
+  const handleSwapAbility = useCallback(() => {
+    if (!contextMenu.open || contextMenu.itemType !== "ability") return;
+
+    const ability = abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId);
+    if (!ability) return;
+
+    const definition = findAbilityDefinitionByAction(ability.action);
+    if (!definition) return;
+
+    const variants = getAbilityVariants(definition);
+    if (variants.length < 2) return;
+
+    const currentIndex = variants.findIndex((v) => v.action === ability.action);
+    const nextVariant = variants[(currentIndex + 1) % variants.length];
+
+    const updatedAbility: AbilityCanvas = {
+      ...ability,
+      action: nextVariant.action,
+      name: nextVariant.name,
+    };
+    setAbilitiesOnCanvas((prev) =>
+      prev.map((a) => (a.id === ability.id ? updatedAbility : a)),
+    );
+    notifyAbilityMoved(updatedAbility);
+    closeContextMenu();
+  }, [
+    contextMenu,
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
+    notifyAbilityMoved,
+    closeContextMenu,
+  ]);
+
   return {
     contextMenu,
     handleContextMenu,
@@ -367,6 +404,7 @@ export const useCanvasContextMenu = (
     handleDuplicate,
     handleDelete,
     handleToggleAlly,
+    handleSwapAbility,
     closeContextMenu,
   };
 };

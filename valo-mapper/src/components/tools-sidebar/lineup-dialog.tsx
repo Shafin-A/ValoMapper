@@ -99,6 +99,7 @@ export const LineupDialog = ({
       id: abilityId,
       name: abilityConfig.name,
       action: abilityConfig.action,
+      src: abilityConfig.src,
       isAlly,
       x: abilityX,
       y: abilityY,

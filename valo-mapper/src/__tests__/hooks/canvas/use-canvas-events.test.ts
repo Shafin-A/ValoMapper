@@ -193,6 +193,7 @@ describe("useCanvasEvents", () => {
       handleDuplicate: jest.fn(),
       handleDelete: jest.fn(),
       handleToggleAlly: jest.fn(),
+      handleSwapAbility: jest.fn(),
       closeContextMenu: jest.fn(),
     });
   });

@@ -10,10 +10,10 @@ import {
   ImageCanvas,
   TextCanvas,
 } from "@/lib/types";
-import { Copy, Heart, HeartCrack, Trash2 } from "lucide-react";
+import { Copy, Heart, HeartCrack, RefreshCw, Trash2 } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ContextMenuPopoverProps {
   open: boolean;
@@ -24,6 +24,7 @@ interface ContextMenuPopoverProps {
   onOpenChange: (open: boolean) => void;
   onDuplicate: () => void;
   onToggleAlly: () => void;
+  onSwapAbility?: () => void;
   onDelete: () => void;
 }
 
@@ -54,13 +55,16 @@ export const ContextMenuPopover = ({
   onOpenChange,
   onDuplicate,
   onToggleAlly,
+  onSwapAbility,
   onDelete,
 }: ContextMenuPopoverProps) => {
   const [allowTooltips, setAllowTooltips] = useState(false);
   const [initialIsAlly, setInitialIsAlly] = useState(false);
+  const swapAbilityRef = useRef(onSwapAbility);
 
   useEffect(() => {
     if (open) {
+      swapAbilityRef.current = onSwapAbility;
       if (itemType !== "text" && itemType !== "image" && currentItem) {
         setInitialIsAlly((currentItem as AgentCanvas | AbilityCanvas).isAlly);
       }
@@ -129,6 +133,24 @@ export const ContextMenuPopover = ({
                 />
               </>
             )}
+
+          {swapAbilityRef.current && (
+            <>
+              <ConditionalTooltip
+                enabled={allowTooltips}
+                content="Swap Ability"
+              >
+                <Button variant="ghost" size="sm" onClick={onSwapAbility}>
+                  <RefreshCw />
+                </Button>
+              </ConditionalTooltip>
+
+              <Separator
+                orientation="vertical"
+                className="data-[orientation=vertical]:h-6"
+              />
+            </>
+          )}
 
           <ConditionalTooltip
             enabled={allowTooltips}

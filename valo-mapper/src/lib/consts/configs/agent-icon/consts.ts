@@ -811,7 +811,6 @@ export const ABILITY_LOOKUP: Record<string, AbilityIconItem> = Object.values(
     {} as Record<string, AbilityIconItem>,
   );
 
-/** Returns the resolved AbilityIconItem for a given variant index (default 0). */
 export const resolveAbilityVariant = (
   ability: AbilityIconDefinition,
   variantIndex: number = 0,
@@ -820,5 +819,16 @@ export const resolveAbilityVariant = (
   return variants[variantIndex < variants.length ? variantIndex : 0];
 };
 
-// Keep original name as alias used in sidebar
 export const resolveAbilityIconItem = resolveAbilityVariant;
+
+export const findAbilityDefinitionByAction = (
+  action: string,
+): AbilityIconDefinition | null => {
+  for (const items of Object.values(AGENT_ICON_CONFIGS)) {
+    for (const item of items) {
+      if (item.action === action) return item;
+      if (item.alternates?.some((alt) => alt.action === action)) return item;
+    }
+  }
+  return null;
+};
