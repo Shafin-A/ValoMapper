@@ -9,23 +9,107 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
-import { MAP_SIZE } from "@/lib/consts";
+import { AGENTS, MAP_OPTIONS, MAP_SIZE } from "@/lib/consts";
+import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts/misc/consts";
+import { preloadImages, preloadImagesWithTimeout } from "@/lib/image-preload";
+import { getAgentImgSrc } from "@/lib/utils";
 import { AlertCircle, Home, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+const ALL_MAP_IMAGE_SOURCES = MAP_OPTIONS.map(
+  (mapOption) => `/maps/minimaps/${mapOption.id}.webp`,
+);
+const ALL_AGENT_IMAGE_SOURCES = AGENTS.map((agent) =>
+  getAgentImgSrc(agent.name),
+);
+const ALL_ABILITY_IMAGE_SOURCES = Array.from(
+  new Set(
+    Object.values(ABILITY_LOOKUP)
+      .map((ability) => ability.src)
+      .filter((src): src is string => Boolean(src)),
+  ),
+);
+
 const LobbyEditPage = () => {
   const divRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<MapStageHandle | null>(null);
   const [stageScale, setStageScale] = useState(1);
   const [isScaleReady, setIsScaleReady] = useState(false);
+  const [isAssetWarmupReady, setIsAssetWarmupReady] = useState(false);
+  const hasCompletedInitialAssetWarmup = useRef(false);
 
   const sidebarState = useSidebarState();
 
-  const { isLoadingLobby, isErrorLobby, lobbyError } = useCanvas();
+  const {
+    isLoadingLobby,
+    isErrorLobby,
+    lobbyError,
+    selectedMap,
+    agentsOnCanvas,
+    abilitiesOnCanvas,
+    toolIconsOnCanvas,
+  } = useCanvas();
+
+  useEffect(() => {
+    if (isLoadingLobby || isErrorLobby) return;
+    if (hasCompletedInitialAssetWarmup.current) return;
+
+    let isCancelled = false;
+
+    const preloadCriticalAssets = async () => {
+      setIsAssetWarmupReady(false);
+
+      const criticalSources = [
+        `/maps/minimaps/${selectedMap.id}.webp`,
+        ...agentsOnCanvas.map((agent) => getAgentImgSrc(agent.name)),
+        ...abilitiesOnCanvas
+          .map((ability) => ABILITY_LOOKUP[ability.name]?.src)
+          .filter((src): src is string => Boolean(src)),
+        ...toolIconsOnCanvas.map((toolIcon) => `/tools/${toolIcon.name}.webp`),
+      ];
+
+      await preloadImagesWithTimeout(criticalSources, 1200);
+
+      if (!isCancelled) {
+        hasCompletedInitialAssetWarmup.current = true;
+        setIsAssetWarmupReady(true);
+      }
+    };
+
+    void preloadCriticalAssets().catch(console.error);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    isLoadingLobby,
+    isErrorLobby,
+    selectedMap.id,
+    agentsOnCanvas,
+    abilitiesOnCanvas,
+    toolIconsOnCanvas,
+  ]);
+
+  useEffect(() => {
+    if (!isAssetWarmupReady) return;
+
+    const id = requestIdleCallback(
+      () => {
+        void preloadImages([
+          ...ALL_MAP_IMAGE_SOURCES,
+          ...ALL_AGENT_IMAGE_SOURCES,
+          ...ALL_ABILITY_IMAGE_SOURCES,
+        ]);
+      },
+      { timeout: 2000 },
+    );
+
+    return () => cancelIdleCallback(id);
+  }, [isAssetWarmupReady]);
 
   useLayoutEffect(() => {
     const updateScale = () => {
@@ -160,12 +244,14 @@ const LobbyEditPage = () => {
                 </Alert>
               </div>
             </div>
-          ) : !isScaleReady ? (
+          ) : !isScaleReady || !isAssetWarmupReady ? (
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center space-y-4">
                 <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
                 <p className="text-muted-foreground font-medium">
-                  Initializing canvas...
+                  {!isScaleReady
+                    ? "Initializing canvas..."
+                    : "Preparing map assets..."}
                 </p>
               </div>
             </div>
