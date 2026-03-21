@@ -190,10 +190,7 @@ func (cs *CleanupScheduler) runImageObjectCleanup(ctx context.Context) {
 	const deleteBatchSize = 1000
 	deletedCount := 0
 	for i := 0; i < len(orphanedKeys); i += deleteBatchSize {
-		end := i + deleteBatchSize
-		if end > len(orphanedKeys) {
-			end = len(orphanedKeys)
-		}
+		end := min(i+deleteBatchSize, len(orphanedKeys))
 
 		batch := orphanedKeys[i:end]
 		if err := storage.DefaultClient.DeleteObjects(ctx, batch); err != nil {

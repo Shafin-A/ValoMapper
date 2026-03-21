@@ -216,7 +216,7 @@ func TestCreateStrategy(t *testing.T) {
 			}, nil
 		}
 
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			lobby := testutils.CreateTestLobby(t, pool)
 			testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
 		}
@@ -252,7 +252,7 @@ func TestCreateStrategy(t *testing.T) {
 			}, nil
 		}
 
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			lobby := testutils.CreateTestLobby(t, pool)
 			testutils.CreateTestStrategy(t, pool, subscribedUser.ID, lobby.Code)
 		}

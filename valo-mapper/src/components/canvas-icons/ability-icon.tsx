@@ -43,6 +43,7 @@ interface AbilityIconProps extends CanvasIconProps {
   currentPath?: Vector2d[];
   currentLength?: number;
   iconOnly?: boolean;
+  showOuterCircle?: boolean;
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
   onInteractionEnd?: (data: InteractionData) => void;
 }
@@ -70,6 +71,7 @@ const renderCircleAbility = (props: AbilityIconProps): ReactNode => {
   return (
     <CanvasCircleIcon
       showAbilityShape={!props.iconOnly}
+      showOuterCircle={props.showOuterCircle}
       circleRadius={mToPixels(radius)}
       stroke={colors.stroke}
       fill={colors.fill}
@@ -243,6 +245,7 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
   return (
     <CanvasArcIcon
       showAbilityShape={!props.iconOnly}
+      showOuterCircle={props.showOuterCircle}
       boxRadius={props.radius}
       arcRadius={mToPixels(config.arcRadius)}
       fov={config.fov}

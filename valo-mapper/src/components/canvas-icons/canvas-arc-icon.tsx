@@ -11,6 +11,7 @@ interface CanvasArcIconProps extends CanvasIconProps {
   arcRadius: number;
   fov: number;
   showAbilityShape?: boolean;
+  showOuterCircle?: boolean;
   outerCircleRadius?: number;
   showOuterArc?: boolean;
   outerArcThickness?: number;
@@ -42,8 +43,9 @@ export const CanvasArcIcon = ({
   boxRadius,
   arcRadius,
   strokeWidth,
-  outerCircleRadius,
   showOuterArc = false,
+  outerCircleRadius,
+  showOuterCircle = true,
   outerArcThickness = 1,
   outerArcFill = "#ffffff",
   outerArcOpacity = 1,
@@ -96,6 +98,7 @@ export const CanvasArcIcon = ({
     isAlly,
     mapSide,
     showAbilityShape,
+    showOuterCircle,
   ]);
 
   useEffect(() => {
@@ -273,7 +276,7 @@ export const CanvasArcIcon = ({
               listening={false}
             />
           )}
-          {outerCircleRadius && (
+          {outerCircleRadius && showOuterCircle && (
             <Circle
               radius={outerCircleRadius}
               strokeWidth={circleStrokeWidth}

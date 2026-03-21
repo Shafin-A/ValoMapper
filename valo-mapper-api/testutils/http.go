@@ -33,7 +33,7 @@ func MakeRequest(t *testing.T, method, path string, body any, authToken string) 
 }
 
 // ParseJSONResponse parses the JSON response from a ResponseRecorder
-func ParseJSONResponse(t *testing.T, w *httptest.ResponseRecorder, v interface{}) {
+func ParseJSONResponse(t *testing.T, w *httptest.ResponseRecorder, v any) {
 	t.Helper()
 
 	if err := json.NewDecoder(w.Body).Decode(v); err != nil {

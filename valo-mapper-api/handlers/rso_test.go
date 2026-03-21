@@ -94,7 +94,7 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Fatalf("expected 200 got %d", rec.Code)
 		}
-		var resp map[string]interface{}
+		var resp map[string]any
 		_ = json.NewDecoder(rec.Body).Decode(&resp)
 		if resp["customToken"] != "custom-123" {
 			t.Errorf("unexpected custom token %v", resp)
@@ -123,7 +123,7 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Fatalf("expected 200 got %d on second attempt", rec.Code)
 		}
-		var resp map[string]interface{}
+		var resp map[string]any
 		_ = json.NewDecoder(rec.Body).Decode(&resp)
 		if resp["customToken"] != "custom-123" {
 			t.Errorf("unexpected custom token on second login %v", resp)

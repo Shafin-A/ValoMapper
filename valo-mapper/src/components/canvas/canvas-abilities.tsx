@@ -86,6 +86,7 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
           currentPath={ability.currentPath}
           currentLength={ability.currentLength}
           iconOnly={ability.iconOnly}
+          showOuterCircle={ability.showOuterCircle}
           onInteractionEnd={(data) => {
             notifyAbilityMoved({ ...ability, ...data });
           }}

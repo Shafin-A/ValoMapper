@@ -10,7 +10,10 @@ import {
   ImageCanvas,
   TextCanvas,
 } from "@/lib/types";
+import { isArcAbility, isCircleAbility } from "@/lib/utils";
+import { CIRCLE_ABILITY_CONFIGS, ARC_ABILITY_CONFIGS } from "@/lib/consts";
 import {
+  CircleDashed,
   Copy,
   Heart,
   HeartCrack,
@@ -34,6 +37,7 @@ interface ContextMenuPopoverProps {
   onToggleAlly: () => void;
   onSwapAbility?: () => void;
   onToggleAbilityIconOnly?: () => void;
+  onToggleAbilityOuterCircle?: () => void;
   onDelete: () => void;
 }
 
@@ -66,15 +70,45 @@ export const ContextMenuPopover = ({
   onToggleAlly,
   onSwapAbility,
   onToggleAbilityIconOnly,
+  onToggleAbilityOuterCircle,
   onDelete,
 }: ContextMenuPopoverProps) => {
   const [allowTooltips, setAllowTooltips] = useState(false);
   const [initialIsAlly, setInitialIsAlly] = useState(false);
   const swapAbilityRef = useRef(onSwapAbility);
   const abilityIconOnly =
-    itemType === "ability"
-      ? (currentItem as AbilityCanvas | null)?.iconOnly
+    itemType === "ability" && currentItem
+      ? (currentItem as AbilityCanvas).iconOnly
       : false;
+
+  const currentAbilityAction =
+    itemType === "ability" && currentItem
+      ? (currentItem as AbilityCanvas).action
+      : undefined;
+
+  const currentCircleConfig =
+    currentAbilityAction && isCircleAbility(currentAbilityAction)
+      ? CIRCLE_ABILITY_CONFIGS[
+          currentAbilityAction as keyof typeof CIRCLE_ABILITY_CONFIGS
+        ]
+      : undefined;
+
+  const currentArcConfig =
+    currentAbilityAction && isArcAbility(currentAbilityAction)
+      ? ARC_ABILITY_CONFIGS[
+          currentAbilityAction as keyof typeof ARC_ABILITY_CONFIGS
+        ]
+      : undefined;
+
+  const controlsOuterCircle = Boolean(
+    currentCircleConfig?.activeRadius || currentArcConfig?.outerCircleRadius,
+  );
+
+  const abilityShowOuterCircle = controlsOuterCircle
+    ? ((currentItem as AbilityCanvas).showOuterCircle ?? true)
+    : true;
+
+  const showOuterCircleToggle = controlsOuterCircle;
 
   useEffect(() => {
     if (open) {
@@ -184,6 +218,33 @@ export const ContextMenuPopover = ({
                   <span className="relative inline-flex items-center justify-center w-4 h-4 overflow-visible">
                     <Shapes className="w-4 h-4" />
                     {!abilityIconOnly && (
+                      <Minus className="absolute rotate-135 text-destructive size-8" />
+                    )}
+                  </span>
+                </Button>
+              </ConditionalTooltip>
+
+              <Separator
+                orientation="vertical"
+                className="data-[orientation=vertical]:h-6"
+              />
+            </>
+          )}
+
+          {showOuterCircleToggle && onToggleAbilityOuterCircle && (
+            <>
+              <ConditionalTooltip
+                enabled={allowTooltips}
+                content={abilityShowOuterCircle ? "Hide Range" : "Show Range"}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onToggleAbilityOuterCircle}
+                >
+                  <span className="relative inline-flex items-center justify-center size-4 overflow-visible">
+                    <CircleDashed className="size-4" />
+                    {abilityShowOuterCircle && (
                       <Minus className="absolute rotate-135 text-destructive size-8" />
                     )}
                   </span>

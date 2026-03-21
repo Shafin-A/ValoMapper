@@ -54,7 +54,8 @@ type CanvasAbility struct {
 	CurrentLength   float64    `json:"currentLength,omitempty"`
 	CurrentRotation float64    `json:"currentRotation,omitempty"`
 	IsAlly          bool       `json:"isAlly"`
-	IconOnly        bool       `json:"iconOnly,omitempty"`
+	IconOnly        bool       `json:"iconOnly"`
+	ShowOuterCircle bool       `json:"showOuterCircle"`
 }
 
 type CanvasDrawLine struct {

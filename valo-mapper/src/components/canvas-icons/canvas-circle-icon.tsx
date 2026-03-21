@@ -18,6 +18,7 @@ interface CanvasCircleIconProps extends CanvasIconProps {
   stroke: string;
   fill: string;
   showAbilityShape?: boolean;
+  showOuterCircle?: boolean;
 }
 
 export const CanvasCircleIcon = ({
@@ -43,6 +44,7 @@ export const CanvasCircleIcon = ({
   width,
   height,
   showAbilityShape = true,
+  showOuterCircle = true,
 }: CanvasCircleIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const [image] = useImage(src);
@@ -57,7 +59,16 @@ export const CanvasCircleIcon = ({
         }
       });
     }
-  }, [image, isAlly, mapSide, stroke, fill, circleRadius, showAbilityShape]);
+  }, [
+    image,
+    isAlly,
+    mapSide,
+    stroke,
+    fill,
+    circleRadius,
+    showAbilityShape,
+    showOuterCircle,
+  ]);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
@@ -108,7 +119,7 @@ export const CanvasCircleIcon = ({
             stroke={stroke}
             listening={false}
           />
-          {outerCircleRadius && (
+          {outerCircleRadius && showOuterCircle && (
             <Circle
               radius={outerCircleRadius}
               strokeWidth={circleStrokeWidth}

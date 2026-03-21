@@ -163,7 +163,7 @@ func TestRateLimitMiddleware_ExemptsStripeWebhook(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		req := httptest.NewRequest("POST", "/api/billing/webhook", nil)
 		req.RemoteAddr = "10.10.10.10:1234"
 		rr := httptest.NewRecorder()

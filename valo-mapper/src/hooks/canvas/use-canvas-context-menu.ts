@@ -421,6 +421,30 @@ export const useCanvasContextMenu = (
     closeContextMenu,
   ]);
 
+  const handleToggleAbilityOuterCircle = useCallback(() => {
+    if (!contextMenu.open || contextMenu.itemType !== "ability") return;
+
+    const ability = abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId);
+    if (!ability) return;
+
+    const updatedAbility: AbilityCanvas = {
+      ...ability,
+      showOuterCircle: ability.showOuterCircle === false ? true : false,
+    };
+
+    setAbilitiesOnCanvas((prev) =>
+      prev.map((a) => (a.id === ability.id ? updatedAbility : a)),
+    );
+    notifyAbilityMoved(updatedAbility);
+    closeContextMenu();
+  }, [
+    contextMenu,
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
+    notifyAbilityMoved,
+    closeContextMenu,
+  ]);
+
   return {
     contextMenu,
     handleContextMenu,
@@ -430,6 +454,7 @@ export const useCanvasContextMenu = (
     handleToggleAlly,
     handleSwapAbility,
     handleToggleAbilityIconOnly,
+    handleToggleAbilityOuterCircle,
     closeContextMenu,
   };
 };

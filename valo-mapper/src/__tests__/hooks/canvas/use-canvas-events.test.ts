@@ -195,6 +195,7 @@ describe("useCanvasEvents", () => {
       handleToggleAlly: jest.fn(),
       handleSwapAbility: jest.fn(),
       handleToggleAbilityIconOnly: jest.fn(),
+      handleToggleAbilityOuterCircle: jest.fn(),
       closeContextMenu: jest.fn(),
     });
   });

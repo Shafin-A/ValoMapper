@@ -217,6 +217,56 @@ describe("useCanvasContextMenu", () => {
     expect(agentsState[0].isAlly).toBe(true);
   });
 
+  it("toggles outer circle for circle ability", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: "ab1",
+        name: "Circle",
+        action: "kj_alarmbot",
+        isAlly: true,
+        x: 0,
+        y: 0,
+        showOuterCircle: true,
+      },
+    ];
+    const setAbilities = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        [],
+        jest.fn(),
+        abilitiesState,
+        setAbilities,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "ab1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleToggleAbilityOuterCircle();
+    });
+
+    expect(abilitiesState[0].showOuterCircle).toBe(false);
+  });
+
   it("ignores context menu on unknown target", () => {
     const stageRef = { current: createStageMock() as unknown as Stage };
 

@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -76,7 +77,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 				{ID: "agent2", AgentName: "Sage", Role: "Sentinel", IsAlly: true, X: 150, Y: 250},
 			},
 			AbilitiesOnCanvas: []CanvasAbility{
-				{ID: "ability1", AgentName: "Jett", Action: "dash", X: 120, Y: 220, IsAlly: true, IconOnly: true},
+				{ID: "ability1", AgentName: "Jett", Action: "dash", X: 120, Y: 220, IsAlly: true, IconOnly: true, ShowOuterCircle: false},
 			},
 			DrawLines: []CanvasDrawLine{
 				{
@@ -152,6 +153,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 		if len(phases[0].AbilitiesOnCanvas) > 0 {
 			assert.Equal(t, "ability1", phases[0].AbilitiesOnCanvas[0].ID)
 			assert.True(t, phases[0].AbilitiesOnCanvas[0].IconOnly)
+			assert.False(t, phases[0].AbilitiesOnCanvas[0].ShowOuterCircle)
 		}
 		assert.GreaterOrEqual(t, len(phases[0].DrawLines), 1)
 		if len(phases[0].DrawLines) > 0 {
@@ -318,6 +320,7 @@ func TestSaveCanvasState(t *testing.T) {
 					CurrentRotation: 45.0,
 					IsAlly:          true,
 					IconOnly:        true,
+					ShowOuterCircle: true,
 				},
 			},
 		}
@@ -344,6 +347,7 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Equal(t, 75.5, phases[0].AbilitiesOnCanvas[0].CurrentLength)
 		assert.Equal(t, 45.0, phases[0].AbilitiesOnCanvas[0].CurrentRotation)
 		assert.True(t, phases[0].AbilitiesOnCanvas[0].IconOnly)
+		assert.True(t, phases[0].AbilitiesOnCanvas[0].ShowOuterCircle)
 	})
 
 	t.Run("handles draw line with points", func(t *testing.T) {
@@ -592,5 +596,23 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Equal(t, "new-from", phases[0].ConnectingLines[0].FromID)
 		assert.Equal(t, "#FFFFFF", phases[0].ConnectingLines[0].StrokeColor)
 		assert.Equal(t, "New notes", phases[0].ConnectingLines[0].Notes)
+	})
+
+	t.Run("marshals ability flags even when false", func(t *testing.T) {
+		ability := CanvasAbility{
+			ID:              "ab1",
+			AgentName:       "Jett",
+			Action:          "dash",
+			X:               100,
+			Y:               200,
+			IsAlly:          true,
+			IconOnly:        false,
+			ShowOuterCircle: false,
+		}
+
+		b, err := json.Marshal(ability)
+		require.NoError(t, err)
+		assert.Contains(t, string(b), `"iconOnly":false`)
+		assert.Contains(t, string(b), `"showOuterCircle":false`)
 	})
 }

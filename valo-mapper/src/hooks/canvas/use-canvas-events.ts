@@ -170,6 +170,7 @@ export const useCanvasEvents = (
     handleToggleAlly,
     handleSwapAbility,
     handleToggleAbilityIconOnly,
+    handleToggleAbilityOuterCircle,
   } = useCanvasContextMenu(
     stageRef,
     agentsOnCanvas,
@@ -228,6 +229,8 @@ export const useCanvasEvents = (
           x: pos.x,
           y: pos.y,
           isAlly: tempAbility?.isAlly ?? true,
+          iconOnly: tempAbility?.iconOnly ?? false,
+          showOuterCircle: tempAbility?.showOuterCircle ?? true,
         };
         setAbilitiesOnCanvas((prev) =>
           prev.map((ability) =>
@@ -426,6 +429,7 @@ export const useCanvasEvents = (
     handleToggleAlly,
     handleSwapAbility,
     handleToggleAbilityIconOnly,
+    handleToggleAbilityOuterCircle,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,

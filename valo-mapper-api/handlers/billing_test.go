@@ -246,7 +246,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			}, nil
 		}
 
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", map[string]any{
 				"plan":           "monthly",
 				"startWithTrial": true,

@@ -2014,6 +2014,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "showOuterCircle": {
+                    "type": "boolean"
+                },
                 "x": {
                     "type": "number"
                 },

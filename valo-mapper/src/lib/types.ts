@@ -52,6 +52,7 @@ export type AbilityCanvas = CanvasItem & {
   currentLength?: number;
   currentPath?: Vector2d[];
   iconOnly?: boolean;
+  showOuterCircle?: boolean;
 };
 
 export type AgentRole = "Duelist" | "Controller" | "Initiator" | "Sentinel";

@@ -57,7 +57,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- ABILITIES ----
 	rows, err = conn.Query(ctx, `
-		SELECT id, name, action, x, y, current_path, current_rotation, current_length, is_ally, icon_only, phase_index 
+		SELECT id, name, action, x, y, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, phase_index 
 		FROM canvas_abilities 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index`, lobbyCode)
@@ -68,7 +68,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var ability CanvasAbility
 		var phaseIndex int
 		if err := rows.Scan(&ability.ID, &ability.AgentName, &ability.Action, &ability.X, &ability.Y,
-			&ability.CurrentPath, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &phaseIndex); err != nil {
+			&ability.CurrentPath, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &ability.ShowOuterCircle, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -239,20 +239,20 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 	// --- Prepare slices for each table ---
 	var (
-		agentRows          [][]interface{}
-		abilityRows        [][]interface{}
-		lineRows           [][]interface{}
-		textRows           [][]interface{}
-		imageRows          [][]interface{}
-		iconRows           [][]interface{}
-		connectingLineRows [][]interface{}
+		agentRows          [][]any
+		abilityRows        [][]any
+		lineRows           [][]any
+		textRows           [][]any
+		imageRows          [][]any
+		iconRows           [][]any
+		connectingLineRows [][]any
 	)
 
 	for phaseIndex, phase := range state.Phases {
 
 		// Agents
 		for _, a := range phase.AgentsOnCanvas {
-			agentRows = append(agentRows, []interface{}{
+			agentRows = append(agentRows, []any{
 				a.ID, lobbyCode, a.AgentName, a.Role, a.X, a.Y, a.IsAlly, phaseIndex,
 			})
 		}
@@ -266,9 +266,9 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 					return err
 				}
 			}
-			abilityRows = append(abilityRows, []interface{}{
+			abilityRows = append(abilityRows, []any{
 				ab.ID, lobbyCode, ab.AgentName, ab.Action, ab.X, ab.Y,
-				pathJSON, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, phaseIndex,
+				pathJSON, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, ab.ShowOuterCircle, phaseIndex,
 			})
 		}
 
@@ -278,7 +278,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 			if err != nil {
 				return err
 			}
-			lineRows = append(lineRows, []interface{}{
+			lineRows = append(lineRows, []any{
 				l.ID, lobbyCode, l.Tool, pointsJSON, l.Color, l.Size,
 				l.IsDashed, l.IsArrowHead, phaseIndex,
 			})
@@ -286,28 +286,28 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Texts
 		for _, t := range phase.TextsOnCanvas {
-			textRows = append(textRows, []interface{}{
+			textRows = append(textRows, []any{
 				t.ID, lobbyCode, t.Text, t.X, t.Y, t.Width, t.Height, phaseIndex,
 			})
 		}
 
 		// Images
 		for _, i := range phase.ImagesOnCanvas {
-			imageRows = append(imageRows, []interface{}{
+			imageRows = append(imageRows, []any{
 				i.ID, lobbyCode, i.Src, i.X, i.Y, i.Width, i.Height, phaseIndex,
 			})
 		}
 
 		// Tool Icons
 		for _, ic := range phase.ToolIconsOnCanvas {
-			iconRows = append(iconRows, []interface{}{
+			iconRows = append(iconRows, []any{
 				ic.ID, lobbyCode, ic.X, ic.Y, ic.Width, ic.Height, phaseIndex,
 			})
 		}
 
 		// Connecting Lines
 		for _, cl := range phase.ConnectingLines {
-			connectingLineRows = append(connectingLineRows, []interface{}{
+			connectingLineRows = append(connectingLineRows, []any{
 				cl.ID, lobbyCode, cl.FromID, cl.ToID, cl.StrokeColor, cl.StrokeWidth,
 				cl.UploadedImages, cl.YoutubeLink, cl.Notes, phaseIndex,
 			})
@@ -331,7 +331,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_abilities"},
-			[]string{"id", "lobby_code", "name", "action", "x", "y", "current_path", "current_rotation", "current_length", "is_ally", "icon_only", "phase_index"},
+			[]string{"id", "lobby_code", "name", "action", "x", "y", "current_path", "current_rotation", "current_length", "is_ally", "icon_only", "show_outer_circle", "phase_index"},
 			pgx.CopyFromRows(abilityRows),
 		)
 		if err != nil {
