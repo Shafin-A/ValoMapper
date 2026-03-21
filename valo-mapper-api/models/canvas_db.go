@@ -57,7 +57,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- ABILITIES ----
 	rows, err = conn.Query(ctx, `
-		SELECT id, name, action, x, y, current_path, current_rotation, current_length, is_ally, phase_index 
+		SELECT id, name, action, x, y, current_path, current_rotation, current_length, is_ally, icon_only, phase_index 
 		FROM canvas_abilities 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index`, lobbyCode)
@@ -68,7 +68,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var ability CanvasAbility
 		var phaseIndex int
 		if err := rows.Scan(&ability.ID, &ability.AgentName, &ability.Action, &ability.X, &ability.Y,
-			&ability.CurrentPath, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &phaseIndex); err != nil {
+			&ability.CurrentPath, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -268,7 +268,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 			}
 			abilityRows = append(abilityRows, []interface{}{
 				ab.ID, lobbyCode, ab.AgentName, ab.Action, ab.X, ab.Y,
-				pathJSON, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, phaseIndex,
+				pathJSON, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, phaseIndex,
 			})
 		}
 
@@ -331,7 +331,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_abilities"},
-			[]string{"id", "lobby_code", "name", "action", "x", "y", "current_path", "current_rotation", "current_length", "is_ally", "phase_index"},
+			[]string{"id", "lobby_code", "name", "action", "x", "y", "current_path", "current_rotation", "current_length", "is_ally", "icon_only", "phase_index"},
 			pgx.CopyFromRows(abilityRows),
 		)
 		if err != nil {

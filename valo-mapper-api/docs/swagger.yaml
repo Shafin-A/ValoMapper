@@ -202,6 +202,8 @@ definitions:
         type: array
       currentRotation:
         type: number
+      iconOnly:
+        type: boolean
       id:
         type: string
       isAlly:

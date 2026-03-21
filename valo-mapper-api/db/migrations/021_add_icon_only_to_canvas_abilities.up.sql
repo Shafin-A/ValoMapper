@@ -1,0 +1,2 @@
+ALTER TABLE canvas_abilities
+ADD COLUMN icon_only BOOLEAN NOT NULL DEFAULT FALSE;

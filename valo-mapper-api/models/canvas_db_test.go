@@ -76,7 +76,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 				{ID: "agent2", AgentName: "Sage", Role: "Sentinel", IsAlly: true, X: 150, Y: 250},
 			},
 			AbilitiesOnCanvas: []CanvasAbility{
-				{ID: "ability1", AgentName: "Jett", Action: "dash", X: 120, Y: 220, IsAlly: true},
+				{ID: "ability1", AgentName: "Jett", Action: "dash", X: 120, Y: 220, IsAlly: true, IconOnly: true},
 			},
 			DrawLines: []CanvasDrawLine{
 				{
@@ -151,6 +151,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 		assert.GreaterOrEqual(t, len(phases[0].AbilitiesOnCanvas), 1)
 		if len(phases[0].AbilitiesOnCanvas) > 0 {
 			assert.Equal(t, "ability1", phases[0].AbilitiesOnCanvas[0].ID)
+			assert.True(t, phases[0].AbilitiesOnCanvas[0].IconOnly)
 		}
 		assert.GreaterOrEqual(t, len(phases[0].DrawLines), 1)
 		if len(phases[0].DrawLines) > 0 {
@@ -316,6 +317,7 @@ func TestSaveCanvasState(t *testing.T) {
 					CurrentLength:   75.5,
 					CurrentRotation: 45.0,
 					IsAlly:          true,
+					IconOnly:        true,
 				},
 			},
 		}
@@ -341,6 +343,7 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Len(t, phases[0].AbilitiesOnCanvas[0].CurrentPath, 3)
 		assert.Equal(t, 75.5, phases[0].AbilitiesOnCanvas[0].CurrentLength)
 		assert.Equal(t, 45.0, phases[0].AbilitiesOnCanvas[0].CurrentRotation)
+		assert.True(t, phases[0].AbilitiesOnCanvas[0].IconOnly)
 	})
 
 	t.Run("handles draw line with points", func(t *testing.T) {

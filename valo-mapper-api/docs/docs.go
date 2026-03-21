@@ -2002,6 +2002,9 @@ const docTemplate = `{
                 "currentRotation": {
                     "type": "number"
                 },
+                "iconOnly": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "string"
                 },
