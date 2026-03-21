@@ -17,7 +17,7 @@ export const ARC_ABILITY_CONFIGS: Record<ArcAbility, ArcAbilityConfig> = {
   kj_turret: {
     arcRadius: 8,
     fov: 100,
-    outerCircleRadius: 40,
+    outerCircleRadius: 42.5,
     useFillGradient: true,
   },
   miks_ult: {
