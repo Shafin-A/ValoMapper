@@ -4,6 +4,15 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      depot:
+        description: "Use Depot for builds"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 jobs:
   check-backend-changes:
@@ -42,7 +51,12 @@ jobs:
 
       - name: Deploy Backend
         working-directory: ./valo-mapper-api
-        run: flyctl deploy --remote-only
+        run: |
+          DEPOT_FLAG=""
+          if [ "${{ inputs.depot }}" == "false" ]; then
+            DEPOT_FLAG="--depot=false"
+          fi
+          flyctl deploy --remote-only $DEPOT_FLAG
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -51,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check-backend-changes, deploy-backend]
     if: |
-      always() && 
+      always() &&
       (needs.check-backend-changes.outputs.frontend-changed == 'true' || github.event_name == 'workflow_dispatch') &&
       (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
 
@@ -65,7 +79,11 @@ jobs:
       - name: Deploy Frontend
         working-directory: ./valo-mapper
         run: |
-          flyctl deploy --remote-only \
+          DEPOT_FLAG=""
+          if [ "${{ inputs.depot }}" == "false" ]; then
+            DEPOT_FLAG="--depot=false"
+          fi
+          flyctl deploy --remote-only $DEPOT_FLAG \
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" \
