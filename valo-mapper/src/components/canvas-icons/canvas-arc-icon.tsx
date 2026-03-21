@@ -206,6 +206,7 @@ export const CanvasArcIcon = ({
 
   const gradientFillProps = useFillGradient
     ? {
+        fillPriority: "radial-gradient",
         fillRadialGradientStartPoint: { x: 0, y: 0 },
         fillRadialGradientEndPoint: { x: 0, y: 0 },
         fillRadialGradientStartRadius: 0,
