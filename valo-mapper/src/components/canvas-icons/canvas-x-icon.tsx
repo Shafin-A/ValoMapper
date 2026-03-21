@@ -14,6 +14,7 @@ interface CanvasXIconProps extends CanvasIconProps {
   lineLength: number;
   lineStrokeWidth?: number;
   stroke: string;
+  showAbilityShape?: boolean;
   rotation?: number;
   onRotationChange?: (rotation: number) => void;
   onInteractionEnd?: (data: { currentRotation: number }) => void;
@@ -56,6 +57,7 @@ export const CanvasXIcon = ({
   strokeWidth,
   endCircleRadius = 8,
   endCircleColor = "#ffffff",
+  showAbilityShape = true,
 }: CanvasXIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const rotationHandleRef = useRef<Konva.Circle>(null);
@@ -87,6 +89,7 @@ export const CanvasXIcon = ({
     isHoveringHandle,
     isAlly,
     mapSide,
+    showAbilityShape,
   ]);
 
   useEffect(() => {
@@ -234,60 +237,68 @@ export const CanvasXIcon = ({
       onDragMove={isListening ? onDragMove : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
     >
-      <Line
-        points={[line1StartX, line1StartY, line1EndX, line1EndY]}
-        strokeWidth={lineStrokeWidth}
-        stroke={stroke}
-      />
+      {showAbilityShape && (
+        <>
+          <Line
+            points={[line1StartX, line1StartY, line1EndX, line1EndY]}
+            strokeWidth={lineStrokeWidth}
+            stroke={stroke}
+          />
 
-      <Line
-        points={[line2StartX, line2StartY, line2EndX, line2EndY]}
-        strokeWidth={lineStrokeWidth}
-        stroke={stroke}
-      />
+          <Line
+            points={[line2StartX, line2StartY, line2EndX, line2EndY]}
+            strokeWidth={lineStrokeWidth}
+            stroke={stroke}
+          />
 
-      <Circle
-        x={line1StartX}
-        y={line1StartY}
-        radius={endCircleRadius}
-        fill={endCircleColor}
-      />
-      <Circle
-        x={line1EndX}
-        y={line1EndY}
-        radius={endCircleRadius}
-        fill={endCircleColor}
-      />
+          <Circle
+            x={line1StartX}
+            y={line1StartY}
+            radius={endCircleRadius}
+            fill={endCircleColor}
+          />
+          <Circle
+            x={line1EndX}
+            y={line1EndY}
+            radius={endCircleRadius}
+            fill={endCircleColor}
+          />
 
-      <Circle
-        x={line2StartX}
-        y={line2StartY}
-        radius={endCircleRadius}
-        fill={endCircleColor}
-      />
-      <Circle
-        x={line2EndX}
-        y={line2EndY}
-        radius={endCircleRadius}
-        fill={endCircleColor}
-      />
+          <Circle
+            x={line2StartX}
+            y={line2StartY}
+            radius={endCircleRadius}
+            fill={endCircleColor}
+          />
+          <Circle
+            x={line2EndX}
+            y={line2EndY}
+            radius={endCircleRadius}
+            fill={endCircleColor}
+          />
 
-      {showRotationHandle && (
-        <Circle
-          ref={rotationHandleRef}
-          x={handleX}
-          y={handleY}
-          isListening={isListening}
-          radius={rotationHandleRadius}
-          fill={rotationHandleColor}
-          stroke={rotationHandleStrokeColor}
-          strokeWidth={2}
-          opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
-          onMouseDown={isListening ? handleInteractionStart : undefined}
-          onTouchStart={isListening ? handleInteractionStart : undefined}
-          onMouseOver={isListening ? handleRotationHandleMouseOver : undefined}
-          onMouseOut={isListening ? handleRotationHandleMouseOut : undefined}
-        />
+          {showRotationHandle && (
+            <Circle
+              ref={rotationHandleRef}
+              x={handleX}
+              y={handleY}
+              isListening={isListening}
+              radius={rotationHandleRadius}
+              fill={rotationHandleColor}
+              stroke={rotationHandleStrokeColor}
+              strokeWidth={2}
+              opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
+              onMouseDown={isListening ? handleInteractionStart : undefined}
+              onTouchStart={isListening ? handleInteractionStart : undefined}
+              onMouseOver={
+                isListening ? handleRotationHandleMouseOver : undefined
+              }
+              onMouseOut={
+                isListening ? handleRotationHandleMouseOut : undefined
+              }
+            />
+          )}
+        </>
       )}
 
       <CanvasIcon

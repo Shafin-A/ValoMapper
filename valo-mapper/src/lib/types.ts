@@ -51,6 +51,7 @@ export type AbilityCanvas = CanvasItem & {
   currentRotation?: number;
   currentLength?: number;
   currentPath?: Vector2d[];
+  iconOnly?: boolean;
 };
 
 export type AgentRole = "Duelist" | "Controller" | "Initiator" | "Sentinel";

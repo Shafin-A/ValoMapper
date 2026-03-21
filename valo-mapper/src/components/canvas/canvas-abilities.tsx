@@ -85,6 +85,7 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
           enemyColor={abilitiesSettings.enemyColor}
           currentPath={ability.currentPath}
           currentLength={ability.currentLength}
+          iconOnly={ability.iconOnly}
           onInteractionEnd={(data) => {
             notifyAbilityMoved({ ...ability, ...data });
           }}

@@ -397,6 +397,30 @@ export const useCanvasContextMenu = (
     closeContextMenu,
   ]);
 
+  const handleToggleAbilityIconOnly = useCallback(() => {
+    if (!contextMenu.open || contextMenu.itemType !== "ability") return;
+
+    const ability = abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId);
+    if (!ability) return;
+
+    const updatedAbility: AbilityCanvas = {
+      ...ability,
+      iconOnly: !ability.iconOnly,
+    };
+
+    setAbilitiesOnCanvas((prev) =>
+      prev.map((a) => (a.id === ability.id ? updatedAbility : a)),
+    );
+    notifyAbilityMoved(updatedAbility);
+    closeContextMenu();
+  }, [
+    contextMenu,
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
+    notifyAbilityMoved,
+    closeContextMenu,
+  ]);
+
   return {
     contextMenu,
     handleContextMenu,
@@ -405,6 +429,7 @@ export const useCanvasContextMenu = (
     handleDelete,
     handleToggleAlly,
     handleSwapAbility,
+    handleToggleAbilityIconOnly,
     closeContextMenu,
   };
 };

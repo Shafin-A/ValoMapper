@@ -15,6 +15,7 @@ interface CanvasCurvableLineIconProps extends CanvasIconProps {
   maxDistance: number;
   lineStrokeWidth?: number;
   stroke: string;
+  showAbilityShape?: boolean;
   showHandle?: boolean;
   handleRadius?: number;
   handleColor?: string;
@@ -50,6 +51,7 @@ export const CanvasCurvableLineIcon = ({
   initialPath = [],
   rotation = 0,
   onInteractionEnd,
+  showAbilityShape = true,
 }: CanvasCurvableLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const handleRef = useRef<Konva.Circle>(null);
@@ -85,7 +87,15 @@ export const CanvasCurvableLineIcon = ({
         }
       });
     }
-  }, [image, path, isDrawing, isHoveringHandle, isAlly, mapSide]);
+  }, [
+    image,
+    path,
+    isDrawing,
+    isHoveringHandle,
+    isAlly,
+    mapSide,
+    showAbilityShape,
+  ]);
 
   useEffect(() => {
     const currentSerialized = JSON.stringify(initialPath);
@@ -290,7 +300,7 @@ export const CanvasCurvableLineIcon = ({
       onDragEnd={isListening ? handleDragEnd : undefined}
       rotation={rotation}
     >
-      {path.length > 1 && (
+      {showAbilityShape && path.length > 1 && (
         <Line
           onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
           points={getLinePoints()}
@@ -299,7 +309,7 @@ export const CanvasCurvableLineIcon = ({
         />
       )}
 
-      {showHandle && !constraintReached && (
+      {showAbilityShape && showHandle && !constraintReached && (
         <Circle
           ref={handleRef}
           x={endPoint.x}
@@ -317,7 +327,7 @@ export const CanvasCurvableLineIcon = ({
         />
       )}
 
-      {
+      {showAbilityShape && (
         <Circle
           x={endPoint.x}
           y={mapSide === "defense" ? endPoint.y - 25 : endPoint.y + 25}
@@ -330,7 +340,7 @@ export const CanvasCurvableLineIcon = ({
           fill={constraintReached ? "#e54646" : "#46e546"}
           opacity={0.6}
         />
-      }
+      )}
 
       <CanvasIcon
         id={id}

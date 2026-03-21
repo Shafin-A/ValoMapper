@@ -10,7 +10,15 @@ import {
   ImageCanvas,
   TextCanvas,
 } from "@/lib/types";
-import { Copy, Heart, HeartCrack, RefreshCw, Trash2 } from "lucide-react";
+import {
+  Copy,
+  Heart,
+  HeartCrack,
+  Minus,
+  RefreshCw,
+  Shapes,
+  Trash2,
+} from "lucide-react";
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useEffect, useRef, useState } from "react";
@@ -25,6 +33,7 @@ interface ContextMenuPopoverProps {
   onDuplicate: () => void;
   onToggleAlly: () => void;
   onSwapAbility?: () => void;
+  onToggleAbilityIconOnly?: () => void;
   onDelete: () => void;
 }
 
@@ -56,11 +65,16 @@ export const ContextMenuPopover = ({
   onDuplicate,
   onToggleAlly,
   onSwapAbility,
+  onToggleAbilityIconOnly,
   onDelete,
 }: ContextMenuPopoverProps) => {
   const [allowTooltips, setAllowTooltips] = useState(false);
   const [initialIsAlly, setInitialIsAlly] = useState(false);
   const swapAbilityRef = useRef(onSwapAbility);
+  const abilityIconOnly =
+    itemType === "ability"
+      ? (currentItem as AbilityCanvas | null)?.iconOnly
+      : false;
 
   useEffect(() => {
     if (open) {
@@ -72,7 +86,7 @@ export const ContextMenuPopover = ({
       const timer = setTimeout(() => setAllowTooltips(true), 300);
       return () => clearTimeout(timer);
     }
-  }, [currentItem, itemType, open]);
+  }, [currentItem, itemType, onSwapAbility, open]);
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -142,6 +156,37 @@ export const ContextMenuPopover = ({
               >
                 <Button variant="ghost" size="sm" onClick={onSwapAbility}>
                   <RefreshCw />
+                </Button>
+              </ConditionalTooltip>
+
+              <Separator
+                orientation="vertical"
+                className="data-[orientation=vertical]:h-6"
+              />
+            </>
+          )}
+
+          {onToggleAbilityIconOnly && itemType === "ability" && (
+            <>
+              <ConditionalTooltip
+                enabled={allowTooltips}
+                content={
+                  abilityIconOnly
+                    ? "Show Ability Shapes"
+                    : "Hide Ability Shapes"
+                }
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onToggleAbilityIconOnly}
+                >
+                  <span className="relative inline-flex items-center justify-center w-4 h-4 overflow-visible">
+                    <Shapes className="w-4 h-4" />
+                    {!abilityIconOnly && (
+                      <Minus className="absolute rotate-135 text-destructive size-8" />
+                    )}
+                  </span>
                 </Button>
               </ConditionalTooltip>
 

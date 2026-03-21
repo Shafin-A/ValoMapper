@@ -169,6 +169,7 @@ export const useCanvasEvents = (
     handleDelete,
     handleToggleAlly,
     handleSwapAbility,
+    handleToggleAbilityIconOnly,
   } = useCanvasContextMenu(
     stageRef,
     agentsOnCanvas,
@@ -424,6 +425,7 @@ export const useCanvasEvents = (
     handleDelete,
     handleToggleAlly,
     handleSwapAbility,
+    handleToggleAbilityIconOnly,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,

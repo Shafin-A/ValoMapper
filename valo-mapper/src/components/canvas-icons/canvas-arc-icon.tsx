@@ -10,6 +10,7 @@ interface CanvasArcIconProps extends CanvasIconProps {
   boxRadius: number;
   arcRadius: number;
   fov: number;
+  showAbilityShape?: boolean;
   outerCircleRadius?: number;
   showOuterArc?: boolean;
   outerArcThickness?: number;
@@ -61,6 +62,7 @@ export const CanvasArcIcon = ({
   rotationHandleRadius = 12,
   rotationHandleColor = "#e54646",
   rotationHandleStrokeColor = "#ffffff",
+  showAbilityShape = true,
 }: CanvasArcIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const rotationHandleRef = useRef<Konva.Circle>(null);
@@ -93,6 +95,7 @@ export const CanvasArcIcon = ({
     isHoveringHandle,
     isAlly,
     mapSide,
+    showAbilityShape,
   ]);
 
   useEffect(() => {
@@ -247,51 +250,59 @@ export const CanvasArcIcon = ({
       onDragMove={isListening ? onDragMove : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
     >
-      <Arc
-        strokeWidth={circleStrokeWidth}
-        angle={fov}
-        innerRadius={0}
-        outerRadius={arcRadius}
-        rotation={currentRotation - fov / 2}
-        fill={fill}
-        {...gradientFillProps}
-      />
-      {showOuterArc && (
-        <Arc
-          angle={fov}
-          innerRadius={outerArcInnerRadius}
-          outerRadius={outerArcOuterRadius}
-          rotation={currentRotation - fov / 2}
-          fill={outerArcFill}
-          opacity={outerArcOpacity}
-          listening={false}
-        />
-      )}
-      {outerCircleRadius && (
-        <Circle
-          radius={outerCircleRadius}
-          strokeWidth={circleStrokeWidth}
-          stroke={"#ffffff"}
-          opacity={0.3}
-          listening={false}
-          dash={[10, 5]}
-        />
-      )}
-      {showRotationHandle && (
-        <Circle
-          ref={rotationHandleRef}
-          x={handleX}
-          y={handleY}
-          radius={rotationHandleRadius}
-          fill={rotationHandleColor}
-          stroke={rotationHandleStrokeColor}
-          strokeWidth={2}
-          opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
-          onMouseDown={isListening ? handleInteractionStart : undefined}
-          onTouchStart={isListening ? handleInteractionStart : undefined}
-          onMouseOver={isListening ? handleRotationHandleMouseOver : undefined}
-          onMouseOut={isListening ? handleRotationHandleMouseOut : undefined}
-        />
+      {showAbilityShape && (
+        <>
+          <Arc
+            strokeWidth={circleStrokeWidth}
+            angle={fov}
+            innerRadius={0}
+            outerRadius={arcRadius}
+            rotation={currentRotation - fov / 2}
+            fill={fill}
+            {...gradientFillProps}
+          />
+          {showOuterArc && (
+            <Arc
+              angle={fov}
+              innerRadius={outerArcInnerRadius}
+              outerRadius={outerArcOuterRadius}
+              rotation={currentRotation - fov / 2}
+              fill={outerArcFill}
+              opacity={outerArcOpacity}
+              listening={false}
+            />
+          )}
+          {outerCircleRadius && (
+            <Circle
+              radius={outerCircleRadius}
+              strokeWidth={circleStrokeWidth}
+              stroke={"#ffffff"}
+              opacity={0.3}
+              listening={false}
+              dash={[10, 5]}
+            />
+          )}
+          {showRotationHandle && (
+            <Circle
+              ref={rotationHandleRef}
+              x={handleX}
+              y={handleY}
+              radius={rotationHandleRadius}
+              fill={rotationHandleColor}
+              stroke={rotationHandleStrokeColor}
+              strokeWidth={2}
+              opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
+              onMouseDown={isListening ? handleInteractionStart : undefined}
+              onTouchStart={isListening ? handleInteractionStart : undefined}
+              onMouseOver={
+                isListening ? handleRotationHandleMouseOver : undefined
+              }
+              onMouseOut={
+                isListening ? handleRotationHandleMouseOut : undefined
+              }
+            />
+          )}
+        </>
       )}
       <CanvasIcon
         id={id}

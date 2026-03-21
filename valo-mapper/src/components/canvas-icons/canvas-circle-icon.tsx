@@ -17,6 +17,7 @@ interface CanvasCircleIconProps extends CanvasIconProps {
   circleStrokeWidth?: number;
   stroke: string;
   fill: string;
+  showAbilityShape?: boolean;
 }
 
 export const CanvasCircleIcon = ({
@@ -41,6 +42,7 @@ export const CanvasCircleIcon = ({
   fill,
   width,
   height,
+  showAbilityShape = true,
 }: CanvasCircleIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const [image] = useImage(src);
@@ -55,7 +57,7 @@ export const CanvasCircleIcon = ({
         }
       });
     }
-  }, [image, isAlly, mapSide, stroke, fill, circleRadius]);
+  }, [image, isAlly, mapSide, stroke, fill, circleRadius, showAbilityShape]);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
@@ -97,22 +99,26 @@ export const CanvasCircleIcon = ({
       onDragEnd={isListening ? handleDragEnd : undefined}
       onDragMove={isListening ? onDragMove : undefined}
     >
-      <Circle
-        radius={circleRadius}
-        strokeWidth={circleStrokeWidth}
-        fill={fill}
-        stroke={stroke}
-        listening={false}
-      />
-      {outerCircleRadius && (
-        <Circle
-          radius={outerCircleRadius}
-          strokeWidth={circleStrokeWidth}
-          stroke={"#ffffff"}
-          opacity={0.3}
-          listening={false}
-          dash={[10, 5]}
-        />
+      {showAbilityShape && (
+        <>
+          <Circle
+            radius={circleRadius}
+            strokeWidth={circleStrokeWidth}
+            fill={fill}
+            stroke={stroke}
+            listening={false}
+          />
+          {outerCircleRadius && (
+            <Circle
+              radius={outerCircleRadius}
+              strokeWidth={circleStrokeWidth}
+              stroke={"#ffffff"}
+              opacity={0.3}
+              listening={false}
+              dash={[10, 5]}
+            />
+          )}
+        </>
       )}
       <CanvasIcon
         id={id}

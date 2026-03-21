@@ -42,6 +42,7 @@ interface AbilityIconProps extends CanvasIconProps {
   rotation?: number;
   currentPath?: Vector2d[];
   currentLength?: number;
+  iconOnly?: boolean;
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
   onInteractionEnd?: (data: InteractionData) => void;
 }
@@ -68,6 +69,7 @@ const renderCircleAbility = (props: AbilityIconProps): ReactNode => {
 
   return (
     <CanvasCircleIcon
+      showAbilityShape={!props.iconOnly}
       circleRadius={mToPixels(radius)}
       stroke={colors.stroke}
       fill={colors.fill}
@@ -88,6 +90,7 @@ const renderAdjustableLineAbility = (props: AbilityIconProps): ReactNode => {
 
   return (
     <CanvasLineIcon
+      showAbilityShape={!props.iconOnly}
       handleMode="length"
       lineLength={props.currentLength || mToPixels(config.lineLength)}
       stroke={config.stroke}
@@ -123,6 +126,7 @@ const renderLineAbility = (props: AbilityIconProps): ReactNode => {
 
   return (
     <CanvasLineIcon
+      showAbilityShape={!props.iconOnly}
       lineLength={mToPixels(config.lineLength)}
       stroke={config.stroke}
       iconPosition={config.iconPosition}
@@ -156,6 +160,7 @@ const renderDoubleLineAbility = (props: AbilityIconProps): ReactNode => {
 
   return (
     <CanvasDoubleLineIcon
+      showAbilityShape={!props.iconOnly}
       handleMode="length"
       lineLength={props.currentLength || mToPixels(config.lineLength)}
       stroke={config.stroke}
@@ -192,6 +197,7 @@ const renderXLineAbility = (props: AbilityIconProps): ReactNode => {
 
   return (
     <CanvasXIcon
+      showAbilityShape={!props.iconOnly}
       lineLength={mToPixels(config.lineLength)}
       stroke={config.stroke}
       lineStrokeWidth={
@@ -217,6 +223,7 @@ const renderCurvableLineAbility = (props: AbilityIconProps): ReactNode => {
 
   return (
     <CanvasCurvableLineIcon
+      showAbilityShape={!props.iconOnly}
       maxDistance={mToPixels(config.maxDistance)}
       stroke={config.stroke}
       initialPath={props.currentPath}
@@ -235,6 +242,7 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
 
   return (
     <CanvasArcIcon
+      showAbilityShape={!props.iconOnly}
       boxRadius={props.radius}
       arcRadius={mToPixels(config.arcRadius)}
       fov={config.fov}

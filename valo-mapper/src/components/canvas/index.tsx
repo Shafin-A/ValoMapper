@@ -76,6 +76,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       handleDuplicate,
       handleToggleAlly,
       handleSwapAbility,
+      handleToggleAbilityIconOnly,
       handlePopoverOpenChange,
       handleDragMove,
       contextMenu,
@@ -253,6 +254,11 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           onDuplicate={handleDuplicate}
           onToggleAlly={handleToggleAlly}
           onSwapAbility={canSwapAbility ? handleSwapAbility : undefined}
+          onToggleAbilityIconOnly={
+            contextMenu.itemType === "ability"
+              ? handleToggleAbilityIconOnly
+              : undefined
+          }
           onDelete={handleDelete}
         />
 

@@ -17,6 +17,7 @@ interface CanvasLineIconProps extends CanvasIconProps {
   lineLength: number;
   lineStrokeWidth?: number;
   stroke: string;
+  showAbilityShape?: boolean;
   rotation?: number;
   onRotationChange?: (rotation: number) => void;
   onLengthChange?: (length: number) => void;
@@ -78,6 +79,7 @@ export const CanvasLineIcon = ({
   thickEndLength = 10,
   thickEndWidth = 0,
   thickEndStroke = "#ffffff",
+  showAbilityShape = true,
 }: CanvasLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const rotationHandleRef = useRef<Konva.Circle>(null);
@@ -112,6 +114,7 @@ export const CanvasLineIcon = ({
     isHoveringHandle,
     isAlly,
     mapSide,
+    showAbilityShape,
   ]);
 
   useEffect(() => {
@@ -309,44 +312,52 @@ export const CanvasLineIcon = ({
       onDragMove={isListening ? onDragMove : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
     >
-      <Line
-        isListening={isListening}
-        points={[startX, startY, endX, endY]}
-        strokeWidth={lineStrokeWidth}
-        stroke={stroke}
-      />
+      {showAbilityShape && (
+        <>
+          <Line
+            isListening={isListening}
+            points={[startX, startY, endX, endY]}
+            strokeWidth={lineStrokeWidth}
+            stroke={stroke}
+          />
 
-      {showThickEnd && (
-        <Line
-          isListening={isListening}
-          points={[
-            endX - thickEndLength * Math.cos(radians),
-            endY - thickEndLength * Math.sin(radians),
-            endX,
-            endY,
-          ]}
-          strokeWidth={lineStrokeWidth + thickEndWidth}
-          stroke={thickEndStroke}
-          opacity={1}
-        />
-      )}
+          {showThickEnd && (
+            <Line
+              isListening={isListening}
+              points={[
+                endX - thickEndLength * Math.cos(radians),
+                endY - thickEndLength * Math.sin(radians),
+                endX,
+                endY,
+              ]}
+              strokeWidth={lineStrokeWidth + thickEndWidth}
+              stroke={thickEndStroke}
+              opacity={1}
+            />
+          )}
 
-      {showRotationHandle && (
-        <Circle
-          ref={rotationHandleRef}
-          x={handleX}
-          y={handleY}
-          isListening={isListening}
-          radius={rotationHandleRadius}
-          fill={handleColor}
-          stroke={rotationHandleStrokeColor}
-          strokeWidth={2}
-          opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
-          onMouseDown={isListening ? handleInteractionStart : undefined}
-          onTouchStart={isListening ? handleInteractionStart : undefined}
-          onMouseOver={isListening ? handleRotationHandleMouseOver : undefined}
-          onMouseOut={isListening ? handleRotationHandleMouseOut : undefined}
-        />
+          {showRotationHandle && (
+            <Circle
+              ref={rotationHandleRef}
+              x={handleX}
+              y={handleY}
+              isListening={isListening}
+              radius={rotationHandleRadius}
+              fill={handleColor}
+              stroke={rotationHandleStrokeColor}
+              strokeWidth={2}
+              opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
+              onMouseDown={isListening ? handleInteractionStart : undefined}
+              onTouchStart={isListening ? handleInteractionStart : undefined}
+              onMouseOver={
+                isListening ? handleRotationHandleMouseOver : undefined
+              }
+              onMouseOut={
+                isListening ? handleRotationHandleMouseOut : undefined
+              }
+            />
+          )}
+        </>
       )}
 
       <CanvasIcon

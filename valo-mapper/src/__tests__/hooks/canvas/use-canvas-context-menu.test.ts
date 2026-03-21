@@ -739,6 +739,56 @@ describe("useCanvasContextMenu", () => {
     expect(abilitiesState[0].isAlly).toBe(false);
   });
 
+  it("toggles icon-only mode for an ability", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: "ab1",
+        name: "smoke",
+        action: "brim_smoke",
+        isAlly: true,
+        x: 0,
+        y: 0,
+        iconOnly: false,
+      },
+    ];
+    const setAbilities = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        [],
+        jest.fn(),
+        abilitiesState,
+        setAbilities,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "ab1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleToggleAbilityIconOnly();
+    });
+
+    expect(abilitiesState[0].iconOnly).toBe(true);
+  });
+
   it("handles popover open change", () => {
     const stageRef = { current: createStageMock() as unknown as Stage };
 
