@@ -85,6 +85,7 @@ export type AbilityIconItem = {
 
 export type AbilityAlternate = {
   id: string;
+  src: string;
   name: string;
   action: AbilityAction;
 };

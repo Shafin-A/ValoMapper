@@ -379,12 +379,13 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   Miks: [
     {
       id: "mpulse",
-      src: "/agents/miks/mpulse.png",
+      src: "/agents/miks/mpulse_heal.png",
       name: "M-Pulse Heal",
       action: "miks_heal",
       alternates: [
         {
           id: "mpulse_concuss",
+          src: "/agents/miks/mpulse_concuss.png",
           name: "M-Pulse Concuss",
           action: "miks_stun",
         },
@@ -788,7 +789,7 @@ export const getAbilityVariants = (
   const alts: AbilityIconItem[] = (ability.alternates ?? []).map(
     (alt: AbilityAlternate) => ({
       id: alt.id,
-      src: ability.src,
+      src: alt.src,
       name: alt.name,
       action: alt.action,
     }),
