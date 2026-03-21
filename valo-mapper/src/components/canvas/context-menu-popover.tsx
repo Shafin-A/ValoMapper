@@ -41,6 +41,28 @@ interface ContextMenuPopoverProps {
   onDelete: () => void;
 }
 
+const itemLabel = (itemType: ContextMenuPopoverProps["itemType"]): string => {
+  switch (itemType) {
+    case "agent":
+      return "Agent";
+    case "ability":
+      return "Ability";
+    case "image":
+      return "Image";
+    case "tool":
+      return "Icon";
+    default:
+      return "Text";
+  }
+};
+
+const isAllyItem = (
+  item: AgentCanvas | AbilityCanvas | TextCanvas | ImageCanvas,
+  itemType: ContextMenuPopoverProps["itemType"],
+): item is AgentCanvas | AbilityCanvas => {
+  return itemType !== "text" && itemType !== "image" && itemType !== "tool";
+};
+
 const ConditionalTooltip = ({
   children,
   content,
@@ -73,54 +95,98 @@ export const ContextMenuPopover = ({
   onToggleAbilityOuterCircle,
   onDelete,
 }: ContextMenuPopoverProps) => {
+  // Tooltip opens on its own after opening popover for some reason so need to delay it
   const [allowTooltips, setAllowTooltips] = useState(false);
-  const [initialIsAlly, setInitialIsAlly] = useState(false);
-  const swapAbilityRef = useRef(onSwapAbility);
-  const abilityIconOnly =
-    itemType === "ability" && currentItem
-      ? (currentItem as AbilityCanvas).iconOnly
-      : false;
 
-  const currentAbilityAction =
-    itemType === "ability" && currentItem
-      ? (currentItem as AbilityCanvas).action
-      : undefined;
+  const snapshotItemType = useRef(itemType);
+  const snapshotItem = useRef(currentItem);
+  const snapshotIsAlly = useRef(false);
+  const snapshotHasSwap = useRef(false);
+  const snapshotHasIconOnly = useRef(false);
+  const snapshotHasOuterCircle = useRef(false);
+  const snapshotAbilityIconOnly = useRef(false);
+  const snapshotAbilityShowOuterCircle = useRef(true);
 
-  const currentCircleConfig =
-    currentAbilityAction && isCircleAbility(currentAbilityAction)
-      ? CIRCLE_ABILITY_CONFIGS[
-          currentAbilityAction as keyof typeof CIRCLE_ABILITY_CONFIGS
-        ]
-      : undefined;
+  const onSwapAbilityRef = useRef(onSwapAbility);
+  const onToggleAbilityIconOnlyRef = useRef(onToggleAbilityIconOnly);
+  const onToggleAbilityOuterCircleRef = useRef(onToggleAbilityOuterCircle);
 
-  const currentArcConfig =
-    currentAbilityAction && isArcAbility(currentAbilityAction)
-      ? ARC_ABILITY_CONFIGS[
-          currentAbilityAction as keyof typeof ARC_ABILITY_CONFIGS
-        ]
-      : undefined;
+  const pendingSnapshot = useRef({
+    itemType,
+    currentItem,
+    onSwapAbility,
+    onToggleAbilityIconOnly,
+    onToggleAbilityOuterCircle,
+  });
+  pendingSnapshot.current = {
+    itemType,
+    currentItem,
+    onSwapAbility,
+    onToggleAbilityIconOnly,
+    onToggleAbilityOuterCircle,
+  };
 
-  const controlsOuterCircle = Boolean(
-    currentCircleConfig?.activeRadius || currentArcConfig?.outerCircleRadius,
-  );
-
-  const abilityShowOuterCircle = controlsOuterCircle
-    ? ((currentItem as AbilityCanvas).showOuterCircle ?? true)
-    : true;
-
-  const showOuterCircleToggle = controlsOuterCircle;
+  onSwapAbilityRef.current = onSwapAbility;
+  onToggleAbilityIconOnlyRef.current = onToggleAbilityIconOnly;
+  onToggleAbilityOuterCircleRef.current = onToggleAbilityOuterCircle;
 
   useEffect(() => {
-    if (open) {
-      swapAbilityRef.current = onSwapAbility;
-      if (itemType !== "text" && itemType !== "image" && currentItem) {
-        setInitialIsAlly((currentItem as AgentCanvas | AbilityCanvas).isAlly);
-      }
-      setAllowTooltips(false); // Tooltip opens on its own after opening popover for some reason so need to delay it
-      const timer = setTimeout(() => setAllowTooltips(true), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [currentItem, itemType, onSwapAbility, open]);
+    if (!open) return;
+
+    const {
+      itemType,
+      currentItem,
+      onSwapAbility,
+      onToggleAbilityIconOnly,
+      onToggleAbilityOuterCircle,
+    } = pendingSnapshot.current;
+
+    const abilityItem =
+      itemType === "ability" ? (currentItem as AbilityCanvas) : null;
+
+    const currentAbilityAction = abilityItem?.action;
+    const isIconAbility = currentAbilityAction === "icon";
+
+    const currentCircleConfig =
+      currentAbilityAction && isCircleAbility(currentAbilityAction)
+        ? CIRCLE_ABILITY_CONFIGS[
+            currentAbilityAction as keyof typeof CIRCLE_ABILITY_CONFIGS
+          ]
+        : undefined;
+
+    const currentArcConfig =
+      currentAbilityAction && isArcAbility(currentAbilityAction)
+        ? ARC_ABILITY_CONFIGS[
+            currentAbilityAction as keyof typeof ARC_ABILITY_CONFIGS
+          ]
+        : undefined;
+
+    const abilityHasOuterCircle = Boolean(
+      currentCircleConfig?.activeRadius || currentArcConfig?.outerCircleRadius,
+    );
+
+    snapshotItemType.current = itemType;
+    snapshotItem.current = currentItem;
+    snapshotIsAlly.current =
+      currentItem && isAllyItem(currentItem, itemType)
+        ? currentItem.isAlly
+        : false;
+    snapshotHasSwap.current = Boolean(onSwapAbility);
+    snapshotHasIconOnly.current =
+      Boolean(onToggleAbilityIconOnly) && !isIconAbility;
+    snapshotHasOuterCircle.current =
+      abilityHasOuterCircle && Boolean(onToggleAbilityOuterCircle);
+    snapshotAbilityIconOnly.current = abilityItem?.iconOnly ?? false;
+    snapshotAbilityShowOuterCircle.current = abilityHasOuterCircle
+      ? (abilityItem?.showOuterCircle ?? true)
+      : true;
+
+    setAllowTooltips(false);
+    const timer = setTimeout(() => setAllowTooltips(true), 300);
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  const snapType = snapshotItemType.current;
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -140,17 +206,7 @@ export const ContextMenuPopover = ({
         <div className="flex items-center space-x-1">
           <ConditionalTooltip
             enabled={allowTooltips}
-            content={`Duplicate ${
-              itemType === "agent"
-                ? "Agent"
-                : itemType === "ability"
-                  ? "Ability"
-                  : itemType === "image"
-                    ? "Image"
-                    : itemType === "tool"
-                      ? "Icon"
-                      : "Text"
-            }`}
+            content={`Duplicate ${itemLabel(snapType)}`}
           >
             <Button variant="ghost" size="sm" onClick={onDuplicate}>
               <Copy />
@@ -162,16 +218,15 @@ export const ContextMenuPopover = ({
             className="data-[orientation=vertical]:h-6"
           />
 
-          {itemType !== "text" &&
-            itemType !== "image" &&
-            itemType !== "tool" && (
+          {snapshotItem.current &&
+            isAllyItem(snapshotItem.current, snapType) && (
               <>
                 <ConditionalTooltip
                   enabled={allowTooltips}
-                  content={initialIsAlly ? "Make Enemy" : "Make Ally"}
+                  content={snapshotIsAlly.current ? "Make Enemy" : "Make Ally"}
                 >
                   <Button variant="ghost" size="sm" onClick={onToggleAlly}>
-                    {initialIsAlly ? <HeartCrack /> : <Heart />}
+                    {snapshotIsAlly.current ? <HeartCrack /> : <Heart />}
                   </Button>
                 </ConditionalTooltip>
 
@@ -182,13 +237,17 @@ export const ContextMenuPopover = ({
               </>
             )}
 
-          {swapAbilityRef.current && (
+          {snapshotHasSwap.current && (
             <>
               <ConditionalTooltip
                 enabled={allowTooltips}
                 content="Swap Ability"
               >
-                <Button variant="ghost" size="sm" onClick={onSwapAbility}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onSwapAbilityRef.current?.()}
+                >
                   <RefreshCw />
                 </Button>
               </ConditionalTooltip>
@@ -200,12 +259,12 @@ export const ContextMenuPopover = ({
             </>
           )}
 
-          {onToggleAbilityIconOnly && itemType === "ability" && (
+          {snapshotHasIconOnly.current && (
             <>
               <ConditionalTooltip
                 enabled={allowTooltips}
                 content={
-                  abilityIconOnly
+                  snapshotAbilityIconOnly.current
                     ? "Show Ability Shapes"
                     : "Hide Ability Shapes"
                 }
@@ -213,11 +272,11 @@ export const ContextMenuPopover = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={onToggleAbilityIconOnly}
+                  onClick={() => onToggleAbilityIconOnlyRef.current?.()}
                 >
                   <span className="relative inline-flex items-center justify-center w-4 h-4 overflow-visible">
                     <Shapes className="w-4 h-4" />
-                    {!abilityIconOnly && (
+                    {!snapshotAbilityIconOnly.current && (
                       <Minus className="absolute rotate-135 text-destructive size-8" />
                     )}
                   </span>
@@ -231,20 +290,24 @@ export const ContextMenuPopover = ({
             </>
           )}
 
-          {showOuterCircleToggle && onToggleAbilityOuterCircle && (
+          {snapshotHasOuterCircle.current && (
             <>
               <ConditionalTooltip
                 enabled={allowTooltips}
-                content={abilityShowOuterCircle ? "Hide Range" : "Show Range"}
+                content={
+                  snapshotAbilityShowOuterCircle.current
+                    ? "Hide Range"
+                    : "Show Range"
+                }
               >
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={onToggleAbilityOuterCircle}
+                  onClick={() => onToggleAbilityOuterCircleRef.current?.()}
                 >
                   <span className="relative inline-flex items-center justify-center size-4 overflow-visible">
                     <CircleDashed className="size-4" />
-                    {abilityShowOuterCircle && (
+                    {snapshotAbilityShowOuterCircle.current && (
                       <Minus className="absolute rotate-135 text-destructive size-8" />
                     )}
                   </span>
@@ -260,17 +323,7 @@ export const ContextMenuPopover = ({
 
           <ConditionalTooltip
             enabled={allowTooltips}
-            content={`Delete ${
-              itemType === "agent"
-                ? "Agent"
-                : itemType === "ability"
-                  ? "Ability"
-                  : itemType === "image"
-                    ? "Image"
-                    : itemType === "tool"
-                      ? "Icon"
-                      : "Text"
-            }`}
+            content={`Delete ${itemLabel(snapType)}`}
           >
             <Button variant="destructiveGhost" size="sm" onClick={onDelete}>
               <Trash2 />

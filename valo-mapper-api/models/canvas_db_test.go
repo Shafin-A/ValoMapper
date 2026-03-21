@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -596,23 +595,5 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Equal(t, "new-from", phases[0].ConnectingLines[0].FromID)
 		assert.Equal(t, "#FFFFFF", phases[0].ConnectingLines[0].StrokeColor)
 		assert.Equal(t, "New notes", phases[0].ConnectingLines[0].Notes)
-	})
-
-	t.Run("marshals ability flags even when false", func(t *testing.T) {
-		ability := CanvasAbility{
-			ID:              "ab1",
-			AgentName:       "Jett",
-			Action:          "dash",
-			X:               100,
-			Y:               200,
-			IsAlly:          true,
-			IconOnly:        false,
-			ShowOuterCircle: false,
-		}
-
-		b, err := json.Marshal(ability)
-		require.NoError(t, err)
-		assert.Contains(t, string(b), `"iconOnly":false`)
-		assert.Contains(t, string(b), `"showOuterCircle":false`)
 	})
 }

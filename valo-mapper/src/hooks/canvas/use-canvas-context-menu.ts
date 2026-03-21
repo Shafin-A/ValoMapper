@@ -401,7 +401,7 @@ export const useCanvasContextMenu = (
     if (!contextMenu.open || contextMenu.itemType !== "ability") return;
 
     const ability = abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId);
-    if (!ability) return;
+    if (!ability || ability.action === "icon") return;
 
     const updatedAbility: AbilityCanvas = {
       ...ability,
