@@ -109,11 +109,11 @@ Before setting up the project, ensure you have:
 
    # Tigris S3-compatible object storage for image uploads
    # Leave empty/unset to skip image upload features. Set to use Tigris or compatible service.
-   # AWS_ACCESS_KEY_ID=your_tigris_access_key
-   # AWS_SECRET_ACCESS_KEY=your_tigris_secret_key
-   # BUCKET_NAME=your_tigris_bucket_name
-   # AWS_ENDPOINT_URL_S3=https://fly.storage.tigris.dev
-   # AWS_REGION=auto
+   AWS_ACCESS_KEY_ID=your_tigris_access_key
+   AWS_SECRET_ACCESS_KEY=your_tigris_secret_key
+   BUCKET_NAME=your_tigris_bucket_name
+   AWS_ENDPOINT_URL_S3=https://fly.storage.tigris.dev
+   AWS_REGION=auto
    ```
 
 3. Ensure PostgreSQL is running and a database named `valo-mapper` exists.
