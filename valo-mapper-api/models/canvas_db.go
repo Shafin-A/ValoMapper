@@ -92,14 +92,14 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	for rows.Next() {
 		var line CanvasDrawLine
 		var phaseIndex int
-		var pointsJSON []byte
-		if err := rows.Scan(&line.ID, &line.Tool, &pointsJSON, &line.Color, &line.Size, &line.IsDashed, &line.IsArrowHead, &phaseIndex); err != nil {
+		var pointsArray []float64
+		if err := rows.Scan(&line.ID, &line.Tool, &pointsArray, &line.Color, &line.Size, &line.IsDashed, &line.IsArrowHead, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
-		if err := json.Unmarshal(pointsJSON, &line.Points); err != nil {
-			rows.Close()
-			return nil, err
+		line.Points = make([]Position, 0, len(pointsArray)/2)
+		for i := 0; i+1 < len(pointsArray); i += 2 {
+			line.Points = append(line.Points, Position{X: pointsArray[i], Y: pointsArray[i+1]})
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].DrawLines = append(phases[phaseIndex].DrawLines, line)
@@ -274,12 +274,12 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Draw lines
 		for _, l := range phase.DrawLines {
-			pointsJSON, err := json.Marshal(l.Points)
-			if err != nil {
-				return err
+			pointsArray := make([]float64, 0, len(l.Points)*2)
+			for _, p := range l.Points {
+				pointsArray = append(pointsArray, p.X, p.Y)
 			}
 			lineRows = append(lineRows, []any{
-				l.ID, lobbyCode, l.Tool, pointsJSON, l.Color, l.Size,
+				l.ID, lobbyCode, l.Tool, pointsArray, l.Color, l.Size,
 				l.IsDashed, l.IsArrowHead, phaseIndex,
 			})
 		}
