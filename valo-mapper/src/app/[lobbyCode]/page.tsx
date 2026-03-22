@@ -97,6 +97,21 @@ const LobbyEditPage = () => {
   useEffect(() => {
     if (!isAssetWarmupReady) return;
 
+    const requestIdleCallback =
+      window.requestIdleCallback ||
+      ((cb: IdleRequestCallback, opts?: IdleRequestOptions) => {
+        const timeout = opts?.timeout ?? 1;
+        return window.setTimeout(() => {
+          cb({
+            didTimeout: false,
+            timeRemaining: () => 0,
+          });
+        }, timeout) as unknown as number;
+      });
+
+    const cancelIdleCallback =
+      window.cancelIdleCallback || ((id: number) => clearTimeout(id));
+
     const id = requestIdleCallback(
       () => {
         void preloadImages([
