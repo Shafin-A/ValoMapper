@@ -36,6 +36,7 @@ export const useCollaborativeCanvas = () => {
     broadcastImageMoved,
     broadcastImageRemoved,
     broadcastLobbyUpdated,
+    broadcastStateSync,
     broadcastToolIconAdded,
     broadcastToolIconMoved,
     broadcastToolIconRemoved,
@@ -196,6 +197,12 @@ export const useCollaborativeCanvas = () => {
     [isConnected, user?.name, broadcastLobbyUpdated],
   );
 
+  const notifyFullSync = useCallback(() => {
+    if (isConnected) {
+      broadcastStateSync();
+    }
+  }, [isConnected, broadcastStateSync]);
+
   const notifyImageMoved = useCallback(
     (image: ImagePositionData) => {
       if (isConnected) {
@@ -295,5 +302,6 @@ export const useCollaborativeCanvas = () => {
     notifyMapChanged,
     notifySideChanged,
     notifyPhaseChanged,
+    notifyFullSync,
   };
 };

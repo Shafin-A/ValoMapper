@@ -107,6 +107,7 @@ interface WebSocketContextType {
   broadcastMapChanged: (selectedMap: MapChangedData["selectedMap"]) => void;
   broadcastSideChanged: (mapSide: SideChangedData["mapSide"]) => void;
   broadcastPhaseChanged: (phaseIndex: number) => void;
+  broadcastStateSync: () => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(
@@ -738,6 +739,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       broadcastImageMoved,
       broadcastImageRemoved,
       broadcastLobbyUpdated,
+      broadcastStateSync,
       broadcastToolIconAdded,
       broadcastToolIconMoved,
       broadcastToolIconRemoved,
@@ -768,6 +770,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       broadcastImageMoved,
       broadcastImageRemoved,
       broadcastLobbyUpdated,
+      broadcastStateSync,
       broadcastToolIconAdded,
       broadcastToolIconMoved,
       broadcastToolIconRemoved,

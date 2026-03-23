@@ -30,7 +30,7 @@ export const DeleteSettings = () => {
     saveCanvasStateAsync,
   } = useCanvas();
 
-  const { notifyCanvasUpdated } = useCollaborativeCanvas();
+  const { notifyFullSync } = useCollaborativeCanvas();
   const { users } = useWebSocket();
 
   const resetAgents = async () => {
@@ -40,8 +40,10 @@ export const DeleteSettings = () => {
     setAgentsOnCanvas((prev) =>
       prev.filter((agent) => connectedAgentIds.has(agent.id)),
     );
-    if (users.length > 1) await saveCanvasStateAsync();
-    notifyCanvasUpdated("agents_deleted");
+    if (users.length > 1) {
+      await saveCanvasStateAsync();
+      notifyFullSync();
+    }
   };
 
   const resetAbilities = async () => {
@@ -52,26 +54,34 @@ export const DeleteSettings = () => {
       prev.filter((ability) => connectedAbilityIds.has(ability.id)),
     );
     setToolIconsOnCanvas([]);
-    if (users.length > 1) await saveCanvasStateAsync();
-    notifyCanvasUpdated("abilities_deleted");
+    if (users.length > 1) {
+      await saveCanvasStateAsync();
+      notifyFullSync();
+    }
   };
 
   const resetDrawings = async () => {
     setDrawLines([]);
-    if (users.length > 1) await saveCanvasStateAsync();
-    notifyCanvasUpdated("drawings_deleted");
+    if (users.length > 1) {
+      await saveCanvasStateAsync();
+      notifyFullSync();
+    }
   };
 
   const resetTexts = async () => {
     setTextsOnCanvas([]);
-    if (users.length > 1) await saveCanvasStateAsync();
-    notifyCanvasUpdated("texts_deleted");
+    if (users.length > 1) {
+      await saveCanvasStateAsync();
+      notifyFullSync();
+    }
   };
 
   const resetImages = async () => {
     setImagesOnCanvas([]);
-    if (users.length > 1) await saveCanvasStateAsync();
-    notifyCanvasUpdated("images_deleted");
+    if (users.length > 1) {
+      await saveCanvasStateAsync();
+      notifyFullSync();
+    }
   };
 
   const resetLineups = async () => {
@@ -85,14 +95,18 @@ export const DeleteSettings = () => {
       prev.filter((ability) => !connectedIds.has(ability.id)),
     );
     setConnectingLines([]);
-    if (users.length > 1) await saveCanvasStateAsync();
-    notifyCanvasUpdated("lineups_deleted");
+    if (users.length > 1) {
+      await saveCanvasStateAsync();
+      notifyFullSync();
+    }
   };
 
   const handleResetState = async () => {
     resetState();
-    if (users.length > 1) await saveCanvasStateAsync();
-    notifyCanvasUpdated("canvas_cleared");
+    if (users.length > 1) {
+      await saveCanvasStateAsync();
+      notifyFullSync();
+    }
   };
 
   return (
