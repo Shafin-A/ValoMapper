@@ -238,7 +238,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
       if (users.length > 1) {
         await saveCanvasStateAsync();
       }
-      notifyImageAdded();
+      notifyImageAdded(newImage);
     };
     img.src = objectUrl;
 

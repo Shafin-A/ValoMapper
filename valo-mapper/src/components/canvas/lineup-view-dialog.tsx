@@ -30,8 +30,7 @@ export const LineupViewDialog = ({
   onClose,
 }: LineupViewDialogProps) => {
   const { setConnectingLines, saveCanvasStateAsync } = useCanvas();
-  const { notifyConnLineUpdated, notifyLineupWithImagesAdded } =
-    useCollaborativeCanvas();
+  const { notifyConnLineUpdated } = useCollaborativeCanvas();
 
   const { users } = useWebSocket();
 
@@ -103,22 +102,15 @@ export const LineupViewDialog = ({
       strokeColor: editLineColor,
     };
 
-    const hasImages = editImages.length > 0;
+    setConnectingLines((prev) =>
+      prev.map((l) => (l.id === line.id ? updatedLine : l)),
+    );
 
-    if (hasImages) {
-      setConnectingLines((prev) =>
-        prev.map((l) => (l.id === line.id ? updatedLine : l)),
-      );
-      if (users.length > 1) {
-        await saveCanvasStateAsync();
-      }
-      notifyLineupWithImagesAdded();
-    } else {
-      setConnectingLines((prev) =>
-        prev.map((l) => (l.id === line.id ? updatedLine : l)),
-      );
-      notifyConnLineUpdated(updatedLine);
+    if (users.length > 1) {
+      await saveCanvasStateAsync();
     }
+
+    notifyConnLineUpdated(updatedLine);
 
     setDisplayImages(editImages);
     setDisplayYoutubeLink(editYoutubeLink);

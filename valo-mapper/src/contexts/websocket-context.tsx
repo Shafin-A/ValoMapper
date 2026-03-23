@@ -11,7 +11,6 @@ import {
   FullSyncData,
   ImageMessageData,
   ImageMoveMessageData,
-  LobbyUpdatedData,
   MapChangedData,
   PhaseChangedData,
   RemoveElementData,
@@ -24,8 +23,6 @@ import {
   WSMessage,
 } from "@/lib/websocket-types";
 import { useParams } from "next/navigation";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   FC,
@@ -94,7 +91,6 @@ interface WebSocketContextType {
     phaseIndex: number,
   ) => void;
   broadcastImageRemoved: (id: string, phaseIndex: number) => void;
-  broadcastLobbyUpdated: (reason: string, username: string) => void;
   broadcastToolIconAdded: (
     toolIcon: ToolIconMessageData["toolIcon"],
     phaseIndex: number,
@@ -123,8 +119,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
 
   const { data: user } = useUser();
 
-  const queryClient = useQueryClient();
-
   const {
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
@@ -146,10 +140,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
   } = useCanvas();
 
   const broadcastStateSyncRef = useRef<(() => void) | null>(null);
-
-  const broadcastLobbyUpdatedRef = useRef<
-    ((reason: string, username: string) => void) | null
-  >(null);
 
   const handleMessage = useCallback(
     (message: WSMessage) => {
@@ -324,14 +314,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
           }
           break;
 
-        case WS_MESSAGE_TYPES.LOBBY_UPDATED:
-          const lobbyUpdatedData = data as LobbyUpdatedData;
-          toast.info(`Synced to ${lobbyUpdatedData.username}'s canvas`, {
-            duration: 3000,
-          });
-          queryClient.invalidateQueries({ queryKey: ["lobby", lobbyCode] });
-          break;
-
         case WS_MESSAGE_TYPES.TOOL_ICON_ADDED:
         case WS_MESSAGE_TYPES.TOOL_ICON_MOVED:
           if (isCurrentPhase) {
@@ -395,8 +377,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     },
     [
       currentPhaseIndex,
-      queryClient,
-      lobbyCode,
       setSelectedMap,
       resetState,
       setMapSide,
@@ -608,23 +588,12 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     [sendMessage],
   );
 
-  const broadcastLobbyUpdated = useCallback(
-    (reason: string, username: string) => {
-      sendMessage<LobbyUpdatedData>(WS_MESSAGE_TYPES.LOBBY_UPDATED, {
-        reason,
-        username,
-      });
-    },
-    [sendMessage],
-  );
-
   const broadcastStateSync = useCallback(() => {
     const currentState = getCurrentStateForSync();
     sendMessage<FullSyncData>(WS_MESSAGE_TYPES.FULL_SYNC, currentState);
   }, [sendMessage, getCurrentStateForSync]);
 
   broadcastStateSyncRef.current = broadcastStateSync;
-  broadcastLobbyUpdatedRef.current = broadcastLobbyUpdated;
 
   useEffect(() => {
     onUndoRedoCallback.current = () => {
@@ -635,10 +604,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
 
       if (hasImages) {
         if (users.length > 1) {
-          saveCanvasStateAsync().then(() => {
-            const username = user?.name || "Annonymous";
-            broadcastLobbyUpdatedRef.current?.("undo_redo", username);
-          });
+          saveCanvasStateAsync();
         } else {
           broadcastStateSyncRef.current?.();
         }
@@ -738,7 +704,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       broadcastImageAdded,
       broadcastImageMoved,
       broadcastImageRemoved,
-      broadcastLobbyUpdated,
       broadcastStateSync,
       broadcastToolIconAdded,
       broadcastToolIconMoved,
@@ -769,7 +734,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       broadcastImageAdded,
       broadcastImageMoved,
       broadcastImageRemoved,
-      broadcastLobbyUpdated,
       broadcastStateSync,
       broadcastToolIconAdded,
       broadcastToolIconMoved,

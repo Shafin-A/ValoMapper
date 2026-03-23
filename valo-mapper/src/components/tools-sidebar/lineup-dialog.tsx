@@ -41,12 +41,8 @@ export const LineupDialog = ({
     saveCanvasStateAsync,
   } = useCanvas();
 
-  const {
-    notifyAgentAdded,
-    notifyAbilityAdded,
-    notifyConnLineAdded,
-    notifyLineupWithImagesAdded,
-  } = useCollaborativeCanvas();
+  const { notifyAgentAdded, notifyAbilityAdded, notifyConnLineAdded } =
+    useCollaborativeCanvas();
 
   const {
     selectedAgent,
@@ -116,22 +112,17 @@ export const LineupDialog = ({
       notes,
     };
 
-    const hasImages = uploadedImages.length > 0;
-
     setAgentsOnCanvas((prev) => [...prev, newAgent]);
     setAbilitiesOnCanvas((prev) => [...prev, newAbility]);
     setConnectingLines((prev) => [...prev, newConnectingLine]);
 
-    if (hasImages) {
-      if (users.length > 1) {
-        await saveCanvasStateAsync();
-      }
-      notifyLineupWithImagesAdded();
-    } else {
-      notifyAgentAdded(newAgent);
-      notifyAbilityAdded(newAbility);
-      notifyConnLineAdded(newConnectingLine);
+    if (users.length > 1) {
+      await saveCanvasStateAsync();
     }
+
+    notifyAgentAdded(newAgent);
+    notifyAbilityAdded(newAbility);
+    notifyConnLineAdded(newConnectingLine);
 
     if (onConfirm) {
       onConfirm(selectedAgent, selectedAbility);

@@ -1,6 +1,5 @@
 import { useWebSocket } from "@/contexts/websocket-context";
 import { useCanvas } from "@/contexts/canvas-context";
-import { useUser } from "@/hooks/api/use-user";
 import { useCallback } from "react";
 import {
   AgentCanvas,
@@ -12,11 +11,12 @@ import {
   MapOption,
   MapSide,
   ImagePositionData,
+  ImageCanvas,
 } from "@/lib/types";
 
 export const useCollaborativeCanvas = () => {
   const { currentPhaseIndex } = useCanvas();
-  const { data: user } = useUser();
+
   const {
     status,
     broadcastAgentAdded,
@@ -33,9 +33,9 @@ export const useCollaborativeCanvas = () => {
     broadcastTextAdded,
     broadcastTextUpdated,
     broadcastTextRemoved,
+    broadcastImageAdded,
     broadcastImageMoved,
     broadcastImageRemoved,
-    broadcastLobbyUpdated,
     broadcastStateSync,
     broadcastToolIconAdded,
     broadcastToolIconMoved,
@@ -173,28 +173,13 @@ export const useCollaborativeCanvas = () => {
     [isConnected, broadcastTextRemoved, currentPhaseIndex],
   );
 
-  const notifyImageAdded = useCallback(() => {
-    if (isConnected) {
-      const username = user?.name || "Annonymous";
-      broadcastLobbyUpdated("image_added", username);
-    }
-  }, [isConnected, user?.name, broadcastLobbyUpdated]);
-
-  const notifyLineupWithImagesAdded = useCallback(() => {
-    if (isConnected) {
-      const username = user?.name || "Annonymous";
-      broadcastLobbyUpdated("lineup_added", username);
-    }
-  }, [isConnected, user?.name, broadcastLobbyUpdated]);
-
-  const notifyCanvasUpdated = useCallback(
-    (action: string) => {
+  const notifyImageAdded = useCallback(
+    (image: ImageCanvas) => {
       if (isConnected) {
-        const username = user?.name || "Annonymous";
-        broadcastLobbyUpdated(action, username);
+        broadcastImageAdded(image, currentPhaseIndex);
       }
     },
-    [isConnected, user?.name, broadcastLobbyUpdated],
+    [isConnected, broadcastImageAdded, currentPhaseIndex],
   );
 
   const notifyFullSync = useCallback(() => {
@@ -294,8 +279,6 @@ export const useCollaborativeCanvas = () => {
     notifyImageAdded,
     notifyImageMoved,
     notifyImageRemoved,
-    notifyLineupWithImagesAdded,
-    notifyCanvasUpdated,
     notifyToolIconAdded,
     notifyToolIconMoved,
     notifyToolIconRemoved,

@@ -38,7 +38,6 @@ export const WS_MESSAGE_TYPES = {
   SIDE_CHANGED: "side_changed",
   PHASE_CHANGED: "phase_changed",
   FULL_SYNC: "full_sync",
-  LOBBY_UPDATED: "lobby_updated",
 
   USER_JOINED: "user_joined",
   USER_LEFT: "user_left",

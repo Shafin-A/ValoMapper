@@ -216,7 +216,7 @@ export const useCanvasContextMenu = (
         );
         if (newImage) {
           if (users.length > 1) await saveCanvasStateAsync?.();
-          notifyImageAdded();
+          notifyImageAdded(newImage as ImageCanvas);
         }
         break;
       }
