@@ -111,6 +111,7 @@ export const TextEditor = ({
           onChange={(e) => {
             const value = e.target.value;
             setCurrentText(value);
+            currentTextRef.current = value;
             const width = e.target.scrollWidth;
             const height = e.target.scrollHeight;
             setTextareaSize({

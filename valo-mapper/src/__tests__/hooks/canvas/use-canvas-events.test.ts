@@ -264,6 +264,30 @@ describe("useCanvasEvents", () => {
     expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
   });
 
+  it("does not clear editing state when clicking stage while editing text", () => {
+    const setEditingTextId = jest.fn();
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        editingTextId: "text-123",
+        setEditingTextId,
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleStageClick();
+    });
+
+    expect(setEditingTextId).not.toHaveBeenCalled();
+    expect(handleDrawingMock).not.toHaveBeenCalled();
+  });
+
   it("handles stage pointer up by ending drawing state", () => {
     mockUseCanvas.mockReturnValue(createCanvasContext());
 

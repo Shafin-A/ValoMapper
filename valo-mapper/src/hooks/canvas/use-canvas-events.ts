@@ -34,7 +34,6 @@ export const useCanvasEvents = (
     setToolIconsOnCanvas,
     isDrawMode,
     editingTextId,
-    setEditingTextId,
     isDrawing,
     drawLines,
     setDrawLines,
@@ -257,7 +256,6 @@ export const useCanvasEvents = (
 
   const handleStageClick = useCallback(() => {
     if (editingTextId) {
-      setEditingTextId(null);
       return;
     }
 
@@ -278,7 +276,6 @@ export const useCanvasEvents = (
     }
   }, [
     editingTextId,
-    setEditingTextId,
     isDrawMode,
     isSidebarDragActive,
     selectedCanvasIcon,

@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { TextEditor } from "@/components/canvas/text-editor";
 import Konva from "konva";
 
@@ -48,5 +48,37 @@ describe("TextEditor collaboration safety", () => {
     );
 
     expect(textarea.value).toBe("start typed");
+  });
+
+  it("applies latest typed value when clicking outside", async () => {
+    jest.useFakeTimers();
+
+    const onClose = jest.fn();
+    const onChange = jest.fn();
+
+    const { getByRole } = render(
+      <TextEditor
+        textNode={textNode}
+        text="start"
+        onClose={onClose}
+        onChange={onChange}
+      />,
+    );
+
+    const textarea = getByRole("textbox") as HTMLTextAreaElement;
+
+    fireEvent.change(textarea, { target: { value: "typed text" } });
+
+    // Allow the 100ms outside click guard timer to complete so the listener is installed.
+    jest.advanceTimersByTime(100);
+
+    fireEvent.click(document.body);
+
+    await waitFor(() => {
+      expect(onChange).toHaveBeenCalledWith("typed text");
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    jest.useRealTimers();
   });
 });
