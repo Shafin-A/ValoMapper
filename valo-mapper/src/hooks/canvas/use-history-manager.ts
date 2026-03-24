@@ -5,11 +5,13 @@ import { useState, useRef, useCallback, useEffect } from "react";
 interface HistoryManagerConfig {
   getCurrentState: () => UndoableState;
   applyState: (state: UndoableState) => void;
+  onApplyHistoryState?: (state: UndoableState) => void;
 }
 
 export const useHistoryManager = ({
   getCurrentState,
   applyState,
+  onApplyHistoryState,
 }: HistoryManagerConfig) => {
   const [history, setHistory] = useState<UndoableState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -95,11 +97,12 @@ export const useHistoryManager = ({
       isUpdatingFromHistory.current = true;
       lastSavedState.current = state;
       applyState(state);
+      onApplyHistoryState?.(state);
       setTimeout(() => {
         isUpdatingFromHistory.current = false;
       }, 10);
     },
-    [applyState],
+    [applyState, onApplyHistoryState],
   );
 
   const undo = useCallback(() => {
