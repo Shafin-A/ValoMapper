@@ -228,6 +228,8 @@ export const useCanvasState = () => {
     if (!lobbyCode || lobbyCode !== lastLoadedLobbyRef.current) return;
 
     const checkAndSave = () => {
+      if (canvasUI.editingTextId) return;
+
       const now = Date.now();
       const idleTime = now - lastChangeRef.current;
 
@@ -241,7 +243,12 @@ export const useCanvasState = () => {
 
     const interval = setInterval(checkAndSave, AUTOSAVE_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [lobbyCode, autoSaveCanvasStateAsync, checkUnsavedChanges]);
+  }, [
+    lobbyCode,
+    autoSaveCanvasStateAsync,
+    checkUnsavedChanges,
+    canvasUI.editingTextId,
+  ]);
 
   const rotateCanvasItemsForSideSwap = useCallback(() => {
     const mapCenterX = (VIRTUAL_WIDTH - MAP_SIZE) / 2 + MAP_SIZE / 2;
