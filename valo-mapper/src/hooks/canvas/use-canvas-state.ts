@@ -15,15 +15,10 @@ import {
   PhaseState,
   UndoableState,
 } from "@/lib/types";
-import {
-  MAP_SIZE,
-  VIRTUAL_WIDTH,
-  VIRTUAL_HEIGHT,
-  AUTOSAVE_IDLE_THRESHOLD_MS,
-  AUTOSAVE_INTERVAL_MS,
-} from "@/lib/consts";
+import { MAP_SIZE, VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts";
 import { useParams } from "next/navigation";
 import { SetStateAction, useCallback, useEffect, useRef } from "react";
+import { useCanvasAutoSave } from "@/hooks/canvas/use-auto-save";
 import { parseTimestamp } from "@/lib/utils";
 
 export const useCanvasState = () => {
@@ -386,31 +381,18 @@ export const useCanvasState = () => {
     return isDirtyRef.current;
   }, []);
 
-  useEffect(() => {
-    if (!lobbyCode || lobbyCode !== lastLoadedLobbyRef.current) return;
+  const isLobbyActive = Boolean(
+    lobbyCode && lobbyCode === lastLoadedLobbyRef.current,
+  );
 
-    const checkAndSave = () => {
-      if (canvasUI.editingTextId) return;
-
-      const now = Date.now();
-      const idleTime = now - lastChangeRef.current;
-
-      if (idleTime < AUTOSAVE_IDLE_THRESHOLD_MS) return;
-      if (!checkUnsavedChanges()) return;
-
-      void autoSaveCanvasStateAsync();
-    };
-
-    checkAndSave();
-
-    const interval = setInterval(checkAndSave, AUTOSAVE_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [
+  useCanvasAutoSave({
     lobbyCode,
-    autoSaveCanvasStateAsync,
+    isActiveLobby: isLobbyActive,
+    editingTextId: canvasUI.editingTextId,
+    lastChangeRef,
     checkUnsavedChanges,
-    canvasUI.editingTextId,
-  ]);
+    autoSaveCanvasStateAsync,
+  });
 
   const rotateCanvasItemsForSideSwap = useCallback(() => {
     const mapCenterX = (VIRTUAL_WIDTH - MAP_SIZE) / 2 + MAP_SIZE / 2;
