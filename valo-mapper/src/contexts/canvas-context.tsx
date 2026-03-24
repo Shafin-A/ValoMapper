@@ -26,6 +26,7 @@ import {
   ReactNode,
   RefObject,
   SetStateAction,
+  useCallback,
   useContext,
   useRef,
   useState,
@@ -116,13 +117,27 @@ const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
 
 export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const canvasState = useCanvasState();
-  const [hoveredElementId, setHoveredElementId] = useState<string | null>(null);
+  const [hoveredElementId, setHoveredElementIdState] = useState<string | null>(
+    null,
+  );
   const [isMapTransitioning, setIsMapTransitioning] = useState(false);
   const recenterCanvasCallback = useRef<(() => void) | null>(null);
   const onUndoRedoCallback = useRef<(() => void) | null>(null);
   const notifyPhaseChangedCallback = useRef<
     ((phaseIndex: number) => void) | null
   >(null);
+
+  const setHoveredElementId = useCallback(
+    (value: React.SetStateAction<string | null>) => {
+      if (canvasState.editingTextId) return;
+      setHoveredElementIdState((prev) =>
+        typeof value === "function"
+          ? (value as (prevState: string | null) => string | null)(prev)
+          : value,
+      );
+    },
+    [canvasState.editingTextId],
+  );
 
   useKeyboardShortcuts({
     undo: canvasState.undo,

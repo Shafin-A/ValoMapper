@@ -18,6 +18,7 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
     unregisterNode,
     setHoveredElementId,
     selectedCanvasIcon,
+    editingTextId,
   } = useCanvas();
 
   const { notifyToolIconMoved, notifyToolIconRemoved } =
@@ -27,9 +28,13 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
     <Group
       key={toolIcon.id}
       onMouseEnter={() =>
-        !selectedCanvasIcon && setHoveredElementId(toolIcon.id)
+        !selectedCanvasIcon &&
+        !editingTextId &&
+        setHoveredElementId(toolIcon.id)
       }
-      onMouseLeave={() => !selectedCanvasIcon && setHoveredElementId(null)}
+      onMouseLeave={() =>
+        !selectedCanvasIcon && !editingTextId && setHoveredElementId(null)
+      }
     >
       <CanvasIcon
         id={toolIcon.id}
@@ -37,8 +42,8 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
         x={toolIcon.x}
         y={toolIcon.y}
         src={`/tools/${toolIcon.name}.webp`}
-        draggable={!isDrawMode}
-        isListening={!isDrawMode}
+        draggable={!isDrawMode && !editingTextId}
+        isListening={!isDrawMode && !editingTextId}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
         onDragEnd={(e) => {
           handleDragEnd(

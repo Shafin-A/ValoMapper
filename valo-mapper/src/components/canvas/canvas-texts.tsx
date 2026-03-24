@@ -58,9 +58,13 @@ export const CanvasTexts = ({
           }
         }}
         onMouseEnter={() =>
-          !selectedCanvasIcon && setHoveredElementId(textItem.id)
+          !selectedCanvasIcon &&
+          !editingTextId &&
+          setHoveredElementId(textItem.id)
         }
-        onMouseLeave={() => !selectedCanvasIcon && setHoveredElementId(null)}
+        onMouseLeave={() =>
+          !selectedCanvasIcon && !editingTextId && setHoveredElementId(null)
+        }
         onDragMove={(e) => handleDragMove(e, deleteGroupRef, textNode)}
         onDragEnd={(e) => {
           handleDragEnd(

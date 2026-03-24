@@ -23,6 +23,7 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
     setHoveredElementId,
     selectedCanvasIcon,
     isSidebarDragActive,
+    editingTextId,
   } = useCanvas();
 
   const { abilitiesSettings } = useSettings();
@@ -45,9 +46,13 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
       <Group
         key={ability.id}
         onMouseEnter={() =>
-          !selectedCanvasIcon && setHoveredElementId(ability.id)
+          !selectedCanvasIcon &&
+          !editingTextId &&
+          setHoveredElementId(ability.id)
         }
-        onMouseLeave={() => !selectedCanvasIcon && setHoveredElementId(null)}
+        onMouseLeave={() =>
+          !selectedCanvasIcon && !editingTextId && setHoveredElementId(null)
+        }
       >
         <AbilityIcon
           id={ability.id}
@@ -57,8 +62,8 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
           y={ability.y}
           rotation={ability.currentRotation}
           src={lookupEntry?.src}
-          draggable={!isDrawMode}
-          isListening={!isDrawMode}
+          draggable={!isDrawMode && !editingTextId}
+          isListening={!isDrawMode && !editingTextId}
           onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
           onDragEnd={(e) => {
             handleDragEnd(

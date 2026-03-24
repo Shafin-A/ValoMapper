@@ -24,6 +24,7 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
     setHoveredElementId,
     selectedCanvasIcon,
     isSidebarDragActive,
+    editingTextId,
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
@@ -38,9 +39,11 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
       <Group
         key={agent.id}
         onMouseEnter={() =>
-          !selectedCanvasIcon && setHoveredElementId(agent.id)
+          !selectedCanvasIcon && !editingTextId && setHoveredElementId(agent.id)
         }
-        onMouseLeave={() => !selectedCanvasIcon && setHoveredElementId(null)}
+        onMouseLeave={() =>
+          !selectedCanvasIcon && !editingTextId && setHoveredElementId(null)
+        }
       >
         <CanvasIcon
           id={agent.id}
@@ -48,8 +51,8 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
           x={agent.x}
           y={agent.y}
           src={getAgentImgSrc(agent.name)}
-          draggable={!isDrawMode}
-          isListening={!isDrawMode}
+          draggable={!isDrawMode && !editingTextId}
+          isListening={!isDrawMode && !editingTextId}
           onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
           onDragEnd={(e) => {
             handleDragEnd(

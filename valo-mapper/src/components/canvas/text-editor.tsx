@@ -1,11 +1,12 @@
 import { Html } from "react-konva-utils";
-import { useCallback, useRef } from "react";
+import { useLayoutEffect, useEffect, useRef, useState } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import Konva from "konva";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
 interface TextEditorProps {
-  textNode: Konva.Text;
+  textNode?: Konva.Text | null;
   text: string;
   onClose: () => void;
   onChange: (text: string) => void;
@@ -17,104 +18,126 @@ export const TextEditor = ({
   onClose,
   onChange,
 }: TextEditorProps) => {
-  const cleanupRef = useRef<(() => void) | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const currentTextRef = useRef(text);
+  const [currentText, setCurrentText] = useState(text);
+  const [textareaSize, setTextareaSize] = useState({
+    width: textNode?.width() ?? 100,
+    height: Math.max(60, textNode?.height() ?? 0),
+  });
 
-  const textareaCallbackRef = useCallback(
-    (textarea: HTMLTextAreaElement | null) => {
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
+  const handleTextareaMouseDown = (e: ReactMouseEvent<HTMLTextAreaElement>) => {
+    e.stopPropagation();
+  };
 
-      if (!textarea || !textNode) return;
+  useEffect(() => {
+    currentTextRef.current = currentText;
+  }, [currentText]);
 
-      textareaRef.current = textarea;
+  useLayoutEffect(() => {
+    setTextareaSize({
+      width: textNode?.width() ?? 100,
+      height: Math.max(60, textNode?.height() ?? 0),
+    });
 
-      const textPosition = textNode.position();
-
-      textarea.value = text;
-      textarea.style.height = "auto";
-
-      textarea.style.position = "absolute";
-      textarea.style.top = `${textPosition.y}px`;
-      textarea.style.left = `${textPosition.x}px`;
-      textarea.style.width = `${textNode.width()}px`;
-      textarea.style.height = `${Math.max(60, textNode.height())}px`;
-      textarea.style.fontSize = `${textNode.fontSize()}px`;
-      textarea.style.border = "none";
-      textarea.style.padding = `${textNode.padding()}px`;
-      textarea.style.margin = "0px";
-      textarea.style.overflow = "hidden";
-      textarea.style.background = "none";
-      textarea.style.outline = "none";
-      textarea.style.resize = "none";
-      textarea.style.lineHeight = textNode.lineHeight().toString();
-      textarea.style.fontFamily = textNode.fontFamily();
-      textarea.style.transformOrigin = "left top";
-      textarea.style.textAlign = textNode.align();
-      textarea.style.color = "#ffffff";
-      textarea.style.backgroundColor = "#18181b";
-      textarea.style.borderRadius = "8px";
+    const focusTextarea = () => {
+      const textarea = textareaRef.current;
+      if (!textarea) return false;
 
       textarea.focus();
       textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+      return true;
+    };
 
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          onChange(textarea.value);
-          onClose();
-        }
-        if (e.key === "Escape") {
-          onClose();
-        }
-      };
+    let focusTimer = window.setTimeout(() => {
+      if (!focusTextarea()) {
+        focusTimer = window.setTimeout(focusTextarea, 50);
+      }
+    }, 0);
 
-      const handleInput = () => {
-        textarea.style.height = "auto";
-        const width = textarea.scrollWidth;
-        const height = textarea.scrollHeight;
-        textarea.style.width = `${width}px`;
-        textarea.style.height = `${Math.max(60, height)}px`;
-        textNode.width(width);
-      };
+    const handleOutsideClick = (e: globalThis.MouseEvent) => {
+      const textarea = textareaRef.current;
+      if (textarea && e.target !== textarea) {
+        onChange(currentTextRef.current);
+        onClose();
+      }
+    };
 
-      const handleOutsideClick = (e: MouseEvent) => {
-        if (e.target !== textarea) {
-          onChange(textarea.value);
-          onClose();
-        }
-      };
+    const clickTimer = window.setTimeout(() => {
+      window.addEventListener("click", handleOutsideClick);
+    }, 100);
 
-      textarea.addEventListener("keydown", handleKeyDown);
-      textarea.addEventListener("input", handleInput);
+    return () => {
+      window.removeEventListener("click", handleOutsideClick);
+      window.clearTimeout(clickTimer);
+      window.clearTimeout(focusTimer);
+    };
+  }, [textNode, onChange, onClose]);
 
-      const timeoutId = setTimeout(() => {
-        window.addEventListener("click", handleOutsideClick);
-      }, 100);
-
-      cleanupRef.current = () => {
-        clearTimeout(timeoutId);
-        textarea.removeEventListener("keydown", handleKeyDown);
-        textarea.removeEventListener("input", handleInput);
-        window.removeEventListener("click", handleOutsideClick);
-      };
-    },
-    [textNode, text, onChange, onClose],
-  );
+  const baseStyle: CSSProperties = {
+    position: "absolute",
+    top: `${textNode?.position().y ?? 0}px`,
+    left: `${textNode?.position().x ?? 0}px`,
+    width: `${textareaSize.width}px`,
+    height: `${textareaSize.height}px`,
+    fontSize: `${textNode?.fontSize() ?? 18}px`,
+    border: "none",
+    padding: `${textNode?.padding() ?? 10}px`,
+    margin: 0,
+    overflow: "hidden",
+    background: "none",
+    outline: "none",
+    resize: "none",
+    lineHeight: `${textNode?.lineHeight() ?? 1.2}`,
+    fontFamily: textNode?.fontFamily() ?? "Arial",
+    transformOrigin: "left top",
+    // textAlign: textNode?.align() ?? "left",
+    color: "#ffffff",
+    backgroundColor: "#18181b",
+    borderRadius: "8px",
+    //zIndex: 500,
+    //pointerEvents: "none",
+  };
 
   return (
     <Html>
       <div>
-        <textarea ref={textareaCallbackRef} />
+        <textarea
+          style={baseStyle}
+          ref={textareaRef}
+          value={currentText}
+          onMouseDown={handleTextareaMouseDown}
+          onChange={(e) => {
+            const value = e.target.value;
+            setCurrentText(value);
+            const width = e.target.scrollWidth;
+            const height = e.target.scrollHeight;
+            setTextareaSize({
+              width: Math.max(100, width),
+              height: Math.max(60, height),
+            });
+            if (textNode) textNode.width(width);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              onChange(currentText);
+              onClose();
+            }
+            if (e.key === "Escape") {
+              onClose();
+            }
+          }}
+        />
         <Button
           variant="default"
           size="icon"
           className="absolute -top-2 -right-2 rounded-full size-6"
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
-            onChange(textareaRef.current?.value || "");
+            onChange(currentText);
             onClose();
           }}
         >

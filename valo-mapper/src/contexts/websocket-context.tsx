@@ -130,6 +130,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     setSelectedMap,
     setMapSide,
     currentPhaseIndex,
+    editingTextId,
     switchToPhase,
     onUndoRedoCallback,
     rotateCanvasItemsForSideSwap,
@@ -249,6 +250,11 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
         case WS_MESSAGE_TYPES.TEXT_UPDATED:
           if (isCurrentPhase) {
             const textData = data as TextMessageData;
+
+            if (editingTextId === textData.text.id) {
+              break;
+            }
+
             setTextsOnCanvas((prev) => {
               const exists = prev.find((t) => t.id === textData.text.id);
               if (exists) {
@@ -360,6 +366,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
           break;
 
         case WS_MESSAGE_TYPES.FULL_SYNC:
+          if (editingTextId) {
+            break;
+          }
+
           const syncData = data as FullSyncData;
           applyRemoteState({
             phases: syncData.phases,
@@ -380,6 +390,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       resetState,
       setMapSide,
       rotateCanvasItemsForSideSwap,
+      editingTextId,
       applyRemoteState,
       setAgentsOnCanvas,
       setAbilitiesOnCanvas,

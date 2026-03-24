@@ -44,7 +44,7 @@ export const CanvasImages = ({
     e: Konva.KonvaEventObject<MouseEvent>,
     imageId: string,
   ) => {
-    if (!selectedCanvasIcon) {
+    if (!selectedCanvasIcon && !editingTextId) {
       hookHandleImageMouseEnter(e, imageId);
       setHoveredElementId(imageId);
     }
@@ -54,7 +54,7 @@ export const CanvasImages = ({
     e: Konva.KonvaEventObject<MouseEvent>,
   ) => {
     handleImageMouseLeave(e);
-    if (!selectedCanvasIcon) {
+    if (!selectedCanvasIcon && !editingTextId) {
       setHoveredElementId(null);
     }
   };
@@ -84,7 +84,7 @@ export const CanvasImages = ({
       <Group
         key={imageItem.id}
         id={imageItem.id}
-        draggable={!isDrawMode}
+        draggable={!isDrawMode && !editingTextId}
         x={imageItem.x}
         y={imageItem.y}
         onDragMove={(e) => handleDragMove(e, deleteGroupRef, imageNode)}
