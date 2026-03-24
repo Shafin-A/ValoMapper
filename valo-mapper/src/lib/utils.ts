@@ -486,3 +486,10 @@ export const ensureAbsoluteUrl = (url: string): string => {
   }
   return `https://${url}`;
 };
+
+export const parseTimestamp = (value: string) => {
+  const num = Number(value);
+  if (!Number.isNaN(num) && Number.isFinite(num)) return num;
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};

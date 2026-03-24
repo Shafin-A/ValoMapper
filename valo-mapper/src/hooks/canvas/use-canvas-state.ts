@@ -24,6 +24,7 @@ import {
 } from "@/lib/consts";
 import { useParams } from "next/navigation";
 import { SetStateAction, useCallback, useEffect, useRef } from "react";
+import { parseTimestamp } from "@/lib/utils";
 
 export const useCanvasState = () => {
   const params = useParams();
@@ -319,12 +320,6 @@ export const useCanvasState = () => {
     const lobbyUpdatedAt = lobby.updatedAt?.toString() || "";
 
     const lastApplied = lastAppliedLobbyUpdatedAt.current || "";
-    const parseTimestamp = (value: string) => {
-      const num = Number(value);
-      if (!Number.isNaN(num) && Number.isFinite(num)) return num;
-      const parsed = Date.parse(value);
-      return Number.isNaN(parsed) ? 0 : parsed;
-    };
 
     const isUpdatedRemotely =
       lobbyUpdatedAt &&
