@@ -11,7 +11,6 @@ import {
 } from "@/lib/types";
 import { getNextId } from "@/lib/utils";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
-import { useWebSocket } from "@/contexts/websocket-context";
 import {
   findAbilityDefinitionByAction,
   getAbilityVariants,
@@ -69,7 +68,6 @@ export const useCanvasContextMenu = (
   setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>,
   connectingLines: ConnectingLine[],
   setConnectingLines: Dispatch<SetStateAction<ConnectingLine[]>>,
-  saveCanvasStateAsync?: () => Promise<void>,
 ) => {
   const {
     notifyAgentAdded,
@@ -86,8 +84,6 @@ export const useCanvasContextMenu = (
     notifyToolIconRemoved,
     notifyConnLineRemoved,
   } = useCollaborativeCanvas();
-
-  const { users } = useWebSocket();
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     open: false,
@@ -215,7 +211,6 @@ export const useCanvasContextMenu = (
           itemType,
         );
         if (newImage) {
-          if (users.length > 1) await saveCanvasStateAsync?.();
           notifyImageAdded(newImage as ImageCanvas);
         }
         break;
@@ -246,8 +241,6 @@ export const useCanvasContextMenu = (
     notifyTextAdded,
     imagesOnCanvas,
     setImagesOnCanvas,
-    users.length,
-    saveCanvasStateAsync,
     notifyImageAdded,
     toolIconsOnCanvas,
     setToolIconsOnCanvas,

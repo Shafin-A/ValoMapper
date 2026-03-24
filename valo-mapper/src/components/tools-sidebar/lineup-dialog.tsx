@@ -38,7 +38,6 @@ export const LineupDialog = ({
     setAbilitiesOnCanvas,
     setConnectingLines,
     isAlly,
-    saveCanvasStateAsync,
   } = useCanvas();
 
   const { notifyAgentAdded, notifyAbilityAdded, notifyConnLineAdded } =
@@ -117,7 +116,7 @@ export const LineupDialog = ({
     setConnectingLines((prev) => [...prev, newConnectingLine]);
 
     if (users.length > 1) {
-      await saveCanvasStateAsync();
+      // autosave handles persisting state; no explicit call required
     }
 
     notifyAgentAdded(newAgent);

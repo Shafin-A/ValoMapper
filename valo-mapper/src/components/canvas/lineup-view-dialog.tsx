@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
-import { useWebSocket } from "@/contexts/websocket-context";
 import { getYoutubeEmbedUrl } from "@/lib/utils";
 import { LineupViewContent } from "./lineup-view-content";
 import { LineupEditContent } from "./lineup-edit-content";
@@ -29,10 +28,8 @@ export const LineupViewDialog = ({
   isOpen,
   onClose,
 }: LineupViewDialogProps) => {
-  const { setConnectingLines, saveCanvasStateAsync } = useCanvas();
+  const { setConnectingLines } = useCanvas();
   const { notifyConnLineUpdated } = useCollaborativeCanvas();
-
-  const { users } = useWebSocket();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
@@ -105,10 +102,6 @@ export const LineupViewDialog = ({
     setConnectingLines((prev) =>
       prev.map((l) => (l.id === line.id ? updatedLine : l)),
     );
-
-    if (users.length > 1) {
-      await saveCanvasStateAsync();
-    }
 
     notifyConnLineUpdated(updatedLine);
 

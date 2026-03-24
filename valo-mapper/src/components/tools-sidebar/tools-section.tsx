@@ -19,12 +19,8 @@ import { Vector2d } from "konva/lib/types";
 import {
   ALargeSmall,
   Camera,
-  Cloud,
-  CloudCheck,
-  CloudOff,
   Eraser,
   Image as ImageIcon,
-  Loader2,
   MapPinned,
   Pencil,
   Redo,
@@ -47,7 +43,6 @@ import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { MapStageHandle } from "@/components/canvas";
 import { RefObject } from "react";
 import { Group } from "konva/lib/Group";
-import { useWebSocket } from "@/contexts/websocket-context";
 
 interface ToolsSectionProps {
   mapPosition: Vector2d;
@@ -74,18 +69,11 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     setTextsOnCanvas,
     setEditingTextId,
     setImagesOnCanvas,
-    saveCanvasState,
-    saveCanvasStateAsync,
-    hasUnsavedChanges,
-    isUpdatingLobby,
-    isErrorUpdatingLobby,
     recenterCanvasCallback,
     onUndoRedoCallback,
   } = useCanvas();
 
   const { notifyTextAdded, notifyImageAdded } = useCollaborativeCanvas();
-
-  const { users } = useWebSocket();
 
   const handleUndo = () => {
     undo();
@@ -234,19 +222,11 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
       };
 
       setImagesOnCanvas((prev) => [...prev, newImage]);
-
-      if (users.length > 1) {
-        await saveCanvasStateAsync();
-      }
       notifyImageAdded(newImage);
     };
     img.src = objectUrl;
 
     event.target.value = "";
-  };
-
-  const handleSyncCanvas = () => {
-    saveCanvasState();
   };
 
   const handleScreenshot = () => {
@@ -378,6 +358,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
           </Tooltip>
         </div>
         <div className="grid grid-cols-5 gap-2">
+          <div className="invisible" aria-hidden="true" />
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -393,6 +374,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               Recenter Canvas (R)
             </TooltipContent>
           </Tooltip>
+
           <Dialog open={openSaveDialog} onOpenChange={setOpenSaveDialog}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -401,54 +383,19 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
                     data-tour="save-strategy"
                     variant="ghost"
                     size="lg"
-                    className="col-start-2"
-                    disabled={isUpdatingLobby || !isAuthenticated}
+                    disabled={!isAuthenticated}
                   >
                     <Save />
                   </Button>
                 </DialogTrigger>
               </TooltipTrigger>
               <TooltipContent side="top" align="center">
-                {isUpdatingLobby
-                  ? "Syncing..."
-                  : !isAuthenticated
-                    ? "Log in to save"
-                    : "Save"}
+                {!isAuthenticated ? "Log in to save" : "Save"}
               </TooltipContent>
             </Tooltip>
 
             <TreeViewDialogContent setOpen={setOpenSaveDialog} />
           </Dialog>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={handleSyncCanvas}
-                disabled={!hasUnsavedChanges || isUpdatingLobby}
-                variant="ghost"
-                size="lg"
-                data-tour="sync-canvas"
-              >
-                {isUpdatingLobby ? (
-                  <Loader2 className="animate-spin" />
-                ) : isErrorUpdatingLobby ? (
-                  <CloudOff className="text-destructive" />
-                ) : hasUnsavedChanges ? (
-                  <Cloud />
-                ) : (
-                  <CloudCheck />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top" align="center">
-              {isUpdatingLobby
-                ? "Syncing..."
-                : isErrorUpdatingLobby
-                  ? `Sync failed`
-                  : hasUnsavedChanges
-                    ? "Sync"
-                    : "All changes synced"}
-            </TooltipContent>
-          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

@@ -120,18 +120,6 @@ Feel free to experiment after this tour!`}
     position: "right",
   },
   {
-    selector: '[data-tour="sync-canvas"]',
-    content: (
-      <TourStepContent
-        title="Sync Changes"
-        description={`Keep your strategy synced to the cloud. Click this button to save your changes so they persist even after a page refresh. 
-          
-Auto-sync runs every 5 minutes to prevent lost progress.`}
-      />
-    ),
-    position: "right",
-  },
-  {
     selector: '[data-tour="save-strategy"]',
     content: (
       <TourStepContent

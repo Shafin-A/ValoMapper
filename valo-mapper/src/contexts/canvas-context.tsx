@@ -91,12 +91,7 @@ interface CanvasContextType {
   registerNode: (id: string, node: Konva.Node) => void;
   unregisterNode: (id: string) => void;
   isTransitioning: RefObject<boolean>;
-  saveCanvasState: () => void;
-  saveCanvasStateAsync: () => Promise<void>;
   applyRemoteState: (state: UndoableState) => void;
-  hasUnsavedChanges: boolean;
-  isUpdatingLobby: boolean;
-  isErrorUpdatingLobby: boolean;
   isLoadingLobby: boolean;
   isErrorLobby: boolean;
   lobbyError: Error | null;

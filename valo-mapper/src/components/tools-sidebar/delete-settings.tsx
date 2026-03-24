@@ -27,7 +27,6 @@ export const DeleteSettings = () => {
     setToolIconsOnCanvas,
     connectingLines,
     setConnectingLines,
-    saveCanvasStateAsync,
   } = useCanvas();
 
   const { notifyFullSync } = useCollaborativeCanvas();
@@ -41,7 +40,6 @@ export const DeleteSettings = () => {
       prev.filter((agent) => connectedAgentIds.has(agent.id)),
     );
     if (users.length > 1) {
-      await saveCanvasStateAsync();
       notifyFullSync();
     }
   };
@@ -55,7 +53,6 @@ export const DeleteSettings = () => {
     );
     setToolIconsOnCanvas([]);
     if (users.length > 1) {
-      await saveCanvasStateAsync();
       notifyFullSync();
     }
   };
@@ -63,7 +60,6 @@ export const DeleteSettings = () => {
   const resetDrawings = async () => {
     setDrawLines([]);
     if (users.length > 1) {
-      await saveCanvasStateAsync();
       notifyFullSync();
     }
   };
@@ -71,7 +67,6 @@ export const DeleteSettings = () => {
   const resetTexts = async () => {
     setTextsOnCanvas([]);
     if (users.length > 1) {
-      await saveCanvasStateAsync();
       notifyFullSync();
     }
   };
@@ -79,7 +74,6 @@ export const DeleteSettings = () => {
   const resetImages = async () => {
     setImagesOnCanvas([]);
     if (users.length > 1) {
-      await saveCanvasStateAsync();
       notifyFullSync();
     }
   };
@@ -96,7 +90,6 @@ export const DeleteSettings = () => {
     );
     setConnectingLines([]);
     if (users.length > 1) {
-      await saveCanvasStateAsync();
       notifyFullSync();
     }
   };
@@ -104,7 +97,6 @@ export const DeleteSettings = () => {
   const handleResetState = async () => {
     resetState();
     if (users.length > 1) {
-      await saveCanvasStateAsync();
       notifyFullSync();
     }
   };

@@ -31,7 +31,6 @@ import { useFolders } from "@/hooks/api/use-folder";
 import { useUser } from "@/hooks/api/use-user";
 import { TreeView } from "./tree-view";
 import { useCreateStrategy } from "@/hooks/api/use-create-strategy";
-import { useCanvas } from "@/contexts/canvas-context";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 import {
   buildLocationPath,
@@ -131,7 +130,6 @@ export const TreeViewDialogContent = ({
     useCreateStrategy();
   const { mutate: updateStrategy, isPending: isUpdatingStrategy } =
     useUpdateStrategy();
-  const { saveCanvasState } = useCanvas();
   const params = useParams();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -198,7 +196,7 @@ export const TreeViewDialogContent = ({
     setSelectedLocation(existingStrategyLocation);
   }, [existingStrategyId, existingStrategyName, existingStrategyLocation]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!trimmedStrategyName || isUserLoading) {
       return;
     }
@@ -221,7 +219,6 @@ export const TreeViewDialogContent = ({
         includeFolderId: true,
       });
     } else {
-      saveCanvasState();
       createStrategy({
         name: trimmedStrategyName,
         lobbyCode: lobbyCode || "",

@@ -60,6 +60,14 @@ const LobbyEditPage = () => {
 
     let isCancelled = false;
 
+    const markWarmupReady = () => {
+      if (isCancelled || hasCompletedInitialAssetWarmup.current) return;
+      hasCompletedInitialAssetWarmup.current = true;
+      setIsAssetWarmupReady(true);
+    };
+
+    let fallbackTimeout = window.setTimeout(markWarmupReady, 3000);
+
     const preloadCriticalAssets = async () => {
       setIsAssetWarmupReady(false);
 
@@ -72,18 +80,22 @@ const LobbyEditPage = () => {
         ...toolIconsOnCanvas.map((toolIcon) => `/tools/${toolIcon.name}.webp`),
       ];
 
-      await preloadImagesWithTimeout(criticalSources, 1200);
-
-      if (!isCancelled) {
-        hasCompletedInitialAssetWarmup.current = true;
-        setIsAssetWarmupReady(true);
+      try {
+        await preloadImagesWithTimeout(criticalSources, 1200);
+      } catch (error) {
+        console.error("Initial asset warmup failed", error);
+      } finally {
+        markWarmupReady();
       }
     };
 
-    void preloadCriticalAssets().catch(console.error);
+    void preloadCriticalAssets();
+
+    fallbackTimeout = window.setTimeout(markWarmupReady, 3000);
 
     return () => {
       isCancelled = true;
+      window.clearTimeout(fallbackTimeout);
     };
   }, [
     isLoadingLobby,
@@ -127,6 +139,14 @@ const LobbyEditPage = () => {
   }, [isAssetWarmupReady]);
 
   useLayoutEffect(() => {
+    let scaleReady = false;
+
+    const markScaleReady = () => {
+      if (scaleReady) return;
+      scaleReady = true;
+      setIsScaleReady(true);
+    };
+
     const updateScale = () => {
       if (!divRef.current) return;
 
@@ -140,29 +160,48 @@ const LobbyEditPage = () => {
       const scale = Math.min(scaleX, scaleY);
 
       setStageScale(scale);
-      setIsScaleReady(true);
+      markScaleReady();
     };
 
-    const timeoutId = setTimeout(updateScale, 0);
+    const timeoutId = window.setTimeout(updateScale, 0);
+    const fallbackTimeout = window.setTimeout(() => {
+      if (scaleReady) return;
+      if (!divRef.current) {
+        setStageScale(1);
+        markScaleReady();
+        return;
+      }
+
+      const containerWidth = divRef.current.offsetWidth;
+      const containerHeight = divRef.current.offsetHeight;
+      if (containerWidth > 0 && containerHeight > 0) {
+        updateScale();
+      } else {
+        setStageScale(1);
+        markScaleReady();
+      }
+    }, 1500);
 
     if (typeof ResizeObserver !== "undefined") {
       const resizeObserver = new ResizeObserver(updateScale);
-      setTimeout(() => {
+      window.setTimeout(() => {
         if (divRef.current) {
           resizeObserver.observe(divRef.current);
         }
       }, 0);
       return () => {
-        clearTimeout(timeoutId);
+        window.clearTimeout(timeoutId);
+        window.clearTimeout(fallbackTimeout);
         resizeObserver.disconnect();
       };
-    } else {
-      window.addEventListener("resize", updateScale);
-      return () => {
-        clearTimeout(timeoutId);
-        window.removeEventListener("resize", updateScale);
-      };
     }
+
+    window.addEventListener("resize", updateScale);
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearTimeout(fallbackTimeout);
+      window.removeEventListener("resize", updateScale);
+    };
   }, []);
 
   const mapPosition = {

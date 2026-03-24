@@ -30,7 +30,7 @@ export const HelpTab = () => {
       content:
         "Each lobby is a shareable strategy board with its own unique URL.\n\n\
         You can share the URL or code with teammates or friends. Anyone with the lobby link can view and edit the strategies inside.\n\n\
-        Lobby canvases sync automatically every 5 minutes, and you can also sync manually whenever you want. This keeps your current layout, drawings, and notes preserved across page refreshes. \n\n\
+        Lobby canvases sync automatically every 3 seconds after inactivity. This keeps your current layout, drawings, and notes preserved across page refreshes. \n\n\
         You can also save lobbies to your account to easily access them later and organize them into folders as strategies. Saved lobbies won't be deleted during routine cleanups.\n\n\
         Unsaved or 'unclaimed' lobbies (lobbies without an active account owner) are subject to automatic cleanup approximately every 12 hours, so make sure to save any lobbies you want to keep!\n\n",
     },

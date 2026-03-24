@@ -135,7 +135,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     rotateCanvasItemsForSideSwap,
     getCurrentStateForSync,
     applyRemoteState,
-    saveCanvasStateAsync,
     resetState,
   } = useCanvas();
 
@@ -603,11 +602,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       );
 
       if (hasImages) {
-        if (users.length > 1) {
-          saveCanvasStateAsync();
-        } else {
-          broadcastStateSyncRef.current?.();
-        }
+        broadcastStateSyncRef.current?.();
       } else {
         broadcastStateSyncRef.current?.();
       }
@@ -615,13 +610,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     return () => {
       onUndoRedoCallback.current = null;
     };
-  }, [
-    onUndoRedoCallback,
-    getCurrentStateForSync,
-    saveCanvasStateAsync,
-    user?.name,
-    users.length,
-  ]);
+  }, [onUndoRedoCallback, getCurrentStateForSync, user?.name, users.length]);
 
   const broadcastToolIconAdded = useCallback(
     (toolIcon: ToolIconMessageData["toolIcon"], phaseIndex: number) => {

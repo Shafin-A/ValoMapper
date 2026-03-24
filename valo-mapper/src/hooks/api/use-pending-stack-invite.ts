@@ -15,7 +15,6 @@ export const usePendingStackInvites = (enabled: boolean) => {
           getIdToken,
         );
       } catch (error) {
-        // Backward compatibility for clients during rollout.
         if (error instanceof ApiError && error.status === 404) {
           return [];
         }

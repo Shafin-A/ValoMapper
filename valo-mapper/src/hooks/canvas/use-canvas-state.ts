@@ -9,9 +9,15 @@ import {
 } from "@/hooks/canvas";
 import { useSettings } from "@/contexts/settings-context";
 import { UndoableState } from "@/lib/types";
-import { MAP_SIZE, VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts";
+import {
+  MAP_SIZE,
+  VIRTUAL_WIDTH,
+  VIRTUAL_HEIGHT,
+  AUTOSAVE_IDLE_THRESHOLD_MS,
+  AUTOSAVE_INTERVAL_MS,
+} from "@/lib/consts";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export const useCanvasState = () => {
   const params = useParams();
@@ -34,14 +40,10 @@ export const useCanvasState = () => {
     isError: isErrorLobby,
     error: lobbyError,
   } = useLobby(lobbyCode);
-  const {
-    mutate: updateLobby,
-    mutateAsync: updateLobbyAsync,
-    isPending: isUpdatingLobby,
-    isError: isErrorUpdatingLobby,
-  } = useUpdateLobby(lobbyCode);
-  const lastSaveRef = useRef<number>(Date.now());
+  const { mutateAsync } = useUpdateLobby(lobbyCode);
   const lastSavedStateRef = useRef<UndoableState | null>(null);
+  const lastChangeRef = useRef<number>(Date.now());
+  const isSavingRef = useRef(false);
 
   const lastLoadedLobbyRef = useRef<string>("");
   const lastAppliedLobbyUpdatedAt = useRef<string>("");
@@ -103,41 +105,45 @@ export const useCanvasState = () => {
     [phaseManager, canvasUI],
   );
 
-  const saveCanvasState = useCallback(() => {
-    if (!lobbyCode) return;
+  const autoSaveCanvasStateAsync = useCallback(async () => {
+    if (!lobbyCode || isSavingRef.current) return;
 
     const currentState = getCurrentState();
-    updateLobby(currentState);
 
-    lastSavedStateRef.current = currentState;
-    lastSaveRef.current = Date.now();
+    isSavingRef.current = true;
 
-    setHasUnsavedChanges(false);
-  }, [lobbyCode, getCurrentState, updateLobby]);
+    try {
+      const result = await mutateAsync(currentState);
 
-  const saveCanvasStateAsync = useCallback(async () => {
-    if (!lobbyCode) return;
+      if (result?.updatedAt) {
+        lastAppliedLobbyUpdatedAt.current = result.updatedAt.toString();
+      }
 
-    const currentState = getCurrentState();
-    const result = await updateLobbyAsync(currentState);
-
-    if (result?.updatedAt) {
-      lastAppliedLobbyUpdatedAt.current = result.updatedAt.toString();
+      lastSavedStateRef.current = currentState;
+    } catch (error) {
+      console.error("Auto save failed", error);
+    } finally {
+      isSavingRef.current = false;
     }
-
-    lastSavedStateRef.current = currentState;
-    lastSaveRef.current = Date.now();
-
-    setHasUnsavedChanges(false);
-  }, [lobbyCode, getCurrentState, updateLobbyAsync]);
+  }, [lobbyCode, getCurrentState, mutateAsync]);
 
   useEffect(() => {
     if (!lobbyCode || !lobby) return;
 
     const isNewLobby = lobbyCode !== lastLoadedLobbyRef.current;
     const lobbyUpdatedAt = lobby.updatedAt?.toString() || "";
+
+    const lastApplied = lastAppliedLobbyUpdatedAt.current || "";
+    const parseTimestamp = (value: string) => {
+      const num = Number(value);
+      if (!Number.isNaN(num) && Number.isFinite(num)) return num;
+      const parsed = Date.parse(value);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    };
+
     const isUpdatedRemotely =
-      lobbyUpdatedAt && lobbyUpdatedAt !== lastAppliedLobbyUpdatedAt.current;
+      lobbyUpdatedAt &&
+      parseTimestamp(lobbyUpdatedAt) > parseTimestamp(lastApplied);
 
     if (isNewLobby || isUpdatedRemotely) {
       lastLoadedLobbyRef.current = lobbyCode;
@@ -193,14 +199,13 @@ export const useCanvasState = () => {
     "abilitiesSettings",
   ]);
 
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
   const checkUnsavedChanges = useCallback(() => {
+    const currentState = getCurrentState();
+
     if (!lastSavedStateRef.current) {
-      setHasUnsavedChanges(true);
+      lastChangeRef.current = Date.now();
       return true;
     }
-    const currentState = getCurrentState();
 
     const hasChanges = relevantProps.current.some(
       (prop) =>
@@ -208,7 +213,10 @@ export const useCanvasState = () => {
         JSON.stringify(lastSavedStateRef.current![prop]),
     );
 
-    setHasUnsavedChanges(hasChanges);
+    if (hasChanges) {
+      lastChangeRef.current = Date.now();
+    }
+
     return hasChanges;
   }, [getCurrentState]);
 
@@ -221,18 +229,19 @@ export const useCanvasState = () => {
 
     const checkAndSave = () => {
       const now = Date.now();
-      const timeSinceLastSave = now - lastSaveRef.current;
+      const idleTime = now - lastChangeRef.current;
 
-      if (timeSinceLastSave >= 5 * 60 * 1000 && hasUnsavedChanges) {
-        saveCanvasState();
-      }
+      if (idleTime < AUTOSAVE_IDLE_THRESHOLD_MS) return;
+      if (!checkUnsavedChanges()) return;
+
+      void autoSaveCanvasStateAsync();
     };
 
     checkAndSave();
 
-    const interval = setInterval(checkAndSave, 60 * 1000);
+    const interval = setInterval(checkAndSave, AUTOSAVE_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [lobbyCode, hasUnsavedChanges, saveCanvasState]);
+  }, [lobbyCode, autoSaveCanvasStateAsync, checkUnsavedChanges]);
 
   const rotateCanvasItemsForSideSwap = useCallback(() => {
     const mapCenterX = (VIRTUAL_WIDTH - MAP_SIZE) / 2 + MAP_SIZE / 2;
@@ -320,12 +329,7 @@ export const useCanvasState = () => {
     ...historyManager,
     ...canvasUI,
     resetState,
-    saveCanvasState,
-    saveCanvasStateAsync,
     applyRemoteState,
-    hasUnsavedChanges,
-    isUpdatingLobby,
-    isErrorUpdatingLobby,
     isLoadingLobby,
     isErrorLobby,
     lobbyError,

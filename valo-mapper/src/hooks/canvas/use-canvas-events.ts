@@ -40,7 +40,6 @@ export const useCanvasEvents = (
     setConnectingLines,
     tool,
     setCurrentStroke,
-    saveCanvasStateAsync,
   } = useCanvas();
 
   const { drawSettings, eraserSettings } = useSettings();
@@ -185,7 +184,6 @@ export const useCanvasEvents = (
     setToolIconsOnCanvas,
     connectingLines,
     setConnectingLines,
-    saveCanvasStateAsync,
   );
 
   const handleIconPlacement = useCallback(
