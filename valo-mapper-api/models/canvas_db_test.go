@@ -109,7 +109,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 				{ID: "img1", Src: "https://example.com/img.png", X: 500, Y: 600, Width: 200, Height: 150},
 			},
 			ToolIconsOnCanvas: []CanvasToolIcon{
-				{ID: "icon1", X: 700, Y: 800, Width: 32, Height: 32},
+				{ID: "icon1", Name: "Spike", X: 700, Y: 800, Width: 32, Height: 32},
 			},
 		}
 
@@ -169,6 +169,7 @@ func TestGetAllCanvasPhases(t *testing.T) {
 		assert.GreaterOrEqual(t, len(phases[0].ToolIconsOnCanvas), 1)
 		if len(phases[0].ToolIconsOnCanvas) > 0 {
 			assert.Equal(t, "icon1", phases[0].ToolIconsOnCanvas[0].ID)
+			assert.Equal(t, "Spike", phases[0].ToolIconsOnCanvas[0].Name)
 		}
 		assert.GreaterOrEqual(t, len(phases[0].ConnectingLines), 1)
 		if len(phases[0].ConnectingLines) > 0 {

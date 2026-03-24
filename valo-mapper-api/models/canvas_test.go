@@ -126,7 +126,7 @@ func TestPhaseStateSerialization(t *testing.T) {
 				{ID: "i1", Src: "image.png", X: 150, Y: 150, Width: 100, Height: 100},
 			},
 			ToolIconsOnCanvas: []CanvasToolIcon{
-				{ID: "ti1", X: 200, Y: 200, Width: 30, Height: 30},
+				{ID: "ti1", Name: "Spike", X: 200, Y: 200, Width: 30, Height: 30},
 			},
 		}
 
@@ -347,6 +347,7 @@ func TestCanvasToolIconSerialization(t *testing.T) {
 	t.Run("serializes tool icon element", func(t *testing.T) {
 		icon := CanvasToolIcon{
 			ID:     "icon-1",
+			Name:   "Spike",
 			X:      300,
 			Y:      400,
 			Width:  32,
@@ -361,6 +362,7 @@ func TestCanvasToolIconSerialization(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, icon.ID, decoded.ID)
+		assert.Equal(t, icon.Name, decoded.Name)
 		assert.Equal(t, icon.X, decoded.X)
 		assert.Equal(t, icon.Y, decoded.Y)
 		assert.Equal(t, icon.Width, decoded.Width)

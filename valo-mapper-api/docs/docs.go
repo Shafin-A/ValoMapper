@@ -2164,6 +2164,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "width": {
                     "type": "number"
                 },

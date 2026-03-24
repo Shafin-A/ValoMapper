@@ -159,7 +159,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- TOOL ICONS ----
 	rows, err = conn.Query(ctx, `
-		SELECT id, x, y, width, height, phase_index 
+		SELECT id, name, x, y, width, height, phase_index 
 		FROM canvas_tool_icons 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index`, lobbyCode)
@@ -169,7 +169,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	for rows.Next() {
 		var icon CanvasToolIcon
 		var phaseIndex int
-		if err := rows.Scan(&icon.ID, &icon.X, &icon.Y, &icon.Width, &icon.Height, &phaseIndex); err != nil {
+		if err := rows.Scan(&icon.ID, &icon.Name, &icon.X, &icon.Y, &icon.Width, &icon.Height, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -301,7 +301,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		// Tool Icons
 		for _, ic := range phase.ToolIconsOnCanvas {
 			iconRows = append(iconRows, []any{
-				ic.ID, lobbyCode, ic.X, ic.Y, ic.Width, ic.Height, phaseIndex,
+				ic.ID, lobbyCode, ic.Name, ic.X, ic.Y, ic.Width, ic.Height, phaseIndex,
 			})
 		}
 
@@ -379,7 +379,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_tool_icons"},
-			[]string{"id", "lobby_code", "x", "y", "width", "height", "phase_index"},
+			[]string{"id", "lobby_code", "name", "x", "y", "width", "height", "phase_index"},
 			pgx.CopyFromRows(iconRows),
 		)
 		if err != nil {
