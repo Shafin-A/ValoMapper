@@ -223,6 +223,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
             <CanvasConnectingLines onLineClick={setSelectedConnectingLine} />
             <CanvasAbilities deleteGroupRef={deleteGroupRef} />
             <CanvasAgents deleteGroupRef={deleteGroupRef} />
+            <CanvasToolIcons deleteGroupRef={deleteGroupRef} />
             <CanvasImages
               stageRef={stageRef}
               transformerRefs={transformerRefs}
@@ -234,7 +235,6 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
               transformerRefs={transformerRefs}
               deleteGroupRef={deleteGroupRef}
             />
-            <CanvasToolIcons deleteGroupRef={deleteGroupRef} />
           </Layer>
           <Layer isListening={isDrawMode}>
             <CanvasDrawLines currentLineRef={currentLineRef} />
