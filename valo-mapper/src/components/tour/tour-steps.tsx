@@ -138,7 +138,9 @@ Creating an account is required to save strategies.`}
         title="Icons"
         description={`Add icons such as the Spike or weapons.
 
-Unlike agents and abilities, simply click an icon to add it directly to the canvas.`}
+Drag icons from the sidebar and drop them onto the map like agents and abilities. 
+
+You can also click on the icon and it will be placed on the map.`}
       />
     ),
     position: "right",
