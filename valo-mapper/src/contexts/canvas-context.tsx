@@ -37,9 +37,9 @@ interface CanvasContextType {
   setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>;
   abilitiesOnCanvas: AbilityCanvas[];
   setAbilitiesOnCanvas: Dispatch<SetStateAction<AbilityCanvas[]>>;
-  selectedCanvasIcon: Agent | AbilityIconItem | null;
+  selectedCanvasIcon: Agent | AbilityIconItem | ToolIconCanvas | null;
   setSelectedCanvasIcon: Dispatch<
-    SetStateAction<Agent | AbilityIconItem | null>
+    SetStateAction<Agent | AbilityIconItem | ToolIconCanvas | null>
   >;
   isSidebarDragActive: boolean;
   setIsSidebarDragActive: Dispatch<SetStateAction<boolean>>;

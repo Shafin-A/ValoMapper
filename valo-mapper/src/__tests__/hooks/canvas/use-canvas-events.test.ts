@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { TEMP_DRAG_ID } from "@/lib/consts";
-import type { AgentCanvas } from "@/lib/types";
+import type { AgentCanvas, ToolIconCanvas } from "@/lib/types";
 import type { Stage } from "konva/lib/Stage";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
@@ -258,6 +258,65 @@ describe("useCanvasEvents", () => {
     expect(agentsState).toHaveLength(1);
     expect(agentsState[0]).toMatchObject({
       id: "agent-new",
+      x: 4,
+      y: 8,
+    });
+    expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
+  });
+
+  it("places a selected tool icon and clears selection on click", () => {
+    let toolIconsState: ToolIconCanvas[] = [
+      {
+        id: TEMP_DRAG_ID,
+        name: "spike",
+        width: 32,
+        height: 32,
+        x: 0,
+        y: 0,
+      },
+    ];
+
+    const setToolIconsOnCanvas = jest.fn((updater) => {
+      toolIconsState =
+        typeof updater === "function" ? updater(toolIconsState) : updater;
+    });
+
+    const setSelectedCanvasIcon = jest.fn();
+
+    mockGetNextId.mockReturnValue("tool-new");
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        selectedCanvasIcon: {
+          id: TEMP_DRAG_ID,
+          name: "spike",
+          width: 32,
+          height: 32,
+          x: 0,
+          y: 0,
+        },
+        setSelectedCanvasIcon,
+        toolIconsOnCanvas: toolIconsState,
+        setToolIconsOnCanvas,
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock({
+        findOne: jest.fn(() => ({ position: jest.fn(() => ({ x: 4, y: 8 })) })),
+      }) as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleStageClick();
+    });
+
+    expect(setToolIconsOnCanvas).toHaveBeenCalled();
+    expect(toolIconsState).toHaveLength(1);
+    expect(toolIconsState[0]).toMatchObject({
+      id: "tool-new",
       x: 4,
       y: 8,
     });

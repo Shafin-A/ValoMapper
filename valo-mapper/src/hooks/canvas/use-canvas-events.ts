@@ -45,7 +45,8 @@ export const useCanvasEvents = (
 
   const { drawSettings, eraserSettings } = useSettings();
 
-  const { notifyAgentAdded, notifyAbilityAdded } = useCollaborativeCanvas();
+  const { notifyAgentAdded, notifyAbilityAdded, notifyToolIconAdded } =
+    useCollaborativeCanvas();
 
   const frameRef = useRef<number | null>(null);
 
@@ -87,8 +88,12 @@ export const useCanvasEvents = (
       setAgentsOnCanvas((prev) =>
         prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
       );
-    } else {
+    } else if ("action" in selectedCanvasIcon) {
       setAbilitiesOnCanvas((prev) =>
+        prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
+      );
+    } else {
+      setToolIconsOnCanvas((prev) =>
         prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
       );
     }
@@ -99,6 +104,7 @@ export const useCanvasEvents = (
     selectedCanvasIcon,
     setAbilitiesOnCanvas,
     setAgentsOnCanvas,
+    setToolIconsOnCanvas,
     setSelectedCanvasIcon,
     setIsSidebarDragActive,
   ]);
@@ -201,8 +207,13 @@ export const useCanvasEvents = (
         pos = tempDragIcon.position();
       }
 
+      const isAbilityIcon = "action" in selectedCanvasIcon;
       const newId = getNextId(
-        isAgent(selectedCanvasIcon) ? "agent" : "ability",
+        isAgent(selectedCanvasIcon)
+          ? "agent"
+          : isAbilityIcon
+            ? "ability"
+            : "tool",
       );
 
       if (isAgent(selectedCanvasIcon)) {
@@ -218,7 +229,7 @@ export const useCanvasEvents = (
           prev.map((agent) => (agent.id === TEMP_DRAG_ID ? newAgent : agent)),
         );
         notifyAgentAdded(newAgent);
-      } else {
+      } else if (isAbilityIcon) {
         const tempAbility = abilitiesOnCanvas.find(
           (a) => a.id === TEMP_DRAG_ID,
         );
@@ -237,6 +248,19 @@ export const useCanvasEvents = (
           ),
         );
         notifyAbilityAdded(newAbility);
+      } else {
+        const newToolIcon = {
+          ...selectedCanvasIcon,
+          id: newId,
+          x: pos.x,
+          y: pos.y,
+        };
+        setToolIconsOnCanvas((prev) =>
+          prev.map((toolIcon) =>
+            toolIcon.id === TEMP_DRAG_ID ? newToolIcon : toolIcon,
+          ),
+        );
+        notifyToolIconAdded(newToolIcon);
       }
 
       setSelectedCanvasIcon(null);
@@ -247,10 +271,12 @@ export const useCanvasEvents = (
       abilitiesOnCanvas,
       setAbilitiesOnCanvas,
       setAgentsOnCanvas,
+      setToolIconsOnCanvas,
       setSelectedCanvasIcon,
       stageRef,
       notifyAgentAdded,
       notifyAbilityAdded,
+      notifyToolIconAdded,
     ],
   );
 

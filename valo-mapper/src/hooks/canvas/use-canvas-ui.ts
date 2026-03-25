@@ -1,5 +1,12 @@
 import { DEFAULT_MAP_OPTIONS } from "@/lib/consts";
-import { MapOption, DrawLine, Tool, AbilityIconItem, Agent } from "@/lib/types";
+import {
+  MapOption,
+  DrawLine,
+  Tool,
+  AbilityIconItem,
+  Agent,
+  ToolIconCanvas,
+} from "@/lib/types";
 import { useRef, useState } from "react";
 
 export const useCanvasUI = () => {
@@ -22,7 +29,7 @@ export const useCanvasUI = () => {
   const [showSpawnBarriers, setShowSpawnBarriers] = useState(false);
 
   const [selectedCanvasIcon, setSelectedCanvasIcon] = useState<
-    Agent | AbilityIconItem | null
+    Agent | AbilityIconItem | ToolIconCanvas | null
   >(null);
   const [isSidebarDragActive, setIsSidebarDragActive] = useState(false);
   const [currentStageScale, setCurrentStageScale] = useState(1);
