@@ -17,7 +17,7 @@ import { MAP_SIZE } from "@/lib/consts";
 
 import { LineupFormFields } from "./lineup-form-fields";
 import { LineupFullscreenViewer } from "./lineup-fullscreen-viewer";
-import { useLineupForm } from "./use-lineup-form";
+import { useLineupForm } from "@/hooks/use-lineup-form";
 
 interface LineupDialogProps {
   onConfirm?: (agentName: string, abilityName: string) => void;

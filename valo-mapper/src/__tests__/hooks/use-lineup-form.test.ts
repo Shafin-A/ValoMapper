@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { useLineupForm } from "@/components/tools-sidebar/lineup-dialog/use-lineup-form";
+import { useLineupForm } from "@/hooks/use-lineup-form";
 
 describe("useLineupForm", () => {
   beforeEach(() => {
