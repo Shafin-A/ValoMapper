@@ -7,11 +7,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
-import {
-  ALLOWED_IMAGE_UPLOAD_MIME_TYPES,
-  IMAGE_UPLOAD_ACCEPT_ATTR,
-  MAP_SIZE,
-} from "@/lib/consts";
+import { MAP_SIZE } from "@/lib/consts";
 import { Tool } from "@/lib/types";
 import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
@@ -19,7 +15,6 @@ import {
   ALargeSmall,
   Camera,
   Eraser,
-  Image as ImageIcon,
   MapPinned,
   Pencil,
   Redo,
@@ -30,8 +25,7 @@ import {
   Info,
   Eye,
 } from "lucide-react";
-import { useRef, useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useState, useEffect } from "react";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
@@ -43,6 +37,7 @@ import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useScreenshot } from "@/hooks/use-screenshot";
 import { useRecenterCanvas } from "@/hooks/use-recenter-canvas";
+import { ImageUploadButton } from "./image-upload-button";
 import { MapStageHandle } from "@/components/canvas";
 import { RefObject } from "react";
 
@@ -52,8 +47,6 @@ interface ToolsSectionProps {
 }
 
 export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [openLineupDialog, setOpenLineupDialog] = useState(false);
   const [visionConesOpen, setVisionConesOpen] = useState(false);
@@ -71,7 +64,6 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     setIsDeleteSettingsOpen,
     setTextsOnCanvas,
     setEditingTextId,
-    setImagesOnCanvas,
     recenterCanvasCallback,
     onUndoRedoCallback,
   } = useCanvas();
@@ -130,84 +122,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     notifyTextAdded(newText);
   };
 
-  const handleImageUpload = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleRecenterCanvas = useRecenterCanvas(stageRef);
-
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const fileType = file.type.toLowerCase();
-    if (
-      !ALLOWED_IMAGE_UPLOAD_MIME_TYPES.includes(
-        fileType as (typeof ALLOWED_IMAGE_UPLOAD_MIME_TYPES)[number],
-      )
-    ) {
-      toast.error("Unsupported image type. Use JPEG, PNG, GIF, or WEBP.");
-      event.target.value = "";
-      return;
-    }
-
-    let url: string;
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      const response = await fetch("/api/images/upload", {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err?.error ?? "Upload failed");
-      }
-      const data = await response.json();
-      url = data.url as string;
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to upload image",
-      );
-      event.target.value = "";
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = async () => {
-      URL.revokeObjectURL(objectUrl);
-
-      const maxSize = 500;
-      let width = img.naturalWidth;
-      let height = img.naturalHeight;
-
-      if (width >= height && width > maxSize) {
-        height = (height * maxSize) / width;
-        width = maxSize;
-      } else if (height > width && height > maxSize) {
-        width = (width * maxSize) / height;
-        height = maxSize;
-      }
-
-      const newImage = {
-        id: getNextId("image"),
-        src: url,
-        x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-        y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-        width,
-        height,
-      };
-
-      setImagesOnCanvas((prev) => [...prev, newImage]);
-      notifyImageAdded(newImage);
-    };
-    img.src = objectUrl;
-
-    event.target.value = "";
-  };
 
   const handleScreenshot = useScreenshot(stageRef);
 
@@ -224,13 +139,6 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
 
   return (
     <>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={IMAGE_UPLOAD_ACCEPT_ATTR}
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-      />
       <div className="space-y-2 mt-4" data-tour="tools-section">
         <div className="flex items-center justify-between">
           <span className="text-base font-semibold">Tools</span>
@@ -399,9 +307,11 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="lg" onClick={handleImageUpload}>
-                <ImageIcon />
-              </Button>
+              <ImageUploadButton
+                mapPosition={mapPosition}
+                onImageAdded={notifyImageAdded}
+                disabled={!stageRef}
+              />
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
               Add Image
