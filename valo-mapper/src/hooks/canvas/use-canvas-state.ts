@@ -13,11 +13,18 @@ import {
   MapOption,
   MapSide,
   PhaseState,
+  SyncStatus,
   UndoableState,
 } from "@/lib/types";
 import { MAP_SIZE, VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts";
 import { useParams } from "next/navigation";
-import { SetStateAction, useCallback, useEffect, useRef } from "react";
+import {
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useCanvasAutoSave } from "@/hooks/canvas/use-auto-save";
 import { parseTimestamp } from "@/lib/utils";
 
@@ -48,18 +55,21 @@ export const useCanvasState = () => {
   const isSavingRef = useRef(false);
   const isDirtyRef = useRef(false);
 
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+
   const lastLoadedLobbyRef = useRef<string>("");
   const lastAppliedLobbyUpdatedAt = useRef<string>("");
 
   const markDirty = useCallback(() => {
     isDirtyRef.current = true;
+    setSyncStatus("unsynced");
     lastChangeRef.current = Date.now();
   }, []);
 
   const clearDirty = useCallback(() => {
     isDirtyRef.current = false;
+    setSyncStatus("synced");
   }, []);
-
   const areIconSettingsEqual = (a: IconSettings, b: IconSettings) =>
     JSON.stringify(a) === JSON.stringify(b);
 
@@ -291,6 +301,7 @@ export const useCanvasState = () => {
     const currentState = getCurrentState();
 
     isSavingRef.current = true;
+    setSyncStatus("syncing");
 
     try {
       const result = await mutateAsync(currentState);
@@ -301,8 +312,10 @@ export const useCanvasState = () => {
 
       lastSavedStateRef.current = currentState;
       clearDirty();
+      setSyncStatus("synced");
     } catch (error) {
       console.error("Auto save failed", error);
+      setSyncStatus("error");
     } finally {
       isSavingRef.current = false;
     }
@@ -342,6 +355,7 @@ export const useCanvasState = () => {
 
       clearDirty();
       lastChangeRef.current = Date.now();
+      setSyncStatus("synced");
     }
   }, [
     lobbyCode,
@@ -504,6 +518,7 @@ export const useCanvasState = () => {
     isLoadingLobby,
     isErrorLobby,
     lobbyError,
+    syncStatus,
     rotateCanvasItemsForSideSwap,
     getCurrentStateForSync,
   };

@@ -13,7 +13,6 @@ export const useUpdateLobby = (lobbyCode: string) => {
         body: JSON.stringify({ canvasState }),
       }),
     onSuccess: (data) => {
-      toast.success("Canvas synced!");
       if (lobbyCode) {
         queryClient.setQueryData(["lobby", lobbyCode], data);
       }

@@ -11,6 +11,8 @@ export type Agent = {
   role: AgentRole;
 };
 
+export type SyncStatus = "idle" | "unsynced" | "syncing" | "synced" | "error";
+
 export type BaseCanvasItem = {
   id: string;
   x: number;

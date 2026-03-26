@@ -3,6 +3,7 @@
 import { CircleQuestionMark, SidebarIcon, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { CanvasSyncStatus } from "@/components/layout/canvas-sync-status";
 import { ConnectionStatus, UserAvatars } from "@/components/collaboration";
 import {
   Dialog,
@@ -26,6 +27,7 @@ import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useWebSocket } from "@/contexts/websocket-context";
 import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
+import { SyncStatus } from "@/lib/types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
@@ -36,6 +38,7 @@ interface SiteHeaderProps {
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
   rightSidebarOpen: boolean;
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
+  syncStatus?: SyncStatus;
 }
 
 export const SiteHeader = ({
@@ -43,6 +46,7 @@ export const SiteHeader = ({
   setLeftSidebarOpen,
   rightSidebarOpen,
   setRightSidebarOpen,
+  syncStatus,
 }: SiteHeaderProps) => {
   const { logout } = useFirebaseAuth();
   const { data: user, isLoading } = useUser();
@@ -68,21 +72,27 @@ export const SiteHeader = ({
             <SidebarIcon />
           </Button>
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Link href="/">
-            <h1 className="font-bold">
-              <span className="bg-linear-to-r from-foreground to-primary bg-clip-text text-transparent">
-                ValoMapper
-              </span>
-            </h1>
-          </Link>
+
+          <div className="flex items-center gap-2">
+            <Link href="/">
+              <h1 className="font-bold">
+                <span className="bg-linear-to-r from-foreground to-primary bg-clip-text text-transparent">
+                  ValoMapper
+                </span>
+              </h1>
+            </Link>
+          </div>
         </div>
 
-        {users.length > 1 && (
-          <div className="flex items-center gap-3">
-            <UserAvatars />
-            <ConnectionStatus />
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <CanvasSyncStatus syncStatus={syncStatus} />
+          {users.length > 1 && (
+            <>
+              <UserAvatars />
+              <ConnectionStatus />
+            </>
+          )}
+        </div>
 
         <div className="flex items-center gap-2 h-full">
           <Dialog>

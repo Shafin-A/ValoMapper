@@ -7,6 +7,7 @@ import type {
   Agent,
   AgentCanvas,
   ConnectingLine,
+  SyncStatus,
   DrawLine,
   ImageCanvas,
   MapOption,
@@ -96,6 +97,7 @@ interface CanvasContextType {
   isLoadingLobby: boolean;
   isErrorLobby: boolean;
   lobbyError: Error | null;
+  syncStatus: SyncStatus;
   hoveredElementId: string | null;
   setHoveredElementId: Dispatch<SetStateAction<string | null>>;
   recenterCanvasCallback: RefObject<(() => void) | null>;
