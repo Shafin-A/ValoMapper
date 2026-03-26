@@ -1,16 +1,25 @@
 import { Slider } from "@/components/ui/slider";
 import { IconSettings } from "@/lib/types";
 import { debounce } from "@/lib/utils";
+import { RefreshCw } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
 
 interface SettingsPanelProps {
   settings: IconSettings;
   onSettingsChange: (newSettings: Partial<IconSettings>) => void;
+  onReset: () => void;
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   settings,
   onSettingsChange,
+  onReset,
 }) => {
   const debouncedSetAllyColor = useMemo(
     () =>
@@ -26,6 +35,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   return (
     <>
+      <div className="flex p-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button onClick={onReset} variant="ghost">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right" align="center">
+            Reset settings
+          </TooltipContent>
+        </Tooltip>
+      </div>
       <div className="flex items-center gap-6 p-2">
         <span className="text-sm font-medium w-20">Scale</span>
         <Slider

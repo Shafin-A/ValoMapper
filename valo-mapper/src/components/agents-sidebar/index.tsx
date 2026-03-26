@@ -71,6 +71,8 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     abilitiesSettings,
     updateAgentsSettings,
     updateAbilitiesSettings,
+    resetAgentsSettings,
+    resetAbilitiesSettings,
   } = useSettings();
 
   const {
@@ -495,6 +497,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
                   <SettingsPanel
                     settings={agentsSettings}
                     onSettingsChange={updateAgentsSettings}
+                    onReset={resetAgentsSettings}
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -507,6 +510,7 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
                   <SettingsPanel
                     settings={abilitiesSettings}
                     onSettingsChange={updateAbilitiesSettings}
+                    onReset={resetAbilitiesSettings}
                   />
                 </AccordionContent>
               </AccordionItem>

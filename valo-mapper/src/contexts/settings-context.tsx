@@ -3,6 +3,15 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { DrawSettings, EraserSettings, IconSettings } from "@/lib/types";
 
+export const defaultIconSettings: IconSettings = {
+  scale: 35,
+  borderOpacity: 1,
+  borderWidth: 3,
+  radius: 8,
+  allyColor: "#18636c",
+  enemyColor: "#FF4655",
+};
+
 interface SettingsContextType {
   agentsSettings: IconSettings;
   abilitiesSettings: IconSettings;
@@ -10,6 +19,8 @@ interface SettingsContextType {
   eraserSettings: EraserSettings;
   updateAgentsSettings: (settings: Partial<IconSettings>) => void;
   updateAbilitiesSettings: (settings: Partial<IconSettings>) => void;
+  resetAgentsSettings: () => void;
+  resetAbilitiesSettings: () => void;
   updateDrawSettings: (settings: Partial<DrawSettings>) => void;
   updateEraserSettings: (settings: Partial<EraserSettings>) => void;
 }
@@ -23,23 +34,11 @@ interface SettingsProviderProps {
 }
 
 export const SettingsProvider = ({ children }: SettingsProviderProps) => {
-  const [agentsSettings, setAgentsSettings] = useState<IconSettings>({
-    scale: 35,
-    borderOpacity: 1,
-    borderWidth: 3,
-    radius: 8,
-    allyColor: "#18636c",
-    enemyColor: "#FF4655",
-  });
+  const [agentsSettings, setAgentsSettings] =
+    useState<IconSettings>(defaultIconSettings);
 
-  const [abilitiesSettings, setAbilitiesSettings] = useState<IconSettings>({
-    scale: 35,
-    borderOpacity: 1,
-    borderWidth: 3,
-    radius: 8,
-    allyColor: "#18636c",
-    enemyColor: "#FF4655",
-  });
+  const [abilitiesSettings, setAbilitiesSettings] =
+    useState<IconSettings>(defaultIconSettings);
 
   const [drawSettings, setDrawSettings] = useState<DrawSettings>({
     size: 5,
@@ -61,6 +60,14 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     setAbilitiesSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
+  const resetAgentsSettings = () => {
+    setAgentsSettings(defaultIconSettings);
+  };
+
+  const resetAbilitiesSettings = () => {
+    setAbilitiesSettings(defaultIconSettings);
+  };
+
   const updateDrawSettings = (newSettings: Partial<DrawSettings>) => {
     setDrawSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -78,6 +85,8 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
         eraserSettings,
         updateAgentsSettings,
         updateAbilitiesSettings,
+        resetAgentsSettings,
+        resetAbilitiesSettings,
         updateDrawSettings,
         updateEraserSettings,
       }}
