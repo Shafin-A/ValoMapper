@@ -95,6 +95,13 @@ export const CanvasCurvableLineIcon = ({
     isAlly,
     mapSide,
     showAbilityShape,
+    width,
+    height,
+    radius,
+    borderOpacity,
+    strokeWidth,
+    allyColor,
+    enemyColor,
   ]);
 
   useEffect(() => {

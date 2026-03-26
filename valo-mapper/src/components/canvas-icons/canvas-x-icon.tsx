@@ -90,6 +90,13 @@ export const CanvasXIcon = ({
     isAlly,
     mapSide,
     showAbilityShape,
+    width,
+    height,
+    radius,
+    borderOpacity,
+    strokeWidth,
+    allyColor,
+    enemyColor,
   ]);
 
   useEffect(() => {

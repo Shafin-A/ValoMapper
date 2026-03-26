@@ -68,6 +68,13 @@ export const CanvasCircleIcon = ({
     circleRadius,
     showAbilityShape,
     showOuterCircle,
+    width,
+    height,
+    boxRadius,
+    borderOpacity,
+    strokeWidth,
+    allyColor,
+    enemyColor,
   ]);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {

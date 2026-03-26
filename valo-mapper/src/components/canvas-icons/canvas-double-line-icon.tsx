@@ -117,6 +117,13 @@ export const CanvasDoubleLineIcon = ({
     isAlly,
     mapSide,
     showAbilityShape,
+    width,
+    height,
+    radius,
+    borderOpacity,
+    strokeWidth,
+    allyColor,
+    enemyColor,
   ]);
 
   useEffect(() => {

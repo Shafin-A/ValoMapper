@@ -108,6 +108,13 @@ export const CanvasArcIcon = ({
     mapSide,
     showAbilityShape,
     showOuterCircle,
+    width,
+    height,
+    boxRadius,
+    borderOpacity,
+    strokeWidth,
+    allyColor,
+    enemyColor,
   ]);
 
   useEffect(() => {
