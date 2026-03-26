@@ -12,7 +12,6 @@ import {
   IMAGE_UPLOAD_ACCEPT_ATTR,
   MAP_SIZE,
 } from "@/lib/consts";
-import { VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts/misc/consts";
 import { Tool } from "@/lib/types";
 import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
@@ -31,7 +30,7 @@ import {
   Info,
   Eye,
 } from "lucide-react";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
@@ -43,6 +42,7 @@ import { LineupDialog } from "./lineup-dialog";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useScreenshot } from "@/hooks/use-screenshot";
+import { useRecenterCanvas } from "@/hooks/use-recenter-canvas";
 import { MapStageHandle } from "@/components/canvas";
 import { RefObject } from "react";
 
@@ -134,33 +134,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     fileInputRef.current?.click();
   };
 
-  const handleRecenterCanvas = useCallback(() => {
-    const stageHandle = stageRef?.current;
-    if (!stageHandle) return;
-
-    const stage = stageHandle.stage;
-    if (!stage) return;
-
-    const container = stage.container();
-    const containerWidth = container.offsetWidth;
-    const containerHeight = container.offsetHeight;
-
-    const scaleX = containerWidth / VIRTUAL_WIDTH;
-    const scaleY = containerHeight / VIRTUAL_HEIGHT;
-    const baseScale = Math.min(scaleX, scaleY);
-
-    const scaledWidth = VIRTUAL_WIDTH * baseScale;
-    const scaledHeight = VIRTUAL_HEIGHT * baseScale;
-
-    const x = (containerWidth - scaledWidth) / 2;
-    const y = (containerHeight - scaledHeight) / 2;
-
-    stage.position({ x, y });
-    stage.scale({ x: baseScale, y: baseScale });
-    stage.batchDraw();
-
-    stageHandle.handleDragMove();
-  }, [stageRef]);
+  const handleRecenterCanvas = useRecenterCanvas(stageRef);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
