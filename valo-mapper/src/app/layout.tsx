@@ -21,16 +21,42 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://valomapper.fly.dev";
+
 export const metadata: Metadata = {
-  title: "ValoMapper",
+  title: {
+    default: "ValoMapper",
+    template: "%s | ValoMapper",
+  },
   description: "Create strategies and executes for VALORANT",
+  metadataBase: new URL(appUrl),
+  openGraph: {
+    title: "ValoMapper",
+    description: "Create strategies and executes for VALORANT",
+    url: appUrl,
+    siteName: "ValoMapper",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 512,
+        height: 512,
+        alt: "ValoMapper logo",
+      },
+    ],
+  },
+  icons: {
+    icon: "/og-image.png",
+    shortcut: "/og-image.png",
+    apple: "/og-image.png",
+  },
 };
 
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -60,4 +86,6 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;
