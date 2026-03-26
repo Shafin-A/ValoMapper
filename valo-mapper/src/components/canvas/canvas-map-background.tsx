@@ -51,25 +51,44 @@ export const CanvasMapBackground = ({
     }
   }, [status, mapImage, selectedMap.id, currentMap, stageRef, isTransitioning]);
 
+  const isKonvaImage = (node: Konva.Image | null): node is Konva.Image => {
+    return (
+      !!node &&
+      typeof node.to === "function" &&
+      typeof node.opacity === "function"
+    );
+  };
+
   useEffect(() => {
     if (isTransitioning && previousMap && currentMap) {
       const animationId = requestAnimationFrame(() => {
-        prevImageRef.current?.to({
-          opacity: 0,
-          duration: 0.15,
-          onFinish: () => {
-            setPreviousMap(null);
-            setIsTransitioning(false);
-            setIsMapTransitioning(false);
-          },
-        });
+        const prevNode = prevImageRef.current;
+        const currNode = currentImageRef.current;
 
-        if (currentImageRef.current) {
-          currentImageRef.current.opacity(0);
-          currentImageRef.current.to({
-            opacity: 1,
+        if (isKonvaImage(prevNode)) {
+          prevNode.to({
+            opacity: 0,
             duration: 0.15,
+            onFinish: () => {
+              setPreviousMap(null);
+              setIsTransitioning(false);
+              setIsMapTransitioning(false);
+            },
           });
+        } else {
+          setPreviousMap(null);
+          setIsTransitioning(false);
+          setIsMapTransitioning(false);
+        }
+
+        if (currNode) {
+          if (isKonvaImage(currNode)) {
+            currNode.opacity(0);
+            currNode.to({
+              opacity: 1,
+              duration: 0.15,
+            });
+          }
         }
       });
 
