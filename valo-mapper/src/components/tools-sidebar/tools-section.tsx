@@ -7,12 +7,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
-import { MAP_SIZE } from "@/lib/consts";
 import { Tool } from "@/lib/types";
-import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
 import {
-  ALargeSmall,
   Camera,
   Eraser,
   MapPinned,
@@ -38,6 +35,7 @@ import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useScreenshot } from "@/hooks/use-screenshot";
 import { useRecenterCanvas } from "@/hooks/use-recenter-canvas";
 import { ImageUploadButton } from "./image-upload-button";
+import { TextAddButton } from "./text-add-button";
 import { MapStageHandle } from "@/components/canvas";
 import { RefObject } from "react";
 
@@ -62,13 +60,12 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
     isDrawMode,
     isDeleteSettingsOpen,
     setIsDeleteSettingsOpen,
-    setTextsOnCanvas,
     setEditingTextId,
     recenterCanvasCallback,
     onUndoRedoCallback,
   } = useCanvas();
 
-  const { notifyTextAdded, notifyImageAdded } = useCollaborativeCanvas();
+  const { notifyImageAdded } = useCollaborativeCanvas();
 
   const handleUndo = () => {
     undo();
@@ -102,24 +99,6 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
 
   const handleLineupCancel = () => {
     setOpenLineupDialog(false);
-  };
-
-  const handleAddText = () => {
-    setEditingTextId(null);
-    setIsDrawMode(false);
-    setVisionConesOpen(false);
-
-    const newText = {
-      id: getNextId("text"),
-      text: "",
-      x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-      y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-      width: 200,
-      height: 60,
-    };
-
-    setTextsOnCanvas((prev) => [...prev, newText]);
-    notifyTextAdded(newText);
   };
 
   const handleRecenterCanvas = useRecenterCanvas(stageRef);
@@ -296,9 +275,13 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="lg" onClick={handleAddText}>
-                <ALargeSmall />
-              </Button>
+              <TextAddButton
+                mapPosition={mapPosition}
+                onBeforeAdd={() => {
+                  setVisionConesOpen(false);
+                }}
+                disabled={!stageRef}
+              />
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
               Add Text
