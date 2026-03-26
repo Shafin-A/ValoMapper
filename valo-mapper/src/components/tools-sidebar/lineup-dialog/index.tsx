@@ -14,10 +14,10 @@ import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { Vector2d } from "konva/lib/types";
 import { MAP_SIZE } from "@/lib/consts";
-import { useLineupForm } from "./lineup-dialog/use-lineup-form";
-import { LineupFormFields } from "./lineup-dialog/lineup-form-fields";
-import { LineupFullscreenViewer } from "./lineup-dialog/lineup-fullscreen-viewer";
-import { useWebSocket } from "@/contexts/websocket-context";
+
+import { LineupFormFields } from "./lineup-form-fields";
+import { LineupFullscreenViewer } from "./lineup-fullscreen-viewer";
+import { useLineupForm } from "./use-lineup-form";
 
 interface LineupDialogProps {
   onConfirm?: (agentName: string, abilityName: string) => void;
@@ -60,8 +60,6 @@ export const LineupDialog = ({
     resetForm,
     isFormValid,
   } = useLineupForm();
-
-  const { users } = useWebSocket();
 
   const handleConfirm = async () => {
     if (!selectedAgent || !selectedAbility) return;
@@ -114,10 +112,6 @@ export const LineupDialog = ({
     setAgentsOnCanvas((prev) => [...prev, newAgent]);
     setAbilitiesOnCanvas((prev) => [...prev, newAbility]);
     setConnectingLines((prev) => [...prev, newConnectingLine]);
-
-    if (users.length > 1) {
-      // autosave handles persisting state; no explicit call required
-    }
 
     notifyAgentAdded(newAgent);
     notifyAbilityAdded(newAbility);
