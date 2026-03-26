@@ -41,6 +41,7 @@ export {
   TEMP_DRAG_ID,
   VIRTUAL_HEIGHT,
   VIRTUAL_WIDTH,
+  VISION_CONE_ITEMS,
   WEAPONS,
 } from "./misc/consts";
 export {

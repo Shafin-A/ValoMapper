@@ -29,12 +29,14 @@ import {
   Trash2,
   Undo,
   Info,
+  Eye,
 } from "lucide-react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
+import { VisionConeSettings } from "./vision-cone-settings";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import TreeViewDialogContent from "../strategies/tree-view-dialog-content";
 import { LineupDialog } from "./lineup-dialog";
@@ -54,6 +56,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
 
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [openLineupDialog, setOpenLineupDialog] = useState(false);
+  const [visionConesOpen, setVisionConesOpen] = useState(false);
 
   const {
     undo,
@@ -87,6 +90,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
 
   const handleDrawPressedChange = (pressed: boolean, tool: Tool) => {
     setIsDeleteSettingsOpen(false);
+    setVisionConesOpen(false);
     setIsDrawMode(pressed);
     if (pressed) {
       setTool(tool);
@@ -96,6 +100,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
 
   const handleDeletePressedChange = (pressed: boolean) => {
     setIsDrawMode(false);
+    setVisionConesOpen(false);
     setIsDeleteSettingsOpen(pressed);
   };
 
@@ -110,6 +115,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
   const handleAddText = () => {
     setEditingTextId(null);
     setIsDrawMode(false);
+    setVisionConesOpen(false);
 
     const newText = {
       id: getNextId("text"),
@@ -396,6 +402,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
 
             <TreeViewDialogContent setOpen={setOpenSaveDialog} />
           </Dialog>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -411,6 +418,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               Undo (Ctrl + Z)
             </TooltipContent>
           </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -444,6 +452,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               Draw (Q)
             </TooltipContent>
           </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
@@ -461,6 +470,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               Eraser (W)
             </TooltipContent>
           </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Toggle
@@ -477,6 +487,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               Delete
             </TooltipContent>
           </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="lg" onClick={handleAddText}>
@@ -487,6 +498,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               Add Text
             </TooltipContent>
           </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="lg" onClick={handleImageUpload}>
@@ -497,6 +509,27 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               Add Image
             </TooltipContent>
           </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                size="lg"
+                data-state={visionConesOpen ? "on" : "off"}
+                pressed={visionConesOpen}
+                onPressedChange={(pressed) => {
+                  setIsDrawMode(false);
+                  setIsDeleteSettingsOpen(false);
+                  setVisionConesOpen(pressed);
+                }}
+              >
+                <Eye />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="center">
+              Vision Cones
+            </TooltipContent>
+          </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -512,6 +545,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               Screenshot
             </TooltipContent>
           </Tooltip>
+
           <Dialog open={openLineupDialog} onOpenChange={setOpenLineupDialog}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -532,6 +566,11 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
             />
           </Dialog>
         </div>
+
+        <AnimatedContent show={visionConesOpen}>
+          <VisionConeSettings mapPosition={mapPosition} />
+        </AnimatedContent>
+
         <AnimatedContent show={isDrawMode && tool === "pencil"}>
           <DrawSettings />
         </AnimatedContent>

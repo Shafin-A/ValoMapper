@@ -21,12 +21,16 @@ interface CanvasArcIconProps extends CanvasIconProps {
   fill: string;
   useFillGradient?: boolean;
   rotation?: number;
-  onInteractionEnd?: (data: { currentRotation: number }) => void;
+  onInteractionEnd?: (data: {
+    currentRotation: number;
+    currentLength?: number;
+  }) => void;
   showRotationHandle?: boolean;
   rotationHandleDistance?: number;
   rotationHandleRadius?: number;
   rotationHandleColor?: string;
   rotationHandleStrokeColor?: string;
+  allowLengthAdjustment?: boolean;
 }
 
 export const CanvasArcIcon = ({
@@ -65,10 +69,12 @@ export const CanvasArcIcon = ({
   rotationHandleColor = "#e54646",
   rotationHandleStrokeColor = "#ffffff",
   showAbilityShape = true,
+  allowLengthAdjustment = false,
 }: CanvasArcIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const rotationHandleRef = useRef<Konva.Circle>(null);
   const [currentRotation, setCurrentRotation] = useState(rotation);
+  const [currentArcRadius, setCurrentArcRadius] = useState(arcRadius);
 
   const [isInteracting, setIsInteracting] = useState(false);
   const [isHoveringHandle, setIsHoveringHandle] = useState(false);
@@ -76,6 +82,9 @@ export const CanvasArcIcon = ({
   const frameRef = useRef<number | null>(null);
 
   const rotationRef = useRef<number>(rotation);
+  const arcRadiusRef = useRef<number>(arcRadius);
+  const initialArcRadiusRef = useRef<number>(arcRadius);
+  const initialPointerDistanceRef = useRef<number>(0);
 
   const { setAbilitiesOnCanvas, mapSide } = useCanvas();
 
@@ -104,7 +113,10 @@ export const CanvasArcIcon = ({
   useEffect(() => {
     setCurrentRotation(rotation);
     rotationRef.current = rotation;
-  }, [rotation]);
+    setCurrentArcRadius(arcRadius);
+    arcRadiusRef.current = arcRadius;
+    initialArcRadiusRef.current = arcRadius;
+  }, [rotation, arcRadius]);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
@@ -140,6 +152,17 @@ export const CanvasArcIcon = ({
       const stage = e.target.getStage();
       if (!stage || !groupRef.current) return;
 
+      const initialPointer = stage.getPointerPosition();
+      if (initialPointer) {
+        const groupPosition = groupRef.current.getAbsolutePosition();
+        const stageScale = stage.scaleX();
+        const initialDX = (initialPointer.x - groupPosition.x) / stageScale;
+        const initialDY = (initialPointer.y - groupPosition.y) / stageScale;
+        initialPointerDistanceRef.current = Math.sqrt(
+          initialDX * initialDX + initialDY * initialDY,
+        );
+      }
+
       const handleInteractionMove = () => {
         if (!groupRef.current) return;
 
@@ -153,12 +176,25 @@ export const CanvasArcIcon = ({
         const deltaY = (pointer.y - groupPosition.y) / stageScale;
 
         const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const minRadius = 10;
+        const maxRadius = 250;
 
         rotationRef.current = angle;
+        if (allowLengthAdjustment) {
+          const delta = distance - initialPointerDistanceRef.current;
+          arcRadiusRef.current = Math.min(
+            Math.max(initialArcRadiusRef.current + delta, minRadius),
+            maxRadius,
+          );
+        }
 
         if (!frameRef.current) {
           frameRef.current = requestAnimationFrame(() => {
             setCurrentRotation(rotationRef.current);
+            if (allowLengthAdjustment) {
+              setCurrentArcRadius(arcRadiusRef.current);
+            }
             frameRef.current = null;
           });
         }
@@ -178,6 +214,9 @@ export const CanvasArcIcon = ({
             const updatedItem = {
               ...item,
               currentRotation: rotationRef.current,
+              currentLength: allowLengthAdjustment
+                ? arcRadiusRef.current
+                : item.currentLength,
             };
             copy.push(updatedItem);
             return copy;
@@ -186,6 +225,9 @@ export const CanvasArcIcon = ({
 
         onInteractionEnd?.({
           currentRotation: rotationRef.current,
+          currentLength: allowLengthAdjustment
+            ? arcRadiusRef.current
+            : undefined,
         });
 
         stage.container().style.cursor = "default";
@@ -199,13 +241,23 @@ export const CanvasArcIcon = ({
       stage.on("touchmove.interaction", handleInteractionMove);
       stage.on("touchend.interaction", handleInteractionEnd);
     },
-    [id, isListening, onInteractionEnd, setAbilitiesOnCanvas],
+    [
+      allowLengthAdjustment,
+      id,
+      isListening,
+      onInteractionEnd,
+      setAbilitiesOnCanvas,
+    ],
   );
 
   const radians = (currentRotation * Math.PI) / 180;
 
-  const handleX = rotationHandleDistance * Math.cos(radians);
-  const handleY = rotationHandleDistance * Math.sin(radians);
+  const handleRadius = allowLengthAdjustment
+    ? currentArcRadius
+    : rotationHandleDistance;
+
+  const handleX = handleRadius * Math.cos(radians);
+  const handleY = handleRadius * Math.sin(radians);
 
   const gradientFillProps = useFillGradient
     ? {
@@ -213,7 +265,7 @@ export const CanvasArcIcon = ({
         fillRadialGradientStartPoint: { x: 0, y: 0 },
         fillRadialGradientEndPoint: { x: 0, y: 0 },
         fillRadialGradientStartRadius: 0,
-        fillRadialGradientEndRadius: arcRadius,
+        fillRadialGradientEndRadius: currentArcRadius,
         fillRadialGradientColorStops: [
           0,
           fill,
@@ -227,9 +279,7 @@ export const CanvasArcIcon = ({
       }
     : {};
 
-  const outerArcInnerRadius = arcRadius;
   const resolvedOuterArcThickness = Math.max(0, outerArcThickness);
-  const outerArcOuterRadius = outerArcInnerRadius + resolvedOuterArcThickness;
 
   const handleRotationHandleMouseOver = () => {
     if (!isListening) return;
@@ -260,7 +310,7 @@ export const CanvasArcIcon = ({
             strokeWidth={circleStrokeWidth}
             angle={fov}
             innerRadius={0}
-            outerRadius={arcRadius}
+            outerRadius={currentArcRadius}
             rotation={currentRotation - fov / 2}
             fill={fill}
             {...gradientFillProps}
@@ -268,8 +318,8 @@ export const CanvasArcIcon = ({
           {showOuterArc && (
             <Arc
               angle={fov}
-              innerRadius={outerArcInnerRadius}
-              outerRadius={outerArcOuterRadius}
+              innerRadius={currentArcRadius}
+              outerRadius={currentArcRadius + resolvedOuterArcThickness}
               rotation={currentRotation - fov / 2}
               fill={outerArcFill}
               opacity={outerArcOpacity}

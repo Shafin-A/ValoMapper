@@ -748,6 +748,26 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "waylay_ult",
     },
   ],
+  VisionCones: [
+    {
+      id: "vision_cone_30",
+      src: "circle.svg",
+      name: "Vision Cone 30",
+      action: "vision_cone_30",
+    },
+    {
+      id: "vision_cone_60",
+      src: "circle.svg",
+      name: "Vision Cone 60",
+      action: "vision_cone_60",
+    },
+    {
+      id: "vision_cone_90",
+      src: "circle.svg",
+      name: "Vision Cone 90",
+      action: "vision_cone_90",
+    },
+  ],
   Yoru: [
     {
       id: "fakeout",

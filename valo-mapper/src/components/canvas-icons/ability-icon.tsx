@@ -242,12 +242,17 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
     "arc",
   );
 
+  const isVisionCone =
+    props.action === "vision_cone_30" ||
+    props.action === "vision_cone_60" ||
+    props.action === "vision_cone_90";
+
   return (
     <CanvasArcIcon
       showAbilityShape={!props.iconOnly}
       showOuterCircle={props.showOuterCircle}
       boxRadius={props.radius}
-      arcRadius={mToPixels(config.arcRadius)}
+      arcRadius={props.currentLength || mToPixels(config.arcRadius)}
       fov={config.fov}
       fill={config.fill || (props.isAlly ? props.allyColor : props.enemyColor)}
       useFillGradient={config.useFillGradient !== false}
@@ -265,6 +270,7 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
           : undefined
       }
       rotationHandleDistance={config.rotationHandleDistance}
+      allowLengthAdjustment={isVisionCone}
       {...props}
     />
   );
@@ -396,6 +402,11 @@ const ABILITY_RENDERERS: Record<
   // Waylay
   waylay_slow: renderCircleAbility,
   waylay_ult: renderLineAbility,
+
+  // Vision Cones
+  vision_cone_30: renderArcAbility,
+  vision_cone_60: renderArcAbility,
+  vision_cone_90: renderArcAbility,
 };
 
 export const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {

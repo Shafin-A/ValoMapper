@@ -76,3 +76,24 @@ export const WEAPONS = {
     { name: "odin", width: 444 / 7, height: 124 / 7 },
   ],
 };
+
+export const VISION_CONE_ITEMS = [
+  {
+    action: "vision_cone_30",
+    name: "Vision Cone 30",
+    icon: "cone-slice-30",
+    tooltip: "30°",
+  },
+  {
+    action: "vision_cone_60",
+    name: "Vision Cone 60",
+    icon: "cone-slice-60",
+    tooltip: "60°",
+  },
+  {
+    action: "vision_cone_90",
+    name: "Vision Cone 90",
+    icon: "cone-slice-90",
+    tooltip: "90°",
+  },
+];

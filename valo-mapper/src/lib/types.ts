@@ -168,7 +168,10 @@ export type AbilityAction =
   | "vyse_ult"
   | "vyse_wall"
   | "waylay_slow"
-  | "waylay_ult";
+  | "waylay_ult"
+  | "vision_cone_30"
+  | "vision_cone_60"
+  | "vision_cone_90";
 export type LineAbility = Extract<
   AbilityAction,
   | "astra_ult"
@@ -189,7 +192,14 @@ export type LineAbility = Extract<
   | "waylay_ult"
 >;
 
-export type ArcAbility = Extract<AbilityAction, "kj_turret" | "miks_ult">;
+export type ArcAbility = Extract<
+  AbilityAction,
+  | "kj_turret"
+  | "miks_ult"
+  | "vision_cone_30"
+  | "vision_cone_60"
+  | "vision_cone_90"
+>;
 
 export type XLineAbility = Extract<AbilityAction, "deadlock_wall">;
 
