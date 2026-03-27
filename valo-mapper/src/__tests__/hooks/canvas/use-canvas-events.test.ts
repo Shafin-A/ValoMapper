@@ -159,6 +159,8 @@ describe("useCanvasEvents", () => {
       updateAbilitiesSettings: jest.fn(),
       updateDrawSettings: jest.fn(),
       updateEraserSettings: jest.fn(),
+      resetAbilitiesSettings: jest.fn(),
+      resetAgentsSettings: jest.fn(),
     });
 
     mockUseCanvasZoom.mockReturnValue({
