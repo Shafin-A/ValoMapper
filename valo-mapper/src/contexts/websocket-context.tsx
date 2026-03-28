@@ -607,16 +607,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     onUndoRedoCallback.current = () => {
-      const currentState = getCurrentStateForSync();
-      const hasImages = currentState.phases.some(
-        (phase) => phase.imagesOnCanvas && phase.imagesOnCanvas.length > 0,
-      );
-
-      if (hasImages) {
-        broadcastStateSyncRef.current?.();
-      } else {
-        broadcastStateSyncRef.current?.();
-      }
+      broadcastStateSyncRef.current?.();
     };
     return () => {
       onUndoRedoCallback.current = null;
