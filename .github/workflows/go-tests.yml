@@ -95,15 +95,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Generate coverage report
-        run: go tool cover -html=coverage.txt -o coverage.html
-
-      - name: Upload coverage report artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: valo-mapper-api/coverage.html
-
   lint:
     name: Lint Go Code
     runs-on: ubuntu-latest
@@ -177,9 +168,3 @@ jobs:
 
       - name: Build application
         run: go build -v -o bin/valo-mapper-api .
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: valo-mapper-api-binary
-          path: valo-mapper-api/bin/valo-mapper-api
