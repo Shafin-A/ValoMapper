@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"valo-mapper-api/db"
 
 	"github.com/jackc/pgx/v5"
 )
+
+const phaseCount = 10
 
 func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	conn, err := db.GetDB()
@@ -16,8 +19,8 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		return nil, err
 	}
 
-	phases := make([]PhaseState, 10)
-	for i := range 10 {
+	phases := make([]PhaseState, phaseCount)
+	for i := range phaseCount {
 		phases[i] = PhaseState{
 			AgentsOnCanvas:    []CanvasAgent{},
 			AbilitiesOnCanvas: []CanvasAbility{},
@@ -31,8 +34,18 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	ctx := context.Background()
 
+	// Use a repeatable-read transaction so all queries see a consistent snapshot,
+	// even if a concurrent SaveCanvasState commits between our queries.
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead})
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = tx.Rollback(ctx) // no-op after commit; harmless on read-only tx
+	}()
+
 	// ---- AGENTS ----
-	rows, err := conn.Query(ctx, `
+	rows, err := tx.Query(ctx, `
 		SELECT id, name, role, is_ally, x, y, phase_index 
 		FROM canvas_agents 
 		WHERE lobby_code = $1 
@@ -54,9 +67,12 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 	}
 	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	// ---- ABILITIES ----
-	rows, err = conn.Query(ctx, `
+	rows, err = tx.Query(ctx, `
 		SELECT id, name, action, x, y, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, phase_index 
 		FROM canvas_abilities 
 		WHERE lobby_code = $1 
@@ -79,9 +95,12 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 	}
 	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	// ---- DRAW LINES ----
-	rows, err = conn.Query(ctx, `
+	rows, err = tx.Query(ctx, `
 		SELECT id, tool, points, color, size, is_dashed, is_arrow_head, phase_index 
 		FROM canvas_draw_lines 
 		WHERE lobby_code = $1 
@@ -108,9 +127,12 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 	}
 	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	// ---- TEXTS ----
-	rows, err = conn.Query(ctx, `
+	rows, err = tx.Query(ctx, `
 		SELECT id, text, x, y, width, height, phase_index 
 		FROM canvas_texts 
 		WHERE lobby_code = $1 
@@ -132,9 +154,12 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 	}
 	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	// ---- IMAGES ----
-	rows, err = conn.Query(ctx, `
+	rows, err = tx.Query(ctx, `
 		SELECT id, src, x, y, width, height, phase_index 
 		FROM canvas_images 
 		WHERE lobby_code = $1 
@@ -156,9 +181,12 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 	}
 	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	// ---- TOOL ICONS ----
-	rows, err = conn.Query(ctx, `
+	rows, err = tx.Query(ctx, `
 		SELECT id, name, x, y, width, height, phase_index 
 		FROM canvas_tool_icons 
 		WHERE lobby_code = $1 
@@ -178,9 +206,12 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 	}
 	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	// ---- CONNECTING LINES ----
-	rows, err = conn.Query(ctx, `
+	rows, err = tx.Query(ctx, `
 		SELECT id, from_id, to_id, stroke_color, stroke_width, uploaded_images, youtube_link, notes, phase_index 
 		FROM canvas_connecting_lines 
 		WHERE lobby_code = $1 
@@ -203,6 +234,13 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 	}
 	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
 
 	return phases, nil
 }
@@ -223,6 +261,11 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 			_ = tx.Rollback(ctx)
 		}
 	}()
+
+	// Prevent race conditions from concurrent lobby updates.
+	if _, err = tx.Exec(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE", lobbyCode); err != nil {
+		return err
+	}
 
 	// Delete all previous data for this lobby
 	tables := []string{
@@ -315,7 +358,32 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	// ---- INSERT DATA ----
+	// Deduplicate row inserts in case the client has repeated elements in the snapshot.
+	dedupeRows := func(rows [][]any, keyIndices []int) [][]any {
+		seen := make(map[string]struct{}, len(rows))
+		filtered := make([][]any, 0, len(rows))
+
+		for _, row := range rows {
+			keyParts := make([]string, 0, len(keyIndices))
+			for _, idx := range keyIndices {
+				if idx < 0 || idx >= len(row) {
+					keyParts = append(keyParts, "")
+					continue
+				}
+				keyParts = append(keyParts, fmt.Sprintf("%v", row[idx]))
+			}
+			key := strings.Join(keyParts, "\x00")
+			if _, exists := seen[key]; exists {
+				continue
+			}
+			seen[key] = struct{}{}
+			filtered = append(filtered, row)
+		}
+		return filtered
+	}
+
 	if len(agentRows) > 0 {
+		agentRows = dedupeRows(agentRows, []int{0, 1, 7})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_agents"},
@@ -328,6 +396,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(abilityRows) > 0 {
+		abilityRows = dedupeRows(abilityRows, []int{0, 1, 12})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_abilities"},
@@ -340,6 +409,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(lineRows) > 0 {
+		lineRows = dedupeRows(lineRows, []int{0, 1, 8})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_draw_lines"},
@@ -352,6 +422,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(textRows) > 0 {
+		textRows = dedupeRows(textRows, []int{0, 1, 7})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_texts"},
@@ -364,6 +435,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(imageRows) > 0 {
+		imageRows = dedupeRows(imageRows, []int{0, 1, 7})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_images"},
@@ -376,6 +448,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(iconRows) > 0 {
+		iconRows = dedupeRows(iconRows, []int{0, 1, 7})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_tool_icons"},
@@ -388,6 +461,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(connectingLineRows) > 0 {
+		connectingLineRows = dedupeRows(connectingLineRows, []int{0, 1, 9})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_connecting_lines"},
