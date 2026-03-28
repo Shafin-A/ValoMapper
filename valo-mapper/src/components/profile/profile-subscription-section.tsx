@@ -19,6 +19,7 @@ interface ProfileSubscriptionSectionProps {
   hasActivePremiumTrial: boolean;
   subscriptionBadgeText: string;
   subscriptionSummary: string;
+  subscriptionStartedText?: string;
   isStackPlan: boolean;
   isStackMembersLoading: boolean;
   isActiveStackMember: boolean;
@@ -35,6 +36,7 @@ export const ProfileSubscriptionSection = ({
   hasValoMapperPremium,
   hasScheduledCancellation,
   hasActivePremiumTrial,
+  subscriptionStartedText,
   subscriptionBadgeText,
   subscriptionSummary,
   isStackPlan,
@@ -68,6 +70,11 @@ export const ProfileSubscriptionSection = ({
         </span>
       </div>
       <p className="text-xs text-muted-foreground">{subscriptionSummary}</p>
+      {subscriptionStartedText && (
+        <p className="text-xs text-muted-foreground">
+          {subscriptionStartedText}
+        </p>
+      )}
       <div className="pt-1">
         {hasValoMapperPremium ? (
           isStackPlan && isStackMembersLoading ? (

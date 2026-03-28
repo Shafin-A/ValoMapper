@@ -140,6 +140,41 @@ export const ProfileContent = () => {
   const isPendingInviteAction =
     isAcceptingStackInvite || isDecliningStackInvite;
 
+  const activeStackMembership = stackMembers.find(
+    (member) =>
+      member.memberUserId === user.id &&
+      member.status === "active" &&
+      member.joinedAt !== undefined &&
+      member.joinedAt !== null,
+  );
+
+  const userSubscriptionStartedAt =
+    user.subscriptionStartedAt && new Date(user.subscriptionStartedAt);
+
+  const subscriptionStartedAt =
+    userSubscriptionStartedAt ||
+    (isStackPlan && isActiveStackMember && activeStackMembership?.joinedAt
+      ? new Date(activeStackMembership.joinedAt)
+      : null) ||
+    (hasValoMapperPremium ? new Date(user.createdAt) : null);
+
+  const subscriptionStartedText = subscriptionStartedAt
+    ? isStackPlan && isActiveStackMember
+      ? `Stack membership started on ${subscriptionStartedAt.toLocaleDateString(
+          "en-US",
+          {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          },
+        )}`
+      : `Subscribed on ${subscriptionStartedAt.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}`
+    : undefined;
+
   const subscriptionLabel = (() => {
     if (!hasValoMapperPremium) {
       return "Free";
@@ -381,6 +416,7 @@ export const ProfileContent = () => {
               hasActivePremiumTrial={hasActivePremiumTrial}
               subscriptionBadgeText={subscriptionBadgeText}
               subscriptionSummary={subscriptionSummary}
+              subscriptionStartedText={subscriptionStartedText}
               isStackPlan={isStackPlan}
               isStackMembersLoading={isStackMembersLoading}
               isActiveStackMember={isActiveStackMember}

@@ -31,6 +31,7 @@ type User struct {
 	StripeCustomerID            *string    `json:"-"`
 	StripeSubscriptionID        *string    `json:"-"`
 	PremiumTrialClaimedAt       *time.Time `json:"-"`
+	SubscriptionStartedAt       *time.Time `json:"subscriptionStartedAt,omitempty"`
 	PremiumTrialEligible        bool       `json:"premiumTrialEligible"`
 	PremiumTrialDaysLeft        *int       `json:"premiumTrialDaysLeft,omitempty"`
 	RSOSubjectID                *string    `json:"rsoSubjectId,omitempty"`
@@ -63,8 +64,12 @@ func (u *User) capturePersonalBillingState() {
 }
 
 func laterSubscriptionEndedAt(first, second *time.Time) *time.Time {
-	if first == nil || second == nil {
-		return nil
+	if first == nil {
+		return second
+	}
+
+	if second == nil {
+		return first
 	}
 
 	if second.After(*first) {
@@ -79,12 +84,22 @@ func (u *User) refreshEffectiveSubscriptionState() error {
 		return nil
 	}
 
-	hasStackAccess, stackSubscriptionEndedAt, err := GetActiveStackAccessState(u.ID)
+	hasStackAccess, stackSubscriptionEndedAt, stackSubscriptionStartedAt, err := GetActiveStackAccessState(u.ID)
 	if err != nil {
 		return err
 	}
 
 	personalIsSubscribed := u.PersonalIsSubscribed
+
+	if hasStackAccess {
+		u.SubscriptionStartedAt = stackSubscriptionStartedAt
+	} else if personalIsSubscribed {
+		if u.PremiumTrialClaimedAt != nil {
+			u.SubscriptionStartedAt = u.PremiumTrialClaimedAt
+		}
+	} else {
+		u.SubscriptionStartedAt = nil
+	}
 
 	switch {
 	case personalIsSubscribed && hasStackAccess:

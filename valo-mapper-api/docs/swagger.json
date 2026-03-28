@@ -2426,6 +2426,9 @@
                 "subscriptionPlan": {
                     "type": "string"
                 },
+                "subscriptionStartedAt": {
+                    "type": "string"
+                },
                 "tourCompleted": {
                     "type": "boolean"
                 },

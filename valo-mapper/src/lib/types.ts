@@ -364,6 +364,7 @@ export type User = {
   updatedAt: Date;
   tourCompleted?: boolean;
   isSubscribed?: boolean;
+  subscriptionStartedAt?: Date | string | null;
   subscriptionEndedAt?: Date | string | null;
   subscriptionPlan?: "monthly" | "yearly" | "stack" | null;
   premiumTrialEligible?: boolean;

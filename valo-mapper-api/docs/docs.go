@@ -2429,6 +2429,9 @@ const docTemplate = `{
                 "subscriptionPlan": {
                     "type": "string"
                 },
+                "subscriptionStartedAt": {
+                    "type": "string"
+                },
                 "tourCompleted": {
                     "type": "boolean"
                 },

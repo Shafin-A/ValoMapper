@@ -172,35 +172,36 @@ func GetPendingStackInviteByOwnerAndMember(ownerUserID, memberUserID int) (*Stac
 
 // GetActiveStackAccessState reports whether a member currently has effective stack premium access.
 // Access is active only when the membership row is active and the owner has an active stack subscription.
-func GetActiveStackAccessState(memberUserID int) (bool, *time.Time, error) {
+func GetActiveStackAccessState(memberUserID int) (bool, *time.Time, *time.Time, error) {
 	conn, err := db.GetDB()
 	if err != nil {
-		return false, nil, err
+		return false, nil, nil, err
 	}
 
 	var ownerIsSubscribed bool
 	var ownerSubscriptionPlan *string
 	var subscriptionEndedAt *time.Time
+	var joinedAt *time.Time
 	err = conn.QueryRow(context.Background(), `
-		SELECT owner.is_subscribed, owner.subscription_plan, owner.subscription_ended_at
+		SELECT owner.is_subscribed, owner.subscription_plan, owner.subscription_ended_at, sm.joined_at
 		FROM stack_members sm
 		JOIN users owner ON owner.id = sm.owner_user_id
 		WHERE sm.member_user_id = $1
 		  AND sm.status = $2
 		LIMIT 1
-	`, memberUserID, StackMemberStatusActive).Scan(&ownerIsSubscribed, &ownerSubscriptionPlan, &subscriptionEndedAt)
+	`, memberUserID, StackMemberStatusActive).Scan(&ownerIsSubscribed, &ownerSubscriptionPlan, &subscriptionEndedAt, &joinedAt)
 	if err == pgx.ErrNoRows {
-		return false, nil, nil
+		return false, nil, nil, nil
 	}
 	if err != nil {
-		return false, nil, err
+		return false, nil, nil, err
 	}
 
 	if ownerIsSubscribed && ownerSubscriptionPlan != nil && *ownerSubscriptionPlan == "stack" {
-		return true, subscriptionEndedAt, nil
+		return true, subscriptionEndedAt, joinedAt, nil
 	}
 
-	return false, subscriptionEndedAt, nil
+	return false, subscriptionEndedAt, joinedAt, nil
 }
 
 // GetActiveStackMemberCount returns the number of active (accepted) stack members for an owner.

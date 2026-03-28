@@ -482,6 +482,8 @@ definitions:
         type: string
       subscriptionPlan:
         type: string
+      subscriptionStartedAt:
+        type: string
       tourCompleted:
         type: boolean
       updatedAt:
