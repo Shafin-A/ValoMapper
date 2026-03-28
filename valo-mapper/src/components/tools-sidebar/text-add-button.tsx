@@ -6,27 +6,25 @@ import { MAP_SIZE } from "@/lib/consts";
 import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
 import type { TextCanvas } from "@/lib/types";
+import React, { useCallback } from "react";
 
-interface TextAddButtonProps {
+interface TextAddButtonProps extends React.ComponentPropsWithoutRef<
+  typeof Button
+> {
   mapPosition: Vector2d;
   onTextAdded?: (text: TextCanvas) => void;
   onBeforeAdd?: () => void;
-  disabled?: boolean;
 }
 
-export const TextAddButton = ({
-  mapPosition,
-  onTextAdded,
-  onBeforeAdd,
-  disabled,
-}: TextAddButtonProps) => {
+export const TextAddButton = React.forwardRef<
+  HTMLButtonElement,
+  TextAddButtonProps
+>(({ mapPosition, onTextAdded, onBeforeAdd, onClick, ...props }, ref) => {
   const { setTextsOnCanvas, setEditingTextId, setIsDrawMode } = useCanvas();
-
   const { notifyTextAdded } = useCollaborativeCanvas();
 
-  const handleAddText = () => {
+  const handleAddText = useCallback(() => {
     onBeforeAdd?.();
-
     setEditingTextId(null);
     setIsDrawMode(false);
 
@@ -40,18 +38,39 @@ export const TextAddButton = ({
     };
 
     setTextsOnCanvas((prev) => [...prev, newText]);
-    notifyTextAdded(newText);
     onTextAdded?.(newText);
-  };
+    notifyTextAdded(newText);
+  }, [
+    mapPosition,
+    onBeforeAdd,
+    onTextAdded,
+    setTextsOnCanvas,
+    setEditingTextId,
+    setIsDrawMode,
+    notifyTextAdded,
+  ]);
+
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(event);
+      if (!event.defaultPrevented) {
+        handleAddText();
+      }
+    },
+    [onClick, handleAddText],
+  );
 
   return (
     <Button
+      ref={ref}
       variant="ghost"
       size="lg"
-      onClick={handleAddText}
-      disabled={disabled}
+      onClick={handleClick}
+      {...props}
     >
       <ALargeSmall />
     </Button>
   );
-};
+});
+
+TextAddButton.displayName = "TextAddButton";

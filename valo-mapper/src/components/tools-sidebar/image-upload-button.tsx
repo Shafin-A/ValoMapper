@@ -9,20 +9,20 @@ import {
 import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
 import { toast } from "sonner";
-import { useCallback, useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import type { ImageCanvas } from "@/lib/types";
 
-interface ImageUploadButtonProps {
+interface ImageUploadButtonProps extends React.ComponentPropsWithoutRef<
+  typeof Button
+> {
   mapPosition: Vector2d;
   onImageAdded?: (image: ImageCanvas) => void;
-  disabled?: boolean;
 }
 
-export const ImageUploadButton = ({
-  mapPosition,
-  onImageAdded,
-  disabled,
-}: ImageUploadButtonProps) => {
+export const ImageUploadButton = React.forwardRef<
+  HTMLButtonElement,
+  ImageUploadButtonProps
+>(({ mapPosition, onImageAdded, onClick, ...props }, ref) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { setImagesOnCanvas } = useCanvas();
 
@@ -35,16 +35,41 @@ export const ImageUploadButton = ({
       const file = event.target.files?.[0];
       if (!file) return;
 
-      const fileType = file.type.toLowerCase();
       if (
         !ALLOWED_IMAGE_UPLOAD_MIME_TYPES.includes(
-          fileType as (typeof ALLOWED_IMAGE_UPLOAD_MIME_TYPES)[number],
+          file.type as (typeof ALLOWED_IMAGE_UPLOAD_MIME_TYPES)[number],
         )
       ) {
         toast.error("Unsupported image type. Use JPEG, PNG, GIF, or WEBP.");
         event.target.value = "";
         return;
       }
+
+      const objectUrl = URL.createObjectURL(file);
+      let dimensions: { width: number; height: number };
+
+      try {
+        dimensions = await new Promise<{ width: number; height: number }>(
+          (resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+              URL.revokeObjectURL(objectUrl);
+              resolve({ width: img.naturalWidth, height: img.naturalHeight });
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(objectUrl);
+              reject(new Error("Failed to load image"));
+            };
+            img.src = objectUrl;
+          },
+        );
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Invalid image file");
+        event.target.value = "";
+        return;
+      }
+
+      const { width, height } = dimensions;
 
       let url: string;
       try {
@@ -70,40 +95,43 @@ export const ImageUploadButton = ({
         return;
       }
 
-      const objectUrl = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
+      const maxSize = 500;
+      let scaledWidth = width;
+      let scaledHeight = height;
 
-        const maxSize = 500;
-        let width = img.naturalWidth;
-        let height = img.naturalHeight;
+      if (scaledWidth >= scaledHeight && scaledWidth > maxSize) {
+        scaledHeight = (scaledHeight * maxSize) / scaledWidth;
+        scaledWidth = maxSize;
+      } else if (scaledHeight > scaledWidth && scaledHeight > maxSize) {
+        scaledWidth = (scaledWidth * maxSize) / scaledHeight;
+        scaledHeight = maxSize;
+      }
 
-        if (width >= height && width > maxSize) {
-          height = (height * maxSize) / width;
-          width = maxSize;
-        } else if (height > width && height > maxSize) {
-          width = (width * maxSize) / height;
-          height = maxSize;
-        }
-
-        const newImage: ImageCanvas = {
-          id: getNextId("image"),
-          src: url,
-          x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-          y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-          width,
-          height,
-        };
-
-        setImagesOnCanvas((prev) => [...prev, newImage]);
-        onImageAdded?.(newImage);
-
-        event.target.value = "";
+      const newImage: ImageCanvas = {
+        id: getNextId("image"),
+        src: url,
+        x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+        y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+        width: scaledWidth,
+        height: scaledHeight,
       };
-      img.src = objectUrl;
+
+      setImagesOnCanvas((prev) => [...prev, newImage]);
+      onImageAdded?.(newImage);
+
+      event.target.value = "";
     },
     [mapPosition, onImageAdded, setImagesOnCanvas],
+  );
+
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(event);
+      if (!event.defaultPrevented) {
+        handleUploadClick();
+      }
+    },
+    [onClick, handleUploadClick],
   );
 
   return (
@@ -116,13 +144,16 @@ export const ImageUploadButton = ({
         style={{ display: "none" }}
       />
       <Button
+        ref={ref}
         variant="ghost"
         size="lg"
-        onClick={handleUploadClick}
-        disabled={disabled}
+        onClick={handleClick}
+        {...props}
       >
         <ImageIcon />
       </Button>
     </>
   );
-};
+});
+
+ImageUploadButton.displayName = "ImageUploadButton";
