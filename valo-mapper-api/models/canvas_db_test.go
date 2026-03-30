@@ -598,3 +598,147 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Equal(t, "New notes", phases[0].ConnectingLines[0].Notes)
 	})
 }
+
+func TestApplyCanvasPatch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	pool := setupTestDB(t)
+	defer cleanupTestDB(t, pool)
+
+	lobby, _ := createCanvasTestLobby(t, pool)
+
+	t.Run("upserts and removes agent via patch", func(t *testing.T) {
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "agent", Action: "upsert", PhaseIndex: 0, ID: "a1", Payload: map[string]any{"id": "a1", "name": "Jett", "role": "Duelist", "x": 100, "y": 200, "isAlly": true}},
+		}}
+
+		err := ApplyCanvasPatch(lobby.Code, patch)
+		require.NoError(t, err)
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		assert.Len(t, phases[0].AgentsOnCanvas, 1)
+		assert.Equal(t, "a1", phases[0].AgentsOnCanvas[0].ID)
+		assert.Equal(t, "Jett", phases[0].AgentsOnCanvas[0].AgentName)
+
+		patch = CanvasPatch{Entries: []CanvasPatchEntry{{Entity: "agent", Action: "remove", PhaseIndex: 0, ID: "a1"}}}
+		err = ApplyCanvasPatch(lobby.Code, patch)
+		require.NoError(t, err)
+
+		phases, err = GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		assert.Empty(t, phases[0].AgentsOnCanvas)
+	})
+
+	t.Run("updates lobby map/side/phase via patch", func(t *testing.T) {
+		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`, "bind", "Bind", "#FFFFFF")
+		require.NoError(t, err)
+
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "map", Action: "update", PhaseIndex: 0, Payload: map[string]any{"id": "bind"}},
+			{Entity: "side", Action: "update", PhaseIndex: 0, Payload: map[string]any{"mapSide": "attack"}},
+			{Entity: "phase", Action: "update", PhaseIndex: 3, Payload: map[string]any{"phaseIndex": 3}},
+		}}
+
+		err = ApplyCanvasPatch(lobby.Code, patch)
+		require.NoError(t, err)
+
+		updatedLobby, err := GetLobbyByCode(lobby.Code)
+		require.NoError(t, err)
+		require.NotNil(t, updatedLobby)
+		assert.Equal(t, "bind", updatedLobby.SelectedMapId)
+		assert.Equal(t, "attack", updatedLobby.CanvasState.MapSide)
+		assert.Equal(t, 3, updatedLobby.CanvasState.CurrentPhaseIndex)
+	})
+
+	t.Run("clear current phase via patch without resetting map/side", func(t *testing.T) {
+		// set a known map/side/phase baseline first (first table is shared state in subtests)
+		setupPatch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "map", Action: "update", PhaseIndex: 0, Payload: map[string]any{"id": "bind"}},
+			{Entity: "side", Action: "update", PhaseIndex: 0, Payload: map[string]any{"mapSide": "attack"}},
+			{Entity: "phase", Action: "update", PhaseIndex: 1},
+		}}
+		err := ApplyCanvasPatch(lobby.Code, setupPatch)
+		require.NoError(t, err)
+
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "agent", Action: "upsert", PhaseIndex: 0, ID: "a1", Payload: map[string]any{"id": "a1", "name": "Jett", "role": "Duelist", "x": 100, "y": 200, "isAlly": true}},
+			{Entity: "agent", Action: "upsert", PhaseIndex: 1, ID: "a2", Payload: map[string]any{"id": "a2", "name": "Sova", "role": "Initiator", "x": 150, "y": 250, "isAlly": true}},
+		}}
+		err = ApplyCanvasPatch(lobby.Code, patch)
+		require.NoError(t, err)
+
+		clearPatch := CanvasPatch{Entries: []CanvasPatchEntry{{Entity: "canvas", Action: "clear", PhaseIndex: 1}}}
+		err = ApplyCanvasPatch(lobby.Code, clearPatch)
+		require.NoError(t, err)
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		assert.Len(t, phases[0].AgentsOnCanvas, 1)
+		assert.Equal(t, "a1", phases[0].AgentsOnCanvas[0].ID)
+		assert.Empty(t, phases[1].AgentsOnCanvas)
+
+		updatedLobby, err := GetLobbyByCode(lobby.Code)
+		require.NoError(t, err)
+		require.NotNil(t, updatedLobby)
+		// map and side should remain unchanged by a phase-specific clear
+		assert.Equal(t, "bind", updatedLobby.SelectedMapId)
+		assert.Equal(t, "attack", updatedLobby.CanvasState.MapSide)
+
+		// current phase should remain the same as before clear, and edited phases should be changed
+		assert.Equal(t, 1, updatedLobby.CanvasState.CurrentPhaseIndex)
+		assert.Contains(t, updatedLobby.CanvasState.EditedPhases, 0)
+		assert.NotContains(t, updatedLobby.CanvasState.EditedPhases, 1)
+	})
+
+	t.Run("full clear via patch resetAll true", func(t *testing.T) {
+		// insert some data across phases + set map/side
+		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`, "bind", "Bind", "#FFFFFF")
+		require.NoError(t, err)
+
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "map", Action: "update", PhaseIndex: 0, Payload: map[string]any{"id": "bind"}},
+			{Entity: "side", Action: "update", PhaseIndex: 0, Payload: map[string]any{"mapSide": "attack"}},
+			{Entity: "agent", Action: "upsert", PhaseIndex: 0, ID: "a1", Payload: map[string]any{"id": "a1", "name": "Jett", "role": "Duelist", "x": 100, "y": 200, "isAlly": true}},
+			{Entity: "ability", Action: "upsert", PhaseIndex: 1, ID: "b1", Payload: map[string]any{"id": "b1", "name": "Sova", "action": "Recon", "x": 150, "y": 250, "currentPath": []map[string]any{}, "currentRotation": 0, "currentLength": 0, "isAlly": true, "iconOnly": false, "showOuterCircle": false}},
+			{Entity: "canvas", Action: "reset", PhaseIndex: 0, Payload: map[string]any{"resetAll": true}},
+		}}
+
+		err = ApplyCanvasPatch(lobby.Code, patch)
+		require.NoError(t, err)
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		assert.Empty(t, phases[0].AgentsOnCanvas)
+		assert.Empty(t, phases[1].AbilitiesOnCanvas)
+
+		updatedLobby, err := GetLobbyByCode(lobby.Code)
+		require.NoError(t, err)
+		require.NotNil(t, updatedLobby)
+		assert.Equal(t, "bind", updatedLobby.SelectedMapId)
+		assert.Equal(t, "attack", updatedLobby.CanvasState.MapSide)
+		assert.Equal(t, 0, updatedLobby.CanvasState.CurrentPhaseIndex)
+		assert.Equal(t, []int{0}, updatedLobby.CanvasState.EditedPhases)
+	})
+
+	t.Run("updates agent and ability settings via patch", func(t *testing.T) {
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "agents_settings", Action: "update", PhaseIndex: 0, Payload: map[string]any{"agentsSettings": map[string]any{"scale": 42, "borderOpacity": 0.5, "borderWidth": 10, "radius": 23, "allyColor": "#112233", "enemyColor": "#445566"}}},
+			{Entity: "abilities_settings", Action: "update", PhaseIndex: 0, Payload: map[string]any{"abilitiesSettings": map[string]any{"scale": 33, "borderOpacity": 0.7, "borderWidth": 8, "radius": 15, "allyColor": "#778899", "enemyColor": "#aabbcc"}}},
+		}}
+
+		err := ApplyCanvasPatch(lobby.Code, patch)
+		require.NoError(t, err)
+
+		updatedLobby, err := GetLobbyByCode(lobby.Code)
+		require.NoError(t, err)
+		require.NotNil(t, updatedLobby)
+		assert.NotNil(t, updatedLobby.CanvasState)
+		assert.Equal(t, 42, updatedLobby.CanvasState.AgentsSettings.Scale)
+		assert.Equal(t, "#112233", updatedLobby.CanvasState.AgentsSettings.AllyColor)
+		assert.Equal(t, 33, updatedLobby.CanvasState.AbilitiesSettings.Scale)
+		assert.Equal(t, "#aabbcc", updatedLobby.CanvasState.AbilitiesSettings.EnemyColor)
+	})
+}

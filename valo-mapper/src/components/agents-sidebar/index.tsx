@@ -31,13 +31,14 @@ import {
   AgentCanvas,
   AgentRole,
 } from "@/lib/types";
-import { useSettings } from "@/contexts/settings-context";
+import { defaultIconSettings, useSettings } from "@/contexts/settings-context";
 import { RoleTabs } from "./role-tabs";
 import { SettingsPanel } from "./settings-panel";
 import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
 import { SIDEBAR_WIDTH, TEMP_DRAG_ID } from "@/lib/consts";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { getAgentImgSrc, isAgent } from "@/lib/utils";
 import { Loader2, AlertCircle, Info } from "lucide-react";
 import { Layer, Stage } from "react-konva";
@@ -71,9 +72,10 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     abilitiesSettings,
     updateAgentsSettings,
     updateAbilitiesSettings,
-    resetAgentsSettings,
-    resetAbilitiesSettings,
   } = useSettings();
+
+  const { notifyAgentsSettingsChanged, notifyAbilitiesSettingsChanged } =
+    useCollaborativeCanvas();
 
   const {
     agentsOnCanvas,
@@ -496,8 +498,14 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
                 <AccordionContent>
                   <SettingsPanel
                     settings={agentsSettings}
-                    onSettingsChange={updateAgentsSettings}
-                    onReset={resetAgentsSettings}
+                    onSettingsChange={(settings) => {
+                      updateAgentsSettings(settings);
+                      notifyAgentsSettingsChanged(settings);
+                    }}
+                    onReset={() => {
+                      updateAgentsSettings(defaultIconSettings);
+                      notifyAgentsSettingsChanged(defaultIconSettings);
+                    }}
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -509,8 +517,14 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
                 <AccordionContent>
                   <SettingsPanel
                     settings={abilitiesSettings}
-                    onSettingsChange={updateAbilitiesSettings}
-                    onReset={resetAbilitiesSettings}
+                    onSettingsChange={(settings) => {
+                      updateAbilitiesSettings(settings);
+                      notifyAbilitiesSettingsChanged(settings);
+                    }}
+                    onReset={() => {
+                      updateAbilitiesSettings(defaultIconSettings);
+                      notifyAbilitiesSettingsChanged(defaultIconSettings);
+                    }}
                   />
                 </AccordionContent>
               </AccordionItem>

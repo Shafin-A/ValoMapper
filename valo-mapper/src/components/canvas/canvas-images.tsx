@@ -100,7 +100,7 @@ export const CanvasImages = ({
             notifyImageRemoved,
             (movedItem) =>
               notifyImageMoved({
-                id: movedItem.id,
+                ...imageItem,
                 x: movedItem.x,
                 y: movedItem.y,
                 width: movedItem.width,

@@ -11,6 +11,7 @@ func RegisterLobbyRoutes(r *mux.Router, hub *websocket.Hub) {
 	r.HandleFunc("/api/lobbies", handlers.CreateLobby).Methods("POST")
 	r.HandleFunc("/api/lobbies/{code}", handlers.GetLobby).Methods("GET")
 	r.HandleFunc("/api/lobbies/{code}", handlers.UpdateLobby).Methods("PATCH")
+	r.HandleFunc("/api/lobbies/{code}/canvas-patches", handlers.ApplyCanvasPatch).Methods("POST")
 
 	r.HandleFunc("/ws/lobbies/{code}", websocket.HandleWebSocket(hub))
 }

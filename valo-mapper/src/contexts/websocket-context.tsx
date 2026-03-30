@@ -2,6 +2,7 @@
 
 import { useLobbyWebSocket } from "@/hooks/use-lobby-websocket";
 import { useUser } from "@/hooks/api/use-user";
+import { useSettings } from "@/contexts/settings-context";
 import {
   AbilityMessageData,
   AgentMessageData,
@@ -14,6 +15,7 @@ import {
   MapChangedData,
   PhaseChangedData,
   RemoveElementData,
+  SettingsChangedData,
   SideChangedData,
   TextMessageData,
   ToolIconMessageData,
@@ -34,6 +36,7 @@ import {
   useRef,
 } from "react";
 import { useCanvas } from "./canvas-context";
+import { useUpdateLobby } from "@/hooks/api/use-update-lobby";
 
 interface WebSocketContextType {
   status: WSConnectionStatus;
@@ -103,6 +106,7 @@ interface WebSocketContextType {
   broadcastMapChanged: (selectedMap: MapChangedData["selectedMap"]) => void;
   broadcastSideChanged: (mapSide: SideChangedData["mapSide"]) => void;
   broadcastPhaseChanged: (phaseIndex: number) => void;
+  broadcastSettingsChanged: (settings: SettingsChangedData) => void;
   broadcastStateSync: () => void;
 }
 
@@ -138,6 +142,10 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     applyRemoteState,
     resetState,
   } = useCanvas();
+
+  const { updateAgentsSettings, updateAbilitiesSettings } = useSettings();
+
+  const { mutateAsync: updateLobby } = useUpdateLobby(lobbyCode);
 
   const broadcastStateSyncRef = useRef<(() => void) | null>(null);
 
@@ -380,6 +388,16 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
           });
           break;
 
+        case WS_MESSAGE_TYPES.SETTINGS_CHANGED:
+          const settingsData = data as SettingsChangedData;
+          if (settingsData.agentsSettings) {
+            updateAgentsSettings(settingsData.agentsSettings);
+          }
+          if (settingsData.abilitiesSettings) {
+            updateAbilitiesSettings(settingsData.abilitiesSettings);
+          }
+          break;
+
         default:
           console.warn(`[WebSocket] Unknown message type: ${type}`);
       }
@@ -400,6 +418,8 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       setImagesOnCanvas,
       setToolIconsOnCanvas,
       switchToPhase,
+      updateAgentsSettings,
+      updateAbilitiesSettings,
     ],
   );
 
@@ -608,11 +628,27 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
   useEffect(() => {
     onUndoRedoCallback.current = () => {
       broadcastStateSyncRef.current?.();
+
+      const currentState = getCurrentStateForSync();
+      if (lobbyCode) {
+        try {
+          updateLobby(currentState);
+        } catch (error) {
+          console.error("Failed to persist undo/redo canvas state", error);
+        }
+      }
     };
     return () => {
       onUndoRedoCallback.current = null;
     };
-  }, [onUndoRedoCallback, getCurrentStateForSync, user?.name, users.length]);
+  }, [
+    onUndoRedoCallback,
+    getCurrentStateForSync,
+    updateLobby,
+    lobbyCode,
+    user?.name,
+    users.length,
+  ]);
 
   const broadcastToolIconAdded = useCallback(
     (toolIcon: ToolIconMessageData["toolIcon"], phaseIndex: number) => {
@@ -672,6 +708,16 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     [sendMessage],
   );
 
+  const broadcastSettingsChanged = useCallback(
+    (settings: SettingsChangedData) => {
+      sendMessage<SettingsChangedData>(
+        WS_MESSAGE_TYPES.SETTINGS_CHANGED,
+        settings,
+      );
+    },
+    [sendMessage],
+  );
+
   const value = useMemo<WebSocketContextType>(
     () => ({
       status,
@@ -702,6 +748,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       broadcastMapChanged,
       broadcastSideChanged,
       broadcastPhaseChanged,
+      broadcastSettingsChanged,
     }),
     [
       status,
@@ -732,6 +779,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       broadcastMapChanged,
       broadcastSideChanged,
       broadcastPhaseChanged,
+      broadcastSettingsChanged,
     ],
   );
 

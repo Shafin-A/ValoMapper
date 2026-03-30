@@ -146,3 +146,58 @@ describe("POST /api/lobbies", () => {
     expect(capturedSignal).toBeInstanceOf(AbortSignal);
   });
 });
+
+describe("POST /api/lobbies/[lobbyCode]/canvas-patches", () => {
+  const originalFetch = global.fetch;
+  const lobbyCode = "ABC123";
+  const createRequest = () =>
+    new Request(`http://localhost/api/lobbies/${lobbyCode}/canvas-patches`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entries: [] }),
+    });
+  let mockFetch: jest.Mock;
+
+  beforeEach(() => {
+    mockFetch = jest.fn();
+    global.fetch = mockFetch;
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    jest.useRealTimers();
+  });
+
+  it("should proxy canvas patch request successfully", async () => {
+    const mockResponse = { success: true };
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse,
+    });
+
+    const { POST } =
+      await import("@/app/api/lobbies/[lobbyCode]/canvas-patches/route");
+    const responsePromise = POST(createRequest(), {
+      params: Promise.resolve({ lobbyCode }),
+    });
+
+    jest.runAllTimers();
+
+    const response = await responsePromise;
+    const data = await response.json();
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `${process.env.API_URL}/lobbies/${lobbyCode}/canvas-patches`,
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: expect.any(AbortSignal),
+        body: JSON.stringify({ entries: [] }),
+      }),
+    );
+
+    expect(data).toEqual(mockResponse);
+  });
+});

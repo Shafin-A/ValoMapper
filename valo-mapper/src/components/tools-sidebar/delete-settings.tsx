@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
-import { useWebSocket } from "@/contexts/websocket-context";
 import {
   ALargeSmall,
   MapPinned,
@@ -29,76 +28,96 @@ export const DeleteSettings = () => {
     setConnectingLines,
   } = useCanvas();
 
-  const { notifyFullSync } = useCollaborativeCanvas();
-  const { users } = useWebSocket();
+  const {
+    notifyCanvasClear,
+    notifyAgentRemoved,
+    notifyAbilityRemoved,
+    notifyLineRemoved,
+    notifyTextRemoved,
+    notifyImageRemoved,
+    notifyToolIconRemoved,
+    notifyConnLineRemoved,
+  } = useCollaborativeCanvas();
 
   const resetAgents = async () => {
     const connectedAgentIds = new Set(
       connectingLines.flatMap((line) => [line.fromId, line.toId]),
     );
-    setAgentsOnCanvas((prev) =>
-      prev.filter((agent) => connectedAgentIds.has(agent.id)),
-    );
-    if (users.length > 1) {
-      notifyFullSync();
-    }
+    const toKeep = new Set<string>(connectedAgentIds);
+
+    setAgentsOnCanvas((prev) => {
+      const removed = prev.filter((agent) => !toKeep.has(agent.id));
+      removed.forEach((agent) => notifyAgentRemoved(agent.id));
+      return prev.filter((agent) => toKeep.has(agent.id));
+    });
   };
 
   const resetAbilities = async () => {
     const connectedAbilityIds = new Set(
       connectingLines.flatMap((line) => [line.fromId, line.toId]),
     );
-    setAbilitiesOnCanvas((prev) =>
-      prev.filter((ability) => connectedAbilityIds.has(ability.id)),
-    );
-    setToolIconsOnCanvas([]);
-    if (users.length > 1) {
-      notifyFullSync();
-    }
+
+    setAbilitiesOnCanvas((prev) => {
+      const removed = prev.filter(
+        (ability) => !connectedAbilityIds.has(ability.id),
+      );
+      removed.forEach((ability) => notifyAbilityRemoved(ability.id));
+      return prev.filter((ability) => connectedAbilityIds.has(ability.id));
+    });
+
+    setToolIconsOnCanvas((prev) => {
+      prev.forEach((toolIcon) => notifyToolIconRemoved(toolIcon.id));
+      return [];
+    });
   };
 
   const resetDrawings = async () => {
-    setDrawLines([]);
-    if (users.length > 1) {
-      notifyFullSync();
-    }
+    setDrawLines((prev) => {
+      prev.forEach((line) => notifyLineRemoved(line.id));
+      return [];
+    });
   };
 
   const resetTexts = async () => {
-    setTextsOnCanvas([]);
-    if (users.length > 1) {
-      notifyFullSync();
-    }
+    setTextsOnCanvas((prev) => {
+      prev.forEach((text) => notifyTextRemoved(text.id));
+      return [];
+    });
   };
 
   const resetImages = async () => {
-    setImagesOnCanvas([]);
-    if (users.length > 1) {
-      notifyFullSync();
-    }
+    setImagesOnCanvas((prev) => {
+      prev.forEach((image) => notifyImageRemoved(image.id));
+      return [];
+    });
   };
 
   const resetLineups = async () => {
     const connectedIds = new Set(
       connectingLines.flatMap((line) => [line.fromId, line.toId]),
     );
-    setAgentsOnCanvas((prev) =>
-      prev.filter((agent) => !connectedIds.has(agent.id)),
-    );
-    setAbilitiesOnCanvas((prev) =>
-      prev.filter((ability) => !connectedIds.has(ability.id)),
-    );
-    setConnectingLines([]);
-    if (users.length > 1) {
-      notifyFullSync();
-    }
+
+    setAgentsOnCanvas((prev) => {
+      const removed = prev.filter((agent) => connectedIds.has(agent.id));
+      removed.forEach((agent) => notifyAgentRemoved(agent.id));
+      return prev.filter((agent) => !connectedIds.has(agent.id));
+    });
+
+    setAbilitiesOnCanvas((prev) => {
+      const removed = prev.filter((ability) => connectedIds.has(ability.id));
+      removed.forEach((ability) => notifyAbilityRemoved(ability.id));
+      return prev.filter((ability) => !connectedIds.has(ability.id));
+    });
+
+    setConnectingLines((prev) => {
+      prev.forEach((line) => notifyConnLineRemoved(line.id));
+      return [];
+    });
   };
 
   const handleResetState = async () => {
     resetState();
-    if (users.length > 1) {
-      notifyFullSync();
-    }
+    notifyCanvasClear();
   };
 
   return (

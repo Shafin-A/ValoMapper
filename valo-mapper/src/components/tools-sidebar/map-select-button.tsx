@@ -43,7 +43,7 @@ export const MapSelect = ({
   const handleMapSelect = (option: MapOption) => {
     if (disabled) return;
     setSelectedMap(option);
-    notifyMapChanged(option);
+    notifyMapChanged(option, true);
     onMapSelect?.(option);
   };
 

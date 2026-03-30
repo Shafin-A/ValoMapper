@@ -29,6 +29,12 @@ interface UseKeyboardShortcutsProps {
   currentPhaseIndex: number;
   switchToPhase: (index: number) => void;
   notifyPhaseChanged?: (phaseIndex: number) => void;
+  notifyAgentRemoved?: (id: string) => void;
+  notifyAbilityRemoved?: (id: string) => void;
+  notifyConnLineRemoved?: (id: string) => void;
+  notifyTextRemoved?: (id: string) => void;
+  notifyImageRemoved?: (id: string) => void;
+  notifyToolIconRemoved?: (id: string) => void;
   hoveredElementId: string | null;
   setHoveredElementId: Dispatch<SetStateAction<string | null>>;
   setImagesOnCanvas: Dispatch<SetStateAction<ImageCanvas[]>>;
@@ -75,6 +81,12 @@ export const useKeyboardShortcuts = ({
   connectingLines,
   setConnectingLines,
   recenterCanvasCallback,
+  notifyAgentRemoved,
+  notifyAbilityRemoved,
+  notifyConnLineRemoved,
+  notifyTextRemoved,
+  notifyImageRemoved,
+  notifyToolIconRemoved,
 }: UseKeyboardShortcutsProps): void => {
   const {
     drawSettings,
@@ -145,12 +157,20 @@ export const useKeyboardShortcuts = ({
           line.fromId === hoveredElementId || line.toId === hoveredElementId,
       );
 
-      setImagesOnCanvas((prev) =>
-        prev.filter((img) => img.id !== hoveredElementId),
-      );
-      setTextsOnCanvas((prev) =>
-        prev.filter((txt) => txt.id !== hoveredElementId),
-      );
+      setImagesOnCanvas((prev) => {
+        const filtered = prev.filter((img) => img.id !== hoveredElementId);
+        if (filtered.length < prev.length) {
+          notifyImageRemoved?.(hoveredElementId);
+        }
+        return filtered;
+      });
+      setTextsOnCanvas((prev) => {
+        const filtered = prev.filter((txt) => txt.id !== hoveredElementId);
+        if (filtered.length < prev.length) {
+          notifyTextRemoved?.(hoveredElementId);
+        }
+        return filtered;
+      });
 
       setAgentsOnCanvas((prev) => {
         const filtered = prev.filter((agent) => agent.id !== hoveredElementId);
@@ -161,6 +181,8 @@ export const useKeyboardShortcuts = ({
           setConnectingLines((lines) =>
             lines.filter((line) => line.id !== connectedLine.id),
           );
+          notifyConnLineRemoved?.(connectedLine.id);
+          notifyAbilityRemoved?.(connectedLine.toId);
         } else if (connectedLine && connectedLine.toId === hoveredElementId) {
           setAbilitiesOnCanvas((abilities) =>
             abilities.filter((ability) => ability.id !== connectedLine.fromId),
@@ -168,6 +190,11 @@ export const useKeyboardShortcuts = ({
           setConnectingLines((lines) =>
             lines.filter((line) => line.id !== connectedLine.id),
           );
+          notifyConnLineRemoved?.(connectedLine.id);
+          notifyAbilityRemoved?.(connectedLine.fromId);
+        }
+        if (filtered.length < prev.length) {
+          notifyAgentRemoved?.(hoveredElementId);
         }
         return filtered;
       });
@@ -183,6 +210,8 @@ export const useKeyboardShortcuts = ({
           setConnectingLines((lines) =>
             lines.filter((line) => line.id !== connectedLine.id),
           );
+          notifyConnLineRemoved?.(connectedLine.id);
+          notifyAgentRemoved?.(connectedLine.toId);
         } else if (connectedLine && connectedLine.toId === hoveredElementId) {
           setAgentsOnCanvas((agents) =>
             agents.filter((agent) => agent.id !== connectedLine.fromId),
@@ -190,13 +219,24 @@ export const useKeyboardShortcuts = ({
           setConnectingLines((lines) =>
             lines.filter((line) => line.id !== connectedLine.id),
           );
+          notifyConnLineRemoved?.(connectedLine.id);
+          notifyAgentRemoved?.(connectedLine.fromId);
+        }
+        if (filtered.length < prev.length) {
+          notifyAbilityRemoved?.(hoveredElementId);
         }
         return filtered;
       });
 
-      setToolIconsOnCanvas((prev) =>
-        prev.filter((toolIcon) => toolIcon.id !== hoveredElementId),
-      );
+      setToolIconsOnCanvas((prev) => {
+        const filtered = prev.filter(
+          (toolIcon) => toolIcon.id !== hoveredElementId,
+        );
+        if (filtered.length < prev.length) {
+          notifyToolIconRemoved?.(hoveredElementId);
+        }
+        return filtered;
+      });
       setHoveredElementId(null);
       e.preventDefault();
       return true;
@@ -320,5 +360,11 @@ export const useKeyboardShortcuts = ({
     connectingLines,
     setConnectingLines,
     recenterCanvasCallback,
+    notifyImageRemoved,
+    notifyTextRemoved,
+    notifyConnLineRemoved,
+    notifyAbilityRemoved,
+    notifyAgentRemoved,
+    notifyToolIconRemoved,
   ]);
 };

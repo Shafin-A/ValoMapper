@@ -76,13 +76,7 @@ export const useImageTransform = () => {
         setImagesOnCanvas((prev) =>
           prev.map((item) => (item.id === imageId ? updatedImage : item)),
         );
-        notifyImageMoved({
-          id: imageId,
-          x: imageItem.x,
-          y: imageItem.y,
-          width: newWidth,
-          height: newHeight,
-        });
+        notifyImageMoved(updatedImage);
       }
     },
     [setImagesOnCanvas, imagesOnCanvas, notifyImageMoved],

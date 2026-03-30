@@ -1,5 +1,4 @@
 import { useLobby } from "@/hooks/api/use-lobby";
-import { useUpdateLobby } from "@/hooks/api/use-update-lobby";
 import {
   useCanvasItems,
   useCanvasUI,
@@ -7,25 +6,12 @@ import {
   usePhaseManager,
   usePhaseTransitions,
 } from "@/hooks/canvas";
+import { useCanvasPatch } from "@/hooks/canvas/use-canvas-patch";
 import { useSettings } from "@/contexts/settings-context";
-import {
-  IconSettings,
-  MapOption,
-  MapSide,
-  PhaseState,
-  SyncStatus,
-  UndoableState,
-} from "@/lib/types";
+import { MapOption, MapSide, PhaseState, UndoableState } from "@/lib/types";
 import { MAP_SIZE, VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts";
 import { useParams } from "next/navigation";
-import {
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { useCanvasAutoSave } from "@/hooks/canvas/use-auto-save";
+import { SetStateAction, useCallback, useEffect, useRef } from "react";
 import { parseTimestamp } from "@/lib/utils";
 
 export const useCanvasState = () => {
@@ -43,55 +29,18 @@ export const useCanvasState = () => {
     updateAbilitiesSettings,
   } = useSettings();
 
+  const { enqueueCanvasPatchEntry } = useCanvasPatch(lobbyCode);
+
   const {
     data: lobby,
     isLoading: isLoadingLobby,
     isError: isErrorLobby,
     error: lobbyError,
   } = useLobby(lobbyCode);
-  const { mutateAsync } = useUpdateLobby(lobbyCode);
   const lastSavedStateRef = useRef<UndoableState | null>(null);
-  const lastChangeRef = useRef<number>(Date.now());
-  const isSavingRef = useRef(false);
-  const isDirtyRef = useRef(false);
-
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
 
   const lastLoadedLobbyRef = useRef<string>("");
   const lastAppliedLobbyUpdatedAt = useRef<string>("");
-
-  const markDirty = useCallback(() => {
-    isDirtyRef.current = true;
-    setSyncStatus("unsynced");
-    lastChangeRef.current = Date.now();
-  }, []);
-
-  const clearDirty = useCallback(() => {
-    isDirtyRef.current = false;
-    setSyncStatus("synced");
-  }, []);
-  const areIconSettingsEqual = (a: IconSettings, b: IconSettings) =>
-    JSON.stringify(a) === JSON.stringify(b);
-
-  useEffect(() => {
-    if (!lastSavedStateRef.current) {
-      return;
-    }
-
-    const savedAgentsSettings = lastSavedStateRef.current.agentsSettings;
-    const savedAbilitiesSettings = lastSavedStateRef.current.abilitiesSettings;
-
-    if (!savedAgentsSettings || !savedAbilitiesSettings) {
-      return;
-    }
-
-    if (
-      !areIconSettingsEqual(agentsSettings, savedAgentsSettings) ||
-      !areIconSettingsEqual(abilitiesSettings, savedAbilitiesSettings)
-    ) {
-      markDirty();
-    }
-  }, [agentsSettings, abilitiesSettings, markDirty]);
 
   const canvasItems = useCanvasItems(
     phaseManager.currentPhase,
@@ -101,57 +50,50 @@ export const useCanvasState = () => {
   const wrappedSetAgentsOnCanvas = useCallback(
     (value: Parameters<typeof canvasItems.setAgentsOnCanvas>[0]) => {
       canvasItems.setAgentsOnCanvas(value);
-      markDirty();
     },
-    [canvasItems, markDirty],
+    [canvasItems],
   );
 
   const wrappedSetAbilitiesOnCanvas = useCallback(
     (value: Parameters<typeof canvasItems.setAbilitiesOnCanvas>[0]) => {
       canvasItems.setAbilitiesOnCanvas(value);
-      markDirty();
     },
-    [canvasItems, markDirty],
+    [canvasItems],
   );
 
   const wrappedSetDrawLines = useCallback(
     (value: Parameters<typeof canvasItems.setDrawLines>[0]) => {
       canvasItems.setDrawLines(value);
-      markDirty();
     },
-    [canvasItems, markDirty],
+    [canvasItems],
   );
 
   const wrappedSetConnectingLines = useCallback(
     (value: Parameters<typeof canvasItems.setConnectingLines>[0]) => {
       canvasItems.setConnectingLines(value);
-      markDirty();
     },
-    [canvasItems, markDirty],
+    [canvasItems],
   );
 
   const wrappedSetImagesOnCanvas = useCallback(
     (value: Parameters<typeof canvasItems.setImagesOnCanvas>[0]) => {
       canvasItems.setImagesOnCanvas(value);
-      markDirty();
     },
-    [canvasItems, markDirty],
+    [canvasItems],
   );
 
   const wrappedSetTextsOnCanvas = useCallback(
     (value: Parameters<typeof canvasItems.setTextsOnCanvas>[0]) => {
       canvasItems.setTextsOnCanvas(value);
-      markDirty();
     },
-    [canvasItems, markDirty],
+    [canvasItems],
   );
 
   const wrappedSetToolIconsOnCanvas = useCallback(
     (value: Parameters<typeof canvasItems.setToolIconsOnCanvas>[0]) => {
       canvasItems.setToolIconsOnCanvas(value);
-      markDirty();
     },
-    [canvasItems, markDirty],
+    [canvasItems],
   );
 
   const getCurrentState = useCallback(
@@ -192,94 +134,109 @@ export const useCanvasState = () => {
   const wrappedUpdateCurrentPhase = useCallback(
     (updates: Partial<PhaseState>) => {
       phaseManager.updateCurrentPhase(updates);
-      markDirty();
     },
-    [phaseManager, markDirty],
+    [phaseManager],
   );
 
   const wrappedSwitchToPhase = useCallback(
     (index: number) => {
       phaseManager.switchToPhase(index);
-      markDirty();
     },
-    [phaseManager, markDirty],
+    [phaseManager],
   );
 
   const wrappedDuplicatePhase = useCallback(
     (index: number) => {
       phaseManager.duplicatePhase(index);
-      markDirty();
     },
-    [phaseManager, markDirty],
+    [phaseManager],
   );
 
   const wrappedDeletePhase = useCallback(
     (index: number) => {
       phaseManager.deletePhase(index);
-      markDirty();
     },
-    [phaseManager, markDirty],
+    [phaseManager],
   );
 
   const wrappedSetCurrentPhaseIndex = useCallback(
     (index: number) => {
       phaseManager.setCurrentPhaseIndex(index);
-      markDirty();
     },
-    [phaseManager, markDirty],
+    [phaseManager],
   );
 
   const wrappedSetPhases = useCallback(
     (value: PhaseState[] | ((prev: PhaseState[]) => PhaseState[])) => {
       phaseManager.setPhases(value);
-      markDirty();
     },
-    [phaseManager, markDirty],
+    [phaseManager],
   );
 
   const wrappedResetAllPhases = useCallback(() => {
     phaseManager.resetAllPhases();
-    markDirty();
-  }, [phaseManager, markDirty]);
+  }, [phaseManager]);
 
   const wrappedSetSelectedMap = useCallback(
     (value: SetStateAction<MapOption>) => {
       canvasUI.setSelectedMap(value);
-      markDirty();
     },
-    [canvasUI, markDirty],
+    [canvasUI],
   );
 
   const wrappedSetMapSide = useCallback(
     (value: SetStateAction<MapSide>) => {
       canvasUI.setMapSide(value);
-      markDirty();
     },
-    [canvasUI, markDirty],
+    [canvasUI],
   );
 
   const wrappedUpdateAgentsSettings = useCallback(
     (settings: Parameters<typeof updateAgentsSettings>[0]) => {
+      const newSettings = { ...agentsSettings, ...settings };
+
       updateAgentsSettings(settings);
-      markDirty();
+
+      enqueueCanvasPatchEntry({
+        entity: "agents_settings",
+        action: "update",
+        phaseIndex: phaseManager.currentPhaseIndex,
+        payload: { agentsSettings: newSettings },
+      });
     },
-    [updateAgentsSettings, markDirty],
+    [
+      agentsSettings,
+      updateAgentsSettings,
+      phaseManager.currentPhaseIndex,
+      enqueueCanvasPatchEntry,
+    ],
   );
 
   const wrappedUpdateAbilitiesSettings = useCallback(
     (settings: Parameters<typeof updateAbilitiesSettings>[0]) => {
+      const newSettings = { ...abilitiesSettings, ...settings };
+
       updateAbilitiesSettings(settings);
-      markDirty();
+
+      enqueueCanvasPatchEntry({
+        entity: "abilities_settings",
+        action: "update",
+        phaseIndex: phaseManager.currentPhaseIndex,
+        payload: { abilitiesSettings: newSettings },
+      });
     },
-    [updateAbilitiesSettings, markDirty],
+    [
+      abilitiesSettings,
+      updateAbilitiesSettings,
+      phaseManager.currentPhaseIndex,
+      enqueueCanvasPatchEntry,
+    ],
   );
 
   const historyManager = useHistoryManager({
     getCurrentState,
     applyState,
-    onApplyHistoryState: () => {
-      markDirty();
-    },
+    onApplyHistoryState: () => {},
   });
 
   const resetState = useCallback(
@@ -290,36 +247,9 @@ export const useCanvasState = () => {
         phaseManager.deletePhase(phaseManager.currentPhaseIndex);
       }
       canvasUI.resetEdits();
-      markDirty();
     },
-    [phaseManager, canvasUI, markDirty],
+    [phaseManager, canvasUI],
   );
-
-  const autoSaveCanvasStateAsync = useCallback(async () => {
-    if (!lobbyCode || isSavingRef.current) return;
-
-    const currentState = getCurrentState();
-
-    isSavingRef.current = true;
-    setSyncStatus("syncing");
-
-    try {
-      const result = await mutateAsync(currentState);
-
-      if (result?.updatedAt) {
-        lastAppliedLobbyUpdatedAt.current = result.updatedAt.toString();
-      }
-
-      lastSavedStateRef.current = currentState;
-      clearDirty();
-      setSyncStatus("synced");
-    } catch (error) {
-      console.error("Auto save failed", error);
-      setSyncStatus("error");
-    } finally {
-      isSavingRef.current = false;
-    }
-  }, [lobbyCode, getCurrentState, mutateAsync, clearDirty]);
 
   useEffect(() => {
     if (!lobbyCode || !lobby) return;
@@ -352,10 +282,6 @@ export const useCanvasState = () => {
         canvasUI.resetEdits();
         lastSavedStateRef.current = null;
       }
-
-      clearDirty();
-      lastChangeRef.current = Date.now();
-      setSyncStatus("synced");
     }
   }, [
     lobbyCode,
@@ -365,7 +291,6 @@ export const useCanvasState = () => {
     canvasUI,
     updateAgentsSettings,
     updateAbilitiesSettings,
-    clearDirty,
   ]);
 
   const applyRemoteState = useCallback(
@@ -379,34 +304,9 @@ export const useCanvasState = () => {
       if (state.abilitiesSettings) {
         updateAbilitiesSettings(state.abilitiesSettings);
       }
-
-      clearDirty();
-      lastChangeRef.current = Date.now();
     },
-    [applyState, updateAgentsSettings, updateAbilitiesSettings, clearDirty],
+    [applyState, updateAgentsSettings, updateAbilitiesSettings],
   );
-
-  const checkUnsavedChanges = useCallback(() => {
-    if (!lastSavedStateRef.current) {
-      lastChangeRef.current = Date.now();
-      return true;
-    }
-
-    return isDirtyRef.current;
-  }, []);
-
-  const isLobbyActive = Boolean(
-    lobbyCode && lobbyCode === lastLoadedLobbyRef.current,
-  );
-
-  useCanvasAutoSave({
-    lobbyCode,
-    isActiveLobby: isLobbyActive,
-    editingTextId: canvasUI.editingTextId,
-    lastChangeRef,
-    checkUnsavedChanges,
-    autoSaveCanvasStateAsync,
-  });
 
   const rotateCanvasItemsForSideSwap = useCallback(() => {
     const mapCenterX = (VIRTUAL_WIDTH - MAP_SIZE) / 2 + MAP_SIZE / 2;
@@ -474,9 +374,7 @@ export const useCanvasState = () => {
         y: 2 * mapCenterY - toolIcon.y,
       })),
     );
-
-    markDirty();
-  }, [canvasItems, markDirty]);
+  }, [canvasItems]);
 
   const getCurrentStateForSync = useCallback(
     () => ({
@@ -485,8 +383,16 @@ export const useCanvasState = () => {
       mapSide: canvasUI.mapSide,
       currentPhaseIndex: phaseManager.currentPhaseIndex,
       editedPhases: Array.from(phaseManager.editedPhases),
+      agentsSettings,
+      abilitiesSettings,
     }),
-    [phaseManager, canvasUI.selectedMap, canvasUI.mapSide],
+    [
+      phaseManager,
+      canvasUI.selectedMap,
+      canvasUI.mapSide,
+      agentsSettings,
+      abilitiesSettings,
+    ],
   );
 
   return {
@@ -511,6 +417,8 @@ export const useCanvasState = () => {
     ...canvasUI,
     setSelectedMap: wrappedSetSelectedMap,
     setMapSide: wrappedSetMapSide,
+    agentsSettings,
+    abilitiesSettings,
     updateAgentsSettings: wrappedUpdateAgentsSettings,
     updateAbilitiesSettings: wrappedUpdateAbilitiesSettings,
     resetState,
@@ -518,7 +426,6 @@ export const useCanvasState = () => {
     isLoadingLobby,
     isErrorLobby,
     lobbyError,
-    syncStatus,
     rotateCanvasItemsForSideSwap,
     getCurrentStateForSync,
   };

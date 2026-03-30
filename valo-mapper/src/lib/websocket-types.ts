@@ -3,6 +3,7 @@ import {
   AgentCanvas,
   ConnectingLine,
   DrawLine,
+  IconSettings,
   ImageCanvas,
   ImagePositionData,
   MapOption,
@@ -37,6 +38,7 @@ export const WS_MESSAGE_TYPES = {
   MAP_CHANGED: "map_changed",
   SIDE_CHANGED: "side_changed",
   PHASE_CHANGED: "phase_changed",
+  SETTINGS_CHANGED: "settings_changed",
   FULL_SYNC: "full_sync",
 
   USER_JOINED: "user_joined",
@@ -113,6 +115,11 @@ export type SideChangedData = {
 export type PhaseChangedData = {
   phaseIndex: number;
   phase?: PhaseState;
+};
+
+export type SettingsChangedData = {
+  agentsSettings?: IconSettings;
+  abilitiesSettings?: IconSettings;
 };
 
 export type UserListData = {

@@ -19,8 +19,6 @@ interface SettingsContextType {
   eraserSettings: EraserSettings;
   updateAgentsSettings: (settings: Partial<IconSettings>) => void;
   updateAbilitiesSettings: (settings: Partial<IconSettings>) => void;
-  resetAgentsSettings: () => void;
-  resetAbilitiesSettings: () => void;
   updateDrawSettings: (settings: Partial<DrawSettings>) => void;
   updateEraserSettings: (settings: Partial<EraserSettings>) => void;
 }
@@ -60,14 +58,6 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     setAbilitiesSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
-  const resetAgentsSettings = () => {
-    setAgentsSettings(defaultIconSettings);
-  };
-
-  const resetAbilitiesSettings = () => {
-    setAbilitiesSettings(defaultIconSettings);
-  };
-
   const updateDrawSettings = (newSettings: Partial<DrawSettings>) => {
     setDrawSettings((prev) => ({ ...prev, ...newSettings }));
   };
@@ -85,8 +75,6 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
         eraserSettings,
         updateAgentsSettings,
         updateAbilitiesSettings,
-        resetAgentsSettings,
-        resetAbilitiesSettings,
         updateDrawSettings,
         updateEraserSettings,
       }}

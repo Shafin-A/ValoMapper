@@ -52,7 +52,6 @@ const LobbyEditPage = () => {
     agentsOnCanvas,
     abilitiesOnCanvas,
     toolIconsOnCanvas,
-    syncStatus,
   } = useCanvas();
 
   useEffect(() => {
@@ -240,7 +239,7 @@ const LobbyEditPage = () => {
     <div className="[--header-height:calc(--spacing(14))]">
       <TourAutoAdvance />
 
-      <SiteHeader {...sidebarState} syncStatus={syncStatus} />
+      <SiteHeader {...sidebarState} />
 
       <ToolsSidebar
         sidebarOpen={sidebarState.leftSidebarOpen}

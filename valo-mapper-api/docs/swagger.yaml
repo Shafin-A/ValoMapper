@@ -287,6 +287,27 @@ definitions:
       "y":
         type: number
     type: object
+  models.CanvasPatch:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/models.CanvasPatchEntry'
+        type: array
+    type: object
+  models.CanvasPatchEntry:
+    properties:
+      action:
+        type: string
+      entity:
+        type: string
+      id:
+        type: string
+      payload:
+        additionalProperties: {}
+        type: object
+      phaseIndex:
+        type: integer
+    type: object
   models.CanvasText:
     properties:
       height:
@@ -1222,6 +1243,46 @@ paths:
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
       summary: Update lobby canvas state
+      tags:
+      - lobbies
+  /api/lobbies/{code}/canvas-patches:
+    post:
+      consumes:
+      - application/json
+      description: Applies a batch of canvas patch entries (entity/action/data) for
+        the lobby
+      parameters:
+      - description: Lobby code
+        in: path
+        name: code
+        required: true
+        type: string
+      - description: Canvas patch request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CanvasPatch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Lobby'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Apply incremental canvas patch updates
       tags:
       - lobbies
   /api/strategies:

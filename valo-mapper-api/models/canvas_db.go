@@ -475,3 +475,630 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 	return tx.Commit(ctx)
 }
+
+func ApplyCanvasPatch(lobbyCode string, patch CanvasPatch) (retErr error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if retErr != nil {
+			_ = tx.Rollback(ctx)
+		}
+	}()
+
+	// Lock lobby row to avoid race with full SaveCanvasState path.
+	if _, err = tx.Exec(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE", lobbyCode); err != nil {
+		return err
+	}
+
+	for _, entry := range patch.Entries {
+		if err := applyPatchEntry(tx, lobbyCode, entry); err != nil {
+			return err
+		}
+	}
+
+	if err := setLobbyUpdatedAt(tx, lobbyCode); err != nil {
+		return err
+	}
+
+	retErr = tx.Commit(ctx)
+	return retErr
+}
+
+func setLobbyUpdatedAt(tx pgx.Tx, lobbyCode string) error {
+	_, err := tx.Exec(context.Background(), "UPDATE lobbies SET updated_at = NOW() WHERE code = $1", lobbyCode)
+	return err
+}
+
+func applyPatchEntry(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	switch strings.ToLower(entry.Entity) {
+	case "agent":
+		return applyAgentPatch(tx, lobbyCode, entry)
+	case "ability":
+		return applyAbilityPatch(tx, lobbyCode, entry)
+	case "drawline":
+		return applyDrawLinePatch(tx, lobbyCode, entry)
+	case "connectingline":
+		return applyConnectingLinePatch(tx, lobbyCode, entry)
+	case "text":
+		return applyTextPatch(tx, lobbyCode, entry)
+	case "image":
+		return applyImagePatch(tx, lobbyCode, entry)
+	case "toolicon":
+		return applyToolIconPatch(tx, lobbyCode, entry)
+	case "map":
+		return applyMapPatch(tx, lobbyCode, entry)
+	case "side":
+		return applyMapSidePatch(tx, lobbyCode, entry)
+	case "phase":
+		return applyPhasePatch(tx, lobbyCode, entry)
+	case "edited_phases":
+		return applyEditedPhasesPatch(tx, lobbyCode, entry)
+	case "canvas":
+		return applyCanvasClearPatch(tx, lobbyCode, entry)
+	case "agents_settings":
+		return applyAgentsSettingsPatch(tx, lobbyCode, entry)
+	case "abilities_settings":
+		return applyAbilitiesSettingsPatch(tx, lobbyCode, entry)
+	default:
+		return fmt.Errorf("unsupported canvas entity: %s", entry.Entity)
+	}
+}
+
+func applyAgentPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
+		if entry.ID == "" {
+			return fmt.Errorf("missing id for agent remove")
+		}
+		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_agents WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
+		return err
+	}
+
+	var p CanvasAgent
+	if entry.Payload != nil {
+		payloadJSON, err := json.Marshal(entry.Payload)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(payloadJSON, &p); err != nil {
+			return err
+		}
+	}
+
+	if p.ID == "" {
+		p.ID = entry.ID
+	}
+	if p.ID == "" {
+		return fmt.Errorf("missing id for agent upsert")
+	}
+
+	_, err := tx.Exec(context.Background(), `
+		INSERT INTO canvas_agents (id, lobby_code, phase_index, name, role, x, y, is_ally)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
+		SET name = EXCLUDED.name, role = EXCLUDED.role, x = EXCLUDED.x, y = EXCLUDED.y, is_ally = EXCLUDED.is_ally`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Role, p.X, p.Y, p.IsAlly)
+	return err
+}
+
+func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
+		if entry.ID == "" {
+			return fmt.Errorf("missing id for ability remove")
+		}
+		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_abilities WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
+		return err
+	}
+
+	var p CanvasAbility
+	if entry.Payload != nil {
+		payloadJSON, err := json.Marshal(entry.Payload)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(payloadJSON, &p); err != nil {
+			return err
+		}
+	}
+
+	if p.ID == "" {
+		p.ID = entry.ID
+	}
+	if p.ID == "" {
+		return fmt.Errorf("missing id for ability upsert")
+	}
+
+	_, err := tx.Exec(context.Background(), `
+		INSERT INTO canvas_abilities (id, lobby_code, phase_index, name, action, x, y, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
+		SET name = EXCLUDED.name, action = EXCLUDED.action, x = EXCLUDED.x, y = EXCLUDED.y,
+		    current_path = EXCLUDED.current_path, current_rotation = EXCLUDED.current_rotation, current_length = EXCLUDED.current_length,
+		    is_ally = EXCLUDED.is_ally, icon_only = EXCLUDED.icon_only, show_outer_circle = EXCLUDED.show_outer_circle`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Action, p.X, p.Y, p.CurrentPath, p.CurrentRotation, p.CurrentLength, p.IsAlly, p.IconOnly, p.ShowOuterCircle)
+	return err
+}
+
+func applyDrawLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
+		if entry.ID == "" {
+			return fmt.Errorf("missing id for draw line remove")
+		}
+		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_draw_lines WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
+		return err
+	}
+
+	var p CanvasDrawLine
+	if entry.Payload != nil {
+		payloadJSON, err := json.Marshal(entry.Payload)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(payloadJSON, &p); err != nil {
+			return err
+		}
+	}
+
+	if p.ID == "" {
+		p.ID = entry.ID
+	}
+	if p.ID == "" {
+		return fmt.Errorf("missing id for draw line upsert")
+	}
+
+	pointsArray := make([]float64, 0, len(p.Points)*2)
+	for _, pt := range p.Points {
+		pointsArray = append(pointsArray, pt.X, pt.Y)
+	}
+
+	_, err := tx.Exec(context.Background(), `
+		INSERT INTO canvas_draw_lines (id, lobby_code, phase_index, tool, points, color, size, is_dashed, is_arrow_head)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
+		SET tool = EXCLUDED.tool, points = EXCLUDED.points, color = EXCLUDED.color, size = EXCLUDED.size,
+		    is_dashed = EXCLUDED.is_dashed, is_arrow_head = EXCLUDED.is_arrow_head`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Tool, pointsArray, p.Color, p.Size, p.IsDashed, p.IsArrowHead)
+	return err
+}
+
+func applyConnectingLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
+		if entry.ID == "" {
+			return fmt.Errorf("missing id for connecting line remove")
+		}
+		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_connecting_lines WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
+		return err
+	}
+
+	var p CanvasConnectingLine
+	if entry.Payload != nil {
+		payloadJSON, err := json.Marshal(entry.Payload)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(payloadJSON, &p); err != nil {
+			return err
+		}
+	}
+
+	if p.ID == "" {
+		p.ID = entry.ID
+	}
+	if p.ID == "" {
+		return fmt.Errorf("missing id for connecting line upsert")
+	}
+
+	_, err := tx.Exec(context.Background(), `
+		INSERT INTO canvas_connecting_lines (id, lobby_code, phase_index, from_id, to_id, stroke_color, stroke_width, uploaded_images, youtube_link, notes)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
+		SET from_id = EXCLUDED.from_id, to_id = EXCLUDED.to_id, stroke_color = EXCLUDED.stroke_color,
+		    stroke_width = EXCLUDED.stroke_width, uploaded_images = EXCLUDED.uploaded_images,
+		    youtube_link = EXCLUDED.youtube_link, notes = EXCLUDED.notes`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.FromID, p.ToID, p.StrokeColor, p.StrokeWidth, p.UploadedImages, p.YoutubeLink, p.Notes)
+	return err
+}
+
+func applyTextPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
+		if entry.ID == "" {
+			return fmt.Errorf("missing id for text remove")
+		}
+		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_texts WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
+		return err
+	}
+
+	var p CanvasText
+	if entry.Payload != nil {
+		payloadJSON, err := json.Marshal(entry.Payload)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(payloadJSON, &p); err != nil {
+			return err
+		}
+	}
+
+	if p.ID == "" {
+		p.ID = entry.ID
+	}
+	if p.ID == "" {
+		return fmt.Errorf("missing id for text upsert")
+	}
+
+	_, err := tx.Exec(context.Background(), `
+		INSERT INTO canvas_texts (id, lobby_code, phase_index, text, x, y, width, height)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
+		SET text = EXCLUDED.text, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Text, p.X, p.Y, p.Width, p.Height)
+	return err
+}
+
+func applyImagePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
+		if entry.ID == "" {
+			return fmt.Errorf("missing id for image remove")
+		}
+		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_images WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
+		return err
+	}
+
+	var p CanvasImage
+	if entry.Payload != nil {
+		payloadJSON, err := json.Marshal(entry.Payload)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(payloadJSON, &p); err != nil {
+			return err
+		}
+	}
+
+	if p.ID == "" {
+		p.ID = entry.ID
+	}
+	if p.ID == "" {
+		return fmt.Errorf("missing id for image upsert")
+	}
+
+	if p.Src == "" {
+		var existingSrc string
+		err := tx.QueryRow(context.Background(), "SELECT src FROM canvas_images WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", p.ID, lobbyCode, entry.PhaseIndex).Scan(&existingSrc)
+		if err != nil && err != pgx.ErrNoRows {
+			return err
+		}
+		if existingSrc != "" {
+			p.Src = existingSrc
+		}
+	}
+
+	_, err := tx.Exec(context.Background(), `
+		INSERT INTO canvas_images (id, lobby_code, phase_index, src, x, y, width, height)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
+		SET src = EXCLUDED.src, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Src, p.X, p.Y, p.Width, p.Height)
+	return err
+}
+
+func applyToolIconPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
+		if entry.ID == "" {
+			return fmt.Errorf("missing id for tool icon remove")
+		}
+		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_tool_icons WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
+		return err
+	}
+
+	var p CanvasToolIcon
+	if entry.Payload != nil {
+		payloadJSON, err := json.Marshal(entry.Payload)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(payloadJSON, &p); err != nil {
+			return err
+		}
+	}
+
+	if p.ID == "" {
+		p.ID = entry.ID
+	}
+	if p.ID == "" {
+		return fmt.Errorf("missing id for tool icon upsert")
+	}
+
+	_, err := tx.Exec(context.Background(), `
+		INSERT INTO canvas_tool_icons (id, lobby_code, phase_index, x, y, width, height)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
+		SET x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.X, p.Y, p.Width, p.Height)
+	return err
+}
+
+func applyMapPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") && !strings.EqualFold(entry.Action, "change") {
+		return fmt.Errorf("invalid action for map patch: %s", entry.Action)
+	}
+
+	if entry.Payload == nil {
+		return fmt.Errorf("payload required for map patch")
+	}
+
+	idRaw, ok := entry.Payload["id"]
+	if !ok {
+		return fmt.Errorf("map patch payload missing id")
+	}
+	id, ok := idRaw.(string)
+	if !ok || id == "" {
+		return fmt.Errorf("invalid map id in payload")
+	}
+
+	// validate map exists.
+	var exists bool
+	if err := tx.QueryRow(context.Background(), "SELECT EXISTS(SELECT 1 FROM maps WHERE id = $1)", id).Scan(&exists); err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("map id not found: %s", id)
+	}
+
+	_, err := tx.Exec(context.Background(), "UPDATE lobbies SET selected_map_id = $1 WHERE code = $2", id, lobbyCode)
+	return err
+}
+
+func applyMapSidePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
+		return fmt.Errorf("invalid action for side patch: %s", entry.Action)
+	}
+
+	var mapSide string
+	if entry.Payload != nil {
+		if side, ok := entry.Payload["mapSide"]; ok {
+			if s, ok := side.(string); ok {
+				mapSide = s
+			}
+		}
+	}
+
+	if mapSide == "" {
+		if entry.ID != "" {
+			mapSide = entry.ID
+		}
+	}
+
+	if mapSide == "" {
+		return fmt.Errorf("map side is required")
+	}
+
+	allowed := map[string]struct{}{"attack": {}, "defense": {}, "defend": {}}
+	if _, ok := allowed[strings.ToLower(mapSide)]; !ok {
+		return fmt.Errorf("invalid map side: %s", mapSide)
+	}
+
+	// standardize to canonical value
+	if strings.EqualFold(mapSide, "defend") {
+		mapSide = "defense"
+	}
+
+	_, err := tx.Exec(context.Background(), "UPDATE lobbies SET map_side = $1 WHERE code = $2", mapSide, lobbyCode)
+	return err
+}
+
+func applyPhasePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
+		return fmt.Errorf("invalid action for phase patch: %s", entry.Action)
+	}
+
+	phaseIndex := entry.PhaseIndex
+	if entry.Payload != nil {
+		if pv, ok := entry.Payload["phaseIndex"]; ok {
+			if pi, ok := pv.(float64); ok {
+				phaseIndex = int(pi)
+			}
+		}
+	}
+
+	if phaseIndex < 0 || phaseIndex >= phaseCount {
+		return fmt.Errorf("invalid phase index: %d", phaseIndex)
+	}
+
+	_, err := tx.Exec(context.Background(), `
+		UPDATE lobbies SET current_phase_index = $1 WHERE code = $2`,
+		phaseIndex, lobbyCode)
+	return err
+}
+
+func applyEditedPhasesPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
+		return fmt.Errorf("invalid action for edited_phases patch: %s", entry.Action)
+	}
+
+	edited, ok := entry.Payload["editedPhases"]
+	if !ok {
+		edited, ok = entry.Payload["edited_phases"]
+	}
+	if !ok {
+		return fmt.Errorf("editedPhases payload is required")
+	}
+
+	var phases []int
+
+	switch v := edited.(type) {
+	case []any:
+		for _, item := range v {
+			if n, ok := item.(float64); ok {
+				phases = append(phases, int(n))
+			}
+		}
+	case []int:
+		phases = v
+	default:
+		return fmt.Errorf("invalid editedPhases type")
+	}
+
+	for _, p := range phases {
+		if p < 0 || p >= phaseCount {
+			return fmt.Errorf("invalid edited phase index: %d", p)
+		}
+	}
+
+	_, err := tx.Exec(context.Background(), `
+		UPDATE lobbies SET edited_phases = $1 WHERE code = $2`,
+		phases, lobbyCode)
+	return err
+}
+
+func applyCanvasClearPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if !strings.EqualFold(entry.Action, "clear") && !strings.EqualFold(entry.Action, "reset") {
+		return fmt.Errorf("invalid action for canvas patch: %s", entry.Action)
+	}
+
+	resetAll := false
+	if entry.Payload != nil {
+		if ra, ok := entry.Payload["resetAll"]; ok {
+			if b, ok := ra.(bool); ok {
+				resetAll = b
+			}
+		}
+	}
+	if strings.EqualFold(entry.Action, "reset") {
+		resetAll = true
+	}
+
+	canvasTables := []string{
+		"canvas_agents",
+		"canvas_abilities",
+		"canvas_draw_lines",
+		"canvas_texts",
+		"canvas_images",
+		"canvas_tool_icons",
+		"canvas_connecting_lines",
+	}
+
+	if resetAll {
+		for _, table := range canvasTables {
+			query := fmt.Sprintf("DELETE FROM %s WHERE lobby_code = $1", pgx.Identifier{table}.Sanitize())
+			if _, err := tx.Exec(context.Background(), query, lobbyCode); err != nil {
+				return err
+			}
+		}
+
+		_, err := tx.Exec(context.Background(), `
+			UPDATE lobbies
+			SET current_phase_index = $1, edited_phases = $2
+			WHERE code = $3`,
+			0, []int{0}, lobbyCode)
+		return err
+	}
+
+	phaseIndex := entry.PhaseIndex
+	if phaseIndex < 0 || phaseIndex >= phaseCount {
+		return fmt.Errorf("invalid phase index for canvas clear: %d", phaseIndex)
+	}
+
+	for _, table := range canvasTables {
+		query := fmt.Sprintf("DELETE FROM %s WHERE lobby_code = $1 AND phase_index = $2", pgx.Identifier{table}.Sanitize())
+		if _, err := tx.Exec(context.Background(), query, lobbyCode, phaseIndex); err != nil {
+			return err
+		}
+	}
+
+	var editedPhases []int
+	if err := tx.QueryRow(context.Background(), "SELECT edited_phases FROM lobbies WHERE code = $1", lobbyCode).Scan(&editedPhases); err != nil {
+		return err
+	}
+
+	updatedEdited := make([]int, 0, len(editedPhases)+1)
+	hasZero := false
+	for _, phase := range editedPhases {
+		if phase == phaseIndex {
+			continue
+		}
+		if phase == 0 {
+			hasZero = true
+		}
+		updatedEdited = append(updatedEdited, phase)
+	}
+	if !hasZero {
+		updatedEdited = append(updatedEdited, 0)
+	}
+
+	_, err := tx.Exec(context.Background(), "UPDATE lobbies SET edited_phases = $1 WHERE code = $2", updatedEdited, lobbyCode)
+	return err
+}
+
+func applyAgentsSettingsPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
+		return fmt.Errorf("invalid action for agents_settings patch: %s", entry.Action)
+	}
+
+	if entry.Payload == nil {
+		return fmt.Errorf("payload required for agents_settings patch")
+	}
+
+	data, ok := entry.Payload["agentsSettings"]
+	if !ok {
+		return fmt.Errorf("agentsSettings payload is required")
+	}
+
+	payloadJSON, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	var settings IconSettings
+	if err := json.Unmarshal(payloadJSON, &settings); err != nil {
+		return err
+	}
+
+	settingsJSON, err := json.Marshal(settings)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(context.Background(), "UPDATE lobbies SET agents_settings = $1 WHERE code = $2", settingsJSON, lobbyCode)
+	return err
+}
+
+func applyAbilitiesSettingsPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
+	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
+		return fmt.Errorf("invalid action for abilities_settings patch: %s", entry.Action)
+	}
+
+	if entry.Payload == nil {
+		return fmt.Errorf("payload required for abilities_settings patch")
+	}
+
+	data, ok := entry.Payload["abilitiesSettings"]
+	if !ok {
+		return fmt.Errorf("abilitiesSettings payload is required")
+	}
+
+	payloadJSON, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	var settings IconSettings
+	if err := json.Unmarshal(payloadJSON, &settings); err != nil {
+		return err
+	}
+
+	settingsJSON, err := json.Marshal(settings)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(context.Background(), "UPDATE lobbies SET abilities_settings = $1 WHERE code = $2", settingsJSON, lobbyCode)
+	return err
+}

@@ -33,9 +33,6 @@ export const ROLE_ICONS: Record<string, string> = {
 
 export const PIXELS_PER_METER = 122 / 15;
 
-export const AUTOSAVE_IDLE_THRESHOLD_MS = 3 * 1000;
-export const AUTOSAVE_INTERVAL_MS = 1 * 1000;
-
 export const LANDING_MESSAGES = [
   "Design strategies that win rounds",
   "Coordinate executes with pixel-perfect precision",

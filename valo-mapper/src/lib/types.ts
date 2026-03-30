@@ -44,6 +44,18 @@ export type ImagePositionData = {
   height: number;
 };
 
+export type CanvasPatchEntry = {
+  entity: string;
+  action: string;
+  phaseIndex: number;
+  id?: string;
+  payload?: Record<string, unknown>;
+};
+
+export type CanvasPatch = {
+  entries: CanvasPatchEntry[];
+};
+
 export type AgentCanvas = CanvasItem & {
   role: AgentRole;
 };

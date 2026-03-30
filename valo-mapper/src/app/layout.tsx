@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CanvasProvider } from "@/contexts/canvas-context";
 import { SettingsProvider } from "@/contexts/settings-context";
 import { WebSocketProvider } from "@/contexts/websocket-context";
+import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { FirebaseAuthProvider } from "@/hooks/use-firebase-auth";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -74,7 +75,10 @@ const RootLayout = ({
                 <SettingsProvider>
                   <TourProviderWrapper>
                     <CanvasProvider>
-                      <WebSocketProvider>{children}</WebSocketProvider>
+                      <WebSocketProvider>
+                        <KeyboardShortcuts />
+                        {children}
+                      </WebSocketProvider>
                     </CanvasProvider>
                     <Toaster richColors closeButton />
                   </TourProviderWrapper>

@@ -1,14 +1,14 @@
 "use client";
 
-import { useCanvasState, useKeyboardShortcuts } from "@/hooks/canvas";
+import { useCanvasState } from "@/hooks/canvas";
 import type {
   AbilityCanvas,
   AbilityIconItem,
   Agent,
   AgentCanvas,
   ConnectingLine,
-  SyncStatus,
   DrawLine,
+  IconSettings,
   ImageCanvas,
   MapOption,
   MapSide,
@@ -80,6 +80,10 @@ interface CanvasContextType {
   setEditingTextId: Dispatch<SetStateAction<string | null>>;
   toolIconsOnCanvas: ToolIconCanvas[];
   setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>;
+  agentsSettings: IconSettings;
+  abilitiesSettings: IconSettings;
+  updateAgentsSettings: (settings: Partial<IconSettings>) => void;
+  updateAbilitiesSettings: (settings: Partial<IconSettings>) => void;
   phases: PhaseState[];
   currentPhaseIndex: number;
   switchToPhase: (index: number) => void;
@@ -97,7 +101,6 @@ interface CanvasContextType {
   isLoadingLobby: boolean;
   isErrorLobby: boolean;
   lobbyError: Error | null;
-  syncStatus: SyncStatus;
   hoveredElementId: string | null;
   setHoveredElementId: Dispatch<SetStateAction<string | null>>;
   recenterCanvasCallback: RefObject<(() => void) | null>;
@@ -140,34 +143,6 @@ export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
     },
     [canvasState.editingTextId],
   );
-
-  useKeyboardShortcuts({
-    undo: canvasState.undo,
-    redo: canvasState.redo,
-    onUndoRedo: () => onUndoRedoCallback.current?.(),
-    tool: canvasState.tool,
-    setTool: canvasState.setTool,
-    isDrawMode: canvasState.isDrawMode,
-    setIsDrawMode: canvasState.setIsDrawMode,
-    editingTextId: canvasState.editingTextId,
-    setEditingTextId: canvasState.setEditingTextId,
-    setIsDeleteSettingsOpen: canvasState.setIsDeleteSettingsOpen,
-    phases: canvasState.phases,
-    currentPhaseIndex: canvasState.currentPhaseIndex,
-    switchToPhase: canvasState.switchToPhase,
-    notifyPhaseChanged: (phaseIndex: number) =>
-      notifyPhaseChangedCallback.current?.(phaseIndex),
-    hoveredElementId,
-    setHoveredElementId,
-    setImagesOnCanvas: canvasState.setImagesOnCanvas,
-    setTextsOnCanvas: canvasState.setTextsOnCanvas,
-    setAgentsOnCanvas: canvasState.setAgentsOnCanvas,
-    setAbilitiesOnCanvas: canvasState.setAbilitiesOnCanvas,
-    setToolIconsOnCanvas: canvasState.setToolIconsOnCanvas,
-    connectingLines: canvasState.connectingLines,
-    setConnectingLines: canvasState.setConnectingLines,
-    recenterCanvasCallback,
-  });
 
   return (
     <CanvasContext.Provider

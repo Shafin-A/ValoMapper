@@ -106,6 +106,18 @@ type CanvasToolIcon struct {
 	Height float64 `json:"height"`
 }
 
+type CanvasPatchEntry struct {
+	Entity     string         `json:"entity"`
+	Action     string         `json:"action"`
+	PhaseIndex int            `json:"phaseIndex"`
+	ID         string         `json:"id,omitempty"`
+	Payload    map[string]any `json:"payload,omitempty"`
+}
+
+type CanvasPatch struct {
+	Entries []CanvasPatchEntry `json:"entries"`
+}
+
 type Position struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
