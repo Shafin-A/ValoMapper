@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png",
+        url: `${appUrl}/og-image.png`,
         width: 512,
         height: 512,
         alt: "ValoMapper logo",
@@ -47,9 +47,9 @@ export const metadata: Metadata = {
     ],
   },
   icons: {
-    icon: "/og-image.png",
-    shortcut: "/og-image.png",
-    apple: "/og-image.png",
+    icon: `${appUrl}/og-image.png`,
+    shortcut: `${appUrl}/og-image.png`,
+    apple: `${appUrl}/og-image.png`,
   },
 };
 
