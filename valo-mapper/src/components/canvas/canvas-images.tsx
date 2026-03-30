@@ -4,7 +4,7 @@ import { useImageTransform } from "@/hooks/canvas";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
 import { RefObject } from "react";
-import { Group, Image, Transformer } from "react-konva";
+import { Group, Image, Rect, Text, Transformer } from "react-konva";
 
 interface CanvasImageProps {
   stageRef: RefObject<Konva.Stage | null>;
@@ -34,6 +34,7 @@ export const CanvasImages = ({
   const {
     imageNodeRefs,
     imageLoaderRefs,
+    imageLoadStatusRefs,
     hoveredImageId,
     handleImageMouseEnter: hookHandleImageMouseEnter,
     handleImageMouseLeave,
@@ -75,10 +76,15 @@ export const CanvasImages = ({
   return imagesOnCanvas.map((imageItem) => {
     const imageNode = imageNodeRefs.current.get(imageItem.id);
     const imageLoader = imageLoaderRefs.current.get(imageItem.id);
+    const imageLoadStatus = imageLoadStatusRefs.current.get(imageItem.id);
+
     const drawableImage =
       imageLoader && imageLoader.complete && imageLoader.naturalWidth > 0
         ? imageLoader
         : undefined;
+
+    const isLoading = !drawableImage && imageLoadStatus === "loading";
+    const isError = !drawableImage && imageLoadStatus === "error";
 
     return (
       <Group
@@ -129,6 +135,46 @@ export const CanvasImages = ({
           height={imageItem.height}
           onTransformEnd={() => handleImageTransformEnd(imageItem.id)}
         />
+        {isLoading && (
+          <>
+            <Rect
+              x={0}
+              y={0}
+              width={imageItem.width}
+              height={imageItem.height}
+              fill="rgba(0, 0, 0, 0.35)"
+            />
+            <Text
+              x={0}
+              y={imageItem.height / 2 - 8}
+              width={imageItem.width}
+              align="center"
+              text="Loading..."
+              fill="#ffffff"
+              fontSize={14}
+            />
+          </>
+        )}
+        {isError && (
+          <>
+            <Rect
+              x={0}
+              y={0}
+              width={imageItem.width}
+              height={imageItem.height}
+              fill="rgba(255, 0, 0, 0.2)"
+            />
+            <Text
+              x={0}
+              y={imageItem.height / 2 - 8}
+              width={imageItem.width}
+              align="center"
+              text="Failed to load"
+              fill="#ffdddd"
+              fontSize={14}
+            />
+          </>
+        )}
         {(hoveredImageId === imageItem.id ||
           hoveredElementId === imageItem.id) &&
           !isDrawMode &&

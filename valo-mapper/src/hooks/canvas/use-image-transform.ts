@@ -17,6 +17,9 @@ export const useImageTransform = () => {
 
   const imageNodeRefs = useRef<Map<string, Konva.Image>>(new Map());
   const imageLoaderRefs = useRef<Map<string, HTMLImageElement>>(new Map());
+  const imageLoadStatusRefs = useRef<
+    Map<string, "loading" | "loaded" | "error">
+  >(new Map());
 
   useEffect(() => {
     const activeIDs = new Set(imagesOnCanvas.map((item) => item.id));
@@ -27,15 +30,19 @@ export const useImageTransform = () => {
         return;
       }
 
+      imageLoadStatusRefs.current.set(imageItem.id, "loading");
+
       const img = new window.Image();
 
       img.onload = () => {
         imageLoaderRefs.current.set(imageItem.id, img);
+        imageLoadStatusRefs.current.set(imageItem.id, "loaded");
         setImageLoadVersion((prev) => prev + 1);
       };
 
       img.onerror = () => {
         imageLoaderRefs.current.delete(imageItem.id);
+        imageLoadStatusRefs.current.set(imageItem.id, "error");
         setImageLoadVersion((prev) => prev + 1);
       };
 
@@ -45,6 +52,13 @@ export const useImageTransform = () => {
     for (const id of imageLoaderRefs.current.keys()) {
       if (!activeIDs.has(id)) {
         imageLoaderRefs.current.delete(id);
+        imageLoadStatusRefs.current.delete(id);
+      }
+    }
+
+    for (const id of imageLoadStatusRefs.current.keys()) {
+      if (!activeIDs.has(id)) {
+        imageLoadStatusRefs.current.delete(id);
       }
     }
   }, [imagesOnCanvas]);
@@ -100,6 +114,7 @@ export const useImageTransform = () => {
   return {
     imageNodeRefs,
     imageLoaderRefs,
+    imageLoadStatusRefs,
     hoveredImageId,
     handleImageMouseEnter,
     handleImageMouseLeave,
