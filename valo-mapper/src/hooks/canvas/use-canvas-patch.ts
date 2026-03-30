@@ -55,10 +55,12 @@ export const useCanvasPatch = (lobbyCode: string) => {
   const mutation = useMutation({
     mutationFn: (entries: CanvasPatchEntry[]) =>
       postCanvasPatchWithRetry(lobbyCode, entries),
-    onError: (error) => {
-      console.error("Canvas patch failed", error);
-    },
   });
+
+  const mutateRef = useRef(mutation.mutateAsync);
+  useEffect(() => {
+    mutateRef.current = mutation.mutateAsync;
+  }, [mutation.mutateAsync]);
 
   const flushCanvasPatch = useCallback(async () => {
     if (timerRef.current) {
@@ -75,14 +77,20 @@ export const useCanvasPatch = (lobbyCode: string) => {
     setPending(0);
 
     try {
-      await mutation.mutateAsync(entries);
+      await mutateRef.current(entries);
     } catch (error) {
       queueRef.current = [...entries, ...queueRef.current];
       setPending(queueRef.current.length);
       console.error("Canvas patch failed after retries, re-queueing", error);
       toast.error("Canvas patch update failed.");
+      scheduleFlushRef.current();
     }
-  }, [mutation]);
+  }, []);
+
+  const flushCanvasPatchRef = useRef(flushCanvasPatch);
+  useEffect(() => {
+    flushCanvasPatchRef.current = flushCanvasPatch;
+  }, [flushCanvasPatch]);
 
   const scheduleFlush = useCallback(() => {
     if (timerRef.current) {
@@ -91,9 +99,14 @@ export const useCanvasPatch = (lobbyCode: string) => {
 
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
-      void flushCanvasPatch();
+      void flushCanvasPatchRef.current();
     }, PATCH_DEBOUNCE_MS);
-  }, [flushCanvasPatch]);
+  }, []);
+
+  const scheduleFlushRef = useRef(scheduleFlush);
+  useEffect(() => {
+    scheduleFlushRef.current = scheduleFlush;
+  }, [scheduleFlush]);
 
   const enqueueCanvasPatchEntry = useCallback(
     (entry: CanvasPatchEntry) => {
@@ -101,17 +114,17 @@ export const useCanvasPatch = (lobbyCode: string) => {
         return;
       }
 
-      queueRef.current = [...queueRef.current, entry];
+      queueRef.current.push(entry);
       setPending(queueRef.current.length);
 
       if (queueRef.current.length >= PATCH_BATCH_SIZE) {
-        void flushCanvasPatch();
+        void flushCanvasPatchRef.current();
         return;
       }
 
-      scheduleFlush();
+      scheduleFlushRef.current();
     },
-    [lobbyCode, flushCanvasPatch, scheduleFlush],
+    [lobbyCode],
   );
 
   useEffect(() => {
@@ -133,13 +146,9 @@ export const useCanvasPatch = (lobbyCode: string) => {
       const payload = JSON.stringify({ entries: entriesToSend });
       const blob = new Blob([payload], { type: "application/json" });
 
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(url, blob);
-        queueRef.current = [];
-        setPending(0);
-      } else {
-        void flushCanvasPatch();
-      }
+      navigator.sendBeacon(url, blob);
+      queueRef.current = [];
+      setPending(0);
     };
 
     window.addEventListener("beforeunload", handlePageUnload);
@@ -147,7 +156,7 @@ export const useCanvasPatch = (lobbyCode: string) => {
     return () => {
       window.removeEventListener("beforeunload", handlePageUnload);
     };
-  }, [flushCanvasPatch, lobbyCode]);
+  }, [lobbyCode]);
 
   useEffect(() => {
     if (!lobbyCode) {
@@ -155,9 +164,9 @@ export const useCanvasPatch = (lobbyCode: string) => {
     }
 
     return () => {
-      void flushCanvasPatch();
+      void flushCanvasPatchRef.current();
     };
-  }, [lobbyCode, flushCanvasPatch]);
+  }, [lobbyCode]);
 
   return {
     pending,
