@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, Loader2 } from "lucide-react";
 import { useCanvas } from "@/contexts/canvas-context";
 import {
   ALLOWED_IMAGE_UPLOAD_MIME_TYPES,
@@ -9,7 +9,7 @@ import {
 import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
 import { toast } from "sonner";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import type { ImageCanvas } from "@/lib/types";
 
 interface ImageUploadButtonProps extends React.ComponentPropsWithoutRef<
@@ -25,10 +25,12 @@ export const ImageUploadButton = React.forwardRef<
 >(({ mapPosition, onImageAdded, onClick, ...props }, ref) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { setImagesOnCanvas } = useCanvas();
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleUploadClick = useCallback(() => {
+    if (isUploading) return;
     fileInputRef.current?.click();
-  }, []);
+  }, [isUploading]);
 
   const handleFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,81 +47,86 @@ export const ImageUploadButton = React.forwardRef<
         return;
       }
 
+      setIsUploading(true);
       const objectUrl = URL.createObjectURL(file);
-      let dimensions: { width: number; height: number };
 
       try {
-        dimensions = await new Promise<{ width: number; height: number }>(
-          (resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-              URL.revokeObjectURL(objectUrl);
-              resolve({ width: img.naturalWidth, height: img.naturalHeight });
-            };
-            img.onerror = () => {
-              URL.revokeObjectURL(objectUrl);
-              reject(new Error("Failed to load image"));
-            };
-            img.src = objectUrl;
-          },
-        );
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Invalid image file");
-        event.target.value = "";
-        return;
-      }
+        let dimensions: { width: number; height: number };
 
-      const { width, height } = dimensions;
-
-      let url: string;
-      try {
-        const formData = new FormData();
-        formData.append("image", file);
-        const response = await fetch("/api/images/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          throw new Error(err?.error ?? "Upload failed");
+        try {
+          dimensions = await new Promise<{ width: number; height: number }>(
+            (resolve, reject) => {
+              const img = new Image();
+              img.onload = () => {
+                URL.revokeObjectURL(objectUrl);
+                resolve({ width: img.naturalWidth, height: img.naturalHeight });
+              };
+              img.onerror = () => {
+                URL.revokeObjectURL(objectUrl);
+                reject(new Error("Failed to load image"));
+              };
+              img.src = objectUrl;
+            },
+          );
+        } catch (err) {
+          toast.error(
+            err instanceof Error ? err.message : "Invalid image file",
+          );
+          return;
         }
 
-        const data = await response.json();
-        url = data.url as string;
-      } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Failed to upload image",
-        );
+        const { width, height } = dimensions;
+
+        let url: string;
+        try {
+          const formData = new FormData();
+          formData.append("image", file);
+          const response = await fetch("/api/images/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err?.error ?? "Upload failed");
+          }
+
+          const data = await response.json();
+          url = data.url as string;
+        } catch (err) {
+          toast.error(
+            err instanceof Error ? err.message : "Failed to upload image",
+          );
+          return;
+        }
+
+        const maxSize = 500;
+        let scaledWidth = width;
+        let scaledHeight = height;
+
+        if (scaledWidth >= scaledHeight && scaledWidth > maxSize) {
+          scaledHeight = (scaledHeight * maxSize) / scaledWidth;
+          scaledWidth = maxSize;
+        } else if (scaledHeight > scaledWidth && scaledHeight > maxSize) {
+          scaledWidth = (scaledWidth * maxSize) / scaledHeight;
+          scaledHeight = maxSize;
+        }
+
+        const newImage: ImageCanvas = {
+          id: getNextId("image"),
+          src: url,
+          x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+          y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
+          width: scaledWidth,
+          height: scaledHeight,
+        };
+
+        setImagesOnCanvas((prev) => [...prev, newImage]);
+        onImageAdded?.(newImage);
+      } finally {
+        setIsUploading(false);
         event.target.value = "";
-        return;
       }
-
-      const maxSize = 500;
-      let scaledWidth = width;
-      let scaledHeight = height;
-
-      if (scaledWidth >= scaledHeight && scaledWidth > maxSize) {
-        scaledHeight = (scaledHeight * maxSize) / scaledWidth;
-        scaledWidth = maxSize;
-      } else if (scaledHeight > scaledWidth && scaledHeight > maxSize) {
-        scaledWidth = (scaledWidth * maxSize) / scaledHeight;
-        scaledHeight = maxSize;
-      }
-
-      const newImage: ImageCanvas = {
-        id: getNextId("image"),
-        src: url,
-        x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-        y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-        width: scaledWidth,
-        height: scaledHeight,
-      };
-
-      setImagesOnCanvas((prev) => [...prev, newImage]);
-      onImageAdded?.(newImage);
-
-      event.target.value = "";
     },
     [mapPosition, onImageAdded, setImagesOnCanvas],
   );
@@ -137,6 +144,7 @@ export const ImageUploadButton = React.forwardRef<
   return (
     <>
       <input
+        data-testid="image-upload-input"
         ref={fileInputRef}
         type="file"
         accept={IMAGE_UPLOAD_ACCEPT_ATTR}
@@ -148,9 +156,14 @@ export const ImageUploadButton = React.forwardRef<
         variant="ghost"
         size="lg"
         onClick={handleClick}
+        disabled={isUploading || props.disabled}
         {...props}
       >
-        <ImageIcon />
+        {isUploading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <ImageIcon />
+        )}
       </Button>
     </>
   );
