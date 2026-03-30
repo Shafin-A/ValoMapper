@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -56,9 +57,14 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	for rows.Next() {
 		var agent CanvasAgent
 		var phaseIndex int
-		if err := rows.Scan(&agent.ID, &agent.AgentName, &agent.Role, &agent.IsAlly, &agent.X, &agent.Y, &phaseIndex); err != nil {
+		var agentName sql.NullString
+		if err := rows.Scan(&agent.ID, &agentName, &agent.Role, &agent.IsAlly, &agent.X, &agent.Y, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
+		}
+		agent.AgentName = ""
+		if agentName.Valid {
+			agent.AgentName = agentName.String
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AgentsOnCanvas = append(phases[phaseIndex].AgentsOnCanvas, agent)
@@ -83,10 +89,15 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	for rows.Next() {
 		var ability CanvasAbility
 		var phaseIndex int
-		if err := rows.Scan(&ability.ID, &ability.AgentName, &ability.Action, &ability.X, &ability.Y,
+		var abilityName sql.NullString
+		if err := rows.Scan(&ability.ID, &abilityName, &ability.Action, &ability.X, &ability.Y,
 			&ability.CurrentPath, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &ability.ShowOuterCircle, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
+		}
+		ability.AgentName = ""
+		if abilityName.Valid {
+			ability.AgentName = abilityName.String
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AbilitiesOnCanvas = append(phases[phaseIndex].AbilitiesOnCanvas, ability)
@@ -197,9 +208,14 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	for rows.Next() {
 		var icon CanvasToolIcon
 		var phaseIndex int
-		if err := rows.Scan(&icon.ID, &icon.Name, &icon.X, &icon.Y, &icon.Width, &icon.Height, &phaseIndex); err != nil {
+		var iconName sql.NullString
+		if err := rows.Scan(&icon.ID, &iconName, &icon.X, &icon.Y, &icon.Width, &icon.Height, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
+		}
+		icon.Name = ""
+		if iconName.Valid {
+			icon.Name = iconName.String
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].ToolIconsOnCanvas = append(phases[phaseIndex].ToolIconsOnCanvas, icon)
@@ -817,11 +833,11 @@ func applyToolIconPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_tool_icons (id, lobby_code, phase_index, x, y, width, height)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO canvas_tool_icons (id, lobby_code, phase_index, name, x, y, width, height)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
-		SET x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.X, p.Y, p.Width, p.Height)
+		SET name = EXCLUDED.name, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Name, p.X, p.Y, p.Width, p.Height)
 	return err
 }
 
