@@ -123,6 +123,33 @@ export const useCanvasPatch = (lobbyCode: string) => {
   }, []);
 
   useEffect(() => {
+    const handlePageUnload = () => {
+      if (!lobbyCode || queueRef.current.length === 0) {
+        return;
+      }
+
+      const entriesToSend = [...queueRef.current];
+      const url = `/api/lobbies/${lobbyCode}/canvas-patches`;
+      const payload = JSON.stringify({ entries: entriesToSend });
+      const blob = new Blob([payload], { type: "application/json" });
+
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(url, blob);
+        queueRef.current = [];
+        setPending(0);
+      } else {
+        void flushCanvasPatch();
+      }
+    };
+
+    window.addEventListener("beforeunload", handlePageUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handlePageUnload);
+    };
+  }, [flushCanvasPatch, lobbyCode]);
+
+  useEffect(() => {
     if (!lobbyCode) {
       return;
     }
