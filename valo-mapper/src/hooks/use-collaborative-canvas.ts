@@ -2,7 +2,7 @@ import { useWebSocket } from "@/contexts/websocket-context";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCanvasPatch } from "@/hooks/canvas/use-canvas-patch";
 import { useParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import {
   AgentCanvas,
   AbilityCanvas,
@@ -16,6 +16,7 @@ import {
   IconSettings,
 } from "@/lib/types";
 import { debounce } from "@/lib/utils";
+import { MAX_DRAWLINE_POINTS } from "@/lib/consts/misc/consts";
 
 export const useCollaborativeCanvas = () => {
   const params = useParams();
@@ -33,6 +34,8 @@ export const useCollaborativeCanvas = () => {
     updateAgentsSettings,
     updateAbilitiesSettings,
   } = useCanvas();
+
+  const drawLineChunks = useRef<Record<string, string[]>>({});
 
   const {
     status,
@@ -195,19 +198,54 @@ export const useCollaborativeCanvas = () => {
     ],
   );
 
+  const splitDrawLineIntoChunks = (line: DrawLine): DrawLine[] => {
+    if (line.points.length <= MAX_DRAWLINE_POINTS) {
+      return [line];
+    }
+
+    const chunks: DrawLine[] = [];
+    const totalChunks = Math.ceil(line.points.length / MAX_DRAWLINE_POINTS);
+
+    for (let i = 0; i < totalChunks; i += 1) {
+      const start = i * MAX_DRAWLINE_POINTS;
+      const end = Math.min(start + MAX_DRAWLINE_POINTS, line.points.length);
+      const segmentPoints = [...line.points.slice(start, end)];
+
+      if (i > 0) {
+        segmentPoints.unshift(line.points[start - 1]);
+      }
+
+      chunks.push({
+        ...line,
+        id: `${line.id}-chunk-${i}`,
+        points: segmentPoints,
+        parentId: line.id,
+        chunkIndex: i,
+        totalChunks,
+      });
+    }
+
+    return chunks;
+  };
+
   const notifyLineDrawn = useCallback(
     (line: DrawLine) => {
-      enqueueCanvasPatchEntry({
-        entity: "drawline",
-        action: "add",
-        phaseIndex: currentPhaseIndex,
-        id: line.id,
-        payload: line,
-      });
+      const chunks = splitDrawLineIntoChunks(line);
+      drawLineChunks.current[line.id] = chunks.map((chunk) => chunk.id);
 
-      if (isConnected) {
-        broadcastLineDrawn(line, currentPhaseIndex);
-      }
+      chunks.forEach((chunk) => {
+        enqueueCanvasPatchEntry({
+          entity: "drawline",
+          action: "add",
+          phaseIndex: currentPhaseIndex,
+          id: chunk.id,
+          payload: chunk,
+        });
+
+        if (isConnected) {
+          broadcastLineDrawn(chunk, currentPhaseIndex);
+        }
+      });
     },
     [
       isConnected,
@@ -219,16 +257,24 @@ export const useCollaborativeCanvas = () => {
 
   const notifyLineRemoved = useCallback(
     (id: string) => {
-      enqueueCanvasPatchEntry({
-        entity: "drawline",
-        action: "remove",
-        phaseIndex: currentPhaseIndex,
-        id,
+      const unchunkedId = id.match(/^(.+)-chunk-\d+$/)?.[1] ?? id;
+      const chunks = drawLineChunks.current[unchunkedId] ?? [];
+      const idsToRemove = new Set<string>([unchunkedId, ...chunks]);
+
+      idsToRemove.forEach((removeId) => {
+        enqueueCanvasPatchEntry({
+          entity: "drawline",
+          action: "remove",
+          phaseIndex: currentPhaseIndex,
+          id: removeId,
+        });
+
+        if (isConnected) {
+          broadcastLineRemoved(removeId, currentPhaseIndex);
+        }
       });
 
-      if (isConnected) {
-        broadcastLineRemoved(id, currentPhaseIndex);
-      }
+      delete drawLineChunks.current[unchunkedId];
     },
     [
       isConnected,

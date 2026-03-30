@@ -114,4 +114,35 @@ func TestApplyCanvasPatch(t *testing.T) {
 		assert.Equal(t, 200.0, phases[0].ImagesOnCanvas[0].X)
 		assert.Equal(t, 220.0, phases[0].ImagesOnCanvas[0].Y)
 	})
+
+	t.Run("removes drawline chunks by parent id", func(t *testing.T) {
+		payload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{
+			{Entity: "drawline", Action: "add", PhaseIndex: 0, ID: "line1-chunk-0", Payload: map[string]any{"id": "line1-chunk-0", "tool": "pencil", "points": []map[string]any{{"x": 10, "y": 10}}, "color": "#000", "size": 2, "isDashed": false, "isArrowHead": false}},
+			{Entity: "drawline", Action: "add", PhaseIndex: 0, ID: "line1-chunk-1", Payload: map[string]any{"id": "line1-chunk-1", "tool": "pencil", "points": []map[string]any{{"x": 20, "y": 20}}, "color": "#000", "size": 2, "isDashed": false, "isArrowHead": false}},
+		}}
+		body, err := json.Marshal(payload)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(body)))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		ApplyCanvasPatch(w, req)
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		removalPayload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{Entity: "drawline", Action: "remove", PhaseIndex: 0, ID: "line1"}}}
+		removalBody, err := json.Marshal(removalPayload)
+		require.NoError(t, err)
+
+		removalReq := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(removalBody)))
+		removalReq.Header.Set("Content-Type", "application/json")
+		removalW := httptest.NewRecorder()
+
+		ApplyCanvasPatch(removalW, removalReq)
+		assert.Equal(t, http.StatusOK, removalW.Code)
+
+		phases, err := models.GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		assert.Empty(t, phases[0].DrawLines)
+	})
 }

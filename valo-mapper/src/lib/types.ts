@@ -288,6 +288,9 @@ export type DrawLine = {
   size: number;
   isDashed: boolean;
   isArrowHead: boolean;
+  parentId?: string;
+  chunkIndex?: number;
+  totalChunks?: number;
 };
 
 export type ConnectingLine = {

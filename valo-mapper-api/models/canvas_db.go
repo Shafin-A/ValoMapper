@@ -631,7 +631,7 @@ func applyDrawLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 		if entry.ID == "" {
 			return fmt.Errorf("missing id for draw line remove")
 		}
-		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_draw_lines WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
+		_, err := tx.Exec(context.Background(), `DELETE FROM canvas_draw_lines WHERE (id = $1 OR id LIKE $1 || '-chunk-%') AND lobby_code = $2 AND phase_index = $3`, entry.ID, lobbyCode, entry.PhaseIndex)
 		return err
 	}
 

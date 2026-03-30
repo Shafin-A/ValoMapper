@@ -14,6 +14,8 @@ export const CONTEXT_MENU_DUPLICATE_OFFSET = 20;
 export const FREE_STRATEGY_LIMIT = 3;
 export const STRATEGY_CLEANUP_GRACE_PERIOD_DAYS = 14;
 
+export const MAX_DRAWLINE_POINTS = 1500;
+
 export const ALLOWED_IMAGE_UPLOAD_MIME_TYPES = [
   "image/jpeg",
   "image/png",
