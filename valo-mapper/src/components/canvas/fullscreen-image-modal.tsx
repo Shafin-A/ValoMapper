@@ -22,7 +22,7 @@ export const FullscreenImageModal = ({
         onEscapeKeyDown={onClose}
       >
         {imageSrc && (
-          <div className="relative">
+          <div className="relative inline-block">
             <Image
               src={imageSrc}
               alt="Fullscreen view"
@@ -34,7 +34,7 @@ export const FullscreenImageModal = ({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 rounded-full z-10"
+              className="absolute -top-2 -right-2 text-white bg-black/50 hover:bg-black/70 rounded-full z-10"
               onClick={onClose}
               aria-label="Close fullscreen"
             >
