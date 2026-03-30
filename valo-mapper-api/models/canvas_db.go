@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
+	"path"
+	"regexp"
 	"strings"
 	"valo-mapper-api/db"
 
@@ -13,6 +16,93 @@ import (
 )
 
 const phaseCount = 10
+
+var allowedImageExtensions = map[string]struct{}{
+	".jpg":  {},
+	".jpeg": {},
+	".png":  {},
+	".gif":  {},
+	".webp": {},
+}
+
+var youtubeIDRegex = regexp.MustCompile(`(?i)^.*(?:youtu\.be/|v/|u/\w/|embed/|watch\?v=|&v=)([^#&?]*).*$`)
+
+func hasBlockedProtocol(raw string) bool {
+	trimmed := strings.TrimSpace(strings.ToLower(raw))
+	return strings.HasPrefix(trimmed, "javascript:") || strings.HasPrefix(trimmed, "data:") || strings.HasPrefix(trimmed, "vbscript:") || strings.HasPrefix(trimmed, "file:")
+}
+
+func isAllowedYoutubeLink(raw string) bool {
+	link := strings.TrimSpace(raw)
+	if link == "" {
+		return true
+	}
+
+	if hasBlockedProtocol(link) {
+		return false
+	}
+
+	match := youtubeIDRegex.FindStringSubmatch(link)
+	return len(match) >= 2 && len(match[1]) == 11
+}
+
+func isAllowedImageSource(raw string) bool {
+	ref := strings.TrimSpace(raw)
+	if ref == "" {
+		return false
+	}
+
+	if hasBlockedProtocol(ref) {
+		return false
+	}
+
+	if strings.HasPrefix(ref, "images/") {
+		return true
+	}
+
+	if strings.HasPrefix(ref, "/api/images/object") {
+		u, err := url.Parse(ref)
+		if err != nil {
+			return false
+		}
+		if key := strings.TrimSpace(u.Query().Get("key")); key != "" {
+			return true
+		}
+		return false
+	}
+
+	parsed, err := url.Parse(ref)
+	if err != nil {
+		return false
+	}
+
+	if parsed.Scheme == "" {
+		ext := strings.ToLower(path.Ext(parsed.Path))
+		_, ok := allowedImageExtensions[ext]
+		return ok
+	}
+
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return false
+	}
+	if parsed.Host == "" {
+		return false
+	}
+
+	ext := strings.ToLower(path.Ext(parsed.Path))
+	if ext != "" {
+		_, ok := allowedImageExtensions[ext]
+		if ok {
+			return true
+		}
+	}
+
+	if strings.Contains(strings.ToLower(parsed.Path), "/images/") {
+		return true
+	}
+
+	return false
+}
 
 func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	conn, err := db.GetDB()
@@ -352,6 +442,9 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Images
 		for _, i := range phase.ImagesOnCanvas {
+			if i.Src != "" && !isAllowedImageSource(i.Src) {
+				return fmt.Errorf("invalid image source in canvas state: %s", i.Src)
+			}
 			imageRows = append(imageRows, []any{
 				i.ID, lobbyCode, i.Src, i.X, i.Y, i.Width, i.Height, phaseIndex,
 			})
@@ -366,6 +459,16 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Connecting Lines
 		for _, cl := range phase.ConnectingLines {
+			for _, img := range cl.UploadedImages {
+				if img != "" && !isAllowedImageSource(img) {
+					return fmt.Errorf("invalid uploaded image source in connecting line canvas state: %s", img)
+				}
+			}
+
+			if cl.YoutubeLink != "" && !isAllowedYoutubeLink(cl.YoutubeLink) {
+				return fmt.Errorf("invalid youtube link in connecting line canvas state: %s", cl.YoutubeLink)
+			}
+
 			connectingLineRows = append(connectingLineRows, []any{
 				cl.ID, lobbyCode, cl.FromID, cl.ToID, cl.StrokeColor, cl.StrokeWidth,
 				cl.UploadedImages, cl.YoutubeLink, cl.Notes, phaseIndex,
@@ -711,6 +814,16 @@ func applyConnectingLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntr
 		return fmt.Errorf("missing id for connecting line upsert")
 	}
 
+	for _, img := range p.UploadedImages {
+		if img != "" && !isAllowedImageSource(img) {
+			return fmt.Errorf("invalid uploaded image source in connecting line: %s", img)
+		}
+	}
+
+	if p.YoutubeLink != "" && !isAllowedYoutubeLink(p.YoutubeLink) {
+		return fmt.Errorf("invalid youtube link in connecting line: %s", p.YoutubeLink)
+	}
+
 	_, err := tx.Exec(context.Background(), `
 		INSERT INTO canvas_connecting_lines (id, lobby_code, phase_index, from_id, to_id, stroke_color, stroke_width, uploaded_images, youtube_link, notes)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -794,6 +907,10 @@ func applyImagePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 		if existingSrc != "" {
 			p.Src = existingSrc
 		}
+	}
+
+	if p.Src != "" && !isAllowedImageSource(p.Src) {
+		return fmt.Errorf("invalid image source: %s", p.Src)
 	}
 
 	_, err := tx.Exec(context.Background(), `

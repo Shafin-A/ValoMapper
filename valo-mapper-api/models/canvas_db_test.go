@@ -250,6 +250,20 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Equal(t, "a1", phases[0].AgentsOnCanvas[0].ID)
 	})
 
+	t.Run("rejects invalid image source in SaveCanvasState", func(t *testing.T) {
+		lobby, _ := createCanvasTestLobby(t, pool)
+		canvasState := FullCanvasState{
+			Phases: make([]PhaseState, 10),
+		}
+		canvasState.Phases[0] = PhaseState{
+			ImagesOnCanvas: []CanvasImage{{ID: "img1", Src: "javascript:alert(1)", X: 0, Y: 0, Width: 10, Height: 10}},
+		}
+
+		err := SaveCanvasState(lobby.Code, canvasState)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid image source")
+	})
+
 	t.Run("updates existing canvas state", func(t *testing.T) {
 		lobby, _ := createCanvasTestLobby(t, pool)
 
@@ -630,6 +644,36 @@ func TestApplyCanvasPatch(t *testing.T) {
 		phases, err = GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
 		assert.Empty(t, phases[0].AgentsOnCanvas)
+	})
+
+	t.Run("rejects invalid image source in image patch", func(t *testing.T) {
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{{
+			Entity: "image", Action: "upsert", PhaseIndex: 0, ID: "img1", Payload: map[string]any{"id": "img1", "src": "javascript:alert(1)", "x": 0, "y": 0, "width": 10, "height": 10},
+		}}}
+
+		err := ApplyCanvasPatch(lobby.Code, patch)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid image source")
+	})
+
+	t.Run("rejects invalid uploaded image source in connecting line patch", func(t *testing.T) {
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{{
+			Entity: "connectingline", Action: "upsert", PhaseIndex: 0, ID: "cl1", Payload: map[string]any{"id": "cl1", "fromId": "a", "toId": "b", "strokeColor": "#FFFFFF", "strokeWidth": 1, "uploadedImages": []string{"data:image/png;base64,abcd"}},
+		}}}
+
+		err := ApplyCanvasPatch(lobby.Code, patch)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid uploaded image source")
+	})
+
+	t.Run("rejects invalid youtube link in connecting line patch", func(t *testing.T) {
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{{
+			Entity: "connectingline", Action: "upsert", PhaseIndex: 0, ID: "cl2", Payload: map[string]any{"id": "cl2", "fromId": "a", "toId": "b", "strokeColor": "#FFFFFF", "strokeWidth": 1, "youtubeLink": "javascript:alert(1)"},
+		}}}
+
+		err := ApplyCanvasPatch(lobby.Code, patch)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid youtube link")
 	})
 
 	t.Run("updates lobby map/side/phase via patch", func(t *testing.T) {
