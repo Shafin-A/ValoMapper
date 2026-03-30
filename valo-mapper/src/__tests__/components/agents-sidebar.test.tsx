@@ -226,7 +226,7 @@ describe("AgentAbilities", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: /swap to m-pulse concuss/i }),
+      screen.getByRole("button", { name: /swap to m-pulse heal/i }),
     ).toBeInTheDocument();
   });
 
@@ -256,14 +256,14 @@ describe("AgentAbilities", () => {
       />,
     );
 
-    // default shows M-Pulse Heal
+    // default shows M-Pulse Concuss
     expect(
-      screen.getByRole("img", { name: "M-Pulse Heal" }),
+      screen.getByRole("img", { name: "M-Pulse Concuss" }),
     ).toBeInTheDocument();
 
     // press swap
     await user.click(
-      screen.getByRole("button", { name: /swap to m-pulse concuss/i }),
+      screen.getByRole("button", { name: /swap to m-pulse heal/i }),
     );
 
     // re-render with updated resolve
@@ -276,19 +276,19 @@ describe("AgentAbilities", () => {
       />,
     );
 
-    // now shows M-Pulse Concuss
+    // now shows M-Pulse Heal
     expect(
-      screen.getByRole("img", { name: "M-Pulse Concuss" }),
+      screen.getByRole("img", { name: "M-Pulse Heal" }),
     ).toBeInTheDocument();
 
-    // clicking places M-Pulse Concuss
-    await user.click(screen.getByRole("img", { name: "M-Pulse Concuss" }));
+    // clicking places M-Pulse Heal
+    await user.click(screen.getByRole("img", { name: "M-Pulse Heal" }));
 
     expect(onAbilitySwap).toHaveBeenCalledWith(
       expect.objectContaining({ id: "mpulse" }),
     );
     expect(mockOnAbilityClick).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "M-Pulse Concuss", action: "miks_stun" }),
+      expect.objectContaining({ name: "M-Pulse Heal", action: "miks_heal" }),
     );
   });
 });

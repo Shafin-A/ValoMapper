@@ -379,15 +379,15 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
   Miks: [
     {
       id: "mpulse",
-      src: "/agents/miks/mpulse_heal.png",
-      name: "M-Pulse Heal",
-      action: "miks_heal",
+      src: "/agents/miks/mpulse_concuss.png",
+      name: "M-Pulse Concuss",
+      action: "miks_stun",
       alternates: [
         {
           id: "mpulse_concuss",
-          src: "/agents/miks/mpulse_concuss.png",
-          name: "M-Pulse Concuss",
-          action: "miks_stun",
+          src: "/agents/miks/mpulse_heal.png",
+          name: "M-Pulse Heal",
+          action: "miks_heal",
         },
       ],
     },
