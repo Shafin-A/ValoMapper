@@ -26,7 +26,7 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://valomapper.fly.dev";
 
 export const metadata: Metadata = {
   title: {
-    default: "ValoMapper",
+    default: "ValoMapper | Create strategies and executes for VALORANT",
     template: "%s | ValoMapper",
   },
   description: "Create strategies and executes for VALORANT",
