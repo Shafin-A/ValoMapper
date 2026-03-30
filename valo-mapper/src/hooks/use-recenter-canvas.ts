@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import { VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts/misc/consts";
 import { MapStageHandle } from "@/components/canvas";
 
 export const useRecenterCanvas = (
@@ -13,15 +12,19 @@ export const useRecenterCanvas = (
     if (!stage) return;
 
     const container = stage.container();
-    const containerWidth = container.offsetWidth;
-    const containerHeight = container.offsetHeight;
+    const host = container.parentElement as HTMLElement | null;
+    const containerWidth = host?.offsetWidth ?? container.offsetWidth;
+    const containerHeight = host?.offsetHeight ?? container.offsetHeight;
 
-    const scaleX = containerWidth / VIRTUAL_WIDTH;
-    const scaleY = containerHeight / VIRTUAL_HEIGHT;
+    const stageWidth = stage.width();
+    const stageHeight = stage.height();
+
+    const scaleX = containerWidth / stageWidth;
+    const scaleY = containerHeight / stageHeight;
     const baseScale = Math.min(scaleX, scaleY);
 
-    const scaledWidth = VIRTUAL_WIDTH * baseScale;
-    const scaledHeight = VIRTUAL_HEIGHT * baseScale;
+    const scaledWidth = stageWidth * baseScale;
+    const scaledHeight = stageHeight * baseScale;
 
     const x = (containerWidth - scaledWidth) / 2;
     const y = (containerHeight - scaledHeight) / 2;

@@ -115,11 +115,12 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       if (!stage) return;
 
       const container = stage.container();
-      const containerWidth = container.offsetWidth;
-      const containerHeight = container.offsetHeight;
+      const host = container.parentElement as HTMLElement | null;
+      const containerWidth = host?.offsetWidth ?? container.offsetWidth;
+      const containerHeight = host?.offsetHeight ?? container.offsetHeight;
 
-      const scaledWidth = width;
-      const scaledHeight = height;
+      const scaledWidth = stage.width() * stage.scaleX();
+      const scaledHeight = stage.height() * stage.scaleY();
 
       const x = (containerWidth - scaledWidth) / 2;
       const y = (containerHeight - scaledHeight) / 2;
@@ -128,7 +129,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       stage.batchDraw();
 
       handleDragMove();
-    }, [width, height, handleDragMove]);
+    }, [width, height, scale, handleDragMove]);
 
     useEffect(() => {
       handleDragMove();
@@ -183,7 +184,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
         data-tour="map-canvas"
       >
         <Stage
-          width={width / scale}
+          width={width}
           height={height}
           scaleX={scale}
           scaleY={scale}

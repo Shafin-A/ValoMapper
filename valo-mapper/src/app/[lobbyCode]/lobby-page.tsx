@@ -312,8 +312,8 @@ const LobbyEditPage = () => {
           ) : (
             <MapStage
               ref={stageRef}
-              width={VIRTUAL_WIDTH * stageScale}
-              height={VIRTUAL_HEIGHT * stageScale}
+              width={VIRTUAL_WIDTH}
+              height={VIRTUAL_HEIGHT}
               scale={stageScale}
               mapPosition={mapPosition}
             />
