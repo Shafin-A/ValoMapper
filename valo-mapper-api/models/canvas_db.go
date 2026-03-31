@@ -10,12 +10,16 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"time"
 	"valo-mapper-api/db"
 
 	"github.com/jackc/pgx/v5"
 )
 
-const phaseCount = 10
+const (
+	phaseCount         = 10
+	dbOperationTimeout = 10 * time.Second
+)
 
 var allowedImageExtensions = map[string]struct{}{
 	".jpg":  {},
@@ -42,8 +46,17 @@ func isAllowedYoutubeLink(raw string) bool {
 		return false
 	}
 
-	match := youtubeIDRegex.FindStringSubmatch(link)
-	return len(match) >= 2 && len(match[1]) == 11
+	parsed, err := url.Parse(link)
+	if err != nil {
+		return false
+	}
+
+	host := strings.ToLower(parsed.Host)
+	if host == "youtube.com" || host == "www.youtube.com" || host == "m.youtube.com" || host == "youtu.be" {
+		return true
+	}
+
+	return false
 }
 
 func isAllowedImageSource(raw string) bool {
@@ -123,7 +136,8 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), dbOperationTimeout)
+	defer cancel()
 
 	// Use a repeatable-read transaction so all queries see a consistent snapshot,
 	// even if a concurrent SaveCanvasState commits between our queries.
@@ -351,13 +365,42 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	return phases, nil
 }
 
+func validateCanvasState(state FullCanvasState) error {
+	for _, phase := range state.Phases {
+		for _, i := range phase.ImagesOnCanvas {
+			if i.Src != "" && !isAllowedImageSource(i.Src) {
+				return fmt.Errorf("invalid image source in canvas state: %s", i.Src)
+			}
+		}
+
+		for _, cl := range phase.ConnectingLines {
+			for _, img := range cl.UploadedImages {
+				if img != "" && !isAllowedImageSource(img) {
+					return fmt.Errorf("invalid uploaded image source in connecting line canvas state: %s", img)
+				}
+			}
+
+			if cl.YoutubeLink != "" && !isAllowedYoutubeLink(cl.YoutubeLink) {
+				return fmt.Errorf("invalid youtube link in connecting line canvas state: %s", cl.YoutubeLink)
+			}
+		}
+	}
+	return nil
+}
+
 func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
+	if err := validateCanvasState(state); err != nil {
+		return err
+	}
+
 	conn, err := db.GetDB()
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), dbOperationTimeout)
+	defer cancel()
+
 	tx, err := conn.Begin(ctx)
 	if err != nil {
 		return err
@@ -369,7 +412,8 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}()
 
 	// Prevent race conditions from concurrent lobby updates.
-	if _, err = tx.Exec(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE", lobbyCode); err != nil {
+	// Use NOWAIT to fail fast if another writer has the lobby lock.
+	if _, err = tx.Exec(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE NOWAIT", lobbyCode); err != nil {
 		return err
 	}
 
@@ -442,9 +486,6 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Images
 		for _, i := range phase.ImagesOnCanvas {
-			if i.Src != "" && !isAllowedImageSource(i.Src) {
-				return fmt.Errorf("invalid image source in canvas state: %s", i.Src)
-			}
 			imageRows = append(imageRows, []any{
 				i.ID, lobbyCode, i.Src, i.X, i.Y, i.Width, i.Height, phaseIndex,
 			})
@@ -459,16 +500,6 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Connecting Lines
 		for _, cl := range phase.ConnectingLines {
-			for _, img := range cl.UploadedImages {
-				if img != "" && !isAllowedImageSource(img) {
-					return fmt.Errorf("invalid uploaded image source in connecting line canvas state: %s", img)
-				}
-			}
-
-			if cl.YoutubeLink != "" && !isAllowedYoutubeLink(cl.YoutubeLink) {
-				return fmt.Errorf("invalid youtube link in connecting line canvas state: %s", cl.YoutubeLink)
-			}
-
 			connectingLineRows = append(connectingLineRows, []any{
 				cl.ID, lobbyCode, cl.FromID, cl.ToID, cl.StrokeColor, cl.StrokeWidth,
 				cl.UploadedImages, cl.YoutubeLink, cl.Notes, phaseIndex,

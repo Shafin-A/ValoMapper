@@ -613,6 +613,14 @@ func TestSaveCanvasState(t *testing.T) {
 	})
 }
 
+func TestIsAllowedYoutubeLink(t *testing.T) {
+	assert.True(t, isAllowedYoutubeLink("https://youtube.com/watch?v=abc123"))
+	assert.True(t, isAllowedYoutubeLink("https://youtube.com/new"))
+	assert.True(t, isAllowedYoutubeLink("https://www.youtube.com/watch?v=abc123"))
+	assert.False(t, isAllowedYoutubeLink("https://evil.com/watch?v=abc123"))
+	assert.False(t, isAllowedYoutubeLink("javascript:alert(1)"))
+}
+
 func TestApplyCanvasPatch(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test")

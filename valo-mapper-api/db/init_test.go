@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -168,6 +169,27 @@ func TestGetDB(t *testing.T) {
 		DB.Close()
 		DB = nil
 	})
+}
+
+func TestEnsureConnection_WhenUninitialized(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	originalDB := DB
+	DB = nil
+	defer func() { DB = originalDB }()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	err := EnsureConnection(ctx)
+	if err == nil {
+		t.Fatal("expected EnsureConnection to return an error when DB is not initialized")
+	}
+	if !strings.Contains(err.Error(), "database connection not initialized") {
+		t.Fatalf("unexpected error: %v", err)
+	}
 }
 
 func TestClose(t *testing.T) {

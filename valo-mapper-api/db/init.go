@@ -92,9 +92,42 @@ func Close() {
 	}
 }
 
+const (
+	connectionRetryCount          = 3
+	connectionRetryInitialBackoff = 100 * time.Millisecond
+	connectionRetryMaxBackoff     = 1 * time.Second
+)
+
 func EnsureConnection(ctx context.Context) error {
 	if DB == nil {
 		return fmt.Errorf("database connection not initialized")
 	}
-	return DB.Ping(ctx)
+
+	var lastErr error
+	backoff := connectionRetryInitialBackoff
+
+	for attempt := 1; attempt <= connectionRetryCount; attempt++ {
+		lastErr = DB.Ping(ctx)
+		if lastErr == nil {
+			return nil
+		}
+
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+
+		if attempt < connectionRetryCount {
+			select {
+			case <-time.After(backoff):
+				backoff *= 2
+				if backoff > connectionRetryMaxBackoff {
+					backoff = connectionRetryMaxBackoff
+				}
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+	}
+
+	return lastErr
 }

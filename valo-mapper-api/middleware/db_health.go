@@ -21,15 +21,9 @@ func DBHealthMiddleware(next http.Handler) http.Handler {
 		defer cancel()
 
 		if err := db.EnsureConnection(ctx); err != nil {
-			log.Printf("[request=%s] Database connection unhealthy, attempting recovery: %v", GetRequestID(r), err)
-
-			time.Sleep(100 * time.Millisecond)
-
-			if err := db.EnsureConnection(ctx); err != nil {
-				utils.SendJSONError(w, utils.NewInternal("Database temporarily unavailable", err), GetRequestID(r))
-				return
-			}
-			log.Printf("[request=%s] Database connection recovered", GetRequestID(r))
+			log.Printf("[request=%s] Database connection unhealthy: %v", GetRequestID(r), err)
+			utils.SendJSONError(w, utils.NewInternal("Database temporarily unavailable", err), GetRequestID(r))
+			return
 		}
 
 		next.ServeHTTP(w, r)
