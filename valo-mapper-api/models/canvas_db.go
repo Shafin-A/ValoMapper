@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/url"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 	"valo-mapper-api/db"
@@ -28,8 +27,6 @@ var allowedImageExtensions = map[string]struct{}{
 	".gif":  {},
 	".webp": {},
 }
-
-var youtubeIDRegex = regexp.MustCompile(`(?i)^.*(?:youtu\.be/|v/|u/\w/|embed/|watch\?v=|&v=)([^#&?]*).*$`)
 
 func hasBlockedProtocol(raw string) bool {
 	trimmed := strings.TrimSpace(strings.ToLower(raw))
