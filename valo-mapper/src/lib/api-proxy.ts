@@ -11,7 +11,6 @@ interface ProxyOptions {
 const FORWARDED_HEADER_NAMES = [
   "x-forwarded-for",
   "x-real-ip",
-  "cf-connecting-ip",
   "fly-client-ip",
 ];
 
