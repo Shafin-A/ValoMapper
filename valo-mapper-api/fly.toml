@@ -33,4 +33,4 @@ primary_region = 'yyz'
 
 [env]
   # CORS configuration
-  ALLOWED_ORIGINS = "https://valomapper.com"
+  ALLOWED_ORIGINS = "https://valomapper.com,https://www.valomapper.com"
