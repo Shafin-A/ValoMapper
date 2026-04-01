@@ -601,6 +601,33 @@ func (u *User) ReleasePremiumTrialClaim() error {
 	return nil
 }
 
+func (u *User) ClearPremiumTrialClaim() error {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	var updatedAt time.Time
+	err = conn.QueryRow(context.Background(), `
+		UPDATE users
+		SET premium_trial_claimed_at = NULL,
+		    updated_at = NOW()
+		WHERE id = $1
+		  AND premium_trial_claimed_at IS NOT NULL
+		RETURNING updated_at
+	`, u.ID).Scan(&updatedAt)
+	if err == pgx.ErrNoRows {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	u.UpdatedAt = updatedAt
+	u.PremiumTrialClaimedAt = nil
+	return nil
+}
+
 func (u *User) UpdateStripeCustomerID(stripeCustomerID string) error {
 	conn, err := db.GetDB()
 	if err != nil {

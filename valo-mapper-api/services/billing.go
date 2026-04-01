@@ -398,8 +398,15 @@ func (bs *BillingService) ProcessStripeSubscriptionEvent(event stripe.Event) (bo
 		return false, "", err
 	}
 
-	if isSubscribed && strings.EqualFold(strings.TrimSpace(stripeSubscription.Metadata["trialApplied"]), "true") {
+	trialApplied := strings.EqualFold(strings.TrimSpace(stripeSubscription.Metadata["trialApplied"]), "true")
+	if isSubscribed && trialApplied {
 		if _, err := user.ClaimPremiumTrial(); err != nil {
+			return false, "", err
+		}
+	}
+
+	if isSubscribed && !trialApplied && user.PremiumTrialClaimedAt != nil {
+		if err := user.ClearPremiumTrialClaim(); err != nil {
 			return false, "", err
 		}
 	}

@@ -1197,6 +1197,43 @@ func TestHandleStripeWebhook(t *testing.T) {
 		}
 	})
 
+	t.Run("clears stale premium trial marker for active non-trial subscription", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-clear-stale-trial")
+		_, err := pool.Exec(context.Background(), `
+			UPDATE users
+			SET is_subscribed = FALSE,
+			    premium_trial_claimed_at = NOW()
+			WHERE id = $1
+		`, testUser.ID)
+		assert.NoError(t, err)
+
+		payload := buildStripeEventPayload(t, "", "customer.subscription.updated", map[string]any{
+			"id":                   "sub_active_non_trial",
+			"object":               "subscription",
+			"status":               "active",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"metadata": map[string]string{
+				"firebaseUid": *testUser.FirebaseUID,
+				"plan":        "monthly",
+			},
+		})
+
+		req := newSignedStripeWebhookRequest(payload, webhookSecret)
+		w := httptest.NewRecorder()
+
+		HandleStripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.True(t, updatedUser.IsSubscribed)
+			assert.Nil(t, updatedUser.PremiumTrialClaimedAt)
+		}
+	})
+
 	t.Run("stores stripe customer id from subscription event", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-customer")
 		_, err := pool.Exec(context.Background(), `UPDATE users SET stripe_customer_id = NULL, stripe_subscription_id = NULL WHERE id = $1`, testUser.ID)
