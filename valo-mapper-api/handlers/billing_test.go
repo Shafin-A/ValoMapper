@@ -213,7 +213,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		}
 	})
 
-	t.Run("applies trial only on first checkout for a user", func(t *testing.T) {
+	t.Run("does not consume trial eligibility when creating checkout session", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-first-time-trial-only")
 
 		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
@@ -262,14 +262,14 @@ func TestCreateCheckoutSession(t *testing.T) {
 				assert.Equal(t, int64(14), stripe.Int64Value(capturedParams[0].SubscriptionData.TrialPeriodDays))
 			}
 			if assert.NotNil(t, capturedParams[1].SubscriptionData) {
-				assert.Nil(t, capturedParams[1].SubscriptionData.TrialPeriodDays)
+				assert.Equal(t, int64(14), stripe.Int64Value(capturedParams[1].SubscriptionData.TrialPeriodDays))
 			}
 		}
 
 		updatedUser, err := models.GetUserByID(testUser.ID)
 		assert.NoError(t, err)
 		if assert.NotNil(t, updatedUser) {
-			assert.NotNil(t, updatedUser.PremiumTrialClaimedAt)
+			assert.Nil(t, updatedUser.PremiumTrialClaimedAt)
 		}
 	})
 
@@ -1163,6 +1163,38 @@ func TestHandleStripeWebhook(t *testing.T) {
 		assert.NotNil(t, updatedUser)
 		assert.True(t, updatedUser.IsSubscribed)
 		assert.Nil(t, updatedUser.SubscriptionEndedAt)
+	})
+
+	t.Run("claims premium trial only after webhook confirms trial subscription", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-trial-claim")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = FALSE, premium_trial_claimed_at = NULL WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+
+		payload := buildStripeEventPayload(t, "", "customer.subscription.created", map[string]any{
+			"id":                   "sub_trial_claim",
+			"object":               "subscription",
+			"status":               "trialing",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"metadata": map[string]string{
+				"firebaseUid":  *testUser.FirebaseUID,
+				"trialApplied": "true",
+			},
+		})
+
+		req := newSignedStripeWebhookRequest(payload, webhookSecret)
+		w := httptest.NewRecorder()
+
+		HandleStripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.True(t, updatedUser.IsSubscribed)
+			assert.NotNil(t, updatedUser.PremiumTrialClaimedAt)
+		}
 	})
 
 	t.Run("stores stripe customer id from subscription event", func(t *testing.T) {

@@ -218,18 +218,16 @@ func (bs *BillingService) CreateCheckoutSession(
 		}
 
 		trialDays := bs.checkoutPremiumTrialDays()
-		trialClaimed := false
-		trialEligible := trialDays > 0 && selectedPlan == CheckoutPlanMonthly && !user.IsSubscribed && startWithTrial
+		trialEligible := trialDays > 0 &&
+			selectedPlan == CheckoutPlanMonthly &&
+			!user.IsSubscribed &&
+			user.PremiumTrialClaimedAt == nil &&
+			startWithTrial
+
 		if trialEligible {
-			trialClaimed, err = user.ClaimPremiumTrial()
-			if err != nil {
-				return err
-			}
-			if trialClaimed {
-				params.SubscriptionData.TrialPeriodDays = stripe.Int64(trialDays)
-				metadata["trialApplied"] = "true"
-				metadata["trialDays"] = strconv.FormatInt(trialDays, 10)
-			}
+			params.SubscriptionData.TrialPeriodDays = stripe.Int64(trialDays)
+			metadata["trialApplied"] = "true"
+			metadata["trialDays"] = strconv.FormatInt(trialDays, 10)
 		}
 
 		if user.StripeCustomerID != nil {
@@ -243,9 +241,6 @@ func (bs *BillingService) CreateCheckoutSession(
 		if err != nil && params.Customer != nil {
 			recovered, recoverErr := bs.recoverStaleStripeCustomerIDForCheckout(user, err)
 			if recoverErr != nil {
-				if trialClaimed {
-					_ = user.ReleasePremiumTrialClaim()
-				}
 				return recoverErr
 			}
 
@@ -255,10 +250,6 @@ func (bs *BillingService) CreateCheckoutSession(
 			}
 		}
 		if err != nil {
-			if trialClaimed {
-				_ = user.ReleasePremiumTrialClaim()
-			}
-
 			return err
 		}
 
@@ -405,6 +396,12 @@ func (bs *BillingService) ProcessStripeSubscriptionEvent(event stripe.Event) (bo
 
 	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, subscriptionPlan); err != nil {
 		return false, "", err
+	}
+
+	if isSubscribed && strings.EqualFold(strings.TrimSpace(stripeSubscription.Metadata["trialApplied"]), "true") {
+		if _, err := user.ClaimPremiumTrial(); err != nil {
+			return false, "", err
+		}
 	}
 
 	return true, "", nil
