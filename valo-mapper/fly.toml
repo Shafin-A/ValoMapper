@@ -29,4 +29,4 @@ primary_region = 'yyz'
   NEXT_PUBLIC_WS_URL = "wss://api.valomapper.com"
   NEXT_PUBLIC_RSO_CLIENT_ID = "9e46a29a-4596-4aa4-933a-7acb53a03f1b"
   NEXT_PUBLIC_RSO_REDIRECT_URI = "https://valomapper.com/api/auth/rso/callback"
-  NEXT_PUBLIC_APP_URL=https://valomapper.com
+  NEXT_PUBLIC_APP_URL = "https://valomapper.com"
