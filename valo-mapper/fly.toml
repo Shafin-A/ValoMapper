@@ -5,8 +5,8 @@ primary_region = 'yyz'
 [build]
   dockerfile = "Dockerfile"
   [build.args]
-    API_URL = "https://valomapper-api.fly.dev/api"
-    NEXT_PUBLIC_WS_URL = "wss://valomapper-api.fly.dev"
+    API_URL = "https://api.valomapper.com/api"
+    NEXT_PUBLIC_WS_URL = "wss://api.valomapper.com"
 
 [http_service]
   internal_port = 3000
@@ -25,7 +25,8 @@ primary_region = 'yyz'
 [env]
   NODE_ENV = "production"
   PORT = "3000"
-  API_URL = "https://valomapper-api.fly.dev/api"
-  NEXT_PUBLIC_WS_URL = "wss://valomapper-api.fly.dev"
+  API_URL = "https://api.valomapper.com/api"
+  NEXT_PUBLIC_WS_URL = "wss://api.valomapper.com"
   NEXT_PUBLIC_RSO_CLIENT_ID = "9e46a29a-4596-4aa4-933a-7acb53a03f1b"
-  NEXT_PUBLIC_RSO_REDIRECT_URI = "https://valomapper.fly.dev/api/auth/rso/callback"
+  NEXT_PUBLIC_RSO_REDIRECT_URI = "https://valomapper.com/api/auth/rso/callback"
+  NEXT_PUBLIC_APP_URL=https://valomapper.com

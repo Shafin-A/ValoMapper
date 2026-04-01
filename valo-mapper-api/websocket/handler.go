@@ -15,7 +15,7 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
 		allowedOrigins := []string{
-			"https://valomapper.fly.dev",
+			"https://valomapper.com",
 			"http://localhost:3000",
 			"http://localhost:3001",
 		}

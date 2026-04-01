@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 const robots = (): MetadataRoute.Robots => {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ??
-    "https://valomapper.fly.dev";
+    "https://valomapper.com";
 
   return {
     rules: [

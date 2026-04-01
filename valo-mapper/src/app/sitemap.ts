@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ??
-    "https://valomapper.fly.dev";
+    "https://valomapper.com";
 
   const staticPages = [
     { path: "", lastModified: new Date() },

@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://valomapper.fly.dev";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://valomapper.com";
 
 export const metadata: Metadata = {
   title: {
