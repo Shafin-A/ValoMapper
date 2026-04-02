@@ -3,12 +3,14 @@ import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Group, Rect, Image as KonvaImage } from "react-konva";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DeleteZoneProps {
   deleteGroupRef: React.RefObject<Konva.Group | null>;
 }
 
 export const DeleteZone = ({ deleteGroupRef }: DeleteZoneProps) => {
+  const isMobile = useIsMobile();
   const [iconImg, setIconImg] = useState<HTMLImageElement | null>(null);
 
   useEffect(() => {
@@ -42,8 +44,8 @@ export const DeleteZone = ({ deleteGroupRef }: DeleteZoneProps) => {
     img.src = dataUrl;
   }, []);
 
-  const DELETE_ZONE_SIZE = 100;
-  const ICON_SIZE = 32;
+  const DELETE_ZONE_SIZE = isMobile ? 84 : 100;
+  const ICON_SIZE = isMobile ? 28 : 32;
 
   return (
     <Group

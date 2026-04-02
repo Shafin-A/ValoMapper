@@ -53,9 +53,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
+  setSidebarOpen?: Dispatch<SetStateAction<boolean>>;
 }
 
 type PendingSidebarDrag = {
@@ -66,7 +68,12 @@ type PendingSidebarDrag = {
   kind: "agent" | "ability";
 };
 
-export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
+export const AgentsSidebar = ({
+  sidebarOpen,
+  setSidebarOpen,
+}: AgentsSidebarProps) => {
+  const isMobile = useIsMobile();
+
   const {
     agentsSettings,
     abilitiesSettings,
@@ -126,6 +133,11 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
   const dragPreviewY = dragPreviewPosition
     ? dragPreviewPosition.y / previewScale
     : 0;
+
+  useEffect(() => {
+    if (sidebarOpen) return;
+    setSelectedAgentAbilities(null);
+  }, [sidebarOpen]);
 
   useEffect(() => {
     if (!isSidebarDragActive) {
@@ -305,6 +317,9 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     setEditingTextId(null);
     setSelectedAgentAbilities(null);
     handleIconClick(agent, setAgentsOnCanvas);
+    if (isMobile) {
+      setSidebarOpen?.(false);
+    }
   };
 
   const handleAgentPointerDown = (
@@ -321,6 +336,9 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
     setIsDrawMode(false);
     setEditingTextId(null);
     handleIconClick(ability, setAbilitiesOnCanvas);
+    if (isMobile) {
+      setSidebarOpen?.(false);
+    }
   };
 
   const handleAbilityPointerDown = (
@@ -553,17 +571,32 @@ export const AgentsSidebar = ({ sidebarOpen }: AgentsSidebarProps) => {
               </div>
             </div>
           )}
+
+          {isMobile && (
+            <AgentAbilities
+              agent={selectedAgentAbilities}
+              sidebarOpen={sidebarOpen}
+              renderInDrawer
+              onClose={() => setSelectedAgentAbilities(null)}
+              onAbilityClick={handleAbilityClick}
+              onAbilitySwap={handleAbilitySwap}
+              resolveAbility={resolveAbility}
+              onAbilityPointerDown={handleAbilityPointerDown}
+            />
+          )}
         </SidebarContent>
       </Sidebar>
-      <AgentAbilities
-        agent={selectedAgentAbilities}
-        sidebarOpen={sidebarOpen}
-        onClose={() => setSelectedAgentAbilities(null)}
-        onAbilityClick={handleAbilityClick}
-        onAbilitySwap={handleAbilitySwap}
-        resolveAbility={resolveAbility}
-        onAbilityPointerDown={handleAbilityPointerDown}
-      />
+      {!isMobile && (
+        <AgentAbilities
+          agent={selectedAgentAbilities}
+          sidebarOpen={sidebarOpen}
+          onClose={() => setSelectedAgentAbilities(null)}
+          onAbilityClick={handleAbilityClick}
+          onAbilitySwap={handleAbilitySwap}
+          resolveAbility={resolveAbility}
+          onAbilityPointerDown={handleAbilityPointerDown}
+        />
+      )}
 
       {isSidebarDragActive &&
         selectedCanvasIcon &&

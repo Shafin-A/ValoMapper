@@ -321,7 +321,10 @@ const LobbyEditPage = () => {
         </div>
       </Suspense>
 
-      <AgentsSidebar sidebarOpen={sidebarState.rightSidebarOpen} />
+      <AgentsSidebar
+        sidebarOpen={sidebarState.rightSidebarOpen}
+        setSidebarOpen={sidebarState.setRightSidebarOpen}
+      />
     </div>
   );
 };

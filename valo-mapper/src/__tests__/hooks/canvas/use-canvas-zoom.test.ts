@@ -8,6 +8,11 @@ import type { RefObject } from "react";
 type StageMock = {
   container: () => {
     offsetWidth: number;
+    offsetHeight: number;
+    parentElement: {
+      offsetWidth: number;
+      offsetHeight: number;
+    } | null;
     getBoundingClientRect: () => { left: number; top: number };
   };
   getPointerPosition: jest.Mock<{ x: number; y: number } | null, []>;
@@ -24,12 +29,21 @@ type StageMock = {
 const createStageMock = (
   initialScale = 1,
   initialPos: { x: number; y: number } = { x: 0, y: 0 },
+  containerSize: { width: number; height: number } = {
+    width: 1000,
+    height: 800,
+  },
 ): StageMock => {
   let scale = initialScale;
   let position = { ...initialPos };
 
   const container = {
-    offsetWidth: 1000,
+    offsetWidth: containerSize.width,
+    offsetHeight: containerSize.height,
+    parentElement: {
+      offsetWidth: containerSize.width,
+      offsetHeight: containerSize.height,
+    },
     getBoundingClientRect: () => ({ left: 0, top: 0 }),
   };
 
@@ -73,8 +87,32 @@ describe("useCanvasZoom", () => {
 
     result.current.handleDragMove();
 
-    expect(deleteGroup.position).toHaveBeenCalledWith({ x: 265, y: 0 });
+    expect(deleteGroup.position).toHaveBeenCalledWith({ x: 275, y: 0 });
     expect(deleteGroup.scale).toHaveBeenCalledWith({ x: 0.5, y: 0.5 });
+  });
+
+  it("positions delete zone at top right on small screens", () => {
+    const stage = createStageMock(
+      1,
+      { x: 0, y: 0 },
+      { width: 390, height: 844 },
+    );
+    const stageRef: RefObject<Stage | null> = {
+      current: stage as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasZoom(stageRef, 1, false));
+
+    const deleteGroup = {
+      position: jest.fn(),
+      scale: jest.fn(),
+    } as Partial<Konva.Group>;
+    result.current.deleteGroupRef.current = deleteGroup as Konva.Group;
+
+    result.current.handleDragMove();
+
+    expect(deleteGroup.position).toHaveBeenCalledWith({ x: 282, y: 24 });
+    expect(deleteGroup.scale).toHaveBeenCalledWith({ x: 1, y: 1 });
   });
 
   it("zooms with the wheel, clamps scale, and repositions", () => {

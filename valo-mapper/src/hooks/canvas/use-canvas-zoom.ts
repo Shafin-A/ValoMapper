@@ -8,7 +8,7 @@ import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export const useCanvasZoom = (
   stageRef: React.RefObject<Stage | null>,
@@ -28,14 +28,24 @@ export const useCanvasZoom = (
     if (!stage) return;
 
     const container = stage.container();
-    const containerWidth = container.offsetWidth;
+    const host = container.parentElement as HTMLElement | null;
+    const containerWidth = host?.offsetWidth ?? container.offsetWidth;
 
-    const DELETE_ZONE_WIDTH = 120;
+    const SMALL_SCREEN_BREAKPOINT = 768;
+    const isSmallScreen = containerWidth < SMALL_SCREEN_BREAKPOINT;
+
+    const DELETE_ZONE_WIDTH = isSmallScreen ? 84 : 100;
     const PADDING = 20;
+    const MOBILE_PADDING = 24;
 
-    const screenX =
-      containerWidth - DELETE_ZONE_WIDTH - SIDEBAR_WIDTH - PADDING;
-    const screenY = PADDING;
+    const rightInset = isSmallScreen ? MOBILE_PADDING : SIDEBAR_WIDTH + PADDING;
+    const topInset = isSmallScreen ? MOBILE_PADDING : PADDING;
+
+    const screenX = Math.max(
+      PADDING,
+      containerWidth - DELETE_ZONE_WIDTH - rightInset,
+    );
+    const screenY = topInset;
 
     const totalScale = stage.scaleX();
     const stagePos = stage.position();
@@ -205,6 +215,22 @@ export const useCanvasZoom = (
     },
     [isDrawMode, stageRef],
   );
+
+  useEffect(() => {
+    const updateDeleteZonePosition = () => {
+      handleDragMove();
+    };
+
+    const rafId = window.requestAnimationFrame(updateDeleteZonePosition);
+    window.addEventListener("resize", updateDeleteZonePosition);
+    window.addEventListener("orientationchange", updateDeleteZonePosition);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", updateDeleteZonePosition);
+      window.removeEventListener("orientationchange", updateDeleteZonePosition);
+    };
+  }, [handleDragMove]);
 
   return {
     deleteGroupRef,

@@ -126,6 +126,11 @@ function SidebarProvider({
     [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
   );
 
+  React.useEffect(() => {
+    if (!isMobile) return;
+    setOpenMobile(open);
+  }, [isMobile, open]);
+
   return (
     <SidebarContext.Provider value={contextValue}>
       <TooltipProvider delayDuration={0}>
@@ -163,7 +168,7 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const { isMobile, state, openMobile, setOpenMobile, setOpen } = useSidebar();
 
   if (collapsible === "none") {
     return (
@@ -181,13 +186,19 @@ function Sidebar({
   }
 
   if (isMobile) {
+    const handleMobileOpenChange = (nextOpen: boolean) => {
+      setOpenMobile(nextOpen);
+      setOpen(nextOpen);
+    };
+
     return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+      <Sheet open={openMobile} onOpenChange={handleMobileOpenChange} {...props}>
         <SheetContent
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
           className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          onOpenAutoFocus={(event) => event.preventDefault()}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,

@@ -32,16 +32,12 @@ import { Dispatch, SetStateAction } from "react";
 import { HelpTab } from "@/components/help/help-tab";
 
 interface SiteHeaderProps {
-  leftSidebarOpen: boolean;
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
-  rightSidebarOpen: boolean;
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export const SiteHeader = ({
-  leftSidebarOpen,
   setLeftSidebarOpen,
-  rightSidebarOpen,
   setRightSidebarOpen,
 }: SiteHeaderProps) => {
   const { logout } = useFirebaseAuth();
@@ -63,7 +59,7 @@ export const SiteHeader = ({
             className="h-8 w-8"
             variant="ghost"
             size="icon"
-            onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+            onClick={() => setLeftSidebarOpen((prev) => !prev)}
           >
             <SidebarIcon />
           </Button>
@@ -154,7 +150,7 @@ export const SiteHeader = ({
             className="h-8 w-8"
             variant="ghost"
             size="icon"
-            onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+            onClick={() => setRightSidebarOpen((prev) => !prev)}
           >
             <SidebarIcon className="rotate-180" />
           </Button>

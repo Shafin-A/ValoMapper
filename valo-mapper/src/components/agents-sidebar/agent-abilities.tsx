@@ -17,6 +17,7 @@ import { isAgent } from "@/lib/utils";
 interface AgentAbilitiesProps {
   agent: Agent | null;
   sidebarOpen: boolean;
+  renderInDrawer?: boolean;
   onClose: () => void;
   onAbilityClick: (ability: AbilityIconItem | null) => void;
   onAbilitySwap: (ability: AbilityIconDefinition) => void;
@@ -30,6 +31,7 @@ interface AgentAbilitiesProps {
 const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   agent,
   sidebarOpen,
+  renderInDrawer = false,
   onClose,
   onAbilityClick,
   onAbilitySwap,
@@ -47,8 +49,12 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
 
   if (!agent || !sidebarOpen) return null;
 
+  const containerClassName = renderInDrawer
+    ? "absolute top-1/2 right-3 z-50 w-20 -translate-y-1/2 rounded-lg border bg-popover p-3 shadow-md"
+    : "fixed top-[25%] right-[calc(20rem+1rem)] z-50 w-20 rounded-lg border bg-popover p-3 shadow-md";
+
   return (
-    <div className="fixed top-[25%] right-[calc(20rem+1rem)] z-50 w-20 rounded-lg border bg-popover p-3 shadow-md">
+    <div className={containerClassName}>
       <Button
         variant="default"
         size="icon"
