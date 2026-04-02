@@ -379,9 +379,14 @@ export type User = {
   updatedAt: Date;
   tourCompleted?: boolean;
   isSubscribed?: boolean;
+  personalIsSubscribed?: boolean;
   subscriptionStartedAt?: Date | string | null;
   subscriptionEndedAt?: Date | string | null;
+  subscriptionTrialEndsAt?: Date | string | null;
   subscriptionPlan?: "monthly" | "yearly" | "stack" | null;
+  personalSubscriptionEndedAt?: Date | string | null;
+  personalSubscriptionTrialEndsAt?: Date | string | null;
+  personalSubscriptionPlan?: "monthly" | "yearly" | "stack" | null;
   premiumTrialEligible?: boolean;
   premiumTrialDaysLeft?: number;
 };

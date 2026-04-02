@@ -491,6 +491,14 @@ definitions:
         type: boolean
       name:
         type: string
+      personalIsSubscribed:
+        type: boolean
+      personalSubscriptionEndedAt:
+        type: string
+      personalSubscriptionPlan:
+        type: string
+      personalSubscriptionTrialEndsAt:
+        type: string
       premiumTrialDaysLeft:
         type: integer
       premiumTrialEligible:
@@ -504,6 +512,8 @@ definitions:
       subscriptionPlan:
         type: string
       subscriptionStartedAt:
+        type: string
+      subscriptionTrialEndsAt:
         type: string
       tourCompleted:
         type: boolean

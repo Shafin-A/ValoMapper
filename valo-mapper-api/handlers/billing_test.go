@@ -1163,52 +1163,14 @@ func TestHandleStripeWebhook(t *testing.T) {
 		assert.NotNil(t, updatedUser)
 		assert.True(t, updatedUser.IsSubscribed)
 		assert.Nil(t, updatedUser.SubscriptionEndedAt)
+		assert.Nil(t, updatedUser.SubscriptionTrialEndsAt)
 	})
 
-	t.Run("claims premium trial only after webhook confirms trial subscription", func(t *testing.T) {
-		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-trial-claim")
-		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = FALSE, premium_trial_claimed_at = NULL WHERE id = $1`, testUser.ID)
-		assert.NoError(t, err)
-
-		payload := buildStripeEventPayload(t, "", "customer.subscription.created", map[string]any{
-			"id":                   "sub_trial_claim",
-			"object":               "subscription",
-			"status":               "trialing",
-			"cancel_at_period_end": false,
-			"cancel_at":            0,
-			"metadata": map[string]string{
-				"firebaseUid":  *testUser.FirebaseUID,
-				"trialApplied": "true",
-			},
-		})
-
-		req := newSignedStripeWebhookRequest(payload, webhookSecret)
-		w := httptest.NewRecorder()
-
-		HandleStripeWebhook(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		updatedUser, err := models.GetUserByID(testUser.ID)
-		assert.NoError(t, err)
-		if assert.NotNil(t, updatedUser) {
-			assert.True(t, updatedUser.IsSubscribed)
-			assert.NotNil(t, updatedUser.PremiumTrialClaimedAt)
-		}
-	})
-
-	t.Run("clears stale premium trial marker for active non-trial subscription", func(t *testing.T) {
-		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-clear-stale-trial")
-		_, err := pool.Exec(context.Background(), `
-			UPDATE users
-			SET is_subscribed = FALSE,
-			    premium_trial_claimed_at = NOW()
-			WHERE id = $1
-		`, testUser.ID)
-		assert.NoError(t, err)
+	t.Run("marks monthly subscription as permanently consuming trial eligibility", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-monthly-ever")
 
 		payload := buildStripeEventPayload(t, "", "customer.subscription.updated", map[string]any{
-			"id":                   "sub_active_non_trial",
+			"id":                   "sub_monthly_ever",
 			"object":               "subscription",
 			"status":               "active",
 			"cancel_at_period_end": false,
@@ -1229,8 +1191,135 @@ func TestHandleStripeWebhook(t *testing.T) {
 		updatedUser, err := models.GetUserByID(testUser.ID)
 		assert.NoError(t, err)
 		if assert.NotNil(t, updatedUser) {
+			updatedUser.RefreshPremiumTrialEligibility()
 			assert.True(t, updatedUser.IsSubscribed)
-			assert.Nil(t, updatedUser.PremiumTrialClaimedAt)
+			assert.True(t, updatedUser.HasEverPersonalSubscription)
+			assert.False(t, updatedUser.PremiumTrialEligible)
+			if assert.NotNil(t, updatedUser.SubscriptionPlan) {
+				assert.Equal(t, "monthly", *updatedUser.SubscriptionPlan)
+			}
+		}
+	})
+
+	t.Run("marks yearly subscription as permanently consuming trial eligibility", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-yearly-ever")
+
+		payload := buildStripeEventPayload(t, "", "customer.subscription.updated", map[string]any{
+			"id":                   "sub_yearly_ever",
+			"object":               "subscription",
+			"status":               "active",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"metadata": map[string]string{
+				"firebaseUid": *testUser.FirebaseUID,
+				"plan":        "yearly",
+			},
+		})
+
+		req := newSignedStripeWebhookRequest(payload, webhookSecret)
+		w := httptest.NewRecorder()
+
+		HandleStripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			updatedUser.RefreshPremiumTrialEligibility()
+			assert.True(t, updatedUser.IsSubscribed)
+			assert.True(t, updatedUser.HasEverPersonalSubscription)
+			assert.False(t, updatedUser.PremiumTrialEligible)
+			if assert.NotNil(t, updatedUser.SubscriptionPlan) {
+				assert.Equal(t, "yearly", *updatedUser.SubscriptionPlan)
+			}
+		}
+	})
+
+	t.Run("claims premium trial only after webhook confirms trial subscription", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-trial-claim")
+		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = FALSE, premium_trial_claimed_at = NULL WHERE id = $1`, testUser.ID)
+		assert.NoError(t, err)
+		trialEnd := time.Now().UTC().Add(14 * 24 * time.Hour)
+
+		payload := buildStripeEventPayload(t, "", "customer.subscription.created", map[string]any{
+			"id":                   "sub_trial_claim",
+			"object":               "subscription",
+			"status":               "trialing",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"trial_end":            trialEnd.Unix(),
+			"metadata": map[string]string{
+				"firebaseUid":  *testUser.FirebaseUID,
+				"trialApplied": "true",
+			},
+		})
+
+		req := newSignedStripeWebhookRequest(payload, webhookSecret)
+		w := httptest.NewRecorder()
+
+		HandleStripeWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.True(t, updatedUser.IsSubscribed)
+			assert.NotNil(t, updatedUser.PremiumTrialClaimedAt)
+			if assert.NotNil(t, updatedUser.SubscriptionTrialEndsAt) {
+				assert.WithinDuration(t, trialEnd, *updatedUser.SubscriptionTrialEndsAt, time.Second)
+			}
+		}
+	})
+
+	t.Run("keeps trial claimed after trial converts to active subscription", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-trial-conversion")
+		trialEnd := time.Now().UTC().Add(14 * 24 * time.Hour)
+
+		trialPayload := buildStripeEventPayload(t, "", "customer.subscription.created", map[string]any{
+			"id":                   "sub_trial_conversion",
+			"object":               "subscription",
+			"status":               "trialing",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"trial_end":            trialEnd.Unix(),
+			"metadata": map[string]string{
+				"firebaseUid":  *testUser.FirebaseUID,
+				"trialApplied": "true",
+				"plan":         "monthly",
+			},
+		})
+
+		trialReq := newSignedStripeWebhookRequest(trialPayload, webhookSecret)
+		trialResp := httptest.NewRecorder()
+		HandleStripeWebhook(trialResp, trialReq)
+		assert.Equal(t, http.StatusOK, trialResp.Code)
+
+		convertedPayload := buildStripeEventPayload(t, "", "customer.subscription.updated", map[string]any{
+			"id":                   "sub_trial_conversion",
+			"object":               "subscription",
+			"status":               "active",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"metadata": map[string]string{
+				"firebaseUid": *testUser.FirebaseUID,
+				"plan":        "monthly",
+			},
+		})
+
+		convertedReq := newSignedStripeWebhookRequest(convertedPayload, webhookSecret)
+		convertedResp := httptest.NewRecorder()
+		HandleStripeWebhook(convertedResp, convertedReq)
+		assert.Equal(t, http.StatusOK, convertedResp.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			assert.True(t, updatedUser.IsSubscribed)
+			assert.NotNil(t, updatedUser.PremiumTrialClaimedAt)
+			assert.Nil(t, updatedUser.SubscriptionTrialEndsAt)
+			assert.True(t, updatedUser.HasEverPersonalSubscription)
 		}
 	})
 
@@ -1386,6 +1475,55 @@ func TestHandleStripeWebhook(t *testing.T) {
 		assert.NotNil(t, updatedUser)
 		assert.False(t, updatedUser.IsSubscribed)
 		assert.NotNil(t, updatedUser.SubscriptionEndedAt)
+		assert.Nil(t, updatedUser.SubscriptionTrialEndsAt)
+	})
+
+	t.Run("keeps trial ineligible after paid subscription is canceled", func(t *testing.T) {
+		testUser := testutils.CreateTestUser(t, pool, "firebase-stripe-uid-cancel-ever")
+
+		activePayload := buildStripeEventPayload(t, "", "customer.subscription.updated", map[string]any{
+			"id":                   "sub_cancel_ever",
+			"object":               "subscription",
+			"status":               "active",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"metadata": map[string]string{
+				"firebaseUid": *testUser.FirebaseUID,
+				"plan":        "monthly",
+			},
+		})
+
+		activeReq := newSignedStripeWebhookRequest(activePayload, webhookSecret)
+		activeResp := httptest.NewRecorder()
+		HandleStripeWebhook(activeResp, activeReq)
+		assert.Equal(t, http.StatusOK, activeResp.Code)
+
+		deletedPayload := buildStripeEventPayload(t, "", "customer.subscription.deleted", map[string]any{
+			"id":                   "sub_cancel_ever",
+			"object":               "subscription",
+			"status":               "canceled",
+			"cancel_at_period_end": false,
+			"cancel_at":            0,
+			"metadata": map[string]string{
+				"firebaseUid": *testUser.FirebaseUID,
+				"plan":        "monthly",
+			},
+		})
+
+		deletedReq := newSignedStripeWebhookRequest(deletedPayload, webhookSecret)
+		deletedResp := httptest.NewRecorder()
+		HandleStripeWebhook(deletedResp, deletedReq)
+		assert.Equal(t, http.StatusOK, deletedResp.Code)
+
+		updatedUser, err := models.GetUserByID(testUser.ID)
+		assert.NoError(t, err)
+		if assert.NotNil(t, updatedUser) {
+			updatedUser.RefreshPremiumTrialEligibility()
+			assert.False(t, updatedUser.IsSubscribed)
+			assert.True(t, updatedUser.HasEverPersonalSubscription)
+			assert.False(t, updatedUser.PremiumTrialEligible)
+			assert.NotNil(t, updatedUser.SubscriptionEndedAt)
+		}
 	})
 
 	t.Run("ignores unsupported event types", func(t *testing.T) {

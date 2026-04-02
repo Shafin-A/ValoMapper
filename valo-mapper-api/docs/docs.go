@@ -2502,6 +2502,18 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "personalIsSubscribed": {
+                    "type": "boolean"
+                },
+                "personalSubscriptionEndedAt": {
+                    "type": "string"
+                },
+                "personalSubscriptionPlan": {
+                    "type": "string"
+                },
+                "personalSubscriptionTrialEndsAt": {
+                    "type": "string"
+                },
                 "premiumTrialDaysLeft": {
                     "type": "integer"
                 },
@@ -2521,6 +2533,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "subscriptionStartedAt": {
+                    "type": "string"
+                },
+                "subscriptionTrialEndsAt": {
                     "type": "string"
                 },
                 "tourCompleted": {

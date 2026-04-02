@@ -119,11 +119,13 @@ export const ProfileContent = () => {
   const currentUserName = user.name?.trim() || "";
   const searchQuery = searchParams.toString();
   const returnToPath = searchQuery ? `${pathname}?${searchQuery}` : pathname;
+
   const canManageStackFromApi = stackMembersData?.canManage === true;
   const stackMembers = stackMembersData?.members ?? [];
   const hasSelfActiveStackMembership = stackMembers.some(
     (member) => member.memberUserId === user.id && member.status === "active",
   );
+
   const canManageStack = canManageStackFromApi && !hasSelfActiveStackMembership;
   const stackRoleLabel = canManageStack ? "Stack Owner" : "Stack Member";
   const stackOwner = stackMembersData?.owner;
@@ -133,9 +135,23 @@ export const ProfileContent = () => {
     (typeof stackOwner?.userId === "number"
       ? `User #${stackOwner.userId}`
       : "Owner");
+
   const stackOwnerDisplayEmail = stackOwner?.email?.trim() || "No email";
   const stackSeatCount = (stackOwner ? 1 : 0) + stackMembers.length;
   const isActiveStackMember = isStackPlan && !canManageStack;
+
+  const personalSubscriptionEndsAt = user.personalSubscriptionEndedAt
+    ? new Date(user.personalSubscriptionEndedAt)
+    : null;
+
+  const hasScheduledPersonalCancellation =
+    user.personalIsSubscribed === true &&
+    personalSubscriptionEndsAt !== null &&
+    !Number.isNaN(personalSubscriptionEndsAt.getTime()) &&
+    personalSubscriptionEndsAt.getTime() > Date.now();
+
+  const personalPlanLabel = user.personalSubscriptionPlan ?? "personal";
+
   const hasPendingStackInvites = (pendingStackInvites?.length ?? 0) > 0;
   const isPendingInviteAction =
     isAcceptingStackInvite || isDecliningStackInvite;
@@ -220,9 +236,22 @@ export const ProfileContent = () => {
     }
 
     if (isStackPlan) {
-      return canManageStack
+      const stackSummary = canManageStack
         ? "You are the stack owner for this Premium Stack plan."
         : `You are covered under ${stackOwnerDisplayName}'s Premium Stack plan.`;
+
+      if (hasScheduledPersonalCancellation && personalSubscriptionEndsAt) {
+        return `${stackSummary} Your personal ${personalPlanLabel} subscription is scheduled to cancel on ${personalSubscriptionEndsAt.toLocaleDateString(
+          "en-US",
+          {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          },
+        )}.`;
+      }
+
+      return stackSummary;
     }
 
     if (isYearlyPlan) {

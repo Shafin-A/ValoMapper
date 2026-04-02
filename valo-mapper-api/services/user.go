@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"math"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 	"valo-mapper-api/models"
@@ -84,17 +82,11 @@ func (us *UserService) EnrichUserBillingState(user *models.User) {
 	user.RefreshPremiumTrialEligibility()
 	user.PremiumTrialDaysLeft = nil
 
-	if user.PremiumTrialClaimedAt == nil {
+	if user.SubscriptionTrialEndsAt == nil {
 		return
 	}
 
-	trialDays := getPremiumTrialDays()
-	if trialDays <= 0 {
-		return
-	}
-
-	trialEndsAt := user.PremiumTrialClaimedAt.UTC().Add(time.Duration(trialDays) * 24 * time.Hour)
-	remainingDays := int(math.Ceil(trialEndsAt.Sub(time.Now().UTC()).Hours() / 24))
+	remainingDays := int(math.Ceil(user.SubscriptionTrialEndsAt.UTC().Sub(time.Now().UTC()).Hours() / 24))
 	if remainingDays <= 0 {
 		return
 	}
@@ -167,24 +159,4 @@ func (us *UserService) UpdateUserSubscription(req UpdateUserSubscriptionRequest)
 	user.SubscriptionEndedAt = subscriptionEndedAt
 
 	return user, nil
-}
-
-// Constants for premium trial
-const (
-	defaultPremiumTrialDays int64 = 14
-)
-
-// getPremiumTrialDays returns the premium trial duration in days
-func getPremiumTrialDays() int64 {
-	configured := strings.TrimSpace(os.Getenv("STRIPE_PREMIUM_TRIAL_DAYS"))
-	if configured == "" {
-		return defaultPremiumTrialDays
-	}
-
-	parsed, err := strconv.ParseInt(configured, 10, 64)
-	if err != nil || parsed < 0 {
-		return defaultPremiumTrialDays
-	}
-
-	return parsed
 }

@@ -273,6 +273,10 @@ func TestAcceptStackInvite_SchedulesPersonalSubscriptionCancellation(t *testing.
 	require.NoError(t, err)
 	require.NotNil(t, updatedMember)
 	assert.True(t, updatedMember.IsSubscribed)
+	require.NotNil(t, updatedMember.SubscriptionPlan)
+	assert.Equal(t, string(checkoutPlanStack), *updatedMember.SubscriptionPlan)
+	assert.Nil(t, updatedMember.SubscriptionEndedAt)
+	assert.Nil(t, updatedMember.SubscriptionTrialEndsAt)
 	assert.True(t, updatedMember.PersonalIsSubscribed)
 	require.NotNil(t, updatedMember.PersonalSubscriptionEndedAt)
 	require.NotNil(t, updatedMember.PersonalSubscriptionPlan)
@@ -282,6 +286,110 @@ func TestAcceptStackInvite_SchedulesPersonalSubscriptionCancellation(t *testing.
 	require.NoError(t, err)
 	require.NotNil(t, updatedInvite)
 	assert.Equal(t, models.StackMemberStatusActive, updatedInvite.Status)
+}
+
+func TestAcceptStackInvite_PrioritizesStackOverPersonalTrial(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "stack_members", "users")
+
+	owner := createStackTestUser(t, pool, "owner-personal-trial-uid", "owner-personal-trial@example.com")
+	member := createStackTestUser(t, pool, "member-personal-trial-uid", "member-personal-trial@example.com")
+
+	_, err := pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = TRUE, subscription_plan = $1
+		WHERE id = $2
+	`, string(checkoutPlanStack), owner.ID)
+	require.NoError(t, err)
+
+	_, err = pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = TRUE,
+		    has_ever_personal_subscription = TRUE,
+		    subscription_plan = $1,
+		    stripe_customer_id = $2,
+		    stripe_subscription_id = $3,
+		    premium_trial_claimed_at = NOW()
+		WHERE id = $4
+	`, string(checkoutPlanMonthly), "cus_member_trial_join", "sub_member_trial_join", member.ID)
+	require.NoError(t, err)
+
+	invite, err := models.CreateStackInvite(owner.ID, member.ID)
+	require.NoError(t, err)
+
+	originalGetSubscriptionFn := getStripeSubscriptionFn
+	originalUpdateSubscriptionFn := updateStripeSubscriptionFn
+	originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
+	defer func() {
+		getStripeSubscriptionFn = originalGetSubscriptionFn
+		updateStripeSubscriptionFn = originalUpdateSubscriptionFn
+		if hadSecret {
+			_ = os.Setenv("STRIPE_SECRET_KEY", originalSecret)
+		} else {
+			_ = os.Unsetenv("STRIPE_SECRET_KEY")
+		}
+	}()
+
+	_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_stack_accept_trial")
+	trialEnd := time.Now().UTC().Add(10 * 24 * time.Hour)
+
+	getStripeSubscriptionFn = func(id string, params *stripe.SubscriptionParams) (*stripe.Subscription, error) {
+		return &stripe.Subscription{
+			ID:                id,
+			Status:            stripe.SubscriptionStatusTrialing,
+			CancelAtPeriodEnd: false,
+			TrialEnd:          trialEnd.Unix(),
+			Metadata: map[string]string{
+				"plan": string(checkoutPlanMonthly),
+			},
+			Customer: &stripe.Customer{ID: "cus_member_trial_join"},
+		}, nil
+	}
+
+	updateStripeSubscriptionFn = func(id string, params *stripe.SubscriptionParams) (*stripe.Subscription, error) {
+		futureCancelAt := trialEnd.Unix()
+		return &stripe.Subscription{
+			ID:                id,
+			Status:            stripe.SubscriptionStatusTrialing,
+			CancelAtPeriodEnd: true,
+			CancelAt:          futureCancelAt,
+			TrialEnd:          trialEnd.Unix(),
+			Metadata: map[string]string{
+				"plan": string(checkoutPlanMonthly),
+			},
+			Customer: &stripe.Customer{ID: "cus_member_trial_join"},
+		}, nil
+	}
+
+	mockAuth := newMockAuthForUser(member)
+	req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/accept/"+strconv.Itoa(invite.ID), nil, "valid-token")
+	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(invite.ID)})
+	w := httptest.NewRecorder()
+
+	AcceptStackInvite(w, req, mockAuth)
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
+
+	updatedMember, err := models.GetUserByID(member.ID)
+	require.NoError(t, err)
+	require.NotNil(t, updatedMember)
+	assert.True(t, updatedMember.IsSubscribed)
+	require.NotNil(t, updatedMember.SubscriptionPlan)
+	assert.Equal(t, string(checkoutPlanStack), *updatedMember.SubscriptionPlan)
+	assert.Nil(t, updatedMember.SubscriptionEndedAt)
+	assert.Nil(t, updatedMember.SubscriptionTrialEndsAt)
+	assert.True(t, updatedMember.PersonalIsSubscribed)
+	require.NotNil(t, updatedMember.PersonalSubscriptionEndedAt)
+	require.NotNil(t, updatedMember.PersonalSubscriptionTrialEndsAt)
+	assert.WithinDuration(t, trialEnd, *updatedMember.PersonalSubscriptionTrialEndsAt, time.Second)
+	require.NotNil(t, updatedMember.PersonalSubscriptionPlan)
+	assert.Equal(t, string(checkoutPlanMonthly), *updatedMember.PersonalSubscriptionPlan)
+	assert.NotNil(t, updatedMember.PremiumTrialClaimedAt)
 }
 
 func TestInviteStackMember_AllowsMultiplePendingInvitesAcrossOwners(t *testing.T) {

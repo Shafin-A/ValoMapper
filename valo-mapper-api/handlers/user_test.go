@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
@@ -119,6 +120,149 @@ func TestGetUser(t *testing.T) {
 		assert.Equal(t, testUser.ID, user.ID)
 		assert.Equal(t, testUser.FirebaseUID, user.FirebaseUID)
 		assert.False(t, user.TourCompleted)
+	})
+
+	t.Run("marks trial ineligible after historical personal subscription", func(t *testing.T) {
+		_, err := pool.Exec(context.Background(), `
+			UPDATE users
+			SET is_subscribed = FALSE,
+			    has_ever_personal_subscription = TRUE,
+			    premium_trial_claimed_at = NULL,
+			    subscription_trial_ends_at = NULL,
+			    subscription_plan = NULL,
+			    subscription_ended_at = NOW()
+			WHERE id = $1
+		`, testUser.ID)
+		assert.NoError(t, err)
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		GetUser(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var user models.User
+		testutils.ParseJSONResponse(t, w, &user)
+		assert.False(t, user.IsSubscribed)
+		assert.False(t, user.PremiumTrialEligible)
+	})
+
+	t.Run("includes personal cancellation details for stack members", func(t *testing.T) {
+		owner := createStackTestUser(t, pool, "owner-user-get-stack-uid", "owner-user-get-stack@example.com")
+		member := createStackTestUser(t, pool, "member-user-get-stack-uid", "member-user-get-stack@example.com")
+
+		_, err := pool.Exec(context.Background(), `
+			UPDATE users
+			SET is_subscribed = TRUE,
+			    subscription_plan = $1
+			WHERE id = $2
+		`, string(checkoutPlanStack), owner.ID)
+		assert.NoError(t, err)
+
+		personalEndsAt := time.Now().UTC().Add(14 * 24 * time.Hour)
+		_, err = pool.Exec(context.Background(), `
+			UPDATE users
+			SET is_subscribed = TRUE,
+			    subscription_plan = $1,
+			    subscription_ended_at = $2,
+			    stripe_subscription_id = $3,
+			    stripe_customer_id = $4
+			WHERE id = $5
+		`, string(checkoutPlanMonthly), personalEndsAt, "sub_user_get_stack_member", "cus_user_get_stack_member", member.ID)
+		assert.NoError(t, err)
+
+		invite, err := models.CreateStackInvite(owner.ID, member.ID)
+		assert.NoError(t, err)
+		assert.NoError(t, models.AcceptStackInvite(invite.ID, member.ID))
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *member.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *member.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		GetUser(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var user models.User
+		testutils.ParseJSONResponse(t, w, &user)
+		assert.True(t, user.IsSubscribed)
+		if assert.NotNil(t, user.SubscriptionPlan) {
+			assert.Equal(t, string(checkoutPlanStack), *user.SubscriptionPlan)
+		}
+		assert.True(t, user.PersonalIsSubscribed)
+		if assert.NotNil(t, user.PersonalSubscriptionPlan) {
+			assert.Equal(t, string(checkoutPlanMonthly), *user.PersonalSubscriptionPlan)
+		}
+		if assert.NotNil(t, user.PersonalSubscriptionEndedAt) {
+			assert.WithinDuration(t, personalEndsAt, *user.PersonalSubscriptionEndedAt, time.Second)
+		}
+	})
+
+	t.Run("keeps stack-only members trial eligible after leaving stack", func(t *testing.T) {
+		owner := createStackTestUser(t, pool, "owner-user-get-stack-leave-uid", "owner-user-get-stack-leave@example.com")
+		member := createStackTestUser(t, pool, "member-user-get-stack-leave-uid", "member-user-get-stack-leave@example.com")
+
+		_, err := pool.Exec(context.Background(), `
+			UPDATE users
+			SET is_subscribed = TRUE,
+			    subscription_plan = $1
+			WHERE id = $2
+		`, string(checkoutPlanStack), owner.ID)
+		assert.NoError(t, err)
+
+		invite, err := models.CreateStackInvite(owner.ID, member.ID)
+		assert.NoError(t, err)
+		assert.NoError(t, models.AcceptStackInvite(invite.ID, member.ID))
+
+		leaveReq := testutils.MakeRequest(t, http.MethodDelete, "/api/billing/stack/leave", nil, "valid-token")
+		leaveResp := httptest.NewRecorder()
+		LeaveStack(leaveResp, leaveReq, newMockAuthForUser(member))
+		assert.Equal(t, http.StatusNoContent, leaveResp.Code)
+
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *member.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *member.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "valid-token")
+		w := httptest.NewRecorder()
+
+		GetUser(w, req, mockAuth)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var user models.User
+		testutils.ParseJSONResponse(t, w, &user)
+		assert.False(t, user.IsSubscribed)
+		assert.True(t, user.PremiumTrialEligible)
+		assert.False(t, user.PersonalIsSubscribed)
+		assert.Nil(t, user.SubscriptionPlan)
+		assert.NotNil(t, user.SubscriptionEndedAt)
 	})
 
 	t.Run("rejects missing authorization", func(t *testing.T) {

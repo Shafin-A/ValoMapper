@@ -388,25 +388,24 @@ func (bs *BillingService) ProcessStripeSubscriptionEvent(event stripe.Event) (bo
 		stripeSubscription.EndedAt,
 		stripeSubscription.CanceledAt,
 	)
+	subscriptionTrialEndsAt := deriveSubscriptionTrialEndsAt(
+		event.Type,
+		stripeSubscription.Status,
+		stripeSubscription.TrialEnd,
+	)
 
 	var subscriptionPlan *string
 	if planVal := strings.TrimSpace(stripeSubscription.Metadata["plan"]); planVal != "" && isSubscribed {
 		subscriptionPlan = &planVal
 	}
 
-	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, subscriptionPlan); err != nil {
+	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, subscriptionTrialEndsAt, subscriptionPlan); err != nil {
 		return false, "", err
 	}
 
 	trialApplied := strings.EqualFold(strings.TrimSpace(stripeSubscription.Metadata["trialApplied"]), "true")
-	if isSubscribed && trialApplied {
+	if subscriptionTrialEndsAt != nil && trialApplied {
 		if _, err := user.ClaimPremiumTrial(); err != nil {
-			return false, "", err
-		}
-	}
-
-	if isSubscribed && !trialApplied && user.PremiumTrialClaimedAt != nil {
-		if err := user.ClearPremiumTrialClaim(); err != nil {
 			return false, "", err
 		}
 	}
@@ -527,7 +526,7 @@ func (bs *BillingService) findStripeSubscriptionForUser(user *models.User) (*str
 	stripeSubscription, err := bs.getStripeSubscriptionFn(stripeSubscriptionID, nil)
 	if err != nil {
 		if isStripeResourceMissingError(err) {
-			if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, user.PersonalIsSubscribed, user.PersonalSubscriptionEndedAt, user.PersonalSubscriptionPlan); updateErr != nil {
+			if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, user.PersonalIsSubscribed, user.PersonalSubscriptionEndedAt, user.PersonalSubscriptionTrialEndsAt, user.PersonalSubscriptionPlan); updateErr != nil {
 				return nil, updateErr
 			}
 
@@ -554,7 +553,7 @@ func (bs *BillingService) SchedulePersonalSubscriptionCancellationForStackJoin(u
 	if err != nil {
 		if isStripeResourceMissingError(err) {
 			now := time.Now().UTC()
-			return user.UpdateStripeBillingState(user.StripeCustomerID, nil, false, &now, nil)
+			return user.UpdateStripeBillingState(user.StripeCustomerID, nil, false, &now, nil, nil)
 		}
 
 		return err
@@ -607,6 +606,11 @@ func (bs *BillingService) syncUserPersonalBillingFromStripeSubscription(user *mo
 		stripeSubscription.EndedAt,
 		stripeSubscription.CanceledAt,
 	)
+	subscriptionTrialEndsAt := deriveSubscriptionTrialEndsAt(
+		stripe.EventTypeCustomerSubscriptionUpdated,
+		stripeSubscription.Status,
+		stripeSubscription.TrialEnd,
+	)
 
 	updatedPlan := user.PersonalSubscriptionPlan
 	if updatedPlan == nil {
@@ -618,7 +622,7 @@ func (bs *BillingService) syncUserPersonalBillingFromStripeSubscription(user *mo
 		updatedPlan = nil
 	}
 
-	return user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, updatedPlan)
+	return user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, subscriptionTrialEndsAt, updatedPlan)
 }
 
 func (bs *BillingService) withCheckoutUserLock(ctx context.Context, userID int, fn func() error) error {
@@ -674,7 +678,7 @@ func (bs *BillingService) recoverStaleStripeSubscriptionForCheckout(user *models
 		}
 
 		now := time.Now().UTC()
-		if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, false, &now, nil); updateErr != nil {
+		if updateErr := user.UpdateStripeBillingState(user.StripeCustomerID, nil, false, &now, nil, nil); updateErr != nil {
 			return false, updateErr
 		}
 
@@ -692,6 +696,11 @@ func (bs *BillingService) recoverStaleStripeSubscriptionForCheckout(user *models
 		stripeSubscription.CancelAt,
 		stripeSubscription.EndedAt,
 		stripeSubscription.CanceledAt,
+	)
+	subscriptionTrialEndsAt := deriveSubscriptionTrialEndsAt(
+		stripe.EventTypeCustomerSubscriptionUpdated,
+		stripeSubscription.Status,
+		stripeSubscription.TrialEnd,
 	)
 
 	nextStripeCustomerID := user.StripeCustomerID
@@ -711,7 +720,7 @@ func (bs *BillingService) recoverStaleStripeSubscriptionForCheckout(user *models
 		updatedPlan = nil
 	}
 
-	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, updatedPlan); err != nil {
+	if err := user.UpdateStripeBillingState(nextStripeCustomerID, nextStripeSubscriptionID, isSubscribed, subscriptionEndedAt, subscriptionTrialEndsAt, updatedPlan); err != nil {
 		return false, err
 	}
 
@@ -727,7 +736,7 @@ func (bs *BillingService) recoverStaleStripeCustomerIDForCheckout(user *models.U
 		return false, nil
 	}
 
-	if err := user.UpdateStripeBillingState(nil, user.StripeSubscriptionID, user.PersonalIsSubscribed, user.PersonalSubscriptionEndedAt, user.PersonalSubscriptionPlan); err != nil {
+	if err := user.UpdateStripeBillingState(nil, user.StripeSubscriptionID, user.PersonalIsSubscribed, user.PersonalSubscriptionEndedAt, user.PersonalSubscriptionTrialEndsAt, user.PersonalSubscriptionPlan); err != nil {
 		return false, err
 	}
 
@@ -903,6 +912,23 @@ func deriveSubscriptionState(
 	}
 
 	return true, nil
+}
+
+func deriveSubscriptionTrialEndsAt(
+	eventType stripe.EventType,
+	status stripe.SubscriptionStatus,
+	trialEnd int64,
+) *time.Time {
+	if eventType == stripe.EventTypeCustomerSubscriptionDeleted {
+		return nil
+	}
+
+	if status != stripe.SubscriptionStatusTrialing || trialEnd <= 0 {
+		return nil
+	}
+
+	endsAt := time.Unix(trialEnd, 0).UTC()
+	return &endsAt
 }
 
 func firstPositiveUnixTime(values ...int64) *time.Time {

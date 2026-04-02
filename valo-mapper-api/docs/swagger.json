@@ -2499,6 +2499,18 @@
                 "name": {
                     "type": "string"
                 },
+                "personalIsSubscribed": {
+                    "type": "boolean"
+                },
+                "personalSubscriptionEndedAt": {
+                    "type": "string"
+                },
+                "personalSubscriptionPlan": {
+                    "type": "string"
+                },
+                "personalSubscriptionTrialEndsAt": {
+                    "type": "string"
+                },
                 "premiumTrialDaysLeft": {
                     "type": "integer"
                 },
@@ -2518,6 +2530,9 @@
                     "type": "string"
                 },
                 "subscriptionStartedAt": {
+                    "type": "string"
+                },
+                "subscriptionTrialEndsAt": {
                     "type": "string"
                 },
                 "tourCompleted": {
