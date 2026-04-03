@@ -55,6 +55,11 @@ export const useLobbyWebSocket = ({
   const connect = useCallback(() => {
     if (!lobbyCode || !enabled) return;
 
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
     if (wsRef.current) {
       wsRef.current.close();
     }
@@ -70,11 +75,19 @@ export const useLobbyWebSocket = ({
     wsRef.current = ws;
 
     ws.onopen = () => {
+      if (wsRef.current !== ws) {
+        return;
+      }
+
       setStatus("connected");
       reconnectAttemptRef.current = 0;
     };
 
     ws.onmessage = (event) => {
+      if (wsRef.current !== ws) {
+        return;
+      }
+
       try {
         const messages = event.data.split("\n").filter(Boolean);
 
@@ -122,7 +135,12 @@ export const useLobbyWebSocket = ({
     };
 
     ws.onclose = (event) => {
+      if (wsRef.current !== ws) {
+        return;
+      }
+
       setStatus("disconnected");
+      wsRef.current = null;
 
       if (enabled && event.code !== 1000) {
         const delay =
@@ -138,6 +156,10 @@ export const useLobbyWebSocket = ({
     };
 
     ws.onerror = (error) => {
+      if (wsRef.current !== ws) {
+        return;
+      }
+
       console.error("[WebSocket] Error:", error);
       setStatus("error");
     };
