@@ -99,6 +99,10 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     event.preventDefault();
 
+    if (typeof event.currentTarget.setPointerCapture === "function") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+
     pendingSidebarDragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,

@@ -99,6 +99,10 @@ export const VisionConeSettings = ({
       if (event.pointerType === "mouse" && event.button !== 0) return;
       event.preventDefault();
 
+      if (typeof event.currentTarget.setPointerCapture === "function") {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+
       const isSame =
         selectedCanvasIcon && !("action" in selectedCanvasIcon)
           ? false

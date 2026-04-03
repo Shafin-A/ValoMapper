@@ -290,6 +290,10 @@ export const AgentsSidebar = ({
     if (event.pointerType === "mouse" && event.button !== 0) return;
     event.preventDefault();
 
+    if (typeof event.currentTarget.setPointerCapture === "function") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+
     const isSameIcon = selectedCanvasIcon
       ? isAgent(selectedCanvasIcon) && isAgent(icon)
         ? selectedCanvasIcon.name === icon.name

@@ -18,6 +18,10 @@ export const ToolIconButton = forwardRef<
     size="icon"
     variant="ghost"
     className="overflow-hidden relative flex items-center justify-center w-full aspect-square"
+    style={{
+      touchAction: "none",
+      WebkitTouchCallout: "none",
+    }}
     onClick={onClick}
     onPointerDown={onPointerDown}
     {...props}
@@ -28,6 +32,8 @@ export const ToolIconButton = forwardRef<
       fill
       className="object-contain"
       sizes="w-full"
+      draggable={false}
+      onDragStart={(event) => event.preventDefault()}
     />
   </Button>
 ));
