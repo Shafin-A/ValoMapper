@@ -404,10 +404,26 @@ export const useCanvasEvents = (
         return;
       }
 
+      if (event.type === "pointercancel") {
+        removeTempDragIcon();
+        setIsSidebarDragActive(false);
+        return;
+      }
+
       const stageContainer = stage.container();
       const target = event.target;
+      const releasedWithinStageBounds = (() => {
+        const rect = stageContainer.getBoundingClientRect();
+        return (
+          event.clientX >= rect.left &&
+          event.clientX <= rect.right &&
+          event.clientY >= rect.top &&
+          event.clientY <= rect.bottom
+        );
+      })();
       const isReleasedOverStage =
-        target instanceof Node && stageContainer.contains(target);
+        releasedWithinStageBounds ||
+        (target instanceof Node && stageContainer.contains(target));
 
       if (isReleasedOverStage && selectedCanvasIcon) {
         stage.setPointersPositions(event as unknown as MouseEvent);

@@ -15,6 +15,8 @@ type StageMock = {
   position: jest.Mock<{ x: number; y: number }>;
   scaleX: jest.Mock<number>;
   findOne: jest.Mock<{ position: jest.Mock } | null, [string?]>;
+  container: jest.Mock;
+  setPointersPositions: jest.Mock;
   draggable: jest.Mock;
   isDragging: jest.Mock<boolean>;
 };
@@ -57,6 +59,25 @@ const createStageMock = (overrides: Partial<StageMock> = {}): StageMock => ({
   position: jest.fn(() => ({ x: 2, y: 4 })),
   scaleX: jest.fn(() => 2),
   findOne: jest.fn(() => null),
+  container: jest.fn(() => ({
+    contains: jest.fn(() => false),
+    getBoundingClientRect: jest.fn(
+      () =>
+        ({
+          left: 0,
+          top: 0,
+          right: 500,
+          bottom: 500,
+          width: 500,
+          height: 500,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    ),
+    style: {},
+  })),
+  setPointersPositions: jest.fn(),
   draggable: jest.fn(),
   isDragging: jest.fn(() => false),
   ...overrides,
@@ -404,5 +425,79 @@ describe("useCanvasEvents", () => {
     expect(handleMouseUpMock).toHaveBeenCalledTimes(1);
     expect(agentsState).toEqual([]);
     expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
+  });
+
+  it("places sidebar drag icon when pointer is released over stage bounds", () => {
+    let agentsState: AgentCanvas[] = [
+      {
+        id: TEMP_DRAG_ID,
+        name: "Jett",
+        role: "Duelist",
+        isAlly: true,
+        x: 0,
+        y: 0,
+      },
+    ];
+
+    const setAgentsOnCanvas = jest.fn((updater) => {
+      agentsState =
+        typeof updater === "function" ? updater(agentsState) : updater;
+    });
+    const setSelectedCanvasIcon = jest.fn();
+    const setIsSidebarDragActive = jest.fn();
+
+    const stage = createStageMock({
+      container: jest.fn(() => ({
+        contains: jest.fn(() => false),
+        getBoundingClientRect: jest.fn(
+          () =>
+            ({
+              left: 0,
+              top: 0,
+              right: 300,
+              bottom: 300,
+              width: 300,
+              height: 300,
+              x: 0,
+              y: 0,
+              toJSON: () => ({}),
+            }) as DOMRect,
+        ),
+        style: {},
+      })),
+    });
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        selectedCanvasIcon: { name: "Jett", role: "Duelist" },
+        setSelectedCanvasIcon,
+        isSidebarDragActive: true,
+        setIsSidebarDragActive,
+        agentsOnCanvas: agentsState,
+        setAgentsOnCanvas,
+      }),
+    );
+
+    const stageRef = {
+      current: stage as unknown as Stage,
+    };
+
+    renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      const PointerUpEvent = window.PointerEvent ?? MouseEvent;
+      window.dispatchEvent(
+        new PointerUpEvent("pointerup", { clientX: 100, clientY: 100 }),
+      );
+    });
+
+    expect(setAgentsOnCanvas).toHaveBeenCalled();
+    expect(agentsState[0]).toMatchObject({
+      id: "agent-new",
+      x: 4,
+      y: 8,
+    });
+    expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
+    expect(setIsSidebarDragActive).toHaveBeenCalledWith(false);
   });
 });

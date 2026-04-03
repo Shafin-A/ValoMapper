@@ -117,6 +117,7 @@ export const AgentsSidebar = ({
   const pendingSidebarDragRef = useRef<PendingSidebarDrag | null>(null);
   const didStartSidebarDragRef = useRef(false);
   const suppressClickUntilRef = useRef(0);
+  const ignoreNextSidebarClickRef = useRef(false);
 
   const tempDragAgent = agentsOnCanvas.find(
     (agent) => agent.id === TEMP_DRAG_ID,
@@ -254,6 +255,11 @@ export const AgentsSidebar = ({
     icon: Agent | AbilityIconItem,
     setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
   ) => {
+    if (ignoreNextSidebarClickRef.current) {
+      ignoreNextSidebarClickRef.current = false;
+      return;
+    }
+
     if (performance.now() < suppressClickUntilRef.current) {
       return;
     }
@@ -383,6 +389,7 @@ export const AgentsSidebar = ({
         );
       }
 
+      ignoreNextSidebarClickRef.current = true;
       setIsSidebarDragActive(true);
       didStartSidebarDragRef.current = true;
       pendingSidebarDragRef.current = null;
