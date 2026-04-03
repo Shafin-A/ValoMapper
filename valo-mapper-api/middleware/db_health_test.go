@@ -67,6 +67,31 @@ func TestDBHealthMiddleware_RetriesTransientErrorOnce(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
+func TestDBHealthMiddleware_ExhaustsTransientRetries(t *testing.T) {
+	originalEnsure := ensureDBConnection
+	defer func() { ensureDBConnection = originalEnsure }()
+
+	calls := 0
+	ensureDBConnection = func(ctx context.Context) error {
+		calls++
+		return errors.New("failed to receive message: unexpected EOF")
+	}
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	middleware := DBHealthMiddleware(next)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/lobbies", nil)
+	w := httptest.NewRecorder()
+	middleware.ServeHTTP(w, req)
+
+	assert.Equal(t, transientDBMaxAttempts, calls)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Database temporarily unavailable")
+}
+
 func TestDBHealthMiddleware_Returns500WhenDBUnavailable(t *testing.T) {
 	originalEnsure := ensureDBConnection
 	defer func() { ensureDBConnection = originalEnsure }()

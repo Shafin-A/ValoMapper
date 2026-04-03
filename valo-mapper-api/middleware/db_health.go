@@ -12,7 +12,10 @@ import (
 
 var ensureDBConnection = db.EnsureConnection
 
-const transientDBRetryDelay = 200 * time.Millisecond
+const (
+	transientDBRetryDelay  = 200 * time.Millisecond
+	transientDBMaxAttempts = 3
+)
 
 func DBHealthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -21,27 +24,10 @@ func DBHealthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
 
-		if err := ensureDBConnection(ctx); err != nil {
-			if db.IsRetryableError(err) {
-				select {
-				case <-time.After(transientDBRetryDelay):
-				case <-r.Context().Done():
-					log.Printf("[request=%s] Request canceled while waiting for database retry: %v", GetRequestID(r), r.Context().Err())
-					utils.SendJSONError(w, utils.NewInternal("Database temporarily unavailable", r.Context().Err()), GetRequestID(r))
-					return
-				}
-
-				if retryErr := ensureDBConnection(ctx); retryErr == nil {
-					next.ServeHTTP(w, r)
-					return
-				} else {
-					err = retryErr
-				}
-			}
-
+		if err := ensureDBHealthyWithRetry(ctx, r); err != nil {
 			log.Printf("[request=%s] Database connection unhealthy: %v", GetRequestID(r), err)
 			utils.SendJSONError(w, utils.NewInternal("Database temporarily unavailable", err), GetRequestID(r))
 			return
@@ -49,4 +35,31 @@ func DBHealthMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func ensureDBHealthyWithRetry(ctx context.Context, r *http.Request) error {
+	var lastErr error
+	retryDelay := transientDBRetryDelay
+
+	for attempt := 1; attempt <= transientDBMaxAttempts; attempt++ {
+		lastErr = ensureDBConnection(ctx)
+		if lastErr == nil {
+			return nil
+		}
+
+		if !db.IsRetryableError(lastErr) || attempt == transientDBMaxAttempts {
+			return lastErr
+		}
+
+		log.Printf("[request=%s] Retryable database health error (attempt %d/%d): %v", GetRequestID(r), attempt, transientDBMaxAttempts, lastErr)
+
+		select {
+		case <-time.After(retryDelay):
+			retryDelay *= 2
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+
+	return lastErr
 }

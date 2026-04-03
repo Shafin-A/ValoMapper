@@ -29,7 +29,7 @@ describe("POST /api/lobbies", () => {
 
     const responsePromise = POST(createRequest());
 
-    jest.runAllTimers();
+    await jest.runAllTimersAsync();
 
     const response = await responsePromise;
     const data = await response.json();
@@ -46,17 +46,78 @@ describe("POST /api/lobbies", () => {
   });
 
   it("should return error when backend fails", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-    });
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
 
     const responsePromise = POST(createRequest());
-    jest.runAllTimers();
+    await jest.runAllTimersAsync();
 
     const response = await responsePromise;
     const data = await response.json();
 
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(response.status).toBe(500);
+    expect(data).toEqual({ error: "Failed to create lobby" });
+  });
+
+  it("should retry once on transient cold-start DB error", async () => {
+    const mockResponse = {
+      lobbyCode: "RETRY1",
+      createdAt: new Date().toISOString(),
+    };
+
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({
+          error:
+            "failed to connect to database: failed to receive message: unexpected EOF",
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+    const responsePromise = POST(createRequest());
+
+    await jest.runAllTimersAsync();
+
+    const response = await responsePromise;
+    const data = await response.json();
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(data).toEqual(mockResponse);
+  });
+
+  it("should return failure when transient error persists after retry", async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: "Database temporarily unavailable" }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
+
+    const responsePromise = POST(createRequest());
+
+    await jest.runAllTimersAsync();
+
+    const response = await responsePromise;
+    const data = await response.json();
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(response.status).toBe(500);
     expect(data).toEqual({ error: "Failed to create lobby" });
   });
@@ -85,7 +146,7 @@ describe("POST /api/lobbies", () => {
     mockFetch.mockRejectedValueOnce(abortError);
 
     const responsePromise = POST(createRequest());
-    jest.runAllTimers();
+    await jest.runAllTimersAsync();
 
     const response = await responsePromise;
     const data = await response.json();
@@ -104,7 +165,7 @@ describe("POST /api/lobbies", () => {
     });
 
     const responsePromise = POST(createRequest());
-    jest.runAllTimers();
+    await jest.runAllTimersAsync();
 
     await responsePromise;
 
@@ -114,13 +175,18 @@ describe("POST /api/lobbies", () => {
   it("should clear timeout on error response", async () => {
     const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
 
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-    });
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
 
     const responsePromise = POST(createRequest());
-    jest.runAllTimers();
+    await jest.runAllTimersAsync();
 
     await responsePromise;
 
@@ -139,7 +205,7 @@ describe("POST /api/lobbies", () => {
     });
 
     const responsePromise = POST(createRequest());
-    jest.runAllTimers();
+    await jest.runAllTimersAsync();
 
     await responsePromise;
 
@@ -183,7 +249,7 @@ describe("POST /api/lobbies/[lobbyCode]/canvas-patches", () => {
       params: Promise.resolve({ lobbyCode }),
     });
 
-    jest.runAllTimers();
+    await jest.runAllTimersAsync();
 
     const response = await responsePromise;
     const data = await response.json();
