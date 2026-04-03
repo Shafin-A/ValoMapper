@@ -67,22 +67,6 @@ func (u *User) capturePersonalBillingState() {
 	u.PersonalSubscriptionPlan = u.SubscriptionPlan
 }
 
-func laterSubscriptionEndedAt(first, second *time.Time) *time.Time {
-	if first == nil {
-		return second
-	}
-
-	if second == nil {
-		return first
-	}
-
-	if second.After(*first) {
-		return second
-	}
-
-	return first
-}
-
 func (u *User) refreshEffectiveSubscriptionState() error {
 	if u == nil {
 		return nil
