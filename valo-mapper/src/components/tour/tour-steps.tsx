@@ -35,8 +35,6 @@ export const tourSteps: StepType[] = [
           
 Delete an agent by dragging them to the trash can or press E while hovering over them.
 
-(If Brimstone gets deselected, just click on him again to reselect.)
-
 When you're ready, click Next to continue.`}
       />
     ),
@@ -69,8 +67,6 @@ When you're ready, click Next to continue.`}
         description={`Now place the ability by clicking on the canvas or by dragging it from the sidebar and releasing over the map. Just like agents, you can drag abilities to reposition them after placing.
 
 Delete an ability by dragging them to the trash can or press E while hovering over them.
-
-(If the ability gets deselected, just click on it again to reselect.)
 
 When you're ready, click Next to continue.`}
       />
