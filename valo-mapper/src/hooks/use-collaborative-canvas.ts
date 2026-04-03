@@ -640,15 +640,11 @@ export const useCollaborativeCanvas = () => {
 
       if (isConnected) {
         broadcastMapChanged(selectedMap);
-        if (resetAll) {
-          broadcastStateSync();
-        }
       }
     },
     [
       isConnected,
       broadcastMapChanged,
-      broadcastStateSync,
       currentPhaseIndex,
       enqueueCanvasPatchEntry,
     ],
