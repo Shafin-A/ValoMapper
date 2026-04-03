@@ -17,7 +17,7 @@ func IsRetryableError(err error) bool {
 
 	errStr := err.Error()
 	retryableErrors := []string{
-		"unexpected EOF",
+		"unexpected eof",
 		"connection reset by peer",
 		"broken pipe",
 		"connection refused",

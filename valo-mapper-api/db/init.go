@@ -112,6 +112,10 @@ func EnsureConnection(ctx context.Context) error {
 			return nil
 		}
 
+		if IsRetryableError(lastErr) {
+			DB.Reset()
+		}
+
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
