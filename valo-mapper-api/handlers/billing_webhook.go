@@ -30,11 +30,6 @@ import (
 func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	if r.Method != http.MethodPost {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), requestID)
-		return
-	}
-
 	webhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
 	if webhookSecret == "" {
 		utils.SendJSONError(w, utils.NewInternal("Stripe webhook secret is not configured", nil), requestID)

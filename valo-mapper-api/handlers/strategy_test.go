@@ -10,6 +10,7 @@ import (
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -290,10 +291,14 @@ func TestCreateStrategy(t *testing.T) {
 	t.Run("rejects non-POST methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/strategies", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/strategies", func(w http.ResponseWriter, r *http.Request) {
+			CreateStrategy(w, r, mockAuth)
+		}).Methods(http.MethodPost)
 
-		CreateStrategy(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -439,10 +444,14 @@ func TestGetStrategies(t *testing.T) {
 	t.Run("rejects non-GET methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/strategies", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/strategies", func(w http.ResponseWriter, r *http.Request) {
+			GetStrategies(w, r, mockAuth)
+		}).Methods(http.MethodGet)
 
-		GetStrategies(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -482,6 +491,7 @@ func TestUpdateStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateStrategy(w, req, mockAuth)
@@ -518,6 +528,7 @@ func TestUpdateStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateStrategy(w, req, mockAuth)
@@ -556,6 +567,7 @@ func TestUpdateStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateStrategy(w, req, mockAuth)
@@ -588,6 +600,7 @@ func TestUpdateStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/strategies/99999", reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": "99999"})
 		w := httptest.NewRecorder()
 
 		UpdateStrategy(w, req, mockAuth)
@@ -616,6 +629,7 @@ func TestUpdateStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateStrategy(w, req, mockAuth)
@@ -640,6 +654,7 @@ func TestUpdateStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/strategies/invalid", reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": "invalid"})
 		w := httptest.NewRecorder()
 
 		UpdateStrategy(w, req, mockAuth)
@@ -657,6 +672,7 @@ func TestUpdateStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateStrategy(w, req, mockAuth)
@@ -667,10 +683,14 @@ func TestUpdateStrategy(t *testing.T) {
 	t.Run("rejects non-PATCH methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/strategies/1", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/strategies/{id}", func(w http.ResponseWriter, r *http.Request) {
+			UpdateStrategy(w, r, mockAuth)
+		}).Methods(http.MethodPatch)
 
-		UpdateStrategy(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -702,6 +722,7 @@ func TestDeleteStrategy(t *testing.T) {
 		strategy := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
 
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/strategies/%d", strategy.ID), nil, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
 
 		DeleteStrategy(w, req, mockAuth)
@@ -724,6 +745,7 @@ func TestDeleteStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/strategies/99999", nil, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": "99999"})
 		w := httptest.NewRecorder()
 
 		DeleteStrategy(w, req, mockAuth)
@@ -747,6 +769,7 @@ func TestDeleteStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/strategies/%d", strategy.ID), nil, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
 
 		DeleteStrategy(w, req, mockAuth)
@@ -766,6 +789,7 @@ func TestDeleteStrategy(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/strategies/invalid", nil, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": "invalid"})
 		w := httptest.NewRecorder()
 
 		DeleteStrategy(w, req, mockAuth)
@@ -778,6 +802,7 @@ func TestDeleteStrategy(t *testing.T) {
 		strategy := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
 
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/strategies/%d", strategy.ID), nil, "")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
 
 		DeleteStrategy(w, req, mockAuth)
@@ -788,9 +813,13 @@ func TestDeleteStrategy(t *testing.T) {
 	t.Run("rejects non-DELETE methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/strategies/1", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/strategies/{id}", func(w http.ResponseWriter, r *http.Request) {
+			DeleteStrategy(w, r, mockAuth)
+		}).Methods(http.MethodDelete)
 
-		DeleteStrategy(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }

@@ -25,11 +25,6 @@ import (
 func GetBillingPlans(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	if r.Method != http.MethodGet {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), requestID)
-		return
-	}
-
 	stripeSecretKey := strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
 	if stripeSecretKey == "" {
 		utils.SendJSONError(w, utils.NewInternal("Stripe checkout is not configured", nil), requestID)

@@ -10,6 +10,8 @@ import (
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
+
+	"github.com/gorilla/mux"
 )
 
 type CreateStrategyRequest struct {
@@ -63,11 +65,6 @@ func newStrategyResponseFromService(strategy *services.StrategyResponse) *Strate
 // @Security BearerAuth
 // @Router /api/strategies [post]
 func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodPost {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
@@ -126,11 +123,6 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 // @Security BearerAuth
 // @Router /api/strategies [get]
 func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodGet {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
@@ -180,20 +172,13 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth Firebase
 // @Security BearerAuth
 // @Router /api/strategies/{id} [patch]
 func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodPatch {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/strategies/")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid strategy ID"), middleware.GetRequestID(r))
 		return
@@ -267,20 +252,13 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 // @Security BearerAuth
 // @Router /api/strategies/{id} [delete]
 func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodDelete {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/strategies/")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid strategy ID"), middleware.GetRequestID(r))
 		return

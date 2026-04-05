@@ -50,11 +50,6 @@ func strPtr(s string) *string {
 // @Security BearerAuth
 // @Router /api/users [post]
 func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodPost {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	token, err := VerifyFirebaseToken(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Invalid or missing authentication"), middleware.GetRequestID(r))
@@ -102,11 +97,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Security BearerAuth
 // @Router /api/users/me [get]
 func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodGet {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
@@ -138,11 +128,6 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthIn
 // @Security BearerAuth
 // @Router /api/users/me [put]
 func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodPut {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
@@ -185,11 +170,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Security BearerAuth
 // @Router /api/users/me [delete]
 func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodDelete {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
@@ -228,11 +208,6 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Security InternalAPIKey
 // @Router /api/users/subscription [patch]
 func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAuthInterface) {
-	if r.Method != http.MethodPatch {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	configuredKey := os.Getenv("INTERNAL_API_KEY")
 	if configuredKey == "" {
 		utils.SendJSONError(w, utils.NewInternal("Internal API key is not configured", nil), middleware.GetRequestID(r))

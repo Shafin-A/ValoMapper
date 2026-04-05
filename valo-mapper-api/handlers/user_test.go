@@ -11,6 +11,7 @@ import (
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -76,10 +77,14 @@ func TestCreateUser(t *testing.T) {
 	t.Run("rejects non-POST methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
+			CreateUser(w, r, mockAuth)
+		}).Methods(http.MethodPost)
 
-		CreateUser(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -277,10 +282,14 @@ func TestGetUser(t *testing.T) {
 	t.Run("rejects non-GET methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/users", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
+			GetUser(w, r, mockAuth)
+		}).Methods(http.MethodGet)
 
-		GetUser(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -344,10 +353,14 @@ func TestUpdateUser(t *testing.T) {
 	t.Run("rejects non-PUT methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
+			UpdateUser(w, r, mockAuth)
+		}).Methods(http.MethodPut)
 
-		UpdateUser(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -411,10 +424,14 @@ func TestDeleteUser(t *testing.T) {
 	t.Run("rejects non-DELETE methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
+			DeleteUser(w, r, mockAuth)
+		}).Methods(http.MethodDelete)
 
-		DeleteUser(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 

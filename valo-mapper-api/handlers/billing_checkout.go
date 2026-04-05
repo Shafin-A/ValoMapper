@@ -29,11 +29,6 @@ import (
 func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	requestID := middleware.GetRequestID(r)
 
-	if r.Method != http.MethodPost {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), requestID)
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)

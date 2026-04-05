@@ -327,11 +327,6 @@ func getAccountInfoFromRSO(accessToken string) (*RSOAccountResponse, error) {
 // @Failure 500 {object} ErrorResponse
 // @Router /api/auth/rso/callback [post]
 func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodPost {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	var req RSORequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))

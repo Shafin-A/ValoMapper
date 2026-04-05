@@ -6,9 +6,12 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
+
+	"github.com/gorilla/mux"
 )
 
 // CreateLobby godoc
@@ -84,13 +87,7 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} ErrorResponse
 // @Router /api/lobbies/{code} [get]
 func GetLobby(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
-	path := r.URL.Path
-	code := strings.TrimPrefix(path, "/api/lobbies/")
+	code := mux.Vars(r)["code"]
 
 	lobby, err := models.GetLobbyByCode(code)
 	if err != nil {
@@ -131,13 +128,7 @@ type UpdateLobbyRequest struct {
 // @Failure 500 {object} ErrorResponse
 // @Router /api/lobbies/{code} [patch]
 func UpdateLobby(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPatch {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
-	path := r.URL.Path
-	code := strings.TrimPrefix(path, "/api/lobbies/")
+	code := mux.Vars(r)["code"]
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

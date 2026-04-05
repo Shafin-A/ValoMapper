@@ -10,9 +10,28 @@ import (
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func executeGetLobbyRequest(req *http.Request) *httptest.ResponseRecorder {
+	router := mux.NewRouter()
+	router.HandleFunc("/api/lobbies/{code}", GetLobby).Methods(http.MethodGet)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	return w
+}
+
+func executeUpdateLobbyRequest(req *http.Request) *httptest.ResponseRecorder {
+	router := mux.NewRouter()
+	router.HandleFunc("/api/lobbies/{code}", UpdateLobby).Methods(http.MethodPatch)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	return w
+}
 
 func TestCreateLobby(t *testing.T) {
 	if testing.Short() {
@@ -76,9 +95,7 @@ func TestGetLobby(t *testing.T) {
 
 	t.Run("successfully retrieves existing lobby", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/lobbies/"+testLobby.Code, nil)
-		w := httptest.NewRecorder()
-
-		GetLobby(w, req)
+		w := executeGetLobbyRequest(req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		testutils.AssertJSONContentType(t, w)
@@ -93,9 +110,7 @@ func TestGetLobby(t *testing.T) {
 
 	t.Run("returns 404 for non-existent lobby", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/lobbies/INVALID", nil)
-		w := httptest.NewRecorder()
-
-		GetLobby(w, req)
+		w := executeGetLobbyRequest(req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		testutils.AssertJSONContentType(t, w)
@@ -107,11 +122,9 @@ func TestGetLobby(t *testing.T) {
 
 	t.Run("rejects non-GET methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+testLobby.Code, nil)
-		w := httptest.NewRecorder()
+		w := executeGetLobbyRequest(req)
 
-		GetLobby(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -165,9 +178,7 @@ func TestUpdateLobby(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPatch, "/api/lobbies/"+testLobby.Code, strings.NewReader(string(body)))
 		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-
-		UpdateLobby(w, req)
+		w := executeUpdateLobbyRequest(req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		testutils.AssertJSONContentType(t, w)
@@ -194,28 +205,22 @@ func TestUpdateLobby(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPatch, "/api/lobbies/INVALID", strings.NewReader(string(body)))
 		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-
-		UpdateLobby(w, req)
+		w := executeUpdateLobbyRequest(req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 
 	t.Run("rejects non-PATCH methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/lobbies/"+testLobby.Code, nil)
-		w := httptest.NewRecorder()
+		w := executeUpdateLobbyRequest(req)
 
-		UpdateLobby(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 
 	t.Run("rejects invalid JSON", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPatch, "/api/lobbies/"+testLobby.Code, strings.NewReader("invalid json"))
 		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-
-		UpdateLobby(w, req)
+		w := executeUpdateLobbyRequest(req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -223,9 +228,7 @@ func TestUpdateLobby(t *testing.T) {
 	t.Run("rejects missing canvas state", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPatch, "/api/lobbies/"+testLobby.Code, strings.NewReader("{}"))
 		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-
-		UpdateLobby(w, req)
+		w := executeUpdateLobbyRequest(req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})

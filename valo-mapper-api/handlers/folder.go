@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
+
+	"github.com/gorilla/mux"
 )
 
 type CreateFolderRequest struct {
@@ -36,11 +37,6 @@ type UpdateFolderRequest struct {
 // @Security BearerAuth
 // @Router /api/folders [post]
 func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodPost {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
@@ -82,11 +78,6 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 // @Security BearerAuth
 // @Router /api/folders [get]
 func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodGet {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
@@ -120,20 +111,13 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Security BearerAuth
 // @Router /api/folders/{id} [patch]
 func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodPatch {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/folders/")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid folder ID"), middleware.GetRequestID(r))
 		return
@@ -185,20 +169,13 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 // @Security BearerAuth
 // @Router /api/folders/{id} [delete]
 func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	if r.Method != http.MethodDelete {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
 	user, err := authenticateRequest(r, firebaseAuth)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
 
-	path := r.URL.Path
-	idStr := strings.TrimPrefix(path, "/api/folders/")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid folder ID"), middleware.GetRequestID(r))
 		return

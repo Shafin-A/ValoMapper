@@ -10,9 +10,19 @@ import (
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func executeCanvasPatchRequest(req *http.Request) *httptest.ResponseRecorder {
+	router := mux.NewRouter()
+	router.HandleFunc("/api/lobbies/{code}/canvas-patches", ApplyCanvasPatch).Methods(http.MethodPost)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	return w
+}
 
 func TestApplyCanvasPatch(t *testing.T) {
 	if testing.Short() {
@@ -34,19 +44,15 @@ func TestApplyCanvasPatch(t *testing.T) {
 
 	t.Run("rejects non-POST", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/lobbies/"+lobby.Code+"/canvas-patches", nil)
-		w := httptest.NewRecorder()
+		w := executeCanvasPatchRequest(req)
 
-		ApplyCanvasPatch(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 
 	t.Run("rejects invalid JSON", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader("invalid json"))
 		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-
-		ApplyCanvasPatch(w, req)
+		w := executeCanvasPatchRequest(req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -58,9 +64,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/INVALID/canvas-patches", strings.NewReader(string(body)))
 		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-
-		ApplyCanvasPatch(w, req)
+		w := executeCanvasPatchRequest(req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -72,9 +76,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(body)))
 		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-
-		ApplyCanvasPatch(w, req)
+		w := executeCanvasPatchRequest(req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		var returnedLobby models.Lobby
@@ -90,9 +92,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 
 		addReq := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(addBody)))
 		addReq.Header.Set("Content-Type", "application/json")
-		addW := httptest.NewRecorder()
-
-		ApplyCanvasPatch(addW, addReq)
+		addW := executeCanvasPatchRequest(addReq)
 		assert.Equal(t, http.StatusOK, addW.Code)
 
 		// Move image without src payload
@@ -102,9 +102,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 
 		updateReq := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(updateBody)))
 		updateReq.Header.Set("Content-Type", "application/json")
-		updateW := httptest.NewRecorder()
-
-		ApplyCanvasPatch(updateW, updateReq)
+		updateW := executeCanvasPatchRequest(updateReq)
 		assert.Equal(t, http.StatusOK, updateW.Code)
 
 		phases, err := models.GetAllCanvasPhases(lobby.Code)
@@ -125,9 +123,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(body)))
 		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-
-		ApplyCanvasPatch(w, req)
+		w := executeCanvasPatchRequest(req)
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		removalPayload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{Entity: "drawline", Action: "remove", PhaseIndex: 0, ID: "line1"}}}
@@ -136,9 +132,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 
 		removalReq := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(removalBody)))
 		removalReq.Header.Set("Content-Type", "application/json")
-		removalW := httptest.NewRecorder()
-
-		ApplyCanvasPatch(removalW, removalReq)
+		removalW := executeCanvasPatchRequest(removalReq)
 		assert.Equal(t, http.StatusOK, removalW.Code)
 
 		phases, err := models.GetAllCanvasPhases(lobby.Code)

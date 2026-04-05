@@ -10,6 +10,7 @@ import (
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -156,10 +157,14 @@ func TestCreateFolder(t *testing.T) {
 	t.Run("rejects non-POST methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/folders", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/folders", func(w http.ResponseWriter, r *http.Request) {
+			CreateFolder(w, r, mockAuth)
+		}).Methods(http.MethodPost)
 
-		CreateFolder(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -282,10 +287,14 @@ func TestGetFolders(t *testing.T) {
 	t.Run("rejects non-GET methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/folders", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/folders", func(w http.ResponseWriter, r *http.Request) {
+			GetFolders(w, r, mockAuth)
+		}).Methods(http.MethodGet)
 
-		GetFolders(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -323,6 +332,7 @@ func TestUpdateFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateFolder(w, req, mockAuth)
@@ -355,6 +365,7 @@ func TestUpdateFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", childFolder.ID), reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", childFolder.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateFolder(w, req, mockAuth)
@@ -385,6 +396,7 @@ func TestUpdateFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/folders/99999", reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": "99999"})
 		w := httptest.NewRecorder()
 
 		UpdateFolder(w, req, mockAuth)
@@ -412,6 +424,7 @@ func TestUpdateFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateFolder(w, req, mockAuth)
@@ -436,6 +449,7 @@ func TestUpdateFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/folders/invalid", reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": "invalid"})
 		w := httptest.NewRecorder()
 
 		UpdateFolder(w, req, mockAuth)
@@ -463,6 +477,7 @@ func TestUpdateFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateFolder(w, req, mockAuth)
@@ -479,6 +494,7 @@ func TestUpdateFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
 
 		UpdateFolder(w, req, mockAuth)
@@ -489,10 +505,14 @@ func TestUpdateFolder(t *testing.T) {
 	t.Run("rejects non-PATCH methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/folders/1", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/folders/{id}", func(w http.ResponseWriter, r *http.Request) {
+			UpdateFolder(w, r, mockAuth)
+		}).Methods(http.MethodPatch)
 
-		UpdateFolder(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
@@ -525,6 +545,7 @@ func TestDeleteFolder(t *testing.T) {
 		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Folder to Delete")
 
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
 
 		DeleteFolder(w, req, mockAuth)
@@ -547,6 +568,7 @@ func TestDeleteFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/folders/99999", nil, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": "99999"})
 		w := httptest.NewRecorder()
 
 		DeleteFolder(w, req, mockAuth)
@@ -569,6 +591,7 @@ func TestDeleteFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
 
 		DeleteFolder(w, req, mockAuth)
@@ -588,6 +611,7 @@ func TestDeleteFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodDelete, "/api/folders/invalid", nil, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": "invalid"})
 		w := httptest.NewRecorder()
 
 		DeleteFolder(w, req, mockAuth)
@@ -610,6 +634,7 @@ func TestDeleteFolder(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "valid-token")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
 
 		DeleteFolder(w, req, mockAuth)
@@ -621,6 +646,7 @@ func TestDeleteFolder(t *testing.T) {
 		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Test Folder")
 
 		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "")
+		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
 
 		DeleteFolder(w, req, mockAuth)
@@ -631,9 +657,13 @@ func TestDeleteFolder(t *testing.T) {
 	t.Run("rejects non-DELETE methods", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/folders/1", nil)
 		w := httptest.NewRecorder()
+		router := mux.NewRouter()
+		router.HandleFunc("/api/folders/{id}", func(w http.ResponseWriter, r *http.Request) {
+			DeleteFolder(w, r, mockAuth)
+		}).Methods(http.MethodDelete)
 
-		DeleteFolder(w, req, mockAuth)
+		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }

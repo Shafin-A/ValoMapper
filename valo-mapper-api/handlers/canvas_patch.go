@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
+
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
+
+	"github.com/gorilla/mux"
 )
 
 // ApplyCanvasPatch godoc
@@ -24,14 +26,7 @@ import (
 // @Failure 500 {object} ErrorResponse
 // @Router /api/lobbies/{code}/canvas-patches [post]
 func ApplyCanvasPatch(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.SendJSONError(w, utils.NewBadRequest("Method not allowed"), middleware.GetRequestID(r))
-		return
-	}
-
-	path := r.URL.Path
-	code := strings.TrimPrefix(path, "/api/lobbies/")
-	code = strings.TrimSuffix(code, "/canvas-patches")
+	code := mux.Vars(r)["code"]
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
