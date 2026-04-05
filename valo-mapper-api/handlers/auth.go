@@ -3,9 +3,11 @@ package handlers
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
+	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 
 	"firebase.google.com/go/v4/auth"
@@ -130,7 +132,9 @@ func authenticateRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*
 
 	if firebaseErr == nil && firebaseUser != nil && firebaseUser.EmailVerified != user.EmailVerified {
 		user.EmailVerified = firebaseUser.EmailVerified
-		_ = user.Update()
+		if updateErr := user.Update(); updateErr != nil {
+			log.Printf("[request=%s] failed to sync email_verified for user %d: %v", middleware.GetRequestID(r), user.ID, updateErr)
+		}
 	}
 
 	return user, nil
