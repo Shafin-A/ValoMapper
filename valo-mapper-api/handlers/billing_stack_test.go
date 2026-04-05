@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
@@ -35,7 +36,7 @@ func TestInviteStackMember_CreatesInvite(t *testing.T) {
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id = $2
-	`, string(checkoutPlanStack), owner.ID)
+	`, string(services.CheckoutPlanStack), owner.ID)
 	require.NoError(t, err)
 
 	mockAuth := newMockAuthForUser(owner)
@@ -72,7 +73,7 @@ func TestInviteStackMember_RejectsTargetWhoOwnsStackPlan(t *testing.T) {
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id IN ($2, $3)
-	`, string(checkoutPlanStack), inviter.ID, targetOwner.ID)
+	`, string(services.CheckoutPlanStack), inviter.ID, targetOwner.ID)
 	require.NoError(t, err)
 
 	mockAuth := newMockAuthForUser(inviter)
@@ -116,7 +117,7 @@ func TestGetStackMembers_AllowsActiveStackMemberViewOnly(t *testing.T) {
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id = $2
-	`, string(checkoutPlanStack), owner.ID)
+	`, string(services.CheckoutPlanStack), owner.ID)
 	require.NoError(t, err)
 
 	invite, err := models.CreateStackInvite(owner.ID, member.ID)
@@ -155,7 +156,7 @@ func TestAcceptStackInvite_ActivatesMembership(t *testing.T) {
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id = $2
-	`, string(checkoutPlanStack), owner.ID)
+	`, string(services.CheckoutPlanStack), owner.ID)
 	require.NoError(t, err)
 
 	invite, err := models.CreateStackInvite(owner.ID, member.ID)
@@ -199,7 +200,7 @@ func TestAcceptStackInvite_SchedulesPersonalSubscriptionCancellation(t *testing.
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id = $2
-	`, string(checkoutPlanStack), owner.ID)
+	`, string(services.CheckoutPlanStack), owner.ID)
 	require.NoError(t, err)
 
 	_, err = pool.Exec(context.Background(), `
@@ -209,7 +210,7 @@ func TestAcceptStackInvite_SchedulesPersonalSubscriptionCancellation(t *testing.
 		    stripe_customer_id = $2,
 		    stripe_subscription_id = $3
 		WHERE id = $4
-	`, string(checkoutPlanMonthly), "cus_member_stack_join", "sub_member_stack_join", member.ID)
+	`, string(services.CheckoutPlanMonthly), "cus_member_stack_join", "sub_member_stack_join", member.ID)
 	require.NoError(t, err)
 
 	invite, err := models.CreateStackInvite(owner.ID, member.ID)
@@ -236,7 +237,7 @@ func TestAcceptStackInvite_SchedulesPersonalSubscriptionCancellation(t *testing.
 			Status:            stripe.SubscriptionStatusActive,
 			CancelAtPeriodEnd: false,
 			Metadata: map[string]string{
-				"plan": string(checkoutPlanMonthly),
+				"plan": string(services.CheckoutPlanMonthly),
 			},
 			Customer: &stripe.Customer{ID: "cus_member_stack_join"},
 		}, nil
@@ -253,7 +254,7 @@ func TestAcceptStackInvite_SchedulesPersonalSubscriptionCancellation(t *testing.
 			CancelAtPeriodEnd: true,
 			CancelAt:          futureCancelAt,
 			Metadata: map[string]string{
-				"plan": string(checkoutPlanMonthly),
+				"plan": string(services.CheckoutPlanMonthly),
 			},
 			Customer: &stripe.Customer{ID: "cus_member_stack_join"},
 		}, nil
@@ -274,13 +275,13 @@ func TestAcceptStackInvite_SchedulesPersonalSubscriptionCancellation(t *testing.
 	require.NotNil(t, updatedMember)
 	assert.True(t, updatedMember.IsSubscribed)
 	require.NotNil(t, updatedMember.SubscriptionPlan)
-	assert.Equal(t, string(checkoutPlanStack), *updatedMember.SubscriptionPlan)
+	assert.Equal(t, string(services.CheckoutPlanStack), *updatedMember.SubscriptionPlan)
 	assert.Nil(t, updatedMember.SubscriptionEndedAt)
 	assert.Nil(t, updatedMember.SubscriptionTrialEndsAt)
 	assert.True(t, updatedMember.PersonalIsSubscribed)
 	require.NotNil(t, updatedMember.PersonalSubscriptionEndedAt)
 	require.NotNil(t, updatedMember.PersonalSubscriptionPlan)
-	assert.Equal(t, string(checkoutPlanMonthly), *updatedMember.PersonalSubscriptionPlan)
+	assert.Equal(t, string(services.CheckoutPlanMonthly), *updatedMember.PersonalSubscriptionPlan)
 
 	updatedInvite, err := models.GetStackMemberByID(invite.ID)
 	require.NoError(t, err)
@@ -304,7 +305,7 @@ func TestAcceptStackInvite_PrioritizesStackOverPersonalTrial(t *testing.T) {
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id = $2
-	`, string(checkoutPlanStack), owner.ID)
+	`, string(services.CheckoutPlanStack), owner.ID)
 	require.NoError(t, err)
 
 	_, err = pool.Exec(context.Background(), `
@@ -316,7 +317,7 @@ func TestAcceptStackInvite_PrioritizesStackOverPersonalTrial(t *testing.T) {
 		    stripe_subscription_id = $3,
 		    premium_trial_claimed_at = NOW()
 		WHERE id = $4
-	`, string(checkoutPlanMonthly), "cus_member_trial_join", "sub_member_trial_join", member.ID)
+	`, string(services.CheckoutPlanMonthly), "cus_member_trial_join", "sub_member_trial_join", member.ID)
 	require.NoError(t, err)
 
 	invite, err := models.CreateStackInvite(owner.ID, member.ID)
@@ -345,7 +346,7 @@ func TestAcceptStackInvite_PrioritizesStackOverPersonalTrial(t *testing.T) {
 			CancelAtPeriodEnd: false,
 			TrialEnd:          trialEnd.Unix(),
 			Metadata: map[string]string{
-				"plan": string(checkoutPlanMonthly),
+				"plan": string(services.CheckoutPlanMonthly),
 			},
 			Customer: &stripe.Customer{ID: "cus_member_trial_join"},
 		}, nil
@@ -360,7 +361,7 @@ func TestAcceptStackInvite_PrioritizesStackOverPersonalTrial(t *testing.T) {
 			CancelAt:          futureCancelAt,
 			TrialEnd:          trialEnd.Unix(),
 			Metadata: map[string]string{
-				"plan": string(checkoutPlanMonthly),
+				"plan": string(services.CheckoutPlanMonthly),
 			},
 			Customer: &stripe.Customer{ID: "cus_member_trial_join"},
 		}, nil
@@ -380,7 +381,7 @@ func TestAcceptStackInvite_PrioritizesStackOverPersonalTrial(t *testing.T) {
 	require.NotNil(t, updatedMember)
 	assert.True(t, updatedMember.IsSubscribed)
 	require.NotNil(t, updatedMember.SubscriptionPlan)
-	assert.Equal(t, string(checkoutPlanStack), *updatedMember.SubscriptionPlan)
+	assert.Equal(t, string(services.CheckoutPlanStack), *updatedMember.SubscriptionPlan)
 	assert.Nil(t, updatedMember.SubscriptionEndedAt)
 	assert.Nil(t, updatedMember.SubscriptionTrialEndsAt)
 	assert.True(t, updatedMember.PersonalIsSubscribed)
@@ -388,7 +389,7 @@ func TestAcceptStackInvite_PrioritizesStackOverPersonalTrial(t *testing.T) {
 	require.NotNil(t, updatedMember.PersonalSubscriptionTrialEndsAt)
 	assert.WithinDuration(t, trialEnd, *updatedMember.PersonalSubscriptionTrialEndsAt, time.Second)
 	require.NotNil(t, updatedMember.PersonalSubscriptionPlan)
-	assert.Equal(t, string(checkoutPlanMonthly), *updatedMember.PersonalSubscriptionPlan)
+	assert.Equal(t, string(services.CheckoutPlanMonthly), *updatedMember.PersonalSubscriptionPlan)
 	assert.NotNil(t, updatedMember.PremiumTrialClaimedAt)
 }
 
@@ -409,7 +410,7 @@ func TestInviteStackMember_AllowsMultiplePendingInvitesAcrossOwners(t *testing.T
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id IN ($2, $3)
-	`, string(checkoutPlanStack), ownerA.ID, ownerB.ID)
+	`, string(services.CheckoutPlanStack), ownerA.ID, ownerB.ID)
 	require.NoError(t, err)
 
 	reqA := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/invite", map[string]string{
@@ -448,7 +449,7 @@ func TestAcceptStackInvite_ClearsOtherPendingInvitesForMember(t *testing.T) {
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id IN ($2, $3)
-	`, string(checkoutPlanStack), ownerA.ID, ownerB.ID)
+	`, string(services.CheckoutPlanStack), ownerA.ID, ownerB.ID)
 	require.NoError(t, err)
 
 	inviteA, err := models.CreateStackInvite(ownerA.ID, member.ID)
@@ -494,7 +495,7 @@ func TestDeclineStackInvite_RemovesOnlySelectedInvite(t *testing.T) {
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id IN ($2, $3)
-	`, string(checkoutPlanStack), ownerA.ID, ownerB.ID)
+	`, string(services.CheckoutPlanStack), ownerA.ID, ownerB.ID)
 	require.NoError(t, err)
 
 	inviteA, err := models.CreateStackInvite(ownerA.ID, member.ID)
@@ -535,7 +536,7 @@ func TestStackMembershipAccessDependsOnOwnerStackSubscription(t *testing.T) {
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id = $2
-	`, string(checkoutPlanStack), owner.ID)
+	`, string(services.CheckoutPlanStack), owner.ID)
 	require.NoError(t, err)
 
 	invite, err := models.CreateStackInvite(owner.ID, member.ID)
@@ -547,7 +548,7 @@ func TestStackMembershipAccessDependsOnOwnerStackSubscription(t *testing.T) {
 	require.NotNil(t, updatedMember)
 	assert.True(t, updatedMember.IsSubscribed)
 	require.NotNil(t, updatedMember.SubscriptionPlan)
-	assert.Equal(t, string(checkoutPlanStack), *updatedMember.SubscriptionPlan)
+	assert.Equal(t, string(services.CheckoutPlanStack), *updatedMember.SubscriptionPlan)
 
 	_, err = pool.Exec(context.Background(), `
 		UPDATE users
@@ -582,7 +583,7 @@ func TestLeaveStack_StartsAndResetsGraceWindowForStackOnlyMember(t *testing.T) {
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id = $2
-	`, string(checkoutPlanStack), owner.ID)
+	`, string(services.CheckoutPlanStack), owner.ID)
 	require.NoError(t, err)
 
 	invite, err := models.CreateStackInvite(owner.ID, member.ID)
@@ -637,7 +638,7 @@ func TestRemoveStackMember_StartsAndResetsGraceWindowForStackOnlyMember(t *testi
 		UPDATE users
 		SET is_subscribed = TRUE, subscription_plan = $1
 		WHERE id = $2
-	`, string(checkoutPlanStack), owner.ID)
+	`, string(services.CheckoutPlanStack), owner.ID)
 	require.NoError(t, err)
 
 	invite, err := models.CreateStackInvite(owner.ID, member.ID)

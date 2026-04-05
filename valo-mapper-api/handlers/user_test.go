@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
@@ -172,7 +173,7 @@ func TestGetUser(t *testing.T) {
 			SET is_subscribed = TRUE,
 			    subscription_plan = $1
 			WHERE id = $2
-		`, string(checkoutPlanStack), owner.ID)
+		`, string(services.CheckoutPlanStack), owner.ID)
 		assert.NoError(t, err)
 
 		personalEndsAt := time.Now().UTC().Add(14 * 24 * time.Hour)
@@ -184,7 +185,7 @@ func TestGetUser(t *testing.T) {
 			    stripe_subscription_id = $3,
 			    stripe_customer_id = $4
 			WHERE id = $5
-		`, string(checkoutPlanMonthly), personalEndsAt, "sub_user_get_stack_member", "cus_user_get_stack_member", member.ID)
+		`, string(services.CheckoutPlanMonthly), personalEndsAt, "sub_user_get_stack_member", "cus_user_get_stack_member", member.ID)
 		assert.NoError(t, err)
 
 		invite, err := models.CreateStackInvite(owner.ID, member.ID)
@@ -212,11 +213,11 @@ func TestGetUser(t *testing.T) {
 		testutils.ParseJSONResponse(t, w, &user)
 		assert.True(t, user.IsSubscribed)
 		if assert.NotNil(t, user.SubscriptionPlan) {
-			assert.Equal(t, string(checkoutPlanStack), *user.SubscriptionPlan)
+			assert.Equal(t, string(services.CheckoutPlanStack), *user.SubscriptionPlan)
 		}
 		assert.True(t, user.PersonalIsSubscribed)
 		if assert.NotNil(t, user.PersonalSubscriptionPlan) {
-			assert.Equal(t, string(checkoutPlanMonthly), *user.PersonalSubscriptionPlan)
+			assert.Equal(t, string(services.CheckoutPlanMonthly), *user.PersonalSubscriptionPlan)
 		}
 		if assert.NotNil(t, user.PersonalSubscriptionEndedAt) {
 			assert.WithinDuration(t, personalEndsAt, *user.PersonalSubscriptionEndedAt, time.Second)
@@ -232,7 +233,7 @@ func TestGetUser(t *testing.T) {
 			SET is_subscribed = TRUE,
 			    subscription_plan = $1
 			WHERE id = $2
-		`, string(checkoutPlanStack), owner.ID)
+		`, string(services.CheckoutPlanStack), owner.ID)
 		assert.NoError(t, err)
 
 		invite, err := models.CreateStackInvite(owner.ID, member.ID)

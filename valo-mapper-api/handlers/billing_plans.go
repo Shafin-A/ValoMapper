@@ -34,7 +34,7 @@ func GetBillingPlans(w http.ResponseWriter, r *http.Request) {
 	stripe.Key = stripeSecretKey
 	billingService := services.NewBillingService(services.BillingServiceDependencies{
 		FindStripePriceForPlanFn: func(plan services.CheckoutPlan) (*stripe.Price, error) {
-			return findStripePriceForPlanFn(checkoutPlan(plan))
+			return findStripePriceForPlanFn(plan)
 		},
 	})
 
@@ -79,23 +79,23 @@ func GetBillingPlans(w http.ResponseWriter, r *http.Request) {
 	}, requestID)
 }
 
-func checkoutLookupKeyForPlan(plan checkoutPlan) (string, error) {
+func checkoutLookupKeyForPlan(plan services.CheckoutPlan) (string, error) {
 	switch plan {
-	case checkoutPlanMonthly:
+	case services.CheckoutPlanMonthly:
 		lookupKey := strings.TrimSpace(os.Getenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY"))
 		if lookupKey == "" {
 			lookupKey = defaultMonthlyPriceLookupKey
 		}
 
 		return lookupKey, nil
-	case checkoutPlanYearly:
+	case services.CheckoutPlanYearly:
 		lookupKey := strings.TrimSpace(os.Getenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY"))
 		if lookupKey == "" {
 			lookupKey = defaultYearlyPriceLookupKey
 		}
 
 		return lookupKey, nil
-	case checkoutPlanStack:
+	case services.CheckoutPlanStack:
 		lookupKey := strings.TrimSpace(os.Getenv("STRIPE_PRICE_LOOKUP_KEY_STACK"))
 		if lookupKey == "" {
 			lookupKey = defaultStackPriceLookupKey
@@ -107,18 +107,18 @@ func checkoutLookupKeyForPlan(plan checkoutPlan) (string, error) {
 	}
 }
 
-func expectedIntervalForPlan(plan checkoutPlan) (stripe.PriceRecurringInterval, error) {
+func expectedIntervalForPlan(plan services.CheckoutPlan) (stripe.PriceRecurringInterval, error) {
 	switch plan {
-	case checkoutPlanMonthly:
+	case services.CheckoutPlanMonthly:
 		return stripe.PriceRecurringIntervalMonth, nil
-	case checkoutPlanYearly, checkoutPlanStack:
+	case services.CheckoutPlanYearly, services.CheckoutPlanStack:
 		return stripe.PriceRecurringIntervalYear, nil
 	default:
 		return "", errUnsupportedCheckoutPlan
 	}
 }
 
-func findStripePriceForPlan(plan checkoutPlan) (*stripe.Price, error) {
+func findStripePriceForPlan(plan services.CheckoutPlan) (*stripe.Price, error) {
 	lookupKey, err := checkoutLookupKeyForPlan(plan)
 	if err != nil {
 		return nil, err

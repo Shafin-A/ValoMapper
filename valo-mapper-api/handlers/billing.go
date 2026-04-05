@@ -33,13 +33,7 @@ var errStripeScheduledCancellationNotFound = services.ErrStripeScheduledCancella
 var errUnsupportedCheckoutPlan = services.ErrUnsupportedCheckoutPlan
 var errCheckoutPlanUnavailable = services.ErrCheckoutPlanUnavailable
 
-type checkoutPlan string
-
 const (
-	checkoutPlanMonthly checkoutPlan = "monthly"
-	checkoutPlanYearly  checkoutPlan = "yearly"
-	checkoutPlanStack   checkoutPlan = "stack"
-
 	defaultMonthlyPriceLookupKey = "standard_monthly"
 	defaultYearlyPriceLookupKey  = "standard_yearly"
 	defaultStackPriceLookupKey   = "standard_stack"

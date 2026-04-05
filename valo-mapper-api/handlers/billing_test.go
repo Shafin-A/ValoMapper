@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 	"valo-mapper-api/models"
+	"valo-mapper-api/services"
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
@@ -93,11 +94,11 @@ func TestCreateCheckoutSession(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-1")
 		const returnToPath = "/ABCD123?tab=map"
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			switch plan {
-			case checkoutPlanMonthly:
+			case services.CheckoutPlanMonthly:
 				return &stripe.Price{ID: "price_test_checkout"}, nil
-			case checkoutPlanYearly:
+			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
 				return nil, errCheckoutPlanUnavailable
@@ -158,11 +159,11 @@ func TestCreateCheckoutSession(t *testing.T) {
 	t.Run("uses yearly plan price when requested without trial", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-yearly")
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			switch plan {
-			case checkoutPlanMonthly:
+			case services.CheckoutPlanMonthly:
 				return &stripe.Price{ID: "price_test_checkout"}, nil
-			case checkoutPlanYearly:
+			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
 				return nil, errCheckoutPlanUnavailable
@@ -216,11 +217,11 @@ func TestCreateCheckoutSession(t *testing.T) {
 	t.Run("does not consume trial eligibility when creating checkout session", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-first-time-trial-only")
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			switch plan {
-			case checkoutPlanMonthly:
+			case services.CheckoutPlanMonthly:
 				return &stripe.Price{ID: "price_test_checkout"}, nil
-			case checkoutPlanYearly:
+			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
 				return nil, errCheckoutPlanUnavailable
@@ -276,7 +277,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 	t.Run("rejects unsupported checkout plan", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-invalid-plan")
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			return &stripe.Price{ID: "price_test_checkout"}, nil
 		}
 
@@ -309,7 +310,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
 		assert.NoError(t, err)
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			return &stripe.Price{ID: "price_should_not_be_used"}, nil
 		}
 
@@ -342,11 +343,11 @@ func TestCreateCheckoutSession(t *testing.T) {
 		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, stripe_subscription_id = $2 WHERE id = $1`, testUser.ID, "sub_stale_checkout")
 		assert.NoError(t, err)
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			switch plan {
-			case checkoutPlanMonthly:
+			case services.CheckoutPlanMonthly:
 				return &stripe.Price{ID: "price_test_checkout"}, nil
-			case checkoutPlanYearly:
+			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
 				return nil, errCheckoutPlanUnavailable
@@ -401,11 +402,11 @@ func TestCreateCheckoutSession(t *testing.T) {
 		_, err := pool.Exec(context.Background(), `UPDATE users SET stripe_customer_id = $2 WHERE id = $1`, testUser.ID, "cus_stale_checkout")
 		assert.NoError(t, err)
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			switch plan {
-			case checkoutPlanMonthly:
+			case services.CheckoutPlanMonthly:
 				return &stripe.Price{ID: "price_test_checkout"}, nil
-			case checkoutPlanYearly:
+			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
 				return nil, errCheckoutPlanUnavailable
@@ -459,11 +460,11 @@ func TestCreateCheckoutSession(t *testing.T) {
 	t.Run("ignores invalid returnTo values", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-3")
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			switch plan {
-			case checkoutPlanMonthly:
+			case services.CheckoutPlanMonthly:
 				return &stripe.Price{ID: "price_test_checkout"}, nil
-			case checkoutPlanYearly:
+			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
 				return nil, errCheckoutPlanUnavailable
@@ -584,9 +585,9 @@ func TestGetBillingPlans(t *testing.T) {
 		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY", "standard_yearly")
 		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_STACK", "standard_stack")
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			switch plan {
-			case checkoutPlanMonthly:
+			case services.CheckoutPlanMonthly:
 				return &stripe.Price{
 					ID:                "price_monthly_test",
 					LookupKey:         "standard_monthly",
@@ -598,7 +599,7 @@ func TestGetBillingPlans(t *testing.T) {
 						IntervalCount: 1,
 					},
 				}, nil
-			case checkoutPlanYearly:
+			case services.CheckoutPlanYearly:
 				return &stripe.Price{
 					ID:                "price_yearly_test",
 					LookupKey:         "standard_yearly",
@@ -610,7 +611,7 @@ func TestGetBillingPlans(t *testing.T) {
 						IntervalCount: 1,
 					},
 				}, nil
-			case checkoutPlanStack:
+			case services.CheckoutPlanStack:
 				return &stripe.Price{
 					ID:                "price_stack_test",
 					LookupKey:         "standard_stack",
@@ -661,7 +662,7 @@ func TestGetBillingPlans(t *testing.T) {
 		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_MONTHLY", "standard_monthly")
 		_ = os.Setenv("STRIPE_PRICE_LOOKUP_KEY_YEARLY", "standard_yearly")
 
-		findStripePriceForPlanFn = func(plan checkoutPlan) (*stripe.Price, error) {
+		findStripePriceForPlanFn = func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			return &stripe.Price{}, nil
 		}
 

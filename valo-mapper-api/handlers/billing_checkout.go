@@ -45,7 +45,7 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 	billingService := services.NewBillingService(services.BillingServiceDependencies{
 		CreateStripeCheckoutSessionFn: createStripeCheckoutSessionFn,
 		FindStripePriceForPlanFn: func(plan services.CheckoutPlan) (*stripe.Price, error) {
-			return findStripePriceForPlanFn(checkoutPlan(plan))
+			return findStripePriceForPlanFn(plan)
 		},
 		GetStripeSubscriptionFn: getStripeSubscriptionFn,
 	})
