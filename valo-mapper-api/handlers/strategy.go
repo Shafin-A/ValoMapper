@@ -78,7 +78,7 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 	}
 	defer r.Body.Close()
 
-	strategyService := services.NewStrategyService()
+	strategyService := services.NewStrategyService(services.StrategyServiceDependencies{})
 	response, err := strategyService.CreateStrategy(user, services.CreateStrategyRequest{
 		FolderID:  req.FolderID,
 		LobbyCode: req.LobbyCode,
@@ -140,7 +140,7 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth Firebase
 		folderID = &id
 	}
 
-	strategyService := services.NewStrategyService()
+	strategyService := services.NewStrategyService(services.StrategyServiceDependencies{})
 	strategies, err := strategyService.GetStrategies(user.ID, folderID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategies", err), middleware.GetRequestID(r))
@@ -212,7 +212,7 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		req.FolderID = folderID
 	}
 
-	strategyService := services.NewStrategyService()
+	strategyService := services.NewStrategyService(services.StrategyServiceDependencies{})
 	response, err := strategyService.UpdateStrategy(user, id, services.UpdateStrategyRequest{
 		FolderID:    req.FolderID,
 		HasFolderID: req.HasFolderID,
@@ -264,7 +264,7 @@ func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		return
 	}
 
-	strategyService := services.NewStrategyService()
+	strategyService := services.NewStrategyService(services.StrategyServiceDependencies{})
 	if err := strategyService.DeleteStrategy(user, id); err != nil {
 		switch {
 		case errors.Is(err, services.ErrStrategyNotFound):
@@ -282,3 +282,4 @@ func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusNoContent)
 }
+

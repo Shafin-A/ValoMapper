@@ -51,7 +51,7 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 	}
 	defer r.Body.Close()
 
-	folderService := services.NewFolderService()
+	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	folder, err := folderService.CreateFolder(user, services.CreateFolderRequest{
 		Name:           req.Name,
 		ParentFolderID: req.ParentFolderID,
@@ -89,7 +89,7 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	folderService := services.NewFolderService()
+	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	folders, err := folderService.GetFolders(user.ID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folders", err), middleware.GetRequestID(r))
@@ -135,7 +135,7 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 	}
 	defer r.Body.Close()
 
-	folderService := services.NewFolderService()
+	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	folder, err := folderService.UpdateFolder(user, id, services.UpdateFolderRequest{
 		Name:           req.Name,
 		ParentFolderID: req.ParentFolderID,
@@ -186,7 +186,7 @@ func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		return
 	}
 
-	folderService := services.NewFolderService()
+	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	if err := folderService.DeleteFolder(user, id); err != nil {
 		if errors.Is(err, services.ErrFolderSubscriptionRequired) {
 			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
@@ -207,3 +207,4 @@ func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusNoContent)
 }
+

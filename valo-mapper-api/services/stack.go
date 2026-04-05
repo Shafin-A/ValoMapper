@@ -20,11 +20,14 @@ var (
 	ErrStackForbidden         = errors.New("forbidden")
 )
 
+// StackServiceDependencies holds injectable dependencies for StackService.
+type StackServiceDependencies struct{}
+
 // StackService handles stack member management and stack-related operations
 type StackService struct{}
 
 // NewStackService creates a new StackService
-func NewStackService() *StackService {
+func NewStackService(_ StackServiceDependencies) *StackService {
 	return &StackService{}
 }
 

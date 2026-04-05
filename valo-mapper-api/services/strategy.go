@@ -17,11 +17,14 @@ var (
 	ErrStrategyAccessDenied  = errors.New("you do not have access to this strategy")
 )
 
+// StrategyServiceDependencies holds injectable dependencies for StrategyService.
+type StrategyServiceDependencies struct{}
+
 // StrategyService handles strategy-related business logic
 type StrategyService struct{}
 
 // NewStrategyService creates a new StrategyService
-func NewStrategyService() *StrategyService {
+func NewStrategyService(_ StrategyServiceDependencies) *StrategyService {
 	return &StrategyService{}
 }
 

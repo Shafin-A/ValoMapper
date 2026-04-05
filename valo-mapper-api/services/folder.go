@@ -12,11 +12,14 @@ var (
 	ErrFolderAccessDenied         = errors.New("you do not have access to this folder")
 )
 
+// FolderServiceDependencies holds injectable dependencies for FolderService.
+type FolderServiceDependencies struct{}
+
 // FolderService handles folder-related business logic
 type FolderService struct{}
 
 // NewFolderService creates a new FolderService
-func NewFolderService() *FolderService {
+func NewFolderService(_ FolderServiceDependencies) *FolderService {
 	return &FolderService{}
 }
 

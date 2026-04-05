@@ -67,7 +67,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	userService := services.NewUserService()
+	userService := services.NewUserService(services.UserServiceDependencies{})
 	user, err := userService.CreateUser(services.CreateUserRequest{
 		FirebaseUID: req.FirebaseUID,
 		Name:        req.Name,
@@ -107,7 +107,7 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthIn
 		return
 	}
 
-	userService := services.NewUserService()
+	userService := services.NewUserService(services.UserServiceDependencies{})
 	userService.EnrichUserBillingState(user)
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
@@ -145,7 +145,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	}
 	defer r.Body.Close()
 
-	userService := services.NewUserService()
+	userService := services.NewUserService(services.UserServiceDependencies{})
 	if err := userService.UpdateUser(user, services.UpdateUserRequest{
 		Name:          req.Name,
 		TourCompleted: req.TourCompleted,
@@ -180,7 +180,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	userService := services.NewUserService()
+	userService := services.NewUserService(services.UserServiceDependencies{})
 	if err := userService.DeleteUser(user, firebaseAuth); err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to delete user", err), middleware.GetRequestID(r))
 		return
@@ -238,7 +238,7 @@ func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAu
 		return
 	}
 
-	userService := services.NewUserService()
+	userService := services.NewUserService(services.UserServiceDependencies{})
 	user, err := userService.UpdateUserSubscription(services.UpdateUserSubscriptionRequest{
 		UserID:       req.UserID,
 		FirebaseUID:  req.FirebaseUID,
@@ -257,3 +257,4 @@ func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAu
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
+

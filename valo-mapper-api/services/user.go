@@ -19,11 +19,14 @@ var (
 	ErrUserNotFound            = errors.New("user not found")
 )
 
+// UserServiceDependencies holds injectable dependencies for UserService.
+type UserServiceDependencies struct{}
+
 // UserService handles user-related business logic
 type UserService struct{}
 
 // NewUserService creates a new UserService
-func NewUserService() *UserService {
+func NewUserService(_ UserServiceDependencies) *UserService {
 	return &UserService{}
 }
 

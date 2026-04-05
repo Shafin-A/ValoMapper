@@ -36,7 +36,7 @@ func GetStackMembers(w http.ResponseWriter, r *http.Request, firebaseAuth Fireba
 		return
 	}
 
-	stackService := services.NewStackService()
+	stackService := services.NewStackService(services.StackServiceDependencies{})
 	ownerUserID, canManage, err := stackService.GetStackViewContext(user)
 	if err != nil {
 		if errors.Is(err, services.ErrNotInStack) {
@@ -99,7 +99,7 @@ func InviteStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		return
 	}
 
-	stackService := services.NewStackService()
+	stackService := services.NewStackService(services.StackServiceDependencies{})
 	invite, err := stackService.InviteStackMember(user, services.InviteStackMemberRequest{FirebaseUID: req.FirebaseUID})
 	if err != nil {
 		switch {
@@ -162,7 +162,7 @@ func RemoveStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		return
 	}
 
-	stackService := services.NewStackService()
+	stackService := services.NewStackService(services.StackServiceDependencies{})
 	if err := stackService.RemoveStackMember(user, memberID); err != nil {
 		if errors.Is(err, services.ErrNotStackOwner) {
 			utils.SendJSONError(w, utils.NewForbidden(services.ErrNotStackOwner.Error()), requestID)
@@ -208,7 +208,7 @@ func AcceptStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		return
 	}
 
-	stackService := services.NewStackService()
+	stackService := services.NewStackService(services.StackServiceDependencies{})
 	if err := stackService.AcceptStackInvite(user, inviteID); err != nil {
 		switch {
 		case errors.Is(err, services.ErrStackInviteNotFound):
@@ -279,7 +279,7 @@ func LeaveStack(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 
-	stackService := services.NewStackService()
+	stackService := services.NewStackService(services.StackServiceDependencies{})
 	if err := stackService.LeaveStack(user); err != nil {
 		if errors.Is(err, services.ErrNotInStack) {
 			utils.SendJSONError(w, utils.NewNotFound("not-in-stack"), requestID)
@@ -320,7 +320,7 @@ func DeclineStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 		return
 	}
 
-	stackService := services.NewStackService()
+	stackService := services.NewStackService(services.StackServiceDependencies{})
 	if err := stackService.DeclineStackInvite(user, inviteID); err != nil {
 		if errors.Is(err, services.ErrStackInviteNotFound) {
 			utils.SendJSONError(w, utils.NewNotFound("stack-invite-not-found"), requestID)
@@ -356,7 +356,7 @@ func GetPendingStackInvites(w http.ResponseWriter, r *http.Request, firebaseAuth
 		return
 	}
 
-	stackService := services.NewStackService()
+	stackService := services.NewStackService(services.StackServiceDependencies{})
 	invites, err := stackService.GetPendingInvites(user.ID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Failed to fetch pending invites", err), requestID)
@@ -370,3 +370,4 @@ func GetPendingStackInvites(w http.ResponseWriter, r *http.Request, firebaseAuth
 func parseIDVar(r *http.Request, name string) (int, error) {
 	return strconv.Atoi(mux.Vars(r)[name])
 }
+
