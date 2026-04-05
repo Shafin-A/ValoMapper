@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/time/rate"
@@ -22,6 +23,12 @@ type IPRateLimiter struct {
 type rateLimiterEntry struct {
 	limiter  *rate.Limiter
 	lastSeen time.Time
+}
+
+var rateLimitRejections atomic.Int64
+
+func RateLimitRejections() int64 {
+	return rateLimitRejections.Load()
 }
 
 func NewIPRateLimiter(r rate.Limit, b int) *IPRateLimiter {
@@ -131,6 +138,7 @@ func RateLimitMiddleware(limiter *IPRateLimiter) func(http.Handler) http.Handler
 			ipLimiter := limiter.GetLimiter(ip)
 
 			if !ipLimiter.Allow() {
+				rateLimitRejections.Add(1)
 				w.Header().Set("Content-Type", "application/json")
 				w.Header().Set("Retry-After", "1")
 				w.WriteHeader(http.StatusTooManyRequests)

@@ -9,6 +9,7 @@ import (
 
 func SetupRoutes(r *mux.Router, firebaseAuth *auth.Client, hub *websocket.Hub) {
 	RegisterHealthRoutes(r)
+	RegisterMetricsRoutes(r, hub)
 	RegisterAuthRoutes(r, firebaseAuth)
 	RegisterBillingRoutes(r, firebaseAuth)
 	RegisterLobbyRoutes(r, hub)

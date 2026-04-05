@@ -45,6 +45,7 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 
 	signature := r.Header.Get("Stripe-Signature")
 	if err := webhook.ValidatePayload(payload, signature, webhookSecret); err != nil {
+		stripeWebhookFailed.Add(1)
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid Stripe signature"), requestID)
 		return
 	}
@@ -64,10 +65,12 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 
 	claimed, err := models.ClaimStripeWebhookEvent(r.Context(), eventID, string(event.Type))
 	if err != nil {
+		stripeWebhookFailed.Add(1)
 		utils.SendJSONError(w, utils.NewInternal("Unable to process Stripe event", err), requestID)
 		return
 	}
 	if !claimed {
+		stripeWebhookDuplicates.Add(1)
 		slog.Info("stripe webhook duplicate ignored", "request_id", requestID, "event_id", eventID, "event_type", event.Type)
 		utils.SendJSON(w, http.StatusOK, map[string]string{
 			"status":  "ignored",
@@ -80,6 +83,7 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 	billingService := services.NewBillingService(services.BillingServiceDependencies{})
 	processed, reason, err := billingService.ProcessStripeSubscriptionEvent(event)
 	if err != nil {
+		stripeWebhookFailed.Add(1)
 		if releaseErr := models.ReleaseStripeWebhookEventClaim(r.Context(), eventID); releaseErr != nil {
 			slog.Error("failed to release stripe webhook event claim", "request_id", requestID, "event_id", eventID, "error", releaseErr)
 		}
@@ -96,6 +100,7 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	stripeWebhookProcessed.Add(1)
 	utils.SendJSON(w, http.StatusOK, map[string]string{
 		"status":    "processed",
 		"eventType": string(event.Type),

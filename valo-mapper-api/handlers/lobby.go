@@ -76,6 +76,7 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	lobbyCreationsTotal.Add(1)
 	utils.SendJSON(w, http.StatusCreated, lobby, middleware.GetRequestID(r))
 }
 

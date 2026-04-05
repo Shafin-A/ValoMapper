@@ -1741,6 +1741,26 @@
                     }
                 }
             }
+        },
+        "/metrics": {
+            "get": {
+                "description": "Returns basic runtime, memory, database pool, and WebSocket metrics.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Observability metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.metricsResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2037,6 +2057,107 @@
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.canvasPatchMetrics": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.dbMetrics": {
+            "type": "object",
+            "properties": {
+                "acquired_conns": {
+                    "type": "integer"
+                },
+                "idle_conns": {
+                    "type": "integer"
+                },
+                "total_conns": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.lobbyMetrics": {
+            "type": "object",
+            "properties": {
+                "creations_total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.memoryMetrics": {
+            "type": "object",
+            "properties": {
+                "alloc_bytes": {
+                    "type": "integer"
+                },
+                "num_gc": {
+                    "type": "integer"
+                },
+                "sys_bytes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.metricsResponse": {
+            "type": "object",
+            "properties": {
+                "canvas_patch": {
+                    "$ref": "#/definitions/handlers.canvasPatchMetrics"
+                },
+                "db": {
+                    "$ref": "#/definitions/handlers.dbMetrics"
+                },
+                "goroutines": {
+                    "type": "integer"
+                },
+                "lobbies": {
+                    "$ref": "#/definitions/handlers.lobbyMetrics"
+                },
+                "memory": {
+                    "$ref": "#/definitions/handlers.memoryMetrics"
+                },
+                "rate_limiter": {
+                    "$ref": "#/definitions/handlers.rateLimiterMetrics"
+                },
+                "stripe_webhook": {
+                    "$ref": "#/definitions/handlers.stripeWebhookMetrics"
+                },
+                "uptime_seconds": {
+                    "type": "number"
+                },
+                "websocket": {
+                    "$ref": "#/definitions/websocket.HubStats"
+                }
+            }
+        },
+        "handlers.rateLimiterMetrics": {
+            "type": "object",
+            "properties": {
+                "rejections": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.stripeWebhookMetrics": {
+            "type": "object",
+            "properties": {
+                "duplicates": {
+                    "type": "integer"
+                },
+                "failed": {
+                    "type": "integer"
+                },
+                "processed": {
+                    "type": "integer"
                 }
             }
         },
@@ -2540,6 +2661,23 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "websocket.HubStats": {
+            "type": "object",
+            "properties": {
+                "active_lobbies": {
+                    "type": "integer"
+                },
+                "connected_clients": {
+                    "type": "integer"
+                },
+                "total_drops": {
+                    "type": "integer"
+                },
+                "total_joins": {
+                    "type": "integer"
                 }
             }
         }

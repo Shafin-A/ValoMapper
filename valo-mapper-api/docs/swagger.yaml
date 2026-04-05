@@ -190,6 +190,71 @@ definitions:
       url:
         type: string
     type: object
+  handlers.canvasPatchMetrics:
+    properties:
+      errors:
+        type: integer
+      total:
+        type: integer
+    type: object
+  handlers.dbMetrics:
+    properties:
+      acquired_conns:
+        type: integer
+      idle_conns:
+        type: integer
+      total_conns:
+        type: integer
+    type: object
+  handlers.lobbyMetrics:
+    properties:
+      creations_total:
+        type: integer
+    type: object
+  handlers.memoryMetrics:
+    properties:
+      alloc_bytes:
+        type: integer
+      num_gc:
+        type: integer
+      sys_bytes:
+        type: integer
+    type: object
+  handlers.metricsResponse:
+    properties:
+      canvas_patch:
+        $ref: '#/definitions/handlers.canvasPatchMetrics'
+      db:
+        $ref: '#/definitions/handlers.dbMetrics'
+      goroutines:
+        type: integer
+      lobbies:
+        $ref: '#/definitions/handlers.lobbyMetrics'
+      memory:
+        $ref: '#/definitions/handlers.memoryMetrics'
+      rate_limiter:
+        $ref: '#/definitions/handlers.rateLimiterMetrics'
+      stripe_webhook:
+        $ref: '#/definitions/handlers.stripeWebhookMetrics'
+      uptime_seconds:
+        type: number
+      websocket:
+        $ref: '#/definitions/websocket.HubStats'
+    type: object
+  handlers.rateLimiterMetrics:
+    properties:
+      rejections:
+        type: integer
+    type: object
+  handlers.stripeWebhookMetrics:
+    properties:
+      duplicates:
+        type: integer
+      failed:
+        type: integer
+      processed:
+        type: integer
+    type: object
   models.CanvasAbility:
     properties:
       action:
@@ -519,6 +584,17 @@ definitions:
         type: boolean
       updatedAt:
         type: string
+    type: object
+  websocket.HubStats:
+    properties:
+      active_lobbies:
+        type: integer
+      connected_clients:
+        type: integer
+      total_drops:
+        type: integer
+      total_joins:
+        type: integer
     type: object
 info:
   contact: {}
@@ -1647,6 +1723,19 @@ paths:
           schema:
             type: string
       summary: Health check
+      tags:
+      - health
+  /metrics:
+    get:
+      description: Returns basic runtime, memory, database pool, and WebSocket metrics.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.metricsResponse'
+      summary: Observability metrics
       tags:
       - health
 schemes:

@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"sync"
+	"sync/atomic"
 )
 
 type Hub struct {
@@ -18,6 +19,9 @@ type Hub struct {
 	stop chan struct{}
 
 	mu sync.RWMutex
+
+	joinsTotal atomic.Int64
+	dropsTotal atomic.Int64
 }
 
 type LobbyMessage struct {
@@ -40,6 +44,31 @@ func (h *Hub) Stop() {
 	close(h.stop)
 }
 
+// HubStats holds a snapshot of the hub's current connection state.
+type HubStats struct {
+	ActiveLobbies    int   `json:"active_lobbies"`
+	ConnectedClients int   `json:"connected_clients"`
+	TotalJoins       int64 `json:"total_joins"`
+	TotalDrops       int64 `json:"total_drops"`
+}
+
+// Stats returns a snapshot of the number of active lobbies and total connected clients.
+func (h *Hub) Stats() HubStats {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	total := 0
+	for _, clients := range h.lobbies {
+		total += len(clients)
+	}
+	return HubStats{
+		ActiveLobbies:    len(h.lobbies),
+		ConnectedClients: total,
+		TotalJoins:       h.joinsTotal.Load(),
+		TotalDrops:       h.dropsTotal.Load(),
+	}
+}
+
 func (h *Hub) Run() {
 	for {
 		select {
@@ -53,6 +82,7 @@ func (h *Hub) Run() {
 			h.lobbies[client.lobbyCode][client] = true
 			clientCount := len(h.lobbies[client.lobbyCode])
 			h.mu.Unlock()
+			h.joinsTotal.Add(1)
 
 			slog.Info("client joined lobby", "client_id", client.id, "lobby_code", client.lobbyCode, "total_clients", clientCount)
 
@@ -64,6 +94,7 @@ func (h *Hub) Run() {
 				if _, ok := clients[client]; ok {
 					delete(clients, client)
 					close(client.send)
+					h.dropsTotal.Add(1)
 
 					if len(clients) == 0 {
 						delete(h.lobbies, client.lobbyCode)
@@ -94,6 +125,7 @@ func (h *Hub) Run() {
 					delete(h.lobbies[lobbyMsg.LobbyCode], client)
 					close(client.send)
 					h.mu.Unlock()
+					h.dropsTotal.Add(1)
 				}
 			}
 		}

@@ -27,6 +27,7 @@ import (
 // @Router /api/lobbies/{code}/canvas-patches [post]
 func ApplyCanvasPatch(w http.ResponseWriter, r *http.Request) {
 	code := mux.Vars(r)["code"]
+	canvasPatchTotal.Add(1)
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -48,6 +49,7 @@ func ApplyCanvasPatch(w http.ResponseWriter, r *http.Request) {
 
 	existingLobby, err := models.GetLobbyByCode(code)
 	if err != nil {
+		canvasPatchErrors.Add(1)
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
 		return
 	}
@@ -57,12 +59,14 @@ func ApplyCanvasPatch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := models.ApplyCanvasPatch(code, patch); err != nil {
+		canvasPatchErrors.Add(1)
 		utils.SendJSONError(w, utils.NewInternal("Unable to apply canvas patch", err), middleware.GetRequestID(r))
 		return
 	}
 
 	updatedLobby, err := models.GetLobbyByCode(code)
 	if err != nil {
+		canvasPatchErrors.Add(1)
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby after patch", err), middleware.GetRequestID(r))
 		return
 	}
