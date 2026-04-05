@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -28,7 +28,7 @@ func DBHealthMiddleware(next http.Handler) http.Handler {
 		defer cancel()
 
 		if err := ensureDBHealthyWithRetry(ctx, r); err != nil {
-			log.Printf("[request=%s] Database connection unhealthy: %v", GetRequestID(r), err)
+			slog.Error("database connection unhealthy", "request_id", GetRequestID(r), "error", err)
 			utils.SendJSONError(w, utils.NewInternal("Database temporarily unavailable", err), GetRequestID(r))
 			return
 		}
@@ -51,7 +51,7 @@ func ensureDBHealthyWithRetry(ctx context.Context, r *http.Request) error {
 			return lastErr
 		}
 
-		log.Printf("[request=%s] Retryable database health error (attempt %d/%d): %v", GetRequestID(r), attempt, transientDBMaxAttempts, lastErr)
+		slog.Warn("retryable database health error", "request_id", GetRequestID(r), "attempt", attempt, "max_attempts", transientDBMaxAttempts, "error", lastErr)
 
 		select {
 		case <-time.After(retryDelay):

@@ -2,7 +2,7 @@ package scheduler
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/url"
 	"strings"
 	"time"
@@ -88,7 +88,7 @@ func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupSched
 }
 
 func (cs *CleanupScheduler) Start() {
-	log.Printf("Starting cleanup scheduler for lobbies (interval: %v)", cs.interval)
+	slog.Info("cleanup scheduler started", "interval", cs.interval)
 
 	cs.runCleanup()
 
@@ -101,7 +101,7 @@ func (cs *CleanupScheduler) Start() {
 				cs.runCleanup()
 			case <-cs.stopChan:
 				ticker.Stop()
-				log.Println("Cleanup scheduler stopped")
+				slog.Info("cleanup scheduler stopped")
 				return
 			}
 		}
@@ -116,32 +116,32 @@ func (cs *CleanupScheduler) runCleanup() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	log.Println("Running cleanup for lobbies...")
+	slog.Info("running cleanup for lobbies")
 
 	cmdTag, err := cs.db.Exec(ctx, cs.cleanupQuery)
 	if err != nil {
-		log.Printf("ERROR: Cleanup failed: %v", err)
+		slog.Error("lobby cleanup failed", "error", err)
 		return
 	}
-	log.Printf("Cleanup completed: %d lobbies deleted", cmdTag.RowsAffected())
+	slog.Info("lobby cleanup completed", "deleted", cmdTag.RowsAffected())
 
-	log.Println("Running cleanup for downgraded user strategies...")
+	slog.Info("running cleanup for downgraded user strategies")
 
 	cmdTag, err = cs.db.Exec(ctx, cs.subscriptionCleanupQuery)
 	if err != nil {
-		log.Printf("ERROR: Subscription cleanup failed: %v", err)
+		slog.Error("subscription cleanup failed", "error", err)
 		return
 	}
-	log.Printf("Subscription cleanup completed: %d excess strategies deleted", cmdTag.RowsAffected())
+	slog.Info("subscription cleanup completed", "deleted", cmdTag.RowsAffected())
 
-	log.Println("Running cleanup for dead registrations...")
+	slog.Info("running cleanup for dead registrations")
 
 	deletedRows, err := cs.runDeadRegistrationCleanup(ctx)
 	if err != nil {
-		log.Printf("ERROR: Dead registration cleanup failed: %v", err)
+		slog.Error("dead registration cleanup failed", "error", err)
 		return
 	}
-	log.Printf("Dead registration cleanup completed: %d abandoned users deleted", deletedRows)
+	slog.Info("dead registration cleanup completed", "deleted", deletedRows)
 
 	cs.runImageObjectCleanup(ctx)
 }
@@ -157,21 +157,21 @@ func (cs *CleanupScheduler) runDeadRegistrationCleanup(ctx context.Context) (int
 
 func (cs *CleanupScheduler) runImageObjectCleanup(ctx context.Context) {
 	if storage.DefaultClient == nil {
-		log.Println("Skipping image object cleanup: Tigris storage not configured")
+		slog.Info("skipping image object cleanup: tigris not configured")
 		return
 	}
 
-	log.Println("Running cleanup for orphaned image objects...")
+	slog.Info("running cleanup for orphaned image objects")
 
 	referencedKeys, err := cs.getReferencedImageKeys(ctx)
 	if err != nil {
-		log.Printf("ERROR: Failed to gather referenced image keys: %v", err)
+		slog.Error("failed to gather referenced image keys", "error", err)
 		return
 	}
 
 	bucketKeys, err := storage.DefaultClient.ListObjectKeys(ctx, "images/")
 	if err != nil {
-		log.Printf("ERROR: Failed to list image objects from Tigris: %v", err)
+		slog.Error("failed to list image objects from tigris", "error", err)
 		return
 	}
 
@@ -183,7 +183,7 @@ func (cs *CleanupScheduler) runImageObjectCleanup(ctx context.Context) {
 	}
 
 	if len(orphanedKeys) == 0 {
-		log.Printf("Image object cleanup completed: 0 orphaned objects deleted (tracked=%d, bucket=%d)", len(referencedKeys), len(bucketKeys))
+		slog.Info("image object cleanup completed", "deleted", 0, "tracked", len(referencedKeys), "bucket", len(bucketKeys))
 		return
 	}
 
@@ -194,14 +194,14 @@ func (cs *CleanupScheduler) runImageObjectCleanup(ctx context.Context) {
 
 		batch := orphanedKeys[i:end]
 		if err := storage.DefaultClient.DeleteObjects(ctx, batch); err != nil {
-			log.Printf("ERROR: Failed deleting orphaned image objects batch (size=%d): %v", len(batch), err)
+			slog.Error("failed deleting orphaned image objects batch", "batch_size", len(batch), "error", err)
 			continue
 		}
 
 		deletedCount += len(batch)
 	}
 
-	log.Printf("Image object cleanup completed: %d orphaned objects deleted (tracked=%d, bucket=%d)", deletedCount, len(referencedKeys), len(bucketKeys))
+	slog.Info("image object cleanup completed", "deleted", deletedCount, "tracked", len(referencedKeys), "bucket", len(bucketKeys))
 }
 
 func (cs *CleanupScheduler) getReferencedImageKeys(ctx context.Context) (map[string]struct{}, error) {

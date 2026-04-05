@@ -1,7 +1,7 @@
 package db
 
 import (
-	"log"
+	"log/slog"
 
 	"github.com/golang-migrate/migrate/v4"
 )
@@ -24,6 +24,6 @@ func RunMigrations(databaseURL string) error {
 		return err
 	}
 
-	log.Println("Database migrations completed successfully")
+	slog.Info("database migrations completed")
 	return nil
 }

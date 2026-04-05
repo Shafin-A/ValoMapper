@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"log"
+	"log/slog"
 	"math/rand"
 	"sync"
 )
@@ -54,7 +54,7 @@ func (h *Hub) Run() {
 			clientCount := len(h.lobbies[client.lobbyCode])
 			h.mu.Unlock()
 
-			log.Printf("Client %s joined lobby %s (total clients: %d)", client.id, client.lobbyCode, clientCount)
+			slog.Info("client joined lobby", "client_id", client.id, "lobby_code", client.lobbyCode, "total_clients", clientCount)
 
 			h.broadcastUserList(client.lobbyCode)
 
@@ -67,9 +67,9 @@ func (h *Hub) Run() {
 
 					if len(clients) == 0 {
 						delete(h.lobbies, client.lobbyCode)
-						log.Printf("Lobby %s closed (no clients remaining)", client.lobbyCode)
+						slog.Info("lobby closed", "lobby_code", client.lobbyCode)
 					} else {
-						log.Printf("Client %s left lobby %s (remaining clients: %d)", client.id, client.lobbyCode, len(clients))
+						slog.Info("client left lobby", "client_id", client.id, "lobby_code", client.lobbyCode, "remaining_clients", len(clients))
 					}
 				}
 			}
@@ -126,7 +126,7 @@ func (h *Hub) broadcastUserList(lobbyCode string) {
 
 	msgBytes, err := msg.Marshal()
 	if err != nil {
-		log.Printf("Error marshaling user list: %v", err)
+		slog.Error("error marshaling user list", "error", err)
 		return
 	}
 

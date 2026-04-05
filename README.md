@@ -115,6 +115,9 @@ Before setting up the project, ensure you have:
    BUCKET_NAME=your_tigris_bucket_name
    AWS_ENDPOINT_URL_S3=https://fly.storage.tigris.dev
    AWS_REGION=auto
+
+   # Log output format: "json" (default, structured — for Datadog/Loki) or "text" (human-readable — for local dev)
+   LOG_FORMAT=text
    ```
 
 3. Ensure PostgreSQL is running and a database named `valo-mapper` exists.

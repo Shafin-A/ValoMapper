@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/url"
 	"path"
 	"strings"
@@ -170,7 +170,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AgentsOnCanvas = append(phases[phaseIndex].AgentsOnCanvas, agent)
 		} else {
-			log.Printf("WARNING: Agent %s has invalid phase index %d (valid range: 0-%d) in lobby %s", agent.ID, phaseIndex, len(phases)-1, lobbyCode)
+			slog.Warn("agent has invalid phase index", "agent_id", agent.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
 	}
 	rows.Close()
@@ -203,7 +203,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AbilitiesOnCanvas = append(phases[phaseIndex].AbilitiesOnCanvas, ability)
 		} else {
-			log.Printf("WARNING: Ability %s has invalid phase index %d (valid range: 0-%d) in lobby %s", ability.ID, phaseIndex, len(phases)-1, lobbyCode)
+			slog.Warn("ability has invalid phase index", "ability_id", ability.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
 	}
 	rows.Close()
@@ -235,7 +235,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].DrawLines = append(phases[phaseIndex].DrawLines, line)
 		} else {
-			log.Printf("WARNING: DrawLine %s has invalid phase index %d (valid range: 0-%d) in lobby %s", line.ID, phaseIndex, len(phases)-1, lobbyCode)
+			slog.Warn("draw line has invalid phase index", "line_id", line.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
 	}
 	rows.Close()
@@ -262,7 +262,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].TextsOnCanvas = append(phases[phaseIndex].TextsOnCanvas, text)
 		} else {
-			log.Printf("WARNING: Text %s has invalid phase index %d (valid range: 0-%d) in lobby %s", text.ID, phaseIndex, len(phases)-1, lobbyCode)
+			slog.Warn("text has invalid phase index", "text_id", text.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
 	}
 	rows.Close()
@@ -289,7 +289,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].ImagesOnCanvas = append(phases[phaseIndex].ImagesOnCanvas, image)
 		} else {
-			log.Printf("WARNING: Image %s has invalid phase index %d (valid range: 0-%d) in lobby %s", image.ID, phaseIndex, len(phases)-1, lobbyCode)
+			slog.Warn("image has invalid phase index", "image_id", image.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
 	}
 	rows.Close()
@@ -347,7 +347,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].ConnectingLines = append(phases[phaseIndex].ConnectingLines, line)
 		} else {
-			log.Printf("WARNING: ConnectingLine %s has invalid phase index %d (valid range: 0-%d) in lobby %s", line.ID, phaseIndex, len(phases)-1, lobbyCode)
+			slog.Warn("connecting line has invalid phase index", "line_id", line.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
 	}
 	rows.Close()

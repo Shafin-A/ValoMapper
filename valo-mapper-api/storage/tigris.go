@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -76,7 +76,7 @@ func InitTigris() error {
 		endpoint: endpoint,
 	}
 
-	log.Printf("Tigris storage initialized (bucket: %s)", bucketName)
+	slog.Info("tigris storage initialized", "bucket", bucketName)
 	return nil
 }
 
@@ -160,8 +160,7 @@ func (t *TigrisClient) DeleteObjects(ctx context.Context, keys []string) error {
 	}
 
 	for _, e := range out.Errors {
-		log.Printf("Tigris DeleteObjects partial error: key=%s code=%s msg=%s",
-			aws.ToString(e.Key), aws.ToString(e.Code), aws.ToString(e.Message))
+		slog.Error("tigris deleteobjects partial error", "key", aws.ToString(e.Key), "code", aws.ToString(e.Code), "message", aws.ToString(e.Message))
 	}
 	return nil
 }

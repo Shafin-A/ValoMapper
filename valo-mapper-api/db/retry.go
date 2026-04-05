@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log"
+	"log/slog"
 	"net"
 	"strings"
 	"time"
@@ -63,7 +63,7 @@ func WithRetry[T any](ctx context.Context, maxRetries int, operation func() (T, 
 			if backoff > 500*time.Millisecond {
 				backoff = 500 * time.Millisecond
 			}
-			log.Printf("Retryable DB error (attempt %d/%d): %v, retrying in %v", attempt+1, maxRetries+1, lastErr, backoff)
+			slog.Warn("retryable DB error, retrying", "attempt", attempt+1, "max_attempts", maxRetries+1, "error", lastErr, "backoff", backoff)
 
 			select {
 			case <-ctx.Done():

@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,6 +13,7 @@ import (
 	"valo-mapper-api/db"
 	"valo-mapper-api/firebase"
 	"valo-mapper-api/handlers"
+	"valo-mapper-api/logger"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/routes"
 	"valo-mapper-api/scheduler"
@@ -50,12 +51,12 @@ func getEnvInt(name string, defaultValue int) int {
 
 	parsedValue, err := strconv.Atoi(rawValue)
 	if err != nil {
-		log.Printf("Invalid %s value %q. Falling back to %d", name, rawValue, defaultValue)
+		slog.Warn("invalid env var value, using default", "name", name, "value", rawValue, "default", defaultValue)
 		return defaultValue
 	}
 
 	if parsedValue <= 0 {
-		log.Printf("Non-positive %s value %q. Falling back to %d", name, rawValue, defaultValue)
+		slog.Warn("non-positive env var value, using default", "name", name, "value", rawValue, "default", defaultValue)
 		return defaultValue
 	}
 
@@ -70,12 +71,12 @@ func getEnvFloat(name string, defaultValue float64) float64 {
 
 	parsedValue, err := strconv.ParseFloat(rawValue, 64)
 	if err != nil {
-		log.Printf("Invalid %s value %q. Falling back to %.2f", name, rawValue, defaultValue)
+		slog.Warn("invalid env var value, using default", "name", name, "value", rawValue, "default", defaultValue)
 		return defaultValue
 	}
 
 	if parsedValue <= 0 {
-		log.Printf("Non-positive %s value %q. Falling back to %.2f", name, rawValue, defaultValue)
+		slog.Warn("non-positive env var value, using default", "name", name, "value", rawValue, "default", defaultValue)
 		return defaultValue
 	}
 
@@ -83,8 +84,10 @@ func getEnvFloat(name string, defaultValue float64) float64 {
 }
 
 func main() {
+	logger.Init()
+
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using environment variables")
+		slog.Info("no .env file found, using environment variables")
 	}
 
 	requiredEnvVars := []string{
@@ -112,17 +115,20 @@ func main() {
 	}
 
 	if len(missingVars) > 0 {
-		log.Fatalf("Missing required environment variables: %v", missingVars)
+		slog.Error("missing required environment variables", "vars", missingVars)
+		os.Exit(1)
 	}
 
 	if err := db.InitDB(); err != nil {
-		log.Fatal("Failed to initialize database:", err)
+		slog.Error("failed to initialize database", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
 	firebaseAuth, err := firebase.InitFirebaseAuth()
 	if err != nil {
-		log.Fatalf("Failed to initialize Firebase: %v", err)
+		slog.Error("failed to initialize firebase", "error", err)
+		os.Exit(1)
 	}
 
 	rsoclient := os.Getenv("RSO_CLIENT_ID")
@@ -131,12 +137,13 @@ func main() {
 	handlers.InitializeRSOConfig(rsoclient, rsosecret, rsoredirect)
 
 	if err := storage.InitTigris(); err != nil {
-		log.Printf("Warning: Tigris storage not initialized (%v); image uploads will be unavailable", err)
+		slog.Warn("tigris storage not initialized; image uploads unavailable", "error", err)
 	}
 
 	conn, err := db.GetDB()
 	if err != nil {
-		log.Fatalf("Failed to get database connection: %v", err)
+		slog.Error("failed to get database connection", "error", err)
+		os.Exit(1)
 	}
 
 	cleanupScheduler := scheduler.NewCleanupScheduler(conn, 12*time.Hour)
@@ -152,7 +159,7 @@ func main() {
 	rateLimitRPS := getEnvFloat("RATE_LIMIT_RPS", 20)
 	rateLimitBurst := getEnvInt("RATE_LIMIT_BURST", 60)
 	rateLimiter := middleware.NewIPRateLimiter(rate.Limit(rateLimitRPS), rateLimitBurst)
-	log.Printf("Rate limiter configured: %.2f req/s with burst %d", rateLimitRPS, rateLimitBurst)
+	slog.Info("rate limiter configured", "rps", rateLimitRPS, "burst", rateLimitBurst)
 
 	var handler http.Handler = r
 	handler = middleware.DBHealthMiddleware(handler)
@@ -181,9 +188,10 @@ func main() {
 	}
 
 	go func() {
-		log.Println("Server running on :8080")
+		slog.Info("server running", "addr", ":8080")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal("Server failed to start:", err)
+			slog.Error("server failed to start", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -191,7 +199,7 @@ func main() {
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	<-quit
-	log.Println("Shutting down server gracefully...")
+	slog.Info("shutting down server gracefully")
 
 	cleanupScheduler.Stop()
 
@@ -199,10 +207,11 @@ func main() {
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
+		slog.Error("server forced to shutdown", "error", err)
+		os.Exit(1)
 	}
 
 	hub.Stop()
 
-	log.Println("Server stopped successfully")
+	slog.Info("server stopped")
 }

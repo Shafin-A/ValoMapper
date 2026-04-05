@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/url"
 	"os"
 	"time"
@@ -74,13 +74,13 @@ func InitDB() error {
 		return fmt.Errorf("error connecting to database after retries: %w", err)
 	}
 
-	log.Println("Database connection established successfully")
+	slog.Info("database connection established")
 
 	if err := RunMigrations(connStr); err != nil {
 		return fmt.Errorf("error running database migrations: %w", err)
 	}
 
-	log.Println("Database initialized successfully!")
+	slog.Info("database initialized")
 	return nil
 }
 
@@ -88,7 +88,7 @@ func Close() {
 	if DB != nil {
 		DB.Close()
 		DB = nil
-		log.Println("Database connection closed")
+		slog.Info("database connection closed")
 	}
 }
 

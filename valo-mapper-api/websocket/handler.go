@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"slices"
 
@@ -46,7 +46,7 @@ func HandleWebSocket(hub *Hub) http.HandlerFunc {
 
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Printf("WebSocket upgrade error: %v", err)
+			slog.Error("websocket upgrade error", "error", err)
 			return
 		}
 

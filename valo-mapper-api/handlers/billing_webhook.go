@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -68,7 +68,7 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !claimed {
-		log.Printf("[request=%s] Stripe webhook duplicate ignored: eventID=%s eventType=%s", requestID, eventID, event.Type)
+		slog.Info("stripe webhook duplicate ignored", "request_id", requestID, "event_id", eventID, "event_type", event.Type)
 		utils.SendJSON(w, http.StatusOK, map[string]string{
 			"status":  "ignored",
 			"reason":  "duplicate-event",
@@ -81,14 +81,14 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 	processed, reason, err := billingService.ProcessStripeSubscriptionEvent(event)
 	if err != nil {
 		if releaseErr := models.ReleaseStripeWebhookEventClaim(r.Context(), eventID); releaseErr != nil {
-			log.Printf("[request=%s] failed to release Stripe webhook event claim eventID=%s: %v", requestID, eventID, releaseErr)
+			slog.Error("failed to release stripe webhook event claim", "request_id", requestID, "event_id", eventID, "error", releaseErr)
 		}
 		utils.SendJSONError(w, utils.NewInternal("Unable to process Stripe event", err), requestID)
 		return
 	}
 
 	if !processed {
-		log.Printf("[request=%s] Stripe webhook ignored: eventType=%s reason=%s", requestID, event.Type, reason)
+		slog.Info("stripe webhook ignored", "request_id", requestID, "event_type", event.Type, "reason", reason)
 		utils.SendJSON(w, http.StatusOK, map[string]string{
 			"status": "ignored",
 			"reason": reason,

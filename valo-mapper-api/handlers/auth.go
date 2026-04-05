@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -133,7 +133,7 @@ func authenticateRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*
 	if firebaseErr == nil && firebaseUser != nil && firebaseUser.EmailVerified != user.EmailVerified {
 		user.EmailVerified = firebaseUser.EmailVerified
 		if updateErr := user.Update(); updateErr != nil {
-			log.Printf("[request=%s] failed to sync email_verified for user %d: %v", middleware.GetRequestID(r), user.ID, updateErr)
+			slog.Error("failed to sync email_verified", "request_id", middleware.GetRequestID(r), "user_id", user.ID, "error", updateErr)
 		}
 	}
 

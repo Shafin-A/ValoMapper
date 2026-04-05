@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -57,12 +57,12 @@ func (c *Client) ReadPump() {
 
 	c.conn.SetReadLimit(maxMessageSize)
 	if err := c.conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
-		log.Printf("Error setting read deadline: %v", err)
+		slog.Error("error setting read deadline", "error", err)
 		return
 	}
 	c.conn.SetPongHandler(func(string) error {
 		if err := c.conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
-			log.Printf("Error setting read deadline in pong handler: %v", err)
+			slog.Error("error setting read deadline in pong handler", "error", err)
 		}
 		return nil
 	})
@@ -71,14 +71,14 @@ func (c *Client) ReadPump() {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("WebSocket error: %v", err)
+				slog.Error("websocket error", "error", err)
 			}
 			break
 		}
 
 		msg, err := ParseMessage(message)
 		if err != nil {
-			log.Printf("Error parsing message: %v", err)
+			slog.Error("error parsing message", "error", err)
 			continue
 		}
 
@@ -123,7 +123,7 @@ func (c *Client) WritePump() {
 			}
 			if err := c.conn.WriteMessage(websocket.CloseMessage,
 				websocket.FormatCloseMessage(websocket.CloseGoingAway, "server shutting down")); err != nil && err != websocket.ErrCloseSent {
-				log.Printf("Error sending close message: %v", err)
+				slog.Error("error sending close message", "error", err)
 			}
 			return
 		case message, ok := <-c.send:
@@ -132,7 +132,7 @@ func (c *Client) WritePump() {
 			}
 			if !ok {
 				if err := c.conn.WriteMessage(websocket.CloseMessage, []byte{}); err != nil && err != websocket.ErrCloseSent {
-					log.Printf("Error writing close message: %v", err)
+					slog.Error("error writing close message", "error", err)
 				}
 				return
 			}
@@ -142,18 +142,17 @@ func (c *Client) WritePump() {
 				return
 			}
 			if _, err := w.Write(message); err != nil {
-				log.Printf("Error writing message: %v", err)
-				return
+				slog.Error("error writing message", "error", err)
 			}
 
 			n := len(c.send)
 			for range n {
 				if _, err := w.Write([]byte{'\n'}); err != nil {
-					log.Printf("Error writing newline: %v", err)
+					slog.Error("error writing newline", "error", err)
 					return
 				}
 				if _, err := w.Write(<-c.send); err != nil {
-					log.Printf("Error writing queued message: %v", err)
+					slog.Error("error writing queued message", "error", err)
 					return
 				}
 			}

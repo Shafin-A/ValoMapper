@@ -3,7 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -46,11 +46,7 @@ func NewForbidden(msg string) *HTTPError {
 
 func SendJSONError(w http.ResponseWriter, he *HTTPError, requestID string) {
 	if he.Err != nil {
-		if requestID != "" {
-			log.Printf("[request=%s] error status=%d: %v", requestID, he.Status, he.Err)
-		} else {
-			log.Printf("error status=%d: %v", he.Status, he.Err)
-		}
+		slog.Error("request error", "request_id", requestID, "status", he.Status, "error", he.Err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -65,14 +61,14 @@ func SendJSONError(w http.ResponseWriter, he *HTTPError, requestID string) {
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("[request=%s] failed to encode error response: %v", requestID, err)
+		slog.Error("failed to encode error response", "request_id", requestID, "error", err)
 	}
 }
 
 func SendJSON(w http.ResponseWriter, statusCode int, data any, requestID string) bool {
 	encoded, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("[request=%s] failed to encode JSON response: %v", requestID, err)
+		slog.Error("failed to encode JSON response", "request_id", requestID, "error", err)
 		SendJSONError(w, NewInternal("Failed to encode response", err), requestID)
 		return false
 	}

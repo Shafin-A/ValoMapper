@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
@@ -135,7 +135,7 @@ func RateLimitMiddleware(limiter *IPRateLimiter) func(http.Handler) http.Handler
 				w.Header().Set("Retry-After", "1")
 				w.WriteHeader(http.StatusTooManyRequests)
 				if _, err := w.Write([]byte(`{"error":"Too many requests. Please slow down."}`)); err != nil {
-					log.Printf("Failed to write rate limit response: %v", err)
+					slog.Error("failed to write rate limit response", "error", err)
 				}
 				return
 			}
