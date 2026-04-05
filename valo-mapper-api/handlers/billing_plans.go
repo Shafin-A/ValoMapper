@@ -103,7 +103,7 @@ func checkoutLookupKeyForPlan(plan services.CheckoutPlan) (string, error) {
 
 		return lookupKey, nil
 	default:
-		return "", errUnsupportedCheckoutPlan
+		return "", services.ErrUnsupportedCheckoutPlan
 	}
 }
 
@@ -114,7 +114,7 @@ func expectedIntervalForPlan(plan services.CheckoutPlan) (stripe.PriceRecurringI
 	case services.CheckoutPlanYearly, services.CheckoutPlanStack:
 		return stripe.PriceRecurringIntervalYear, nil
 	default:
-		return "", errUnsupportedCheckoutPlan
+		return "", services.ErrUnsupportedCheckoutPlan
 	}
 }
 
@@ -155,5 +155,5 @@ func findStripePriceForPlan(plan services.CheckoutPlan) (*stripe.Price, error) {
 		return nil, err
 	}
 
-	return nil, fmt.Errorf("%w: lookup key %s", errCheckoutPlanUnavailable, lookupKey)
+	return nil, fmt.Errorf("%w: lookup key %s", services.ErrCheckoutPlanUnavailable, lookupKey)
 }

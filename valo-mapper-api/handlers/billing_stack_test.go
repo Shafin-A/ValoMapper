@@ -89,7 +89,7 @@ func TestInviteStackMember_RejectsTargetWhoOwnsStackPlan(t *testing.T) {
 
 	var errResp testutils.ErrorResponse
 	testutils.ParseJSONResponse(t, w, &errResp)
-	assert.Equal(t, errTargetAlreadyInStack.Error(), errResp.Error)
+	assert.Equal(t, services.ErrTargetAlreadyInStack.Error(), errResp.Error)
 
 	var count int
 	err = pool.QueryRow(context.Background(), `

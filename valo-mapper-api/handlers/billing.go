@@ -2,24 +2,9 @@ package handlers
 
 import (
 	"valo-mapper-api/models"
-	"valo-mapper-api/services"
 
 	"github.com/stripe/stripe-go/v82/checkout/session"
 	"github.com/stripe/stripe-go/v82/subscription"
-)
-
-var (
-	errNotStackOwner        = services.ErrNotStackOwner
-	errNotInStack           = services.ErrNotInStack
-	errStackFull            = services.ErrStackFull
-	errTargetAlreadyInStack = services.ErrTargetAlreadyInStack
-	errTargetAlreadyInvited = services.ErrTargetAlreadyInvited
-	errCannotInviteSelf     = services.ErrCannotInviteSelf
-	errStackMemberNotFound  = services.ErrStackMemberNotFound
-	errStackInviteNotFound  = services.ErrStackInviteNotFound
-	errStackForbidden       = services.ErrStackForbidden
-	errStackUIDRequired     = services.ErrStackFirebaseUIDNeeded
-	errStackUserNotFound    = services.ErrStackUserNotFound
 )
 
 var createStripeCheckoutSessionFn = session.New
@@ -28,10 +13,6 @@ var updateStripeSubscriptionFn = subscription.Update
 var getStripeSubscriptionFn = subscription.Get
 var findCancelableStripeSubscriptionIDForUserFn func(*models.User) (string, error)
 var findScheduledCancellationSubscriptionIDForUserFn func(*models.User) (string, error)
-
-var errStripeScheduledCancellationNotFound = services.ErrStripeScheduledCancellationNotFound
-var errUnsupportedCheckoutPlan = services.ErrUnsupportedCheckoutPlan
-var errCheckoutPlanUnavailable = services.ErrCheckoutPlanUnavailable
 
 const (
 	defaultMonthlyPriceLookupKey = "standard_monthly"

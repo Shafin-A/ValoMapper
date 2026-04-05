@@ -101,7 +101,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
-				return nil, errCheckoutPlanUnavailable
+				return nil, services.ErrCheckoutPlanUnavailable
 			}
 		}
 
@@ -166,7 +166,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
-				return nil, errCheckoutPlanUnavailable
+				return nil, services.ErrCheckoutPlanUnavailable
 			}
 		}
 
@@ -224,7 +224,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
-				return nil, errCheckoutPlanUnavailable
+				return nil, services.ErrCheckoutPlanUnavailable
 			}
 		}
 
@@ -350,7 +350,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
-				return nil, errCheckoutPlanUnavailable
+				return nil, services.ErrCheckoutPlanUnavailable
 			}
 		}
 
@@ -409,7 +409,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
-				return nil, errCheckoutPlanUnavailable
+				return nil, services.ErrCheckoutPlanUnavailable
 			}
 		}
 
@@ -467,7 +467,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			case services.CheckoutPlanYearly:
 				return &stripe.Price{ID: "price_test_checkout_yearly"}, nil
 			default:
-				return nil, errCheckoutPlanUnavailable
+				return nil, services.ErrCheckoutPlanUnavailable
 			}
 		}
 
@@ -1019,7 +1019,7 @@ func TestResumeSubscription(t *testing.T) {
 		}
 
 		findScheduledCancellationSubscriptionIDForUserFn = func(user *models.User) (string, error) {
-			return "", errStripeScheduledCancellationNotFound
+			return "", services.ErrStripeScheduledCancellationNotFound
 		}
 
 		originalSecret, hadSecret := os.LookupEnv("STRIPE_SECRET_KEY")
@@ -1657,3 +1657,4 @@ func buildStripeEventPayload(t *testing.T, eventID, eventType string, dataObject
 
 	return payload
 }
+
