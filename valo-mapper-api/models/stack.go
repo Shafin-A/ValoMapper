@@ -6,6 +6,7 @@ import (
 	"time"
 	"valo-mapper-api/db"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -250,7 +251,7 @@ func CreateStackInvite(ownerUserID, memberUserID int) (*StackMember, error) {
 	)
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			return nil, ErrStackInviteAlreadyExists
 		}
 		return nil, err
@@ -298,7 +299,7 @@ func AcceptStackInvite(inviteID, memberUserID int) error {
 	}
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			return ErrStackMemberAlreadyActive
 		}
 		return err

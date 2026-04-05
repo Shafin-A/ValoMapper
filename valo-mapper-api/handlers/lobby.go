@@ -2,14 +2,17 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/gorilla/mux"
 )
@@ -62,7 +65,8 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			break
 		}
-		if !strings.Contains(err.Error(), "duplicate key") {
+		var pgErr *pgconn.PgError
+		if !errors.As(err, &pgErr) || pgErr.Code != pgerrcode.UniqueViolation {
 			utils.SendJSONError(w, utils.NewInternal("Unable to create lobby", err), middleware.GetRequestID(r))
 			return
 		}

@@ -2,9 +2,12 @@ package services
 
 import (
 	"errors"
-	"strings"
 	"time"
+
 	"valo-mapper-api/models"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 var (
@@ -132,7 +135,8 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 	}
 
 	if err := ss.repo.SaveStrategy(strategy); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			return nil, ErrStrategyAlreadySaved
 		}
 		return nil, err

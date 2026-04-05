@@ -1,11 +1,12 @@
 package services
 
 import (
-	"errors"
 	"testing"
 	"time"
 	"valo-mapper-api/models"
 
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -143,7 +144,7 @@ func TestStrategyService_CreateStrategy(t *testing.T) {
 			getLobbyByCodeFn:          func(code string) (*models.Lobby, error) { return testLobby, nil },
 			countStrategiesByUserIDFn: func(userID int) (int, error) { return 0, nil },
 			saveStrategyFn: func(s *models.Strategy) error {
-				return errors.New("ERROR: duplicate key value violates unique constraint")
+				return &pgconn.PgError{Code: pgerrcode.UniqueViolation}
 			},
 		}
 		svc := newStrategyService(repo)

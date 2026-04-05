@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"math"
-	"strings"
 	"time"
+
 	"valo-mapper-api/models"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 var (
@@ -90,7 +93,8 @@ func (us *UserService) CreateUser(req CreateUserRequest) (*models.User, error) {
 	}
 
 	if err := us.repo.SaveUser(user); err != nil {
-		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "already exists") {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			return nil, ErrUserAlreadyExists
 		}
 		return nil, err
