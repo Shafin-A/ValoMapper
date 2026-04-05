@@ -15,6 +15,8 @@ type Hub struct {
 
 	broadcast chan *LobbyMessage
 
+	stop chan struct{}
+
 	mu sync.RWMutex
 }
 
@@ -30,12 +32,19 @@ func NewHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		broadcast:  make(chan *LobbyMessage),
+		stop:       make(chan struct{}),
 	}
+}
+
+func (h *Hub) Stop() {
+	close(h.stop)
 }
 
 func (h *Hub) Run() {
 	for {
 		select {
+		case <-h.stop:
+			return
 		case client := <-h.register:
 			h.mu.Lock()
 			if h.lobbies[client.lobbyCode] == nil {

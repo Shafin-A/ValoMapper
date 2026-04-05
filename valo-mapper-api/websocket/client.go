@@ -48,7 +48,10 @@ func NewClient(hub *Hub, conn *websocket.Conn, lobbyCode string, username string
 
 func (c *Client) ReadPump() {
 	defer func() {
-		c.hub.unregister <- c
+		select {
+		case c.hub.unregister <- c:
+		case <-c.hub.stop:
+		}
 		c.conn.Close()
 	}()
 
@@ -114,6 +117,15 @@ func (c *Client) WritePump() {
 
 	for {
 		select {
+		case <-c.hub.stop:
+			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				return
+			}
+			if err := c.conn.WriteMessage(websocket.CloseMessage,
+				websocket.FormatCloseMessage(websocket.CloseGoingAway, "server shutting down")); err != nil && err != websocket.ErrCloseSent {
+				log.Printf("Error sending close message: %v", err)
+			}
+			return
 		case message, ok := <-c.send:
 			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
 				return

@@ -202,5 +202,7 @@ func main() {
 		log.Fatal("Server forced to shutdown:", err)
 	}
 
+	hub.Stop()
+
 	log.Println("Server stopped successfully")
 }
