@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"strings"
 
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/services"
@@ -75,7 +74,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		Email:       req.Email,
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), "already exists") {
+		if errors.Is(err, services.ErrUserAlreadyExists) {
 			utils.SendJSONError(w, utils.NewConflict("User already exists", err), middleware.GetRequestID(r))
 			return
 		}
@@ -246,7 +245,7 @@ func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAu
 		IsSubscribed: *req.IsSubscribed,
 	})
 	if err != nil {
-		if err.Error() == "user not found" {
+		if errors.Is(err, services.ErrUserNotFound) {
 			utils.SendJSONError(w, utils.NewNotFound("User not found"), middleware.GetRequestID(r))
 			return
 		}

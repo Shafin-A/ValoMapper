@@ -6,6 +6,20 @@ import (
 	"valo-mapper-api/models"
 )
 
+var (
+	ErrNotInStack             = errors.New("not-in-stack")
+	ErrNotStackOwner          = errors.New("not-stack-owner")
+	ErrStackFirebaseUIDNeeded = errors.New("firebase-uid-required")
+	ErrStackUserNotFound      = errors.New("user-not-found")
+	ErrCannotInviteSelf       = errors.New("cannot-invite-self")
+	ErrTargetAlreadyInStack   = errors.New("target-already-in-stack")
+	ErrTargetAlreadyInvited   = errors.New("target-already-invited")
+	ErrStackFull              = errors.New("stack-full")
+	ErrStackMemberNotFound    = errors.New("stack-member-not-found")
+	ErrStackInviteNotFound    = errors.New("stack-invite-not-found")
+	ErrStackForbidden         = errors.New("forbidden")
+)
+
 // StackService handles stack member management and stack-related operations
 type StackService struct{}
 
@@ -28,7 +42,7 @@ func (ss *StackService) IsStackOwner(user *models.User) bool {
 // Returns the owner's ID, whether current user can manage,  and any errors
 func (ss *StackService) GetStackViewContext(user *models.User) (int, bool, error) {
 	if user == nil {
-		return 0, false, errors.New("not-in-stack")
+		return 0, false, ErrNotInStack
 	}
 
 	if ss.IsStackOwner(user) {
@@ -40,7 +54,7 @@ func (ss *StackService) GetStackViewContext(user *models.User) (int, bool, error
 		return 0, false, err
 	}
 	if membership == nil || membership.Status != models.StackMemberStatusActive {
-		return 0, false, errors.New("not-in-stack")
+		return 0, false, ErrNotInStack
 	}
 
 	return membership.OwnerUserID, false, nil
@@ -54,12 +68,12 @@ type InviteStackMemberRequest struct {
 // InviteStackMember invites a user to join a stack
 func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMemberRequest) (*models.StackMember, error) {
 	if !ss.IsStackOwner(owner) {
-		return nil, errors.New("not-stack-owner")
+		return nil, ErrNotStackOwner
 	}
 
 	targetFirebaseUID := strings.TrimSpace(req.FirebaseUID)
 	if targetFirebaseUID == "" {
-		return nil, errors.New("firebase-uid-required")
+		return nil, ErrStackFirebaseUIDNeeded
 	}
 
 	target, err := models.GetUserByFirebaseUID(targetFirebaseUID)
@@ -67,15 +81,15 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 		return nil, err
 	}
 	if target == nil {
-		return nil, errors.New("user-not-found")
+		return nil, ErrStackUserNotFound
 	}
 
 	if target.ID == owner.ID {
-		return nil, errors.New("cannot-invite-self")
+		return nil, ErrCannotInviteSelf
 	}
 
 	if ss.IsStackOwner(target) {
-		return nil, errors.New("target-already-in-stack")
+		return nil, ErrTargetAlreadyInStack
 	}
 
 	existingActiveMembership, err := models.GetActiveStackMemberByMemberUserID(target.ID)
@@ -83,7 +97,7 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 		return nil, err
 	}
 	if existingActiveMembership != nil {
-		return nil, errors.New("target-already-in-stack")
+		return nil, ErrTargetAlreadyInStack
 	}
 
 	existingPendingInvite, err := models.GetPendingStackInviteByOwnerAndMember(owner.ID, target.ID)
@@ -91,7 +105,7 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 		return nil, err
 	}
 	if existingPendingInvite != nil {
-		return nil, errors.New("target-already-invited")
+		return nil, ErrTargetAlreadyInvited
 	}
 
 	total, err := models.GetTotalStackMemberCount(owner.ID)
@@ -99,13 +113,13 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 		return nil, err
 	}
 	if total >= StackMaxMembers {
-		return nil, errors.New("stack-full")
+		return nil, ErrStackFull
 	}
 
 	invite, err := models.CreateStackInvite(owner.ID, target.ID)
 	if err != nil {
 		if errors.Is(err, models.ErrStackInviteAlreadyExists) {
-			return nil, errors.New("target-already-invited")
+			return nil, ErrTargetAlreadyInvited
 		}
 		return nil, err
 	}
@@ -116,12 +130,12 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 // RemoveStackMember removes a stack member or invite
 func (ss *StackService) RemoveStackMember(owner *models.User, memberID int) error {
 	if !ss.IsStackOwner(owner) {
-		return errors.New("not-stack-owner")
+		return ErrNotStackOwner
 	}
 
 	if err := models.RemoveStackMember(owner.ID, memberID); err != nil {
 		if errors.Is(err, models.ErrStackMemberNotFound) {
-			return errors.New("stack-member-not-found")
+			return ErrStackMemberNotFound
 		}
 		return err
 	}
@@ -136,18 +150,18 @@ func (ss *StackService) AcceptStackInvite(member *models.User, inviteID int) err
 		return err
 	}
 	if invite == nil {
-		return errors.New("stack-invite-not-found")
+		return ErrStackInviteNotFound
 	}
 	if invite.MemberUserID != member.ID {
-		return errors.New("forbidden")
+		return ErrStackForbidden
 	}
 
 	if err := models.AcceptStackInvite(inviteID, member.ID); err != nil {
 		if errors.Is(err, models.ErrStackInviteNotFound) {
-			return errors.New("stack-invite-not-found")
+			return ErrStackInviteNotFound
 		}
 		if errors.Is(err, models.ErrStackMemberAlreadyActive) {
-			return errors.New("target-already-in-stack")
+			return ErrTargetAlreadyInStack
 		}
 		return err
 	}
@@ -162,15 +176,15 @@ func (ss *StackService) DeclineStackInvite(member *models.User, inviteID int) er
 		return err
 	}
 	if invite == nil {
-		return errors.New("stack-invite-not-found")
+		return ErrStackInviteNotFound
 	}
 	if invite.MemberUserID != member.ID {
-		return errors.New("forbidden")
+		return ErrStackForbidden
 	}
 
 	if err := models.DeclineStackInvite(inviteID, member.ID); err != nil {
 		if errors.Is(err, models.ErrStackInviteNotFound) {
-			return errors.New("stack-invite-not-found")
+			return ErrStackInviteNotFound
 		}
 		return err
 	}
@@ -185,7 +199,7 @@ func (ss *StackService) LeaveStack(member *models.User) error {
 		return err
 	}
 	if membership == nil {
-		return errors.New("not-in-stack")
+		return ErrNotInStack
 	}
 
 	return models.LeaveStack(member.ID)

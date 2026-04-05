@@ -5,6 +5,13 @@ import (
 	"valo-mapper-api/models"
 )
 
+var (
+	ErrFolderSubscriptionRequired = errors.New("active subscription required to manage folders")
+	ErrFolderNameRequired         = errors.New("folder name is required")
+	ErrFolderNotFound             = errors.New("folder not found")
+	ErrFolderAccessDenied         = errors.New("you do not have access to this folder")
+)
+
 // FolderService handles folder-related business logic
 type FolderService struct{}
 
@@ -22,11 +29,11 @@ type CreateFolderRequest struct {
 // CreateFolder creates a new folder for a user
 func (fs *FolderService) CreateFolder(user *models.User, req CreateFolderRequest) (*models.Folder, error) {
 	if !user.IsSubscribed {
-		return nil, errors.New("active subscription required to manage folders")
+		return nil, ErrFolderSubscriptionRequired
 	}
 
 	if req.Name == "" {
-		return nil, errors.New("folder name is required")
+		return nil, ErrFolderNameRequired
 	}
 
 	folder := &models.Folder{
@@ -65,7 +72,7 @@ type UpdateFolderRequest struct {
 // UpdateFolder updates an existing folder
 func (fs *FolderService) UpdateFolder(user *models.User, folderID int, req UpdateFolderRequest) (*models.Folder, error) {
 	if !user.IsSubscribed {
-		return nil, errors.New("active subscription required to manage folders")
+		return nil, ErrFolderSubscriptionRequired
 	}
 
 	folder, err := models.GetFolderByID(folderID)
@@ -73,11 +80,11 @@ func (fs *FolderService) UpdateFolder(user *models.User, folderID int, req Updat
 		return nil, err
 	}
 	if folder == nil {
-		return nil, errors.New("folder not found")
+		return nil, ErrFolderNotFound
 	}
 
 	if folder.UserID != user.ID {
-		return nil, errors.New("you do not have access to this folder")
+		return nil, ErrFolderAccessDenied
 	}
 
 	if req.Name != nil {
@@ -97,7 +104,7 @@ func (fs *FolderService) UpdateFolder(user *models.User, folderID int, req Updat
 // DeleteFolder deletes a folder
 func (fs *FolderService) DeleteFolder(user *models.User, folderID int) error {
 	if !user.IsSubscribed {
-		return errors.New("active subscription required to manage folders")
+		return ErrFolderSubscriptionRequired
 	}
 
 	folder, err := models.GetFolderByID(folderID)
@@ -105,11 +112,11 @@ func (fs *FolderService) DeleteFolder(user *models.User, folderID int) error {
 		return err
 	}
 	if folder == nil {
-		return errors.New("folder not found")
+		return ErrFolderNotFound
 	}
 
 	if folder.UserID != user.ID {
-		return errors.New("you do not have access to this folder")
+		return ErrFolderAccessDenied
 	}
 
 	return folder.Delete()

@@ -39,7 +39,7 @@ func GetStackMembers(w http.ResponseWriter, r *http.Request, firebaseAuth Fireba
 	stackService := services.NewStackService()
 	ownerUserID, canManage, err := stackService.GetStackViewContext(user)
 	if err != nil {
-		if err.Error() == errNotInStack.Error() {
+		if errors.Is(err, errNotInStack) {
 			utils.SendJSONError(w, utils.NewForbidden(errNotInStack.Error()), requestID)
 			return
 		}
@@ -102,26 +102,26 @@ func InviteStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 	stackService := services.NewStackService()
 	invite, err := stackService.InviteStackMember(user, services.InviteStackMemberRequest{FirebaseUID: req.FirebaseUID})
 	if err != nil {
-		switch err.Error() {
-		case errNotStackOwner.Error():
+		switch {
+		case errors.Is(err, errNotStackOwner):
 			utils.SendJSONError(w, utils.NewForbidden(errNotStackOwner.Error()), requestID)
 			return
-		case "firebase-uid-required":
+		case errors.Is(err, errStackUIDRequired):
 			utils.SendJSONError(w, utils.NewBadRequest("firebase-uid-required"), requestID)
 			return
-		case "user-not-found":
+		case errors.Is(err, errStackUserNotFound):
 			utils.SendJSONError(w, utils.NewNotFound("user-not-found"), requestID)
 			return
-		case errCannotInviteSelf.Error():
+		case errors.Is(err, errCannotInviteSelf):
 			utils.SendJSONError(w, utils.NewBadRequest(errCannotInviteSelf.Error()), requestID)
 			return
-		case errTargetAlreadyInStack.Error():
+		case errors.Is(err, errTargetAlreadyInStack):
 			utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInStack.Error(), nil), requestID)
 			return
-		case errTargetAlreadyInvited.Error():
+		case errors.Is(err, errTargetAlreadyInvited):
 			utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInvited.Error(), nil), requestID)
 			return
-		case errStackFull.Error():
+		case errors.Is(err, errStackFull):
 			utils.SendJSONError(w, &utils.HTTPError{Status: http.StatusUnprocessableEntity, Message: errStackFull.Error()}, requestID)
 			return
 		default:
@@ -164,11 +164,11 @@ func RemoveStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 
 	stackService := services.NewStackService()
 	if err := stackService.RemoveStackMember(user, memberID); err != nil {
-		if err.Error() == errNotStackOwner.Error() {
+		if errors.Is(err, errNotStackOwner) {
 			utils.SendJSONError(w, utils.NewForbidden(errNotStackOwner.Error()), requestID)
 			return
 		}
-		if err.Error() == "stack-member-not-found" {
+		if errors.Is(err, errStackMemberNotFound) {
 			utils.SendJSONError(w, utils.NewNotFound("stack-member-not-found"), requestID)
 			return
 		}
@@ -210,14 +210,14 @@ func AcceptStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 
 	stackService := services.NewStackService()
 	if err := stackService.AcceptStackInvite(user, inviteID); err != nil {
-		switch err.Error() {
-		case "stack-invite-not-found":
+		switch {
+		case errors.Is(err, errStackInviteNotFound):
 			utils.SendJSONError(w, utils.NewNotFound("stack-invite-not-found"), requestID)
 			return
-		case "forbidden":
+		case errors.Is(err, errStackForbidden):
 			utils.SendJSONError(w, utils.NewForbidden("forbidden"), requestID)
 			return
-		case errTargetAlreadyInStack.Error():
+		case errors.Is(err, errTargetAlreadyInStack):
 			utils.SendJSONError(w, utils.NewConflict(errTargetAlreadyInStack.Error(), nil), requestID)
 			return
 		default:
@@ -281,7 +281,7 @@ func LeaveStack(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 
 	stackService := services.NewStackService()
 	if err := stackService.LeaveStack(user); err != nil {
-		if err.Error() == "not-in-stack" {
+		if errors.Is(err, errNotInStack) {
 			utils.SendJSONError(w, utils.NewNotFound("not-in-stack"), requestID)
 			return
 		}
@@ -322,11 +322,11 @@ func DeclineStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 
 	stackService := services.NewStackService()
 	if err := stackService.DeclineStackInvite(user, inviteID); err != nil {
-		if err.Error() == "stack-invite-not-found" {
+		if errors.Is(err, errStackInviteNotFound) {
 			utils.SendJSONError(w, utils.NewNotFound("stack-invite-not-found"), requestID)
 			return
 		}
-		if err.Error() == "forbidden" {
+		if errors.Is(err, errStackForbidden) {
 			utils.SendJSONError(w, utils.NewForbidden("forbidden"), requestID)
 			return
 		}

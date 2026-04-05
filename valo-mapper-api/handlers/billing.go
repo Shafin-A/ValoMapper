@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"valo-mapper-api/models"
 	"valo-mapper-api/services"
 
@@ -10,12 +9,17 @@ import (
 )
 
 var (
-	errNotStackOwner        = errors.New("not-stack-owner")
-	errNotInStack           = errors.New("not-in-stack")
-	errStackFull            = errors.New("stack-full")
-	errTargetAlreadyInStack = errors.New("target-already-in-stack")
-	errTargetAlreadyInvited = errors.New("target-already-invited")
-	errCannotInviteSelf     = errors.New("cannot-invite-self")
+	errNotStackOwner        = services.ErrNotStackOwner
+	errNotInStack           = services.ErrNotInStack
+	errStackFull            = services.ErrStackFull
+	errTargetAlreadyInStack = services.ErrTargetAlreadyInStack
+	errTargetAlreadyInvited = services.ErrTargetAlreadyInvited
+	errCannotInviteSelf     = services.ErrCannotInviteSelf
+	errStackMemberNotFound  = services.ErrStackMemberNotFound
+	errStackInviteNotFound  = services.ErrStackInviteNotFound
+	errStackForbidden       = services.ErrStackForbidden
+	errStackUIDRequired     = services.ErrStackFirebaseUIDNeeded
+	errStackUserNotFound    = services.ErrStackUserNotFound
 )
 
 var createStripeCheckoutSessionFn = session.New

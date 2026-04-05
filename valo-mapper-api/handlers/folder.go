@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -56,8 +57,12 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		ParentFolderID: req.ParentFolderID,
 	})
 	if err != nil {
-		if err.Error() == "active subscription required to manage folders" {
+		if errors.Is(err, services.ErrFolderSubscriptionRequired) {
 			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
+			return
+		}
+		if errors.Is(err, services.ErrFolderNameRequired) {
+			utils.SendJSONError(w, utils.NewBadRequest("Folder name is required"), middleware.GetRequestID(r))
 			return
 		}
 		utils.SendJSONError(w, utils.NewBadRequest(err.Error()), middleware.GetRequestID(r))
@@ -136,15 +141,15 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		ParentFolderID: req.ParentFolderID,
 	})
 	if err != nil {
-		if err.Error() == "active subscription required to manage folders" {
+		if errors.Is(err, services.ErrFolderSubscriptionRequired) {
 			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
 			return
 		}
-		if err.Error() == "folder not found" {
+		if errors.Is(err, services.ErrFolderNotFound) {
 			utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
 			return
 		}
-		if err.Error() == "you do not have access to this folder" {
+		if errors.Is(err, services.ErrFolderAccessDenied) {
 			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
 			return
 		}
@@ -183,15 +188,15 @@ func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 
 	folderService := services.NewFolderService()
 	if err := folderService.DeleteFolder(user, id); err != nil {
-		if err.Error() == "active subscription required to manage folders" {
+		if errors.Is(err, services.ErrFolderSubscriptionRequired) {
 			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
 			return
 		}
-		if err.Error() == "folder not found" {
+		if errors.Is(err, services.ErrFolderNotFound) {
 			utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
 			return
 		}
-		if err.Error() == "you do not have access to this folder" {
+		if errors.Is(err, services.ErrFolderAccessDenied) {
 			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
 			return
 		}

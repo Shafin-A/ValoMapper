@@ -9,6 +9,16 @@ import (
 	"valo-mapper-api/models"
 )
 
+var (
+	ErrUserFirebaseUIDRequired = errors.New("firebase UID is required")
+	ErrUserNameRequired        = errors.New("name is required")
+	ErrUserEmailRequired       = errors.New("email is required")
+	ErrUserAlreadyExists       = errors.New("user already exists")
+	ErrUserFirebaseUIDMissing  = errors.New("user firebase UID is missing")
+	ErrUserIdentifierRequired  = errors.New("either userId or firebaseUid must be provided")
+	ErrUserNotFound            = errors.New("user not found")
+)
+
 // UserService handles user-related business logic
 type UserService struct{}
 
@@ -27,13 +37,13 @@ type CreateUserRequest struct {
 // CreateUser creates a new user profile
 func (us *UserService) CreateUser(req CreateUserRequest) (*models.User, error) {
 	if req.FirebaseUID == "" {
-		return nil, errors.New("firebase UID is required")
+		return nil, ErrUserFirebaseUIDRequired
 	}
 	if req.Name == "" {
-		return nil, errors.New("name is required")
+		return nil, ErrUserNameRequired
 	}
 	if req.Email == "" {
-		return nil, errors.New("email is required")
+		return nil, ErrUserEmailRequired
 	}
 
 	user := &models.User{
@@ -45,7 +55,7 @@ func (us *UserService) CreateUser(req CreateUserRequest) (*models.User, error) {
 
 	if err := user.Save(); err != nil {
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "already exists") {
-			return nil, errors.New("user already exists")
+			return nil, ErrUserAlreadyExists
 		}
 		return nil, err
 	}
@@ -106,7 +116,7 @@ func (us *UserService) DeleteUser(user *models.User, firebaseAuth FirebaseAuthIn
 	}
 
 	if user.FirebaseUID == nil || *user.FirebaseUID == "" {
-		return errors.New("user firebase UID is missing")
+		return ErrUserFirebaseUIDMissing
 	}
 
 	if err := firebaseAuth.DeleteUser(context.Background(), *user.FirebaseUID); err != nil {
@@ -133,14 +143,14 @@ func (us *UserService) UpdateUserSubscription(req UpdateUserSubscriptionRequest)
 	} else if req.FirebaseUID != nil {
 		user, err = models.GetUserByFirebaseUID(*req.FirebaseUID)
 	} else {
-		return nil, errors.New("either userId or firebaseUid must be provided")
+		return nil, ErrUserIdentifierRequired
 	}
 
 	if err != nil {
 		return nil, err
 	}
 	if user == nil {
-		return nil, errors.New("user not found")
+		return nil, ErrUserNotFound
 	}
 
 	var subscriptionEndedAt *time.Time

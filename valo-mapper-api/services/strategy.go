@@ -7,6 +7,16 @@ import (
 	"valo-mapper-api/models"
 )
 
+var (
+	ErrLobbyCodeRequired     = errors.New("lobby code is required")
+	ErrStrategyNameRequired  = errors.New("strategy name is required")
+	ErrStrategyLobbyNotFound = errors.New("lobby not found")
+	ErrStrategyFreePlanLimit = errors.New("free plan limit reached")
+	ErrStrategyAlreadySaved  = errors.New("you have already saved this lobby")
+	ErrStrategyNotFound      = errors.New("strategy not found")
+	ErrStrategyAccessDenied  = errors.New("you do not have access to this strategy")
+)
+
 // StrategyService handles strategy-related business logic
 type StrategyService struct{}
 
@@ -41,10 +51,10 @@ type StrategyResponse struct {
 // CreateStrategy creates a new strategy for a user
 func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyRequest) (*StrategyResponse, error) {
 	if req.LobbyCode == "" {
-		return nil, errors.New("lobby code is required")
+		return nil, ErrLobbyCodeRequired
 	}
 	if req.Name == "" {
-		return nil, errors.New("strategy name is required")
+		return nil, ErrStrategyNameRequired
 	}
 
 	lobby, err := models.GetLobbyByCode(req.LobbyCode)
@@ -52,7 +62,7 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 		return nil, err
 	}
 	if lobby == nil {
-		return nil, errors.New("lobby not found")
+		return nil, ErrStrategyLobbyNotFound
 	}
 
 	// Check free-tier limit
@@ -62,7 +72,7 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 			return nil, err
 		}
 		if strategyCount >= FreeStrategyLimit {
-			return nil, errors.New("free plan limit reached (3 saved strategies). Upgrade to ValoMapper Premium for unlimited saves")
+			return nil, ErrStrategyFreePlanLimit
 		}
 	}
 
@@ -75,7 +85,7 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 
 	if err := strategy.Save(); err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
-			return nil, errors.New("you have already saved this lobby")
+			return nil, ErrStrategyAlreadySaved
 		}
 		return nil, err
 	}
@@ -162,11 +172,11 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 		return nil, err
 	}
 	if strategy == nil {
-		return nil, errors.New("strategy not found")
+		return nil, ErrStrategyNotFound
 	}
 
 	if strategy.UserID != user.ID {
-		return nil, errors.New("you do not have access to this strategy")
+		return nil, ErrStrategyAccessDenied
 	}
 
 	if req.Name != nil {
@@ -186,7 +196,7 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 		return nil, err
 	}
 	if lobby == nil {
-		return nil, errors.New("lobby not found")
+		return nil, ErrStrategyLobbyNotFound
 	}
 
 	return &StrategyResponse{
@@ -207,11 +217,11 @@ func (ss *StrategyService) DeleteStrategy(user *models.User, strategyID int) err
 		return err
 	}
 	if strategy == nil {
-		return errors.New("strategy not found")
+		return ErrStrategyNotFound
 	}
 
 	if strategy.UserID != user.ID {
-		return errors.New("you do not have access to this strategy")
+		return ErrStrategyAccessDenied
 	}
 
 	return strategy.Delete()

@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"valo-mapper-api/middleware"
@@ -86,19 +86,19 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 	})
 	if err != nil {
 		switch {
-		case err.Error() == "lobby code is required":
+		case errors.Is(err, services.ErrLobbyCodeRequired):
 			utils.SendJSONError(w, utils.NewBadRequest("Lobby code is required"), middleware.GetRequestID(r))
 			return
-		case err.Error() == "strategy name is required":
+		case errors.Is(err, services.ErrStrategyNameRequired):
 			utils.SendJSONError(w, utils.NewBadRequest("Strategy name is required"), middleware.GetRequestID(r))
 			return
-		case err.Error() == "lobby not found":
+		case errors.Is(err, services.ErrStrategyLobbyNotFound):
 			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 			return
-		case strings.HasPrefix(err.Error(), "free plan limit reached"):
+		case errors.Is(err, services.ErrStrategyFreePlanLimit):
 			utils.SendJSONError(w, utils.NewForbidden("Free plan limit reached (3 saved strategies). Upgrade to ValoMapper Premium for unlimited saves."), middleware.GetRequestID(r))
 			return
-		case err.Error() == "you have already saved this lobby":
+		case errors.Is(err, services.ErrStrategyAlreadySaved):
 			utils.SendJSONError(w, utils.NewConflict("You have already saved this lobby", err), middleware.GetRequestID(r))
 			return
 		default:
@@ -219,14 +219,14 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		Name:        req.Name,
 	})
 	if err != nil {
-		switch err.Error() {
-		case "strategy not found":
+		switch {
+		case errors.Is(err, services.ErrStrategyNotFound):
 			utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
 			return
-		case "you do not have access to this strategy":
+		case errors.Is(err, services.ErrStrategyAccessDenied):
 			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
 			return
-		case "lobby not found":
+		case errors.Is(err, services.ErrStrategyLobbyNotFound):
 			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 			return
 		default:
@@ -266,11 +266,11 @@ func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 
 	strategyService := services.NewStrategyService()
 	if err := strategyService.DeleteStrategy(user, id); err != nil {
-		switch err.Error() {
-		case "strategy not found":
+		switch {
+		case errors.Is(err, services.ErrStrategyNotFound):
 			utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
 			return
-		case "you do not have access to this strategy":
+		case errors.Is(err, services.ErrStrategyAccessDenied):
 			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
 			return
 		default:
