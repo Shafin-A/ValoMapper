@@ -687,9 +687,9 @@ func createStackTestUser(t *testing.T, pool *pgxpool.Pool, firebaseUID, email st
 
 	now := time.Now().UTC()
 	user := &models.User{
-		FirebaseUID:   strPtrStackTest(firebaseUID),
-		Email:         strPtrStackTest(email),
-		Name:          strPtrStackTest("Stack Test User"),
+		FirebaseUID:   strPtr(firebaseUID),
+		Email:         strPtr(email),
+		Name:          strPtr("Stack Test User"),
 		EmailVerified: true,
 	}
 
@@ -715,8 +715,4 @@ func newMockAuthForUser(user *models.User) *testutils.MockFirebaseAuth {
 		}, nil
 	}
 	return mockAuth
-}
-
-func strPtrStackTest(v string) *string {
-	return &v
 }

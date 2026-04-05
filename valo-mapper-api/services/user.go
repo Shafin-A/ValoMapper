@@ -146,7 +146,7 @@ func strPtr(s string) *string {
 }
 
 // DeleteUser deletes a user from the database and Firebase
-func (us *UserService) DeleteUser(user *models.User, firebaseAuth FirebaseAuthInterface) error {
+func (us *UserService) DeleteUser(user *models.User, firebaseAuth FirebaseUserDeleter) error {
 	if err := us.repo.DeleteUser(user); err != nil {
 		return err
 	}

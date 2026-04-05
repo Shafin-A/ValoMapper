@@ -1,14 +1,8 @@
 package services
 
-import (
-	"context"
+import "context"
 
-	"firebase.google.com/go/v4/auth"
-)
-
-// FirebaseAuthInterface defines Firebase authentication operations
-type FirebaseAuthInterface interface {
-	VerifyIDToken(ctx context.Context, idToken string) (*auth.Token, error)
+type FirebaseUserDeleter interface {
 	DeleteUser(ctx context.Context, uid string) error
 }
 
