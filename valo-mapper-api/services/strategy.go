@@ -17,15 +17,60 @@ var (
 	ErrStrategyAccessDenied  = errors.New("you do not have access to this strategy")
 )
 
+// StrategyRepository abstracts persistence operations for StrategyService.
+type StrategyRepository interface {
+	GetLobbyByCode(code string) (*models.Lobby, error)
+	CountStrategiesByUserID(userID int) (int, error)
+	GetStrategiesByUserID(userID int) ([]models.Strategy, error)
+	GetStrategiesByFolderID(userID, folderID int) ([]models.Strategy, error)
+	GetLobbiesByCodes(codes []string) ([]models.Lobby, error)
+	GetStrategyByID(id int) (*models.Strategy, error)
+	SaveStrategy(s *models.Strategy) error
+	UpdateStrategy(s *models.Strategy) error
+	DeleteStrategy(s *models.Strategy) error
+}
+
+type defaultStrategyRepository struct{}
+
+func (r *defaultStrategyRepository) GetLobbyByCode(code string) (*models.Lobby, error) {
+	return models.GetLobbyByCode(code)
+}
+func (r *defaultStrategyRepository) CountStrategiesByUserID(userID int) (int, error) {
+	return models.CountStrategiesByUserID(userID)
+}
+func (r *defaultStrategyRepository) GetStrategiesByUserID(userID int) ([]models.Strategy, error) {
+	return models.GetStrategiesByUserID(userID)
+}
+func (r *defaultStrategyRepository) GetStrategiesByFolderID(userID, folderID int) ([]models.Strategy, error) {
+	return models.GetStrategiesByFolderID(userID, folderID)
+}
+func (r *defaultStrategyRepository) GetLobbiesByCodes(codes []string) ([]models.Lobby, error) {
+	return models.GetLobbiesByCodes(codes)
+}
+func (r *defaultStrategyRepository) GetStrategyByID(id int) (*models.Strategy, error) {
+	return models.GetStrategyByID(id)
+}
+func (r *defaultStrategyRepository) SaveStrategy(s *models.Strategy) error   { return s.Save() }
+func (r *defaultStrategyRepository) UpdateStrategy(s *models.Strategy) error { return s.Update() }
+func (r *defaultStrategyRepository) DeleteStrategy(s *models.Strategy) error { return s.Delete() }
+
 // StrategyServiceDependencies holds injectable dependencies for StrategyService.
-type StrategyServiceDependencies struct{}
+type StrategyServiceDependencies struct {
+	Repo StrategyRepository
+}
 
 // StrategyService handles strategy-related business logic
-type StrategyService struct{}
+type StrategyService struct {
+	repo StrategyRepository
+}
 
 // NewStrategyService creates a new StrategyService
-func NewStrategyService(_ StrategyServiceDependencies) *StrategyService {
-	return &StrategyService{}
+func NewStrategyService(deps StrategyServiceDependencies) *StrategyService {
+	repo := deps.Repo
+	if repo == nil {
+		repo = &defaultStrategyRepository{}
+	}
+	return &StrategyService{repo: repo}
 }
 
 const (
@@ -60,7 +105,7 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 		return nil, ErrStrategyNameRequired
 	}
 
-	lobby, err := models.GetLobbyByCode(req.LobbyCode)
+	lobby, err := ss.repo.GetLobbyByCode(req.LobbyCode)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +115,7 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 
 	// Check free-tier limit
 	if !user.IsSubscribed {
-		strategyCount, err := models.CountStrategiesByUserID(user.ID)
+		strategyCount, err := ss.repo.CountStrategiesByUserID(user.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +131,7 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 		Name:      req.Name,
 	}
 
-	if err := strategy.Save(); err != nil {
+	if err := ss.repo.SaveStrategy(strategy); err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
 			return nil, ErrStrategyAlreadySaved
 		}
@@ -110,9 +155,9 @@ func (ss *StrategyService) GetStrategies(userID int, folderID *int) ([]*Strategy
 	var err error
 
 	if folderID != nil {
-		strategies, err = models.GetStrategiesByFolderID(userID, *folderID)
+		strategies, err = ss.repo.GetStrategiesByFolderID(userID, *folderID)
 	} else {
-		strategies, err = models.GetStrategiesByUserID(userID)
+		strategies, err = ss.repo.GetStrategiesByUserID(userID)
 	}
 
 	if err != nil {
@@ -129,7 +174,7 @@ func (ss *StrategyService) GetStrategies(userID int, folderID *int) ([]*Strategy
 		lobbyCodes = append(lobbyCodes, s.LobbyCode)
 	}
 
-	lobbies, err := models.GetLobbiesByCodes(lobbyCodes)
+	lobbies, err := ss.repo.GetLobbiesByCodes(lobbyCodes)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +215,7 @@ type UpdateStrategyRequest struct {
 
 // UpdateStrategy updates an existing strategy
 func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req UpdateStrategyRequest) (*StrategyResponse, error) {
-	strategy, err := models.GetStrategyByID(strategyID)
+	strategy, err := ss.repo.GetStrategyByID(strategyID)
 	if err != nil {
 		return nil, err
 	}
@@ -189,12 +234,12 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 		strategy.FolderID = req.FolderID
 	}
 
-	if err := strategy.Update(); err != nil {
+	if err := ss.repo.UpdateStrategy(strategy); err != nil {
 		return nil, err
 	}
 
 	// Fetch lobby to build response
-	lobby, err := models.GetLobbyByCode(strategy.LobbyCode)
+	lobby, err := ss.repo.GetLobbyByCode(strategy.LobbyCode)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +260,7 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 
 // DeleteStrategy deletes a strategy
 func (ss *StrategyService) DeleteStrategy(user *models.User, strategyID int) error {
-	strategy, err := models.GetStrategyByID(strategyID)
+	strategy, err := ss.repo.GetStrategyByID(strategyID)
 	if err != nil {
 		return err
 	}
@@ -227,5 +272,5 @@ func (ss *StrategyService) DeleteStrategy(user *models.User, strategyID int) err
 		return ErrStrategyAccessDenied
 	}
 
-	return strategy.Delete()
+	return ss.repo.DeleteStrategy(strategy)
 }

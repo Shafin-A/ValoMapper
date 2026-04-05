@@ -12,15 +12,44 @@ var (
 	ErrFolderAccessDenied         = errors.New("you do not have access to this folder")
 )
 
+// FolderRepository abstracts persistence operations for FolderService.
+type FolderRepository interface {
+	GetFoldersByUserID(userID int) ([]models.Folder, error)
+	GetFolderByID(folderID int) (*models.Folder, error)
+	SaveFolder(f *models.Folder) error
+	UpdateFolder(f *models.Folder) error
+	DeleteFolder(f *models.Folder) error
+}
+
+type defaultFolderRepository struct{}
+
+func (r *defaultFolderRepository) GetFoldersByUserID(userID int) ([]models.Folder, error) {
+	return models.GetFoldersByUserID(userID)
+}
+func (r *defaultFolderRepository) GetFolderByID(folderID int) (*models.Folder, error) {
+	return models.GetFolderByID(folderID)
+}
+func (r *defaultFolderRepository) SaveFolder(f *models.Folder) error   { return f.Save() }
+func (r *defaultFolderRepository) UpdateFolder(f *models.Folder) error { return f.Update() }
+func (r *defaultFolderRepository) DeleteFolder(f *models.Folder) error { return f.Delete() }
+
 // FolderServiceDependencies holds injectable dependencies for FolderService.
-type FolderServiceDependencies struct{}
+type FolderServiceDependencies struct {
+	Repo FolderRepository
+}
 
 // FolderService handles folder-related business logic
-type FolderService struct{}
+type FolderService struct {
+	repo FolderRepository
+}
 
 // NewFolderService creates a new FolderService
-func NewFolderService(_ FolderServiceDependencies) *FolderService {
-	return &FolderService{}
+func NewFolderService(deps FolderServiceDependencies) *FolderService {
+	repo := deps.Repo
+	if repo == nil {
+		repo = &defaultFolderRepository{}
+	}
+	return &FolderService{repo: repo}
 }
 
 // CreateFolderRequest wraps folder creation input
@@ -45,7 +74,7 @@ func (fs *FolderService) CreateFolder(user *models.User, req CreateFolderRequest
 		ParentFolderID: req.ParentFolderID,
 	}
 
-	if err := folder.Save(); err != nil {
+	if err := fs.repo.SaveFolder(folder); err != nil {
 		return nil, err
 	}
 
@@ -54,7 +83,7 @@ func (fs *FolderService) CreateFolder(user *models.User, req CreateFolderRequest
 
 // GetFolders retrieves all folders for a user
 func (fs *FolderService) GetFolders(userID int) ([]models.Folder, error) {
-	folders, err := models.GetFoldersByUserID(userID)
+	folders, err := fs.repo.GetFoldersByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +107,7 @@ func (fs *FolderService) UpdateFolder(user *models.User, folderID int, req Updat
 		return nil, ErrFolderSubscriptionRequired
 	}
 
-	folder, err := models.GetFolderByID(folderID)
+	folder, err := fs.repo.GetFolderByID(folderID)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +126,7 @@ func (fs *FolderService) UpdateFolder(user *models.User, folderID int, req Updat
 		folder.ParentFolderID = req.ParentFolderID
 	}
 
-	if err := folder.Update(); err != nil {
+	if err := fs.repo.UpdateFolder(folder); err != nil {
 		return nil, err
 	}
 
@@ -110,7 +139,7 @@ func (fs *FolderService) DeleteFolder(user *models.User, folderID int) error {
 		return ErrFolderSubscriptionRequired
 	}
 
-	folder, err := models.GetFolderByID(folderID)
+	folder, err := fs.repo.GetFolderByID(folderID)
 	if err != nil {
 		return err
 	}
@@ -122,5 +151,5 @@ func (fs *FolderService) DeleteFolder(user *models.User, folderID int) error {
 		return ErrFolderAccessDenied
 	}
 
-	return folder.Delete()
+	return fs.repo.DeleteFolder(folder)
 }

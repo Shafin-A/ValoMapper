@@ -20,15 +20,78 @@ var (
 	ErrStackForbidden         = errors.New("forbidden")
 )
 
+// StackRepository abstracts persistence operations for StackService.
+type StackRepository interface {
+	GetActiveStackMemberByMemberUserID(userID int) (*models.StackMember, error)
+	GetUserByFirebaseUID(uid string) (*models.User, error)
+	GetPendingStackInviteByOwnerAndMember(ownerID, memberID int) (*models.StackMember, error)
+	GetTotalStackMemberCount(ownerID int) (int, error)
+	CreateStackInvite(ownerID, memberID int) (*models.StackMember, error)
+	RemoveStackMember(ownerID, memberID int) error
+	GetStackMemberByID(id int) (*models.StackMember, error)
+	AcceptStackInvite(inviteID, memberID int) error
+	DeclineStackInvite(inviteID, memberID int) error
+	LeaveStack(memberID int) error
+	GetStackMembersForOwner(ownerID int) ([]models.StackMember, error)
+	GetPendingStackInvitesByMemberUserID(memberID int) ([]models.StackMember, error)
+}
+
+type defaultStackRepository struct{}
+
+func (r *defaultStackRepository) GetActiveStackMemberByMemberUserID(userID int) (*models.StackMember, error) {
+	return models.GetActiveStackMemberByMemberUserID(userID)
+}
+func (r *defaultStackRepository) GetUserByFirebaseUID(uid string) (*models.User, error) {
+	return models.GetUserByFirebaseUID(uid)
+}
+func (r *defaultStackRepository) GetPendingStackInviteByOwnerAndMember(ownerID, memberID int) (*models.StackMember, error) {
+	return models.GetPendingStackInviteByOwnerAndMember(ownerID, memberID)
+}
+func (r *defaultStackRepository) GetTotalStackMemberCount(ownerID int) (int, error) {
+	return models.GetTotalStackMemberCount(ownerID)
+}
+func (r *defaultStackRepository) CreateStackInvite(ownerID, memberID int) (*models.StackMember, error) {
+	return models.CreateStackInvite(ownerID, memberID)
+}
+func (r *defaultStackRepository) RemoveStackMember(ownerID, memberID int) error {
+	return models.RemoveStackMember(ownerID, memberID)
+}
+func (r *defaultStackRepository) GetStackMemberByID(id int) (*models.StackMember, error) {
+	return models.GetStackMemberByID(id)
+}
+func (r *defaultStackRepository) AcceptStackInvite(inviteID, memberID int) error {
+	return models.AcceptStackInvite(inviteID, memberID)
+}
+func (r *defaultStackRepository) DeclineStackInvite(inviteID, memberID int) error {
+	return models.DeclineStackInvite(inviteID, memberID)
+}
+func (r *defaultStackRepository) LeaveStack(memberID int) error {
+	return models.LeaveStack(memberID)
+}
+func (r *defaultStackRepository) GetStackMembersForOwner(ownerID int) ([]models.StackMember, error) {
+	return models.GetStackMembersForOwner(ownerID)
+}
+func (r *defaultStackRepository) GetPendingStackInvitesByMemberUserID(memberID int) ([]models.StackMember, error) {
+	return models.GetPendingStackInvitesByMemberUserID(memberID)
+}
+
 // StackServiceDependencies holds injectable dependencies for StackService.
-type StackServiceDependencies struct{}
+type StackServiceDependencies struct {
+	Repo StackRepository
+}
 
 // StackService handles stack member management and stack-related operations
-type StackService struct{}
+type StackService struct {
+	repo StackRepository
+}
 
 // NewStackService creates a new StackService
-func NewStackService(_ StackServiceDependencies) *StackService {
-	return &StackService{}
+func NewStackService(deps StackServiceDependencies) *StackService {
+	repo := deps.Repo
+	if repo == nil {
+		repo = &defaultStackRepository{}
+	}
+	return &StackService{repo: repo}
 }
 
 const (
@@ -52,7 +115,7 @@ func (ss *StackService) GetStackViewContext(user *models.User) (int, bool, error
 		return user.ID, true, nil
 	}
 
-	membership, err := models.GetActiveStackMemberByMemberUserID(user.ID)
+	membership, err := ss.repo.GetActiveStackMemberByMemberUserID(user.ID)
 	if err != nil {
 		return 0, false, err
 	}
@@ -79,7 +142,7 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 		return nil, ErrStackFirebaseUIDNeeded
 	}
 
-	target, err := models.GetUserByFirebaseUID(targetFirebaseUID)
+	target, err := ss.repo.GetUserByFirebaseUID(targetFirebaseUID)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +158,7 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 		return nil, ErrTargetAlreadyInStack
 	}
 
-	existingActiveMembership, err := models.GetActiveStackMemberByMemberUserID(target.ID)
+	existingActiveMembership, err := ss.repo.GetActiveStackMemberByMemberUserID(target.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +166,7 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 		return nil, ErrTargetAlreadyInStack
 	}
 
-	existingPendingInvite, err := models.GetPendingStackInviteByOwnerAndMember(owner.ID, target.ID)
+	existingPendingInvite, err := ss.repo.GetPendingStackInviteByOwnerAndMember(owner.ID, target.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +174,7 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 		return nil, ErrTargetAlreadyInvited
 	}
 
-	total, err := models.GetTotalStackMemberCount(owner.ID)
+	total, err := ss.repo.GetTotalStackMemberCount(owner.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +182,7 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 		return nil, ErrStackFull
 	}
 
-	invite, err := models.CreateStackInvite(owner.ID, target.ID)
+	invite, err := ss.repo.CreateStackInvite(owner.ID, target.ID)
 	if err != nil {
 		if errors.Is(err, models.ErrStackInviteAlreadyExists) {
 			return nil, ErrTargetAlreadyInvited
@@ -136,7 +199,7 @@ func (ss *StackService) RemoveStackMember(owner *models.User, memberID int) erro
 		return ErrNotStackOwner
 	}
 
-	if err := models.RemoveStackMember(owner.ID, memberID); err != nil {
+	if err := ss.repo.RemoveStackMember(owner.ID, memberID); err != nil {
 		if errors.Is(err, models.ErrStackMemberNotFound) {
 			return ErrStackMemberNotFound
 		}
@@ -148,7 +211,7 @@ func (ss *StackService) RemoveStackMember(owner *models.User, memberID int) erro
 
 // AcceptStackInvite accepts a stack invite for a member
 func (ss *StackService) AcceptStackInvite(member *models.User, inviteID int) error {
-	invite, err := models.GetStackMemberByID(inviteID)
+	invite, err := ss.repo.GetStackMemberByID(inviteID)
 	if err != nil {
 		return err
 	}
@@ -159,7 +222,7 @@ func (ss *StackService) AcceptStackInvite(member *models.User, inviteID int) err
 		return ErrStackForbidden
 	}
 
-	if err := models.AcceptStackInvite(inviteID, member.ID); err != nil {
+	if err := ss.repo.AcceptStackInvite(inviteID, member.ID); err != nil {
 		if errors.Is(err, models.ErrStackInviteNotFound) {
 			return ErrStackInviteNotFound
 		}
@@ -174,7 +237,7 @@ func (ss *StackService) AcceptStackInvite(member *models.User, inviteID int) err
 
 // DeclineStackInvite declines a stack invite for a member
 func (ss *StackService) DeclineStackInvite(member *models.User, inviteID int) error {
-	invite, err := models.GetStackMemberByID(inviteID)
+	invite, err := ss.repo.GetStackMemberByID(inviteID)
 	if err != nil {
 		return err
 	}
@@ -185,7 +248,7 @@ func (ss *StackService) DeclineStackInvite(member *models.User, inviteID int) er
 		return ErrStackForbidden
 	}
 
-	if err := models.DeclineStackInvite(inviteID, member.ID); err != nil {
+	if err := ss.repo.DeclineStackInvite(inviteID, member.ID); err != nil {
 		if errors.Is(err, models.ErrStackInviteNotFound) {
 			return ErrStackInviteNotFound
 		}
@@ -197,7 +260,7 @@ func (ss *StackService) DeclineStackInvite(member *models.User, inviteID int) er
 
 // LeaveStack removes the current user from their active stack
 func (ss *StackService) LeaveStack(member *models.User) error {
-	membership, err := models.GetActiveStackMemberByMemberUserID(member.ID)
+	membership, err := ss.repo.GetActiveStackMemberByMemberUserID(member.ID)
 	if err != nil {
 		return err
 	}
@@ -205,17 +268,17 @@ func (ss *StackService) LeaveStack(member *models.User) error {
 		return ErrNotInStack
 	}
 
-	return models.LeaveStack(member.ID)
+	return ss.repo.LeaveStack(member.ID)
 }
 
 // GetStackMembers retrieves the members of a stack
 func (ss *StackService) GetStackMembers(ownerID int) ([]models.StackMember, error) {
-	return models.GetStackMembersForOwner(ownerID)
+	return ss.repo.GetStackMembersForOwner(ownerID)
 }
 
 // GetPendingInvites retrieves pending stack invites for a user
 func (ss *StackService) GetPendingInvites(memberID int) ([]models.StackMember, error) {
-	invites, err := models.GetPendingStackInvitesByMemberUserID(memberID)
+	invites, err := ss.repo.GetPendingStackInvitesByMemberUserID(memberID)
 	if err != nil {
 		return nil, err
 	}
