@@ -135,6 +135,7 @@ type UpdateLobbyRequest struct {
 func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 	code := mux.Vars(r)["code"]
 
+	r.Body = http.MaxBytesReader(w, r.Body, 4<<20) // 4 MB
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Unable to read request body"), middleware.GetRequestID(r))

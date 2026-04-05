@@ -29,6 +29,7 @@ func ApplyCanvasPatch(w http.ResponseWriter, r *http.Request) {
 	code := mux.Vars(r)["code"]
 	canvasPatchTotal.Add(1)
 
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1 MB
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Unable to read request body"), middleware.GetRequestID(r))

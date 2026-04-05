@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"net/http"
+	"os"
 	"runtime"
 	"time"
 	"valo-mapper-api/db"
 	"valo-mapper-api/middleware"
+	"valo-mapper-api/utils"
 	"valo-mapper-api/websocket"
 )
 
@@ -61,9 +64,23 @@ type rateLimiterMetrics struct {
 // @Tags health
 // @Produce json
 // @Success 200 {object} metricsResponse
+// @Failure 403 {object} ErrorResponse
+// @Security InternalAPIKey
 // @Router /metrics [get]
 func HandleMetrics(hub *websocket.Hub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		configuredKey := os.Getenv("INTERNAL_API_KEY")
+		if configuredKey == "" {
+			utils.SendJSONError(w, utils.NewInternal("Internal API key is not configured", nil), middleware.GetRequestID(r))
+			return
+		}
+
+		providedKey := r.Header.Get("X-Internal-API-Key")
+		if subtle.ConstantTimeCompare([]byte(providedKey), []byte(configuredKey)) != 1 {
+			utils.SendJSONError(w, utils.NewForbidden("Forbidden"), middleware.GetRequestID(r))
+			return
+		}
+
 		var ms runtime.MemStats
 		runtime.ReadMemStats(&ms)
 

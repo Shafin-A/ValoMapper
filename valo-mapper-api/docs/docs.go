@@ -1747,6 +1747,11 @@ const docTemplate = `{
         },
         "/metrics": {
             "get": {
+                "security": [
+                    {
+                        "InternalAPIKey": []
+                    }
+                ],
                 "description": "Returns basic runtime, memory, database pool, and WebSocket metrics.",
                 "produces": [
                     "application/json"
@@ -1760,6 +1765,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/handlers.metricsResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }

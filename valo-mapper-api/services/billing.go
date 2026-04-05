@@ -113,9 +113,14 @@ type BillingPlansResponse struct {
 func (bs *BillingService) ParseCreateCheckoutSessionRequest(r *http.Request) (CreateCheckoutSessionRequest, error) {
 	request := CreateCheckoutSessionRequest{}
 
-	body, err := io.ReadAll(r.Body)
+	const maxCheckoutRequestSize = 4096 // 4 KB
+	lr := io.LimitReader(r.Body, maxCheckoutRequestSize+1)
+	body, err := io.ReadAll(lr)
 	if err != nil {
 		return request, err
+	}
+	if int64(len(body)) > maxCheckoutRequestSize {
+		return request, fmt.Errorf("request body too large")
 	}
 
 	if len(bytes.TrimSpace(body)) == 0 {

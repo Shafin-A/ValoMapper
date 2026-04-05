@@ -1735,6 +1735,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/handlers.metricsResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - InternalAPIKey: []
       summary: Observability metrics
       tags:
       - health

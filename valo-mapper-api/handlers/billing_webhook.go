@@ -36,6 +36,7 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, 512<<10) // 512 KB
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), requestID)
