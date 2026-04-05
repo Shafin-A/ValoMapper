@@ -13,7 +13,4 @@ const (
 	CheckoutPlanMonthly CheckoutPlan = "monthly"
 	CheckoutPlanYearly  CheckoutPlan = "yearly"
 	CheckoutPlanStack   CheckoutPlan = "stack"
-
-	// DefaultPremiumTrialDaysEnv environment variable for trial duration
-	DefaultPremiumTrialDaysEnv = "PREMIUM_TRIAL_DAYS"
 )
