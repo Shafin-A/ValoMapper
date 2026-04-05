@@ -23,8 +23,16 @@ type TigrisClient struct {
 	endpoint string
 }
 
+// Client is the interface satisfied by TigrisClient and any test double.
+type Client interface {
+	UploadImage(ctx context.Context, key string, data io.Reader, contentType string, contentLength int64) (string, error)
+	GetImage(ctx context.Context, key string) (io.ReadCloser, string, error)
+	ListObjectKeys(ctx context.Context, prefix string) ([]string, error)
+	DeleteObjects(ctx context.Context, keys []string) error
+}
+
 // DefaultClient is the package-level Tigris client, set by InitTigris.
-var DefaultClient *TigrisClient
+var DefaultClient Client
 
 // InitTigris reads credentials from environment variables and initialises
 // DefaultClient.  The variables match exactly what `fly storage create` injects:
