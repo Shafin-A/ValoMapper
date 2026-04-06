@@ -22,8 +22,8 @@ func TestGetMapById(t *testing.T) {
 
 		// Insert test map
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('ascent', 'Ascent', '#FF4655')
+			INSERT INTO maps (id, text) 
+			VALUES ('ascent', 'Ascent')
 		`)
 		require.NoError(t, err)
 
@@ -33,7 +33,7 @@ func TestGetMapById(t *testing.T) {
 		require.NotNil(t, mapOption)
 		assert.Equal(t, "ascent", mapOption.ID)
 		assert.Equal(t, "Ascent", mapOption.Text)
-		assert.Equal(t, "#FF4655", mapOption.TextColor)
+		assert.Equal(t, "text-white", mapOption.TextColor)
 	})
 
 	t.Run("returns error for non-existent map", func(t *testing.T) {
@@ -50,11 +50,11 @@ func TestGetMapById(t *testing.T) {
 
 		// Insert multiple test maps
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
+			INSERT INTO maps (id, text) 
 			VALUES 
-				('bind', 'Bind', '#D4AF37'),
-				('haven', 'Haven', '#C19A6B'),
-				('split', 'Split', '#00FF00')
+				('bind', 'Bind'),
+				('haven', 'Haven'),
+				('split', 'Split')
 		`)
 		require.NoError(t, err)
 
@@ -64,7 +64,7 @@ func TestGetMapById(t *testing.T) {
 		require.NotNil(t, bindMap)
 		assert.Equal(t, "bind", bindMap.ID)
 		assert.Equal(t, "Bind", bindMap.Text)
-		assert.Equal(t, "#D4AF37", bindMap.TextColor)
+		assert.Equal(t, "text-white", bindMap.TextColor)
 
 		// Test haven
 		havenMap, err := GetMapById("haven")
@@ -78,7 +78,7 @@ func TestGetMapById(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, splitMap)
 		assert.Equal(t, "split", splitMap.ID)
-		assert.Equal(t, "#00FF00", splitMap.TextColor)
+		assert.Equal(t, "text-white", splitMap.TextColor)
 	})
 
 	t.Run("handles empty id", func(t *testing.T) {
@@ -95,8 +95,8 @@ func TestGetMapById(t *testing.T) {
 
 		// Insert map with special characters
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('test-map', 'Test & Map', '#FFFFFF')
+			INSERT INTO maps (id, text) 
+			VALUES ('test-map', 'Test & Map')
 		`)
 		require.NoError(t, err)
 
@@ -107,34 +107,22 @@ func TestGetMapById(t *testing.T) {
 		assert.Equal(t, "Test & Map", mapOption.Text)
 	})
 
-	t.Run("retrieves map with various color formats", func(t *testing.T) {
+	t.Run("text color is always text-white", func(t *testing.T) {
 		truncateTables(t, pool, "maps")
 
-		testCases := []struct {
-			id        string
-			text      string
-			textColor string
-		}{
-			{"map1", "Map 1", "#FF0000"},
-			{"map2", "Map 2", "#00FF00"},
-			{"map3", "Map 3", "#0000FF"},
-			{"map4", "Map 4", "#AABBCC"},
-			{"map5", "Map 5", "#123456"},
-		}
+		mapIDs := []string{"map1", "map2", "map3"}
 
-		for _, tc := range testCases {
+		for _, id := range mapIDs {
 			_, err := pool.Exec(context.Background(), `
-				INSERT INTO maps (id, text, text_color) 
-				VALUES ($1, $2, $3)
-			`, tc.id, tc.text, tc.textColor)
+				INSERT INTO maps (id, text) 
+				VALUES ($1, $2)
+			`, id, "Test Map")
 			require.NoError(t, err)
 
-			mapOption, err := GetMapById(tc.id)
+			mapOption, err := GetMapById(id)
 			require.NoError(t, err)
 			require.NotNil(t, mapOption)
-			assert.Equal(t, tc.id, mapOption.ID)
-			assert.Equal(t, tc.text, mapOption.Text)
-			assert.Equal(t, tc.textColor, mapOption.TextColor)
+			assert.Equal(t, "text-white", mapOption.TextColor)
 		}
 	})
 
@@ -143,8 +131,8 @@ func TestGetMapById(t *testing.T) {
 
 		// Insert map with lowercase id
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('icebox', 'Icebox', '#FFFFFF')
+			INSERT INTO maps (id, text) 
+			VALUES ('icebox', 'Icebox')
 		`)
 		require.NoError(t, err)
 

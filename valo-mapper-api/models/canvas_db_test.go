@@ -15,8 +15,8 @@ func createCanvasTestLobby(t *testing.T, pool *pgxpool.Pool) (*Lobby, string) {
 
 	mapID := fmt.Sprintf("canvas-map-%s", GenerateLobbyCode())
 	_, err := pool.Exec(context.Background(),
-		`INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3)`,
-		mapID, "Canvas Test Map", "#00FF00",
+		`INSERT INTO maps (id, text) VALUES ($1, $2)`,
+		mapID, "Canvas Test Map",
 	)
 	require.NoError(t, err)
 
@@ -685,7 +685,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 	})
 
 	t.Run("updates lobby map/side/phase via patch", func(t *testing.T) {
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`, "bind", "Bind", "#FFFFFF")
+		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING`, "bind", "Bind")
 		require.NoError(t, err)
 
 		patch := CanvasPatch{Entries: []CanvasPatchEntry{
@@ -747,7 +747,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 
 	t.Run("full clear via patch resetAll true", func(t *testing.T) {
 		// insert some data across phases + set map/side
-		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`, "bind", "Bind", "#FFFFFF")
+		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING`, "bind", "Bind")
 		require.NoError(t, err)
 
 		patch := CanvasPatch{Entries: []CanvasPatchEntry{

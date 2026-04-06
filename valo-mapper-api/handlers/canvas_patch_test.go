@@ -35,8 +35,8 @@ func TestApplyCanvasPatch(t *testing.T) {
 	testutils.TruncateTables(t, pool, "lobbies", "maps", "canvas_agents", "canvas_abilities", "canvas_draw_lines", "canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines")
 
 	_, err := pool.Exec(context.Background(),
-		`INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3)`,
-		models.DefaultMapID, "Default Map", "#FFFFFF",
+		`INSERT INTO maps (id, text) VALUES ($1, $2)`,
+		models.DefaultMapID, "Default Map",
 	)
 	require.NoError(t, err)
 

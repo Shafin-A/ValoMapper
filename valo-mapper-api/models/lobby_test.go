@@ -56,8 +56,8 @@ func TestLobbySave(t *testing.T) {
 
 		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('ascent', 'Ascent', '#FF0000')
+			INSERT INTO maps (id, text) 
+			VALUES ('ascent', 'Ascent')
 		`)
 		require.NoError(t, err)
 
@@ -66,9 +66,8 @@ func TestLobbySave(t *testing.T) {
 			CreatedAt: time.Now(),
 			CanvasState: &FullCanvasState{
 				SelectedMap: MapOption{
-					ID:        "ascent",
-					Text:      "Ascent",
-					TextColor: "#FF0000",
+					ID:   "ascent",
+					Text: "Ascent",
 				},
 				MapSide:           "attack",
 				CurrentPhaseIndex: 0,
@@ -93,8 +92,8 @@ func TestLobbySave(t *testing.T) {
 
 		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('bind', 'Bind', '#00FF00')
+			INSERT INTO maps (id, text) 
+			VALUES ('bind', 'Bind')
 		`)
 		require.NoError(t, err)
 
@@ -104,9 +103,8 @@ func TestLobbySave(t *testing.T) {
 			CreatedAt: time.Now(),
 			CanvasState: &FullCanvasState{
 				SelectedMap: MapOption{
-					ID:        "bind",
-					Text:      "Bind",
-					TextColor: "#00FF00",
+					ID:   "bind",
+					Text: "Bind",
 				},
 				MapSide:           "attack",
 				CurrentPhaseIndex: 0,
@@ -139,8 +137,8 @@ func TestLobbySave(t *testing.T) {
 
 		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('split', 'Split', '#0000FF')
+			INSERT INTO maps (id, text) 
+			VALUES ('split', 'Split')
 		`)
 		require.NoError(t, err)
 
@@ -149,9 +147,8 @@ func TestLobbySave(t *testing.T) {
 			CreatedAt: time.Now(),
 			CanvasState: &FullCanvasState{
 				SelectedMap: MapOption{
-					ID:        "split",
-					Text:      "Split",
-					TextColor: "#0000FF",
+					ID:   "split",
+					Text: "Split",
 				},
 				MapSide:           "attack",
 				CurrentPhaseIndex: 0,
@@ -202,8 +199,8 @@ func TestGetLobbyByCode(t *testing.T) {
 
 		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('haven', 'Haven', '#FFFFFF')
+			INSERT INTO maps (id, text) 
+			VALUES ('haven', 'Haven')
 		`)
 		require.NoError(t, err)
 
@@ -214,9 +211,8 @@ func TestGetLobbyByCode(t *testing.T) {
 			CreatedAt: time.Now(),
 			CanvasState: &FullCanvasState{
 				SelectedMap: MapOption{
-					ID:        "haven",
-					Text:      "Haven",
-					TextColor: "#FFFFFF",
+					ID:   "haven",
+					Text: "Haven",
 				},
 				MapSide:           "defend",
 				CurrentPhaseIndex: 2,
@@ -252,8 +248,8 @@ func TestGetLobbyByCode(t *testing.T) {
 
 		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('breeze', 'Breeze', '#AABBCC')
+			INSERT INTO maps (id, text) 
+			VALUES ('breeze', 'Breeze')
 		`)
 		require.NoError(t, err)
 
@@ -262,9 +258,8 @@ func TestGetLobbyByCode(t *testing.T) {
 			CreatedAt: time.Now(),
 			CanvasState: &FullCanvasState{
 				SelectedMap: MapOption{
-					ID:        "breeze",
-					Text:      "Breeze",
-					TextColor: "#AABBCC",
+					ID:   "breeze",
+					Text: "Breeze",
 				},
 				MapSide:           "attack",
 				CurrentPhaseIndex: 0,
@@ -296,8 +291,8 @@ func TestGetLobbyByCode(t *testing.T) {
 
 		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('icebox', 'Icebox', '#000000')
+			INSERT INTO maps (id, text) 
+			VALUES ('icebox', 'Icebox')
 		`)
 		require.NoError(t, err)
 
@@ -306,9 +301,8 @@ func TestGetLobbyByCode(t *testing.T) {
 			CreatedAt: time.Now(),
 			CanvasState: &FullCanvasState{
 				SelectedMap: MapOption{
-					ID:        "icebox",
-					Text:      "Icebox",
-					TextColor: "#000000",
+					ID:   "icebox",
+					Text: "Icebox",
 				},
 				MapSide:           "attack",
 				CurrentPhaseIndex: 0,
@@ -363,9 +357,9 @@ func TestGetLobbiesByCodes(t *testing.T) {
 
 		// Insert test maps
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('ascent', 'Ascent', '#FF0000'),
-			       ('bind', 'Bind', '#00FF00')
+			INSERT INTO maps (id, text) 
+			VALUES ('ascent', 'Ascent'),
+			       ('bind', 'Bind')
 		`)
 		require.NoError(t, err)
 
@@ -423,8 +417,8 @@ func TestGetLobbiesByCodes(t *testing.T) {
 
 		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
-			INSERT INTO maps (id, text, text_color) 
-			VALUES ('split', 'Split', '#0000FF')
+			INSERT INTO maps (id, text) 
+			VALUES ('split', 'Split')
 		`)
 		require.NoError(t, err)
 

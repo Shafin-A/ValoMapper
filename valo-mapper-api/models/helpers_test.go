@@ -164,8 +164,8 @@ func createTestLobby(t *testing.T, pool *pgxpool.Pool, code string) *Lobby {
 
 	// Ensure the map exists
 	_, err := pool.Exec(context.Background(),
-		`INSERT INTO maps (id, text, text_color) 
-		VALUES ('ascent', 'Ascent', '#FF0000')
+		`INSERT INTO maps (id, text) 
+		VALUES ('ascent', 'Ascent')
 		ON CONFLICT (id) DO NOTHING`)
 	if err != nil {
 		t.Fatalf("Failed to create test map: %v", err)

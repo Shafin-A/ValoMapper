@@ -46,9 +46,9 @@ func TestCreateLobby(t *testing.T) {
 
 	// Create test map and lobby
 	_, err := pool.Exec(context.Background(),
-		`INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3)
+		`INSERT INTO maps (id, text) VALUES ($1, $2)
 		ON CONFLICT (id) DO NOTHING`,
-		models.DefaultMapID, "Default Map", "#FFFFFF",
+		models.DefaultMapID, "Default Map",
 	)
 	require.NoError(t, err)
 
@@ -85,9 +85,9 @@ func TestGetLobby(t *testing.T) {
 	testutils.TruncateTables(t, pool, "lobbies", "maps")
 
 	_, err := pool.Exec(context.Background(),
-		`INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3)
+		`INSERT INTO maps (id, text) VALUES ($1, $2)
 		ON CONFLICT (id) DO NOTHING`,
-		"ascent", "Ascent", "#FFFFFF",
+		"ascent", "Ascent",
 	)
 	require.NoError(t, err)
 
@@ -139,9 +139,9 @@ func TestUpdateLobby(t *testing.T) {
 	testutils.TruncateTables(t, pool, "lobbies", "maps")
 
 	_, err := pool.Exec(context.Background(),
-		`INSERT INTO maps (id, text, text_color) VALUES ($1, $2, $3)
+		`INSERT INTO maps (id, text) VALUES ($1, $2)
 		ON CONFLICT (id) DO NOTHING`,
-		"ascent", "Ascent", "#FFFFFF",
+		"ascent", "Ascent",
 	)
 	require.NoError(t, err)
 
@@ -151,9 +151,8 @@ func TestUpdateLobby(t *testing.T) {
 		updateReq := UpdateLobbyRequest{
 			CanvasState: &models.FullCanvasState{
 				SelectedMap: models.MapOption{
-					ID:        "ascent",
-					Text:      "Ascent",
-					TextColor: "#FFFFFF",
+					ID:   "ascent",
+					Text: "Ascent",
 				},
 				MapSide:           "attack",
 				CurrentPhaseIndex: 2,

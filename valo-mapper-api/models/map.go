@@ -20,17 +20,17 @@ func GetMapById(id string) (*MapOption, error) {
 
 		mapOption := &MapOption{}
 		err = conn.QueryRow(ctx,
-			`SELECT id, text, text_color
+			`SELECT id, text
 			FROM maps WHERE id = $1`,
 			id).Scan(
 			&mapOption.ID,
 			&mapOption.Text,
-			&mapOption.TextColor,
 		)
 		if err != nil {
 			return nil, err
 		}
 
+		mapOption.TextColor = "text-white"
 		return mapOption, nil
 	})
 }

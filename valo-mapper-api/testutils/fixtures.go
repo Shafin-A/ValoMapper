@@ -81,12 +81,11 @@ func CreateTestLobbyWithCode(t *testing.T, pool *pgxpool.Pool, code string) *mod
 
 	// ensure selected map exists to satisfy foreign key
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO maps (id, text, text_color)
-		VALUES ($1, $2, $3)
+		`INSERT INTO maps (id, text)
+		VALUES ($1, $2)
 		ON CONFLICT (id) DO NOTHING`,
 		lobby.CanvasState.SelectedMap.ID,
 		lobby.CanvasState.SelectedMap.Text,
-		lobby.CanvasState.SelectedMap.TextColor,
 	); err != nil {
 		t.Fatalf("Failed to ensure map exists: %v", err)
 	}
