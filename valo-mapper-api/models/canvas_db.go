@@ -191,10 +191,15 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var ability CanvasAbility
 		var phaseIndex int
 		var abilityName sql.NullString
+		var pathArray []float64
 		if err := rows.Scan(&ability.ID, &abilityName, &ability.Action, &ability.X, &ability.Y,
-			&ability.CurrentPath, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &ability.ShowOuterCircle, &phaseIndex); err != nil {
+			&pathArray, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &ability.ShowOuterCircle, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
+		}
+		ability.CurrentPath = make([]Position, 0, len(pathArray)/2)
+		for i := 0; i+1 < len(pathArray); i += 2 {
+			ability.CurrentPath = append(ability.CurrentPath, Position{X: pathArray[i], Y: pathArray[i+1]})
 		}
 		ability.AgentName = ""
 		if abilityName.Valid {
@@ -449,16 +454,13 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Abilities
 		for _, ab := range phase.AbilitiesOnCanvas {
-			var pathJSON []byte
-			if ab.CurrentPath != nil {
-				pathJSON, err = json.Marshal(ab.CurrentPath)
-				if err != nil {
-					return err
-				}
+			pathArray := make([]float64, 0, len(ab.CurrentPath)*2)
+			for _, pt := range ab.CurrentPath {
+				pathArray = append(pathArray, pt.X, pt.Y)
 			}
 			abilityRows = append(abilityRows, []any{
 				ab.ID, lobbyCode, ab.AgentName, ab.Action, ab.X, ab.Y,
-				pathJSON, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, ab.ShowOuterCircle, phaseIndex,
+				pathArray, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, ab.ShowOuterCircle, phaseIndex,
 			})
 		}
 
@@ -762,6 +764,11 @@ func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 		return fmt.Errorf("missing id for ability upsert")
 	}
 
+	pathArray := make([]float64, 0, len(p.CurrentPath)*2)
+	for _, pt := range p.CurrentPath {
+		pathArray = append(pathArray, pt.X, pt.Y)
+	}
+
 	_, err := tx.Exec(context.Background(), `
 		INSERT INTO canvas_abilities (id, lobby_code, phase_index, name, action, x, y, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
@@ -769,7 +776,7 @@ func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 		SET name = EXCLUDED.name, action = EXCLUDED.action, x = EXCLUDED.x, y = EXCLUDED.y,
 		    current_path = EXCLUDED.current_path, current_rotation = EXCLUDED.current_rotation, current_length = EXCLUDED.current_length,
 		    is_ally = EXCLUDED.is_ally, icon_only = EXCLUDED.icon_only, show_outer_circle = EXCLUDED.show_outer_circle`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Action, p.X, p.Y, p.CurrentPath, p.CurrentRotation, p.CurrentLength, p.IsAlly, p.IconOnly, p.ShowOuterCircle)
+		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Action, p.X, p.Y, pathArray, p.CurrentRotation, p.CurrentLength, p.IsAlly, p.IconOnly, p.ShowOuterCircle)
 	return err
 }
 
