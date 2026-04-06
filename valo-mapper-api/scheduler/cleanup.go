@@ -20,36 +20,34 @@ type CleanupScheduler struct {
 	deadRegistrationQuery    string
 }
 
-func buildDeadRegistrationCleanupQuery(retentionWindow string) string {
-	return `
-		DELETE FROM users u
-		WHERE u.created_at < NOW() - INTERVAL '` + retentionWindow + `'
-		AND u.updated_at = u.created_at
-		AND u.firebase_uid IS NULL
-		AND u.email IS NULL
-		AND COALESCE(NULLIF(TRIM(u.name), ''), '') = ''
-		AND u.email_verified = false
-		AND u.tour_completed = false
-		AND u.is_subscribed = false
-		AND u.subscription_ended_at IS NULL
-		AND u.subscription_plan IS NULL
-		AND u.stripe_customer_id IS NULL
-		AND u.stripe_subscription_id IS NULL
-		AND u.premium_trial_claimed_at IS NULL
-		AND u.rso_subject_id IS NOT NULL
-		AND NOT EXISTS (
-			SELECT 1 FROM folders f
-			WHERE f.user_id = u.id
-		)
-		AND NOT EXISTS (
-			SELECT 1 FROM strategies s
-			WHERE s.user_id = u.id
-		)
-		AND NOT EXISTS (
-			SELECT 1 FROM stack_members sm
-			WHERE sm.owner_user_id = u.id OR sm.member_user_id = u.id
-		)`
-}
+const deadRegistrationCleanupQuery = `
+	DELETE FROM users u
+	WHERE u.created_at < NOW() - INTERVAL '30 days'
+	AND u.updated_at = u.created_at
+	AND u.firebase_uid IS NULL
+	AND u.email IS NULL
+	AND COALESCE(NULLIF(TRIM(u.name), ''), '') = ''
+	AND u.email_verified = false
+	AND u.tour_completed = false
+	AND u.is_subscribed = false
+	AND u.subscription_ended_at IS NULL
+	AND u.subscription_plan IS NULL
+	AND u.stripe_customer_id IS NULL
+	AND u.stripe_subscription_id IS NULL
+	AND u.premium_trial_claimed_at IS NULL
+	AND u.rso_subject_id IS NOT NULL
+	AND NOT EXISTS (
+		SELECT 1 FROM folders f
+		WHERE f.user_id = u.id
+	)
+	AND NOT EXISTS (
+		SELECT 1 FROM strategies s
+		WHERE s.user_id = u.id
+	)
+	AND NOT EXISTS (
+		SELECT 1 FROM stack_members sm
+		WHERE sm.owner_user_id = u.id OR sm.member_user_id = u.id
+	)`
 
 func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupScheduler {
 	cleanupQuery := `
@@ -75,7 +73,7 @@ func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupSched
 			) >= 3
 		)`
 
-	deadRegistrationQuery := buildDeadRegistrationCleanupQuery("30 days")
+	deadRegistrationQuery := deadRegistrationCleanupQuery
 
 	return &CleanupScheduler{
 		db:                       db,

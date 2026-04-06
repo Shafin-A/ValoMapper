@@ -5,9 +5,7 @@ import (
 	"testing"
 )
 
-func TestBuildDeadRegistrationCleanupQuery(t *testing.T) {
-	query := buildDeadRegistrationCleanupQuery("30 days")
-
+func TestDeadRegistrationCleanupQuery(t *testing.T) {
 	requiredClauses := []string{
 		"DELETE FROM users u",
 		"u.created_at < NOW() - INTERVAL '30 days'",
@@ -26,7 +24,7 @@ func TestBuildDeadRegistrationCleanupQuery(t *testing.T) {
 	}
 
 	for _, clause := range requiredClauses {
-		if !strings.Contains(query, clause) {
+		if !strings.Contains(deadRegistrationCleanupQuery, clause) {
 			t.Fatalf("query missing required clause: %s", clause)
 		}
 	}
