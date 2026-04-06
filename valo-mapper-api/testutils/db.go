@@ -58,19 +58,13 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 	// URL-encode the password to handle special characters like $, @, :, etc.
 	password := url.QueryEscape(os.Getenv("DB_PASSWORD"))
 
-	sslMode := os.Getenv("DB_SSLMODE")
-	if sslMode == "" {
-		sslMode = "disable"
-	}
-
 	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
 		password,
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		testDBName,
-		url.QueryEscape(sslMode),
 	)
 
 	config, err := pgxpool.ParseConfig(connStr)

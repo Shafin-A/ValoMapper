@@ -72,8 +72,6 @@ Before setting up the project, ensure you have:
    DB_USER=postgres
    DB_PASSWORD=your_db_password
    DB_NAME=valo-mapper
-   # Set to "disable" for local dev (defaults to "require" in production)
-   DB_SSLMODE=disable
 
    # Raw Firebase service account JSON (single-line string)
    GOOGLE_APPLICATION_CREDENTIALS='{"type":"service_account",...}'
@@ -218,7 +216,7 @@ ValoMapper is configured for deployment on Fly.io using Docker containers.
    This creates a Tigris bucket and outputs credentials that you'll use in the next step.
 
 5. **Configure secrets**:
-   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RATE_LIMIT_RPS`, `RATE_LIMIT_BURST`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`, `INTERNAL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_LOOKUP_KEY_MONTHLY`, `STRIPE_PRICE_LOOKUP_KEY_YEARLY`, `STRIPE_PRICE_LOOKUP_KEY_STACK`, `STRIPE_WEBHOOK_SECRET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `BUCKET_NAME`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION` (omit `DB_SSLMODE` in production — it defaults to `require`; set `SWAGGER_PASSWORD` to expose `/swagger/` behind Basic Auth, otherwise the endpoint returns 404)
+   - Backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`, `ALLOWED_ORIGINS`, `RATE_LIMIT_RPS`, `RATE_LIMIT_BURST`, `RSO_CLIENT_ID`, `RSO_CLIENT_SECRET`, `RSO_REDIRECT_URI`, `INTERNAL_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_LOOKUP_KEY_MONTHLY`, `STRIPE_PRICE_LOOKUP_KEY_YEARLY`, `STRIPE_PRICE_LOOKUP_KEY_STACK`, `STRIPE_WEBHOOK_SECRET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `BUCKET_NAME`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION` (set `SWAGGER_PASSWORD` to expose `/swagger/` behind Basic Auth, otherwise the endpoint returns 404)
    - Frontend: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_RSO_CLIENT_ID`, `NEXT_PUBLIC_RSO_REDIRECT_URI`, `API_URL`, `NEXT_PUBLIC_WS_URL`
 
 6. **Deploy**:

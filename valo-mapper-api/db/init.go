@@ -35,19 +35,13 @@ func InitDB() error {
 
 	password := url.QueryEscape(os.Getenv("DB_PASSWORD"))
 
-	sslMode := os.Getenv("DB_SSLMODE")
-	if sslMode == "" {
-		sslMode = "require"
-	}
-
 	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
 		password,
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_NAME"),
-		url.QueryEscape(sslMode),
 	)
 
 	config, err := pgxpool.ParseConfig(connStr)
