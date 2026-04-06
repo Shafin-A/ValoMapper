@@ -154,7 +154,7 @@ func main() {
 
 	r := mux.NewRouter()
 	routes.SetupRoutes(r, firebaseAuth, hub)
-	r.PathPrefix("/swagger/").HandlerFunc(httpSwagger.WrapHandler)
+	r.PathPrefix("/swagger/").Handler(middleware.SwaggerBasicAuth(httpSwagger.WrapHandler))
 
 	rateLimitRPS := getEnvFloat("RATE_LIMIT_RPS", 20)
 	rateLimitBurst := getEnvInt("RATE_LIMIT_BURST", 60)
