@@ -1,0 +1,2 @@
+ALTER TABLE canvas_draw_lines
+    ALTER COLUMN size TYPE INTEGER USING ROUND(size)::INTEGER;
