@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 	"valo-mapper-api/storage"
 
@@ -15,6 +16,7 @@ type CleanupScheduler struct {
 	db                       *pgxpool.Pool
 	interval                 time.Duration
 	stopChan                 chan struct{}
+	stopOnce                 sync.Once
 	cleanupQuery             string
 	subscriptionCleanupQuery string
 	deadRegistrationQuery    string
@@ -107,7 +109,9 @@ func (cs *CleanupScheduler) Start() {
 }
 
 func (cs *CleanupScheduler) Stop() {
-	close(cs.stopChan)
+	cs.stopOnce.Do(func() {
+		close(cs.stopChan)
+	})
 }
 
 func (cs *CleanupScheduler) runCleanup() {
