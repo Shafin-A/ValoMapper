@@ -52,11 +52,17 @@ export const ToolsSidebar = ({
     mapSide,
     setMapSide,
     resetState,
-    setTextsOnCanvas,
-    setImagesOnCanvas,
+    agentsOnCanvas,
     setAgentsOnCanvas,
+    abilitiesOnCanvas,
     setAbilitiesOnCanvas,
+    textsOnCanvas,
+    setTextsOnCanvas,
+    imagesOnCanvas,
+    setImagesOnCanvas,
+    toolIconsOnCanvas,
     setToolIconsOnCanvas,
+    drawLines,
     setDrawLines,
     phases,
     currentPhaseIndex,
@@ -76,7 +82,15 @@ export const ToolsSidebar = ({
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
-  const { notifyPhaseChanged } = useCollaborativeCanvas();
+  const {
+    notifyPhaseChanged,
+    notifyAgentMoved,
+    notifyAbilityMoved,
+    notifyTextUpdated,
+    notifyImageMoved,
+    notifyLineDrawn,
+    notifyToolIconMoved,
+  } = useCollaborativeCanvas();
   const [mapSettingsOpen, setMapSettingsOpen] = useState(false);
   const [showAllMaps, setShowAllMaps] = useState(false);
 
@@ -93,77 +107,67 @@ export const ToolsSidebar = ({
   };
 
   const handleRotationToggle = () => {
-    setAgentsOnCanvas((prev) =>
-      prev.map((agent) => ({
-        ...agent,
-        x: 2 * (mapPosition.x + MAP_SIZE / 2) - agent.x,
-        y: 2 * (mapPosition.y + MAP_SIZE / 2) - agent.y,
+    const mapCenterX = mapPosition.x + MAP_SIZE / 2;
+    const mapCenterY = mapPosition.y + MAP_SIZE / 2;
+
+    const newAgents = agentsOnCanvas.map((agent) => ({
+      ...agent,
+      x: 2 * mapCenterX - agent.x,
+      y: 2 * mapCenterY - agent.y,
+    }));
+    setAgentsOnCanvas(newAgents);
+    newAgents.forEach((agent) => notifyAgentMoved(agent));
+
+    const newAbilities = abilitiesOnCanvas.map((ability) => ({
+      ...ability,
+      x: 2 * mapCenterX - ability.x,
+      y: 2 * mapCenterY - ability.y,
+      currentRotation: ((ability.currentRotation || 0) + 180) % 360,
+    }));
+    setAbilitiesOnCanvas(newAbilities);
+    newAbilities.forEach((ability) => notifyAbilityMoved(ability));
+
+    const newTexts = textsOnCanvas.map((text) => {
+      const cx = text.x + text.width / 2;
+      const cy = text.y + text.height / 2;
+      const newCx = 2 * mapCenterX - cx;
+      const newCy = 2 * mapCenterY - cy;
+      return { ...text, x: newCx - text.width / 2, y: newCy - text.height / 2 };
+    });
+    setTextsOnCanvas(newTexts);
+    newTexts.forEach((text) => notifyTextUpdated(text));
+
+    const newImages = imagesOnCanvas.map((image) => {
+      const cx = image.x + image.width / 2;
+      const cy = image.y + image.height / 2;
+      const newCx = 2 * mapCenterX - cx;
+      const newCy = 2 * mapCenterY - cy;
+      return {
+        ...image,
+        x: newCx - image.width / 2,
+        y: newCy - image.height / 2,
+      };
+    });
+    setImagesOnCanvas(newImages);
+    newImages.forEach((image) => notifyImageMoved(image));
+
+    const newDrawLines = drawLines.map((line) => ({
+      ...line,
+      points: line.points.map((point) => ({
+        x: 2 * mapCenterX - point.x,
+        y: 2 * mapCenterY - point.y,
       })),
-    );
+    }));
+    setDrawLines(newDrawLines);
+    newDrawLines.forEach((line) => notifyLineDrawn(line));
 
-    setAbilitiesOnCanvas((prev) =>
-      prev.map((ability) => ({
-        ...ability,
-        x: 2 * (mapPosition.x + MAP_SIZE / 2) - ability.x,
-        y: 2 * (mapPosition.y + MAP_SIZE / 2) - ability.y,
-        currentRotation: ((ability.currentRotation || 0) + 180) % 360,
-      })),
-    );
-
-    setTextsOnCanvas((prev) =>
-      prev.map((text) => {
-        const cx = text.x + text.width / 2;
-        const cy = text.y + text.height / 2;
-
-        const mapCenterX = mapPosition.x + MAP_SIZE / 2;
-        const mapCenterY = mapPosition.y + MAP_SIZE / 2;
-
-        const newCx = 2 * mapCenterX - cx;
-        const newCy = 2 * mapCenterY - cy;
-
-        return {
-          ...text,
-          x: newCx - text.width / 2,
-          y: newCy - text.height / 2,
-        };
-      }),
-    );
-
-    setImagesOnCanvas((prev) =>
-      prev.map((image) => {
-        const cx = image.x + image.width / 2;
-        const cy = image.y + image.height / 2;
-        const mapCenterX = mapPosition.x + MAP_SIZE / 2;
-        const mapCenterY = mapPosition.y + MAP_SIZE / 2;
-
-        const newCx = 2 * mapCenterX - cx;
-        const newCy = 2 * mapCenterY - cy;
-
-        return {
-          ...image,
-          x: newCx - image.width / 2,
-          y: newCy - image.height / 2,
-        };
-      }),
-    );
-
-    setDrawLines((prev) =>
-      prev.map((line) => ({
-        ...line,
-        points: line.points.map((point) => ({
-          x: 2 * (mapPosition.x + MAP_SIZE / 2) - point.x,
-          y: 2 * (mapPosition.y + MAP_SIZE / 2) - point.y,
-        })),
-      })),
-    );
-
-    setToolIconsOnCanvas((prev) =>
-      prev.map((toolIcon) => ({
-        ...toolIcon,
-        x: 2 * (mapPosition.x + MAP_SIZE / 2) - toolIcon.x,
-        y: 2 * (mapPosition.y + MAP_SIZE / 2) - toolIcon.y,
-      })),
-    );
+    const newToolIcons = toolIconsOnCanvas.map((toolIcon) => ({
+      ...toolIcon,
+      x: 2 * mapCenterX - toolIcon.x,
+      y: 2 * mapCenterY - toolIcon.y,
+    }));
+    setToolIconsOnCanvas(newToolIcons);
+    newToolIcons.forEach((icon) => notifyToolIconMoved(icon));
   };
 
   const [pendingPhaseIndex, setPendingPhaseIndex] = useState<number | null>(
