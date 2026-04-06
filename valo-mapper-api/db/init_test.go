@@ -43,6 +43,7 @@ func TestInitDB(t *testing.T) {
 		"DB_USER":     os.Getenv("DB_USER"),
 		"DB_PASSWORD": os.Getenv("DB_PASSWORD"),
 		"DB_NAME":     os.Getenv("DB_NAME"),
+		"DB_SSLMODE":  os.Getenv("DB_SSLMODE"),
 	}
 
 	defer func() {
@@ -76,6 +77,9 @@ func TestInitDB(t *testing.T) {
 		if os.Getenv("DB_NAME") == "" {
 			os.Setenv("DB_NAME", "valomapper_test")
 		}
+		if os.Getenv("DB_SSLMODE") == "" {
+			os.Setenv("DB_SSLMODE", "disable")
+		}
 
 		err := InitDB()
 		require.NoError(t, err)
@@ -97,6 +101,7 @@ func TestInitDB(t *testing.T) {
 		os.Unsetenv("DB_USER")
 		os.Unsetenv("DB_PASSWORD")
 		os.Unsetenv("DB_NAME")
+		os.Unsetenv("DB_SSLMODE")
 
 		err := InitDB()
 		assert.Error(t, err)
@@ -109,6 +114,7 @@ func TestInitDB(t *testing.T) {
 		os.Setenv("DB_USER", "postgres")
 		os.Setenv("DB_PASSWORD", "postgres")
 		os.Setenv("DB_NAME", "valomapper_test")
+		os.Setenv("DB_SSLMODE", "disable")
 
 		err := InitDB()
 		assert.Error(t, err)
@@ -156,6 +162,9 @@ func TestGetDB(t *testing.T) {
 		}
 		if os.Getenv("DB_NAME") == "" {
 			os.Setenv("DB_NAME", "valomapper_test")
+		}
+		if os.Getenv("DB_SSLMODE") == "" {
+			os.Setenv("DB_SSLMODE", "disable")
 		}
 
 		err := InitDB()
@@ -219,6 +228,9 @@ func TestClose(t *testing.T) {
 	if os.Getenv("DB_NAME") == "" {
 		os.Setenv("DB_NAME", "valomapper_test")
 	}
+	if os.Getenv("DB_SSLMODE") == "" {
+		os.Setenv("DB_SSLMODE", "disable")
+	}
 
 	err = InitDB()
 	require.NoError(t, err)
@@ -265,6 +277,9 @@ func TestDatabaseConnectionPool(t *testing.T) {
 	}
 	if os.Getenv("DB_NAME") == "" {
 		os.Setenv("DB_NAME", "valomapper_test")
+	}
+	if os.Getenv("DB_SSLMODE") == "" {
+		os.Setenv("DB_SSLMODE", "disable")
 	}
 
 	err = InitDB()
