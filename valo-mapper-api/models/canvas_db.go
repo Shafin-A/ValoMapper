@@ -148,7 +148,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- AGENTS ----
 	rows, err := tx.Query(ctx, `
-		SELECT id, name, role, is_ally, x, y, phase_index 
+		SELECT id, name, is_ally, x, y, phase_index 
 		FROM canvas_agents 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index`, lobbyCode)
@@ -159,7 +159,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var agent CanvasAgent
 		var phaseIndex int
 		var agentName sql.NullString
-		if err := rows.Scan(&agent.ID, &agentName, &agent.Role, &agent.IsAlly, &agent.X, &agent.Y, &phaseIndex); err != nil {
+		if err := rows.Scan(&agent.ID, &agentName, &agent.IsAlly, &agent.X, &agent.Y, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -167,6 +167,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		if agentName.Valid {
 			agent.AgentName = agentName.String
 		}
+		agent.Role = agentRoleByName[agent.AgentName]
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AgentsOnCanvas = append(phases[phaseIndex].AgentsOnCanvas, agent)
 		} else {
@@ -448,7 +449,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		// Agents
 		for _, a := range phase.AgentsOnCanvas {
 			agentRows = append(agentRows, []any{
-				a.ID, lobbyCode, a.AgentName, a.Role, a.X, a.Y, a.IsAlly, phaseIndex,
+				a.ID, lobbyCode, a.AgentName, a.X, a.Y, a.IsAlly, phaseIndex,
 			})
 		}
 
@@ -532,11 +533,11 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(agentRows) > 0 {
-		agentRows = dedupeRows(agentRows, []int{0, 1, 7})
+		agentRows = dedupeRows(agentRows, []int{0, 1, 6})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_agents"},
-			[]string{"id", "lobby_code", "name", "role", "x", "y", "is_ally", "phase_index"},
+			[]string{"id", "lobby_code", "name", "x", "y", "is_ally", "phase_index"},
 			pgx.CopyFromRows(agentRows),
 		)
 		if err != nil {
@@ -729,11 +730,11 @@ func applyAgentPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_agents (id, lobby_code, phase_index, name, role, x, y, is_ally)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO canvas_agents (id, lobby_code, phase_index, name, x, y, is_ally)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
-		SET name = EXCLUDED.name, role = EXCLUDED.role, x = EXCLUDED.x, y = EXCLUDED.y, is_ally = EXCLUDED.is_ally`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Role, p.X, p.Y, p.IsAlly)
+		SET name = EXCLUDED.name, x = EXCLUDED.x, y = EXCLUDED.y, is_ally = EXCLUDED.is_ally`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.X, p.Y, p.IsAlly)
 	return err
 }
 

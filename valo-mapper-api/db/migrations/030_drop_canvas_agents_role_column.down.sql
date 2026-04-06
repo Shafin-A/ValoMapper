@@ -1,0 +1,1 @@
+ALTER TABLE canvas_agents ADD COLUMN role VARCHAR(50);

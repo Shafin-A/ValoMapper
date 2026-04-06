@@ -44,6 +44,38 @@ type CanvasAgent struct {
 	Y         float64 `json:"y"`
 }
 
+var agentRoleByName = map[string]string{
+	"Astra":     "Controller",
+	"Breach":    "Initiator",
+	"Brimstone": "Controller",
+	"Chamber":   "Sentinel",
+	"Clove":     "Controller",
+	"Cypher":    "Sentinel",
+	"Deadlock":  "Sentinel",
+	"Fade":      "Initiator",
+	"Gekko":     "Initiator",
+	"Harbor":    "Controller",
+	"Iso":       "Duelist",
+	"Jett":      "Duelist",
+	"KAY/O":     "Initiator",
+	"Killjoy":   "Sentinel",
+	"Miks":      "Controller",
+	"Neon":      "Duelist",
+	"Omen":      "Controller",
+	"Phoenix":   "Duelist",
+	"Raze":      "Duelist",
+	"Reyna":     "Duelist",
+	"Sage":      "Sentinel",
+	"Skye":      "Initiator",
+	"Sova":      "Initiator",
+	"Tejo":      "Initiator",
+	"Veto":      "Sentinel",
+	"Viper":     "Controller",
+	"Vyse":      "Sentinel",
+	"Waylay":    "Duelist",
+	"Yoru":      "Duelist",
+}
+
 type CanvasAbility struct {
 	ID              string     `json:"id"`
 	AgentName       string     `json:"name"`
