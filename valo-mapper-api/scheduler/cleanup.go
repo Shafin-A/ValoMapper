@@ -13,13 +13,14 @@ import (
 )
 
 type CleanupScheduler struct {
-	db                       *pgxpool.Pool
-	interval                 time.Duration
-	stopChan                 chan struct{}
-	stopOnce                 sync.Once
-	cleanupQuery             string
-	subscriptionCleanupQuery string
-	deadRegistrationQuery    string
+	db                        *pgxpool.Pool
+	interval                  time.Duration
+	stopChan                  chan struct{}
+	stopOnce                  sync.Once
+	cleanupQuery              string
+	subscriptionCleanupQuery  string
+	deadRegistrationQuery     string
+	webhookEventsCleanupQuery string
 }
 
 const deadRegistrationCleanupQuery = `
@@ -77,13 +78,18 @@ func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupSched
 
 	deadRegistrationQuery := deadRegistrationCleanupQuery
 
+	webhookEventsCleanupQuery := `
+		DELETE FROM stripe_webhook_events
+		WHERE processed_at < NOW() - INTERVAL '7 days'`
+
 	return &CleanupScheduler{
-		db:                       db,
-		interval:                 interval,
-		stopChan:                 make(chan struct{}),
-		cleanupQuery:             cleanupQuery,
-		subscriptionCleanupQuery: subscriptionCleanupQuery,
-		deadRegistrationQuery:    deadRegistrationQuery,
+		db:                        db,
+		interval:                  interval,
+		stopChan:                  make(chan struct{}),
+		cleanupQuery:              cleanupQuery,
+		subscriptionCleanupQuery:  subscriptionCleanupQuery,
+		deadRegistrationQuery:     deadRegistrationQuery,
+		webhookEventsCleanupQuery: webhookEventsCleanupQuery,
 	}
 }
 
@@ -144,6 +150,15 @@ func (cs *CleanupScheduler) runCleanup() {
 		return
 	}
 	slog.Info("dead registration cleanup completed", "deleted", deletedRows)
+
+	slog.Info("running cleanup for stale stripe webhook events")
+
+	cmdTag, err = cs.db.Exec(ctx, cs.webhookEventsCleanupQuery)
+	if err != nil {
+		slog.Error("webhook events cleanup failed", "error", err)
+		return
+	}
+	slog.Info("webhook events cleanup completed", "deleted", cmdTag.RowsAffected())
 
 	cs.runImageObjectCleanup(ctx)
 }
