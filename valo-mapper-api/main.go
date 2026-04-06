@@ -178,6 +178,7 @@ func main() {
 		AllowCredentials: true,
 	})
 	handler = c.Handler(handler)
+	handler = middleware.SecurityHeadersMiddleware(handler)
 
 	srv := &http.Server{
 		Addr:         ":8080",
