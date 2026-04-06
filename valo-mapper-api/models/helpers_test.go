@@ -54,12 +54,18 @@ func setupTestDB(t *testing.T) *pgxpool.Pool {
 	password := url.QueryEscape(os.Getenv("DB_PASSWORD"))
 
 	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		os.Getenv("DB_USER"),
 		password,
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		testDBName,
+		func() string {
+			if m := os.Getenv("DB_SSLMODE"); m != "" {
+				return url.QueryEscape(m)
+			}
+			return "disable"
+		}(),
 	)
 
 	config, err := pgxpool.ParseConfig(connStr)
