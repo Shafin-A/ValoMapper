@@ -190,6 +190,15 @@ definitions:
       url:
         type: string
     type: object
+  handlers.adminLobbiesResponse:
+    properties:
+      codes:
+        items:
+          type: string
+        type: array
+      count:
+        type: integer
+    type: object
   handlers.canvasPatchMetrics:
     properties:
       errors:
@@ -208,6 +217,8 @@ definitions:
     type: object
   handlers.lobbyMetrics:
     properties:
+      active_count:
+        type: integer
       creations_total:
         type: integer
     type: object
@@ -602,6 +613,29 @@ info:
   title: ValoMapper API
   version: "1.0"
 paths:
+  /admin/lobbies:
+    get:
+      description: Returns all active lobby codes.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.adminLobbiesResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - InternalAPIKey: []
+      summary: List lobby codes
+      tags:
+      - admin
   /api/auth/rso/callback:
     post:
       consumes:

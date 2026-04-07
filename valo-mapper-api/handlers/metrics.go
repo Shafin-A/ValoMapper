@@ -9,6 +9,7 @@ import (
 	"time"
 	"valo-mapper-api/db"
 	"valo-mapper-api/middleware"
+	"valo-mapper-api/models"
 	"valo-mapper-api/utils"
 	"valo-mapper-api/websocket"
 )
@@ -46,6 +47,7 @@ type canvasPatchMetrics struct {
 
 type lobbyMetrics struct {
 	CreationsTotal int64 `json:"creations_total"`
+	ActiveCount    int64 `json:"active_count"`
 }
 
 type stripeWebhookMetrics struct {
@@ -94,6 +96,8 @@ func HandleMetrics(hub *websocket.Hub) http.HandlerFunc {
 			}
 		}
 
+		lobbyActiveCount, _ := models.CountLobbies()
+
 		resp := metricsResponse{
 			UptimeSeconds: time.Since(metricsStartTime).Seconds(),
 			Goroutines:    runtime.NumGoroutine(),
@@ -110,6 +114,7 @@ func HandleMetrics(hub *websocket.Hub) http.HandlerFunc {
 			},
 			Lobbies: lobbyMetrics{
 				CreationsTotal: lobbyCreationsTotal.Load(),
+				ActiveCount:    lobbyActiveCount,
 			},
 			StripeWebhook: stripeWebhookMetrics{
 				Processed:  stripeWebhookProcessed.Load(),

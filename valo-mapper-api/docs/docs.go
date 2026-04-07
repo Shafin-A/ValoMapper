@@ -15,6 +15,43 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/lobbies": {
+            "get": {
+                "security": [
+                    {
+                        "InternalAPIKey": []
+                    }
+                ],
+                "description": "Returns all active lobby codes.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List lobby codes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.adminLobbiesResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/rso/callback": {
             "post": {
                 "description": "Exchanges a Riot authorization code and returns a Firebase custom token plus user data.",
@@ -2074,6 +2111,20 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.adminLobbiesResponse": {
+            "type": "object",
+            "properties": {
+                "codes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
         "handlers.canvasPatchMetrics": {
             "type": "object",
             "properties": {
@@ -2102,6 +2153,9 @@ const docTemplate = `{
         "handlers.lobbyMetrics": {
             "type": "object",
             "properties": {
+                "active_count": {
+                    "type": "integer"
+                },
                 "creations_total": {
                     "type": "integer"
                 }

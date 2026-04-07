@@ -284,3 +284,46 @@ func GetLobbiesByCodes(codes []string) ([]Lobby, error) {
 
 	return lobbies, nil
 }
+
+func CountLobbies() (int64, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return 0, err
+	}
+
+	var count int64
+	err = conn.QueryRow(context.Background(), "SELECT COUNT(*) FROM lobbies").Scan(&count)
+	return count, err
+}
+
+func ListLobbyCodes() ([]string, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := conn.Query(context.Background(), "SELECT code FROM lobbies ORDER BY created_at DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var codes []string
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			return nil, err
+		}
+		codes = append(codes, code)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if codes == nil {
+		codes = []string{}
+	}
+
+	return codes, nil
+}
