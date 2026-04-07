@@ -14,6 +14,9 @@ on:
           - "true"
           - "false"
 
+permissions:
+  contents: read
+
 jobs:
   check-backend-changes:
     name: Check Backend Changes

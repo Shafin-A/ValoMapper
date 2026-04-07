@@ -12,6 +12,9 @@ on:
       - "valo-mapper/**"
       - ".github/workflows/next-tests.yml"
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test Next.js Frontend

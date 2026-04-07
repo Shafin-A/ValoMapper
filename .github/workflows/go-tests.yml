@@ -12,6 +12,9 @@ on:
       - "valo-mapper-api/**"
       - ".github/workflows/go-tests.yml"
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test Go Backend
