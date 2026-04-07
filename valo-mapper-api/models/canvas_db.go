@@ -455,7 +455,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Abilities
 		for _, ab := range phase.AbilitiesOnCanvas {
-			pathArray := make([]float64, 0, len(ab.CurrentPath)*2)
+			pathArray := make([]float64, 0)
 			for _, pt := range ab.CurrentPath {
 				pathArray = append(pathArray, pt.X, pt.Y)
 			}
@@ -467,7 +467,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Draw lines
 		for _, l := range phase.DrawLines {
-			pointsArray := make([]float64, 0, len(l.Points)*2)
+			pointsArray := make([]float64, 0)
 			for _, p := range l.Points {
 				pointsArray = append(pointsArray, p.X, p.Y)
 			}
@@ -765,7 +765,7 @@ func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 		return fmt.Errorf("missing id for ability upsert")
 	}
 
-	pathArray := make([]float64, 0, len(p.CurrentPath)*2)
+	pathArray := make([]float64, 0)
 	for _, pt := range p.CurrentPath {
 		pathArray = append(pathArray, pt.X, pt.Y)
 	}
@@ -808,7 +808,7 @@ func applyDrawLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 		return fmt.Errorf("missing id for draw line upsert")
 	}
 
-	pointsArray := make([]float64, 0, len(p.Points)*2)
+	pointsArray := make([]float64, 0)
 	for _, pt := range p.Points {
 		pointsArray = append(pointsArray, pt.X, pt.Y)
 	}
