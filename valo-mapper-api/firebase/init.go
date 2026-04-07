@@ -8,6 +8,7 @@ import (
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 )
 
@@ -23,7 +24,17 @@ func InitFirebaseAuth() (*auth.Client, error) {
 		return nil, errors.New("GOOGLE_APPLICATION_CREDENTIALS must contain Firebase service account JSON (file paths are not supported)")
 	}
 
-	app, err := firebase.NewApp(ctx, nil, option.WithCredentialsJSON([]byte(credsJSON)))
+	creds, err := google.CredentialsFromJSONWithTypeAndParams(ctx, []byte(credsJSON), google.ServiceAccount, google.CredentialsParams{
+		Scopes: []string{
+			"https://www.googleapis.com/auth/cloud-platform",
+			"https://www.googleapis.com/auth/firebase",
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	app, err := firebase.NewApp(ctx, nil, option.WithCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
