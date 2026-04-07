@@ -833,8 +833,8 @@ func expectedIntervalForPlan(plan CheckoutPlan) (stripe.PriceRecurringInterval, 
 }
 
 func firstServiceAllowedOrigin() string {
-	origins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
-	for _, origin := range origins {
+	origins := strings.SplitSeq(os.Getenv("ALLOWED_ORIGINS"), ",")
+	for origin := range origins {
 		trimmed := strings.TrimSpace(origin)
 		if trimmed != "" {
 			return trimmed

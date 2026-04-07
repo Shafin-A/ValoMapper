@@ -2771,7 +2771,7 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
 	BasePath:         "/",
-	Schemes:          []string{"http", "https"},
+	Schemes:          []string{"https"},
 	Title:            "ValoMapper API",
 	Description:      "API for ValoMapper backend services.",
 	InfoInstanceName: "swagger",

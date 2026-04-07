@@ -20,7 +20,7 @@ import (
 	"valo-mapper-api/storage"
 	"valo-mapper-api/websocket"
 
-	_ "valo-mapper-api/docs"
+	"valo-mapper-api/docs"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -33,7 +33,7 @@ import (
 // @version 1.0
 // @description API for ValoMapper backend services.
 // @BasePath /
-// @schemes http https
+// @schemes https
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
@@ -83,12 +83,35 @@ func getEnvFloat(name string, defaultValue float64) float64 {
 	return parsedValue
 }
 
+func getSwaggerSchemesFromAllowedOrigins() []string {
+	origins := strings.TrimSpace(os.Getenv("ALLOWED_ORIGINS"))
+	if origins == "" {
+		return []string{"http", "https"}
+	}
+
+	firstOrigin := strings.TrimSpace(strings.Split(origins, ",")[0])
+	lowerOrigin := strings.ToLower(firstOrigin)
+
+	switch {
+	case strings.HasPrefix(lowerOrigin, "http://"):
+		return []string{"http"}
+	case strings.HasPrefix(lowerOrigin, "https://"):
+		return []string{"https"}
+	case strings.HasPrefix(lowerOrigin, "localhost") || strings.HasPrefix(lowerOrigin, "127.0.0.1"):
+		return []string{"http", "https"}
+	default:
+		return []string{"https"}
+	}
+}
+
 func main() {
 	logger.Init()
 
 	if err := godotenv.Load(); err != nil {
 		slog.Info("no .env file found, using environment variables")
 	}
+
+	docs.SwaggerInfo.Schemes = getSwaggerSchemesFromAllowedOrigins()
 
 	requiredEnvVars := []string{
 		"DB_HOST",
