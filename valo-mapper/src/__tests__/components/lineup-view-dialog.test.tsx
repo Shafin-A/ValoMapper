@@ -111,8 +111,18 @@ jest.mock(
 
 jest.mock("@/lib/utils", () => ({
   ...jest.requireActual("@/lib/utils"),
-  getYoutubeEmbedUrl: (url: string) =>
-    url.includes("youtube.com") ? `https://www.youtube.com/embed/test` : null,
+  getYoutubeEmbedUrl: (url: string) => {
+    try {
+      const { hostname } = new URL(url);
+      return hostname === "youtube.com" ||
+        hostname === "www.youtube.com" ||
+        hostname === "youtu.be"
+        ? `https://www.youtube.com/embed/test`
+        : null;
+    } catch {
+      return null;
+    }
+  },
 }));
 
 describe("LineupViewDialog", () => {
