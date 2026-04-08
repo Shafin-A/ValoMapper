@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   DialogContent,
@@ -10,32 +10,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Breadcrumb,
-  BreadcrumbEllipsis,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { AlertCircle } from "lucide-react";
 import { StrategyData } from "@/lib/types";
 import { useFolders } from "@/hooks/api/use-folder";
 import { useUser } from "@/hooks/api/use-user";
-import { TreeView } from "./tree-view";
+import { FolderTreePicker } from "./folder-tree-picker";
 import { useCreateStrategy } from "@/hooks/api/use-create-strategy";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 import {
+  buildFolderFlatData,
   buildLocationPath,
   convertFolderOrStrategyId,
-  flattenData,
   getFolderOrStrategyId,
 } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
@@ -43,62 +28,6 @@ import Link from "next/link";
 import { FREE_STRATEGY_LIMIT } from "@/lib/consts";
 import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
 import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
-
-const renderBreadcrumbs = (parts: Array<{ id: string; name: string }>) => {
-  if (parts.length === 0) {
-    return (
-      <BreadcrumbItem className="h-5 flex items-center">
-        <BreadcrumbPage className="text-muted-foreground">
-          My Strategies
-        </BreadcrumbPage>
-      </BreadcrumbItem>
-    );
-  }
-
-  if (parts.length > 3) {
-    const hiddenParts = parts.slice(1, -1);
-
-    return (
-      <>
-        <BreadcrumbItem className="h-5 flex items-center">
-          <BreadcrumbPage className="text-muted-foreground">
-            {parts[0].name}
-          </BreadcrumbPage>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem className="h-5 flex items-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <BreadcrumbEllipsis />
-              </TooltipTrigger>
-              <TooltipContent>
-                <div>{hiddenParts.map((part) => part.name).join(" > ")}</div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem className="h-5 flex items-center">
-          <BreadcrumbPage className="text-muted-foreground">
-            {parts[parts.length - 1].name}
-          </BreadcrumbPage>
-        </BreadcrumbItem>
-      </>
-    );
-  }
-
-  return parts.map((part, index) => (
-    <React.Fragment key={part.id}>
-      <BreadcrumbItem className="h-5 flex items-center">
-        <BreadcrumbPage className="text-muted-foreground">
-          {part.name}
-        </BreadcrumbPage>
-      </BreadcrumbItem>
-      {index < parts.length - 1 && <BreadcrumbSeparator />}
-    </React.Fragment>
-  ));
-};
 
 interface TreeViewDialogContentProps {
   setOpen: (open: boolean) => void;
@@ -138,26 +67,7 @@ export const TreeViewDialogContent = ({
   const searchQuery = searchParams.toString();
   const returnToPath = searchQuery ? `${pathname}?${searchQuery}` : pathname;
 
-  const strategyDataWithoutParent: Record<string, StrategyData> = {
-    root: {
-      id: "root",
-      name: "My Strategies",
-      type: "folder",
-      children: data || [],
-    },
-  };
-
-  const strategyData = {
-    _virtual_root: {
-      id: "_virtual_root",
-      name: "Virtual Root",
-      type: "folder" as const,
-      children: [strategyDataWithoutParent.root],
-    },
-    ...strategyDataWithoutParent,
-  };
-
-  const flatData = flattenData(strategyData._virtual_root);
+  const flatData = buildFolderFlatData(data || []);
   const existingStrategy = Object.values(flatData).find(
     (item) => item.type === "strategy" && item.lobbyCode === lobbyCode,
   );
@@ -231,7 +141,6 @@ export const TreeViewDialogContent = ({
     setSelectedLocation("root");
   };
 
-  const locationPath = buildLocationPath(selectedLocation, flatData);
   const dialogTitle = isExistingStrategy
     ? "Update Saved Strategy"
     : "Save Strategy";
@@ -341,34 +250,15 @@ export const TreeViewDialogContent = ({
 
         <div className="space-y-2">
           <div className="text-sm font-medium">Save Location</div>
-          {isExistingStrategy && isSameLocationAsExisting && (
-            <p className="text-xs text-muted-foreground">
-              This strategy is already in the selected location. Choose another
-              folder to move it.
-            </p>
-          )}
-          <Breadcrumb className="mb-4">
-            <BreadcrumbList>{renderBreadcrumbs(locationPath)}</BreadcrumbList>
-          </Breadcrumb>
-          <ScrollArea className="h-[300px] border rounded-md">
-            <Suspense fallback={<TreeViewLoadingSkeleton />}>
-              {isLoading || isPending ? (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : data && data.length >= 0 ? (
-                <TreeView
-                  flatData={flatData}
-                  selectedLocation={selectedLocation}
-                  setSelectedLocation={setSelectedLocation}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  No folders yet
-                </div>
-              )}
-            </Suspense>
-          </ScrollArea>
+          <FolderTreePicker
+            flatData={flatData}
+            selectedLocation={selectedLocation}
+            setSelectedLocation={setSelectedLocation}
+            isLoading={isLoading || isPending}
+            showSameLocationWarning={
+              isExistingStrategy && isSameLocationAsExisting
+            }
+          />
         </div>
       </div>
 
@@ -391,14 +281,6 @@ export const TreeViewDialogContent = ({
         </Button>
       </DialogFooter>
     </DialogContent>
-  );
-};
-
-const TreeViewLoadingSkeleton = () => {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-    </div>
   );
 };
 

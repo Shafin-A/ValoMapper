@@ -418,6 +418,24 @@ export const flattenData = (
   return result;
 };
 
+export const buildFolderFlatData = (
+  data: StrategyData[],
+): Record<string, StrategyData> => {
+  const root: StrategyData = {
+    id: "root",
+    name: "My Strategies",
+    type: "folder",
+    children: data,
+  };
+  const virtualRoot: StrategyData = {
+    id: "_virtual_root",
+    name: "Virtual Root",
+    type: "folder",
+    children: [root],
+  };
+  return flattenData(virtualRoot);
+};
+
 export const buildLocationPath = (
   selectedId: string,
   data: Record<string, StrategyData>,
