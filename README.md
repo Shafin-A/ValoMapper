@@ -4,6 +4,8 @@ ValoMapper is a collaborative strategy tool for VALORANT. Place agents, abilitie
 
 The frontend is built with Next.js and the backend is a Go REST API backed by PostgreSQL. Real-time collaboration is powered by WebSockets. Firebase handles authentication, Riot Sign-On (RSO) supports Riot account login, Stripe manages subscription billing, and Tigris provides S3-compatible object storage for image uploads.
 
+![Example strategy using app](example_strat.png)
+
 ## Prerequisites
 
 - Node.js & npm
