@@ -11,7 +11,7 @@ export const VIRTUAL_HEIGHT = 1440;
 
 export const CONTEXT_MENU_DUPLICATE_OFFSET = 20;
 
-export const FREE_STRATEGY_LIMIT = 3;
+export const FREE_STRATEGY_LIMIT = 1;
 export const STRATEGY_CLEANUP_GRACE_PERIOD_DAYS = 14;
 
 export const MAX_DRAWLINE_POINTS = 1500;

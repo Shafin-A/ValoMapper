@@ -96,7 +96,7 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 			return
 		case errors.Is(err, services.ErrStrategyFreePlanLimit):
-			utils.SendJSONError(w, utils.NewForbidden("Free plan limit reached (3 saved strategies). Upgrade to ValoMapper Premium for unlimited saves."), middleware.GetRequestID(r))
+			utils.SendJSONError(w, utils.NewForbidden("Free plan limit reached (1 saved strategy). Upgrade to ValoMapper Premium for unlimited saves."), middleware.GetRequestID(r))
 			return
 		case errors.Is(err, services.ErrStrategyAlreadySaved):
 			utils.SendJSONError(w, utils.NewConflict("You have already saved this lobby", err), middleware.GetRequestID(r))
@@ -282,4 +282,3 @@ func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusNoContent)
 }
-

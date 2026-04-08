@@ -204,7 +204,7 @@ func TestCreateStrategy(t *testing.T) {
 		assert.Equal(t, http.StatusConflict, w.Code)
 	})
 
-	t.Run("rejects creating a fourth strategy for free users", func(t *testing.T) {
+	t.Run("rejects creating a second strategy for free users", func(t *testing.T) {
 		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
 
 		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
@@ -217,15 +217,15 @@ func TestCreateStrategy(t *testing.T) {
 			}, nil
 		}
 
-		for range 3 {
+		for range 1 {
 			lobby := testutils.CreateTestLobby(t, pool)
 			testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
 		}
 
-		fourthLobby := testutils.CreateTestLobby(t, pool)
+		secondLobby := testutils.CreateTestLobby(t, pool)
 		reqBody := CreateStrategyRequest{
-			LobbyCode: fourthLobby.Code,
-			Name:      "Fourth Strategy",
+			LobbyCode: secondLobby.Code,
+			Name:      "Second Strategy",
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
@@ -236,7 +236,7 @@ func TestCreateStrategy(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
 
-	t.Run("allows subscribed users to save more than three strategies", func(t *testing.T) {
+	t.Run("allows subscribed users to save more than one strategy", func(t *testing.T) {
 		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
 
 		subscribedUser := testutils.CreateTestUser(t, pool, "firebase-uid-subscribed-strategy-test")
@@ -253,15 +253,15 @@ func TestCreateStrategy(t *testing.T) {
 			}, nil
 		}
 
-		for range 3 {
+		for range 1 {
 			lobby := testutils.CreateTestLobby(t, pool)
 			testutils.CreateTestStrategy(t, pool, subscribedUser.ID, lobby.Code)
 		}
 
-		fourthLobby := testutils.CreateTestLobby(t, pool)
+		secondLobby := testutils.CreateTestLobby(t, pool)
 		reqBody := CreateStrategyRequest{
-			LobbyCode: fourthLobby.Code,
-			Name:      "Subscribed Fourth Strategy",
+			LobbyCode: secondLobby.Code,
+			Name:      "Subscribed Second Strategy",
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")

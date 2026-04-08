@@ -23,6 +23,7 @@ var (
 // StrategyRepository abstracts persistence operations for StrategyService.
 type StrategyRepository interface {
 	GetLobbyByCode(code string) (*models.Lobby, error)
+	StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error)
 	CountStrategiesByUserID(userID int) (int, error)
 	GetStrategiesByUserID(userID int) ([]models.Strategy, error)
 	GetStrategiesByFolderID(userID, folderID int) ([]models.Strategy, error)
@@ -37,6 +38,9 @@ type defaultStrategyRepository struct{}
 
 func (r *defaultStrategyRepository) GetLobbyByCode(code string) (*models.Lobby, error) {
 	return models.GetLobbyByCode(code)
+}
+func (r *defaultStrategyRepository) StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error) {
+	return models.StrategyExistsByUserAndLobby(userID, lobbyCode)
 }
 func (r *defaultStrategyRepository) CountStrategiesByUserID(userID int) (int, error) {
 	return models.CountStrategiesByUserID(userID)
@@ -78,7 +82,7 @@ func NewStrategyService(deps StrategyServiceDependencies) *StrategyService {
 
 const (
 	// FreeStrategyLimit is the maximum strategies free-tier users can create
-	FreeStrategyLimit = 3
+	FreeStrategyLimit = 1
 )
 
 // CreateStrategyRequest wraps strategy creation input
@@ -114,6 +118,14 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 	}
 	if lobby == nil {
 		return nil, ErrStrategyLobbyNotFound
+	}
+
+	exists, err := ss.repo.StrategyExistsByUserAndLobby(user.ID, req.LobbyCode)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, ErrStrategyAlreadySaved
 	}
 
 	// Check free-tier limit

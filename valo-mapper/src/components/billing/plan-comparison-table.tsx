@@ -28,7 +28,7 @@ const FEATURE_ROWS: FeatureRow[] = [
   },
   {
     label: "Save unlimited strategies",
-    description: "Free plan is limited to 3 strategies",
+    description: "Free plan is limited to 1 strategy",
     values: { free: false, monthly: true, yearly: true, stack: true },
   },
   {

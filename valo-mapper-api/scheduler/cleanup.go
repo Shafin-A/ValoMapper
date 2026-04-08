@@ -73,7 +73,7 @@ func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupSched
 			AND (
 				SELECT COUNT(*) FROM strategies s2
 				WHERE s2.user_id = s.user_id AND s2.id > s.id
-			) >= 3
+			) >= 1
 		)`
 
 	deadRegistrationQuery := deadRegistrationCleanupQuery

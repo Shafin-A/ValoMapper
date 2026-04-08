@@ -169,6 +169,26 @@ func GetStrategiesByFolderID(userID int, folderID int) ([]Strategy, error) {
 	return strategies, nil
 }
 
+func StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return false, err
+	}
+
+	var exists bool
+	err = conn.QueryRow(context.Background(),
+		`SELECT EXISTS(
+			SELECT 1 FROM strategies
+			WHERE user_id = $1 AND lobby_code = $2
+		)`,
+		userID, lobbyCode,
+	).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func CountStrategiesByUserID(userID int) (int, error) {
 	conn, err := db.GetDB()
 	if err != nil {

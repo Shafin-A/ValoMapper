@@ -12,15 +12,16 @@ import (
 )
 
 type mockStrategyRepo struct {
-	getLobbyByCodeFn          func(code string) (*models.Lobby, error)
-	countStrategiesByUserIDFn func(userID int) (int, error)
-	getStrategiesByUserIDFn   func(userID int) ([]models.Strategy, error)
-	getStrategiesByFolderIDFn func(userID, folderID int) ([]models.Strategy, error)
-	getLobbiesByCodesFn       func(codes []string) ([]models.Lobby, error)
-	getStrategyByIDFn         func(id int) (*models.Strategy, error)
-	saveStrategyFn            func(s *models.Strategy) error
-	updateStrategyFn          func(s *models.Strategy) error
-	deleteStrategyFn          func(s *models.Strategy) error
+	getLobbyByCodeFn               func(code string) (*models.Lobby, error)
+	strategyExistsByUserAndLobbyFn func(userID int, lobbyCode string) (bool, error)
+	countStrategiesByUserIDFn      func(userID int) (int, error)
+	getStrategiesByUserIDFn        func(userID int) ([]models.Strategy, error)
+	getStrategiesByFolderIDFn      func(userID, folderID int) ([]models.Strategy, error)
+	getLobbiesByCodesFn            func(codes []string) ([]models.Lobby, error)
+	getStrategyByIDFn              func(id int) (*models.Strategy, error)
+	saveStrategyFn                 func(s *models.Strategy) error
+	updateStrategyFn               func(s *models.Strategy) error
+	deleteStrategyFn               func(s *models.Strategy) error
 }
 
 func (m *mockStrategyRepo) GetLobbyByCode(code string) (*models.Lobby, error) {
@@ -28,6 +29,12 @@ func (m *mockStrategyRepo) GetLobbyByCode(code string) (*models.Lobby, error) {
 		return nil, nil
 	}
 	return m.getLobbyByCodeFn(code)
+}
+func (m *mockStrategyRepo) StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error) {
+	if m.strategyExistsByUserAndLobbyFn == nil {
+		return false, nil
+	}
+	return m.strategyExistsByUserAndLobbyFn(userID, lobbyCode)
 }
 func (m *mockStrategyRepo) CountStrategiesByUserID(userID int) (int, error) {
 	if m.countStrategiesByUserIDFn == nil {
