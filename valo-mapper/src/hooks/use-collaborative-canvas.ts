@@ -2,7 +2,7 @@ import { useWebSocket } from "@/contexts/websocket-context";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCanvasPatch } from "@/hooks/canvas/use-canvas-patch";
 import { useParams } from "next/navigation";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   AgentCanvas,
   AbilityCanvas,
@@ -14,6 +14,7 @@ import {
   MapSide,
   ImageCanvas,
   IconSettings,
+  PhaseState,
 } from "@/lib/types";
 import { debounce } from "@/lib/utils";
 import { MAX_DRAWLINE_POINTS } from "@/lib/consts/misc/consts";
@@ -29,6 +30,13 @@ export const useCollaborativeCanvas = () => {
   const {
     currentPhaseIndex,
     editedPhases,
+    agentsOnCanvas,
+    abilitiesOnCanvas,
+    drawLines,
+    connectingLines,
+    textsOnCanvas,
+    imagesOnCanvas,
+    toolIconsOnCanvas,
     agentsSettings,
     abilitiesSettings,
     updateAgentsSettings,
@@ -36,6 +44,119 @@ export const useCollaborativeCanvas = () => {
   } = useCanvas();
 
   const drawLineChunks = useRef<Record<string, string[]>>({});
+
+  const syncedPhasesRef = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    syncedPhasesRef.current.forEach((phaseIndex) => {
+      if (!editedPhases.has(phaseIndex)) {
+        syncedPhasesRef.current.delete(phaseIndex);
+      }
+    });
+  }, [editedPhases]);
+
+  const syncPhaseIfNecessary = useCallback(
+    (phaseIndex: number) => {
+      if (editedPhases.has(phaseIndex)) return;
+      if (syncedPhasesRef.current.has(phaseIndex)) return;
+
+      syncedPhasesRef.current.add(phaseIndex);
+
+      agentsOnCanvas.forEach((agent) => {
+        enqueueCanvasPatchEntry({
+          entity: "agent",
+          action: "add",
+          phaseIndex,
+          id: agent.id,
+          payload: agent,
+        });
+      });
+
+      abilitiesOnCanvas.forEach((ability) => {
+        enqueueCanvasPatchEntry({
+          entity: "ability",
+          action: "add",
+          phaseIndex,
+          id: ability.id,
+          payload: ability,
+        });
+      });
+
+      drawLines.forEach((line) => {
+        enqueueCanvasPatchEntry({
+          entity: "drawline",
+          action: "add",
+          phaseIndex,
+          id: line.id,
+          payload: line,
+        });
+      });
+
+      connectingLines.forEach((line) => {
+        enqueueCanvasPatchEntry({
+          entity: "connectingline",
+          action: "add",
+          phaseIndex,
+          id: line.id,
+          payload: line,
+        });
+      });
+
+      textsOnCanvas.forEach((text) => {
+        enqueueCanvasPatchEntry({
+          entity: "text",
+          action: "add",
+          phaseIndex,
+          id: text.id,
+          payload: text,
+        });
+      });
+
+      imagesOnCanvas.forEach((image) => {
+        enqueueCanvasPatchEntry({
+          entity: "image",
+          action: "add",
+          phaseIndex,
+          id: image.id,
+          payload: image,
+        });
+      });
+
+      toolIconsOnCanvas.forEach((icon) => {
+        enqueueCanvasPatchEntry({
+          entity: "toolicon",
+          action: "add",
+          phaseIndex,
+          id: icon.id,
+          payload: icon,
+        });
+      });
+
+      enqueueCanvasPatchEntry({
+        entity: "edited_phases",
+        action: "update",
+        phaseIndex,
+        payload: { editedPhases: [...Array.from(editedPhases), phaseIndex] },
+      });
+    },
+    [
+      editedPhases,
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+      drawLines,
+      connectingLines,
+      textsOnCanvas,
+      imagesOnCanvas,
+      toolIconsOnCanvas,
+      enqueueCanvasPatchEntry,
+    ],
+  );
+
+  const syncPhaseIfNecessaryRef = useRef(syncPhaseIfNecessary);
+
+  useEffect(() => {
+    syncPhaseIfNecessaryRef.current = syncPhaseIfNecessary;
+  }, [syncPhaseIfNecessary]);
 
   const {
     status,
@@ -70,6 +191,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyAgentAdded = useCallback(
     (agent: AgentCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "agent",
         action: "add",
@@ -92,6 +214,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyAgentMoved = useCallback(
     (agent: AgentCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "agent",
         action: "update",
@@ -114,6 +237,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyAgentRemoved = useCallback(
     (id: string) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "agent",
         action: "remove",
@@ -135,6 +259,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyAbilityAdded = useCallback(
     (ability: AbilityCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "ability",
         action: "add",
@@ -157,6 +282,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyAbilityMoved = useCallback(
     (ability: AbilityCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "ability",
         action: "update",
@@ -179,6 +305,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyAbilityRemoved = useCallback(
     (id: string) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "ability",
         action: "remove",
@@ -230,6 +357,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyLineDrawn = useCallback(
     (line: DrawLine) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       const chunks = splitDrawLineIntoChunks(line);
       drawLineChunks.current[line.id] = chunks.map((chunk) => chunk.id);
 
@@ -257,6 +385,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyLineRemoved = useCallback(
     (id: string) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       const unchunkedId = id.match(/^(.+)-chunk-\d+$/)?.[1] ?? id;
       const chunks = drawLineChunks.current[unchunkedId] ?? [];
       const idsToRemove = new Set<string>([unchunkedId, ...chunks]);
@@ -286,6 +415,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyConnLineAdded = useCallback(
     (line: ConnectingLine) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "connectingline",
         action: "add",
@@ -308,6 +438,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyConnLineUpdated = useCallback(
     (line: ConnectingLine) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "connectingline",
         action: "update",
@@ -330,6 +461,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyConnLineRemoved = useCallback(
     (id: string) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "connectingline",
         action: "remove",
@@ -351,6 +483,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyTextAdded = useCallback(
     (text: TextCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "text",
         action: "add",
@@ -373,6 +506,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyTextUpdated = useCallback(
     (text: TextCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "text",
         action: "update",
@@ -395,6 +529,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyTextRemoved = useCallback(
     (id: string) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "text",
         action: "remove",
@@ -416,6 +551,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyImageAdded = useCallback(
     (image: ImageCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "image",
         action: "add",
@@ -446,6 +582,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyImageMoved = useCallback(
     (image: ImageCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "image",
         action: "update",
@@ -468,6 +605,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyImageRemoved = useCallback(
     (id: string) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "image",
         action: "remove",
@@ -489,6 +627,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyToolIconAdded = useCallback(
     (toolIcon: ToolIconCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "toolicon",
         action: "add",
@@ -511,6 +650,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyToolIconMoved = useCallback(
     (toolIcon: ToolIconCanvas) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "toolicon",
         action: "update",
@@ -533,6 +673,7 @@ export const useCollaborativeCanvas = () => {
 
   const notifyToolIconRemoved = useCallback(
     (id: string) => {
+      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
         entity: "toolicon",
         action: "remove",
@@ -715,6 +856,78 @@ export const useCollaborativeCanvas = () => {
     [enqueueCanvasPatchEntry, editedPhases, isConnected, broadcastPhaseChanged],
   );
 
+  const notifyAllPhasesRotated = useCallback(
+    (rotatedPhases: PhaseState[]) => {
+      rotatedPhases.forEach((phase, phaseIndex) => {
+        if (!editedPhases.has(phaseIndex)) return;
+
+        phase.agentsOnCanvas.forEach((agent) => {
+          enqueueCanvasPatchEntry({
+            entity: "agent",
+            action: "update",
+            phaseIndex,
+            id: agent.id,
+            payload: agent,
+          });
+        });
+
+        phase.abilitiesOnCanvas.forEach((ability) => {
+          enqueueCanvasPatchEntry({
+            entity: "ability",
+            action: "update",
+            phaseIndex,
+            id: ability.id,
+            payload: ability,
+          });
+        });
+
+        phase.textsOnCanvas.forEach((text) => {
+          enqueueCanvasPatchEntry({
+            entity: "text",
+            action: "update",
+            phaseIndex,
+            id: text.id,
+            payload: text,
+          });
+        });
+
+        phase.imagesOnCanvas.forEach((image) => {
+          enqueueCanvasPatchEntry({
+            entity: "image",
+            action: "update",
+            phaseIndex,
+            id: image.id,
+            payload: image,
+          });
+        });
+
+        phase.drawLines.forEach((line) => {
+          const chunks = splitDrawLineIntoChunks(line);
+          chunks.forEach((chunk) => {
+            enqueueCanvasPatchEntry({
+              entity: "drawline",
+              action: "add",
+              phaseIndex,
+              id: chunk.id,
+              payload: chunk,
+            });
+          });
+        });
+
+        phase.toolIconsOnCanvas.forEach((icon) => {
+          enqueueCanvasPatchEntry({
+            entity: "toolicon",
+            action: "update",
+            phaseIndex,
+            id: icon.id,
+            payload: icon,
+          });
+        });
+      });
+    },
+    [editedPhases, enqueueCanvasPatchEntry],
+  );
+
   return {
     isConnected,
     notifyAgentAdded,
@@ -744,5 +957,6 @@ export const useCollaborativeCanvas = () => {
     notifyAgentsSettingsChanged,
     notifyAbilitiesSettingsChanged,
     notifyFullSync,
+    notifyAllPhasesRotated,
   };
 };

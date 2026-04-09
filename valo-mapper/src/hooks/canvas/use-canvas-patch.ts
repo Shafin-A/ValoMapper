@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
@@ -47,7 +47,10 @@ const postCanvasPatchWithRetry = async (
   }
 };
 
-export const useCanvasPatch = (lobbyCode: string) => {
+export const useCanvasPatch = (
+  lobbyCode: string,
+  onBeforeUnload?: RefObject<(() => void) | null>,
+) => {
   const queueRef = useRef<CanvasPatchEntry[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pending, setPending] = useState(0);
@@ -137,6 +140,8 @@ export const useCanvasPatch = (lobbyCode: string) => {
 
   useEffect(() => {
     const handlePageUnload = () => {
+      onBeforeUnload?.current?.();
+
       if (!lobbyCode || queueRef.current.length === 0) {
         return;
       }
@@ -156,7 +161,7 @@ export const useCanvasPatch = (lobbyCode: string) => {
     return () => {
       window.removeEventListener("beforeunload", handlePageUnload);
     };
-  }, [lobbyCode]);
+  }, [lobbyCode, onBeforeUnload]);
 
   useEffect(() => {
     if (!lobbyCode) {

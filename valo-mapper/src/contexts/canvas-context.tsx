@@ -114,7 +114,9 @@ interface CanvasContextType {
   setShowSpawnBarriers: Dispatch<SetStateAction<boolean>>;
   isMapTransitioning: boolean;
   setIsMapTransitioning: Dispatch<SetStateAction<boolean>>;
-  rotateCanvasItemsForSideSwap: () => void;
+  rotateCanvasItemsForSideSwap: (
+    onRotated?: (newPhases: PhaseState[]) => void,
+  ) => void;
   getCurrentStateForSync: () => FullSyncData;
 }
 

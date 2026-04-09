@@ -625,6 +625,16 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
 
   broadcastStateSyncRef.current = broadcastStateSync;
 
+  // When a new user joins an active session, broadcast a FULL_SYNC
+  const prevUsersLengthRef = useRef(0);
+  useEffect(() => {
+    const prev = prevUsersLengthRef.current;
+    prevUsersLengthRef.current = users.length;
+    if (users.length > prev && prev > 0) {
+      broadcastStateSyncRef.current?.();
+    }
+  }, [users]);
+
   useEffect(() => {
     onUndoRedoCallback.current = () => {
       broadcastStateSyncRef.current?.();

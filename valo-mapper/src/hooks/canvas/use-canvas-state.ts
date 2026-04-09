@@ -29,7 +29,8 @@ export const useCanvasState = () => {
     updateAbilitiesSettings,
   } = useSettings();
 
-  const { enqueueCanvasPatchEntry } = useCanvasPatch(lobbyCode);
+  const phaseUnloadRef = useRef<(() => void) | null>(null);
+  const { enqueueCanvasPatchEntry } = useCanvasPatch(lobbyCode, phaseUnloadRef);
 
   const {
     data: lobby,
@@ -251,6 +252,111 @@ export const useCanvasState = () => {
     [phaseManager, canvasUI],
   );
 
+  const phaseUnloadStateRef = useRef({
+    currentPhaseIndex: phaseManager.currentPhaseIndex,
+    editedPhases: phaseManager.editedPhases,
+  });
+
+  useEffect(() => {
+    phaseUnloadStateRef.current = {
+      currentPhaseIndex: phaseManager.currentPhaseIndex,
+      editedPhases: phaseManager.editedPhases,
+    };
+  }, [phaseManager.currentPhaseIndex, phaseManager.editedPhases]);
+
+  useEffect(() => {
+    phaseUnloadRef.current = () => {
+      const { currentPhaseIndex, editedPhases } = phaseUnloadStateRef.current;
+      if (editedPhases.has(currentPhaseIndex)) return;
+
+      const phase = phaseManager.getLatestPhases()[currentPhaseIndex];
+      if (!phase) return;
+
+      const hasContent =
+        phase.agentsOnCanvas.length > 0 ||
+        phase.abilitiesOnCanvas.length > 0 ||
+        phase.drawLines.length > 0 ||
+        phase.connectingLines.length > 0 ||
+        phase.textsOnCanvas.length > 0 ||
+        phase.imagesOnCanvas.length > 0 ||
+        phase.toolIconsOnCanvas.length > 0;
+
+      if (!hasContent) return;
+
+      phase.agentsOnCanvas.forEach((agent) =>
+        enqueueCanvasPatchEntry({
+          entity: "agent",
+          action: "add",
+          phaseIndex: currentPhaseIndex,
+          id: agent.id,
+          payload: agent,
+        }),
+      );
+      phase.abilitiesOnCanvas.forEach((ability) =>
+        enqueueCanvasPatchEntry({
+          entity: "ability",
+          action: "add",
+          phaseIndex: currentPhaseIndex,
+          id: ability.id,
+          payload: ability,
+        }),
+      );
+      phase.drawLines.forEach((line) =>
+        enqueueCanvasPatchEntry({
+          entity: "drawline",
+          action: "add",
+          phaseIndex: currentPhaseIndex,
+          id: line.id,
+          payload: line,
+        }),
+      );
+      phase.connectingLines.forEach((line) =>
+        enqueueCanvasPatchEntry({
+          entity: "connectingline",
+          action: "add",
+          phaseIndex: currentPhaseIndex,
+          id: line.id,
+          payload: line,
+        }),
+      );
+      phase.textsOnCanvas.forEach((text) =>
+        enqueueCanvasPatchEntry({
+          entity: "text",
+          action: "add",
+          phaseIndex: currentPhaseIndex,
+          id: text.id,
+          payload: text,
+        }),
+      );
+      phase.imagesOnCanvas.forEach((image) =>
+        enqueueCanvasPatchEntry({
+          entity: "image",
+          action: "add",
+          phaseIndex: currentPhaseIndex,
+          id: image.id,
+          payload: image,
+        }),
+      );
+      phase.toolIconsOnCanvas.forEach((icon) =>
+        enqueueCanvasPatchEntry({
+          entity: "toolicon",
+          action: "add",
+          phaseIndex: currentPhaseIndex,
+          id: icon.id,
+          payload: icon,
+        }),
+      );
+      enqueueCanvasPatchEntry({
+        entity: "edited_phases",
+        action: "update",
+        phaseIndex: currentPhaseIndex,
+        payload: {
+          editedPhases: [...Array.from(editedPhases), currentPhaseIndex],
+        },
+      });
+    };
+  }, [phaseManager.getLatestPhases, enqueueCanvasPatchEntry, phaseManager]);
+
   useEffect(() => {
     if (!lobbyCode || !lobby) return;
 
@@ -308,73 +414,66 @@ export const useCanvasState = () => {
     [applyState, updateAgentsSettings, updateAbilitiesSettings],
   );
 
-  const rotateCanvasItemsForSideSwap = useCallback(() => {
-    const mapCenterX = (VIRTUAL_WIDTH - MAP_SIZE) / 2 + MAP_SIZE / 2;
-    const mapCenterY = (VIRTUAL_HEIGHT - MAP_SIZE) / 2 + MAP_SIZE / 2;
+  const rotateCanvasItemsForSideSwap = useCallback(
+    (onRotated?: (newPhases: PhaseState[]) => void) => {
+      const mapCenterX = (VIRTUAL_WIDTH - MAP_SIZE) / 2 + MAP_SIZE / 2;
+      const mapCenterY = (VIRTUAL_HEIGHT - MAP_SIZE) / 2 + MAP_SIZE / 2;
 
-    canvasItems.setAgentsOnCanvas((prev) =>
-      prev.map((agent) => ({
-        ...agent,
-        x: 2 * mapCenterX - agent.x,
-        y: 2 * mapCenterY - agent.y,
-      })),
-    );
-
-    canvasItems.setAbilitiesOnCanvas((prev) =>
-      prev.map((ability) => ({
-        ...ability,
-        x: 2 * mapCenterX - ability.x,
-        y: 2 * mapCenterY - ability.y,
-        currentRotation: ((ability.currentRotation || 0) + 180) % 360,
-      })),
-    );
-
-    canvasItems.setTextsOnCanvas((prev) =>
-      prev.map((text) => {
-        const cx = text.x + text.width / 2;
-        const cy = text.y + text.height / 2;
-        const newCx = 2 * mapCenterX - cx;
-        const newCy = 2 * mapCenterY - cy;
-        return {
-          ...text,
-          x: newCx - text.width / 2,
-          y: newCy - text.height / 2,
-        };
-      }),
-    );
-
-    canvasItems.setImagesOnCanvas((prev) =>
-      prev.map((image) => {
-        const cx = image.x + image.width / 2;
-        const cy = image.y + image.height / 2;
-        const newCx = 2 * mapCenterX - cx;
-        const newCy = 2 * mapCenterY - cy;
-        return {
-          ...image,
-          x: newCx - image.width / 2,
-          y: newCy - image.height / 2,
-        };
-      }),
-    );
-
-    canvasItems.setDrawLines((prev) =>
-      prev.map((line) => ({
-        ...line,
-        points: line.points.map((point) => ({
-          x: 2 * mapCenterX - point.x,
-          y: 2 * mapCenterY - point.y,
+      const currentPhases = phaseManager.getLatestPhases();
+      const newPhases = currentPhases.map((phase) => ({
+        ...phase,
+        agentsOnCanvas: phase.agentsOnCanvas.map((agent) => ({
+          ...agent,
+          x: 2 * mapCenterX - agent.x,
+          y: 2 * mapCenterY - agent.y,
         })),
-      })),
-    );
+        abilitiesOnCanvas: phase.abilitiesOnCanvas.map((ability) => ({
+          ...ability,
+          x: 2 * mapCenterX - ability.x,
+          y: 2 * mapCenterY - ability.y,
+          currentRotation: ((ability.currentRotation || 0) + 180) % 360,
+        })),
+        textsOnCanvas: phase.textsOnCanvas.map((text) => {
+          const cx = text.x + text.width / 2;
+          const cy = text.y + text.height / 2;
+          const newCx = 2 * mapCenterX - cx;
+          const newCy = 2 * mapCenterY - cy;
+          return {
+            ...text,
+            x: newCx - text.width / 2,
+            y: newCy - text.height / 2,
+          };
+        }),
+        imagesOnCanvas: phase.imagesOnCanvas.map((image) => {
+          const cx = image.x + image.width / 2;
+          const cy = image.y + image.height / 2;
+          const newCx = 2 * mapCenterX - cx;
+          const newCy = 2 * mapCenterY - cy;
+          return {
+            ...image,
+            x: newCx - image.width / 2,
+            y: newCy - image.height / 2,
+          };
+        }),
+        drawLines: phase.drawLines.map((line) => ({
+          ...line,
+          points: line.points.map((point) => ({
+            x: 2 * mapCenterX - point.x,
+            y: 2 * mapCenterY - point.y,
+          })),
+        })),
+        toolIconsOnCanvas: phase.toolIconsOnCanvas.map((toolIcon) => ({
+          ...toolIcon,
+          x: 2 * mapCenterX - toolIcon.x,
+          y: 2 * mapCenterY - toolIcon.y,
+        })),
+      }));
 
-    canvasItems.setToolIconsOnCanvas((prev) =>
-      prev.map((toolIcon) => ({
-        ...toolIcon,
-        x: 2 * mapCenterX - toolIcon.x,
-        y: 2 * mapCenterY - toolIcon.y,
-      })),
-    );
-  }, [canvasItems]);
+      phaseManager.setPhases(newPhases);
+      onRotated?.(newPhases);
+    },
+    [phaseManager],
+  );
 
   const getCurrentStateForSync = useCallback(
     () => ({
