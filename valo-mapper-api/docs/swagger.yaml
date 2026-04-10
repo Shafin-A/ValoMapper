@@ -343,6 +343,8 @@ definitions:
         items:
           $ref: '#/definitions/models.Position'
         type: array
+      shape:
+        type: string
       size:
         type: number
       tool:

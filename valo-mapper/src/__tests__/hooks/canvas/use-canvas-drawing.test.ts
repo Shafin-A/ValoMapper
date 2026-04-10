@@ -43,7 +43,13 @@ describe("useCanvasDrawing", () => {
         getWorldPointerPosition,
         isDrawing,
         "pencil",
-        { size: 2, color: "#000", isDashed: false, isArrowHead: false },
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "freehand" as const,
+        },
         { size: 5, mode: "pixel" },
         [],
         jest.fn(),
@@ -109,7 +115,13 @@ describe("useCanvasDrawing", () => {
         getWorldPointerPosition,
         isDrawing,
         "eraser",
-        { size: 2, color: "#000", isDashed: false, isArrowHead: false },
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "freehand" as const,
+        },
         { size: 5, mode: "line" },
         drawLines,
         setDrawLines,
@@ -181,7 +193,13 @@ describe("useCanvasDrawing", () => {
         getWorldPointerPosition,
         isDrawing,
         "eraser",
-        { size: 2, color: "#000", isDashed: false, isArrowHead: false },
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "freehand" as const,
+        },
         { size: 5, mode: "line" },
         latestDrawLines,
         setDrawLines,
@@ -219,7 +237,13 @@ describe("useCanvasDrawing", () => {
         getWorldPointerPosition,
         isDrawing,
         "eraser",
-        { size: 2, color: "#111", isDashed: false, isArrowHead: false },
+        {
+          size: 2,
+          color: "#111",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "freehand" as const,
+        },
         { size: 3, mode: "pixel" },
         [],
         setDrawLines,
@@ -244,5 +268,147 @@ describe("useCanvasDrawing", () => {
     });
     expect(setCurrentStroke).toHaveBeenLastCalledWith(null);
     expect(isDrawing.current).toBe(false);
+  });
+
+  it("creates a straight line with exactly two points on mouse up", () => {
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+      { x: 20, y: 20 },
+      { x: 30, y: 30 },
+    ];
+    const getWorldPointerPosition = jest
+      .fn()
+      .mockReturnValueOnce(positions[0])
+      .mockReturnValueOnce(positions[1])
+      .mockReturnValueOnce(positions[2])
+      .mockReturnValueOnce(positions[3]);
+
+    const isDrawing = { current: false };
+    const setDrawLines = jest.fn();
+    const setCurrentStroke = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "straight" as const,
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        setDrawLines,
+        setCurrentStroke,
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleMouseUp();
+    });
+
+    expect(setDrawLines).toHaveBeenCalledWith(expect.any(Function));
+    const updateArg = (
+      setDrawLines.mock.calls[0][0] as (prev: DrawLine[]) => DrawLine[]
+    )([]);
+    expect(updateArg).toHaveLength(1);
+    expect(updateArg[0].points).toHaveLength(2);
+    expect(updateArg[0].points[0]).toEqual(positions[0]);
+    expect(updateArg[0].points[1]).toEqual(positions[3]);
+    expect(updateArg[0].shape).toBe("straight");
+  });
+
+  it("creates a freehand line with all buffered points on mouse up", () => {
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+      { x: 20, y: 20 },
+      { x: 30, y: 30 },
+    ];
+    const getWorldPointerPosition = jest
+      .fn()
+      .mockReturnValueOnce(positions[0])
+      .mockReturnValueOnce(positions[1])
+      .mockReturnValueOnce(positions[2])
+      .mockReturnValueOnce(positions[3]);
+
+    const isDrawing = { current: false };
+    const setDrawLines = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "freehand" as const,
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        setDrawLines,
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleMouseUp();
+    });
+
+    expect(setDrawLines).toHaveBeenCalledWith(expect.any(Function));
+    const updateArg = (
+      setDrawLines.mock.calls[0][0] as (prev: DrawLine[]) => DrawLine[]
+    )([]);
+    expect(updateArg).toHaveLength(1);
+    expect(updateArg[0].points.length).toBeGreaterThan(2);
+    expect(updateArg[0].shape).toBe("freehand");
+  });
+
+  it("includes shape field in initial currentStroke for pencil", () => {
+    const getWorldPointerPosition = jest.fn().mockReturnValue({ x: 5, y: 5 });
+    const isDrawing = { current: false };
+    const setCurrentStroke = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "straight" as const,
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        jest.fn(),
+        setCurrentStroke,
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+    });
+
+    expect(setCurrentStroke).toHaveBeenCalledWith(
+      expect.objectContaining({ shape: "straight" }),
+    );
   });
 });

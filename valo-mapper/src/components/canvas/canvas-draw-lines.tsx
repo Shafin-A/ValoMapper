@@ -24,7 +24,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             stroke={line.color}
             strokeWidth={line.size}
             dash={line.isDashed ? [15, 10] : []}
-            tension={1}
+            tension={line.shape === "straight" ? 0 : 1}
             globalCompositeOperation={"source-over"}
           />
         ) : (
@@ -36,7 +36,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             stroke={line.color}
             strokeWidth={line.size}
             dash={line.isDashed && line.tool !== "eraser" ? [15, 10] : []}
-            tension={1}
+            tension={line.shape === "straight" ? 0 : 1}
             globalCompositeOperation={
               line.tool === "eraser" ? "destination-out" : "source-over"
             }
@@ -51,7 +51,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             points={currentStroke.points.flatMap((point) => [point.x, point.y])}
             isListening={false}
             perfectDrawEnabled={false}
-            tension={1}
+            tension={currentStroke.shape === "straight" ? 0 : 1}
             stroke={currentStroke.color}
             strokeWidth={currentStroke.size}
             dash={currentStroke.isDashed ? [15, 10] : []}
@@ -63,7 +63,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             points={currentStroke.points.flatMap((point) => [point.x, point.y])}
             isListening={false}
             perfectDrawEnabled={false}
-            tension={1}
+            tension={currentStroke.shape === "straight" ? 0 : 1}
             stroke={currentStroke.color}
             strokeWidth={currentStroke.size}
             dash={

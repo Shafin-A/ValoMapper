@@ -50,6 +50,7 @@ export const useCanvasDrawing = (
         size: tool === "eraser" ? eraserSettings.size : drawSettings.size,
         isDashed: drawSettings.isDashed,
         isArrowHead: drawSettings.isArrowHead,
+        shape: tool === "eraser" ? "freehand" : drawSettings.shape,
       });
     } else {
       const lastPoint =
@@ -89,10 +90,11 @@ export const useCanvasDrawing = (
         }
 
         if (currentLineRef.current) {
-          const flatPoints = drawingBufferRef.current.flatMap((p) => [
-            p.x,
-            p.y,
-          ]);
+          const startPoint = drawingBufferRef.current[0];
+          const flatPoints =
+            tool === "pencil" && drawSettings.shape === "straight"
+              ? [startPoint.x, startPoint.y, worldPos.x, worldPos.y]
+              : drawingBufferRef.current.flatMap((p) => [p.x, p.y]);
           currentLineRef.current.points(flatPoints);
           currentLineRef.current.getLayer()?.batchDraw();
         }
@@ -112,14 +114,23 @@ export const useCanvasDrawing = (
 
   const handleMouseUp = useCallback(() => {
     if (isDrawing.current && drawingBufferRef.current.length > 0) {
+      const isStraightLine =
+        tool === "pencil" && drawSettings.shape === "straight";
+      const finalPoints = isStraightLine
+        ? [
+            drawingBufferRef.current[0],
+            drawingBufferRef.current[drawingBufferRef.current.length - 1],
+          ]
+        : drawingBufferRef.current;
       const finalStroke = {
         id: getNextId("tool"),
         tool,
-        points: drawingBufferRef.current,
+        points: finalPoints,
         color: drawSettings.color,
         size: tool === "eraser" ? eraserSettings.size : drawSettings.size,
         isDashed: drawSettings.isDashed,
         isArrowHead: drawSettings.isArrowHead,
+        shape: tool === "eraser" ? ("freehand" as const) : drawSettings.shape,
       };
 
       if (tool === "eraser") {

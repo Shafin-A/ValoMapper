@@ -76,11 +76,14 @@ export type EraserSettings = {
   mode: "pixel" | "line";
 };
 
+export type DrawShape = "freehand" | "straight";
+
 export type DrawSettings = {
   size: number;
   color: string;
   isDashed: boolean;
   isArrowHead: boolean;
+  shape: DrawShape;
 };
 
 export type IconSettings = {
@@ -288,6 +291,7 @@ export type DrawLine = {
   size: number;
   isDashed: boolean;
   isArrowHead: boolean;
+  shape?: DrawShape;
   parentId?: string;
   chunkIndex?: number;
   totalChunks?: number;

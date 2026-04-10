@@ -2346,6 +2346,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Position"
                     }
                 },
+                "shape": {
+                    "type": "string"
+                },
                 "size": {
                     "type": "number"
                 },

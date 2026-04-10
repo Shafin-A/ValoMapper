@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useSettings } from "@/contexts/settings-context";
 import { debounce } from "@/lib/utils";
-import { Minus, MoreHorizontal, MoveUpRight } from "lucide-react";
+import { LineSquiggle, Minus, MoreHorizontal, MoveUpRight } from "lucide-react";
 import { useMemo } from "react";
 
 export const DrawSettings = () => {
@@ -40,6 +40,48 @@ export const DrawSettings = () => {
           onChange={(e) => debouncedSetColor(e.target.value)}
           className="h-6 w-6 cursor-pointer rounded"
         />
+      </div>
+
+      <div className="flex items-center gap-6 p-2">
+        <span className="text-sm font-medium w-20">Shape</span>
+        <div className="flex border rounded-md">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                size="sm"
+                data-state={drawSettings.shape === "freehand" ? "on" : "off"}
+                pressed={drawSettings.shape === "freehand"}
+                onPressedChange={(pressed) => {
+                  if (pressed && drawSettings.shape !== "freehand") {
+                    updateDrawSettings({ shape: "freehand" });
+                  }
+                }}
+                className="rounded-r-none border-r"
+              >
+                <LineSquiggle />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Free Draw</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                size="sm"
+                data-state={drawSettings.shape === "straight" ? "on" : "off"}
+                pressed={drawSettings.shape === "straight"}
+                onPressedChange={(pressed) => {
+                  if (pressed && drawSettings.shape !== "straight") {
+                    updateDrawSettings({ shape: "straight" });
+                  }
+                }}
+                className="rounded-l-none"
+              >
+                <Minus />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Straight Line</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       <div className="flex items-center gap-6 p-2">
