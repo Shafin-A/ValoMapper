@@ -175,6 +175,7 @@ describe("useCanvasEvents", () => {
         isDashed: false,
         isArrowHead: false,
         shape: "freehand" as const,
+        opacity: 1,
       },
       eraserSettings: { size: 10, mode: "pixel" },
       updateAgentsSettings: jest.fn(),
