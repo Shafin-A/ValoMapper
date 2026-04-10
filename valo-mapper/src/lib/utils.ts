@@ -384,9 +384,10 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
     const index = prev.findIndex((item) => item.id === icon.id);
     if (index === -1) return prev;
 
-    const updatedItems = [...prev];
-    updatedItems[index] = { ...updatedItems[index], x: newX, y: newY };
-    return updatedItems;
+    const copy = prev.slice();
+    const [item] = copy.splice(index, 1);
+    copy.push({ ...item, x: newX, y: newY });
+    return copy;
   });
 
   onItemMoved?.({ ...icon, x: newX, y: newY } as T);
