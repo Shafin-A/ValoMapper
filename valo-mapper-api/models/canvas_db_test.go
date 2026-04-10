@@ -830,4 +830,60 @@ func TestApplyCanvasPatch(t *testing.T) {
 		require.Contains(t, lineByID, "dl-freehand-1")
 		assert.Equal(t, "freehand", lineByID["dl-freehand-1"].Shape)
 	})
+
+	t.Run("ability moved to front persists sort order after reload", func(t *testing.T) {
+		sortLobby, _ := createCanvasTestLobby(t, pool)
+
+		// Add three abilities in order: ab-first, ab-second, ab-third
+		addPatch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "ability", Action: "add", PhaseIndex: 0, ID: "ab-first", Payload: map[string]any{
+				"id": "ab-first", "name": "Jett", "action": "jett_dash", "x": 10.0, "y": 10.0,
+				"currentPath": []map[string]any{}, "currentRotation": 0.0, "currentLength": 0.0,
+				"isAlly": true, "iconOnly": false, "showOuterCircle": true,
+			}},
+			{Entity: "ability", Action: "add", PhaseIndex: 0, ID: "ab-second", Payload: map[string]any{
+				"id": "ab-second", "name": "Sage", "action": "sage_wall", "x": 20.0, "y": 20.0,
+				"currentPath": []map[string]any{}, "currentRotation": 0.0, "currentLength": 100.0,
+				"isAlly": true, "iconOnly": false, "showOuterCircle": true,
+			}},
+			{Entity: "ability", Action: "add", PhaseIndex: 0, ID: "ab-third", Payload: map[string]any{
+				"id": "ab-third", "name": "Viper", "action": "viper_wall", "x": 30.0, "y": 30.0,
+				"currentPath": []map[string]any{}, "currentRotation": 0.0, "currentLength": 100.0,
+				"isAlly": false, "iconOnly": false, "showOuterCircle": true,
+			}},
+		}}
+
+		err := ApplyCanvasPatch(sortLobby.Code, addPatch)
+		require.NoError(t, err)
+
+		// Simulate dragging ab-first (moves it to front — sort_order bumped via nextval)
+		movePatch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "ability", Action: "update", PhaseIndex: 0, ID: "ab-first", Payload: map[string]any{
+				"id": "ab-first", "name": "Jett", "action": "jett_dash", "x": 50.0, "y": 50.0,
+				"currentPath": []map[string]any{}, "currentRotation": 0.0, "currentLength": 0.0,
+				"isAlly": true, "iconOnly": false, "showOuterCircle": true,
+			}},
+		}}
+
+		err = ApplyCanvasPatch(sortLobby.Code, movePatch)
+		require.NoError(t, err)
+
+		// Reload and verify ab-first is now last (highest sort_order = rendered on top)
+		phases, err := GetAllCanvasPhases(sortLobby.Code)
+		require.NoError(t, err)
+
+		require.Len(t, phases[0].AbilitiesOnCanvas, 3)
+		ids := make([]string, 3)
+		for i, ab := range phases[0].AbilitiesOnCanvas {
+			ids[i] = ab.ID
+		}
+
+		assert.Equal(t, "ab-second", ids[0], "ab-second should be first (lowest sort_order)")
+		assert.Equal(t, "ab-third", ids[1], "ab-third should be second")
+		assert.Equal(t, "ab-first", ids[2], "ab-first should be last (highest sort_order, rendered on top)")
+
+		// Also verify the updated position was persisted
+		assert.Equal(t, 50.0, phases[0].AbilitiesOnCanvas[2].X)
+		assert.Equal(t, 50.0, phases[0].AbilitiesOnCanvas[2].Y)
+	})
 }

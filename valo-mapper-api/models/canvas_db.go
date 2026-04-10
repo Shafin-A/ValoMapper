@@ -184,7 +184,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		SELECT id, name, action, x, y, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, phase_index 
 		FROM canvas_abilities 
 		WHERE lobby_code = $1 
-		ORDER BY phase_index`, lobbyCode)
+		ORDER BY phase_index, sort_order`, lobbyCode)
 	if err != nil {
 		return nil, err
 	}
@@ -776,7 +776,8 @@ func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
 		SET name = EXCLUDED.name, action = EXCLUDED.action, x = EXCLUDED.x, y = EXCLUDED.y,
 		    current_path = EXCLUDED.current_path, current_rotation = EXCLUDED.current_rotation, current_length = EXCLUDED.current_length,
-		    is_ally = EXCLUDED.is_ally, icon_only = EXCLUDED.icon_only, show_outer_circle = EXCLUDED.show_outer_circle`,
+		    is_ally = EXCLUDED.is_ally, icon_only = EXCLUDED.icon_only, show_outer_circle = EXCLUDED.show_outer_circle,
+		    sort_order = nextval('canvas_abilities_sort_order_seq')`,
 		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Action, p.X, p.Y, pathArray, p.CurrentRotation, p.CurrentLength, p.IsAlly, p.IconOnly, p.ShowOuterCircle)
 	return err
 }
