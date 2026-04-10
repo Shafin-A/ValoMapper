@@ -107,7 +107,7 @@ export const CanvasXIcon = ({
   const handleMouseDown = useCallback((e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
     const className = e.target.getClassName();
-    groupRef.current.draggable(className === "Line" || className === "Image");
+    groupRef.current.draggable(className === "Image");
   }, []);
 
   const handleDragStart = useCallback(() => {
@@ -235,7 +235,7 @@ export const CanvasXIcon = ({
       ref={groupRef}
       x={x}
       y={y}
-      isListening={isListening}
+      listening={isListening}
       draggable={draggable}
       onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
       onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
@@ -247,24 +247,28 @@ export const CanvasXIcon = ({
       {showAbilityShape && (
         <>
           <Line
+            listening={false}
             points={[line1StartX, line1StartY, line1EndX, line1EndY]}
             strokeWidth={lineStrokeWidth}
             stroke={stroke}
           />
 
           <Line
+            listening={false}
             points={[line2StartX, line2StartY, line2EndX, line2EndY]}
             strokeWidth={lineStrokeWidth}
             stroke={stroke}
           />
 
           <Circle
+            listening={false}
             x={line1StartX}
             y={line1StartY}
             radius={endCircleRadius}
             fill={endCircleColor}
           />
           <Circle
+            listening={false}
             x={line1EndX}
             y={line1EndY}
             radius={endCircleRadius}
@@ -272,12 +276,14 @@ export const CanvasXIcon = ({
           />
 
           <Circle
+            listening={false}
             x={line2StartX}
             y={line2StartY}
             radius={endCircleRadius}
             fill={endCircleColor}
           />
           <Circle
+            listening={false}
             x={line2EndX}
             y={line2EndY}
             radius={endCircleRadius}
@@ -289,7 +295,7 @@ export const CanvasXIcon = ({
               ref={rotationHandleRef}
               x={handleX}
               y={handleY}
-              isListening={isListening}
+              listening={isListening}
               radius={rotationHandleRadius}
               fill={rotationHandleColor}
               stroke={rotationHandleStrokeColor}

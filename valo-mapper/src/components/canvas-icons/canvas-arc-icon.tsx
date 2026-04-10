@@ -304,7 +304,7 @@ export const CanvasArcIcon = ({
       ref={groupRef}
       x={x}
       y={y}
-      isListening={isListening}
+      listening={isListening}
       draggable={draggable}
       onMouseDown={isListening ? handleMouseDown : undefined}
       onDragStart={isListening ? handleDragStart : undefined}
@@ -314,6 +314,7 @@ export const CanvasArcIcon = ({
       {showAbilityShape && (
         <>
           <Arc
+            listening={false}
             strokeWidth={circleStrokeWidth}
             angle={fov}
             innerRadius={0}

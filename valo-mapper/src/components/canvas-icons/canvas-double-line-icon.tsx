@@ -139,7 +139,7 @@ export const CanvasDoubleLineIcon = ({
   const handleMouseDown = useCallback((e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
     const className = e.target.getClassName();
-    groupRef.current.draggable(className === "Line" || className === "Image");
+    groupRef.current.draggable(className === "Image");
   }, []);
 
   const handleDragStart = useCallback(() => {
@@ -325,7 +325,7 @@ export const CanvasDoubleLineIcon = ({
       ref={groupRef}
       x={x}
       y={y}
-      isListening={isListening}
+      listening={isListening}
       draggable={draggable}
       onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
       onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
@@ -337,12 +337,14 @@ export const CanvasDoubleLineIcon = ({
       {showAbilityShape && (
         <>
           <Line
+            listening={false}
             points={[line1StartX, line1StartY, line1EndX, line1EndY]}
             strokeWidth={lineStrokeWidth}
             stroke={stroke}
           />
 
           <Line
+            listening={false}
             points={[line2StartX, line2StartY, line2EndX, line2EndY]}
             strokeWidth={lineStrokeWidth}
             stroke={stroke}
@@ -351,6 +353,7 @@ export const CanvasDoubleLineIcon = ({
           {showThickEnd && (
             <>
               <Line
+                listening={false}
                 points={[
                   line1EndX - thickEndLength * Math.cos(radians),
                   line1EndY - thickEndLength * Math.sin(radians),
@@ -361,6 +364,7 @@ export const CanvasDoubleLineIcon = ({
                 stroke={thickEndStroke}
               />
               <Line
+                listening={false}
                 points={[
                   line2EndX - thickEndLength * Math.cos(radians),
                   line2EndY - thickEndLength * Math.sin(radians),
@@ -378,7 +382,7 @@ export const CanvasDoubleLineIcon = ({
               ref={rotationHandleRef}
               x={handleX}
               y={handleY}
-              isListening={isListening}
+              listening={isListening}
               radius={rotationHandleRadius}
               fill={handleColor}
               stroke={rotationHandleStrokeColor}

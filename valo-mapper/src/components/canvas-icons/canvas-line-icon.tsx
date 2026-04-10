@@ -137,7 +137,7 @@ export const CanvasLineIcon = ({
   const handleMouseDown = useCallback((e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
     const className = e.target.getClassName();
-    groupRef.current.draggable(className === "Line" || className === "Image");
+    groupRef.current.draggable(className === "Image");
   }, []);
 
   const handleDragStart = useCallback(() => {
@@ -310,7 +310,7 @@ export const CanvasLineIcon = ({
       ref={groupRef}
       x={x}
       y={y}
-      isListening={isListening}
+      listening={isListening}
       draggable={draggable}
       onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
       onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
@@ -322,7 +322,7 @@ export const CanvasLineIcon = ({
       {showAbilityShape && (
         <>
           <Line
-            isListening={isListening}
+            listening={false}
             points={[startX, startY, endX, endY]}
             strokeWidth={lineStrokeWidth}
             stroke={stroke}
@@ -330,7 +330,7 @@ export const CanvasLineIcon = ({
 
           {showThickEnd && (
             <Line
-              isListening={isListening}
+              listening={false}
               points={[
                 endX - thickEndLength * Math.cos(radians),
                 endY - thickEndLength * Math.sin(radians),
@@ -348,7 +348,7 @@ export const CanvasLineIcon = ({
               ref={rotationHandleRef}
               x={handleX}
               y={handleY}
-              isListening={isListening}
+              listening={isListening}
               radius={rotationHandleRadius}
               fill={handleColor}
               stroke={rotationHandleStrokeColor}

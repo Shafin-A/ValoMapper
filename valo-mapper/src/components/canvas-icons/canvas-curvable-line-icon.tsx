@@ -1,9 +1,6 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
-import {
-  handleMouseOutDefaultCursor,
-  handleMouseOverGrabCursor,
-} from "@/lib/utils";
+import { handleMouseOutDefaultCursor } from "@/lib/utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
@@ -298,7 +295,7 @@ export const CanvasCurvableLineIcon = ({
       ref={groupRef}
       x={x}
       y={y}
-      isListening={isListening}
+      listening={isListening}
       draggable={draggable}
       onMouseOut={isListening ? handleMouseOutDefaultCursor : undefined}
       onMouseDown={isListening ? handleMouseDown : undefined}
@@ -309,7 +306,7 @@ export const CanvasCurvableLineIcon = ({
     >
       {showAbilityShape && path.length > 1 && (
         <Line
-          onMouseOver={isListening ? handleMouseOverGrabCursor : undefined}
+          listening={false}
           points={getLinePoints()}
           strokeWidth={lineStrokeWidth}
           stroke={stroke}
@@ -321,7 +318,7 @@ export const CanvasCurvableLineIcon = ({
           ref={handleRef}
           x={endPoint.x}
           y={endPoint.y}
-          isListening={isListening}
+          listening={isListening}
           radius={handleRadius}
           fill={stroke}
           stroke={handleStrokeColor}
@@ -338,7 +335,7 @@ export const CanvasCurvableLineIcon = ({
         <Circle
           x={endPoint.x}
           y={mapSide === "defense" ? endPoint.y - 25 : endPoint.y + 25}
-          isListening={isListening}
+          listening={isListening}
           radius={8}
           onClick={isListening ? handleReset : undefined}
           onTap={isListening ? handleReset : undefined}
