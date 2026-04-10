@@ -76,7 +76,7 @@ export type EraserSettings = {
   mode: "pixel" | "line";
 };
 
-export type DrawShape = "freehand" | "straight" | "rectangle";
+export type DrawShape = "freehand" | "straight" | "rectangle" | "circle";
 
 export type DrawSettings = {
   size: number;

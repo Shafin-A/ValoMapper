@@ -8,6 +8,7 @@ import {
 import { useSettings } from "@/contexts/settings-context";
 import { debounce } from "@/lib/utils";
 import {
+  Circle,
   LineSquiggle,
   Minus,
   MoreHorizontal,
@@ -98,12 +99,30 @@ export const DrawSettings = () => {
                     updateDrawSettings({ shape: "rectangle" });
                   }
                 }}
-                className="rounded-l-none"
+                className="rounded-none border-x"
               >
                 <Square />
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="bottom">Rectangle</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                size="sm"
+                data-state={drawSettings.shape === "circle" ? "on" : "off"}
+                pressed={drawSettings.shape === "circle"}
+                onPressedChange={(pressed) => {
+                  if (pressed && drawSettings.shape !== "circle") {
+                    updateDrawSettings({ shape: "circle" });
+                  }
+                }}
+                className="rounded-l-none"
+              >
+                <Circle />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Ellipse</TooltipContent>
           </Tooltip>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { Ref } from "react";
 import Konva from "konva";
-import { Arrow, Line, Rect } from "react-konva";
+import { Arrow, Ellipse, Line, Rect } from "react-konva";
 import { useCanvas } from "@/contexts/canvas-context";
 import { Vector2d } from "konva/lib/types";
 
@@ -11,8 +11,17 @@ const getRectProps = (p1: Vector2d, p2: Vector2d) => ({
   height: Math.abs(p2.y - p1.y),
 });
 
+const getEllipseProps = (p1: Vector2d, p2: Vector2d) => ({
+  x: (p1.x + p2.x) / 2,
+  y: (p1.y + p2.y) / 2,
+  radiusX: Math.abs(p2.x - p1.x) / 2,
+  radiusY: Math.abs(p2.y - p1.y) / 2,
+});
+
 interface CanvasDrawLinesProps {
-  currentLineRef: React.RefObject<Konva.Line | Konva.Arrow | Konva.Rect | null>;
+  currentLineRef: React.RefObject<
+    Konva.Line | Konva.Arrow | Konva.Rect | Konva.Ellipse | null
+  >;
 }
 
 export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
@@ -29,6 +38,18 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             isListening={false}
             perfectDrawEnabled={false}
             {...getRectProps(line.points[0], line.points[1])}
+            stroke={line.color}
+            strokeWidth={line.size}
+            dash={line.isDashed ? [15, 10] : []}
+            fill="transparent"
+            globalCompositeOperation={"source-over"}
+          />
+        ) : line.shape === "circle" && line.points.length === 2 ? (
+          <Ellipse
+            key={i}
+            isListening={false}
+            perfectDrawEnabled={false}
+            {...getEllipseProps(line.points[0], line.points[1])}
             stroke={line.color}
             strokeWidth={line.size}
             dash={line.isDashed ? [15, 10] : []}
@@ -74,6 +95,21 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             y={currentStroke.points[0]?.y ?? 0}
             width={0}
             height={0}
+            stroke={currentStroke.color}
+            strokeWidth={currentStroke.size}
+            dash={currentStroke.isDashed ? [15, 10] : []}
+            fill="transparent"
+            globalCompositeOperation={"source-over"}
+          />
+        ) : currentStroke.shape === "circle" ? (
+          <Ellipse
+            ref={currentLineRef as Ref<Konva.Ellipse>}
+            isListening={false}
+            perfectDrawEnabled={false}
+            x={currentStroke.points[0]?.x ?? 0}
+            y={currentStroke.points[0]?.y ?? 0}
+            radiusX={0}
+            radiusY={0}
             stroke={currentStroke.color}
             strokeWidth={currentStroke.size}
             dash={currentStroke.isDashed ? [15, 10] : []}

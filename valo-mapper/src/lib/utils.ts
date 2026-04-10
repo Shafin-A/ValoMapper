@@ -165,6 +165,42 @@ const getRectEdges = (p1: Vector2d, p2: Vector2d): [Vector2d, Vector2d][] => {
   ];
 };
 
+// Returns true if the line segment (p1→p2) intersects the ellipse with centre (cx,cy)
+// and semi-axes (rx, ry). Uses exact analytic intersection via quadratic formula.
+const doesSegmentIntersectEllipse = (
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  p1: Vector2d,
+  p2: Vector2d,
+): boolean => {
+  if (rx <= 0 || ry <= 0) return false;
+
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  const fx = p1.x - cx;
+  const fy = p1.y - cy;
+
+  const a = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+
+  if (a === 0) return false;
+
+  const b = 2 * ((fx * dx) / (rx * rx) + (fy * dy) / (ry * ry));
+  const c = (fx * fx) / (rx * rx) + (fy * fy) / (ry * ry) - 1;
+
+  const disc = b * b - 4 * a * c;
+
+  if (disc < 0) return false;
+
+  const sqrtDisc = Math.sqrt(disc);
+
+  const t1 = (-b - sqrtDisc) / (2 * a);
+  const t2 = (-b + sqrtDisc) / (2 * a);
+
+  return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
+};
+
 export const doesEraserIntersect = (
   eraserPoints: Vector2d[],
   existingStrokes: DrawLine[],
@@ -184,6 +220,27 @@ export const doesEraserIntersect = (
             return true;
           }
         }
+      }
+      continue;
+    }
+    if (stroke.shape === "circle" && stroke.points.length === 2) {
+      const cx = (stroke.points[0].x + stroke.points[1].x) / 2;
+      const cy = (stroke.points[0].y + stroke.points[1].y) / 2;
+      const radiusX = Math.abs(stroke.points[1].x - stroke.points[0].x) / 2;
+      const radiusY = Math.abs(stroke.points[1].y - stroke.points[0].y) / 2;
+      const tolerance = stroke.size / 2;
+      for (let i = 0; i < eraserPoints.length - 1; i++) {
+        if (
+          doesSegmentIntersectEllipse(
+            cx,
+            cy,
+            radiusX + tolerance,
+            radiusY + tolerance,
+            eraserPoints[i],
+            eraserPoints[i + 1],
+          )
+        )
+          return true;
       }
       continue;
     }
@@ -234,6 +291,23 @@ export const getIntersectingLines = (
             break;
           }
         }
+      } else if (stroke.shape === "circle" && stroke.points.length === 2) {
+        const cx = (stroke.points[0].x + stroke.points[1].x) / 2;
+        const cy = (stroke.points[0].y + stroke.points[1].y) / 2;
+        const radiusX = Math.abs(stroke.points[1].x - stroke.points[0].x) / 2;
+        const radiusY = Math.abs(stroke.points[1].y - stroke.points[0].y) / 2;
+        const tolerance = stroke.size / 2;
+        if (
+          doesSegmentIntersectEllipse(
+            cx,
+            cy,
+            radiusX + tolerance,
+            radiusY + tolerance,
+            eraserP1,
+            eraserP2,
+          )
+        )
+          hasIntersection = true;
       } else {
         for (let j = 0; j < stroke.points.length - 1; j++) {
           const strokeP1 = stroke.points[j];

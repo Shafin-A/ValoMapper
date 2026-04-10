@@ -27,7 +27,9 @@ export const useCanvasDrawing = (
 ) => {
   const { notifyLineDrawn, notifyLineRemoved } = useCollaborativeCanvas();
   const drawingBufferRef = useRef<Vector2d[]>([]);
-  const currentLineRef = useRef<Konva.Line | Konva.Arrow | Konva.Rect>(null);
+  const currentLineRef = useRef<
+    Konva.Line | Konva.Arrow | Konva.Rect | Konva.Ellipse
+  >(null);
   const erasedLineIdsRef = useRef<Set<string>>(new Set());
 
   const handleDrawing = useCallback(() => {
@@ -96,17 +98,31 @@ export const useCanvasDrawing = (
             const y = Math.min(startPoint.y, worldPos.y);
             const width = Math.abs(worldPos.x - startPoint.x);
             const height = Math.abs(worldPos.y - startPoint.y);
+
             (currentLineRef.current as Konva.Rect).setAttrs({
               x,
               y,
               width,
               height,
             });
+          } else if (tool === "pencil" && drawSettings.shape === "circle") {
+            const radiusX = Math.abs(worldPos.x - startPoint.x) / 2;
+            const radiusY = Math.abs(worldPos.y - startPoint.y) / 2;
+            const x = (startPoint.x + worldPos.x) / 2;
+            const y = (startPoint.y + worldPos.y) / 2;
+
+            (currentLineRef.current as Konva.Ellipse).setAttrs({
+              x,
+              y,
+              radiusX,
+              radiusY,
+            });
           } else {
             const flatPoints =
               tool === "pencil" && drawSettings.shape === "straight"
                 ? [startPoint.x, startPoint.y, worldPos.x, worldPos.y]
                 : drawingBufferRef.current.flatMap((p) => [p.x, p.y]);
+
             (currentLineRef.current as Konva.Line | Konva.Arrow).points(
               flatPoints,
             );
@@ -132,7 +148,8 @@ export const useCanvasDrawing = (
       const isTwoPoint =
         tool === "pencil" &&
         (drawSettings.shape === "straight" ||
-          drawSettings.shape === "rectangle");
+          drawSettings.shape === "rectangle" ||
+          drawSettings.shape === "circle");
       const finalPoints = isTwoPoint
         ? [
             drawingBufferRef.current[0],

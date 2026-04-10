@@ -503,4 +503,143 @@ describe("useCanvasDrawing", () => {
       expect.objectContaining({ shape: "rectangle" }),
     );
   });
+
+  it("creates a circle with exactly two points on mouse up", () => {
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+      { x: 20, y: 20 },
+      { x: 60, y: 40 },
+    ];
+    const getWorldPointerPosition = jest
+      .fn()
+      .mockReturnValueOnce(positions[0])
+      .mockReturnValueOnce(positions[1])
+      .mockReturnValueOnce(positions[2])
+      .mockReturnValueOnce(positions[3]);
+
+    const isDrawing = { current: false };
+    const setDrawLines = jest.fn();
+    const setCurrentStroke = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 2,
+          color: "#0f0",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "circle" as const,
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        setDrawLines,
+        setCurrentStroke,
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleMouseUp();
+    });
+
+    expect(setDrawLines).toHaveBeenCalledWith(expect.any(Function));
+    const updateArg = (
+      setDrawLines.mock.calls[0][0] as (prev: DrawLine[]) => DrawLine[]
+    )([]);
+    expect(updateArg).toHaveLength(1);
+    expect(updateArg[0].points).toHaveLength(2);
+    expect(updateArg[0].points[0]).toEqual(positions[0]);
+    expect(updateArg[0].points[1]).toEqual(positions[3]);
+    expect(updateArg[0].shape).toBe("circle");
+    expect(updateArg[0].color).toBe("#0f0");
+    expect(updateArg[0].size).toBe(2);
+    expect(updateArg[0].isDashed).toBe(false);
+  });
+
+  it("includes shape=circle in initial currentStroke", () => {
+    const getWorldPointerPosition = jest.fn().mockReturnValue({ x: 5, y: 5 });
+    const isDrawing = { current: false };
+    const setCurrentStroke = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "circle" as const,
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        jest.fn(),
+        setCurrentStroke,
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+    });
+
+    expect(setCurrentStroke).toHaveBeenCalledWith(
+      expect.objectContaining({ shape: "circle" }),
+    );
+  });
+
+  it("circle ignores isArrowHead setting", () => {
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 50, y: 50 },
+    ];
+    const getWorldPointerPosition = jest
+      .fn()
+      .mockReturnValueOnce(positions[0])
+      .mockReturnValueOnce(positions[1]);
+
+    const isDrawing = { current: false };
+    const setDrawLines = jest.fn();
+    const setCurrentStroke = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 4,
+          color: "#f00",
+          isDashed: true,
+          isArrowHead: true,
+          shape: "circle" as const,
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        setDrawLines,
+        setCurrentStroke,
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleMouseUp();
+    });
+
+    const updateArg = (
+      setDrawLines.mock.calls[0][0] as (prev: DrawLine[]) => DrawLine[]
+    )([]);
+    expect(updateArg[0].shape).toBe("circle");
+    expect(updateArg[0].isDashed).toBe(true);
+    expect(updateArg[0].size).toBe(4);
+  });
 });
