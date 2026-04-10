@@ -7,7 +7,13 @@ import {
 } from "@/components/ui/tooltip";
 import { useSettings } from "@/contexts/settings-context";
 import { debounce } from "@/lib/utils";
-import { LineSquiggle, Minus, MoreHorizontal, MoveUpRight } from "lucide-react";
+import {
+  LineSquiggle,
+  Minus,
+  MoreHorizontal,
+  MoveUpRight,
+  Square,
+} from "lucide-react";
 import { useMemo } from "react";
 
 export const DrawSettings = () => {
@@ -74,12 +80,30 @@ export const DrawSettings = () => {
                     updateDrawSettings({ shape: "straight" });
                   }
                 }}
-                className="rounded-l-none"
+                className="rounded-none border-x"
               >
                 <Minus />
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="bottom">Straight Line</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                size="sm"
+                data-state={drawSettings.shape === "rectangle" ? "on" : "off"}
+                pressed={drawSettings.shape === "rectangle"}
+                onPressedChange={(pressed) => {
+                  if (pressed && drawSettings.shape !== "rectangle") {
+                    updateDrawSettings({ shape: "rectangle" });
+                  }
+                }}
+                className="rounded-l-none"
+              >
+                <Square />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Rectangle</TooltipContent>
           </Tooltip>
         </div>
       </div>

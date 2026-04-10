@@ -1,10 +1,18 @@
 import React, { Ref } from "react";
 import Konva from "konva";
-import { Arrow, Line } from "react-konva";
+import { Arrow, Line, Rect } from "react-konva";
 import { useCanvas } from "@/contexts/canvas-context";
+import { Vector2d } from "konva/lib/types";
+
+const getRectProps = (p1: Vector2d, p2: Vector2d) => ({
+  x: Math.min(p1.x, p2.x),
+  y: Math.min(p1.y, p2.y),
+  width: Math.abs(p2.x - p1.x),
+  height: Math.abs(p2.y - p1.y),
+});
 
 interface CanvasDrawLinesProps {
-  currentLineRef: React.RefObject<Konva.Line | Konva.Arrow | null>;
+  currentLineRef: React.RefObject<Konva.Line | Konva.Arrow | Konva.Rect | null>;
 }
 
 export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
@@ -15,7 +23,19 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
   return (
     <>
       {drawLines.map((line, i) =>
-        line.isArrowHead && line.tool !== "eraser" ? (
+        line.shape === "rectangle" && line.points.length === 2 ? (
+          <Rect
+            key={i}
+            isListening={false}
+            perfectDrawEnabled={false}
+            {...getRectProps(line.points[0], line.points[1])}
+            stroke={line.color}
+            strokeWidth={line.size}
+            dash={line.isDashed ? [15, 10] : []}
+            fill="transparent"
+            globalCompositeOperation={"source-over"}
+          />
+        ) : line.isArrowHead && line.tool !== "eraser" ? (
           <Arrow
             key={i}
             isListening={false}
@@ -45,7 +65,22 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
       )}
 
       {currentStroke &&
-        (currentStroke.isArrowHead && currentStroke.tool !== "eraser" ? (
+        (currentStroke.shape === "rectangle" ? (
+          <Rect
+            ref={currentLineRef as Ref<Konva.Rect>}
+            isListening={false}
+            perfectDrawEnabled={false}
+            x={currentStroke.points[0]?.x ?? 0}
+            y={currentStroke.points[0]?.y ?? 0}
+            width={0}
+            height={0}
+            stroke={currentStroke.color}
+            strokeWidth={currentStroke.size}
+            dash={currentStroke.isDashed ? [15, 10] : []}
+            fill="transparent"
+            globalCompositeOperation={"source-over"}
+          />
+        ) : currentStroke.isArrowHead && currentStroke.tool !== "eraser" ? (
           <Arrow
             ref={currentLineRef as Ref<Konva.Arrow>}
             points={currentStroke.points.flatMap((point) => [point.x, point.y])}

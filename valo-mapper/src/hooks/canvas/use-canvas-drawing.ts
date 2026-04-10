@@ -27,7 +27,7 @@ export const useCanvasDrawing = (
 ) => {
   const { notifyLineDrawn, notifyLineRemoved } = useCollaborativeCanvas();
   const drawingBufferRef = useRef<Vector2d[]>([]);
-  const currentLineRef = useRef<Konva.Line | Konva.Arrow>(null);
+  const currentLineRef = useRef<Konva.Line | Konva.Arrow | Konva.Rect>(null);
   const erasedLineIdsRef = useRef<Set<string>>(new Set());
 
   const handleDrawing = useCallback(() => {
@@ -91,11 +91,26 @@ export const useCanvasDrawing = (
 
         if (currentLineRef.current) {
           const startPoint = drawingBufferRef.current[0];
-          const flatPoints =
-            tool === "pencil" && drawSettings.shape === "straight"
-              ? [startPoint.x, startPoint.y, worldPos.x, worldPos.y]
-              : drawingBufferRef.current.flatMap((p) => [p.x, p.y]);
-          currentLineRef.current.points(flatPoints);
+          if (tool === "pencil" && drawSettings.shape === "rectangle") {
+            const x = Math.min(startPoint.x, worldPos.x);
+            const y = Math.min(startPoint.y, worldPos.y);
+            const width = Math.abs(worldPos.x - startPoint.x);
+            const height = Math.abs(worldPos.y - startPoint.y);
+            (currentLineRef.current as Konva.Rect).setAttrs({
+              x,
+              y,
+              width,
+              height,
+            });
+          } else {
+            const flatPoints =
+              tool === "pencil" && drawSettings.shape === "straight"
+                ? [startPoint.x, startPoint.y, worldPos.x, worldPos.y]
+                : drawingBufferRef.current.flatMap((p) => [p.x, p.y]);
+            (currentLineRef.current as Konva.Line | Konva.Arrow).points(
+              flatPoints,
+            );
+          }
           currentLineRef.current.getLayer()?.batchDraw();
         }
       }
@@ -114,9 +129,11 @@ export const useCanvasDrawing = (
 
   const handleMouseUp = useCallback(() => {
     if (isDrawing.current && drawingBufferRef.current.length > 0) {
-      const isStraightLine =
-        tool === "pencil" && drawSettings.shape === "straight";
-      const finalPoints = isStraightLine
+      const isTwoPoint =
+        tool === "pencil" &&
+        (drawSettings.shape === "straight" ||
+          drawSettings.shape === "rectangle");
+      const finalPoints = isTwoPoint
         ? [
             drawingBufferRef.current[0],
             drawingBufferRef.current[drawingBufferRef.current.length - 1],

@@ -793,4 +793,41 @@ func TestApplyCanvasPatch(t *testing.T) {
 		assert.Equal(t, 33, updatedLobby.CanvasState.AbilitiesSettings.Scale)
 		assert.Equal(t, "#aabbcc", updatedLobby.CanvasState.AbilitiesSettings.EnemyColor)
 	})
+
+	t.Run("persists draw line shape field across save and reload", func(t *testing.T) {
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "drawline", Action: "upsert", PhaseIndex: 0, ID: "dl-rect-1", Payload: map[string]any{
+				"id": "dl-rect-1", "tool": "draw", "points": []map[string]any{{"x": 10.0, "y": 20.0}, {"x": 100.0, "y": 80.0}},
+				"color": "#FF0000", "size": 3.0, "isDashed": false, "isArrowHead": false, "shape": "rectangle",
+			}},
+			{Entity: "drawline", Action: "upsert", PhaseIndex: 0, ID: "dl-straight-1", Payload: map[string]any{
+				"id": "dl-straight-1", "tool": "draw", "points": []map[string]any{{"x": 0.0, "y": 0.0}, {"x": 50.0, "y": 50.0}},
+				"color": "#00FF00", "size": 2.0, "isDashed": true, "isArrowHead": false, "shape": "straight",
+			}},
+			{Entity: "drawline", Action: "upsert", PhaseIndex: 0, ID: "dl-freehand-1", Payload: map[string]any{
+				"id": "dl-freehand-1", "tool": "draw", "points": []map[string]any{{"x": 5.0, "y": 5.0}, {"x": 10.0, "y": 15.0}, {"x": 20.0, "y": 10.0}},
+				"color": "#0000FF", "size": 1.0, "isDashed": false, "isArrowHead": false, "shape": "freehand",
+			}},
+		}}
+
+		err := ApplyCanvasPatch(lobby.Code, patch)
+		require.NoError(t, err)
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+
+		lineByID := make(map[string]CanvasDrawLine)
+		for _, line := range phases[0].DrawLines {
+			lineByID[line.ID] = line
+		}
+
+		require.Contains(t, lineByID, "dl-rect-1")
+		assert.Equal(t, "rectangle", lineByID["dl-rect-1"].Shape)
+
+		require.Contains(t, lineByID, "dl-straight-1")
+		assert.Equal(t, "straight", lineByID["dl-straight-1"].Shape)
+
+		require.Contains(t, lineByID, "dl-freehand-1")
+		assert.Equal(t, "freehand", lineByID["dl-freehand-1"].Shape)
+	})
 }

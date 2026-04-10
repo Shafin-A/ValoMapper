@@ -140,6 +140,31 @@ export const doLinesIntersect = (
   return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1;
 };
 
+const getRectEdges = (p1: Vector2d, p2: Vector2d): [Vector2d, Vector2d][] => {
+  const minX = Math.min(p1.x, p2.x);
+  const minY = Math.min(p1.y, p2.y);
+  const maxX = Math.max(p1.x, p2.x);
+  const maxY = Math.max(p1.y, p2.y);
+  return [
+    [
+      { x: minX, y: minY },
+      { x: maxX, y: minY },
+    ], // top
+    [
+      { x: maxX, y: minY },
+      { x: maxX, y: maxY },
+    ], // right
+    [
+      { x: maxX, y: maxY },
+      { x: minX, y: maxY },
+    ], // bottom
+    [
+      { x: minX, y: maxY },
+      { x: minX, y: minY },
+    ], // left
+  ];
+};
+
 export const doesEraserIntersect = (
   eraserPoints: Vector2d[],
   existingStrokes: DrawLine[],
@@ -149,6 +174,19 @@ export const doesEraserIntersect = (
   );
 
   for (const stroke of existingPencilStrokes) {
+    if (stroke.shape === "rectangle" && stroke.points.length === 2) {
+      const edges = getRectEdges(stroke.points[0], stroke.points[1]);
+      for (let i = 0; i < eraserPoints.length - 1; i++) {
+        const eraserP1 = eraserPoints[i];
+        const eraserP2 = eraserPoints[i + 1];
+        for (const [edgeP1, edgeP2] of edges) {
+          if (doLinesIntersect(eraserP1, eraserP2, edgeP1, edgeP2)) {
+            return true;
+          }
+        }
+      }
+      continue;
+    }
     for (let i = 0; i < eraserPoints.length - 1; i++) {
       const eraserP1 = eraserPoints[i];
       const eraserP2 = eraserPoints[i + 1];
@@ -188,13 +226,23 @@ export const getIntersectingLines = (
       const eraserP1 = eraserPoints[i];
       const eraserP2 = eraserPoints[i + 1];
 
-      for (let j = 0; j < stroke.points.length - 1; j++) {
-        const strokeP1 = stroke.points[j];
-        const strokeP2 = stroke.points[j + 1];
+      if (stroke.shape === "rectangle" && stroke.points.length === 2) {
+        const edges = getRectEdges(stroke.points[0], stroke.points[1]);
+        for (const [edgeP1, edgeP2] of edges) {
+          if (doLinesIntersect(eraserP1, eraserP2, edgeP1, edgeP2)) {
+            hasIntersection = true;
+            break;
+          }
+        }
+      } else {
+        for (let j = 0; j < stroke.points.length - 1; j++) {
+          const strokeP1 = stroke.points[j];
+          const strokeP2 = stroke.points[j + 1];
 
-        if (doLinesIntersect(eraserP1, eraserP2, strokeP1, strokeP2)) {
-          hasIntersection = true;
-          break;
+          if (doLinesIntersect(eraserP1, eraserP2, strokeP1, strokeP2)) {
+            hasIntersection = true;
+            break;
+          }
         }
       }
     }
