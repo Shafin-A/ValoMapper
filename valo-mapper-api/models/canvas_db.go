@@ -222,7 +222,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		SELECT id, tool, points, color, size, is_dashed, is_arrow_head, shape, opacity, phase_index 
 		FROM canvas_draw_lines 
 		WHERE lobby_code = $1 
-		ORDER BY phase_index`, lobbyCode)
+		ORDER BY phase_index, sort_order`, lobbyCode)
 	if err != nil {
 		return nil, err
 	}
