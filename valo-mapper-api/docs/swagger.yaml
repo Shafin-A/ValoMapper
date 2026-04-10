@@ -339,6 +339,8 @@ definitions:
         type: boolean
       isDashed:
         type: boolean
+      opacity:
+        type: number
       points:
         items:
           $ref: '#/definitions/models.Position'

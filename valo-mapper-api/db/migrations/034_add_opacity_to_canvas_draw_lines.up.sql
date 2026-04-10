@@ -1,0 +1,1 @@
+ALTER TABLE canvas_draw_lines ADD COLUMN opacity FLOAT NOT NULL DEFAULT 1;

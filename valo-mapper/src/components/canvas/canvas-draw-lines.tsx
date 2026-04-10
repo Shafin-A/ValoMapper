@@ -42,6 +42,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             strokeWidth={line.size}
             dash={line.isDashed ? [15, 10] : []}
             fill="transparent"
+            opacity={line.opacity ?? 1}
             globalCompositeOperation={"source-over"}
           />
         ) : line.shape === "circle" && line.points.length === 2 ? (
@@ -54,6 +55,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             strokeWidth={line.size}
             dash={line.isDashed ? [15, 10] : []}
             fill="transparent"
+            opacity={line.opacity ?? 1}
             globalCompositeOperation={"source-over"}
           />
         ) : line.isArrowHead && line.tool !== "eraser" ? (
@@ -66,6 +68,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             strokeWidth={line.size}
             dash={line.isDashed ? [15, 10] : []}
             tension={line.shape === "straight" ? 0 : 1}
+            opacity={line.opacity ?? 1}
             globalCompositeOperation={"source-over"}
           />
         ) : (
@@ -78,6 +81,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             strokeWidth={line.size}
             dash={line.isDashed && line.tool !== "eraser" ? [15, 10] : []}
             tension={line.shape === "straight" ? 0 : 1}
+            opacity={line.tool === "eraser" ? 1 : (line.opacity ?? 1)}
             globalCompositeOperation={
               line.tool === "eraser" ? "destination-out" : "source-over"
             }
@@ -99,6 +103,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             strokeWidth={currentStroke.size}
             dash={currentStroke.isDashed ? [15, 10] : []}
             fill="transparent"
+            opacity={currentStroke.opacity ?? 1}
             globalCompositeOperation={"source-over"}
           />
         ) : currentStroke.shape === "circle" ? (
@@ -114,6 +119,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             strokeWidth={currentStroke.size}
             dash={currentStroke.isDashed ? [15, 10] : []}
             fill="transparent"
+            opacity={currentStroke.opacity ?? 1}
             globalCompositeOperation={"source-over"}
           />
         ) : currentStroke.isArrowHead && currentStroke.tool !== "eraser" ? (
@@ -126,6 +132,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
             stroke={currentStroke.color}
             strokeWidth={currentStroke.size}
             dash={currentStroke.isDashed ? [15, 10] : []}
+            opacity={currentStroke.opacity ?? 1}
             globalCompositeOperation={"source-over"}
           />
         ) : (
@@ -141,6 +148,9 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
               currentStroke.isDashed && currentStroke.tool !== "eraser"
                 ? [15, 10]
                 : []
+            }
+            opacity={
+              currentStroke.tool === "eraser" ? 1 : (currentStroke.opacity ?? 1)
             }
             globalCompositeOperation={
               currentStroke.tool === "eraser"

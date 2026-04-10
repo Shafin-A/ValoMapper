@@ -2340,6 +2340,9 @@ const docTemplate = `{
                 "isDashed": {
                     "type": "boolean"
                 },
+                "opacity": {
+                    "type": "number"
+                },
                 "points": {
                     "type": "array",
                     "items": {

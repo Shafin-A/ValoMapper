@@ -27,7 +27,7 @@ export const AnimatedContent = ({ show, children }: AnimatedContentProps) => {
       data-state={show ? "open" : "closed"}
       onAnimationEnd={onAnimationEnd}
       style={{
-        ["--content-height" as string]: `${ref.current?.scrollHeight || 220}px`,
+        ["--content-height" as string]: `${ref.current?.scrollHeight || 280}px`,
       }}
       className="data-[state=closed]:animate-slideUp data-[state=open]:animate-slideDown overflow-hidden text-sm"
     >

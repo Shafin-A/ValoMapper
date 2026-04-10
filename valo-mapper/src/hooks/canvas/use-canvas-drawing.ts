@@ -53,6 +53,7 @@ export const useCanvasDrawing = (
         isDashed: drawSettings.isDashed,
         isArrowHead: drawSettings.isArrowHead,
         shape: tool === "eraser" ? "freehand" : drawSettings.shape,
+        opacity: tool === "eraser" ? 1 : drawSettings.opacity,
       });
     } else {
       const lastPoint =
@@ -165,6 +166,7 @@ export const useCanvasDrawing = (
         isDashed: drawSettings.isDashed,
         isArrowHead: drawSettings.isArrowHead,
         shape: tool === "eraser" ? ("freehand" as const) : drawSettings.shape,
+        opacity: tool === "eraser" ? 1 : drawSettings.opacity,
       };
 
       if (tool === "eraser") {

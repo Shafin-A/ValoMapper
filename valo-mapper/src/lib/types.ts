@@ -84,6 +84,7 @@ export type DrawSettings = {
   isDashed: boolean;
   isArrowHead: boolean;
   shape: DrawShape;
+  opacity: number;
 };
 
 export type IconSettings = {
@@ -292,6 +293,7 @@ export type DrawLine = {
   isDashed: boolean;
   isArrowHead: boolean;
   shape?: DrawShape;
+  opacity?: number;
   parentId?: string;
   chunkIndex?: number;
   totalChunks?: number;

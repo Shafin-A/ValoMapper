@@ -40,6 +40,20 @@ export const DrawSettings = () => {
       </div>
 
       <div className="flex items-center gap-6 p-2">
+        <span className="text-sm font-medium w-20">Opacity</span>
+        <Slider
+          value={[Math.round(drawSettings.opacity * 100)]}
+          onValueChange={(value) =>
+            updateDrawSettings({ opacity: value[0] / 100 })
+          }
+          max={100}
+          min={10}
+          step={10}
+          className="flex-1"
+        />
+      </div>
+
+      <div className="flex items-center gap-6 p-2">
         <span className="text-sm font-medium w-20">Color</span>
         <input
           type="color"

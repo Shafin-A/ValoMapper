@@ -99,6 +99,7 @@ type CanvasDrawLine struct {
 	IsDashed    bool       `json:"isDashed"`
 	IsArrowHead bool       `json:"isArrowHead"`
 	Shape       string     `json:"shape,omitempty"`
+	Opacity     float64    `json:"opacity,omitempty"`
 }
 
 type CanvasConnectingLine struct {

@@ -219,7 +219,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- DRAW LINES ----
 	rows, err = tx.Query(ctx, `
-		SELECT id, tool, points, color, size, is_dashed, is_arrow_head, shape, phase_index 
+		SELECT id, tool, points, color, size, is_dashed, is_arrow_head, shape, opacity, phase_index 
 		FROM canvas_draw_lines 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index`, lobbyCode)
@@ -230,7 +230,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var line CanvasDrawLine
 		var phaseIndex int
 		var pointsArray []float64
-		if err := rows.Scan(&line.ID, &line.Tool, &pointsArray, &line.Color, &line.Size, &line.IsDashed, &line.IsArrowHead, &line.Shape, &phaseIndex); err != nil {
+		if err := rows.Scan(&line.ID, &line.Tool, &pointsArray, &line.Color, &line.Size, &line.IsDashed, &line.IsArrowHead, &line.Shape, &line.Opacity, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -814,12 +814,13 @@ func applyDrawLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_draw_lines (id, lobby_code, phase_index, tool, points, color, size, is_dashed, is_arrow_head, shape)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO canvas_draw_lines (id, lobby_code, phase_index, tool, points, color, size, is_dashed, is_arrow_head, shape, opacity)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
 		SET tool = EXCLUDED.tool, points = EXCLUDED.points, color = EXCLUDED.color, size = EXCLUDED.size,
-		    is_dashed = EXCLUDED.is_dashed, is_arrow_head = EXCLUDED.is_arrow_head, shape = EXCLUDED.shape`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.Tool, pointsArray, p.Color, p.Size, p.IsDashed, p.IsArrowHead, p.Shape)
+		    is_dashed = EXCLUDED.is_dashed, is_arrow_head = EXCLUDED.is_arrow_head, shape = EXCLUDED.shape,
+		    opacity = EXCLUDED.opacity`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Tool, pointsArray, p.Color, p.Size, p.IsDashed, p.IsArrowHead, p.Shape, p.Opacity)
 	return err
 }
 
