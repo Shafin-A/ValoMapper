@@ -207,6 +207,12 @@ export const AgentsSidebar = ({
     [isAlly, setAgentsOnCanvas, setAbilitiesOnCanvas, setSelectedCanvasIcon],
   );
 
+  const clearSelection = useCallback(() => {
+    setSelectedCanvasIcon(null);
+    setAgentsOnCanvas((prev) => prev.filter((c) => c.id !== TEMP_DRAG_ID));
+    setAbilitiesOnCanvas((prev) => prev.filter((c) => c.id !== TEMP_DRAG_ID));
+  }, [setAgentsOnCanvas, setAbilitiesOnCanvas, setSelectedCanvasIcon]);
+
   const resolveAbility = useCallback(
     (ability: AbilityIconDefinition): AbilityIconItem => {
       const variantIndex = selectedAbilityVariants[ability.id] ?? 0;
@@ -486,7 +492,10 @@ export const AgentsSidebar = ({
                       : agentsSettings.enemyColor,
                   }}
                   checked={isAlly}
-                  onCheckedChange={setIsAlly}
+                  onCheckedChange={(checked) => {
+                    clearSelection();
+                    setIsAlly(checked);
+                  }}
                   disabled={isLoadingLobby || isErrorLobby}
                 />
                 <span className="text-sm">{isAlly ? "Ally" : "Enemy"}</span>
@@ -494,7 +503,10 @@ export const AgentsSidebar = ({
               <div className="flex items-center gap-2">
                 <Checkbox
                   checked={onMap}
-                  onCheckedChange={(checked) => setOnMap(!!checked)}
+                  onCheckedChange={(checked) => {
+                    clearSelection();
+                    setOnMap(!!checked);
+                  }}
                   disabled={isLoadingLobby || isErrorLobby}
                 />
                 <span className="text-sm">On map</span>
