@@ -16,7 +16,7 @@ export const tourSteps: StepType[] = [
     content: (
       <TourStepContent
         title="Select an Agent"
-        description="Click on Brimstone to select the agent. You can then click on the canvas to place him or drag him directly onto the canvas in the next step."
+        description="Click on Brimstone to select him and see his abilities. You can then click on the canvas to place him or drag him directly onto the canvas in the next step."
         isAutoAdvanceStep
       />
     ),
@@ -39,40 +39,6 @@ When you're ready, click Next to continue.`}
       />
     ),
   },
-  {
-    selector: '[data-tour="brimstone-abilities-button"]',
-    content: (
-      <TourStepContent
-        title="View Agent Abilities"
-        description="Click the ⋮ button on Brimstone to see his abilities."
-        isAutoAdvanceStep
-      />
-    ),
-  },
-  {
-    selector: '[data-tour="brimstone-third-ability"]',
-    content: (
-      <TourStepContent
-        title="Select an Ability"
-        description="Click on this ability to select it. You can then click on the canvas to place it or drag it directly onto the map in the next step."
-        isAutoAdvanceStep
-      />
-    ),
-  },
-  {
-    selector: '[data-tour="map-canvas"]',
-    content: (
-      <TourStepContent
-        title="Place Ability on Canvas"
-        description={`Now place the ability by clicking on the canvas or by dragging it from the sidebar and releasing over the map. Just like agents, you can drag abilities to reposition them after placing.
-
-Delete an ability by dragging them to the trash can or press E while hovering over them.
-
-When you're ready, click Next to continue.`}
-      />
-    ),
-  },
-
   {
     selector: '[data-tour="map-selector"]',
     content: (

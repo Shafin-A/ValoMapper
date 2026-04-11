@@ -185,6 +185,10 @@ export const AgentsSidebar = ({
     ) => {
       setSelectedCanvasIcon(icon);
 
+      // Clear any stale TEMP_DRAG_ID from the other list before adding to this one
+      setAgentsOnCanvas((prev) => prev.filter((c) => c.id !== TEMP_DRAG_ID));
+      setAbilitiesOnCanvas((prev) => prev.filter((c) => c.id !== TEMP_DRAG_ID));
+
       const newCanvasIcon = {
         ...icon,
         id: TEMP_DRAG_ID,
@@ -200,7 +204,7 @@ export const AgentsSidebar = ({
         return [...withoutDrag, newCanvasIcon];
       });
     },
-    [isAlly, setSelectedCanvasIcon],
+    [isAlly, setAgentsOnCanvas, setAbilitiesOnCanvas, setSelectedCanvasIcon],
   );
 
   const resolveAbility = useCallback(
@@ -325,7 +329,15 @@ export const AgentsSidebar = ({
     if (!agent) return;
     setIsDrawMode(false);
     setEditingTextId(null);
-    setSelectedAgentAbilities(null);
+    const isSameAgent =
+      selectedCanvasIcon &&
+      isAgent(selectedCanvasIcon) &&
+      selectedCanvasIcon.name === agent.name;
+    if (isSameAgent) {
+      setSelectedAgentAbilities(null);
+    } else {
+      setSelectedAgentAbilities(agent);
+    }
     handleIconClick(agent, setAgentsOnCanvas);
     if (isMobile) {
       setSidebarOpen?.(false);
@@ -337,7 +349,6 @@ export const AgentsSidebar = ({
     agent: Agent | null,
   ) => {
     if (!agent) return;
-    setSelectedAgentAbilities(null);
     handleIconPointerDown(event, agent, "agent");
   };
 

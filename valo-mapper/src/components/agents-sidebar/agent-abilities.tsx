@@ -51,14 +51,14 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
 
   const containerClassName = renderInDrawer
     ? "absolute top-1/2 right-3 z-50 w-20 -translate-y-1/2 rounded-lg border bg-popover p-3 shadow-md"
-    : "fixed top-[25%] right-[calc(20rem+1rem)] z-50 w-20 rounded-lg border bg-popover p-3 shadow-md";
+    : "fixed top-[25%] right-[calc(20rem)] z-50 w-20 rounded-lg border bg-popover p-3 shadow-md";
 
   return (
     <div className={containerClassName}>
       <Button
         variant="default"
         size="icon"
-        className="absolute -top-2 -right-2 rounded-full size-6"
+        className="absolute -top-2 -left-2 rounded-full size-6"
         onClick={onClose}
       >
         <X />
@@ -82,19 +82,11 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
             ? variants[(currentIndex + 1) % variants.length]
             : null;
 
-          const isThirdAbility =
-            AGENT_ICON_CONFIGS[agent.name]?.[2]?.name === iconConfig.name;
-
           return (
             <div key={iconConfig.id} className="relative">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Image
-                    data-tour={
-                      agent.name === "Brimstone" && isThirdAbility
-                        ? "brimstone-third-ability"
-                        : undefined
-                    }
                     className={`rounded-md transition-transform duration-200 ${
                       isSelected ? `border-2 scale-110 shadow-lg` : "border"
                     } ${swappingId === iconConfig.id ? "animate-[ability-pop_0.3s_ease-out]" : ""}`}
@@ -128,7 +120,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
                       type="button"
                       variant="secondary"
                       size="icon"
-                      className="absolute -top-2 -left-2 size-5 rounded-full shadow-sm"
+                      className="absolute -top-2 -right-2 size-5 rounded-full shadow-sm"
                       onPointerDown={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
