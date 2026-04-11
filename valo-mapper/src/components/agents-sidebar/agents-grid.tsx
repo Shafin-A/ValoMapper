@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
-import { AGENTS } from "@/lib/consts";
+import { AGENTS, TEMP_DRAG_ID } from "@/lib/consts";
 import { Agent, AgentRole } from "@/lib/types";
 import { getAgentImgSrc } from "@/lib/utils";
 import { EllipsisVertical, Users } from "lucide-react";
@@ -52,7 +52,10 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
 
   const filteredAgents = onMap
     ? agentsByRole.filter((agent) =>
-        agentsOnCanvas.some((canvasAgent) => canvasAgent.name === agent.name),
+        agentsOnCanvas.some(
+          (canvasAgent) =>
+            canvasAgent.name === agent.name && canvasAgent.id !== TEMP_DRAG_ID,
+        ),
       )
     : agentsByRole;
 
