@@ -431,7 +431,10 @@ export const useCanvasState = () => {
           ...ability,
           x: 2 * mapCenterX - ability.x,
           y: 2 * mapCenterY - ability.y,
-          currentRotation: ((ability.currentRotation || 0) + 180) % 360,
+          currentRotation:
+            ability.action === "icon"
+              ? ability.currentRotation
+              : ((ability.currentRotation || 0) + 180) % 360,
         })),
         textsOnCanvas: phase.textsOnCanvas.map((text) => {
           const cx = text.x + text.width / 2;
