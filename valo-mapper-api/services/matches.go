@@ -313,10 +313,29 @@ func normalizeQueueLabel(queueID, gameMode string) string {
 	return "Unknown"
 }
 
+var valorantMapURLToDisplayName = map[string]string{
+	"/Game/Maps/Ascent/Ascent":     "Ascent",
+	"/Game/Maps/Bonsai/Bonsai":     "Split",
+	"/Game/Maps/Canyon/Canyon":     "Fracture",
+	"/Game/Maps/Duality/Duality":   "Bind",
+	"/Game/Maps/Foxtrot/Foxtrot":   "Breeze",
+	"/Game/Maps/Infinity/Infinity": "Abyss",
+	"/Game/Maps/Jam/Jam":           "Lotus",
+	"/Game/Maps/Juliett/Juliett":   "Sunset",
+	"/Game/Maps/Pitt/Pitt":         "Pearl",
+	"/Game/Maps/Port/Port":         "Icebox",
+	"/Game/Maps/Rook/Rook":         "Corrode",
+	"/Game/Maps/Triad/Triad":       "Haven",
+}
+
 func toMapName(mapID string) string {
 	trimmed := strings.TrimSpace(mapID)
 	if trimmed == "" {
 		return "Unknown"
+	}
+
+	if displayName, ok := valorantMapURLToDisplayName[trimmed]; ok {
+		return displayName
 	}
 
 	parts := strings.Split(trimmed, "/")
