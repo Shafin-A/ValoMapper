@@ -140,7 +140,7 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 		return nil, fmt.Errorf("fetch matchlist: %w", err)
 	}
 
-	previews := make([]MatchPreview, 0, limit)
+	previews := make([]MatchPreview, 0)
 	for _, entry := range matchlist.History {
 		if len(previews) >= limit {
 			break
