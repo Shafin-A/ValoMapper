@@ -36,7 +36,7 @@ func sanitizeRiotIdentifier(value string) (string, error) {
 	return trimmed, nil
 }
 
-var riotRegions = []string{"americas", "europe", "asia"}
+var riotRegions = []string{"na", "latam", "br", "eu", "ap", "kr"}
 
 type MatchPreview struct {
 	MatchID       string `json:"matchId"`
