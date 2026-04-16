@@ -33,6 +33,9 @@ Go REST API for ValoMapper, backed by PostgreSQL.
    RSO_CLIENT_SECRET=your_rso_client_secret
    RSO_REDIRECT_URI=http://localhost:3000/api/auth/rso/callback
 
+   # Riot Developer API key
+   RIOT_API_KEY=RGAPI-your-riot-developer-key
+
    # Internal key used by protected server-to-server endpoints
    # Generate with PowerShell:
    # $bytes = New-Object byte[] 32; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes); -join ($bytes | ForEach-Object { $_.ToString("x2") })

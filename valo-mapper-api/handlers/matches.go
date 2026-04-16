@@ -76,8 +76,8 @@ func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, fireba
 			utils.SendJSONError(w, utils.NewForbidden("RSO login required"), requestID)
 		case errors.Is(err, services.ErrPUUIDUnavailable):
 			utils.SendJSONError(w, utils.NewForbidden("RSO account is missing a PUUID"), requestID)
-		case errors.Is(err, services.ErrRSOTokenUnavailable):
-			utils.SendJSONError(w, utils.NewUnauthorized("RSO session expired. Please sign in with Riot again"), requestID)
+		case errors.Is(err, services.ErrRiotAPIKeyMissing):
+			utils.SendJSONError(w, utils.NewInternal("Matches integration is not configured", err), requestID)
 		default:
 			utils.SendJSONError(w, utils.NewInternal("Unable to fetch match history", err), requestID)
 		}

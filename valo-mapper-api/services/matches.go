@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 	"valo-mapper-api/models"
@@ -19,9 +20,9 @@ const (
 )
 
 var (
-	ErrRSOUserRequired     = errors.New("rso user required")
-	ErrPUUIDUnavailable    = errors.New("puuid unavailable")
-	ErrRSOTokenUnavailable = errors.New("rso access token unavailable")
+	ErrRSOUserRequired   = errors.New("rso user required")
+	ErrPUUIDUnavailable  = errors.New("puuid unavailable")
+	ErrRiotAPIKeyMissing = errors.New("riot api key unavailable")
 )
 
 func sanitizeRiotIdentifier(value string) (string, error) {
@@ -55,12 +56,14 @@ type MatchPreview struct {
 // MatchService fetches match data from Riot and builds preview DTOs.
 type MatchService struct {
 	httpClient *http.Client
+	riotAPIKey string
 }
 
 // NewMatchService creates a MatchService with a default HTTP client.
 func NewMatchService() *MatchService {
 	return &MatchService{
 		httpClient: &http.Client{Timeout: riotHTTPTimeout},
+		riotAPIKey: strings.TrimSpace(os.Getenv("RIOT_API_KEY")),
 	}
 }
 
@@ -121,12 +124,8 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 		return nil, ErrPUUIDUnavailable
 	}
 
-	if user.RSOAccessToken == nil {
-		return nil, ErrRSOTokenUnavailable
-	}
-	token, err := sanitizeRiotIdentifier(*user.RSOAccessToken)
-	if err != nil {
-		return nil, ErrRSOTokenUnavailable
+	if s.riotAPIKey == "" {
+		return nil, ErrRiotAPIKeyMissing
 	}
 
 	if limit <= 0 {
@@ -137,7 +136,7 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 
 	matchlistPath := fmt.Sprintf("/val/match/v1/matchlists/by-puuid/%s", url.PathEscape(puuid))
 	matchlist := riotMatchlistResponse{}
-	if err := s.fetchFromAnyRegion(ctx, token, matchlistPath, &matchlist); err != nil {
+	if err := s.fetchFromAnyRegion(ctx, matchlistPath, &matchlist); err != nil {
 		return nil, fmt.Errorf("fetch matchlist: %w", err)
 	}
 
@@ -154,7 +153,7 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 
 		matchPath := fmt.Sprintf("/val/match/v1/matches/%s", url.PathEscape(matchID))
 		match := riotMatchDTO{}
-		if err := s.fetchFromAnyRegion(ctx, token, matchPath, &match); err != nil {
+		if err := s.fetchFromAnyRegion(ctx, matchPath, &match); err != nil {
 			continue
 		}
 
@@ -172,7 +171,7 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 	return previews, nil
 }
 
-func (s *MatchService) fetchFromAnyRegion(ctx context.Context, accessToken, endpointPath string, destination any) error {
+func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath string, destination any) error {
 	var lastErr error
 
 	for _, region := range riotRegions {
@@ -183,7 +182,7 @@ func (s *MatchService) fetchFromAnyRegion(ctx context.Context, accessToken, endp
 			continue
 		}
 
-		req.Header.Set("Authorization", "Bearer "+accessToken)
+		req.Header.Set("X-Riot-Token", s.riotAPIKey)
 		req.Header.Set("Accept", "application/json")
 
 		resp, err := s.httpClient.Do(req)
