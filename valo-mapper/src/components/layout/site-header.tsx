@@ -44,6 +44,7 @@ export const SiteHeader = ({
   const { data: user, isLoading } = useUser();
   const pathname = usePathname();
   const { users } = useWebSocket();
+  const isRSOUser = Boolean(user?.rsoSubjectId) && user?.id === 5;
   const canCheckPendingInvite =
     !isLoading && Boolean(user) && user?.subscriptionPlan !== "stack";
   const { data: pendingStackInvites } = usePendingStackInvites(
@@ -130,6 +131,11 @@ export const SiteHeader = ({
                     <DropdownMenuItem asChild>
                       <Link href="/strategies">My Strategies</Link>
                     </DropdownMenuItem>
+                    {isRSOUser && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/matches">My Matches</Link>
+                      </DropdownMenuItem>
+                    )}
                     {pendingStackInviteCount > 0 && (
                       <DropdownMenuItem asChild>
                         <Link href="/profile" className="text-amber-600">

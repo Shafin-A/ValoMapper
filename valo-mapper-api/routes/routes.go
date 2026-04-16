@@ -12,6 +12,7 @@ func SetupRoutes(r *mux.Router, firebaseAuth *auth.Client, hub *websocket.Hub) {
 	RegisterMetricsRoutes(r, hub)
 	RegisterAdminRoutes(r)
 	RegisterAuthRoutes(r, firebaseAuth)
+	RegisterMatchRoutes(r, firebaseAuth)
 	RegisterBillingRoutes(r, firebaseAuth)
 	RegisterLobbyRoutes(r, hub)
 	RegisterUserRoutes(r, firebaseAuth)

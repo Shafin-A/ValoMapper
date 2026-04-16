@@ -379,6 +379,7 @@ export type Strategy = {
 export type User = {
   id: number;
   firebaseUid: string;
+  rsoSubjectId?: string | null;
   name: string;
   email: string;
   createdAt: Date;
@@ -395,6 +396,25 @@ export type User = {
   personalSubscriptionPlan?: "monthly" | "yearly" | "stack" | null;
   premiumTrialEligible?: boolean;
   premiumTrialDaysLeft?: number;
+};
+
+export type MatchPreview = {
+  matchId: string;
+  playedAt: number;
+  queueLabel: string;
+  mapId: string;
+  mapName: string;
+  result: "Win" | "Loss" | string;
+  teamScore: number;
+  enemyScore: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  personalScore: number;
+};
+
+export type MatchPreviewsResponse = {
+  matches: MatchPreview[];
 };
 
 export type StackMember = {

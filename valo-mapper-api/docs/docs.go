@@ -1231,6 +1231,66 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/matches": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns recent competitive or unrated Riot match previews for the authenticated RSO user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Get match previews",
+                "parameters": [
+                    {
+                        "maximum": 50,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Maximum number of previews to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MatchPreviewsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/strategies": {
             "get": {
                 "security": [
@@ -1949,6 +2009,17 @@ const docTemplate = `{
             "properties": {
                 "firebaseUid": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.MatchPreviewsResponse": {
+            "type": "object",
+            "properties": {
+                "matches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.MatchPreview"
+                    }
                 }
             }
         },
@@ -2735,6 +2806,47 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "services.MatchPreview": {
+            "type": "object",
+            "properties": {
+                "assists": {
+                    "type": "integer"
+                },
+                "deaths": {
+                    "type": "integer"
+                },
+                "enemyScore": {
+                    "type": "integer"
+                },
+                "kills": {
+                    "type": "integer"
+                },
+                "mapId": {
+                    "type": "string"
+                },
+                "mapName": {
+                    "type": "string"
+                },
+                "matchId": {
+                    "type": "string"
+                },
+                "personalScore": {
+                    "type": "integer"
+                },
+                "playedAt": {
+                    "type": "integer"
+                },
+                "queueLabel": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "teamScore": {
+                    "type": "integer"
                 }
             }
         },

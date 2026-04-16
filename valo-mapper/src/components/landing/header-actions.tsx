@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,6 +9,9 @@ import { usePathname } from "next/navigation";
 export const HeaderActions = () => {
   const pathname = usePathname();
   const { user, logout } = useFirebaseAuth();
+  const { data: userProfile } = useUser();
+
+  const isRSOUser = Boolean(userProfile?.rsoSubjectId) && userProfile?.id === 5;
 
   if (!user) {
     return (
@@ -41,6 +45,15 @@ export const HeaderActions = () => {
       >
         <Link href="/profile">My Profile</Link>
       </Button>
+      {isRSOUser && (
+        <Button
+          variant="ghost"
+          className="transition-all hover:scale-105 will-change-transform"
+          asChild
+        >
+          <Link href="/matches">My Matches</Link>
+        </Button>
+      )}
       <Button
         variant="outline"
         onClick={logout}

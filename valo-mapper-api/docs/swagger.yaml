@@ -88,6 +88,13 @@ definitions:
       firebaseUid:
         type: string
     type: object
+  handlers.MatchPreviewsResponse:
+    properties:
+      matches:
+        items:
+          $ref: '#/definitions/services.MatchPreview'
+        type: array
+    type: object
   handlers.RSOCallbackResponse:
     properties:
       customToken:
@@ -599,6 +606,33 @@ definitions:
         type: boolean
       updatedAt:
         type: string
+    type: object
+  services.MatchPreview:
+    properties:
+      assists:
+        type: integer
+      deaths:
+        type: integer
+      enemyScore:
+        type: integer
+      kills:
+        type: integer
+      mapId:
+        type: string
+      mapName:
+        type: string
+      matchId:
+        type: string
+      personalScore:
+        type: integer
+      playedAt:
+        type: integer
+      queueLabel:
+        type: string
+      result:
+        type: string
+      teamScore:
+        type: integer
     type: object
   websocket.HubStats:
     properties:
@@ -1409,6 +1443,46 @@ paths:
       summary: Apply incremental canvas patch updates
       tags:
       - lobbies
+  /api/matches:
+    get:
+      description: Returns recent competitive or unrated Riot match previews for the
+        authenticated RSO user.
+      parameters:
+      - default: 10
+        description: Maximum number of previews to return
+        in: query
+        maximum: 50
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.MatchPreviewsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get match previews
+      tags:
+      - matches
   /api/strategies:
     get:
       description: Lists strategies for the authenticated user, optionally filtered
