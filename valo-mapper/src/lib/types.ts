@@ -411,6 +411,8 @@ export type MatchPreview = {
   deaths: number;
   assists: number;
   personalScore: number;
+  agentId: string;
+  agentName: string;
 };
 
 export type MatchPreviewsResponse = {
