@@ -418,6 +418,33 @@ const getRoundOutcomeText = (
   return `${normalizedResult} ${outcome}`;
 };
 
+const getRoundOutcomeIconSrc = (
+  roundResultCode: string,
+  winningTeam: string,
+  currentPlayerTeamId: string | undefined,
+) => {
+  const outcomeSuffix = currentPlayerTeamId
+    ? winningTeam === currentPlayerTeamId
+      ? "win1"
+      : "loss1"
+    : "win1";
+
+  switch (roundResultCode) {
+    case "Elimination":
+      return `/matchOutcomes/elimination${outcomeSuffix}.png`;
+    case "Detonate":
+      return `/matchOutcomes/explosion${outcomeSuffix}.png`;
+    case "Defuse":
+      return `/matchOutcomes/diffuse${outcomeSuffix}.png`;
+    case "TimeExpired":
+      return `/matchOutcomes/time${outcomeSuffix}.png`;
+    case "Surrendered":
+      return `/matchOutcomes/EarlySurrender_Flag.png`;
+    default:
+      return `/matchOutcomes/${roundResultCode.toLowerCase()}${outcomeSuffix}.png`;
+  }
+};
+
 const MatchesPage = () => {
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
   const [selectedRoundByMatch, setSelectedRoundByMatch] = useState<
@@ -667,26 +694,36 @@ const MatchesPage = () => {
                         </div>
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="mt-1 text-lg font-semibold text-white">
-                              Round {selectedRound.roundNumber} |{" "}
-                              <span
-                                className={`font-semibold ${
-                                  currentPlayerTeamId
-                                    ? selectedRound.winningTeam ===
-                                      currentPlayerTeamId
-                                      ? "text-[#42EEC7]"
-                                      : "text-[#FF4655]"
-                                    : "text-white"
-                                }`}
-                              >
-                                {getRoundOutcomeText(
+                          <div className="mt-1 flex items-center gap-2 text-lg font-semibold text-white">
+                            Round {selectedRound.roundNumber}
+                            <span className="px-1 font-normal">|</span>
+                            <span
+                              className={`inline-flex items-center gap-2 font-semibold ${
+                                currentPlayerTeamId
+                                  ? selectedRound.winningTeam ===
+                                    currentPlayerTeamId
+                                    ? "text-[#42EEC7]"
+                                    : "text-[#FF4655]"
+                                  : "text-white"
+                              }`}
+                            >
+                              <Image
+                                src={getRoundOutcomeIconSrc(
                                   selectedRound.roundResultCode,
                                   selectedRound.winningTeam,
                                   currentPlayerTeamId,
                                 )}
-                              </span>
-                            </p>
+                                alt={`${selectedRound.roundResultCode} icon`}
+                                width={24}
+                                height={24}
+                                className="h-6 w-6"
+                              />
+                              {getRoundOutcomeText(
+                                selectedRound.roundResultCode,
+                                selectedRound.winningTeam,
+                                currentPlayerTeamId,
+                              )}
+                            </span>
                           </div>
                           <Button size="sm">Load Round</Button>
                         </div>
