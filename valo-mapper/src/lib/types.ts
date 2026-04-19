@@ -476,6 +476,10 @@ export type MatchSummaryResponse = {
   mapName: string;
   queueLabel: string;
   gameStartAt: string;
+  viewer: {
+    puuid: string;
+    bestRoundNumber: number;
+  };
   totalRounds: number;
   players: MatchPlayerSummary[];
   rounds: RoundSummaryLite[];

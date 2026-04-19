@@ -76,8 +76,6 @@ const getResultLabel = (result: MatchPreview["result"]) => {
   return result === "Win" ? "Victory" : "Defeat";
 };
 
-const mockCurrentPlayerPuuid = "player-2";
-
 const mockMatchSummary: MatchSummaryResponse = {
   schemaVersion: "matches-summary.v1",
   matchId: "mock-1",
@@ -85,6 +83,10 @@ const mockMatchSummary: MatchSummaryResponse = {
   mapName: "Pearl",
   queueLabel: "Competitive",
   gameStartAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+  viewer: {
+    puuid: "player-2",
+    bestRoundNumber: 4,
+  },
   totalRounds: 4,
   players: [
     {
@@ -422,7 +424,12 @@ const getRoundOutcomeIconSrc = (
   roundResultCode: string,
   winningTeam: string,
   currentPlayerTeamId: string | undefined,
+  isBestRound: boolean,
 ) => {
+  if (isBestRound) {
+    return "/matchOutcomes/TX_Icon_MVPStar_Gold.png";
+  }
+
   const outcomeSuffix = currentPlayerTeamId
     ? winningTeam === currentPlayerTeamId
       ? "win1"
@@ -454,7 +461,9 @@ const MatchesPage = () => {
   const { data: userProfile, isLoading: isUserLoading } = useUser();
   const isRSOUser = Boolean(userProfile?.rsoSubjectId) && userProfile?.id === 5;
   const useMockData = !firebaseUser || !isRSOUser;
-  const currentPlayerTeamId = getPlayerSummary(mockCurrentPlayerPuuid)?.teamId;
+  const currentPlayerPuuid = mockMatchSummary.viewer.puuid;
+  const currentPlayerBestRoundNumber = mockMatchSummary.viewer.bestRoundNumber;
+  const currentPlayerTeamId = getPlayerSummary(currentPlayerPuuid)?.teamId;
 
   const toggleExpanded = (matchId: string) => {
     setExpandedMatchId((current) => {
@@ -680,13 +689,30 @@ const MatchesPage = () => {
                                       round.roundNumber,
                                     )
                                   }
-                                  className={`h-11 min-w-11 shrink-0 rounded-md border px-3 text-sm font-semibold transition-colors ${
+                                  className={`h-16 min-w-14 shrink-0 text-sm font-semibold transition-colors ${
                                     isSelected
-                                      ? "border-cyan-400 bg-cyan-500/20 text-cyan-100"
-                                      : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800"
+                                      ? "border-[#42EEC7] text-[#42EEC7] border-2 bg-linear-to-t from-[#42EEC7]/48 via-[#42EEC7]/24 to-transparent"
+                                      : "bg-slate-900/45 text-slate-300 hover:border-[#42EEC7] hover:border-2"
                                   }`}
                                 >
-                                  R{round.roundNumber}
+                                  <span className="flex h-full flex-col items-center justify-center gap-4 leading-none">
+                                    <span className="text-[14px] font-semibold uppercase tracking-[0.08em]">
+                                      {round.roundNumber}
+                                    </span>
+                                    <Image
+                                      src={getRoundOutcomeIconSrc(
+                                        round.roundResultCode,
+                                        round.winningTeam,
+                                        currentPlayerTeamId,
+                                        round.roundNumber ===
+                                          currentPlayerBestRoundNumber,
+                                      )}
+                                      alt={`${round.roundResultCode} icon`}
+                                      width={20}
+                                      height={20}
+                                      className="h-5 w-5"
+                                    />
+                                  </span>
                                 </button>
                               );
                             })}
@@ -694,7 +720,7 @@ const MatchesPage = () => {
                         </div>
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="mt-1 flex items-center gap-2 text-lg font-semibold text-white">
+                          <div className="mt-1 flex items-center gap-2 text-xl font-semibold text-white uppercase">
                             Round {selectedRound.roundNumber}
                             <span className="px-1 font-normal">|</span>
                             <span
@@ -712,16 +738,25 @@ const MatchesPage = () => {
                                   selectedRound.roundResultCode,
                                   selectedRound.winningTeam,
                                   currentPlayerTeamId,
+                                  false,
                                 )}
                                 alt={`${selectedRound.roundResultCode} icon`}
                                 width={24}
                                 height={24}
                                 className="h-6 w-6"
                               />
+                              (
                               {getRoundOutcomeText(
                                 selectedRound.roundResultCode,
                                 selectedRound.winningTeam,
                                 currentPlayerTeamId,
+                              )}
+                              )
+                              {selectedRound.roundNumber ===
+                                currentPlayerBestRoundNumber && (
+                                <span className="text-amber-100">
+                                  (Your Best Round)
+                                </span>
                               )}
                             </span>
                           </div>
@@ -745,7 +780,7 @@ const MatchesPage = () => {
                                 (stats, index, allStats) => {
                                   const player = getPlayerSummary(stats.puuid);
                                   const isCurrentPlayer =
-                                    stats.puuid === mockCurrentPlayerPuuid;
+                                    stats.puuid === currentPlayerPuuid;
                                   const isBlueTeam = player?.teamId === "Blue";
 
                                   const rowAccent = isCurrentPlayer
