@@ -410,7 +410,11 @@ const getRoundOutcomeText = (
   currentPlayerTeamId: string | undefined,
 ) => {
   const normalizedResult =
-    roundResultCode === "TimeExpired" ? "Time Expired" : roundResultCode;
+    roundResultCode === "TimeExpired"
+      ? "Time Expired"
+      : roundResultCode === "Detonate"
+        ? "Detonation"
+        : roundResultCode;
 
   if (!currentPlayerTeamId) {
     return normalizedResult;
