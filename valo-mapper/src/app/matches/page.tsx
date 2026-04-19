@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useMatches } from "@/hooks/api/use-matches";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { MatchPreview, MatchSummaryResponse } from "@/lib/types";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -678,14 +679,14 @@ const MatchesPage = () => {
                   {expandedMatchId === match.matchId && selectedRound && (
                     <section className="rounded-b-xl border border-slate-700 bg-slate-950/90 px-4 py-4 sm:px-5">
                       <div className="space-y-4">
-                        <div className="overflow-x-auto pb-1">
+                        <ScrollArea className="w-full pb-1">
                           <div className="inline-flex min-w-full gap-2">
                             {mockMatchSummary.rounds.map((round) => {
                               const isSelected =
                                 round.roundNumber === selectedRound.roundNumber;
-                              return (
+                              const roundButton = (
                                 <button
-                                  key={round.roundNumber}
+                                  key={`round-${round.roundNumber}`}
                                   type="button"
                                   onClick={() =>
                                     selectRound(
@@ -719,9 +720,28 @@ const MatchesPage = () => {
                                   </span>
                                 </button>
                               );
+
+                              if (round.roundNumber !== 12) {
+                                return roundButton;
+                              }
+
+                              return [
+                                roundButton,
+                                <span
+                                  key="round-half-separator"
+                                  aria-hidden="true"
+                                  className="inline-flex h-16 min-w-8 shrink-0 items-center justify-center text-white"
+                                >
+                                  <RefreshCw
+                                    className="h-5 w-5"
+                                    strokeWidth={3}
+                                  />
+                                </span>,
+                              ];
                             })}
                           </div>
-                        </div>
+                          <ScrollBar orientation="horizontal" />
+                        </ScrollArea>
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div className="mt-1 flex items-center gap-2 text-xl font-semibold text-white uppercase">
