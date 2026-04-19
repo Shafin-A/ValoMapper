@@ -415,6 +415,72 @@ export type MatchPreview = {
   agentName: string;
 };
 
+export type RoundPlayerStatsLite = {
+  puuid: string;
+  score: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  economy: {
+    loadoutValue: number;
+    remaining: number;
+  };
+};
+
+export type RoundEventLogEntry =
+  | {
+      eventType: "kill";
+      timeSinceRoundStartMillis: number;
+      killerPuuid: string;
+      victimPuuid: string;
+      weaponId: string;
+      weaponName: string;
+      assistantPuuids: string[];
+    }
+  | {
+      eventType: "spike_planted";
+      timeSinceRoundStartMillis: number;
+      planterPuuid: string;
+    }
+  | {
+      eventType: "spike_defused";
+      timeSinceRoundStartMillis: number;
+      defuserPuuid: string;
+    };
+
+export type RoundSummaryLite = {
+  roundNumber: number;
+  winningTeam: string;
+  roundResultCode: string;
+  scoreAfterRound: {
+    red: number;
+    blue: number;
+  };
+  playerStats: RoundPlayerStatsLite[];
+  eventLog: RoundEventLogEntry[];
+};
+
+export type MatchPlayerSummary = {
+  puuid: string;
+  gameName: string;
+  tagLine: string;
+  teamId: string;
+  characterId: string;
+  characterName: string;
+};
+
+export type MatchSummaryResponse = {
+  schemaVersion: string;
+  matchId: string;
+  mapId: string;
+  mapName: string;
+  queueLabel: string;
+  gameStartAt: string;
+  totalRounds: number;
+  players: MatchPlayerSummary[];
+  rounds: RoundSummaryLite[];
+};
+
 export type MatchPreviewsResponse = {
   matches: MatchPreview[];
 };
