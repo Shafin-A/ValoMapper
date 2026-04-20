@@ -170,7 +170,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-2",
           victimPuuid: "player-4",
           weaponId: "vandal",
-          weaponName: "Vandal",
           assistantPuuids: ["player-1"],
         },
         {
@@ -231,7 +230,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-3",
           victimPuuid: "player-1",
           weaponId: "phantom",
-          weaponName: "Phantom",
           assistantPuuids: [],
         },
         {
@@ -240,7 +238,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-4",
           victimPuuid: "player-2",
           weaponId: "sheriff",
-          weaponName: "Sheriff",
           assistantPuuids: ["player-3"],
         },
       ],
@@ -296,7 +293,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-1",
           victimPuuid: "player-4",
           weaponId: "operator",
-          weaponName: "Operator",
           assistantPuuids: [],
         },
         {
@@ -352,7 +348,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-2",
           victimPuuid: "player-3",
           weaponId: "spectre",
-          weaponName: "Spectre",
           assistantPuuids: [],
         },
         {
@@ -360,9 +355,13 @@ const mockMatchSummary: MatchSummaryResponse = {
           timeSinceRoundStartMillis: 29000,
           killerPuuid: "player-1",
           victimPuuid: "player-4",
-          weaponId: "ghost",
-          weaponName: "Ghost",
+          weaponId: "C4883E50-4494-202C-3EC3-6B8A9284F00B",
           assistantPuuids: ["player-2"],
+        },
+        {
+          eventType: "spike_defused",
+          timeSinceRoundStartMillis: 126000,
+          defuserPuuid: "player-2",
         },
       ],
     },
@@ -373,8 +372,23 @@ const getPlayerSummary = (puuid: string) => {
   return mockMatchSummary.players.find((player) => player.puuid === puuid);
 };
 
-const getPlayerName = (puuid: string) => {
-  return getPlayerSummary(puuid)?.gameName ?? "Player";
+const getPlayerAgentIconSrc = (puuid: string) => {
+  const characterId = getPlayerSummary(puuid)?.characterId ?? "astra";
+  return getAgentImageSrc(characterId);
+};
+
+const getWeaponKillstreamImageSrc = (weaponId: string) => {
+  const normalized = weaponId.trim();
+  const isUuid =
+    /^[0-9a-fA-F-]{36}$/.test(normalized) && normalized.includes("-");
+
+  // Production payloads generally provide weapon UUIDs for killstream assets.
+  if (isUuid) {
+    return `/weapons/${normalized.toUpperCase()}_killstream.png`;
+  }
+
+  // Local mock payloads currently use short names (vandal, phantom, ...).
+  return `/tools/${normalized.toLowerCase()}.webp`;
 };
 
 const formatTimeSinceRoundStart = (timeSinceRoundStartMillis: number) => {
@@ -384,25 +398,147 @@ const formatTimeSinceRoundStart = (timeSinceRoundStartMillis: number) => {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
-const formatRoundEvent = (
+const renderRoundEventRow = (
   event: MatchSummaryResponse["rounds"][number]["eventLog"][number],
+  index: number,
 ) => {
-  switch (event.eventType) {
-    case "kill":
-      return `${getPlayerName(event.killerPuuid)} killed ${getPlayerName(
-        event.victimPuuid,
-      )} with ${event.weaponName}${
-        event.assistantPuuids.length > 0
-          ? ` (assist: ${event.assistantPuuids.map(getPlayerName).join(", ")})`
-          : ""
-      }`;
-    case "spike_planted":
-      return `${getPlayerName(event.planterPuuid)} planted the spike`;
-    case "spike_defused":
-      return `${getPlayerName(event.defuserPuuid)} defused the spike`;
-    default:
-      return "Unknown event";
+  const actorPuuid =
+    event.eventType === "kill"
+      ? event.killerPuuid
+      : event.eventType === "spike_planted"
+        ? event.planterPuuid
+        : event.defuserPuuid;
+
+  const actorTeamId = getPlayerSummary(actorPuuid)?.teamId;
+  const victimTeamId =
+    event.eventType === "kill"
+      ? getPlayerSummary(event.victimPuuid)?.teamId
+      : undefined;
+
+  const leftAccent = actorTeamId === "Blue" ? "bg-[#42EEC7]" : "bg-[#FF4655]";
+  const rightAccent = victimTeamId === "Blue" ? "bg-[#42EEC7]" : "bg-[#FF4655]";
+
+  const iconShade = actorTeamId === "Blue" ? "bg-[#19ac92]" : "bg-[#c65063]";
+
+  const contentShade =
+    actorTeamId === "Blue" ? "bg-[#19767480]" : "bg-[#3f2d3f80]";
+
+  if (event.eventType === "kill") {
+    return (
+      <li
+        key={index}
+        className="relative isolate overflow-hidden border border-slate-800/80"
+      >
+        <div className={`absolute inset-y-0 left-0 w-1.5 ${leftAccent}`} />
+        <div className={`absolute inset-y-0 right-0 w-1.5 ${rightAccent}`} />
+
+        <div className="relative z-10 px-2">
+          <div className="grid grid-cols-[32px_50px_1fr_32px] items-stretch">
+            <div className={`relative h-8 overflow-hidden ${iconShade}`}>
+              <Image
+                src={getPlayerAgentIconSrc(event.killerPuuid)}
+                alt="Killer"
+                fill
+                sizes="32px"
+                className="object-fill"
+              />
+            </div>
+
+            <div className={`flex items-center justify-center ${contentShade}`}>
+              <span className="text-xs font-semibold tabular-nums text-white">
+                {formatTimeSinceRoundStart(event.timeSinceRoundStartMillis)}
+              </span>
+            </div>
+
+            <div
+              className={`flex items-center justify-center min-w-0 ${contentShade}`}
+            >
+              <div className="relative h-4 w-full ml-3">
+                <Image
+                  src={getWeaponKillstreamImageSrc(event.weaponId)}
+                  alt="Weapon"
+                  fill
+                  sizes="120px"
+                  className="object-contain object-right scale-x-[-1]"
+                />
+              </div>
+            </div>
+
+            <div
+              className={`relative h-8 overflow-hidden ${
+                victimTeamId === "Blue" ? "bg-[#19ac92]" : "bg-[#c65063]"
+              }`}
+            >
+              <Image
+                src={getPlayerAgentIconSrc(event.victimPuuid)}
+                alt="Victim"
+                fill
+                sizes="32px"
+                className="object-fill"
+              />
+            </div>
+          </div>
+        </div>
+      </li>
+    );
   }
+
+  return (
+    <li
+      key={index}
+      className="relative isolate overflow-hidden border border-slate-800/80"
+    >
+      <div className={`absolute inset-y-0 left-0 w-1.5 ${leftAccent}`} />
+
+      <div className="relative z-10 pl-2 pr-0">
+        <div className="grid grid-cols-[32px_50px_1fr_auto] items-stretch">
+          <div className={`relative h-8 overflow-hidden ${iconShade}`}>
+            <Image
+              src={getPlayerAgentIconSrc(actorPuuid)}
+              alt="Player"
+              fill
+              sizes="32px"
+              className="object-fill"
+            />
+          </div>
+
+          <div className={`flex items-center justify-center ${contentShade}`}>
+            <span className="text-xs font-semibold tabular-nums text-white">
+              {formatTimeSinceRoundStart(event.timeSinceRoundStartMillis)}
+            </span>
+          </div>
+
+          <div className={`min-w-0 ${contentShade}`}>
+            <div className="relative h-8 w-full px-2">
+              {event.eventType === "spike_planted" ? (
+                <Image
+                  src="/tools/spike.webp"
+                  alt="Spike"
+                  fill
+                  sizes="32px"
+                  className="object-contain object-right scale-[-0.65]"
+                />
+              ) : (
+                <Image
+                  src="/matchOutcomes/defuse.png"
+                  alt="Defuse"
+                  fill
+                  sizes="32px"
+                  className="object-contain object-left scale-[0.7]"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className={`flex items-center pl-2 pr-0 ${contentShade}`}>
+            <span className="pr-1 text-sm tracking-[0.04em] text-white/90">
+              {event.eventType === "spike_planted" ? "Planted" : "Defused"}
+            </span>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
 };
 
 const getRoundOutcomeText = (
@@ -787,8 +923,8 @@ const MatchesPage = () => {
                           <Button size="sm">Load Round</Button>
                         </div>
 
-                        <div className="grid gap-3 md:grid-cols-[1fr_240px]">
-                          <div className="min-w-[760px]">
+                        <div className="grid gap-3 md:grid-cols-[1fr_280px]">
+                          <div className="min-w-[720px]">
                             <div>
                               <div className="grid grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px] items-center text-[12px] mb-2 font-semibold uppercase tracking-[0.1em] text-white/55">
                                 <span className="text-center">Player</span>
@@ -943,22 +1079,18 @@ const MatchesPage = () => {
                             </div>
                           </div>
 
-                          <div className="rounded-xl border border-slate-700 bg-slate-900 p-3">
-                            <p className="text-sm font-semibold text-white">
+                          <div>
+                            <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/55">
                               Event Log
                             </p>
-                            <ol className="mt-3 space-y-2 text-sm text-slate-300">
-                              {selectedRound.eventLog.map((event, index) => (
-                                <li key={index}>
-                                  <span className="text-slate-500">
-                                    {formatTimeSinceRoundStart(
-                                      event.timeSinceRoundStartMillis,
-                                    )}
-                                  </span>{" "}
-                                  {formatRoundEvent(event)}
-                                </li>
-                              ))}
-                            </ol>
+                            <ScrollArea className="h-[360px] w-full">
+                              <ol className="space-y-1 pr-2">
+                                {selectedRound.eventLog.map((event, index) =>
+                                  renderRoundEventRow(event, index),
+                                )}
+                              </ol>
+                              <ScrollBar orientation="vertical" />
+                            </ScrollArea>
                           </div>
                         </div>
                       </div>
