@@ -763,28 +763,28 @@ const MatchesPage = () => {
                         />
                       </div>
 
-                      <div className="flex min-w-0 flex-1 items-center gap-3 px-3 sm:px-5">
+                      <div className="flex min-w-0 flex-1 items-center gap-1.5 px-1.5 pr-[36%] sm:gap-2 sm:px-3 sm:pr-[35%] lg:gap-3 lg:px-5 lg:pr-[30%]">
                         <div className="min-w-0">
-                          <div className="grid grid-cols-[auto_1fr] items-baseline gap-x-2 gap-y-1.5">
-                            <span className="truncate text-[12px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[28px]">
+                          <div className="grid grid-cols-[auto_auto] items-baseline gap-x-1.5 gap-y-1.5 sm:grid-cols-[auto_1fr] sm:gap-x-2">
+                            <span className="whitespace-nowrap text-[11px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[18px] lg:text-[28px]">
                               KDA
                             </span>
-                            <span className="truncate text-[12px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[28px]">
+                            <span className="whitespace-nowrap text-[11px] font-semibold uppercase leading-none tracking-[0.04em] text-white sm:text-[18px] lg:text-[28px]">
                               {match.kills} / {match.deaths} / {match.assists}
                             </span>
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-white/55 sm:text-[16px]">
+                            <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.05em] text-white/55 sm:text-[12px] lg:text-[16px]">
                               SCORE
                             </span>
-                            <span className="truncate text-[11px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[16px]">
+                            <span className="whitespace-nowrap text-[10px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[12px] lg:text-[16px]">
                               {match.personalScore}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="absolute left-1/2 top-1/2 z-40 w-[42%] -translate-x-1/2 -translate-y-1/2 text-center sm:w-[30%]">
+                      <div className="absolute right-1 top-1/2 z-40 w-[34%] -translate-y-1/2 text-right sm:right-2 sm:w-[32%] lg:left-1/2 lg:right-auto lg:w-[30%] lg:-translate-x-1/2 lg:text-center">
                         <p
-                          className={`text-[24px] font-semibold uppercase leading-none tracking-[0.06em] sm:text-[36px] ${
+                          className={`text-[16px] font-semibold uppercase leading-none tracking-[0.04em] sm:text-[24px] lg:text-[36px] ${
                             match.result === "Win"
                               ? "text-[#42EEC7]"
                               : "text-[#FF4655]"
@@ -792,7 +792,7 @@ const MatchesPage = () => {
                         >
                           {getResultLabel(match.result)}
                         </p>
-                        <p className="mt-2 text-[30px] font-semibold leading-none tracking-[0.03em] text-white sm:text-[32px]">
+                        <p className="mt-0.5 text-[20px] font-semibold leading-none tracking-[0.03em] text-white sm:mt-1 sm:text-[24px] lg:mt-2 lg:text-[32px]">
                           <span
                             className={
                               match.result === "Win" ? "text-[#42EEC7]" : ""
@@ -880,11 +880,11 @@ const MatchesPage = () => {
                         </ScrollArea>
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="mt-1 flex items-center gap-2 text-xl font-semibold text-white uppercase">
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-lg font-semibold text-white uppercase sm:text-xl">
                             Round {selectedRound.roundNumber}
                             <span className="px-1 font-normal">|</span>
                             <span
-                              className={`inline-flex items-center gap-2 font-semibold ${
+                              className={`inline-flex min-w-0 flex-wrap items-center gap-1 sm:gap-2 font-semibold ${
                                 currentPlayerTeamId
                                   ? selectedRound.winningTeam ===
                                     currentPlayerTeamId
@@ -903,18 +903,20 @@ const MatchesPage = () => {
                                 alt={`${selectedRound.roundResultCode} icon`}
                                 width={24}
                                 height={24}
-                                className="h-6 w-6"
+                                className="h-4 w-4 shrink-0 sm:h-6 sm:w-6"
                               />
-                              (
-                              {getRoundOutcomeText(
-                                selectedRound.roundResultCode,
-                                selectedRound.winningTeam,
-                                currentPlayerTeamId,
-                              )}
-                              )
+                              <span className="text-base leading-tight sm:text-xl">
+                                (
+                                {getRoundOutcomeText(
+                                  selectedRound.roundResultCode,
+                                  selectedRound.winningTeam,
+                                  currentPlayerTeamId,
+                                )}
+                                )
+                              </span>
                               {selectedRound.roundNumber ===
                                 currentPlayerBestRoundNumber && (
-                                <span className="text-amber-100">
+                                <span className="block w-full text-base leading-tight text-amber-100 sm:inline sm:w-auto sm:text-xl">
                                   (Your Best Round)
                                 </span>
                               )}
@@ -924,159 +926,166 @@ const MatchesPage = () => {
                         </div>
 
                         <div className="grid gap-3 md:grid-cols-[1fr_280px]">
-                          <div className="min-w-[720px]">
-                            <div>
-                              <div className="grid grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px] items-center text-[12px] mb-2 font-semibold uppercase tracking-[0.1em] text-white/55">
-                                <span className="text-center">Player</span>
-                                <span aria-hidden="true" />
-                                <span className="text-center">Score</span>
-                                <span className="text-center">K</span>
-                                <span className="text-center">D</span>
-                                <span className="text-center">A</span>
-                                <span className="text-center">Econ</span>
-                              </div>
+                          <div className="min-w-0">
+                            <ScrollArea className="w-full">
+                              <div className="min-w-[640px] pr-2 sm:min-w-[720px]">
+                                <div className="mb-2 grid grid-cols-[48px_minmax(140px,1fr)_64px_44px_44px_44px_100px] items-center text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55 sm:grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px] sm:text-[12px]">
+                                  <span className="text-center">Player</span>
+                                  <span aria-hidden="true" />
+                                  <span className="text-center">Score</span>
+                                  <span className="text-center">K</span>
+                                  <span className="text-center">D</span>
+                                  <span className="text-center">A</span>
+                                  <span className="text-center">Econ</span>
+                                </div>
 
-                              {selectedRound.playerStats.flatMap(
-                                (stats, index, allStats) => {
-                                  const player = getPlayerSummary(stats.puuid);
-                                  const isCurrentPlayer =
-                                    stats.puuid === currentPlayerPuuid;
-                                  const isBlueTeam = player?.teamId === "Blue";
+                                {selectedRound.playerStats.flatMap(
+                                  (stats, index, allStats) => {
+                                    const player = getPlayerSummary(
+                                      stats.puuid,
+                                    );
+                                    const isCurrentPlayer =
+                                      stats.puuid === currentPlayerPuuid;
+                                    const isBlueTeam =
+                                      player?.teamId === "Blue";
 
-                                  const rowAccent = isCurrentPlayer
-                                    ? "bg-[#facc15]"
-                                    : isBlueTeam
-                                      ? "bg-[#42EEC7]"
-                                      : "bg-[#FF4655]";
+                                    const rowAccent = isCurrentPlayer
+                                      ? "bg-[#facc15]"
+                                      : isBlueTeam
+                                        ? "bg-[#42EEC7]"
+                                        : "bg-[#FF4655]";
 
-                                  const iconShade = isCurrentPlayer
-                                    ? "bg-[#6a5817]"
-                                    : isBlueTeam
-                                      ? "bg-[#19ac92]"
-                                      : "bg-[#c65063]";
+                                    const iconShade = isCurrentPlayer
+                                      ? "bg-[#6a5817]"
+                                      : isBlueTeam
+                                        ? "bg-[#19ac92]"
+                                        : "bg-[#c65063]";
 
-                                  const identityShade = isCurrentPlayer
-                                    ? "bg-[#998c6180]"
-                                    : isBlueTeam
-                                      ? "bg-[#19ac9280]"
-                                      : "bg-[#c6506380]";
+                                    const identityShade = isCurrentPlayer
+                                      ? "bg-[#998c6180]"
+                                      : isBlueTeam
+                                        ? "bg-[#19ac9280]"
+                                        : "bg-[#c6506380]";
 
-                                  const scoreShade = isCurrentPlayer
-                                    ? "bg-[#665d4080]"
-                                    : isBlueTeam
-                                      ? "bg-[#21999980]"
-                                      : "bg-[#a0415080]";
+                                    const scoreShade = isCurrentPlayer
+                                      ? "bg-[#665d4080]"
+                                      : isBlueTeam
+                                        ? "bg-[#21999980]"
+                                        : "bg-[#a0415080]";
 
-                                  const statsShade = isCurrentPlayer
-                                    ? "bg-[#584f3680]"
-                                    : isBlueTeam
-                                      ? "bg-[#19767480]"
-                                      : "bg-[#3f2d3f80]";
+                                    const statsShade = isCurrentPlayer
+                                      ? "bg-[#584f3680]"
+                                      : isBlueTeam
+                                        ? "bg-[#19767480]"
+                                        : "bg-[#3f2d3f80]";
 
-                                  const nextStats = allStats[index + 1];
-                                  const nextTeamId = nextStats
-                                    ? getPlayerSummary(nextStats.puuid)?.teamId
-                                    : undefined;
-                                  const shouldInsertTeamGap =
-                                    player?.teamId === "Blue" &&
-                                    nextTeamId === "Red";
+                                    const nextStats = allStats[index + 1];
+                                    const nextTeamId = nextStats
+                                      ? getPlayerSummary(nextStats.puuid)
+                                          ?.teamId
+                                      : undefined;
+                                    const shouldInsertTeamGap =
+                                      player?.teamId === "Blue" &&
+                                      nextTeamId === "Red";
 
-                                  const row = (
-                                    <article
-                                      key={stats.puuid}
-                                      className="relative isolate overflow-hidden border border-slate-800/80 mb-1"
-                                    >
-                                      <div
-                                        className={`absolute inset-y-0 left-0 w-1.5 ${rowAccent}`}
-                                      />
+                                    const row = (
+                                      <article
+                                        key={stats.puuid}
+                                        className="relative isolate overflow-hidden border border-slate-800/80 mb-1"
+                                      >
+                                        <div
+                                          className={`absolute inset-y-0 left-0 w-1.5 ${rowAccent}`}
+                                        />
 
-                                      <div className="relative z-30 pl-2">
-                                        <div className="grid grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px] items-stretch">
-                                          <div
-                                            className={`relative overflow-hidden ${iconShade}`}
-                                          >
-                                            <div className="relative h-full min-h-14 w-full">
-                                              <Image
-                                                src={getAgentImageSrc(
-                                                  player?.characterId ??
-                                                    "astra",
-                                                )}
-                                                alt={
-                                                  player?.characterName ??
-                                                  "Agent"
-                                                }
-                                                fill
-                                                sizes="56px"
-                                                className="object-fill"
-                                              />
+                                        <div className="relative z-30 pl-2">
+                                          <div className="grid grid-cols-[48px_minmax(140px,1fr)_64px_44px_44px_44px_100px] items-stretch sm:grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px]">
+                                            <div
+                                              className={`relative overflow-hidden ${iconShade}`}
+                                            >
+                                              <div className="relative h-full min-h-12 w-full sm:min-h-14">
+                                                <Image
+                                                  src={getAgentImageSrc(
+                                                    player?.characterId ??
+                                                      "astra",
+                                                  )}
+                                                  alt={
+                                                    player?.characterName ??
+                                                    "Agent"
+                                                  }
+                                                  fill
+                                                  sizes="56px"
+                                                  className="object-fill"
+                                                />
+                                              </div>
                                             </div>
-                                          </div>
 
-                                          <div
-                                            className={`min-w-0 px-3 py-2.5 ${identityShade}`}
-                                          >
-                                            <div className="min-w-0">
-                                              <p className="truncate text-lg font-semibold leading-none text-white">
-                                                {player?.gameName ?? "Player"}
+                                            <div
+                                              className={`min-w-0 px-2 py-2 sm:px-3 sm:py-2.5 ${identityShade}`}
+                                            >
+                                              <div className="min-w-0">
+                                                <p className="truncate text-base font-semibold leading-none text-white sm:text-lg">
+                                                  {player?.gameName ?? "Player"}
+                                                </p>
+                                                <p className="mt-1 truncate text-xs font-semibold leading-none text-white/55 sm:text-sm">
+                                                  {player?.characterName ??
+                                                    "Unknown Agent"}
+                                                </p>
+                                              </div>
+                                            </div>
+
+                                            <p
+                                              className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${scoreShade}`}
+                                            >
+                                              {stats.score}
+                                            </p>
+
+                                            <p
+                                              className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${statsShade}`}
+                                            >
+                                              {stats.kills}
+                                            </p>
+                                            <p
+                                              className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${statsShade}`}
+                                            >
+                                              {stats.deaths}
+                                            </p>
+                                            <p
+                                              className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${statsShade}`}
+                                            >
+                                              {stats.assists}
+                                            </p>
+                                            <div
+                                              className={`flex flex-col items-center justify-center text-center leading-tight ${statsShade}`}
+                                            >
+                                              <p className="text-base font-semibold text-white sm:text-lg">
+                                                {stats.economy.loadoutValue}
                                               </p>
-                                              <p className="mt-1 truncate text-sm font-semibold leading-none text-white/55">
-                                                {player?.characterName ??
-                                                  "Unknown Agent"}
+                                              <p className="text-base font-semibold text-white/55 sm:text-lg">
+                                                {stats.economy.remaining}
                                               </p>
                                             </div>
-                                          </div>
-
-                                          <p
-                                            className={`flex items-center justify-center text-center text-l font-semibold text-white ${scoreShade}`}
-                                          >
-                                            {stats.score}
-                                          </p>
-
-                                          <p
-                                            className={`flex items-center justify-center text-center text-l font-semibold text-white ${statsShade}`}
-                                          >
-                                            {stats.kills}
-                                          </p>
-                                          <p
-                                            className={`flex items-center justify-center text-center text-l font-semibold text-white ${statsShade}`}
-                                          >
-                                            {stats.deaths}
-                                          </p>
-                                          <p
-                                            className={`flex items-center justify-center text-center text-l font-semibold text-white ${statsShade}`}
-                                          >
-                                            {stats.assists}
-                                          </p>
-                                          <div
-                                            className={`flex flex-col items-center justify-center text-center leading-tight ${statsShade}`}
-                                          >
-                                            <p className="text-l font-semibold text-white">
-                                              {stats.economy.loadoutValue}
-                                            </p>
-                                            <p className="text-l font-semibold text-white/55">
-                                              {stats.economy.remaining}
-                                            </p>
                                           </div>
                                         </div>
-                                      </div>
-                                    </article>
-                                  );
+                                      </article>
+                                    );
 
-                                  if (!shouldInsertTeamGap) {
-                                    return [row];
-                                  }
+                                    if (!shouldInsertTeamGap) {
+                                      return [row];
+                                    }
 
-                                  return [
-                                    row,
-                                    <div
-                                      key={`team-gap-${stats.puuid}`}
-                                      className="h-1.5"
-                                      aria-hidden="true"
-                                    />,
-                                  ];
-                                },
-                              )}
-                            </div>
+                                    return [
+                                      row,
+                                      <div
+                                        key={`team-gap-${stats.puuid}`}
+                                        className="h-1.5"
+                                        aria-hidden="true"
+                                      />,
+                                    ];
+                                  },
+                                )}
+                              </div>
+                              <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
                           </div>
 
                           <div>
