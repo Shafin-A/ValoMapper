@@ -75,16 +75,15 @@ type MatchPreview struct {
 }
 
 type MatchSummaryResponse struct {
-	SchemaVersion string               `json:"schemaVersion"`
-	MatchID       string               `json:"matchId"`
-	MapID         string               `json:"mapId"`
-	MapName       string               `json:"mapName"`
-	QueueLabel    string               `json:"queueLabel"`
-	GameStartAt   string               `json:"gameStartAt"`
-	Viewer        ViewerContext        `json:"viewer"`
-	TotalRounds   int                  `json:"totalRounds"`
-	Players       []MatchPlayerSummary `json:"players"`
-	Rounds        []RoundSummaryLite   `json:"rounds"`
+	MatchID     string               `json:"matchId"`
+	MapID       string               `json:"mapId"`
+	MapName     string               `json:"mapName"`
+	QueueLabel  string               `json:"queueLabel"`
+	GameStartAt string               `json:"gameStartAt"`
+	Viewer      ViewerContext        `json:"viewer"`
+	TotalRounds int                  `json:"totalRounds"`
+	Players     []MatchPlayerSummary `json:"players"`
+	Rounds      []RoundSummaryLite   `json:"rounds"`
 }
 
 type ViewerContext struct {
@@ -592,12 +591,11 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 	bestRound := s.findBestRound(match, viewerPUUID)
 
 	summary := &MatchSummaryResponse{
-		SchemaVersion: "matches-summary.v1",
-		MatchID:       strings.TrimSpace(match.MatchInfo.MatchID),
-		MapID:         strings.TrimSpace(match.MatchInfo.MapID),
-		MapName:       toMapName(strings.TrimSpace(match.MatchInfo.MapID)),
-		QueueLabel:    normalizeQueueLabel(match.MatchInfo.QueueID, match.MatchInfo.GameMode),
-		GameStartAt:   time.UnixMilli(match.MatchInfo.GameStartMillis).UTC().Format(time.RFC3339),
+		MatchID:     strings.TrimSpace(match.MatchInfo.MatchID),
+		MapID:       strings.TrimSpace(match.MatchInfo.MapID),
+		MapName:     toMapName(strings.TrimSpace(match.MatchInfo.MapID)),
+		QueueLabel:  normalizeQueueLabel(match.MatchInfo.QueueID, match.MatchInfo.GameMode),
+		GameStartAt: time.UnixMilli(match.MatchInfo.GameStartMillis).UTC().Format(time.RFC3339),
 		Viewer: ViewerContext{
 			PUUID:           viewerPUUID,
 			BestRoundNumber: bestRound,

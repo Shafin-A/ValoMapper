@@ -468,7 +468,6 @@ export type MatchPlayerSummary = {
 };
 
 export type MatchSummaryResponse = {
-  schemaVersion: string;
   matchId: string;
   mapId: string;
   mapName: string;
