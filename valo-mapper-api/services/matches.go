@@ -204,7 +204,7 @@ type riotDetailedMatchDTO struct {
 	MatchInfo riotMatchInfoDTO `json:"matchInfo"`
 	Players   []riotPlayerDTO  `json:"players"`
 	Teams     []riotTeamDTO    `json:"teams"`
-	Rounds    []riotRoundDTO   `json:"rounds"`
+	Rounds    []riotRoundDTO   `json:"roundResults"`
 }
 
 type riotRoundDTO struct {
@@ -220,13 +220,10 @@ type riotRoundDTO struct {
 }
 
 type riotRoundPlayerStats struct {
-	PUUID         string           `json:"puuid"`
-	Kills         int              `json:"kills"`
-	Deaths        int              `json:"deaths"`
-	Assists       int              `json:"assists"`
-	PlayersKilled []riotKillEvent  `json:"playersKilled"`
-	EconomyState  riotEconomyState `json:"economy"`
-	Score         int              `json:"score"`
+	PUUID        string           `json:"puuid"`
+	Kills        []riotKillEvent  `json:"kills"`
+	EconomyState riotEconomyState `json:"economy"`
+	Score        int              `json:"score"`
 }
 
 type riotKillEvent struct {
@@ -250,6 +247,12 @@ type riotEconomyState struct {
 	LoadoutValue int `json:"loadoutValue"`
 	Remaining    int `json:"remaining"`
 	Spent        int `json:"spent"`
+}
+
+type roundCombatCounts struct {
+	Kills   int
+	Deaths  int
+	Assists int
 }
 
 func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.User, limit int) ([]MatchPreview, error) {
@@ -616,7 +619,7 @@ func (s *MatchService) findBestRound(match riotDetailedMatchDTO, viewerPUUID str
 			if stats.PUUID == viewerPUUID {
 				if stats.Score > bestScore {
 					bestScore = stats.Score
-					bestRound = round.RoundNum
+					bestRound = round.RoundNum + 1
 				}
 				break
 			}
@@ -654,7 +657,7 @@ func (s *MatchService) buildRoundSummaries(match riotDetailedMatchDTO) []RoundSu
 		}
 
 		roundSummary := RoundSummaryLite{
-			RoundNumber:     round.RoundNum,
+			RoundNumber:     round.RoundNum + 1,
 			WinningTeam:     round.WinningTeam,
 			RoundResultCode: normalizeRoundResult(round.RoundResult, round.RoundCeremony),
 			ScoreAfterRound: ScoreAfterRound{
@@ -673,18 +676,20 @@ func (s *MatchService) buildRoundSummaries(match riotDetailedMatchDTO) []RoundSu
 
 func (s *MatchService) buildPlayerStats(round riotRoundDTO, allPlayers []riotPlayerDTO) []RoundPlayerStatsLite {
 	stats := make([]RoundPlayerStatsLite, 0, len(round.PlayersStats))
+	combatCounts := buildRoundCombatCounts(round)
 
 	// Sort: Blue team first, then Red team
 	blueStats := make([]RoundPlayerStatsLite, 0)
 	redStats := make([]RoundPlayerStatsLite, 0)
 
 	for _, ps := range round.PlayersStats {
+		counts := combatCounts[ps.PUUID]
 		stat := RoundPlayerStatsLite{
 			PUUID:   ps.PUUID,
 			Score:   ps.Score,
-			Kills:   ps.Kills,
-			Deaths:  ps.Deaths,
-			Assists: ps.Assists,
+			Kills:   counts.Kills,
+			Deaths:  counts.Deaths,
+			Assists: counts.Assists,
 			Economy: EconomyInfo{
 				LoadoutValue: ps.EconomyState.LoadoutValue,
 				Remaining:    ps.EconomyState.Remaining,
@@ -715,7 +720,7 @@ func (s *MatchService) buildEventLog(round riotRoundDTO) []RoundEventLogEntry {
 
 	// Process kill events
 	for _, ps := range round.PlayersStats {
-		for _, kill := range ps.PlayersKilled {
+		for _, kill := range ps.Kills {
 			var weaponID string
 			if kill.FinishingDamage.DamageItem != "" {
 				weaponID = kill.FinishingDamage.DamageItem
@@ -756,6 +761,30 @@ func (s *MatchService) buildEventLog(round riotRoundDTO) []RoundEventLogEntry {
 	return events
 }
 
+func buildRoundCombatCounts(round riotRoundDTO) map[string]roundCombatCounts {
+	counts := make(map[string]roundCombatCounts, len(round.PlayersStats))
+
+	for _, ps := range round.PlayersStats {
+		entry := counts[ps.PUUID]
+		entry.Kills = len(ps.Kills)
+		counts[ps.PUUID] = entry
+
+		for _, kill := range ps.Kills {
+			victimEntry := counts[kill.Victim]
+			victimEntry.Deaths++
+			counts[kill.Victim] = victimEntry
+
+			for _, assistant := range kill.Assistants {
+				assistantEntry := counts[assistant]
+				assistantEntry.Assists++
+				counts[assistant] = assistantEntry
+			}
+		}
+	}
+
+	return counts
+}
+
 func normalizeRoundResult(roundResult, roundCeremony string) string {
 	result := strings.TrimSpace(roundResult)
 	ceremony := strings.ToLower(strings.TrimSpace(roundCeremony))
@@ -763,7 +792,7 @@ func normalizeRoundResult(roundResult, roundCeremony string) string {
 	if strings.EqualFold(result, "Bomb detonated") || ceremony == "detonate" {
 		return "Detonate"
 	}
-	if strings.EqualFold(result, "Defused") || ceremony == "defuse" {
+	if strings.EqualFold(result, "Defused") || strings.EqualFold(result, "Bomb defused") || ceremony == "defuse" {
 		return "Defuse"
 	}
 	if strings.EqualFold(result, "Eliminated") || ceremony == "elimination" {
