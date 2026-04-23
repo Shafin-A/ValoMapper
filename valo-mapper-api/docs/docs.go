@@ -2995,6 +2995,12 @@ const docTemplate = `{
         "services.RoundEventLogEntry": {
             "type": "object",
             "properties": {
+                "damageItem": {
+                    "type": "string"
+                },
+                "damageType": {
+                    "type": "string"
+                },
                 "defuserPuuid": {
                     "type": "string"
                 },
@@ -3011,9 +3017,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "victimPuuid": {
-                    "type": "string"
-                },
-                "weaponId": {
                     "type": "string"
                 }
             }

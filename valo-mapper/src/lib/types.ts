@@ -101,6 +101,7 @@ export type AbilityIconItem = {
   src: string;
   name: string;
   action: AbilityAction;
+  slot: string;
 };
 
 export type AbilityAlternate = {
@@ -108,6 +109,7 @@ export type AbilityAlternate = {
   src: string;
   name: string;
   action: AbilityAction;
+  slot: string;
 };
 
 export type AbilityIconDefinition = AbilityIconItem & {
@@ -433,7 +435,15 @@ export type RoundEventLogEntry =
       timeSinceRoundStartMillis: number;
       killerPuuid: string;
       victimPuuid: string;
-      weaponId: string;
+      damageType?:
+        | "Weapon"
+        | "Bomb"
+        | "Ability"
+        | "Fall"
+        | "Melee"
+        | "Invalid"
+        | "";
+      damageItem?: string;
     }
   | {
       eventType: "spike_planted";

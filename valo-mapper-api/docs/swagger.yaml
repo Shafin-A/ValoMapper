@@ -687,6 +687,10 @@ definitions:
     type: object
   services.RoundEventLogEntry:
     properties:
+      damageItem:
+        type: string
+      damageType:
+        type: string
       defuserPuuid:
         type: string
       eventType:
@@ -698,8 +702,6 @@ definitions:
       timeSinceRoundStartMillis:
         type: integer
       victimPuuid:
-        type: string
-      weaponId:
         type: string
     type: object
   services.RoundPlayerStatsLite:

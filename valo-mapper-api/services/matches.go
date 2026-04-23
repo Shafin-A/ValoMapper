@@ -133,7 +133,8 @@ type RoundEventLogEntry struct {
 	TimeSinceRoundStartMillis int     `json:"timeSinceRoundStartMillis"`
 	KillerPuuid               *string `json:"killerPuuid,omitempty"`
 	VictimPuuid               *string `json:"victimPuuid,omitempty"`
-	WeaponID                  *string `json:"weaponId,omitempty"`
+	DamageType                *string `json:"damageType,omitempty"`
+	DamageItem                *string `json:"damageItem,omitempty"`
 	PlanterPuuid              *string `json:"planterPuuid,omitempty"`
 	DefuserPuuid              *string `json:"defuserPuuid,omitempty"`
 }
@@ -719,17 +720,16 @@ func (s *MatchService) buildEventLog(round riotRoundDTO) []RoundEventLogEntry {
 	// Process kill events
 	for _, ps := range round.PlayersStats {
 		for _, kill := range ps.Kills {
-			var weaponID string
-			if kill.FinishingDamage.DamageItem != "" {
-				weaponID = kill.FinishingDamage.DamageItem
-			}
+			damageType := strings.TrimSpace(kill.FinishingDamage.DamageType)
+			damageItem := strings.TrimSpace(kill.FinishingDamage.DamageItem)
 
 			event := RoundEventLogEntry{
 				EventType:                 "kill",
 				TimeSinceRoundStartMillis: kill.TimeSinceRoundStartMillis,
 				KillerPuuid:               ptrStr(kill.Killer),
 				VictimPuuid:               ptrStr(kill.Victim),
-				WeaponID:                  ptrStr(weaponID),
+				DamageType:                ptrStrOrNil(damageType),
+				DamageItem:                ptrStrOrNil(damageItem),
 			}
 			events = append(events, event)
 		}
@@ -817,5 +817,13 @@ func sortEventsByTime(events []RoundEventLogEntry) {
 }
 
 func ptrStr(s string) *string {
+	return &s
+}
+
+func ptrStrOrNil(s string) *string {
+	if s == "" {
+		return nil
+	}
+
 	return &s
 }

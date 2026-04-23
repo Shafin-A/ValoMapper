@@ -119,6 +119,12 @@ func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 	if round.EventLog[0].EventType != "kill" || round.EventLog[1].EventType != "spike_planted" || round.EventLog[2].EventType != "spike_defused" {
 		t.Fatalf("unexpected event ordering: %+v", round.EventLog)
 	}
+	if round.EventLog[0].DamageType == nil || *round.EventLog[0].DamageType != "Weapon" {
+		t.Fatalf("expected kill event damageType Weapon, got %+v", round.EventLog[0].DamageType)
+	}
+	if round.EventLog[0].DamageItem == nil || *round.EventLog[0].DamageItem != "weapon-1" {
+		t.Fatalf("expected kill event damageItem weapon-1, got %+v", round.EventLog[0].DamageItem)
+	}
 }
 
 func TestToMapName_HardcodedMapUrlMappings(t *testing.T) {

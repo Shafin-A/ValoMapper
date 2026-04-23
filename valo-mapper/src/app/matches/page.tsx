@@ -7,6 +7,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useMatches } from "@/hooks/api/use-matches";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { AGENT_ICON_CONFIGS } from "@/lib/consts";
 import { MatchPreview, MatchSummaryResponse } from "@/lib/types";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import Image from "next/image";
@@ -45,8 +46,107 @@ const getPlayerAgentIconSrc = (
   return getAgentImageSrc(player?.characterName || "Astra");
 };
 
-const getWeaponKillstreamImageSrc = (weaponId: string) => {
-  return `/weapons/${weaponId.trim().toUpperCase()}_killstream.png`;
+const getWeaponKillstreamImageSrc = (damageItem: string) => {
+  return `/weapons/${damageItem.trim().toUpperCase()}_killstream.png`;
+};
+
+const ABILITY_DAMAGE_SLOT_MAP = {
+  Ultimate: "Ultimate",
+  Ability1: "Ability1",
+  Ability2: "Ability2",
+  GrenadeAbility: "Grenade",
+} as const;
+
+type KillEventImage = {
+  src: string;
+  alt: string;
+  className: string;
+};
+
+const getAbilityKillIconSrc = (
+  players: MatchSummaryResponse["players"],
+  killerPuuid: string,
+  damageItem?: string,
+) => {
+  if (!damageItem) {
+    return undefined;
+  }
+
+  const slot =
+    ABILITY_DAMAGE_SLOT_MAP[damageItem as keyof typeof ABILITY_DAMAGE_SLOT_MAP];
+  if (!slot) {
+    return undefined;
+  }
+
+  const killer = getPlayerSummary(players, killerPuuid);
+  if (!killer?.characterName) {
+    return undefined;
+  }
+
+  return AGENT_ICON_CONFIGS[killer.characterName]?.find(
+    (ability) => ability.slot === slot,
+  )?.src;
+};
+
+const getKillEventImage = (
+  event: Extract<
+    MatchSummaryResponse["rounds"][number]["eventLog"][number],
+    { eventType: "kill" }
+  >,
+  players: MatchSummaryResponse["players"],
+): KillEventImage => {
+  switch (event.damageType) {
+    case "Bomb":
+      return {
+        src: "/tools/spike.webp",
+        alt: "Spike",
+        className: "object-contain object-center scale-[0.8]",
+      };
+    case "Fall":
+      return {
+        src: "/weapons/fall_death.png",
+        alt: "Fall damage",
+        className: "object-contain object-center scale-[0.95]",
+      };
+    case "Ability": {
+      const abilityIconSrc = getAbilityKillIconSrc(
+        players,
+        event.killerPuuid,
+        event.damageItem,
+      );
+
+      if (abilityIconSrc) {
+        return {
+          src: abilityIconSrc,
+          alt: "Ability",
+          className: "object-contain object-center scale-[0.9]",
+        };
+      }
+
+      return {
+        src: getPlayerAgentIconSrc(players, event.killerPuuid),
+        alt: "Ability",
+        className: "object-contain object-center scale-[0.95]",
+      };
+    }
+  }
+
+  if (
+    (event.damageType === "Weapon" || event.damageType === "Melee") &&
+    event.damageItem?.trim()
+  ) {
+    return {
+      src: getWeaponKillstreamImageSrc(event.damageItem),
+      alt: event.damageType === "Melee" ? "Melee" : "Weapon",
+      className: "object-contain object-right scale-x-[-1]",
+    };
+  }
+
+  return {
+    src: getPlayerAgentIconSrc(players, event.killerPuuid),
+    alt: "Kill source",
+    className: "object-contain object-center scale-[0.95]",
+  };
 };
 
 const formatTimeSinceRoundStart = (timeSinceRoundStartMillis: number) => {
@@ -83,6 +183,8 @@ const renderRoundEventRow = (
     actorTeamId === "Blue" ? "bg-[#19767480]" : "bg-[#3f2d3f80]";
 
   if (event.eventType === "kill") {
+    const killEventImage = getKillEventImage(event, players);
+
     return (
       <li
         key={index}
@@ -114,11 +216,11 @@ const renderRoundEventRow = (
             >
               <div className="relative h-4 w-full ml-3">
                 <Image
-                  src={getWeaponKillstreamImageSrc(event.weaponId)}
-                  alt="Weapon"
+                  src={killEventImage.src}
+                  alt={killEventImage.alt}
                   fill
                   sizes="120px"
-                  className="object-contain object-right scale-x-[-1]"
+                  className={killEventImage.className}
                 />
               </div>
             </div>

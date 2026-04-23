@@ -2991,6 +2991,12 @@
         "services.RoundEventLogEntry": {
             "type": "object",
             "properties": {
+                "damageItem": {
+                    "type": "string"
+                },
+                "damageType": {
+                    "type": "string"
+                },
                 "defuserPuuid": {
                     "type": "string"
                 },
@@ -3007,9 +3013,6 @@
                     "type": "integer"
                 },
                 "victimPuuid": {
-                    "type": "string"
-                },
-                "weaponId": {
                     "type": "string"
                 }
             }
