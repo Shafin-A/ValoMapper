@@ -20,10 +20,14 @@
  *   });
  * });
  *
- * // Dynamic route:
+ * // Dynamic route (Next.js context style):
  * export const DELETE = withAuthRequired(
- *   async (request, { params }, authHeader) => {
- *     const { strategyId } = await params;
+ *   async (
+ *     request: NextRequest,
+ *     context: { params: Promise<{ strategyId: string }> },
+ *     authHeader: string
+ *   ) => {
+ *     const { strategyId } = await context.params;
  *     return proxyToBackend(`/strategies/${strategyId}`, {
  *       method: "DELETE",
  *       token: authHeader,
@@ -31,16 +35,20 @@
  *   }
  * );
  */
+
 type StaticAuthHandler = (
   request: Request,
   authHeader: string,
 ) => Promise<Response> | Response;
 
-type DynamicAuthHandler<T> = (
+type DynamicAuthHandler<
+  T extends Record<string, string> = Record<string, string>,
+> = (
   request: Request,
-  param: T,
+  context: { params: Promise<T> },
   authHeader: string,
 ) => Promise<Response> | Response;
+
 const isInvalidTokenValue = (token: string): boolean => {
   const lowered = token.toLowerCase();
   return (
@@ -76,34 +84,46 @@ const normalizeAuthHeader = (authHeader: string | null): string | null => {
   return `Bearer ${trimmed}`;
 };
 
+// Overload for static routes
 export function withAuthRequired(
   handler: StaticAuthHandler,
 ): (request: Request) => Promise<Response>;
 
-export function withAuthRequired<T>(
+// Overload for dynamic routes with Next.js context
+export function withAuthRequired<T extends Record<string, string>>(
   handler: DynamicAuthHandler<T>,
-): (request: Request, param: T) => Promise<Response>;
+): (request: Request, context: { params: Promise<T> }) => Promise<Response>;
 
-export function withAuthRequired<T>(
-  handler: StaticAuthHandler | DynamicAuthHandler<T>,
-) {
+// Implementation
+export function withAuthRequired<
+  T extends Record<string, string> = Record<string, string>,
+>(handler: StaticAuthHandler | DynamicAuthHandler<T>) {
   const expectsDynamicParam = handler.length >= 3;
 
-  return async (request: Request, param?: T): Promise<Response> => {
+  if (expectsDynamicParam) {
+    return async (
+      request: Request,
+      context: { params: Promise<T> },
+    ): Promise<Response> => {
+      const authHeader = normalizeAuthHeader(
+        request.headers.get("Authorization"),
+      );
+
+      if (!authHeader) {
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      return (handler as DynamicAuthHandler<T>)(request, context, authHeader);
+    };
+  }
+
+  return async (request: Request): Promise<Response> => {
     const authHeader = normalizeAuthHeader(
       request.headers.get("Authorization"),
     );
 
     if (!authHeader) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (expectsDynamicParam) {
-      return (handler as DynamicAuthHandler<T>)(
-        request,
-        param as T,
-        authHeader,
-      );
     }
 
     return (handler as StaticAuthHandler)(request, authHeader);

@@ -4,10 +4,10 @@ import { proxyToBackend } from "@/lib/api-proxy";
 export const GET = withAuthRequired(
   async (
     request: Request,
-    params: { matchId?: string },
+    { params }: { params: Promise<{ matchId: string }> },
     authHeader: string,
   ) => {
-    const matchId = params?.matchId;
+    const { matchId } = await params;
     if (!matchId) {
       return Response.json({ error: "matchId is required" }, { status: 400 });
     }
