@@ -528,7 +528,7 @@ const MatchesPage = () => {
                     matchSummary && (
                       <section className="rounded-b-xl border border-slate-700 bg-slate-950/90 px-4 py-4 sm:px-5">
                         <div className="space-y-4">
-                          <ScrollArea className="w-full pb-1">
+                          <ScrollArea className="w-full pb-3">
                             <div className="inline-flex min-w-full gap-2">
                               {matchSummary.rounds.map(
                                 (
@@ -595,7 +595,10 @@ const MatchesPage = () => {
                                 },
                               )}
                             </div>
-                            <ScrollBar orientation="horizontal" />
+                            <ScrollBar
+                              orientation="horizontal"
+                              className="mt-2"
+                            />
                           </ScrollArea>
 
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -815,11 +818,11 @@ const MatchesPage = () => {
                               </ScrollArea>
                             </div>
 
-                            <div>
+                            <div className="md:h-[652px]">
                               <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/55">
                                 Event Log
                               </p>
-                              <ScrollArea className="h-[360px] w-full">
+                              <ScrollArea className="h-[360px] w-full md:h-[620px]">
                                 <ol className="space-y-1 pr-2">
                                   {selectedRound.eventLog.map(
                                     (
