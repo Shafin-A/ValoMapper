@@ -434,7 +434,6 @@ export type RoundEventLogEntry =
       killerPuuid: string;
       victimPuuid: string;
       weaponId: string;
-      assistantPuuids: string[];
     }
   | {
       eventType: "spike_planted";

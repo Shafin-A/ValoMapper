@@ -170,7 +170,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-2",
           victimPuuid: "player-4",
           weaponId: "vandal",
-          assistantPuuids: ["player-1"],
         },
         {
           eventType: "spike_planted",
@@ -230,7 +229,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-3",
           victimPuuid: "player-1",
           weaponId: "phantom",
-          assistantPuuids: [],
         },
         {
           eventType: "kill",
@@ -238,7 +236,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-4",
           victimPuuid: "player-2",
           weaponId: "sheriff",
-          assistantPuuids: ["player-3"],
         },
       ],
     },
@@ -293,7 +290,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-1",
           victimPuuid: "player-4",
           weaponId: "operator",
-          assistantPuuids: [],
         },
         {
           eventType: "spike_defused",
@@ -348,7 +344,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-2",
           victimPuuid: "player-3",
           weaponId: "spectre",
-          assistantPuuids: [],
         },
         {
           eventType: "kill",
@@ -356,7 +351,6 @@ const mockMatchSummary: MatchSummaryResponse = {
           killerPuuid: "player-1",
           victimPuuid: "player-4",
           weaponId: "C4883E50-4494-202C-3EC3-6B8A9284F00B",
-          assistantPuuids: ["player-2"],
         },
         {
           eventType: "spike_defused",
