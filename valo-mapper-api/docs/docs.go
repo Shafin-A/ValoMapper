@@ -2117,9 +2117,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/services.RoundSummaryLite"
                     }
                 },
-                "schemaVersion": {
-                    "type": "string"
-                },
                 "totalRounds": {
                     "type": "integer"
                 },

@@ -115,8 +115,6 @@ definitions:
         items:
           $ref: '#/definitions/services.RoundSummaryLite'
         type: array
-      schemaVersion:
-        type: string
       totalRounds:
         type: integer
       viewer:
