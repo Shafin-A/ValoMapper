@@ -8,6 +8,8 @@ import (
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
+
+	"github.com/gorilla/mux"
 )
 
 const defaultMatchLimit = 10
@@ -119,7 +121,7 @@ func (h *MatchHandler) GetMatchSummary(w http.ResponseWriter, r *http.Request, f
 		return
 	}
 
-	matchID := r.PathValue("matchId")
+	matchID := mux.Vars(r)["matchId"]
 	if matchID == "" {
 		utils.SendJSONError(w, utils.NewBadRequest("matchId is required"), requestID)
 		return
