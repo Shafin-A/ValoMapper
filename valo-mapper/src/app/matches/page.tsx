@@ -11,60 +11,10 @@ import { MatchPreview, MatchSummaryResponse } from "@/lib/types";
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useMatchSummary } from "@/hooks/api/use-match-summary";
 
-const mockMatches: MatchPreview[] = [
-  {
-    matchId: "mock-1",
-    mapId: "pearl",
-    mapName: "Pearl",
-    result: "Win",
-    queueLabel: "Competitive",
-    teamScore: 13,
-    enemyScore: 8,
-    kills: 17,
-    deaths: 4,
-    assists: 5,
-    personalScore: 5731,
-    agentId: "jett",
-    agentName: "Jett",
-    playedAt: Date.now() - 1000 * 60 * 45,
-  },
-  {
-    matchId: "mock-2",
-    mapId: "split",
-    mapName: "Split",
-    result: "Loss",
-    queueLabel: "Unrated",
-    teamScore: 7,
-    enemyScore: 13,
-    kills: 12,
-    deaths: 10,
-    assists: 6,
-    personalScore: 2388,
-    agentId: "breach",
-    agentName: "Breach",
-    playedAt: Date.now() - 1000 * 60 * 120,
-  },
-  {
-    matchId: "mock-3",
-    mapId: "haven",
-    mapName: "Haven",
-    result: "Win",
-    queueLabel: "Competitive",
-    teamScore: 13,
-    enemyScore: 11,
-    kills: 21,
-    deaths: 8,
-    assists: 8,
-    personalScore: 6419,
-    agentId: "jett",
-    agentName: "Jett",
-    playedAt: Date.now() - 1000 * 60 * 300,
-  },
-];
-
-const getAgentImageSrc = (agentId: string) => {
-  const normalized = (agentId || "astra").toLowerCase();
+const getAgentImageSrc = (agentName: string) => {
+  const normalized = (agentName || "Astra").trim().toLowerCase();
   return `/agents/${normalized}/${normalized}.png`;
 };
 
@@ -76,313 +26,27 @@ const getMapImageSrc = (mapName: string) => {
 const getResultLabel = (result: MatchPreview["result"]) => {
   return result === "Win" ? "Victory" : "Defeat";
 };
+const getPlayerSummary = (
+  players: MatchSummaryResponse["players"],
+  puuid?: string,
+) => {
+  if (!puuid) {
+    return undefined;
+  }
 
-const mockMatchSummary: MatchSummaryResponse = {
-  schemaVersion: "matches-summary.v1",
-  matchId: "mock-1",
-  mapId: "pearl",
-  mapName: "Pearl",
-  queueLabel: "Competitive",
-  gameStartAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-  viewer: {
-    puuid: "player-2",
-    bestRoundNumber: 4,
-  },
-  totalRounds: 4,
-  players: [
-    {
-      puuid: "player-1",
-      gameName: "Sova",
-      tagLine: "#NA",
-      teamId: "Blue",
-      characterId: "sova",
-      characterName: "Sova",
-    },
-    {
-      puuid: "player-2",
-      gameName: "Jett",
-      tagLine: "#NA",
-      teamId: "Blue",
-      characterId: "jett",
-      characterName: "Jett",
-    },
-    {
-      puuid: "player-3",
-      gameName: "Breach",
-      tagLine: "#EU",
-      teamId: "Red",
-      characterId: "breach",
-      characterName: "Breach",
-    },
-    {
-      puuid: "player-4",
-      gameName: "Killjoy",
-      tagLine: "#EU",
-      teamId: "Red",
-      characterId: "killjoy",
-      characterName: "Killjoy",
-    },
-  ],
-  rounds: [
-    {
-      roundNumber: 1,
-      winningTeam: "Blue",
-      roundResultCode: "Elimination",
-      scoreAfterRound: { red: 0, blue: 1 },
-      playerStats: [
-        {
-          puuid: "player-1",
-          score: 250,
-          kills: 1,
-          deaths: 0,
-          assists: 1,
-          economy: { loadoutValue: 3000, remaining: 650 },
-        },
-        {
-          puuid: "player-2",
-          score: 220,
-          kills: 2,
-          deaths: 0,
-          assists: 0,
-          economy: { loadoutValue: 2800, remaining: 850 },
-        },
-        {
-          puuid: "player-3",
-          score: 40,
-          kills: 0,
-          deaths: 1,
-          assists: 0,
-          economy: { loadoutValue: 1800, remaining: 1200 },
-        },
-        {
-          puuid: "player-4",
-          score: 10,
-          kills: 0,
-          deaths: 2,
-          assists: 0,
-          economy: { loadoutValue: 1900, remaining: 950 },
-        },
-      ],
-      eventLog: [
-        {
-          eventType: "kill",
-          timeSinceRoundStartMillis: 12000,
-          killerPuuid: "player-2",
-          victimPuuid: "player-4",
-          weaponId: "vandal",
-        },
-        {
-          eventType: "spike_planted",
-          timeSinceRoundStartMillis: 95000,
-          planterPuuid: "player-3",
-        },
-        {
-          eventType: "spike_defused",
-          timeSinceRoundStartMillis: 175000,
-          defuserPuuid: "player-1",
-        },
-      ],
-    },
-    {
-      roundNumber: 2,
-      winningTeam: "Red",
-      roundResultCode: "Elimination",
-      scoreAfterRound: { red: 1, blue: 1 },
-      playerStats: [
-        {
-          puuid: "player-1",
-          score: 70,
-          kills: 0,
-          deaths: 1,
-          assists: 0,
-          economy: { loadoutValue: 3900, remaining: 1450 },
-        },
-        {
-          puuid: "player-2",
-          score: 120,
-          kills: 1,
-          deaths: 1,
-          assists: 0,
-          economy: { loadoutValue: 4200, remaining: 1050 },
-        },
-        {
-          puuid: "player-3",
-          score: 260,
-          kills: 2,
-          deaths: 0,
-          assists: 1,
-          economy: { loadoutValue: 4100, remaining: 900 },
-        },
-        {
-          puuid: "player-4",
-          score: 200,
-          kills: 1,
-          deaths: 0,
-          assists: 1,
-          economy: { loadoutValue: 3800, remaining: 1200 },
-        },
-      ],
-      eventLog: [
-        {
-          eventType: "kill",
-          timeSinceRoundStartMillis: 8000,
-          killerPuuid: "player-3",
-          victimPuuid: "player-1",
-          weaponId: "phantom",
-        },
-        {
-          eventType: "kill",
-          timeSinceRoundStartMillis: 31000,
-          killerPuuid: "player-4",
-          victimPuuid: "player-2",
-          weaponId: "sheriff",
-        },
-      ],
-    },
-    {
-      roundNumber: 3,
-      winningTeam: "Blue",
-      roundResultCode: "Defuse",
-      scoreAfterRound: { red: 1, blue: 2 },
-      playerStats: [
-        {
-          puuid: "player-1",
-          score: 300,
-          kills: 2,
-          deaths: 0,
-          assists: 0,
-          economy: { loadoutValue: 4300, remaining: 700 },
-        },
-        {
-          puuid: "player-2",
-          score: 210,
-          kills: 1,
-          deaths: 1,
-          assists: 2,
-          economy: { loadoutValue: 3900, remaining: 850 },
-        },
-        {
-          puuid: "player-3",
-          score: 60,
-          kills: 0,
-          deaths: 1,
-          assists: 0,
-          economy: { loadoutValue: 4200, remaining: 1400 },
-        },
-        {
-          puuid: "player-4",
-          score: 45,
-          kills: 0,
-          deaths: 1,
-          assists: 0,
-          economy: { loadoutValue: 4200, remaining: 900 },
-        },
-      ],
-      eventLog: [
-        {
-          eventType: "spike_planted",
-          timeSinceRoundStartMillis: 82000,
-          planterPuuid: "player-3",
-        },
-        {
-          eventType: "kill",
-          timeSinceRoundStartMillis: 102000,
-          killerPuuid: "player-1",
-          victimPuuid: "player-4",
-          weaponId: "operator",
-        },
-        {
-          eventType: "spike_defused",
-          timeSinceRoundStartMillis: 126000,
-          defuserPuuid: "player-2",
-        },
-      ],
-    },
-    {
-      roundNumber: 4,
-      winningTeam: "Blue",
-      roundResultCode: "Elimination",
-      scoreAfterRound: { red: 1, blue: 3 },
-      playerStats: [
-        {
-          puuid: "player-1",
-          score: 190,
-          kills: 1,
-          deaths: 0,
-          assists: 1,
-          economy: { loadoutValue: 2400, remaining: 750 },
-        },
-        {
-          puuid: "player-2",
-          score: 265,
-          kills: 2,
-          deaths: 0,
-          assists: 0,
-          economy: { loadoutValue: 2200, remaining: 650 },
-        },
-        {
-          puuid: "player-3",
-          score: 80,
-          kills: 0,
-          deaths: 1,
-          assists: 0,
-          economy: { loadoutValue: 2000, remaining: 900 },
-        },
-        {
-          puuid: "player-4",
-          score: 50,
-          kills: 0,
-          deaths: 2,
-          assists: 0,
-          economy: { loadoutValue: 1950, remaining: 630 },
-        },
-      ],
-      eventLog: [
-        {
-          eventType: "kill",
-          timeSinceRoundStartMillis: 14000,
-          killerPuuid: "player-2",
-          victimPuuid: "player-3",
-          weaponId: "spectre",
-        },
-        {
-          eventType: "kill",
-          timeSinceRoundStartMillis: 29000,
-          killerPuuid: "player-1",
-          victimPuuid: "player-4",
-          weaponId: "C4883E50-4494-202C-3EC3-6B8A9284F00B",
-        },
-        {
-          eventType: "spike_defused",
-          timeSinceRoundStartMillis: 126000,
-          defuserPuuid: "player-2",
-        },
-      ],
-    },
-  ],
+  return players.find((player) => player.puuid === puuid);
 };
 
-const getPlayerSummary = (puuid: string) => {
-  return mockMatchSummary.players.find((player) => player.puuid === puuid);
-};
-
-const getPlayerAgentIconSrc = (puuid: string) => {
-  const characterId = getPlayerSummary(puuid)?.characterId ?? "astra";
-  return getAgentImageSrc(characterId);
+const getPlayerAgentIconSrc = (
+  players: MatchSummaryResponse["players"],
+  puuid?: string,
+) => {
+  const player = getPlayerSummary(players, puuid);
+  return getAgentImageSrc(player?.characterName || "Astra");
 };
 
 const getWeaponKillstreamImageSrc = (weaponId: string) => {
-  const normalized = weaponId.trim();
-  const isUuid =
-    /^[0-9a-fA-F-]{36}$/.test(normalized) && normalized.includes("-");
-
-  // Production payloads generally provide weapon UUIDs for killstream assets.
-  if (isUuid) {
-    return `/weapons/${normalized.toUpperCase()}_killstream.png`;
-  }
-
-  // Local mock payloads currently use short names (vandal, phantom, ...).
-  return `/tools/${normalized.toLowerCase()}.webp`;
+  return `/weapons/${weaponId.trim().toUpperCase()}_killstream.png`;
 };
 
 const formatTimeSinceRoundStart = (timeSinceRoundStartMillis: number) => {
@@ -395,6 +59,7 @@ const formatTimeSinceRoundStart = (timeSinceRoundStartMillis: number) => {
 const renderRoundEventRow = (
   event: MatchSummaryResponse["rounds"][number]["eventLog"][number],
   index: number,
+  players: MatchSummaryResponse["players"],
 ) => {
   const actorPuuid =
     event.eventType === "kill"
@@ -403,10 +68,10 @@ const renderRoundEventRow = (
         ? event.planterPuuid
         : event.defuserPuuid;
 
-  const actorTeamId = getPlayerSummary(actorPuuid)?.teamId;
+  const actorTeamId = getPlayerSummary(players, actorPuuid)?.teamId;
   const victimTeamId =
     event.eventType === "kill"
-      ? getPlayerSummary(event.victimPuuid)?.teamId
+      ? getPlayerSummary(players, event.victimPuuid)?.teamId
       : undefined;
 
   const leftAccent = actorTeamId === "Blue" ? "bg-[#42EEC7]" : "bg-[#FF4655]";
@@ -430,7 +95,7 @@ const renderRoundEventRow = (
           <div className="grid grid-cols-[32px_50px_1fr_32px] items-stretch">
             <div className={`relative h-8 overflow-hidden ${iconShade}`}>
               <Image
-                src={getPlayerAgentIconSrc(event.killerPuuid)}
+                src={getPlayerAgentIconSrc(players, event.killerPuuid)}
                 alt="Killer"
                 fill
                 sizes="32px"
@@ -464,7 +129,7 @@ const renderRoundEventRow = (
               }`}
             >
               <Image
-                src={getPlayerAgentIconSrc(event.victimPuuid)}
+                src={getPlayerAgentIconSrc(players, event.victimPuuid)}
                 alt="Victim"
                 fill
                 sizes="32px"
@@ -488,7 +153,7 @@ const renderRoundEventRow = (
         <div className="grid grid-cols-[32px_50px_1fr_auto] items-stretch">
           <div className={`relative h-8 overflow-hidden ${iconShade}`}>
             <Image
-              src={getPlayerAgentIconSrc(actorPuuid)}
+              src={getPlayerAgentIconSrc(players, actorPuuid)}
               alt="Player"
               fill
               sizes="32px"
@@ -595,10 +260,7 @@ const MatchesPage = () => {
   const { user: firebaseUser, loading: authLoading } = useFirebaseAuth();
   const { data: userProfile, isLoading: isUserLoading } = useUser();
   const isRSOUser = Boolean(userProfile?.rsoSubjectId) && userProfile?.id === 5;
-  const useMockData = !firebaseUser || !isRSOUser;
-  const currentPlayerPuuid = mockMatchSummary.viewer.puuid;
-  const currentPlayerBestRoundNumber = mockMatchSummary.viewer.bestRoundNumber;
-  const currentPlayerTeamId = getPlayerSummary(currentPlayerPuuid)?.teamId;
+  const canLoadMatches = Boolean(firebaseUser && isRSOUser);
 
   const toggleExpanded = (matchId: string) => {
     setExpandedMatchId((current) => {
@@ -606,7 +268,7 @@ const MatchesPage = () => {
       if (next) {
         setSelectedRoundByMatch((prev) => ({
           ...prev,
-          [next]: prev[next] ?? mockMatchSummary.rounds[0]?.roundNumber ?? 1,
+          [next]: prev[next] ?? 1,
         }));
       }
       return next;
@@ -626,7 +288,14 @@ const MatchesPage = () => {
     isError,
     error,
     refetch,
-  } = useMatches(Boolean(firebaseUser && isRSOUser), 10);
+  } = useMatches(canLoadMatches, 10);
+  const {
+    data: expandedMatchSummary,
+    isLoading: isMatchSummaryLoading,
+    isError: isMatchSummaryError,
+    error: matchSummaryError,
+    refetch: refetchMatchSummary,
+  } = useMatchSummary(expandedMatchId, canLoadMatches && !!expandedMatchId);
 
   if (authLoading || isUserLoading) {
     return (
@@ -639,7 +308,7 @@ const MatchesPage = () => {
     );
   }
 
-  if (isMatchesLoading && !useMockData) {
+  if (isMatchesLoading && canLoadMatches) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -652,7 +321,7 @@ const MatchesPage = () => {
     );
   }
 
-  if (isError && !useMockData) {
+  if (isError && canLoadMatches) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md space-y-4 w-full">
@@ -669,7 +338,7 @@ const MatchesPage = () => {
     );
   }
 
-  const matches = useMockData ? mockMatches : (data?.matches ?? []);
+  const matches = data?.matches ?? [];
 
   return (
     <div className="min-h-screen py-8 px-4">
@@ -680,11 +349,20 @@ const MatchesPage = () => {
           </Button>
         </div>
 
-        {useMockData && (
-          <Alert className="mb-4 border-cyan-500/30 bg-cyan-950/25 text-cyan-100">
-            <AlertTitle>Temporary mock data</AlertTitle>
+        {!firebaseUser && (
+          <Alert className="mb-4">
+            <AlertTitle>Sign in required</AlertTitle>
             <AlertDescription>
-              Using local mock response for design iteration.
+              Sign in to load your recent matches.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {firebaseUser && !isRSOUser && (
+          <Alert className="mb-4">
+            <AlertTitle>Riot account required</AlertTitle>
+            <AlertDescription>
+              This page is only available for Riot Sign-On users.
             </AlertDescription>
           </Alert>
         )}
@@ -699,12 +377,23 @@ const MatchesPage = () => {
         ) : (
           <section className="space-y-px">
             {matches.map((match) => {
+              const matchSummary =
+                expandedMatchId === match.matchId ? expandedMatchSummary : null;
+              const players = matchSummary?.players ?? [];
+              const currentPlayerPuuid = matchSummary?.viewer.puuid;
+              const currentPlayerBestRoundNumber =
+                matchSummary?.viewer.bestRoundNumber;
+              const currentPlayerTeamId = getPlayerSummary(
+                players,
+                currentPlayerPuuid,
+              )?.teamId;
               const selectedRoundNumber =
                 selectedRoundByMatch[match.matchId] ??
-                mockMatchSummary.rounds[0]?.roundNumber ??
+                matchSummary?.rounds[0]?.roundNumber ??
                 1;
-              const selectedRound = mockMatchSummary.rounds.find(
-                (round) => round.roundNumber === selectedRoundNumber,
+              const selectedRound = matchSummary?.rounds.find(
+                (round: MatchSummaryResponse["rounds"][number]) =>
+                  round.roundNumber === selectedRoundNumber,
               );
 
               return (
@@ -749,7 +438,7 @@ const MatchesPage = () => {
                     <div className="relative z-30 flex h-full items-center pl-1">
                       <div className="relative aspect-square h-full shrink-0">
                         <Image
-                          src={getAgentImageSrc(match.agentId)}
+                          src={getAgentImageSrc(match.agentName)}
                           alt={match.agentName || "Agent"}
                           fill
                           sizes="(min-width: 640px) 96px, 84px"
@@ -806,299 +495,351 @@ const MatchesPage = () => {
                       </div>
                     </div>
                   </article>
-                  {expandedMatchId === match.matchId && selectedRound && (
+                  {expandedMatchId === match.matchId &&
+                    isMatchSummaryLoading && (
+                      <section className="rounded-b-xl border border-slate-700 bg-slate-950/90 px-4 py-8 sm:px-5">
+                        <div className="flex items-center justify-center gap-3 text-slate-200">
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span className="text-sm font-medium">
+                            Loading match summary...
+                          </span>
+                        </div>
+                      </section>
+                    )}
+                  {expandedMatchId === match.matchId && isMatchSummaryError && (
                     <section className="rounded-b-xl border border-slate-700 bg-slate-950/90 px-4 py-4 sm:px-5">
-                      <div className="space-y-4">
-                        <ScrollArea className="w-full pb-1">
-                          <div className="inline-flex min-w-full gap-2">
-                            {mockMatchSummary.rounds.map((round) => {
-                              const isSelected =
-                                round.roundNumber === selectedRound.roundNumber;
-                              const roundButton = (
-                                <button
-                                  key={`round-${round.roundNumber}`}
-                                  type="button"
-                                  onClick={() =>
-                                    selectRound(
-                                      match.matchId,
-                                      round.roundNumber,
-                                    )
-                                  }
-                                  className={`h-16 min-w-14 shrink-0 text-sm font-semibold transition-colors ${
-                                    isSelected
-                                      ? "border-[#42EEC7] text-[#42EEC7] border-2 bg-linear-to-t from-[#42EEC7]/48 via-[#42EEC7]/24 to-transparent"
-                                      : "bg-slate-900/45 text-slate-300 hover:border-[#42EEC7] hover:border-2"
-                                  }`}
-                                >
-                                  <span className="flex h-full flex-col items-center justify-center gap-4 leading-none">
-                                    <span className="text-[14px] font-semibold uppercase tracking-[0.08em]">
-                                      {round.roundNumber}
-                                    </span>
-                                    <Image
-                                      src={getRoundOutcomeIconSrc(
-                                        round.roundResultCode,
-                                        round.winningTeam,
-                                        currentPlayerTeamId,
-                                        round.roundNumber ===
-                                          currentPlayerBestRoundNumber,
-                                      )}
-                                      alt={`${round.roundResultCode} icon`}
-                                      width={20}
-                                      height={20}
-                                      className="h-5 w-5"
-                                    />
-                                  </span>
-                                </button>
-                              );
-
-                              if (round.roundNumber !== 12) {
-                                return roundButton;
-                              }
-
-                              return [
-                                roundButton,
-                                <span
-                                  key="round-half-separator"
-                                  aria-hidden="true"
-                                  className="inline-flex h-16 min-w-8 shrink-0 items-center justify-center text-white"
-                                >
-                                  <RefreshCw
-                                    className="h-5 w-5"
-                                    strokeWidth={3}
-                                  />
-                                </span>,
-                              ];
-                            })}
-                          </div>
-                          <ScrollBar orientation="horizontal" />
-                        </ScrollArea>
-
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-lg font-semibold text-white uppercase sm:text-xl">
-                            Round {selectedRound.roundNumber}
-                            <span className="px-1 font-normal">|</span>
-                            <span
-                              className={`inline-flex min-w-0 flex-wrap items-center gap-1 sm:gap-2 font-semibold ${
-                                currentPlayerTeamId
-                                  ? selectedRound.winningTeam ===
-                                    currentPlayerTeamId
-                                    ? "text-[#42EEC7]"
-                                    : "text-[#FF4655]"
-                                  : "text-white"
-                              }`}
-                            >
-                              <Image
-                                src={getRoundOutcomeIconSrc(
-                                  selectedRound.roundResultCode,
-                                  selectedRound.winningTeam,
-                                  currentPlayerTeamId,
-                                  false,
-                                )}
-                                alt={`${selectedRound.roundResultCode} icon`}
-                                width={24}
-                                height={24}
-                                className="h-4 w-4 shrink-0 sm:h-6 sm:w-6"
-                              />
-                              <span className="text-base leading-tight sm:text-xl">
-                                (
-                                {getRoundOutcomeText(
-                                  selectedRound.roundResultCode,
-                                  selectedRound.winningTeam,
-                                  currentPlayerTeamId,
-                                )}
-                                )
-                              </span>
-                              {selectedRound.roundNumber ===
-                                currentPlayerBestRoundNumber && (
-                                <span className="block w-full text-base leading-tight text-amber-100 sm:inline sm:w-auto sm:text-xl">
-                                  (Your Best Round)
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                          <Button size="sm">Load Round</Button>
-                        </div>
-
-                        <div className="grid gap-3 md:grid-cols-[1fr_280px]">
-                          <div className="min-w-0">
-                            <ScrollArea className="w-full">
-                              <div className="min-w-[640px] pr-2 sm:min-w-[720px]">
-                                <div className="mb-2 grid grid-cols-[48px_minmax(140px,1fr)_64px_44px_44px_44px_100px] items-center text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55 sm:grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px] sm:text-[12px]">
-                                  <span className="text-center">Player</span>
-                                  <span aria-hidden="true" />
-                                  <span className="text-center">Score</span>
-                                  <span className="text-center">K</span>
-                                  <span className="text-center">D</span>
-                                  <span className="text-center">A</span>
-                                  <span className="text-center">Econ</span>
-                                </div>
-
-                                {selectedRound.playerStats.flatMap(
-                                  (stats, index, allStats) => {
-                                    const player = getPlayerSummary(
-                                      stats.puuid,
-                                    );
-                                    const isCurrentPlayer =
-                                      stats.puuid === currentPlayerPuuid;
-                                    const isBlueTeam =
-                                      player?.teamId === "Blue";
-
-                                    const rowAccent = isCurrentPlayer
-                                      ? "bg-[#facc15]"
-                                      : isBlueTeam
-                                        ? "bg-[#42EEC7]"
-                                        : "bg-[#FF4655]";
-
-                                    const iconShade = isCurrentPlayer
-                                      ? "bg-[#6a5817]"
-                                      : isBlueTeam
-                                        ? "bg-[#19ac92]"
-                                        : "bg-[#c65063]";
-
-                                    const identityShade = isCurrentPlayer
-                                      ? "bg-[#998c6180]"
-                                      : isBlueTeam
-                                        ? "bg-[#19ac9280]"
-                                        : "bg-[#c6506380]";
-
-                                    const scoreShade = isCurrentPlayer
-                                      ? "bg-[#665d4080]"
-                                      : isBlueTeam
-                                        ? "bg-[#21999980]"
-                                        : "bg-[#a0415080]";
-
-                                    const statsShade = isCurrentPlayer
-                                      ? "bg-[#584f3680]"
-                                      : isBlueTeam
-                                        ? "bg-[#19767480]"
-                                        : "bg-[#3f2d3f80]";
-
-                                    const nextStats = allStats[index + 1];
-                                    const nextTeamId = nextStats
-                                      ? getPlayerSummary(nextStats.puuid)
-                                          ?.teamId
-                                      : undefined;
-                                    const shouldInsertTeamGap =
-                                      player?.teamId === "Blue" &&
-                                      nextTeamId === "Red";
-
-                                    const row = (
-                                      <article
-                                        key={stats.puuid}
-                                        className="relative isolate overflow-hidden border border-slate-800/80 mb-1"
-                                      >
-                                        <div
-                                          className={`absolute inset-y-0 left-0 w-1.5 ${rowAccent}`}
-                                        />
-
-                                        <div className="relative z-30 pl-2">
-                                          <div className="grid grid-cols-[48px_minmax(140px,1fr)_64px_44px_44px_44px_100px] items-stretch sm:grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px]">
-                                            <div
-                                              className={`relative overflow-hidden ${iconShade}`}
-                                            >
-                                              <div className="relative h-full min-h-12 w-full sm:min-h-14">
-                                                <Image
-                                                  src={getAgentImageSrc(
-                                                    player?.characterId ??
-                                                      "astra",
-                                                  )}
-                                                  alt={
-                                                    player?.characterName ??
-                                                    "Agent"
-                                                  }
-                                                  fill
-                                                  sizes="56px"
-                                                  className="object-fill"
-                                                />
-                                              </div>
-                                            </div>
-
-                                            <div
-                                              className={`min-w-0 px-2 py-2 sm:px-3 sm:py-2.5 ${identityShade}`}
-                                            >
-                                              <div className="min-w-0">
-                                                <p className="truncate text-base font-semibold leading-none text-white sm:text-lg">
-                                                  {player?.gameName ?? "Player"}
-                                                </p>
-                                                <p className="mt-1 truncate text-xs font-semibold leading-none text-white/55 sm:text-sm">
-                                                  {player?.characterName ??
-                                                    "Unknown Agent"}
-                                                </p>
-                                              </div>
-                                            </div>
-
-                                            <p
-                                              className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${scoreShade}`}
-                                            >
-                                              {stats.score}
-                                            </p>
-
-                                            <p
-                                              className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${statsShade}`}
-                                            >
-                                              {stats.kills}
-                                            </p>
-                                            <p
-                                              className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${statsShade}`}
-                                            >
-                                              {stats.deaths}
-                                            </p>
-                                            <p
-                                              className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${statsShade}`}
-                                            >
-                                              {stats.assists}
-                                            </p>
-                                            <div
-                                              className={`flex flex-col items-center justify-center text-center leading-tight ${statsShade}`}
-                                            >
-                                              <p className="text-base font-semibold text-white sm:text-lg">
-                                                {stats.economy.loadoutValue}
-                                              </p>
-                                              <p className="text-base font-semibold text-white/55 sm:text-lg">
-                                                {stats.economy.remaining}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </article>
-                                    );
-
-                                    if (!shouldInsertTeamGap) {
-                                      return [row];
-                                    }
-
-                                    return [
-                                      row,
-                                      <div
-                                        key={`team-gap-${stats.puuid}`}
-                                        className="h-1.5"
-                                        aria-hidden="true"
-                                      />,
-                                    ];
-                                  },
-                                )}
-                              </div>
-                              <ScrollBar orientation="horizontal" />
-                            </ScrollArea>
-                          </div>
-
-                          <div>
-                            <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/55">
-                              Event Log
-                            </p>
-                            <ScrollArea className="h-[360px] w-full">
-                              <ol className="space-y-1 pr-2">
-                                {selectedRound.eventLog.map((event, index) =>
-                                  renderRoundEventRow(event, index),
-                                )}
-                              </ol>
-                              <ScrollBar orientation="vertical" />
-                            </ScrollArea>
-                          </div>
-                        </div>
+                      <div className="space-y-3">
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle>Failed to load match summary</AlertTitle>
+                          <AlertDescription>
+                            {matchSummaryError?.message ||
+                              "Something went wrong while loading the selected match."}
+                          </AlertDescription>
+                        </Alert>
+                        <Button size="sm" onClick={() => refetchMatchSummary()}>
+                          Try Again
+                        </Button>
                       </div>
                     </section>
                   )}
+                  {expandedMatchId === match.matchId &&
+                    selectedRound &&
+                    matchSummary && (
+                      <section className="rounded-b-xl border border-slate-700 bg-slate-950/90 px-4 py-4 sm:px-5">
+                        <div className="space-y-4">
+                          <ScrollArea className="w-full pb-1">
+                            <div className="inline-flex min-w-full gap-2">
+                              {matchSummary.rounds.map(
+                                (
+                                  round: MatchSummaryResponse["rounds"][number],
+                                ) => {
+                                  const isSelected =
+                                    round.roundNumber ===
+                                    selectedRound.roundNumber;
+                                  const roundButton = (
+                                    <button
+                                      key={`round-${round.roundNumber}`}
+                                      type="button"
+                                      onClick={() =>
+                                        selectRound(
+                                          match.matchId,
+                                          round.roundNumber,
+                                        )
+                                      }
+                                      className={`h-16 min-w-14 shrink-0 text-sm font-semibold transition-colors ${
+                                        isSelected
+                                          ? "border-[#42EEC7] text-[#42EEC7] border-2 bg-linear-to-t from-[#42EEC7]/48 via-[#42EEC7]/24 to-transparent"
+                                          : "bg-slate-900/45 text-slate-300 hover:border-[#42EEC7] hover:border-2"
+                                      }`}
+                                    >
+                                      <span className="flex h-full flex-col items-center justify-center gap-4 leading-none">
+                                        <span className="text-[14px] font-semibold uppercase tracking-[0.08em]">
+                                          {round.roundNumber}
+                                        </span>
+                                        <Image
+                                          src={getRoundOutcomeIconSrc(
+                                            round.roundResultCode,
+                                            round.winningTeam,
+                                            currentPlayerTeamId,
+                                            round.roundNumber ===
+                                              (currentPlayerBestRoundNumber ??
+                                                -1),
+                                          )}
+                                          alt={`${round.roundResultCode} icon`}
+                                          width={20}
+                                          height={20}
+                                          className="h-5 w-5"
+                                        />
+                                      </span>
+                                    </button>
+                                  );
+
+                                  if (round.roundNumber !== 12) {
+                                    return roundButton;
+                                  }
+
+                                  return [
+                                    roundButton,
+                                    <span
+                                      key="round-half-separator"
+                                      aria-hidden="true"
+                                      className="inline-flex h-16 min-w-8 shrink-0 items-center justify-center text-white"
+                                    >
+                                      <RefreshCw
+                                        className="h-5 w-5"
+                                        strokeWidth={3}
+                                      />
+                                    </span>,
+                                  ];
+                                },
+                              )}
+                            </div>
+                            <ScrollBar orientation="horizontal" />
+                          </ScrollArea>
+
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-lg font-semibold text-white uppercase sm:text-xl">
+                              Round {selectedRound.roundNumber}
+                              <span className="px-1 font-normal">|</span>
+                              <span
+                                className={`inline-flex min-w-0 flex-wrap items-center gap-1 sm:gap-2 font-semibold ${
+                                  currentPlayerTeamId
+                                    ? selectedRound.winningTeam ===
+                                      currentPlayerTeamId
+                                      ? "text-[#42EEC7]"
+                                      : "text-[#FF4655]"
+                                    : "text-white"
+                                }`}
+                              >
+                                <Image
+                                  src={getRoundOutcomeIconSrc(
+                                    selectedRound.roundResultCode,
+                                    selectedRound.winningTeam,
+                                    currentPlayerTeamId,
+                                    false,
+                                  )}
+                                  alt={`${selectedRound.roundResultCode} icon`}
+                                  width={24}
+                                  height={24}
+                                  className="h-4 w-4 shrink-0 sm:h-6 sm:w-6"
+                                />
+                                <span className="text-base leading-tight sm:text-xl">
+                                  (
+                                  {getRoundOutcomeText(
+                                    selectedRound.roundResultCode,
+                                    selectedRound.winningTeam,
+                                    currentPlayerTeamId,
+                                  )}
+                                  )
+                                </span>
+                                {selectedRound.roundNumber ===
+                                  currentPlayerBestRoundNumber && (
+                                  <span className="block w-full text-base leading-tight text-amber-100 sm:inline sm:w-auto sm:text-xl">
+                                    (Your Best Round)
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                            <Button size="sm">Load Round</Button>
+                          </div>
+
+                          <div className="grid gap-3 md:grid-cols-[1fr_280px]">
+                            <div className="min-w-0">
+                              <ScrollArea className="w-full">
+                                <div className="min-w-[640px] pr-2 sm:min-w-[720px]">
+                                  <div className="mb-2 grid grid-cols-[48px_minmax(140px,1fr)_64px_44px_44px_44px_100px] items-center text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55 sm:grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px] sm:text-[12px]">
+                                    <span className="text-center">Player</span>
+                                    <span aria-hidden="true" />
+                                    <span className="text-center">Score</span>
+                                    <span className="text-center">K</span>
+                                    <span className="text-center">D</span>
+                                    <span className="text-center">A</span>
+                                    <span className="text-center">Econ</span>
+                                  </div>
+
+                                  {selectedRound.playerStats.flatMap(
+                                    (
+                                      stats: MatchSummaryResponse["rounds"][number]["playerStats"][number],
+                                      index: number,
+                                      allStats: MatchSummaryResponse["rounds"][number]["playerStats"],
+                                    ) => {
+                                      const player = getPlayerSummary(
+                                        players,
+                                        stats.puuid,
+                                      );
+                                      const isCurrentPlayer =
+                                        stats.puuid === currentPlayerPuuid;
+                                      const isBlueTeam =
+                                        player?.teamId === "Blue";
+
+                                      const rowAccent = isCurrentPlayer
+                                        ? "bg-[#facc15]"
+                                        : isBlueTeam
+                                          ? "bg-[#42EEC7]"
+                                          : "bg-[#FF4655]";
+
+                                      const iconShade = isCurrentPlayer
+                                        ? "bg-[#6a5817]"
+                                        : isBlueTeam
+                                          ? "bg-[#19ac92]"
+                                          : "bg-[#c65063]";
+
+                                      const identityShade = isCurrentPlayer
+                                        ? "bg-[#998c6180]"
+                                        : isBlueTeam
+                                          ? "bg-[#19ac9280]"
+                                          : "bg-[#c6506380]";
+
+                                      const scoreShade = isCurrentPlayer
+                                        ? "bg-[#665d4080]"
+                                        : isBlueTeam
+                                          ? "bg-[#21999980]"
+                                          : "bg-[#a0415080]";
+
+                                      const statsShade = isCurrentPlayer
+                                        ? "bg-[#584f3680]"
+                                        : isBlueTeam
+                                          ? "bg-[#19767480]"
+                                          : "bg-[#3f2d3f80]";
+
+                                      const nextStats = allStats[index + 1];
+                                      const nextTeamId = nextStats
+                                        ? getPlayerSummary(
+                                            players,
+                                            nextStats.puuid,
+                                          )?.teamId
+                                        : undefined;
+                                      const shouldInsertTeamGap =
+                                        player?.teamId === "Blue" &&
+                                        nextTeamId === "Red";
+
+                                      const row = (
+                                        <article
+                                          key={stats.puuid}
+                                          className="relative isolate overflow-hidden border border-slate-800/80 mb-1"
+                                        >
+                                          <div
+                                            className={`absolute inset-y-0 left-0 w-1.5 ${rowAccent}`}
+                                          />
+
+                                          <div className="relative z-30 pl-2">
+                                            <div className="grid grid-cols-[48px_minmax(140px,1fr)_64px_44px_44px_44px_100px] items-stretch sm:grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px]">
+                                              <div
+                                                className={`relative overflow-hidden ${iconShade}`}
+                                              >
+                                                <div className="relative h-full min-h-12 w-full sm:min-h-14">
+                                                  <Image
+                                                    src={getAgentImageSrc(
+                                                      player?.characterName ??
+                                                        "Astra",
+                                                    )}
+                                                    alt={
+                                                      player?.characterName ??
+                                                      "Agent"
+                                                    }
+                                                    fill
+                                                    sizes="56px"
+                                                    className="object-fill"
+                                                  />
+                                                </div>
+                                              </div>
+
+                                              <div
+                                                className={`min-w-0 px-2 py-2 sm:px-3 sm:py-2.5 ${identityShade}`}
+                                              >
+                                                <div className="min-w-0">
+                                                  <p className="truncate text-base font-semibold leading-none text-white sm:text-lg">
+                                                    {player?.gameName ??
+                                                      "Player"}
+                                                  </p>
+                                                  <p className="mt-1 truncate text-xs font-semibold leading-none text-white/55 sm:text-sm">
+                                                    {player?.characterName ??
+                                                      "Unknown Agent"}
+                                                  </p>
+                                                </div>
+                                              </div>
+
+                                              <p
+                                                className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${scoreShade}`}
+                                              >
+                                                {stats.score}
+                                              </p>
+
+                                              <p
+                                                className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${statsShade}`}
+                                              >
+                                                {stats.kills}
+                                              </p>
+                                              <p
+                                                className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${statsShade}`}
+                                              >
+                                                {stats.deaths}
+                                              </p>
+                                              <p
+                                                className={`flex items-center justify-center text-center text-base font-semibold text-white sm:text-lg ${statsShade}`}
+                                              >
+                                                {stats.assists}
+                                              </p>
+                                              <div
+                                                className={`flex flex-col items-center justify-center text-center leading-tight ${statsShade}`}
+                                              >
+                                                <p className="text-base font-semibold text-white sm:text-lg">
+                                                  {stats.economy.loadoutValue}
+                                                </p>
+                                                <p className="text-base font-semibold text-white/55 sm:text-lg">
+                                                  {stats.economy.remaining}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </article>
+                                      );
+
+                                      if (!shouldInsertTeamGap) {
+                                        return [row];
+                                      }
+
+                                      return [
+                                        row,
+                                        <div
+                                          key={`team-gap-${stats.puuid}`}
+                                          className="h-1.5"
+                                          aria-hidden="true"
+                                        />,
+                                      ];
+                                    },
+                                  )}
+                                </div>
+                                <ScrollBar orientation="horizontal" />
+                              </ScrollArea>
+                            </div>
+
+                            <div>
+                              <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/55">
+                                Event Log
+                              </p>
+                              <ScrollArea className="h-[360px] w-full">
+                                <ol className="space-y-1 pr-2">
+                                  {selectedRound.eventLog.map(
+                                    (
+                                      event: MatchSummaryResponse["rounds"][number]["eventLog"][number],
+                                      index: number,
+                                    ) =>
+                                      renderRoundEventRow(
+                                        event,
+                                        index,
+                                        players,
+                                      ),
+                                  )}
+                                </ol>
+                                <ScrollBar orientation="vertical" />
+                              </ScrollArea>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+                    )}
                 </div>
               );
             })}
