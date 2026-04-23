@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -39,6 +41,21 @@ func sanitizeRiotIdentifier(value string) (string, error) {
 }
 
 var riotRegions = []string{"na", "latam", "br", "eu", "ap", "kr"}
+
+type riotHTTPError struct {
+	StatusCode int
+	Region     string
+	Endpoint   string
+}
+
+func (e *riotHTTPError) Error() string {
+	return fmt.Sprintf("riot request failed with status %d in region %s", e.StatusCode, e.Region)
+}
+
+func isRiotNotFound(err error) bool {
+	var riotErr *riotHTTPError
+	return errors.As(err, &riotErr) && riotErr.StatusCode == http.StatusNotFound
+}
 
 type MatchPreview struct {
 	MatchID       string `json:"matchId"`
@@ -297,6 +314,7 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 
 func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath string, destination any) error {
 	var lastErr error
+	notFoundCount := 0
 
 	for _, region := range riotRegions {
 		apiURL := fmt.Sprintf("https://%s.api.riotgames.com%s", region, endpointPath)
@@ -311,24 +329,36 @@ func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath stri
 
 		resp, err := s.httpClient.Do(req)
 		if err != nil {
+			slog.Warn("riot request transport failure", "region", region, "endpoint", endpointPath, "error", err)
 			lastErr = err
 			continue
 		}
 
 		if resp.StatusCode == http.StatusNotFound {
+			notFoundCount++
 			_ = resp.Body.Close()
-			lastErr = fmt.Errorf("riot endpoint not found in region %s", region)
+			slog.Info("riot endpoint returned 404", "region", region, "endpoint", endpointPath)
+			lastErr = &riotHTTPError{StatusCode: resp.StatusCode, Region: region, Endpoint: endpointPath}
 			continue
 		}
 
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			bodyPreview := ""
+			if bodyBytes, readErr := io.ReadAll(resp.Body); readErr == nil {
+				bodyPreview = string(bodyBytes)
+				if len(bodyPreview) > 300 {
+					bodyPreview = bodyPreview[:300]
+				}
+			}
 			_ = resp.Body.Close()
-			lastErr = fmt.Errorf("riot request failed with status %d in region %s", resp.StatusCode, region)
+			slog.Warn("riot request failed", "region", region, "endpoint", endpointPath, "status_code", resp.StatusCode, "body_preview", bodyPreview)
+			lastErr = &riotHTTPError{StatusCode: resp.StatusCode, Region: region, Endpoint: endpointPath}
 			continue
 		}
 
 		if err := json.NewDecoder(resp.Body).Decode(destination); err != nil {
 			_ = resp.Body.Close()
+			slog.Warn("riot response decode failure", "region", region, "endpoint", endpointPath, "error", err)
 			lastErr = fmt.Errorf("failed to decode riot response from region %s: %w", region, err)
 			continue
 		}
@@ -336,6 +366,14 @@ func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath stri
 		_ = resp.Body.Close()
 
 		return nil
+	}
+
+	if notFoundCount == len(riotRegions) {
+		return fmt.Errorf("riot endpoint returned 404 across all regions for %s: %w", endpointPath, &riotHTTPError{
+			StatusCode: http.StatusNotFound,
+			Region:     "all",
+			Endpoint:   endpointPath,
+		})
 	}
 
 	if lastErr != nil {
@@ -541,6 +579,9 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 	matchPath := fmt.Sprintf("/val/match/v1/matches/%s", url.PathEscape(matchID))
 	match := riotDetailedMatchDTO{}
 	if err := s.fetchFromAnyRegion(ctx, matchPath, &match); err != nil {
+		if isRiotNotFound(err) {
+			return nil, ErrMatchNotFound
+		}
 		return nil, fmt.Errorf("fetch match details: %w", err)
 	}
 

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"valo-mapper-api/middleware"
@@ -71,6 +72,7 @@ func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, fireba
 
 	matches, err := h.matchService.GetRecentMatchPreviews(r.Context(), user, limit)
 	if err != nil {
+		slog.Error("failed to load match previews", "request_id", requestID, "user_id", user.ID, "limit", limit, "error", err)
 		switch {
 		case errors.Is(err, services.ErrRSOUserRequired):
 			utils.SendJSONError(w, utils.NewForbidden("RSO login required"), requestID)
@@ -125,6 +127,7 @@ func (h *MatchHandler) GetMatchSummary(w http.ResponseWriter, r *http.Request, f
 
 	summary, err := h.matchService.GetMatchSummary(r.Context(), user, matchID)
 	if err != nil {
+		slog.Error("failed to load match summary", "request_id", requestID, "user_id", user.ID, "match_id", matchID, "error", err)
 		switch {
 		case errors.Is(err, services.ErrRSOUserRequired):
 			utils.SendJSONError(w, utils.NewForbidden("RSO login required"), requestID)
