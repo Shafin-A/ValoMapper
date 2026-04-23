@@ -88,3 +88,55 @@ func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, fireba
 		"matches": matches,
 	}, requestID)
 }
+
+// GetMatchSummary godoc
+// @Summary Get match summary with round details
+// @Description Returns a match summary with round-by-round details and event logs for the authenticated user.
+// @Tags matches
+// @Produce json
+// @Param matchId path string true "Match ID"
+// @Success 200 {object} MatchSummaryResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Security BearerAuth
+// @Router /api/matches/{matchId}/summary [get]
+func (h *MatchHandler) GetMatchSummary(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+	requestID := middleware.GetRequestID(r)
+
+	user, err := authenticateRequest(r, firebaseAuth)
+	if err != nil {
+		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
+			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
+			return
+		}
+
+		utils.SendJSONError(w, utils.NewInternal("Unable to load authenticated user", err), requestID)
+		return
+	}
+
+	matchID := r.PathValue("matchId")
+	if matchID == "" {
+		utils.SendJSONError(w, utils.NewBadRequest("matchId is required"), requestID)
+		return
+	}
+
+	summary, err := h.matchService.GetMatchSummary(r.Context(), user, matchID)
+	if err != nil {
+		switch {
+		case errors.Is(err, services.ErrRSOUserRequired):
+			utils.SendJSONError(w, utils.NewForbidden("RSO login required"), requestID)
+		case errors.Is(err, services.ErrRiotAPIKeyMissing):
+			utils.SendJSONError(w, utils.NewInternal("Matches integration is not configured", err), requestID)
+		case errors.Is(err, services.ErrMatchNotFound):
+			utils.SendJSONError(w, utils.NewNotFound("Match not found"), requestID)
+		default:
+			utils.SendJSONError(w, utils.NewInternal("Unable to fetch match summary", err), requestID)
+		}
+		return
+	}
+
+	utils.SendJSON(w, http.StatusOK, summary, requestID)
+}

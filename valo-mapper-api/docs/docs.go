@@ -1291,6 +1291,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/matches/{matchId}/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a match summary with round-by-round details and event logs for the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "matches"
+                ],
+                "summary": "Get match summary with round details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Match ID",
+                        "name": "matchId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MatchSummaryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/strategies": {
             "get": {
                 "security": [
@@ -2020,6 +2084,47 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/services.MatchPreview"
                     }
+                }
+            }
+        },
+        "handlers.MatchSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "gameStartAt": {
+                    "type": "string"
+                },
+                "mapId": {
+                    "type": "string"
+                },
+                "mapName": {
+                    "type": "string"
+                },
+                "matchId": {
+                    "type": "string"
+                },
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.MatchPlayerSummary"
+                    }
+                },
+                "queueLabel": {
+                    "type": "string"
+                },
+                "rounds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.RoundSummaryLite"
+                    }
+                },
+                "schemaVersion": {
+                    "type": "string"
+                },
+                "totalRounds": {
+                    "type": "integer"
+                },
+                "viewer": {
+                    "$ref": "#/definitions/services.ViewerContext"
                 }
             }
         },
@@ -2809,9 +2914,49 @@ const docTemplate = `{
                 }
             }
         },
+        "services.EconomyInfo": {
+            "type": "object",
+            "properties": {
+                "loadoutValue": {
+                    "type": "integer"
+                },
+                "remaining": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.MatchPlayerSummary": {
+            "type": "object",
+            "properties": {
+                "characterId": {
+                    "type": "string"
+                },
+                "characterName": {
+                    "type": "string"
+                },
+                "gameName": {
+                    "type": "string"
+                },
+                "puuid": {
+                    "type": "string"
+                },
+                "tagLine": {
+                    "type": "string"
+                },
+                "teamId": {
+                    "type": "string"
+                }
+            }
+        },
         "services.MatchPreview": {
             "type": "object",
             "properties": {
+                "agentId": {
+                    "type": "string"
+                },
+                "agentName": {
+                    "type": "string"
+                },
                 "assists": {
                     "type": "integer"
                 },
@@ -2847,6 +2992,106 @@ const docTemplate = `{
                 },
                 "teamScore": {
                     "type": "integer"
+                }
+            }
+        },
+        "services.RoundEventLogEntry": {
+            "type": "object",
+            "properties": {
+                "defuserPuuid": {
+                    "type": "string"
+                },
+                "eventType": {
+                    "type": "string"
+                },
+                "killerPuuid": {
+                    "type": "string"
+                },
+                "planterPuuid": {
+                    "type": "string"
+                },
+                "timeSinceRoundStartMillis": {
+                    "type": "integer"
+                },
+                "victimPuuid": {
+                    "type": "string"
+                },
+                "weaponId": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.RoundPlayerStatsLite": {
+            "type": "object",
+            "properties": {
+                "assists": {
+                    "type": "integer"
+                },
+                "deaths": {
+                    "type": "integer"
+                },
+                "economy": {
+                    "$ref": "#/definitions/services.EconomyInfo"
+                },
+                "kills": {
+                    "type": "integer"
+                },
+                "puuid": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.RoundSummaryLite": {
+            "type": "object",
+            "properties": {
+                "eventLog": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.RoundEventLogEntry"
+                    }
+                },
+                "playerStats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.RoundPlayerStatsLite"
+                    }
+                },
+                "roundNumber": {
+                    "type": "integer"
+                },
+                "roundResultCode": {
+                    "type": "string"
+                },
+                "scoreAfterRound": {
+                    "$ref": "#/definitions/services.ScoreAfterRound"
+                },
+                "winningTeam": {
+                    "type": "string"
+                }
+            }
+        },
+        "services.ScoreAfterRound": {
+            "type": "object",
+            "properties": {
+                "blue": {
+                    "type": "integer"
+                },
+                "red": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.ViewerContext": {
+            "type": "object",
+            "properties": {
+                "bestRoundNumber": {
+                    "type": "integer"
+                },
+                "puuid": {
+                    "type": "string"
                 }
             }
         },

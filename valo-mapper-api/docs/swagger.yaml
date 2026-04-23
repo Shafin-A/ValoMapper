@@ -95,6 +95,33 @@ definitions:
           $ref: '#/definitions/services.MatchPreview'
         type: array
     type: object
+  handlers.MatchSummaryResponse:
+    properties:
+      gameStartAt:
+        type: string
+      mapId:
+        type: string
+      mapName:
+        type: string
+      matchId:
+        type: string
+      players:
+        items:
+          $ref: '#/definitions/services.MatchPlayerSummary'
+        type: array
+      queueLabel:
+        type: string
+      rounds:
+        items:
+          $ref: '#/definitions/services.RoundSummaryLite'
+        type: array
+      schemaVersion:
+        type: string
+      totalRounds:
+        type: integer
+      viewer:
+        $ref: '#/definitions/services.ViewerContext'
+    type: object
   handlers.RSOCallbackResponse:
     properties:
       customToken:
@@ -607,8 +634,34 @@ definitions:
       updatedAt:
         type: string
     type: object
+  services.EconomyInfo:
+    properties:
+      loadoutValue:
+        type: integer
+      remaining:
+        type: integer
+    type: object
+  services.MatchPlayerSummary:
+    properties:
+      characterId:
+        type: string
+      characterName:
+        type: string
+      gameName:
+        type: string
+      puuid:
+        type: string
+      tagLine:
+        type: string
+      teamId:
+        type: string
+    type: object
   services.MatchPreview:
     properties:
+      agentId:
+        type: string
+      agentName:
+        type: string
       assists:
         type: integer
       deaths:
@@ -633,6 +686,71 @@ definitions:
         type: string
       teamScore:
         type: integer
+    type: object
+  services.RoundEventLogEntry:
+    properties:
+      defuserPuuid:
+        type: string
+      eventType:
+        type: string
+      killerPuuid:
+        type: string
+      planterPuuid:
+        type: string
+      timeSinceRoundStartMillis:
+        type: integer
+      victimPuuid:
+        type: string
+      weaponId:
+        type: string
+    type: object
+  services.RoundPlayerStatsLite:
+    properties:
+      assists:
+        type: integer
+      deaths:
+        type: integer
+      economy:
+        $ref: '#/definitions/services.EconomyInfo'
+      kills:
+        type: integer
+      puuid:
+        type: string
+      score:
+        type: integer
+    type: object
+  services.RoundSummaryLite:
+    properties:
+      eventLog:
+        items:
+          $ref: '#/definitions/services.RoundEventLogEntry'
+        type: array
+      playerStats:
+        items:
+          $ref: '#/definitions/services.RoundPlayerStatsLite'
+        type: array
+      roundNumber:
+        type: integer
+      roundResultCode:
+        type: string
+      scoreAfterRound:
+        $ref: '#/definitions/services.ScoreAfterRound'
+      winningTeam:
+        type: string
+    type: object
+  services.ScoreAfterRound:
+    properties:
+      blue:
+        type: integer
+      red:
+        type: integer
+    type: object
+  services.ViewerContext:
+    properties:
+      bestRoundNumber:
+        type: integer
+      puuid:
+        type: string
     type: object
   websocket.HubStats:
     properties:
@@ -1481,6 +1599,48 @@ paths:
       security:
       - BearerAuth: []
       summary: Get match previews
+      tags:
+      - matches
+  /api/matches/{matchId}/summary:
+    get:
+      description: Returns a match summary with round-by-round details and event logs
+        for the authenticated user.
+      parameters:
+      - description: Match ID
+        in: path
+        name: matchId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.MatchSummaryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get match summary with round details
       tags:
       - matches
   /api/strategies:

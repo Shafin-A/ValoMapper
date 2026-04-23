@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strings"
 	"time"
 	"valo-mapper-api/models"
@@ -23,6 +24,7 @@ var (
 	ErrRSOUserRequired   = errors.New("rso user required")
 	ErrPUUIDUnavailable  = errors.New("puuid unavailable")
 	ErrRiotAPIKeyMissing = errors.New("riot api key unavailable")
+	ErrMatchNotFound     = errors.New("match not found")
 )
 
 func sanitizeRiotIdentifier(value string) (string, error) {
@@ -53,6 +55,71 @@ type MatchPreview struct {
 	Deaths        int    `json:"deaths"`
 	Assists       int    `json:"assists"`
 	PersonalScore int    `json:"personalScore"`
+}
+
+type MatchSummaryResponse struct {
+	SchemaVersion string               `json:"schemaVersion"`
+	MatchID       string               `json:"matchId"`
+	MapID         string               `json:"mapId"`
+	MapName       string               `json:"mapName"`
+	QueueLabel    string               `json:"queueLabel"`
+	GameStartAt   string               `json:"gameStartAt"`
+	Viewer        ViewerContext        `json:"viewer"`
+	TotalRounds   int                  `json:"totalRounds"`
+	Players       []MatchPlayerSummary `json:"players"`
+	Rounds        []RoundSummaryLite   `json:"rounds"`
+}
+
+type ViewerContext struct {
+	PUUID           string `json:"puuid"`
+	BestRoundNumber int    `json:"bestRoundNumber"`
+}
+
+type MatchPlayerSummary struct {
+	PUUID         string `json:"puuid"`
+	GameName      string `json:"gameName"`
+	TagLine       string `json:"tagLine"`
+	TeamID        string `json:"teamId"`
+	CharacterID   string `json:"characterId"`
+	CharacterName string `json:"characterName"`
+}
+
+type RoundSummaryLite struct {
+	RoundNumber     int                    `json:"roundNumber"`
+	WinningTeam     string                 `json:"winningTeam"`
+	RoundResultCode string                 `json:"roundResultCode"`
+	ScoreAfterRound ScoreAfterRound        `json:"scoreAfterRound"`
+	PlayerStats     []RoundPlayerStatsLite `json:"playerStats"`
+	EventLog        []RoundEventLogEntry   `json:"eventLog"`
+}
+
+type ScoreAfterRound struct {
+	Red  int `json:"red"`
+	Blue int `json:"blue"`
+}
+
+type RoundPlayerStatsLite struct {
+	PUUID   string      `json:"puuid"`
+	Score   int         `json:"score"`
+	Kills   int         `json:"kills"`
+	Deaths  int         `json:"deaths"`
+	Assists int         `json:"assists"`
+	Economy EconomyInfo `json:"economy"`
+}
+
+type EconomyInfo struct {
+	LoadoutValue int `json:"loadoutValue"`
+	Remaining    int `json:"remaining"`
+}
+
+type RoundEventLogEntry struct {
+	EventType                 string  `json:"eventType"`
+	TimeSinceRoundStartMillis int     `json:"timeSinceRoundStartMillis"`
+	KillerPuuid               *string `json:"killerPuuid,omitempty"`
+	VictimPuuid               *string `json:"victimPuuid,omitempty"`
+	WeaponID                  *string `json:"weaponId,omitempty"`
+	PlanterPuuid              *string `json:"planterPuuid,omitempty"`
+	DefuserPuuid              *string `json:"defuserPuuid,omitempty"`
 }
 
 // MatchService fetches match data from Riot and builds preview DTOs.
@@ -97,6 +164,8 @@ type riotMatchInfoDTO struct {
 type riotPlayerDTO struct {
 	PUUID       string             `json:"puuid"`
 	TeamID      string             `json:"teamId"`
+	GameName    string             `json:"gameName"`
+	TagLine     string             `json:"tagLine"`
 	Stats       riotPlayerStatsDTO `json:"stats"`
 	CharacterID string             `json:"characterId"`
 }
@@ -112,6 +181,58 @@ type riotTeamDTO struct {
 	TeamID    string `json:"teamId"`
 	Won       bool   `json:"won"`
 	RoundsWon int    `json:"roundsWon"`
+}
+
+type riotDetailedMatchDTO struct {
+	MatchInfo riotMatchInfoDTO `json:"matchInfo"`
+	Players   []riotPlayerDTO  `json:"players"`
+	Teams     []riotTeamDTO    `json:"teams"`
+	Rounds    []riotRoundDTO   `json:"rounds"`
+}
+
+type riotRoundDTO struct {
+	RoundNum        int                    `json:"roundNum"`
+	RoundResult     string                 `json:"roundResult"`
+	RoundCeremony   string                 `json:"roundCeremony"`
+	WinningTeam     string                 `json:"winningTeam"`
+	BombPlanter     *string                `json:"bombPlanter"`
+	BombDefuser     *string                `json:"bombDefuser"`
+	PlantRoundTime  int                    `json:"plantRoundTime"`
+	DefuseRoundTime int                    `json:"defuseRoundTime"`
+	PlayersStats    []riotRoundPlayerStats `json:"playerStats"`
+}
+
+type riotRoundPlayerStats struct {
+	PUUID         string           `json:"puuid"`
+	Kills         int              `json:"kills"`
+	Deaths        int              `json:"deaths"`
+	Assists       int              `json:"assists"`
+	PlayersKilled []riotKillEvent  `json:"playersKilled"`
+	EconomyState  riotEconomyState `json:"economy"`
+	Score         int              `json:"score"`
+}
+
+type riotKillEvent struct {
+	TimeSinceGameStartMillis  int                 `json:"timeSinceGameStartMillis"`
+	TimeSinceRoundStartMillis int                 `json:"timeSinceRoundStartMillis"`
+	Killer                    string              `json:"killer"`
+	Victim                    string              `json:"victim"`
+	Assistants                []string            `json:"assistants"`
+	VictimLocation            map[string]int      `json:"victimLocation"`
+	PlayerLocations           []map[string]any    `json:"playerLocations"`
+	FinishingDamage           riotFinishingDamage `json:"finishingDamage"`
+}
+
+type riotFinishingDamage struct {
+	DamageType          string `json:"damageType"`
+	DamageItem          string `json:"damageItem"`
+	IsSecondaryFireMode bool   `json:"isSecondaryFireMode"`
+}
+
+type riotEconomyState struct {
+	LoadoutValue int `json:"loadoutValue"`
+	Remaining    int `json:"remaining"`
+	Spent        int `json:"spent"`
 }
 
 func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.User, limit int) ([]MatchPreview, error) {
@@ -396,4 +517,237 @@ func toAgentName(agentID string) string {
 	}
 
 	return trimmed
+}
+
+// GetMatchSummary returns a match summary with round details and event logs fetched from Riot API.
+func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, matchID string) (*MatchSummaryResponse, error) {
+	if user == nil || user.RSOSubjectID == nil || strings.TrimSpace(*user.RSOSubjectID) == "" {
+		return nil, ErrRSOUserRequired
+	}
+
+	if user.FirebaseUID == nil {
+		return nil, ErrPUUIDUnavailable
+	}
+
+	matchID = strings.TrimSpace(matchID)
+	if matchID == "" {
+		return nil, fmt.Errorf("match id is required")
+	}
+
+	if s.riotAPIKey == "" {
+		return nil, ErrRiotAPIKeyMissing
+	}
+
+	matchPath := fmt.Sprintf("/val/match/v1/matches/%s", url.PathEscape(matchID))
+	match := riotDetailedMatchDTO{}
+	if err := s.fetchFromAnyRegion(ctx, matchPath, &match); err != nil {
+		return nil, fmt.Errorf("fetch match details: %w", err)
+	}
+
+	viewerPUUID := *user.FirebaseUID
+	bestRound := s.findBestRound(match, viewerPUUID)
+
+	summary := &MatchSummaryResponse{
+		SchemaVersion: "matches-summary.v1",
+		MatchID:       strings.TrimSpace(match.MatchInfo.MatchID),
+		MapID:         strings.TrimSpace(match.MatchInfo.MapID),
+		MapName:       toMapName(strings.TrimSpace(match.MatchInfo.MapID)),
+		QueueLabel:    normalizeQueueLabel(match.MatchInfo.QueueID, match.MatchInfo.GameMode),
+		GameStartAt:   time.UnixMilli(match.MatchInfo.GameStartMillis).UTC().Format(time.RFC3339),
+		Viewer: ViewerContext{
+			PUUID:           viewerPUUID,
+			BestRoundNumber: bestRound,
+		},
+		TotalRounds: len(match.Rounds),
+		Players:     s.buildPlayerSummaries(match),
+		Rounds:      s.buildRoundSummaries(match),
+	}
+
+	return summary, nil
+}
+
+func (s *MatchService) findBestRound(match riotDetailedMatchDTO, viewerPUUID string) int {
+	bestScore := -1
+	bestRound := 1
+
+	for _, round := range match.Rounds {
+		for _, stats := range round.PlayersStats {
+			if stats.PUUID == viewerPUUID {
+				if stats.Score > bestScore {
+					bestScore = stats.Score
+					bestRound = round.RoundNum
+				}
+				break
+			}
+		}
+	}
+
+	return bestRound
+}
+
+func (s *MatchService) buildPlayerSummaries(match riotDetailedMatchDTO) []MatchPlayerSummary {
+	summaries := make([]MatchPlayerSummary, 0, len(match.Players))
+	for _, p := range match.Players {
+		summaries = append(summaries, MatchPlayerSummary{
+			PUUID:         p.PUUID,
+			GameName:      p.GameName,
+			TagLine:       p.TagLine,
+			TeamID:        p.TeamID,
+			CharacterID:   p.CharacterID,
+			CharacterName: toAgentName(p.CharacterID),
+		})
+	}
+	return summaries
+}
+
+func (s *MatchService) buildRoundSummaries(match riotDetailedMatchDTO) []RoundSummaryLite {
+	summaries := make([]RoundSummaryLite, 0, len(match.Rounds))
+
+	// Map to track cumulative scores
+	scores := map[string]int{"Red": 0, "Blue": 0}
+
+	for _, round := range match.Rounds {
+		// Update scores based on round result
+		if round.WinningTeam != "" {
+			scores[round.WinningTeam]++
+		}
+
+		roundSummary := RoundSummaryLite{
+			RoundNumber:     round.RoundNum,
+			WinningTeam:     round.WinningTeam,
+			RoundResultCode: normalizeRoundResult(round.RoundResult, round.RoundCeremony),
+			ScoreAfterRound: ScoreAfterRound{
+				Red:  scores["Red"],
+				Blue: scores["Blue"],
+			},
+			PlayerStats: s.buildPlayerStats(round, match.Players),
+			EventLog:    s.buildEventLog(round),
+		}
+
+		summaries = append(summaries, roundSummary)
+	}
+
+	return summaries
+}
+
+func (s *MatchService) buildPlayerStats(round riotRoundDTO, allPlayers []riotPlayerDTO) []RoundPlayerStatsLite {
+	stats := make([]RoundPlayerStatsLite, 0, len(round.PlayersStats))
+
+	// Sort: Blue team first, then Red team
+	blueStats := make([]RoundPlayerStatsLite, 0)
+	redStats := make([]RoundPlayerStatsLite, 0)
+
+	for _, ps := range round.PlayersStats {
+		stat := RoundPlayerStatsLite{
+			PUUID:   ps.PUUID,
+			Score:   ps.Score,
+			Kills:   ps.Kills,
+			Deaths:  ps.Deaths,
+			Assists: ps.Assists,
+			Economy: EconomyInfo{
+				LoadoutValue: ps.EconomyState.LoadoutValue,
+				Remaining:    ps.EconomyState.Remaining,
+			},
+		}
+
+		// Find player's team
+		for _, p := range allPlayers {
+			if p.PUUID == ps.PUUID {
+				if p.TeamID == "Blue" {
+					blueStats = append(blueStats, stat)
+				} else {
+					redStats = append(redStats, stat)
+				}
+				break
+			}
+		}
+	}
+
+	stats = append(stats, blueStats...)
+	stats = append(stats, redStats...)
+
+	return stats
+}
+
+func (s *MatchService) buildEventLog(round riotRoundDTO) []RoundEventLogEntry {
+	events := make([]RoundEventLogEntry, 0)
+
+	// Process kill events
+	for _, ps := range round.PlayersStats {
+		for _, kill := range ps.PlayersKilled {
+			var weaponID string
+			if kill.FinishingDamage.DamageItem != "" {
+				weaponID = kill.FinishingDamage.DamageItem
+			}
+
+			event := RoundEventLogEntry{
+				EventType:                 "kill",
+				TimeSinceRoundStartMillis: kill.TimeSinceRoundStartMillis,
+				KillerPuuid:               ptrStr(kill.Killer),
+				VictimPuuid:               ptrStr(kill.Victim),
+				WeaponID:                  ptrStr(weaponID),
+			}
+			events = append(events, event)
+		}
+	}
+
+	// Add spike events
+	if round.BombPlanter != nil && round.PlantRoundTime > 0 {
+		event := RoundEventLogEntry{
+			EventType:                 "spike_planted",
+			TimeSinceRoundStartMillis: round.PlantRoundTime,
+			PlanterPuuid:              round.BombPlanter,
+		}
+		events = append(events, event)
+	}
+
+	if round.BombDefuser != nil && round.DefuseRoundTime > 0 {
+		event := RoundEventLogEntry{
+			EventType:                 "spike_defused",
+			TimeSinceRoundStartMillis: round.DefuseRoundTime,
+			DefuserPuuid:              round.BombDefuser,
+		}
+		events = append(events, event)
+	}
+
+	sortEventsByTime(events)
+
+	return events
+}
+
+func normalizeRoundResult(roundResult, roundCeremony string) string {
+	result := strings.TrimSpace(roundResult)
+	ceremony := strings.ToLower(strings.TrimSpace(roundCeremony))
+
+	if strings.EqualFold(result, "Bomb detonated") || ceremony == "detonate" {
+		return "Detonate"
+	}
+	if strings.EqualFold(result, "Defused") || ceremony == "defuse" {
+		return "Defuse"
+	}
+	if strings.EqualFold(result, "Eliminated") || ceremony == "elimination" {
+		return "Elimination"
+	}
+	if ceremony == "time_expired" {
+		return "TimeExpired"
+	}
+	if ceremony == "surrender" {
+		return "Surrendered"
+	}
+
+	if result != "" {
+		return result
+	}
+
+	return "Elimination"
+}
+
+func sortEventsByTime(events []RoundEventLogEntry) {
+	slices.SortFunc(events, func(a, b RoundEventLogEntry) int {
+		return a.TimeSinceRoundStartMillis - b.TimeSinceRoundStartMillis
+	})
+}
+
+func ptrStr(s string) *string {
+	return &s
 }

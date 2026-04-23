@@ -25,3 +25,12 @@ type StripeWebhookResponse struct {
 type MatchPreviewsResponse struct {
 	Matches []services.MatchPreview `json:"matches"`
 }
+
+type MatchSummaryResponse = services.MatchSummaryResponse
+type ViewerContext = services.ViewerContext
+type MatchPlayerSummary = services.MatchPlayerSummary
+type RoundSummaryLite = services.RoundSummaryLite
+type ScoreAfterRound = services.ScoreAfterRound
+type RoundPlayerStatsLite = services.RoundPlayerStatsLite
+type EconomyInfo = services.EconomyInfo
+type RoundEventLogEntry = services.RoundEventLogEntry

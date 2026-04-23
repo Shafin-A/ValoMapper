@@ -18,4 +18,8 @@ func RegisterMatchRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 	matches.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
 		matchHandler.GetMatches(w, r, authClient)
 	}).Methods("GET")
+
+	matches.HandleFunc("/{matchId}/summary", func(w http.ResponseWriter, r *http.Request) {
+		matchHandler.GetMatchSummary(w, r, authClient)
+	}).Methods("GET")
 }
