@@ -173,7 +173,7 @@ export const getKillEventImage = (
       return {
         src: "/weapons/fall_death.png",
         alt: "Fall damage",
-        className: "object-contain object-center scale-[0.95]",
+        className: "object-contain object-right scale-x-[-1]",
       };
     case "Ability": {
       const abilityIconSrc = getAbilityKillIconSrc(
