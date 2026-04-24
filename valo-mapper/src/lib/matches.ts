@@ -26,8 +26,19 @@ export type KillEventImage = {
   wrapperClassName?: string;
 };
 
+const normalizeAgentAssetName = (agentName?: string) => {
+  if (!agentName) return "astra";
+
+  const normalized = agentName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+
+  return normalized;
+};
+
 export const getAgentImageSrc = (agentName: string) => {
-  const normalized = (agentName || "Astra").trim().toLowerCase();
+  const normalized = normalizeAgentAssetName(agentName);
   return `/agents/${normalized}/${normalized}.png`;
 };
 
