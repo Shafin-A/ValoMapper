@@ -15,10 +15,15 @@ export type MatchRoundEvent = MatchRound["eventLog"][number];
 export type MatchKillEvent = Extract<MatchRoundEvent, { eventType: "kill" }>;
 export type MatchRoundPlayerStats = MatchRound["playerStats"][number];
 
+export const MATCH_SPIKE_IMAGE_CLASS_NAME =
+  "object-contain object-right scale-[-0.65]";
+export const MATCH_SPIKE_IMAGE_WRAPPER_CLASS_NAME = "relative h-8 w-full px-2";
+
 export type KillEventImage = {
   src: string;
   alt: string;
   className: string;
+  wrapperClassName?: string;
 };
 
 export const getAgentImageSrc = (agentName: string) => {
@@ -150,7 +155,8 @@ export const getKillEventImage = (
       return {
         src: "/tools/spike.webp",
         alt: "Spike",
-        className: "object-contain object-center scale-[0.8]",
+        className: MATCH_SPIKE_IMAGE_CLASS_NAME,
+        wrapperClassName: MATCH_SPIKE_IMAGE_WRAPPER_CLASS_NAME,
       };
     case "Fall":
       return {
@@ -169,14 +175,14 @@ export const getKillEventImage = (
         return {
           src: abilityIconSrc,
           alt: "Ability",
-          className: "object-contain object-center scale-[0.9]",
+          className: "object-contain object-right scale-x-[-1]",
         };
       }
 
       return {
         src: getPlayerAgentIconSrc(players, event.killerPuuid),
         alt: "Ability",
-        className: "object-contain object-center scale-[0.95]",
+        className: "object-contain object-right scale-x-[-1]",
       };
     }
   }
@@ -195,6 +201,6 @@ export const getKillEventImage = (
   return {
     src: getPlayerAgentIconSrc(players, event.killerPuuid),
     alt: "Kill source",
-    className: "object-contain object-center scale-[0.95]",
+    className: "object-contain object-right scale-x-[-1]",
   };
 };

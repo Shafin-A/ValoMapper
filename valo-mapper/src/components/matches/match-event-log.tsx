@@ -1,6 +1,8 @@
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getMatchTone, MATCH_TONE_CLASSES } from "@/lib/consts";
 import {
+  MATCH_SPIKE_IMAGE_CLASS_NAME,
+  MATCH_SPIKE_IMAGE_WRAPPER_CLASS_NAME,
   MatchPlayers,
   MatchRoundEvent,
   formatTimeSinceRoundStart,
@@ -82,7 +84,11 @@ const RoundEventRow = ({
             <div
               className={`flex min-w-0 items-center justify-center ${contentShade}`}
             >
-              <div className="relative ml-3 h-4 w-full">
+              <div
+                className={
+                  killEventImage.wrapperClassName ?? "relative ml-3 h-4 w-full"
+                }
+              >
                 <Image
                   src={killEventImage.src}
                   alt={killEventImage.alt}
@@ -131,14 +137,20 @@ const RoundEventRow = ({
           </div>
 
           <div className={`min-w-0 ${contentShade}`}>
-            <div className="relative h-8 w-full px-2">
+            <div
+              className={
+                event.eventType === "spike_planted"
+                  ? MATCH_SPIKE_IMAGE_WRAPPER_CLASS_NAME
+                  : "relative h-8 w-full px-2"
+              }
+            >
               {event.eventType === "spike_planted" ? (
                 <Image
                   src="/tools/spike.webp"
                   alt="Spike"
                   fill
                   sizes="32px"
-                  className="object-contain object-right scale-[-0.65]"
+                  className={MATCH_SPIKE_IMAGE_CLASS_NAME}
                 />
               ) : (
                 <Image
