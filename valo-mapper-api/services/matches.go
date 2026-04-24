@@ -301,7 +301,7 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 			continue
 		}
 
-		if !isSupportedQueue(match.MatchInfo.QueueID, match.MatchInfo.GameMode) {
+		if !isSupportedQueue(match.MatchInfo.QueueID) {
 			continue
 		}
 
@@ -386,9 +386,21 @@ func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath stri
 	return errors.New("riot request failed")
 }
 
-func isSupportedQueue(queueID, gameMode string) bool {
-	combined := strings.ToLower(strings.TrimSpace(queueID) + " " + strings.TrimSpace(gameMode))
-	return strings.Contains(combined, "competitive") || strings.Contains(combined, "unrated")
+func normalizeQueueID(queueID string) string {
+	return strings.ToLower(strings.TrimSpace(queueID))
+}
+
+func isCustomQueue(queueID string) bool {
+	return normalizeQueueID(queueID) == ""
+}
+
+func isSupportedQueue(queueID string) bool {
+	switch normalizeQueueID(queueID) {
+	case "", "competitive", "unrated":
+		return true
+	default:
+		return false
+	}
 }
 
 func buildMatchPreview(match riotMatchDTO, puuid string) (MatchPreview, bool) {
@@ -407,7 +419,7 @@ func buildMatchPreview(match riotMatchDTO, puuid string) (MatchPreview, bool) {
 		result = "Win"
 	}
 
-	queueLabel := normalizeQueueLabel(match.MatchInfo.QueueID, match.MatchInfo.GameMode)
+	queueLabel := normalizeQueueLabel(match.MatchInfo.QueueID)
 	mapID := strings.TrimSpace(match.MatchInfo.MapID)
 	agentID := strings.TrimSpace(player.CharacterID)
 
@@ -464,17 +476,16 @@ func findTeams(teams []riotTeamDTO, playerTeamID string) (riotTeamDTO, riotTeamD
 	return *myTeam, *enemyTeam, true
 }
 
-func normalizeQueueLabel(queueID, gameMode string) string {
-	combined := strings.ToLower(strings.TrimSpace(queueID) + " " + strings.TrimSpace(gameMode))
-	if strings.Contains(combined, "competitive") {
+func normalizeQueueLabel(queueID string) string {
+	switch normalizeQueueID(queueID) {
+	case "":
+		return "Custom"
+	case "competitive":
 		return "Competitive"
-	}
-	if strings.Contains(combined, "unrated") {
+	case "unrated":
 		return "Unrated"
 	}
-	if trimmedMode := strings.TrimSpace(gameMode); trimmedMode != "" {
-		return trimmedMode
-	}
+
 	if trimmedQueue := strings.TrimSpace(queueID); trimmedQueue != "" {
 		return trimmedQueue
 	}
@@ -595,7 +606,7 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 		MatchID:     strings.TrimSpace(match.MatchInfo.MatchID),
 		MapID:       strings.TrimSpace(match.MatchInfo.MapID),
 		MapName:     toMapName(strings.TrimSpace(match.MatchInfo.MapID)),
-		QueueLabel:  normalizeQueueLabel(match.MatchInfo.QueueID, match.MatchInfo.GameMode),
+		QueueLabel:  normalizeQueueLabel(match.MatchInfo.QueueID),
 		GameStartAt: time.UnixMilli(match.MatchInfo.GameStartMillis).UTC().Format(time.RFC3339),
 		Viewer: ViewerContext{
 			PUUID:           viewerPUUID,

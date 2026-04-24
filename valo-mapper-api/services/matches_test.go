@@ -151,6 +151,44 @@ func TestToMapName_FallbacksToInternalName(t *testing.T) {
 	}
 }
 
+func TestIsSupportedQueue(t *testing.T) {
+	tests := []struct {
+		name    string
+		queueID string
+		want    bool
+	}{
+		{name: "competitive queue", queueID: "competitive", want: true},
+		{name: "unrated queue", queueID: "unrated", want: true},
+		{name: "custom empty queue", queueID: "", want: true},
+		{name: "unsupported queue", queueID: "deathmatch", want: false},
+	}
+
+	for _, test := range tests {
+		if got := isSupportedQueue(test.queueID); got != test.want {
+			t.Fatalf("%s: isSupportedQueue(%q) = %t, want %t", test.name, test.queueID, got, test.want)
+		}
+	}
+}
+
+func TestNormalizeQueueLabel(t *testing.T) {
+	tests := []struct {
+		name    string
+		queueID string
+		want    string
+	}{
+		{name: "competitive queue", queueID: "competitive", want: "Competitive"},
+		{name: "unrated queue", queueID: "unrated", want: "Unrated"},
+		{name: "custom empty queue", queueID: "", want: "Custom"},
+		{name: "falls back to queue id", queueID: "swiftplay", want: "swiftplay"},
+	}
+
+	for _, test := range tests {
+		if got := normalizeQueueLabel(test.queueID); got != test.want {
+			t.Fatalf("%s: normalizeQueueLabel(%q) = %q, want %q", test.name, test.queueID, got, test.want)
+		}
+	}
+}
+
 func TestToAgentName_KnownAgentUUIDMappings(t *testing.T) {
 	tests := []struct {
 		agentID  string
