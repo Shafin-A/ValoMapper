@@ -210,7 +210,6 @@ type riotDetailedMatchDTO struct {
 type riotRoundDTO struct {
 	RoundNum        int                    `json:"roundNum"`
 	RoundResult     string                 `json:"roundResult"`
-	RoundCeremony   string                 `json:"roundCeremony"`
 	WinningTeam     string                 `json:"winningTeam"`
 	BombPlanter     *string                `json:"bombPlanter"`
 	BombDefuser     *string                `json:"bombDefuser"`
@@ -388,10 +387,6 @@ func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath stri
 
 func normalizeQueueID(queueID string) string {
 	return strings.ToLower(strings.TrimSpace(queueID))
-}
-
-func isCustomQueue(queueID string) bool {
-	return normalizeQueueID(queueID) == ""
 }
 
 func isSupportedQueue(queueID string) bool {
@@ -669,7 +664,7 @@ func (s *MatchService) buildRoundSummaries(match riotDetailedMatchDTO) []RoundSu
 		roundSummary := RoundSummaryLite{
 			RoundNumber:     round.RoundNum + 1,
 			WinningTeam:     round.WinningTeam,
-			RoundResultCode: normalizeRoundResult(round.RoundResult, round.RoundCeremony),
+			RoundResultCode: normalizeRoundResult(round.RoundResult),
 			ScoreAfterRound: ScoreAfterRound{
 				Red:  scores["Red"],
 				Blue: scores["Blue"],
@@ -794,23 +789,22 @@ func buildRoundCombatCounts(round riotRoundDTO) map[string]roundCombatCounts {
 	return counts
 }
 
-func normalizeRoundResult(roundResult, roundCeremony string) string {
+func normalizeRoundResult(roundResult string) string {
 	result := strings.TrimSpace(roundResult)
-	ceremony := strings.ToLower(strings.TrimSpace(roundCeremony))
 
-	if strings.EqualFold(result, "Bomb detonated") || ceremony == "detonate" {
+	if strings.EqualFold(result, "Bomb detonated") {
 		return "Detonate"
 	}
-	if strings.EqualFold(result, "Defused") || strings.EqualFold(result, "Bomb defused") || ceremony == "defuse" {
+	if strings.EqualFold(result, "Defused") || strings.EqualFold(result, "Bomb defused") {
 		return "Defuse"
 	}
-	if strings.EqualFold(result, "Eliminated") || ceremony == "elimination" {
+	if strings.EqualFold(result, "Eliminated") {
 		return "Elimination"
 	}
-	if ceremony == "time_expired" {
+	if strings.EqualFold(result, "Round timer expired") {
 		return "TimeExpired"
 	}
-	if ceremony == "surrender" {
+	if strings.EqualFold(result, "Surrendered") {
 		return "Surrendered"
 	}
 

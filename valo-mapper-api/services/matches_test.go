@@ -189,6 +189,25 @@ func TestNormalizeQueueLabel(t *testing.T) {
 	}
 }
 
+func TestNormalizeRoundResult(t *testing.T) {
+	tests := []struct {
+		name   string
+		result string
+		want   string
+	}{
+		{name: "bomb defused", result: "Bomb defused", want: "Defuse"},
+		{name: "round timer expired", result: "Round timer expired", want: "TimeExpired"},
+		{name: "surrendered", result: "Surrendered", want: "Surrendered"},
+		{name: "fallback raw result", result: "Some Future Result", want: "Some Future Result"},
+	}
+
+	for _, test := range tests {
+		if got := normalizeRoundResult(test.result); got != test.want {
+			t.Fatalf("%s: normalizeRoundResult(%q) = %q, want %q", test.name, test.result, got, test.want)
+		}
+	}
+}
+
 func TestToAgentName_KnownAgentUUIDMappings(t *testing.T) {
 	tests := []struct {
 		agentID  string
