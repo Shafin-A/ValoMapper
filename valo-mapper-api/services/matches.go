@@ -22,6 +22,7 @@ const (
 	maxMatchPreviewLimit     = 50
 	matchPreviewConcurrency  = 4
 	matchPreviewCacheTTL     = 30 * time.Second
+	matchSummaryCacheTTL     = 5 * time.Minute
 	riotHTTPTimeout          = 10 * time.Second
 )
 
@@ -31,6 +32,11 @@ var (
 	ErrRiotAPIKeyMissing = errors.New("riot api key unavailable")
 	ErrMatchNotFound     = errors.New("match not found")
 )
+
+type matchSummaryCacheEntry struct {
+	summary   *MatchSummaryResponse
+	expiresAt time.Time
+}
 
 func sanitizeRiotIdentifier(value string) (string, error) {
 	trimmed := strings.TrimSpace(value)
@@ -148,6 +154,8 @@ type MatchService struct {
 	riotAPIKey          string
 	matchPreviewCache   map[string]matchPreviewCacheEntry
 	matchPreviewCacheMu sync.RWMutex
+	matchSummaryCache   map[string]matchSummaryCacheEntry
+	matchSummaryCacheMu sync.RWMutex
 	now                 func() time.Time
 }
 
@@ -157,6 +165,7 @@ func NewMatchService() *MatchService {
 		httpClient:        &http.Client{Timeout: riotHTTPTimeout},
 		riotAPIKey:        strings.TrimSpace(os.Getenv("RIOT_API_KEY")),
 		matchPreviewCache: make(map[string]matchPreviewCacheEntry),
+		matchSummaryCache: make(map[string]matchSummaryCacheEntry),
 		now:               time.Now,
 	}
 }
@@ -423,6 +432,95 @@ func (s *MatchService) setCachedMatchPreviews(puuid string, limit int, previews 
 		expiresAt: s.timeNow().Add(matchPreviewCacheTTL),
 	}
 	s.matchPreviewCacheMu.Unlock()
+}
+
+func cloneMatchSummary(summary *MatchSummaryResponse) *MatchSummaryResponse {
+	if summary == nil {
+		return nil
+	}
+
+	cloned := *summary
+	cloned.Players = append([]MatchPlayerSummary(nil), summary.Players...)
+	cloned.Rounds = make([]RoundSummaryLite, len(summary.Rounds))
+
+	for roundIndex, round := range summary.Rounds {
+		clonedRound := round
+		clonedRound.PlayerStats = append([]RoundPlayerStatsLite(nil), round.PlayerStats...)
+		clonedRound.EventLog = make([]RoundEventLogEntry, len(round.EventLog))
+
+		for eventIndex, event := range round.EventLog {
+			clonedRound.EventLog[eventIndex] = RoundEventLogEntry{
+				EventType:                 event.EventType,
+				TimeSinceRoundStartMillis: event.TimeSinceRoundStartMillis,
+				KillerPuuid:               cloneStringPointer(event.KillerPuuid),
+				VictimPuuid:               cloneStringPointer(event.VictimPuuid),
+				DamageType:                cloneStringPointer(event.DamageType),
+				DamageItem:                cloneStringPointer(event.DamageItem),
+				PlanterPuuid:              cloneStringPointer(event.PlanterPuuid),
+				DefuserPuuid:              cloneStringPointer(event.DefuserPuuid),
+			}
+		}
+
+		cloned.Rounds[roundIndex] = clonedRound
+	}
+
+	return &cloned
+}
+
+func cloneStringPointer(value *string) *string {
+	if value == nil {
+		return nil
+	}
+
+	cloned := *value
+	return &cloned
+}
+
+func buildMatchSummaryCacheKey(puuid, matchID string) string {
+	return fmt.Sprintf("%s:%s", puuid, matchID)
+}
+
+func (s *MatchService) getCachedMatchSummary(puuid, matchID string) (*MatchSummaryResponse, bool) {
+	cacheKey := buildMatchSummaryCacheKey(puuid, matchID)
+	now := s.timeNow()
+
+	s.matchSummaryCacheMu.RLock()
+	entry, ok := s.matchSummaryCache[cacheKey]
+	s.matchSummaryCacheMu.RUnlock()
+	if !ok {
+		return nil, false
+	}
+
+	if !entry.expiresAt.After(now) {
+		s.matchSummaryCacheMu.Lock()
+		if currentEntry, currentOK := s.matchSummaryCache[cacheKey]; currentOK && !currentEntry.expiresAt.After(now) {
+			delete(s.matchSummaryCache, cacheKey)
+		}
+		s.matchSummaryCacheMu.Unlock()
+		return nil, false
+	}
+
+	return cloneMatchSummary(entry.summary), true
+}
+
+func (s *MatchService) setCachedMatchSummary(puuid, matchID string, summary *MatchSummaryResponse) {
+	cacheKey := buildMatchSummaryCacheKey(puuid, matchID)
+
+	s.matchSummaryCacheMu.Lock()
+	if s.matchSummaryCache == nil {
+		s.matchSummaryCache = make(map[string]matchSummaryCacheEntry)
+	}
+	if summary == nil {
+		delete(s.matchSummaryCache, cacheKey)
+		s.matchSummaryCacheMu.Unlock()
+		return
+	}
+
+	s.matchSummaryCache[cacheKey] = matchSummaryCacheEntry{
+		summary:   cloneMatchSummary(summary),
+		expiresAt: s.timeNow().Add(matchSummaryCacheTTL),
+	}
+	s.matchSummaryCacheMu.Unlock()
 }
 
 func buildRiotRegionOrder(preferredRegion string) []string {
@@ -731,6 +829,11 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 		return nil, ErrRiotAPIKeyMissing
 	}
 
+	viewerPUUID := strings.TrimSpace(*user.FirebaseUID)
+	if cachedSummary, ok := s.getCachedMatchSummary(viewerPUUID, matchID); ok {
+		return cachedSummary, nil
+	}
+
 	matchPath := fmt.Sprintf("/val/match/v1/matches/%s", url.PathEscape(matchID))
 	match := riotDetailedMatchDTO{}
 	if _, err := s.fetchFromAnyRegion(ctx, matchPath, &match); err != nil {
@@ -740,7 +843,6 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 		return nil, fmt.Errorf("fetch match details: %w", err)
 	}
 
-	viewerPUUID := *user.FirebaseUID
 	bestRound := s.findBestRound(match, viewerPUUID)
 
 	summary := &MatchSummaryResponse{
@@ -757,6 +859,8 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 		Players:     s.buildPlayerSummaries(match),
 		Rounds:      s.buildRoundSummaries(match),
 	}
+
+	s.setCachedMatchSummary(viewerPUUID, matchID, summary)
 
 	return summary, nil
 }

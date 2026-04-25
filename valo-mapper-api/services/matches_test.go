@@ -410,6 +410,140 @@ func TestGetRecentMatchPreviews_UsesCachedPreviewsOnRepeatedRequest(t *testing.T
 	}
 }
 
+func TestGetMatchSummary_UsesCachedSummaryOnRepeatedRequest(t *testing.T) {
+	firebaseUID := "player-puuid"
+	rsoSubjectID := "rso-subject"
+	fixedNow := time.Unix(1_710_000_000, 0)
+	var requestCount atomic.Int32
+
+	service := &MatchService{
+		httpClient: &http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				requestCount.Add(1)
+
+				switch req.URL.Path {
+				case "/val/match/v1/matches/cached-summary-match":
+					return newJSONResponse(t, `{
+						"matchInfo": {
+							"matchId": "cached-summary-match",
+							"mapId": "/Game/Maps/Ascent/Ascent",
+							"gameStartMillis": 1710000000000,
+							"queueId": "competitive",
+							"gameMode": ""
+						},
+						"players": [
+							{
+								"puuid": "player-puuid",
+								"teamId": "Blue",
+								"gameName": "Player",
+								"tagLine": "NA1",
+								"characterId": "add6443a-41bd-e414-f6ad-e58d267f4e95"
+							},
+							{
+								"puuid": "enemy-puuid",
+								"teamId": "Red",
+								"gameName": "Enemy",
+								"tagLine": "EUW",
+								"characterId": "9f0d8ba9-4140-b941-57d3-a7ad57c6b417"
+							}
+						],
+						"teams": [
+							{"teamId": "Blue", "won": true, "roundsWon": 1},
+							{"teamId": "Red", "won": false, "roundsWon": 0}
+						],
+						"roundResults": [
+							{
+								"roundNum": 0,
+								"roundResult": "Eliminated",
+								"winningTeam": "Blue",
+								"playerStats": [
+									{
+										"puuid": "player-puuid",
+										"kills": [
+											{
+												"timeSinceGameStartMillis": 1000,
+												"timeSinceRoundStartMillis": 5000,
+												"killer": "player-puuid",
+												"victim": "enemy-puuid",
+												"assistants": [],
+												"victimLocation": {"x": 1, "y": 2},
+												"playerLocations": [],
+												"finishingDamage": {
+													"damageType": "Weapon",
+													"damageItem": "weapon-1",
+													"isSecondaryFireMode": false
+												}
+											}
+										],
+										"economy": {"loadoutValue": 3900, "remaining": 200, "spent": 3700},
+										"score": 250
+									},
+									{
+										"puuid": "enemy-puuid",
+										"kills": [],
+										"economy": {"loadoutValue": 3400, "remaining": 0, "spent": 3400},
+										"score": 100
+									}
+								]
+							}
+						]
+					}`), nil
+				default:
+					t.Fatalf("unexpected request path %q", req.URL.Path)
+					return nil, nil
+				}
+			}),
+		},
+		riotAPIKey:        "test-riot-key",
+		matchSummaryCache: make(map[string]matchSummaryCacheEntry),
+		now:               func() time.Time { return fixedNow },
+	}
+
+	user := &models.User{FirebaseUID: &firebaseUID, RSOSubjectID: &rsoSubjectID}
+
+	firstSummary, err := service.GetMatchSummary(context.Background(), user, "cached-summary-match")
+	if err != nil {
+		t.Fatalf("first GetMatchSummary returned error: %v", err)
+	}
+
+	if len(firstSummary.Players) == 0 || len(firstSummary.Rounds) == 0 || len(firstSummary.Rounds[0].EventLog) == 0 {
+		t.Fatalf("expected populated summary from first request, got %+v", firstSummary)
+	}
+
+	firstSummary.QueueLabel = "Mutated"
+	firstSummary.Players[0].GameName = "Mutated"
+	firstSummary.Rounds[0].EventLog[0].EventType = "Mutated"
+	if firstSummary.Rounds[0].EventLog[0].KillerPuuid == nil {
+		t.Fatalf("expected first event killer in cached summary")
+	}
+	*firstSummary.Rounds[0].EventLog[0].KillerPuuid = "mutated-killer"
+
+	secondSummary, err := service.GetMatchSummary(context.Background(), user, "cached-summary-match")
+	if err != nil {
+		t.Fatalf("second GetMatchSummary returned error: %v", err)
+	}
+
+	if requestCount.Load() != 1 {
+		t.Fatalf("expected only 1 Riot request total for cached summary, got %d", requestCount.Load())
+	}
+
+	if secondSummary.QueueLabel != "Competitive" {
+		t.Fatalf("expected cached summary queue label to remain Competitive, got %q", secondSummary.QueueLabel)
+	}
+
+	if secondSummary.Players[0].GameName != "Player" {
+		t.Fatalf("expected cached summary player name to remain Player, got %q", secondSummary.Players[0].GameName)
+	}
+
+	if secondSummary.Rounds[0].EventLog[0].EventType != "kill" {
+		t.Fatalf("expected cached summary event type to remain kill, got %q", secondSummary.Rounds[0].EventLog[0].EventType)
+	}
+
+	if secondSummary.Rounds[0].EventLog[0].KillerPuuid == nil || *secondSummary.Rounds[0].EventLog[0].KillerPuuid != "player-puuid" {
+		t.Fatalf("expected cached summary killer to remain player-puuid, got %+v", secondSummary.Rounds[0].EventLog[0].KillerPuuid)
+	}
+}
+
 func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 	payload := []byte(`{
 		"matchInfo": {
