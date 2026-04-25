@@ -1248,6 +1248,14 @@ const docTemplate = `{
                 "summary": "Get match previews",
                 "parameters": [
                     {
+                        "minimum": 0,
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Zero-based starting index for the preview page",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
                         "maximum": 50,
                         "minimum": 1,
                         "type": "integer",
@@ -2084,6 +2092,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/services.MatchPreview"
                     }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/services.MatchPreviewPagination"
                 }
             }
         },
@@ -2988,6 +2999,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "teamScore": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.MatchPreviewPagination": {
+            "type": "object",
+            "properties": {
+                "hasMore": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "nextStart": {
+                    "type": "integer"
+                },
+                "start": {
+                    "type": "integer"
+                },
+                "total": {
                     "type": "integer"
                 }
             }

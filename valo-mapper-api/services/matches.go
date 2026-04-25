@@ -83,6 +83,19 @@ type MatchPreview struct {
 	PersonalScore int    `json:"personalScore"`
 }
 
+type MatchPreviewPage struct {
+	Matches    []MatchPreview         `json:"matches"`
+	Pagination MatchPreviewPagination `json:"pagination"`
+}
+
+type MatchPreviewPagination struct {
+	Start     int  `json:"start"`
+	Limit     int  `json:"limit"`
+	Total     int  `json:"total"`
+	HasMore   bool `json:"hasMore"`
+	NextStart *int `json:"nextStart,omitempty"`
+}
+
 type MatchSummaryResponse struct {
 	MatchID     string               `json:"matchId"`
 	MapID       string               `json:"mapId"`
@@ -277,11 +290,20 @@ type matchPreviewFetchResult struct {
 }
 
 type matchPreviewCacheEntry struct {
-	previews  []MatchPreview
+	page      *MatchPreviewPage
 	expiresAt time.Time
 }
 
 func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.User, limit int) ([]MatchPreview, error) {
+	page, err := s.GetRecentMatchPreviewPage(ctx, user, 0, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return page.Matches, nil
+}
+
+func (s *MatchService) GetRecentMatchPreviewPage(ctx context.Context, user *models.User, start, limit int) (*MatchPreviewPage, error) {
 	if user == nil || user.RSOSubjectID == nil || strings.TrimSpace(*user.RSOSubjectID) == "" {
 		return nil, ErrRSOUserRequired
 	}
@@ -304,8 +326,12 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 		limit = maxMatchPreviewLimit
 	}
 
-	if cachedPreviews, ok := s.getCachedMatchPreviews(puuid, limit); ok {
-		return cachedPreviews, nil
+	if start < 0 {
+		start = 0
+	}
+
+	if cachedPage, ok := s.getCachedMatchPreviewPage(puuid, start, limit); ok {
+		return cachedPage, nil
 	}
 
 	matchlistPath := fmt.Sprintf("/val/match/v1/matchlists/by-puuid/%s", url.PathEscape(puuid))
@@ -315,27 +341,66 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 		return nil, fmt.Errorf("fetch matchlist: %w", err)
 	}
 
-	previews := make([]MatchPreview, 0, limit)
-	for historyIndex := 0; historyIndex < len(matchlist.History) && len(previews) < limit; {
-		batchEntries := make([]riotMatchlistEntryDTO, 0, matchPreviewConcurrency)
-		for historyIndex < len(matchlist.History) && len(batchEntries) < matchPreviewConcurrency {
-			entry := matchlist.History[historyIndex]
-			historyIndex++
+	supportedEntries := filterSupportedMatchlistEntries(matchlist.History)
+	page := &MatchPreviewPage{
+		Matches: nil,
+		Pagination: MatchPreviewPagination{
+			Start: start,
+			Limit: limit,
+			Total: len(supportedEntries),
+		},
+	}
 
-			if !isSupportedQueue(entry.QueueID) {
-				continue
-			}
+	if start >= len(supportedEntries) {
+		s.setCachedMatchPreviewPage(puuid, start, limit, page)
+		return page, nil
+	}
 
-			if strings.TrimSpace(entry.MatchID) == "" {
-				continue
-			}
+	end := start + limit
+	if end > len(supportedEntries) {
+		end = len(supportedEntries)
+	}
 
-			batchEntries = append(batchEntries, entry)
+	page.Matches = s.fetchMatchPreviewsForEntries(ctx, preferredRegion, puuid, supportedEntries[start:end])
+	if end < len(supportedEntries) {
+		page.Pagination.HasMore = true
+		nextStart := end
+		page.Pagination.NextStart = &nextStart
+	}
+
+	s.setCachedMatchPreviewPage(puuid, start, limit, page)
+
+	return page, nil
+}
+
+func filterSupportedMatchlistEntries(history []riotMatchlistEntryDTO) []riotMatchlistEntryDTO {
+	supportedEntries := make([]riotMatchlistEntryDTO, 0, len(history))
+	for _, entry := range history {
+		if !isSupportedQueue(entry.QueueID) {
+			continue
 		}
 
-		if len(batchEntries) == 0 {
-			break
+		if strings.TrimSpace(entry.MatchID) == "" {
+			continue
 		}
+
+		supportedEntries = append(supportedEntries, entry)
+	}
+
+	return supportedEntries
+}
+
+func (s *MatchService) fetchMatchPreviewsForEntries(ctx context.Context, preferredRegion, puuid string, entries []riotMatchlistEntryDTO) []MatchPreview {
+	previews := make([]MatchPreview, 0, len(entries))
+
+	for entryIndex := 0; entryIndex < len(entries); {
+		batchEnd := entryIndex + matchPreviewConcurrency
+		if batchEnd > len(entries) {
+			batchEnd = len(entries)
+		}
+
+		batchEntries := entries[entryIndex:batchEnd]
+		entryIndex = batchEnd
 
 		batchResults := make([]matchPreviewFetchResult, len(batchEntries))
 		var waitGroup sync.WaitGroup
@@ -368,21 +433,31 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 			}
 
 			previews = append(previews, result.preview)
-			if len(previews) >= limit {
-				break
-			}
 		}
 	}
 
-	s.setCachedMatchPreviews(puuid, limit, previews)
-
-	return previews, nil
+	return previews
 }
 
 func cloneMatchPreviews(previews []MatchPreview) []MatchPreview {
 	cloned := make([]MatchPreview, len(previews))
 	copy(cloned, previews)
 	return cloned
+}
+
+func cloneMatchPreviewPage(page *MatchPreviewPage) *MatchPreviewPage {
+	if page == nil {
+		return nil
+	}
+
+	cloned := *page
+	cloned.Matches = cloneMatchPreviews(page.Matches)
+	if page.Pagination.NextStart != nil {
+		nextStart := *page.Pagination.NextStart
+		cloned.Pagination.NextStart = &nextStart
+	}
+
+	return &cloned
 }
 
 func (s *MatchService) timeNow() time.Time {
@@ -393,12 +468,12 @@ func (s *MatchService) timeNow() time.Time {
 	return time.Now()
 }
 
-func buildMatchPreviewCacheKey(puuid string, limit int) string {
-	return fmt.Sprintf("%s:%d", puuid, limit)
+func buildMatchPreviewCacheKey(puuid string, start, limit int) string {
+	return fmt.Sprintf("%s:%d:%d", puuid, start, limit)
 }
 
-func (s *MatchService) getCachedMatchPreviews(puuid string, limit int) ([]MatchPreview, bool) {
-	cacheKey := buildMatchPreviewCacheKey(puuid, limit)
+func (s *MatchService) getCachedMatchPreviewPage(puuid string, start, limit int) (*MatchPreviewPage, bool) {
+	cacheKey := buildMatchPreviewCacheKey(puuid, start, limit)
 	now := s.timeNow()
 
 	s.matchPreviewCacheMu.RLock()
@@ -417,18 +492,23 @@ func (s *MatchService) getCachedMatchPreviews(puuid string, limit int) ([]MatchP
 		return nil, false
 	}
 
-	return cloneMatchPreviews(entry.previews), true
+	return cloneMatchPreviewPage(entry.page), true
 }
 
-func (s *MatchService) setCachedMatchPreviews(puuid string, limit int, previews []MatchPreview) {
-	cacheKey := buildMatchPreviewCacheKey(puuid, limit)
+func (s *MatchService) setCachedMatchPreviewPage(puuid string, start, limit int, page *MatchPreviewPage) {
+	cacheKey := buildMatchPreviewCacheKey(puuid, start, limit)
 
 	s.matchPreviewCacheMu.Lock()
 	if s.matchPreviewCache == nil {
 		s.matchPreviewCache = make(map[string]matchPreviewCacheEntry)
 	}
+	if page == nil {
+		delete(s.matchPreviewCache, cacheKey)
+		s.matchPreviewCacheMu.Unlock()
+		return
+	}
 	s.matchPreviewCache[cacheKey] = matchPreviewCacheEntry{
-		previews:  cloneMatchPreviews(previews),
+		page:      cloneMatchPreviewPage(page),
 		expiresAt: s.timeNow().Add(matchPreviewCacheTTL),
 	}
 	s.matchPreviewCacheMu.Unlock()

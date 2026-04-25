@@ -23,9 +23,11 @@ type StripeWebhookResponse struct {
 }
 
 type MatchPreviewsResponse struct {
-	Matches []services.MatchPreview `json:"matches"`
+	Matches    []services.MatchPreview         `json:"matches"`
+	Pagination services.MatchPreviewPagination `json:"pagination"`
 }
 
+type MatchPreviewPagination = services.MatchPreviewPagination
 type MatchSummaryResponse = services.MatchSummaryResponse
 type ViewerContext = services.ViewerContext
 type MatchPlayerSummary = services.MatchPlayerSummary

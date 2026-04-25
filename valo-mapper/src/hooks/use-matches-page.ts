@@ -37,11 +37,16 @@ export const useMatchesPage = () => {
   };
 
   const {
-    data,
+    matches,
+    pagination,
     isLoading: isMatchesLoading,
     isError: isMatchesError,
     error: matchesError,
     refetch: refetchMatches,
+    fetchNextPage: fetchNextMatchesPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
   } = useMatches(canLoadMatches, 10);
 
   const {
@@ -57,11 +62,16 @@ export const useMatchesPage = () => {
     isRSOUser,
     canLoadMatches,
     isPageLoading: authLoading || isUserLoading,
-    matches: data?.matches ?? [],
+    matches,
+    totalMatches: pagination.total,
     isMatchesLoading,
     isMatchesError,
     matchesError,
     refetchMatches,
+    hasMoreMatches: hasNextPage,
+    isFetchingNextMatches: isFetchingNextPage,
+    isFetchNextMatchesError: isFetchNextPageError,
+    fetchNextMatchesPage,
     expandedMatchId,
     expandedMatchSummary,
     isMatchSummaryLoading,

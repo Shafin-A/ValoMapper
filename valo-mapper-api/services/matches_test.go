@@ -110,6 +110,103 @@ func TestGetRecentMatchPreviews_SkipsUnsupportedMatchlistQueuesBeforeDetailFetch
 	}
 }
 
+func TestGetRecentMatchPreviewPage_UsesStartOffsetAcrossSupportedEntries(t *testing.T) {
+	firebaseUID := "player-puuid"
+	rsoSubjectID := "rso-subject"
+	requestedMatchDetails := make([]string, 0, 3)
+
+	service := &MatchService{
+		httpClient: &http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				switch req.URL.Path {
+				case "/val/match/v1/matchlists/by-puuid/player-puuid":
+					return newJSONResponse(t, `{
+						"puuid": "player-puuid",
+						"history": [
+							{"matchId": "first-match", "queueId": "competitive"},
+							{"matchId": "ignored-match", "queueId": "deathmatch"},
+							{"matchId": "second-match", "queueId": "competitive"},
+							{"matchId": "third-match", "queueId": ""}
+						]
+					}`), nil
+				case "/val/match/v1/matches/first-match":
+					requestedMatchDetails = append(requestedMatchDetails, "first-match")
+					return newJSONResponse(t, `{}`), nil
+				case "/val/match/v1/matches/second-match":
+					requestedMatchDetails = append(requestedMatchDetails, "second-match")
+					return newJSONResponse(t, `{
+						"matchInfo": {
+							"matchId": "second-match",
+							"mapId": "/Game/Maps/Ascent/Ascent",
+							"gameStartMillis": 1710000000000,
+							"queueId": "competitive",
+							"gameMode": ""
+						},
+						"players": [
+							{
+								"puuid": "player-puuid",
+								"teamId": "Blue",
+								"gameName": "Player",
+								"tagLine": "NA1",
+								"characterId": "add6443a-41bd-e414-f6ad-e58d267f4e95",
+								"stats": {"score": 210, "kills": 12, "deaths": 7, "assists": 3}
+							},
+							{
+								"puuid": "enemy-puuid",
+								"teamId": "Red",
+								"gameName": "Enemy",
+								"tagLine": "EUW",
+								"characterId": "9f0d8ba9-4140-b941-57d3-a7ad57c6b417",
+								"stats": {"score": 150, "kills": 7, "deaths": 12, "assists": 2}
+							}
+						],
+						"teams": [
+							{"teamId": "Blue", "won": true, "roundsWon": 13},
+							{"teamId": "Red", "won": false, "roundsWon": 11}
+						]
+					}`), nil
+				case "/val/match/v1/matches/third-match":
+					requestedMatchDetails = append(requestedMatchDetails, "third-match")
+					return newJSONResponse(t, `{}`), nil
+				default:
+					t.Fatalf("unexpected request path %q", req.URL.Path)
+					return nil, nil
+				}
+			}),
+		},
+		riotAPIKey: "test-riot-key",
+	}
+
+	page, err := service.GetRecentMatchPreviewPage(context.Background(), &models.User{
+		FirebaseUID:  &firebaseUID,
+		RSOSubjectID: &rsoSubjectID,
+	}, 1, 1)
+	if err != nil {
+		t.Fatalf("GetRecentMatchPreviewPage returned error: %v", err)
+	}
+
+	if len(page.Matches) != 1 {
+		t.Fatalf("expected 1 preview, got %d", len(page.Matches))
+	}
+	if page.Matches[0].MatchID != "second-match" {
+		t.Fatalf("expected second-match preview, got %q", page.Matches[0].MatchID)
+	}
+
+	if page.Pagination.Total != 3 {
+		t.Fatalf("expected 3 supported matches total, got %d", page.Pagination.Total)
+	}
+	if !page.Pagination.HasMore {
+		t.Fatalf("expected paged result to report more matches")
+	}
+	if page.Pagination.NextStart == nil || *page.Pagination.NextStart != 2 {
+		t.Fatalf("expected nextStart 2, got %+v", page.Pagination.NextStart)
+	}
+
+	if len(requestedMatchDetails) != 1 || requestedMatchDetails[0] != "second-match" {
+		t.Fatalf("expected only second-match detail fetch, got %+v", requestedMatchDetails)
+	}
+}
+
 func TestGetRecentMatchPreviews_ReusesSuccessfulMatchlistRegionForDetailFetches(t *testing.T) {
 	firebaseUID := "player-puuid"
 	rsoSubjectID := "rso-subject"

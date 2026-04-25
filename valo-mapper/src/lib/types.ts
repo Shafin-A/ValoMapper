@@ -492,8 +492,17 @@ export type MatchSummaryResponse = {
   rounds: RoundSummaryLite[];
 };
 
+export type MatchPreviewPagination = {
+  start: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+  nextStart?: number | null;
+};
+
 export type MatchPreviewsResponse = {
   matches: MatchPreview[];
+  pagination: MatchPreviewPagination;
 };
 
 export type StackMember = {

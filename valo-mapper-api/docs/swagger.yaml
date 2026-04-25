@@ -94,6 +94,8 @@ definitions:
         items:
           $ref: '#/definitions/services.MatchPreview'
         type: array
+      pagination:
+        $ref: '#/definitions/services.MatchPreviewPagination'
     type: object
   handlers.MatchSummaryResponse:
     properties:
@@ -683,6 +685,19 @@ definitions:
       result:
         type: string
       teamScore:
+        type: integer
+    type: object
+  services.MatchPreviewPagination:
+    properties:
+      hasMore:
+        type: boolean
+      limit:
+        type: integer
+      nextStart:
+        type: integer
+      start:
+        type: integer
+      total:
         type: integer
     type: object
   services.RoundEventLogEntry:
@@ -1566,6 +1581,12 @@ paths:
       description: Returns recent competitive or unrated Riot match previews for the
         authenticated RSO user.
       parameters:
+      - default: 0
+        description: Zero-based starting index for the preview page
+        in: query
+        minimum: 0
+        name: start
+        type: integer
       - default: 10
         description: Maximum number of previews to return
         in: query

@@ -37,6 +37,7 @@ func NewMatchHandler(deps MatchHandlerDependencies) *MatchHandler {
 // @Description Returns recent competitive or unrated Riot match previews for the authenticated RSO user.
 // @Tags matches
 // @Produce json
+// @Param start query int false "Zero-based starting index for the preview page" minimum(0) default(0)
 // @Param limit query int false "Maximum number of previews to return" minimum(1) maximum(50) default(10)
 // @Success 200 {object} MatchPreviewsResponse
 // @Failure 400 {object} ErrorResponse
@@ -60,6 +61,15 @@ func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, fireba
 	}
 
 	limit := defaultMatchLimit
+	start := 0
+	if rawStart := r.URL.Query().Get("start"); rawStart != "" {
+		parsedStart, parseErr := strconv.Atoi(rawStart)
+		if parseErr != nil || parsedStart < 0 {
+			utils.SendJSONError(w, utils.NewBadRequest("start must be a non-negative integer"), requestID)
+			return
+		}
+		start = parsedStart
+	}
 	if rawLimit := r.URL.Query().Get("limit"); rawLimit != "" {
 		parsedLimit, parseErr := strconv.Atoi(rawLimit)
 		if parseErr != nil || parsedLimit <= 0 {
@@ -72,9 +82,9 @@ func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, fireba
 		limit = parsedLimit
 	}
 
-	matches, err := h.matchService.GetRecentMatchPreviews(r.Context(), user, limit)
+	matchPage, err := h.matchService.GetRecentMatchPreviewPage(r.Context(), user, start, limit)
 	if err != nil {
-		slog.Error("failed to load match previews", "request_id", requestID, "user_id", user.ID, "limit", limit, "error", err)
+		slog.Error("failed to load match previews", "request_id", requestID, "user_id", user.ID, "start", start, "limit", limit, "error", err)
 		switch {
 		case errors.Is(err, services.ErrRSOUserRequired):
 			utils.SendJSONError(w, utils.NewForbidden("RSO login required"), requestID)
@@ -88,9 +98,7 @@ func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, fireba
 		return
 	}
 
-	utils.SendJSON(w, http.StatusOK, map[string]any{
-		"matches": matches,
-	}, requestID)
+	utils.SendJSON(w, http.StatusOK, matchPage, requestID)
 }
 
 // GetMatchSummary godoc

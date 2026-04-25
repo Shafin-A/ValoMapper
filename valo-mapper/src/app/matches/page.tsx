@@ -14,10 +14,15 @@ const MatchesPage = () => {
     canLoadMatches,
     isPageLoading,
     matches,
+    totalMatches,
     isMatchesLoading,
     isMatchesError,
     matchesError,
     refetchMatches,
+    hasMoreMatches,
+    isFetchingNextMatches,
+    isFetchNextMatchesError,
+    fetchNextMatchesPage,
     expandedMatchId,
     expandedMatchSummary,
     isMatchSummaryLoading,
@@ -40,7 +45,7 @@ const MatchesPage = () => {
     );
   }
 
-  if (isMatchesLoading && canLoadMatches) {
+  if (isMatchesLoading && canLoadMatches && matches.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -53,7 +58,7 @@ const MatchesPage = () => {
     );
   }
 
-  if (isMatchesError && canLoadMatches) {
+  if (isMatchesError && canLoadMatches && matches.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md space-y-4 w-full">
@@ -108,15 +113,20 @@ const MatchesPage = () => {
         ) : (
           <MatchesContent
             matches={matches}
+            totalMatches={totalMatches}
             expandedMatchId={expandedMatchId}
             expandedMatchSummary={expandedMatchSummary}
             isMatchSummaryLoading={isMatchSummaryLoading}
             isMatchSummaryError={isMatchSummaryError}
             matchSummaryError={matchSummaryError}
+            hasMoreMatches={hasMoreMatches}
+            isFetchingNextMatches={isFetchingNextMatches}
+            isFetchNextMatchesError={isFetchNextMatchesError}
             selectedRoundByMatch={selectedRoundByMatch}
             onToggleMatch={toggleExpanded}
             onSelectRound={selectRound}
             onRetryMatchSummary={refetchMatchSummary}
+            onLoadMoreMatches={fetchNextMatchesPage}
           />
         )}
       </div>
