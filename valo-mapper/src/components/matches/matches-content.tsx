@@ -15,7 +15,6 @@ import { useEffect, useRef } from "react";
 
 interface MatchesContentProps {
   matches: MatchPreview[];
-  loadedMatchesCount: number;
   totalMatches: number;
   queueFilter: MatchQueueFilter;
   expandedMatchIds: string[];
@@ -82,7 +81,6 @@ const MatchAccordionItem = ({
 
 export const MatchesContent = ({
   matches,
-  loadedMatchesCount,
   totalMatches,
   queueFilter,
   expandedMatchIds,
@@ -124,7 +122,9 @@ export const MatchesContent = ({
   const queueSummaryText =
     queueFilter === ALL_MATCH_QUEUE_FILTER
       ? `Showing ${matches.length}/${totalMatches} matches`
-      : `Showing ${matches.length}/${loadedMatchesCount} ${queueFilter} matches`;
+      : hasMoreMatches
+        ? `Showing ${matches.length} loaded ${queueFilter} matches`
+        : `Showing ${matches.length}/${matches.length} ${queueFilter} matches`;
 
   const emptyFilterTitle =
     queueFilter === ALL_MATCH_QUEUE_FILTER

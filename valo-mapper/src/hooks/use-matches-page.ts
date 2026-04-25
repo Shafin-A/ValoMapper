@@ -92,7 +92,6 @@ export const useMatchesPage = () => {
     canLoadMatches,
     isPageLoading: authLoading || isUserLoading,
     matches,
-    loadedMatchesCount: loadedMatches.length,
     totalMatches: pagination.total,
     isMatchesLoading,
     isMatchesError,

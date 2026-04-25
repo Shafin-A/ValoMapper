@@ -22,7 +22,6 @@ const MatchesPage = () => {
     canLoadMatches,
     isPageLoading,
     matches,
-    loadedMatchesCount,
     totalMatches,
     isMatchesLoading,
     isMatchesError,
@@ -141,7 +140,6 @@ const MatchesPage = () => {
         ) : canLoadMatches && totalMatches > 0 ? (
           <MatchesContent
             matches={matches}
-            loadedMatchesCount={loadedMatchesCount}
             totalMatches={totalMatches}
             queueFilter={queueFilter}
             expandedMatchIds={expandedMatchIds}
