@@ -6,7 +6,9 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 	"valo-mapper-api/models"
 )
 
@@ -196,6 +198,215 @@ func TestGetRecentMatchPreviews_ReusesSuccessfulMatchlistRegionForDetailFetches(
 
 	if len(requestedDetailHosts) != 1 || requestedDetailHosts[0] != "eu.api.riotgames.com" {
 		t.Fatalf("expected detail fetch to reuse eu region only, got %+v", requestedDetailHosts)
+	}
+}
+
+func TestGetRecentMatchPreviews_PreservesMatchlistOrderAcrossConcurrentDetailFetches(t *testing.T) {
+	firebaseUID := "player-puuid"
+	rsoSubjectID := "rso-subject"
+	firstMatchRequested := make(chan struct{})
+	allowFirstMatchResponse := make(chan struct{})
+
+	service := &MatchService{
+		httpClient: &http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				switch req.URL.Path {
+				case "/val/match/v1/matchlists/by-puuid/player-puuid":
+					return newJSONResponse(t, `{
+						"puuid": "player-puuid",
+						"history": [
+							{"matchId": "first-match", "queueId": "competitive"},
+							{"matchId": "second-match", "queueId": "competitive"}
+						]
+					}`), nil
+				case "/val/match/v1/matches/first-match":
+					close(firstMatchRequested)
+					select {
+					case <-allowFirstMatchResponse:
+					case <-time.After(time.Second):
+						t.Fatalf("first match detail fetch was never released; requests may still be sequential")
+					}
+
+					return newJSONResponse(t, `{
+						"matchInfo": {
+							"matchId": "first-match",
+							"mapId": "/Game/Maps/Ascent/Ascent",
+							"gameStartMillis": 1710000000000,
+							"queueId": "competitive",
+							"gameMode": ""
+						},
+						"players": [
+							{
+								"puuid": "player-puuid",
+								"teamId": "Blue",
+								"gameName": "Player",
+								"tagLine": "NA1",
+								"characterId": "add6443a-41bd-e414-f6ad-e58d267f4e95",
+								"stats": {"score": 210, "kills": 12, "deaths": 7, "assists": 3}
+							},
+							{
+								"puuid": "enemy-one",
+								"teamId": "Red",
+								"gameName": "Enemy One",
+								"tagLine": "EUW",
+								"characterId": "9f0d8ba9-4140-b941-57d3-a7ad57c6b417",
+								"stats": {"score": 150, "kills": 7, "deaths": 12, "assists": 2}
+							}
+						],
+						"teams": [
+							{"teamId": "Blue", "won": true, "roundsWon": 13},
+							{"teamId": "Red", "won": false, "roundsWon": 11}
+						]
+					}`), nil
+				case "/val/match/v1/matches/second-match":
+					select {
+					case <-firstMatchRequested:
+					case <-time.After(time.Second):
+						t.Fatalf("second match detail fetch did not overlap with first fetch")
+					}
+					close(allowFirstMatchResponse)
+
+					return newJSONResponse(t, `{
+						"matchInfo": {
+							"matchId": "second-match",
+							"mapId": "/Game/Maps/Bonsai/Bonsai",
+							"gameStartMillis": 1710000001000,
+							"queueId": "competitive",
+							"gameMode": ""
+						},
+						"players": [
+							{
+								"puuid": "player-puuid",
+								"teamId": "Blue",
+								"gameName": "Player",
+								"tagLine": "NA1",
+								"characterId": "add6443a-41bd-e414-f6ad-e58d267f4e95",
+								"stats": {"score": 240, "kills": 15, "deaths": 9, "assists": 4}
+							},
+							{
+								"puuid": "enemy-two",
+								"teamId": "Red",
+								"gameName": "Enemy Two",
+								"tagLine": "EUW",
+								"characterId": "9f0d8ba9-4140-b941-57d3-a7ad57c6b417",
+								"stats": {"score": 120, "kills": 9, "deaths": 15, "assists": 1}
+							}
+						],
+						"teams": [
+							{"teamId": "Blue", "won": false, "roundsWon": 10},
+							{"teamId": "Red", "won": true, "roundsWon": 13}
+						]
+					}`), nil
+				default:
+					t.Fatalf("unexpected request path %q", req.URL.Path)
+					return nil, nil
+				}
+			}),
+		},
+		riotAPIKey: "test-riot-key",
+	}
+
+	previews, err := service.GetRecentMatchPreviews(context.Background(), &models.User{
+		FirebaseUID:  &firebaseUID,
+		RSOSubjectID: &rsoSubjectID,
+	}, 10)
+	if err != nil {
+		t.Fatalf("GetRecentMatchPreviews returned error: %v", err)
+	}
+
+	if len(previews) != 2 {
+		t.Fatalf("expected 2 previews, got %d", len(previews))
+	}
+
+	if previews[0].MatchID != "first-match" || previews[1].MatchID != "second-match" {
+		t.Fatalf("expected previews to preserve matchlist order, got %+v", previews)
+	}
+}
+
+func TestGetRecentMatchPreviews_UsesCachedPreviewsOnRepeatedRequest(t *testing.T) {
+	firebaseUID := "player-puuid"
+	rsoSubjectID := "rso-subject"
+	fixedNow := time.Unix(1_710_000_000, 0)
+	var requestCount atomic.Int32
+
+	service := &MatchService{
+		httpClient: &http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				requestCount.Add(1)
+
+				switch req.URL.Path {
+				case "/val/match/v1/matchlists/by-puuid/player-puuid":
+					return newJSONResponse(t, `{
+						"puuid": "player-puuid",
+						"history": [
+							{"matchId": "cached-match", "queueId": "competitive"}
+						]
+					}`), nil
+				case "/val/match/v1/matches/cached-match":
+					return newJSONResponse(t, `{
+						"matchInfo": {
+							"matchId": "cached-match",
+							"mapId": "/Game/Maps/Ascent/Ascent",
+							"gameStartMillis": 1710000000000,
+							"queueId": "competitive",
+							"gameMode": ""
+						},
+						"players": [
+							{
+								"puuid": "player-puuid",
+								"teamId": "Blue",
+								"gameName": "Player",
+								"tagLine": "NA1",
+								"characterId": "add6443a-41bd-e414-f6ad-e58d267f4e95",
+								"stats": {"score": 210, "kills": 12, "deaths": 7, "assists": 3}
+							},
+							{
+								"puuid": "enemy-puuid",
+								"teamId": "Red",
+								"gameName": "Enemy",
+								"tagLine": "EUW",
+								"characterId": "9f0d8ba9-4140-b941-57d3-a7ad57c6b417",
+								"stats": {"score": 150, "kills": 7, "deaths": 12, "assists": 2}
+							}
+						],
+						"teams": [
+							{"teamId": "Blue", "won": true, "roundsWon": 13},
+							{"teamId": "Red", "won": false, "roundsWon": 11}
+						]
+					}`), nil
+				default:
+					t.Fatalf("unexpected request path %q", req.URL.Path)
+					return nil, nil
+				}
+			}),
+		},
+		riotAPIKey:        "test-riot-key",
+		matchPreviewCache: make(map[string]matchPreviewCacheEntry),
+		now:               func() time.Time { return fixedNow },
+	}
+
+	user := &models.User{FirebaseUID: &firebaseUID, RSOSubjectID: &rsoSubjectID}
+
+	firstPreviews, err := service.GetRecentMatchPreviews(context.Background(), user, 10)
+	if err != nil {
+		t.Fatalf("first GetRecentMatchPreviews returned error: %v", err)
+	}
+
+	secondPreviews, err := service.GetRecentMatchPreviews(context.Background(), user, 10)
+	if err != nil {
+		t.Fatalf("second GetRecentMatchPreviews returned error: %v", err)
+	}
+
+	if requestCount.Load() != 2 {
+		t.Fatalf("expected only 2 Riot requests total (matchlist + detail), got %d", requestCount.Load())
+	}
+
+	if len(firstPreviews) != 1 || len(secondPreviews) != 1 {
+		t.Fatalf("expected one preview from both calls, got %d and %d", len(firstPreviews), len(secondPreviews))
+	}
+
+	if firstPreviews[0].MatchID != "cached-match" || secondPreviews[0].MatchID != "cached-match" {
+		t.Fatalf("expected cached-match previews on both calls, got %+v and %+v", firstPreviews, secondPreviews)
 	}
 }
 

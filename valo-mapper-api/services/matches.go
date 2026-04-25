@@ -12,6 +12,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 	"valo-mapper-api/models"
 )
@@ -19,6 +20,8 @@ import (
 const (
 	defaultMatchPreviewLimit = 10
 	maxMatchPreviewLimit     = 50
+	matchPreviewConcurrency  = 4
+	matchPreviewCacheTTL     = 30 * time.Second
 	riotHTTPTimeout          = 10 * time.Second
 )
 
@@ -141,15 +144,20 @@ type RoundEventLogEntry struct {
 
 // MatchService fetches match data from Riot and builds preview DTOs.
 type MatchService struct {
-	httpClient *http.Client
-	riotAPIKey string
+	httpClient          *http.Client
+	riotAPIKey          string
+	matchPreviewCache   map[string]matchPreviewCacheEntry
+	matchPreviewCacheMu sync.RWMutex
+	now                 func() time.Time
 }
 
 // NewMatchService creates a MatchService with a default HTTP client.
 func NewMatchService() *MatchService {
 	return &MatchService{
-		httpClient: &http.Client{Timeout: riotHTTPTimeout},
-		riotAPIKey: strings.TrimSpace(os.Getenv("RIOT_API_KEY")),
+		httpClient:        &http.Client{Timeout: riotHTTPTimeout},
+		riotAPIKey:        strings.TrimSpace(os.Getenv("RIOT_API_KEY")),
+		matchPreviewCache: make(map[string]matchPreviewCacheEntry),
+		now:               time.Now,
 	}
 }
 
@@ -254,6 +262,16 @@ type roundCombatCounts struct {
 	Assists int
 }
 
+type matchPreviewFetchResult struct {
+	preview MatchPreview
+	ok      bool
+}
+
+type matchPreviewCacheEntry struct {
+	previews  []MatchPreview
+	expiresAt time.Time
+}
+
 func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.User, limit int) ([]MatchPreview, error) {
 	if user == nil || user.RSOSubjectID == nil || strings.TrimSpace(*user.RSOSubjectID) == "" {
 		return nil, ErrRSOUserRequired
@@ -277,6 +295,10 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 		limit = maxMatchPreviewLimit
 	}
 
+	if cachedPreviews, ok := s.getCachedMatchPreviews(puuid, limit); ok {
+		return cachedPreviews, nil
+	}
+
 	matchlistPath := fmt.Sprintf("/val/match/v1/matchlists/by-puuid/%s", url.PathEscape(puuid))
 	matchlist := riotMatchlistResponse{}
 	preferredRegion, err := s.fetchFromAnyRegion(ctx, matchlistPath, &matchlist)
@@ -284,37 +306,123 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 		return nil, fmt.Errorf("fetch matchlist: %w", err)
 	}
 
-	previews := make([]MatchPreview, 0)
-	for _, entry := range matchlist.History {
-		if len(previews) >= limit {
+	previews := make([]MatchPreview, 0, limit)
+	for historyIndex := 0; historyIndex < len(matchlist.History) && len(previews) < limit; {
+		batchEntries := make([]riotMatchlistEntryDTO, 0, matchPreviewConcurrency)
+		for historyIndex < len(matchlist.History) && len(batchEntries) < matchPreviewConcurrency {
+			entry := matchlist.History[historyIndex]
+			historyIndex++
+
+			if !isSupportedQueue(entry.QueueID) {
+				continue
+			}
+
+			if strings.TrimSpace(entry.MatchID) == "" {
+				continue
+			}
+
+			batchEntries = append(batchEntries, entry)
+		}
+
+		if len(batchEntries) == 0 {
 			break
 		}
 
-		if !isSupportedQueue(entry.QueueID) {
-			continue
+		batchResults := make([]matchPreviewFetchResult, len(batchEntries))
+		var waitGroup sync.WaitGroup
+		waitGroup.Add(len(batchEntries))
+
+		for batchIndex, entry := range batchEntries {
+			go func(batchIndex int, entry riotMatchlistEntryDTO) {
+				defer waitGroup.Done()
+
+				matchPath := fmt.Sprintf("/val/match/v1/matches/%s", url.PathEscape(strings.TrimSpace(entry.MatchID)))
+				match := riotMatchDTO{}
+				if _, err := s.fetchFromPreferredRegion(ctx, preferredRegion, matchPath, &match); err != nil {
+					return
+				}
+
+				preview, ok := buildMatchPreview(match, puuid)
+				if !ok {
+					return
+				}
+
+				batchResults[batchIndex] = matchPreviewFetchResult{preview: preview, ok: true}
+			}(batchIndex, entry)
 		}
 
-		matchID := strings.TrimSpace(entry.MatchID)
-		if matchID == "" {
-			continue
-		}
+		waitGroup.Wait()
 
-		matchPath := fmt.Sprintf("/val/match/v1/matches/%s", url.PathEscape(matchID))
-		match := riotMatchDTO{}
-		resolvedRegion, err := s.fetchFromPreferredRegion(ctx, preferredRegion, matchPath, &match)
-		if err != nil {
-			continue
-		}
-		preferredRegion = resolvedRegion
+		for _, result := range batchResults {
+			if !result.ok {
+				continue
+			}
 
-		preview, ok := buildMatchPreview(match, puuid)
-		if !ok {
-			continue
+			previews = append(previews, result.preview)
+			if len(previews) >= limit {
+				break
+			}
 		}
-		previews = append(previews, preview)
 	}
 
+	s.setCachedMatchPreviews(puuid, limit, previews)
+
 	return previews, nil
+}
+
+func cloneMatchPreviews(previews []MatchPreview) []MatchPreview {
+	cloned := make([]MatchPreview, len(previews))
+	copy(cloned, previews)
+	return cloned
+}
+
+func (s *MatchService) timeNow() time.Time {
+	if s != nil && s.now != nil {
+		return s.now()
+	}
+
+	return time.Now()
+}
+
+func buildMatchPreviewCacheKey(puuid string, limit int) string {
+	return fmt.Sprintf("%s:%d", puuid, limit)
+}
+
+func (s *MatchService) getCachedMatchPreviews(puuid string, limit int) ([]MatchPreview, bool) {
+	cacheKey := buildMatchPreviewCacheKey(puuid, limit)
+	now := s.timeNow()
+
+	s.matchPreviewCacheMu.RLock()
+	entry, ok := s.matchPreviewCache[cacheKey]
+	s.matchPreviewCacheMu.RUnlock()
+	if !ok {
+		return nil, false
+	}
+
+	if !entry.expiresAt.After(now) {
+		s.matchPreviewCacheMu.Lock()
+		if currentEntry, currentOK := s.matchPreviewCache[cacheKey]; currentOK && !currentEntry.expiresAt.After(now) {
+			delete(s.matchPreviewCache, cacheKey)
+		}
+		s.matchPreviewCacheMu.Unlock()
+		return nil, false
+	}
+
+	return cloneMatchPreviews(entry.previews), true
+}
+
+func (s *MatchService) setCachedMatchPreviews(puuid string, limit int, previews []MatchPreview) {
+	cacheKey := buildMatchPreviewCacheKey(puuid, limit)
+
+	s.matchPreviewCacheMu.Lock()
+	if s.matchPreviewCache == nil {
+		s.matchPreviewCache = make(map[string]matchPreviewCacheEntry)
+	}
+	s.matchPreviewCache[cacheKey] = matchPreviewCacheEntry{
+		previews:  cloneMatchPreviews(previews),
+		expiresAt: s.timeNow().Add(matchPreviewCacheTTL),
+	}
+	s.matchPreviewCacheMu.Unlock()
 }
 
 func buildRiotRegionOrder(preferredRegion string) []string {
