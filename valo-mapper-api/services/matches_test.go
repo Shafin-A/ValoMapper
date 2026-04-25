@@ -1,9 +1,203 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
+	"io"
+	"net/http"
+	"strings"
 	"testing"
+	"valo-mapper-api/models"
 )
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (fn roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return fn(req)
+}
+
+func newJSONResponse(t *testing.T, body string) *http.Response {
+	t.Helper()
+
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     make(http.Header),
+		Body:       io.NopCloser(strings.NewReader(body)),
+	}
+}
+
+func TestGetRecentMatchPreviews_SkipsUnsupportedMatchlistQueuesBeforeDetailFetch(t *testing.T) {
+	firebaseUID := "player-puuid"
+	rsoSubjectID := "rso-subject"
+	requestedMatchDetails := make([]string, 0, 2)
+
+	service := &MatchService{
+		httpClient: &http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				switch req.URL.Path {
+				case "/val/match/v1/matchlists/by-puuid/player-puuid":
+					return newJSONResponse(t, `{
+						"puuid": "player-puuid",
+						"history": [
+							{"matchId": "unsupported-match", "queueId": "deathmatch"},
+							{"matchId": "custom-match", "queueId": ""}
+						]
+					}`), nil
+				case "/val/match/v1/matches/unsupported-match":
+					requestedMatchDetails = append(requestedMatchDetails, "unsupported-match")
+					return newJSONResponse(t, `{}`), nil
+				case "/val/match/v1/matches/custom-match":
+					requestedMatchDetails = append(requestedMatchDetails, "custom-match")
+					return newJSONResponse(t, `{
+						"matchInfo": {
+							"matchId": "custom-match",
+							"mapId": "/Game/Maps/Ascent/Ascent",
+							"gameStartMillis": 1710000000000,
+							"queueId": "",
+							"gameMode": "/Game/GameModes/Bomb/BombGameMode.BombGameMode_C"
+						},
+						"players": [
+							{
+								"puuid": "player-puuid",
+								"teamId": "Blue",
+								"gameName": "Player",
+								"tagLine": "NA1",
+								"characterId": "add6443a-41bd-e414-f6ad-e58d267f4e95",
+								"stats": {"score": 210, "kills": 12, "deaths": 7, "assists": 3}
+							},
+							{
+								"puuid": "enemy-puuid",
+								"teamId": "Red",
+								"gameName": "Enemy",
+								"tagLine": "EUW",
+								"characterId": "9f0d8ba9-4140-b941-57d3-a7ad57c6b417",
+								"stats": {"score": 150, "kills": 7, "deaths": 12, "assists": 2}
+							}
+						],
+						"teams": [
+							{"teamId": "Blue", "won": true, "roundsWon": 13},
+							{"teamId": "Red", "won": false, "roundsWon": 11}
+						]
+					}`), nil
+				default:
+					t.Fatalf("unexpected request path %q", req.URL.Path)
+					return nil, nil
+				}
+			}),
+		},
+		riotAPIKey: "test-riot-key",
+	}
+
+	previews, err := service.GetRecentMatchPreviews(context.Background(), &models.User{
+		FirebaseUID:  &firebaseUID,
+		RSOSubjectID: &rsoSubjectID,
+	}, 10)
+	if err != nil {
+		t.Fatalf("GetRecentMatchPreviews returned error: %v", err)
+	}
+
+	if len(previews) != 1 {
+		t.Fatalf("expected 1 preview, got %d", len(previews))
+	}
+	if previews[0].MatchID != "custom-match" {
+		t.Fatalf("expected custom-match preview, got %q", previews[0].MatchID)
+	}
+
+	if len(requestedMatchDetails) != 1 || requestedMatchDetails[0] != "custom-match" {
+		t.Fatalf("expected only custom-match detail fetch, got %+v", requestedMatchDetails)
+	}
+}
+
+func TestGetRecentMatchPreviews_ReusesSuccessfulMatchlistRegionForDetailFetches(t *testing.T) {
+	firebaseUID := "player-puuid"
+	rsoSubjectID := "rso-subject"
+	requestedDetailHosts := make([]string, 0, 4)
+
+	service := &MatchService{
+		httpClient: &http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				switch req.URL.Path {
+				case "/val/match/v1/matchlists/by-puuid/player-puuid":
+					switch req.URL.Host {
+					case "na.api.riotgames.com", "latam.api.riotgames.com", "br.api.riotgames.com":
+						resp := newJSONResponse(t, `{}`)
+						resp.StatusCode = http.StatusNotFound
+						return resp, nil
+					case "eu.api.riotgames.com":
+						return newJSONResponse(t, `{
+							"puuid": "player-puuid",
+							"history": [
+								{"matchId": "custom-match", "queueId": ""}
+							]
+						}`), nil
+					default:
+						t.Fatalf("unexpected matchlist host %q", req.URL.Host)
+						return nil, nil
+					}
+				case "/val/match/v1/matches/custom-match":
+					requestedDetailHosts = append(requestedDetailHosts, req.URL.Host)
+					if req.URL.Host != "eu.api.riotgames.com" {
+						resp := newJSONResponse(t, `{}`)
+						resp.StatusCode = http.StatusNotFound
+						return resp, nil
+					}
+
+					return newJSONResponse(t, `{
+						"matchInfo": {
+							"matchId": "custom-match",
+							"mapId": "/Game/Maps/Ascent/Ascent",
+							"gameStartMillis": 1710000000000,
+							"queueId": "",
+							"gameMode": "/Game/GameModes/Bomb/BombGameMode.BombGameMode_C"
+						},
+						"players": [
+							{
+								"puuid": "player-puuid",
+								"teamId": "Blue",
+								"gameName": "Player",
+								"tagLine": "NA1",
+								"characterId": "add6443a-41bd-e414-f6ad-e58d267f4e95",
+								"stats": {"score": 210, "kills": 12, "deaths": 7, "assists": 3}
+							},
+							{
+								"puuid": "enemy-puuid",
+								"teamId": "Red",
+								"gameName": "Enemy",
+								"tagLine": "EUW",
+								"characterId": "9f0d8ba9-4140-b941-57d3-a7ad57c6b417",
+								"stats": {"score": 150, "kills": 7, "deaths": 12, "assists": 2}
+							}
+						],
+						"teams": [
+							{"teamId": "Blue", "won": true, "roundsWon": 13},
+							{"teamId": "Red", "won": false, "roundsWon": 11}
+						]
+					}`), nil
+				default:
+					t.Fatalf("unexpected request path %q", req.URL.Path)
+					return nil, nil
+				}
+			}),
+		},
+		riotAPIKey: "test-riot-key",
+	}
+
+	previews, err := service.GetRecentMatchPreviews(context.Background(), &models.User{
+		FirebaseUID:  &firebaseUID,
+		RSOSubjectID: &rsoSubjectID,
+	}, 10)
+	if err != nil {
+		t.Fatalf("GetRecentMatchPreviews returned error: %v", err)
+	}
+
+	if len(previews) != 1 {
+		t.Fatalf("expected 1 preview, got %d", len(previews))
+	}
+
+	if len(requestedDetailHosts) != 1 || requestedDetailHosts[0] != "eu.api.riotgames.com" {
+		t.Fatalf("expected detail fetch to reuse eu region only, got %+v", requestedDetailHosts)
+	}
+}
 
 func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 	payload := []byte(`{

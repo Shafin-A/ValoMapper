@@ -279,7 +279,8 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 
 	matchlistPath := fmt.Sprintf("/val/match/v1/matchlists/by-puuid/%s", url.PathEscape(puuid))
 	matchlist := riotMatchlistResponse{}
-	if err := s.fetchFromAnyRegion(ctx, matchlistPath, &matchlist); err != nil {
+	preferredRegion, err := s.fetchFromAnyRegion(ctx, matchlistPath, &matchlist)
+	if err != nil {
 		return nil, fmt.Errorf("fetch matchlist: %w", err)
 	}
 
@@ -289,6 +290,10 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 			break
 		}
 
+		if !isSupportedQueue(entry.QueueID) {
+			continue
+		}
+
 		matchID := strings.TrimSpace(entry.MatchID)
 		if matchID == "" {
 			continue
@@ -296,13 +301,11 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 
 		matchPath := fmt.Sprintf("/val/match/v1/matches/%s", url.PathEscape(matchID))
 		match := riotMatchDTO{}
-		if err := s.fetchFromAnyRegion(ctx, matchPath, &match); err != nil {
+		resolvedRegion, err := s.fetchFromPreferredRegion(ctx, preferredRegion, matchPath, &match)
+		if err != nil {
 			continue
 		}
-
-		if !isSupportedQueue(match.MatchInfo.QueueID) {
-			continue
-		}
+		preferredRegion = resolvedRegion
 
 		preview, ok := buildMatchPreview(match, puuid)
 		if !ok {
@@ -314,11 +317,46 @@ func (s *MatchService) GetRecentMatchPreviews(ctx context.Context, user *models.
 	return previews, nil
 }
 
-func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath string, destination any) error {
+func buildRiotRegionOrder(preferredRegion string) []string {
+	normalizedPreferredRegion := strings.ToLower(strings.TrimSpace(preferredRegion))
+	if normalizedPreferredRegion == "" {
+		return riotRegions
+	}
+
+	orderedRegions := make([]string, 0, len(riotRegions))
+	for _, region := range riotRegions {
+		if region == normalizedPreferredRegion {
+			orderedRegions = append(orderedRegions, region)
+			break
+		}
+	}
+
+	for _, region := range riotRegions {
+		if region != normalizedPreferredRegion {
+			orderedRegions = append(orderedRegions, region)
+		}
+	}
+
+	if len(orderedRegions) == 0 {
+		return riotRegions
+	}
+
+	return orderedRegions
+}
+
+func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath string, destination any) (string, error) {
+	return s.fetchFromRegions(ctx, riotRegions, endpointPath, destination)
+}
+
+func (s *MatchService) fetchFromPreferredRegion(ctx context.Context, preferredRegion, endpointPath string, destination any) (string, error) {
+	return s.fetchFromRegions(ctx, buildRiotRegionOrder(preferredRegion), endpointPath, destination)
+}
+
+func (s *MatchService) fetchFromRegions(ctx context.Context, regions []string, endpointPath string, destination any) (string, error) {
 	var lastErr error
 	notFoundCount := 0
 
-	for _, region := range riotRegions {
+	for _, region := range regions {
 		apiURL := fmt.Sprintf("https://%s.api.riotgames.com%s", region, endpointPath)
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
 		if err != nil {
@@ -367,11 +405,11 @@ func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath stri
 
 		_ = resp.Body.Close()
 
-		return nil
+		return region, nil
 	}
 
-	if notFoundCount == len(riotRegions) {
-		return fmt.Errorf("riot endpoint returned 404 across all regions for %s: %w", endpointPath, &riotHTTPError{
+	if notFoundCount == len(regions) {
+		return "", fmt.Errorf("riot endpoint returned 404 across all regions for %s: %w", endpointPath, &riotHTTPError{
 			StatusCode: http.StatusNotFound,
 			Region:     "all",
 			Endpoint:   endpointPath,
@@ -379,10 +417,10 @@ func (s *MatchService) fetchFromAnyRegion(ctx context.Context, endpointPath stri
 	}
 
 	if lastErr != nil {
-		return fmt.Errorf("riot request failed for %s: %w", endpointPath, lastErr)
+		return "", fmt.Errorf("riot request failed for %s: %w", endpointPath, lastErr)
 	}
 
-	return errors.New("riot request failed")
+	return "", errors.New("riot request failed")
 }
 
 func normalizeQueueID(queueID string) string {
@@ -587,7 +625,7 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 
 	matchPath := fmt.Sprintf("/val/match/v1/matches/%s", url.PathEscape(matchID))
 	match := riotDetailedMatchDTO{}
-	if err := s.fetchFromAnyRegion(ctx, matchPath, &match); err != nil {
+	if _, err := s.fetchFromAnyRegion(ctx, matchPath, &match); err != nil {
 		if isRiotNotFound(err) {
 			return nil, ErrMatchNotFound
 		}
