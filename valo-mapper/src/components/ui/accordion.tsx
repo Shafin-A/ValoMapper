@@ -35,6 +35,15 @@ function AccordionTrigger({
   showChevron?: boolean;
   unstyled?: boolean;
 }) {
+  const triggerChildren = showChevron ? (
+    <>
+      {children}
+      <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200" />
+    </>
+  ) : (
+    children
+  );
+
   return (
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
@@ -46,10 +55,7 @@ function AccordionTrigger({
         )}
         {...props}
       >
-        {children}
-        {showChevron ? (
-          <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200" />
-        ) : null}
+        {triggerChildren}
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   );
