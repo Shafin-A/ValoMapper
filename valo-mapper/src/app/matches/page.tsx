@@ -34,14 +34,9 @@ const MatchesPage = () => {
     isFetchingNextMatches,
     isFetchNextMatchesError,
     fetchNextMatchesPage,
-    expandedMatchId,
-    expandedMatchSummary,
-    isMatchSummaryLoading,
-    isMatchSummaryError,
-    matchSummaryError,
-    refetchMatchSummary,
+    expandedMatchIds,
+    setExpandedMatches,
     selectedRoundByMatch,
-    toggleExpanded,
     selectRound,
   } = useMatchesPage();
 
@@ -149,18 +144,13 @@ const MatchesPage = () => {
             loadedMatchesCount={loadedMatchesCount}
             totalMatches={totalMatches}
             queueFilter={queueFilter}
-            expandedMatchId={expandedMatchId}
-            expandedMatchSummary={expandedMatchSummary}
-            isMatchSummaryLoading={isMatchSummaryLoading}
-            isMatchSummaryError={isMatchSummaryError}
-            matchSummaryError={matchSummaryError}
+            expandedMatchIds={expandedMatchIds}
             hasMoreMatches={hasMoreMatches}
             isFetchingNextMatches={isFetchingNextMatches}
             isFetchNextMatchesError={isFetchNextMatchesError}
             selectedRoundByMatch={selectedRoundByMatch}
-            onToggleMatch={toggleExpanded}
+            onExpandedMatchesChange={setExpandedMatches}
             onSelectRound={selectRound}
-            onRetryMatchSummary={refetchMatchSummary}
             onLoadMoreMatches={fetchNextMatchesPage}
           />
         ) : null}

@@ -5,13 +5,12 @@ import {
 import { filterMatchesByQueue, isMatchQueueFilter } from "@/lib/matches";
 import { MatchQueueFilter } from "@/lib/types";
 import { useState } from "react";
-import { useMatchSummary } from "@/hooks/api/use-match-summary";
 import { useMatches } from "@/hooks/api/use-matches";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 
 export const useMatchesPage = () => {
-  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
+  const [expandedMatchIds, setExpandedMatchIds] = useState<string[]>([]);
   const [selectedRoundByMatch, setSelectedRoundByMatch] = useState<
     Record<string, number>
   >({});
@@ -25,16 +24,20 @@ export const useMatchesPage = () => {
   const isRSOUser = Boolean(userProfile?.rsoSubjectId) && userProfile?.id === 5;
   const canLoadMatches = Boolean(firebaseUser && isRSOUser);
 
-  const toggleExpanded = (matchId: string) => {
-    setExpandedMatchId((current) => {
-      const next = current === matchId ? null : matchId;
-      if (next) {
-        setSelectedRoundByMatch((prev) => ({
-          ...prev,
-          [next]: prev[next] ?? 1,
-        }));
+  const setExpandedMatches = (nextExpandedMatchIds: string[]) => {
+    setExpandedMatchIds(nextExpandedMatchIds);
+    setSelectedRoundByMatch((prev) => {
+      let hasChanges = false;
+      const next = { ...prev };
+
+      for (const matchId of nextExpandedMatchIds) {
+        if (next[matchId] == null) {
+          next[matchId] = 1;
+          hasChanges = true;
+        }
       }
-      return next;
+
+      return hasChanges ? next : prev;
     });
   };
 
@@ -66,28 +69,22 @@ export const useMatchesPage = () => {
     }
 
     setQueueFilter(value);
-    setExpandedMatchId((currentExpandedMatchId) => {
-      if (!currentExpandedMatchId || value === ALL_MATCH_QUEUE_FILTER) {
-        return currentExpandedMatchId;
+    setExpandedMatchIds((currentExpandedMatchIds) => {
+      if (value === ALL_MATCH_QUEUE_FILTER) {
+        return currentExpandedMatchIds;
       }
 
-      const expandedMatchStillVisible = loadedMatches.some(
-        (match) =>
-          match.matchId === currentExpandedMatchId &&
-          match.queueLabel === value,
+      const visibleMatchIds = new Set(
+        loadedMatches
+          .filter((match) => match.queueLabel === value)
+          .map((match) => match.matchId),
       );
 
-      return expandedMatchStillVisible ? currentExpandedMatchId : null;
+      return currentExpandedMatchIds.filter((matchId) =>
+        visibleMatchIds.has(matchId),
+      );
     });
   };
-
-  const {
-    data: expandedMatchSummary,
-    isLoading: isMatchSummaryLoading,
-    isError: isMatchSummaryError,
-    error: matchSummaryError,
-    refetch: refetchMatchSummary,
-  } = useMatchSummary(expandedMatchId, canLoadMatches && !!expandedMatchId);
 
   return {
     firebaseUser,
@@ -107,14 +104,9 @@ export const useMatchesPage = () => {
     isFetchingNextMatches: isFetchingNextPage,
     isFetchNextMatchesError: isFetchNextPageError,
     fetchNextMatchesPage,
-    expandedMatchId,
-    expandedMatchSummary,
-    isMatchSummaryLoading,
-    isMatchSummaryError,
-    matchSummaryError,
-    refetchMatchSummary,
+    expandedMatchIds,
+    setExpandedMatches,
     selectedRoundByMatch,
-    toggleExpanded,
     selectRound,
   };
 };
