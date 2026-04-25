@@ -1,6 +1,16 @@
 export type MatchTone = "user" | "blue" | "red";
 export type MatchResultTone = "Win" | "Loss";
 
+export const ALL_MATCH_QUEUE_FILTER = "All";
+export const DEFAULT_MATCH_QUEUE_FILTER = "Competitive";
+
+export const MATCH_QUEUE_FILTER_OPTIONS = [
+  { value: ALL_MATCH_QUEUE_FILTER, label: "All Queues" },
+  { value: "Competitive", label: "Competitive" },
+  { value: "Unrated", label: "Unrated" },
+  { value: "Custom", label: "Custom" },
+] as const;
+
 type MatchToneClasses = {
   accentBg: string;
   accentText: string;

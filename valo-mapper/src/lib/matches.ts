@@ -1,5 +1,13 @@
-import { AGENT_ICON_CONFIGS } from "@/lib/consts";
-import { MatchPreview, MatchSummaryResponse } from "@/lib/types";
+import {
+  ALL_MATCH_QUEUE_FILTER,
+  MATCH_QUEUE_FILTER_OPTIONS,
+  AGENT_ICON_CONFIGS,
+} from "@/lib/consts";
+import {
+  MatchPreview,
+  MatchQueueFilter,
+  MatchSummaryResponse,
+} from "@/lib/types";
 
 const ABILITY_DAMAGE_SLOT_MAP = {
   Ultimate: "Ultimate",
@@ -49,6 +57,23 @@ export const getMapImageSrc = (mapName: string) => {
 
 export const getResultLabel = (result: MatchPreview["result"]) => {
   return result === "Win" ? "Victory" : "Defeat";
+};
+
+export const isMatchQueueFilter = (
+  value: string,
+): value is MatchQueueFilter => {
+  return MATCH_QUEUE_FILTER_OPTIONS.some((option) => option.value === value);
+};
+
+export const filterMatchesByQueue = (
+  matches: MatchPreview[],
+  queueFilter: MatchQueueFilter,
+) => {
+  if (queueFilter === ALL_MATCH_QUEUE_FILTER) {
+    return matches;
+  }
+
+  return matches.filter((match) => match.queueLabel === queueFilter);
 };
 
 export const getPlayerSummary = (players: MatchPlayers, puuid?: string) => {

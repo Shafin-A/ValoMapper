@@ -1,6 +1,14 @@
 "use client";
 
 import { MatchesContent } from "@/components/matches/matches-content";
+import { MATCH_QUEUE_FILTER_OPTIONS } from "@/lib/consts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useMatchesPage } from "@/hooks/use-matches-page";
@@ -14,11 +22,14 @@ const MatchesPage = () => {
     canLoadMatches,
     isPageLoading,
     matches,
+    loadedMatchesCount,
     totalMatches,
     isMatchesLoading,
     isMatchesError,
     matchesError,
     refetchMatches,
+    queueFilter,
+    selectQueueFilter,
     hasMoreMatches,
     isFetchingNextMatches,
     isFetchNextMatchesError,
@@ -79,7 +90,29 @@ const MatchesPage = () => {
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="mx-auto w-full max-w-[1260px] px-3 sm:px-4">
-        <div className="mb-4 flex items-center justify-end">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          {canLoadMatches && totalMatches > 0 ? (
+            <div className="w-full max-w-60 space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+                Queue
+              </p>
+              <Select value={queueFilter} onValueChange={selectQueueFilter}>
+                <SelectTrigger className="w-full border-slate-700 bg-slate-950/80 text-white">
+                  <SelectValue placeholder="Select a queue" />
+                </SelectTrigger>
+                <SelectContent className="border-slate-700 bg-slate-950 text-white">
+                  {MATCH_QUEUE_FILTER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div />
+          )}
+
           <Button variant="outline" size="sm" asChild>
             <Link href="/">Back Home</Link>
           </Button>
@@ -103,17 +136,19 @@ const MatchesPage = () => {
           </Alert>
         )}
 
-        {matches.length === 0 ? (
+        {canLoadMatches && totalMatches === 0 ? (
           <Alert>
             <AlertTitle>No matches found</AlertTitle>
             <AlertDescription>
               No competitive or unrated matches were found for your account yet.
             </AlertDescription>
           </Alert>
-        ) : (
+        ) : canLoadMatches && totalMatches > 0 ? (
           <MatchesContent
             matches={matches}
+            loadedMatchesCount={loadedMatchesCount}
             totalMatches={totalMatches}
+            queueFilter={queueFilter}
             expandedMatchId={expandedMatchId}
             expandedMatchSummary={expandedMatchSummary}
             isMatchSummaryLoading={isMatchSummaryLoading}
@@ -128,7 +163,7 @@ const MatchesPage = () => {
             onRetryMatchSummary={refetchMatchSummary}
             onLoadMoreMatches={fetchNextMatchesPage}
           />
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -1,3 +1,9 @@
+import {
+  ALL_MATCH_QUEUE_FILTER,
+  DEFAULT_MATCH_QUEUE_FILTER,
+} from "@/lib/consts";
+import { filterMatchesByQueue, isMatchQueueFilter } from "@/lib/matches";
+import { MatchQueueFilter } from "@/lib/types";
 import { useState } from "react";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
 import { useMatches } from "@/hooks/api/use-matches";
@@ -9,6 +15,9 @@ export const useMatchesPage = () => {
   const [selectedRoundByMatch, setSelectedRoundByMatch] = useState<
     Record<string, number>
   >({});
+  const [queueFilter, setQueueFilter] = useState<MatchQueueFilter>(
+    DEFAULT_MATCH_QUEUE_FILTER,
+  );
 
   const { user: firebaseUser, loading: authLoading } = useFirebaseAuth();
   const { data: userProfile, isLoading: isUserLoading } = useUser();
@@ -37,7 +46,7 @@ export const useMatchesPage = () => {
   };
 
   const {
-    matches,
+    matches: loadedMatches,
     pagination,
     isLoading: isMatchesLoading,
     isError: isMatchesError,
@@ -48,6 +57,29 @@ export const useMatchesPage = () => {
     isFetchingNextPage,
     isFetchNextPageError,
   } = useMatches(canLoadMatches, 10);
+
+  const matches = filterMatchesByQueue(loadedMatches, queueFilter);
+
+  const selectQueueFilter = (value: string) => {
+    if (!isMatchQueueFilter(value)) {
+      return;
+    }
+
+    setQueueFilter(value);
+    setExpandedMatchId((currentExpandedMatchId) => {
+      if (!currentExpandedMatchId || value === ALL_MATCH_QUEUE_FILTER) {
+        return currentExpandedMatchId;
+      }
+
+      const expandedMatchStillVisible = loadedMatches.some(
+        (match) =>
+          match.matchId === currentExpandedMatchId &&
+          match.queueLabel === value,
+      );
+
+      return expandedMatchStillVisible ? currentExpandedMatchId : null;
+    });
+  };
 
   const {
     data: expandedMatchSummary,
@@ -63,11 +95,14 @@ export const useMatchesPage = () => {
     canLoadMatches,
     isPageLoading: authLoading || isUserLoading,
     matches,
+    loadedMatchesCount: loadedMatches.length,
     totalMatches: pagination.total,
     isMatchesLoading,
     isMatchesError,
     matchesError,
     refetchMatches,
+    queueFilter,
+    selectQueueFilter,
     hasMoreMatches: hasNextPage,
     isFetchingNextMatches: isFetchingNextPage,
     isFetchNextMatchesError: isFetchNextPageError,

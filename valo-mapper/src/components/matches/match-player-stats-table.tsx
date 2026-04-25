@@ -76,10 +76,10 @@ export const MatchPlayerStatsTable = ({
                     className={`min-w-0 px-2 py-2 sm:px-3 sm:py-2.5 ${identityShade}`}
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-base font-semibold leading-none text-white sm:text-lg">
+                      <p className="truncate text-base font-semibold leading-tight text-white sm:text-lg">
                         {player?.gameName ?? "Player"}
                       </p>
-                      <p className="mt-1 truncate text-xs font-semibold leading-none text-white/55 sm:text-sm">
+                      <p className="mt-1 truncate text-xs font-semibold leading-tight text-white/55 sm:text-sm">
                         {player?.characterName ?? "Unknown Agent"}
                       </p>
                     </div>

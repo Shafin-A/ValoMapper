@@ -1,13 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { MatchCard } from "@/components/matches/match-card";
 import { MatchDetails } from "@/components/matches/match-details";
-import { MatchSummaryResponse, MatchPreview } from "@/lib/types";
+import { ALL_MATCH_QUEUE_FILTER } from "@/lib/consts";
+import {
+  MatchQueueFilter,
+  MatchSummaryResponse,
+  MatchPreview,
+} from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 interface MatchesContentProps {
   matches: MatchPreview[];
+  loadedMatchesCount: number;
   totalMatches: number;
+  queueFilter: MatchQueueFilter;
   expandedMatchId: string | null;
   expandedMatchSummary?: MatchSummaryResponse;
   isMatchSummaryLoading: boolean;
@@ -25,7 +32,9 @@ interface MatchesContentProps {
 
 export const MatchesContent = ({
   matches,
+  loadedMatchesCount,
   totalMatches,
+  queueFilter,
   expandedMatchId,
   expandedMatchSummary,
   isMatchSummaryLoading,
@@ -66,44 +75,73 @@ export const MatchesContent = ({
     return () => observer.disconnect();
   }, [hasMoreMatches, isFetchingNextMatches, onLoadMoreMatches]);
 
+  const queueSummaryText =
+    queueFilter === ALL_MATCH_QUEUE_FILTER
+      ? `Showing ${matches.length}/${totalMatches} matches`
+      : `Showing ${matches.length}/${loadedMatchesCount} ${queueFilter} matches`;
+
+  const emptyFilterTitle =
+    queueFilter === ALL_MATCH_QUEUE_FILTER
+      ? "No matches found."
+      : `No ${queueFilter} matches found.`;
+
+  const emptyFilterDescription = hasMoreMatches
+    ? `Load more matches to keep searching the ${
+        queueFilter === ALL_MATCH_QUEUE_FILTER
+          ? "match list"
+          : `${queueFilter} queue`
+      }.`
+    : queueFilter === ALL_MATCH_QUEUE_FILTER
+      ? "Try coming back later after some matches have been played."
+      : `Try coming back later after some ${queueFilter} matches have been played.`;
+
   return (
     <section className="space-y-px">
-      {matches.map((match) => {
-        const isExpanded = expandedMatchId === match.matchId;
-        const matchSummary = isExpanded ? (expandedMatchSummary ?? null) : null;
-        const selectedRoundNumber =
-          selectedRoundByMatch[match.matchId] ??
-          matchSummary?.rounds[0]?.roundNumber ??
-          1;
+      {matches.length === 0 ? (
+        <div className="rounded-xl border border-slate-800/80 bg-slate-950/75 px-4 py-6 text-center">
+          <p className="text-base font-semibold text-white">
+            {emptyFilterTitle}
+          </p>
+          <p className="mt-2 text-sm text-white/60">{emptyFilterDescription}</p>
+        </div>
+      ) : (
+        matches.map((match) => {
+          const isExpanded = expandedMatchId === match.matchId;
+          const matchSummary = isExpanded
+            ? (expandedMatchSummary ?? null)
+            : null;
+          const selectedRoundNumber =
+            selectedRoundByMatch[match.matchId] ??
+            matchSummary?.rounds[0]?.roundNumber ??
+            1;
 
-        return (
-          <div key={match.matchId}>
-            <MatchCard
-              match={match}
-              onToggle={() => onToggleMatch(match.matchId)}
-            />
-
-            {isExpanded && (
-              <MatchDetails
-                matchSummary={matchSummary}
-                isLoading={isMatchSummaryLoading}
-                isError={isMatchSummaryError}
-                error={matchSummaryError}
-                onRetry={onRetryMatchSummary}
-                selectedRoundNumber={selectedRoundNumber}
-                onSelectRound={(roundNumber) =>
-                  onSelectRound(match.matchId, roundNumber)
-                }
+          return (
+            <div key={match.matchId}>
+              <MatchCard
+                match={match}
+                onToggle={() => onToggleMatch(match.matchId)}
               />
-            )}
-          </div>
-        );
-      })}
+
+              {isExpanded && (
+                <MatchDetails
+                  matchSummary={matchSummary}
+                  isLoading={isMatchSummaryLoading}
+                  isError={isMatchSummaryError}
+                  error={matchSummaryError}
+                  onRetry={onRetryMatchSummary}
+                  selectedRoundNumber={selectedRoundNumber}
+                  onSelectRound={(roundNumber) =>
+                    onSelectRound(match.matchId, roundNumber)
+                  }
+                />
+              )}
+            </div>
+          );
+        })
+      )}
 
       <div className="flex flex-col items-center gap-3 px-4 py-6 text-center">
-        <p className="text-sm text-muted-foreground">
-          Showing {matches.length} of {totalMatches} matches
-        </p>
+        <p className="text-sm text-muted-foreground">{queueSummaryText}</p>
 
         {hasMoreMatches ? (
           <>

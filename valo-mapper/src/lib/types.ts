@@ -492,6 +492,8 @@ export type MatchSummaryResponse = {
   rounds: RoundSummaryLite[];
 };
 
+export type MatchQueueFilter = "All" | "Competitive" | "Unrated" | "Custom";
+
 export type MatchPreviewPagination = {
   start: number;
   limit: number;
