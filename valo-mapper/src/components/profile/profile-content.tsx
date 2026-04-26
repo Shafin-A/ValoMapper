@@ -96,9 +96,7 @@ export const ProfileContent = () => {
     return <ProfileUserDataNotFoundCard />;
   }
 
-  const isRSOUser = Boolean(
-    (user as { rsoSubjectId?: string | null }).rsoSubjectId,
-  );
+  const isRSOUser = Boolean(user.rsoSubjectId);
   const isMonthlyPlan = user.subscriptionPlan === "monthly";
   const isYearlyPlan = user.subscriptionPlan === "yearly";
   const hasValoMapperPremium = Boolean(user.isSubscribed);

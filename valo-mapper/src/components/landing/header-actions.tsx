@@ -11,7 +11,7 @@ export const HeaderActions = () => {
   const { user, logout } = useFirebaseAuth();
   const { data: userProfile } = useUser();
 
-  const isRSOUser = Boolean(userProfile?.rsoSubjectId) && userProfile?.id === 5;
+  const isRSOUser = Boolean(userProfile?.rsoSubjectId);
 
   if (!user) {
     return (

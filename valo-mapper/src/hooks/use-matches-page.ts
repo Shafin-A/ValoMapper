@@ -21,7 +21,7 @@ export const useMatchesPage = () => {
   const { user: firebaseUser, loading: authLoading } = useFirebaseAuth();
   const { data: userProfile, isLoading: isUserLoading } = useUser();
 
-  const isRSOUser = Boolean(userProfile?.rsoSubjectId) && userProfile?.id === 5;
+  const isRSOUser = Boolean(userProfile?.rsoSubjectId);
   const canLoadMatches = Boolean(firebaseUser && isRSOUser);
 
   const setExpandedMatches = (nextExpandedMatchIds: string[]) => {

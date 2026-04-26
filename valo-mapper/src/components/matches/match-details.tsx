@@ -4,6 +4,11 @@ import { MatchRoundSelector } from "@/components/matches/match-round-selector";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   getMatchResultTone,
   MATCH_PAGE_CLASSES,
   MATCH_RESULT_CLASSES,
@@ -142,7 +147,16 @@ export const MatchDetails = ({
               )}
             </span>
           </div>
-          <Button size="sm">Load Round</Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex" tabIndex={0}>
+                <Button size="sm" disabled>
+                  Load Round
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top">Coming soon.</TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="grid gap-3 md:grid-cols-[1fr_280px]">

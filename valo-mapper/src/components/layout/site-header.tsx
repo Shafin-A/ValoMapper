@@ -44,7 +44,7 @@ export const SiteHeader = ({
   const { data: user, isLoading } = useUser();
   const pathname = usePathname();
   const { users } = useWebSocket();
-  const isRSOUser = Boolean(user?.rsoSubjectId) && user?.id === 5;
+  const isRSOUser = Boolean(user?.rsoSubjectId);
   const canCheckPendingInvite =
     !isLoading && Boolean(user) && user?.subscriptionPlan !== "stack";
   const { data: pendingStackInvites } = usePendingStackInvites(
