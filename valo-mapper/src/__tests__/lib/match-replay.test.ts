@@ -1,4 +1,6 @@
 import { buildMatchReplayRoundStates } from "@/lib/match-replay";
+import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
+import { getMapCallouts, MAP_SIZE, VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts";
 import { MatchSummaryResponse } from "@/lib/types";
 
 describe("buildMatchReplayRoundStates", () => {
@@ -139,6 +141,26 @@ describe("buildMatchReplayRoundStates", () => {
     expect(replayState.phases[2].toolIconsOnCanvas[0]).toMatchObject({
       x: replayState.phases[1].toolIconsOnCanvas[0].x,
       y: replayState.phases[1].toolIconsOnCanvas[0].y,
+    });
+
+    const mapPosition = {
+      x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
+      y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
+    };
+
+    const plantTransform = getMapCallouts("ascent");
+    expect(plantTransform).toBeDefined();
+
+    const plantCanvasPoint = transformRiotWorldToCanvasPoint({
+      position: { x: -500, y: 2400 },
+      transform: plantTransform!,
+      mapPosition,
+      mapSide: "attack",
+    });
+
+    expect(replayState.phases[1].toolIconsOnCanvas[0]).toMatchObject({
+      x: plantCanvasPoint.x,
+      y: plantCanvasPoint.y,
     });
   });
 });

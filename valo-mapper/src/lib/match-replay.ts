@@ -294,8 +294,8 @@ const buildSpikeToolIcon = ({
   return {
     id: `replay-spike-${roundNumber}`,
     name: "spike",
-    x: canvasPoint.x - REPLAY_SPIKE_SIZE / 2,
-    y: canvasPoint.y - REPLAY_SPIKE_SIZE / 2,
+    x: canvasPoint.x,
+    y: canvasPoint.y,
     width: REPLAY_SPIKE_SIZE,
     height: REPLAY_SPIKE_SIZE,
   };
