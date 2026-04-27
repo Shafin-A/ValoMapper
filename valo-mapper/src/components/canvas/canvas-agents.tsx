@@ -51,6 +51,7 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
           x={agent.x}
           y={agent.y}
           src={getAgentImgSrc(agent.name)}
+          isGray={agent.isGray}
           draggable={!isDrawMode && !editingTextId}
           isListening={!isDrawMode && !editingTextId}
           onDragMove={(e) => handleDragMove(e, deleteGroupRef)}

@@ -191,12 +191,14 @@ const buildAgentsFromLocations = ({
   mapSide,
   players,
   viewerTeamId,
+  grayPlayerIds,
 }: {
   latestLocations: Map<string, MatchPlayerLocation>;
   mapId: string;
   mapSide: MapSide;
   players: MatchPlayerSummary[];
   viewerTeamId?: string;
+  grayPlayerIds?: Set<string>;
 }): AgentCanvas[] => {
   return players.flatMap((player) => {
     const playerLocation = latestLocations.get(player.puuid);
@@ -216,6 +218,7 @@ const buildAgentsFromLocations = ({
         name: player.characterName,
         role: getAgentRole(player.characterName),
         isAlly: player.teamId === viewerTeamId,
+        isGray: grayPlayerIds?.has(player.puuid),
         x: canvasPoint.x,
         y: canvasPoint.y,
       },
@@ -352,6 +355,8 @@ const buildRoundReplayState = ({
       mapSide,
       players,
       viewerTeamId,
+      grayPlayerIds:
+        event.eventType === "kill" ? new Set([event.victimPuuid]) : undefined,
     });
 
     if (event.eventType === "kill") {

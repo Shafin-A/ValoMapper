@@ -100,6 +100,14 @@ describe("buildMatchReplayRoundStates", () => {
       toId: "replay-agent-enemy-puuid",
       isInteractive: false,
     });
+    expect(replayState.phases[0].agentsOnCanvas).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "replay-agent-enemy-puuid",
+          isGray: true,
+        }),
+      ]),
+    );
     expect(replayState.phases[1].connectingLines).toHaveLength(0);
     expect(replayState.phases[1].imagesOnCanvas).toHaveLength(1);
     expect(replayState.phases[1].imagesOnCanvas[0].src).toBe(

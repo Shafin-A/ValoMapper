@@ -58,6 +58,7 @@ export type CanvasPatch = {
 
 export type AgentCanvas = CanvasItem & {
   role: AgentRole;
+  isGray?: boolean;
 };
 
 export type AbilityCanvas = CanvasItem & {
