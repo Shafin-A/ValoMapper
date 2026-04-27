@@ -109,9 +109,13 @@ describe("buildMatchReplayRoundStates", () => {
       ]),
     );
     expect(replayState.phases[1].connectingLines).toHaveLength(0);
-    expect(replayState.phases[1].imagesOnCanvas).toHaveLength(1);
-    expect(replayState.phases[1].imagesOnCanvas[0].src).toBe(
-      "/tools/spike.webp",
-    );
+    expect(replayState.phases[1].imagesOnCanvas).toHaveLength(0);
+    expect(replayState.phases[1].toolIconsOnCanvas).toHaveLength(1);
+    expect(replayState.phases[1].toolIconsOnCanvas[0]).toMatchObject({
+      id: "replay-spike-1",
+      name: "spike",
+      width: 32,
+      height: 32,
+    });
   });
 });

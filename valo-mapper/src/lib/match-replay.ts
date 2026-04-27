@@ -12,7 +12,6 @@ import type {
   AgentCanvas,
   AgentRole,
   ConnectingLine,
-  ImageCanvas,
   MapOption,
   MapSide,
   MatchPlayerLocation,
@@ -21,6 +20,7 @@ import type {
   PhaseState,
   RoundEventLogEntry,
   RoundSummaryLite,
+  ToolIconCanvas,
   UndoableState,
 } from "@/lib/types";
 
@@ -29,7 +29,7 @@ const REPLAY_KILL_COLORS = {
   enemy: "#fb7185",
 } as const;
 
-const REPLAY_SPIKE_SIZE = 40;
+const REPLAY_SPIKE_SIZE = 32;
 
 const createEmptyPhaseState = (): PhaseState => ({
   agentsOnCanvas: [],
@@ -270,7 +270,7 @@ const buildKillLine = ({
   };
 };
 
-const buildSpikeImage = ({
+const buildSpikeToolIcon = ({
   location,
   mapId,
   mapSide,
@@ -280,7 +280,7 @@ const buildSpikeImage = ({
   mapId: string;
   mapSide: MapSide;
   roundNumber: number;
-}): ImageCanvas | null => {
+}): ToolIconCanvas | null => {
   const canvasPoint = toCanvasPoint({ mapId, mapSide, position: location });
 
   if (!canvasPoint) {
@@ -289,7 +289,7 @@ const buildSpikeImage = ({
 
   return {
     id: `replay-spike-${roundNumber}`,
-    src: "/tools/spike.webp",
+    name: "spike",
     x: canvasPoint.x - REPLAY_SPIKE_SIZE / 2,
     y: canvasPoint.y - REPLAY_SPIKE_SIZE / 2,
     width: REPLAY_SPIKE_SIZE,
@@ -384,37 +384,37 @@ const buildRoundReplayState = ({
     }
 
     if (event.eventType === "spike_planted") {
-      const spikeImage = buildSpikeImage({
+      const spikeToolIcon = buildSpikeToolIcon({
         location: event.plantLocation,
         mapId: mapOption.id,
         mapSide,
         roundNumber: round.roundNumber,
       });
 
-      if (spikeImage) {
-        nextPhase.imagesOnCanvas = [
-          ...nextPhase.imagesOnCanvas.filter(
-            (image) => image.id !== spikeImage.id,
+      if (spikeToolIcon) {
+        nextPhase.toolIconsOnCanvas = [
+          ...nextPhase.toolIconsOnCanvas.filter(
+            (icon) => icon.id !== spikeToolIcon.id,
           ),
-          spikeImage,
+          spikeToolIcon,
         ];
       }
     }
 
     if (event.eventType === "spike_defused") {
-      const spikeImage = buildSpikeImage({
+      const spikeToolIcon = buildSpikeToolIcon({
         location: event.defuseLocation,
         mapId: mapOption.id,
         mapSide,
         roundNumber: round.roundNumber,
       });
 
-      if (spikeImage) {
-        nextPhase.imagesOnCanvas = [
-          ...nextPhase.imagesOnCanvas.filter(
-            (image) => image.id !== spikeImage.id,
+      if (spikeToolIcon) {
+        nextPhase.toolIconsOnCanvas = [
+          ...nextPhase.toolIconsOnCanvas.filter(
+            (icon) => icon.id !== spikeToolIcon.id,
           ),
-          spikeImage,
+          spikeToolIcon,
         ];
       }
     }
