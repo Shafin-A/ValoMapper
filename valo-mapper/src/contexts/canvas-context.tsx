@@ -122,8 +122,18 @@ interface CanvasContextType {
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
 
-export const CanvasProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const canvasState = useCanvasState();
+interface CanvasProviderProps {
+  children: ReactNode;
+  initialPhaseCount?: number;
+  initialState?: Partial<UndoableState>;
+}
+
+export const CanvasProvider: FC<CanvasProviderProps> = ({
+  children,
+  initialPhaseCount,
+  initialState,
+}) => {
+  const canvasState = useCanvasState({ initialPhaseCount, initialState });
   const [hoveredElementId, setHoveredElementIdState] = useState<string | null>(
     null,
   );

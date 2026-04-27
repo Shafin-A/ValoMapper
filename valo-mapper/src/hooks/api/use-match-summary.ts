@@ -3,7 +3,11 @@ import { MatchSummaryResponse } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useFirebaseAuth } from "../use-firebase-auth";
 
-export const useMatchSummary = (matchId: string | null, enabled = true) => {
+export const useMatchSummary = (
+  matchId: string | null,
+  enabled = true,
+  includeReplayTelemetry = false,
+) => {
   const {
     getIdToken,
     user: firebaseUser,
@@ -12,10 +16,10 @@ export const useMatchSummary = (matchId: string | null, enabled = true) => {
 
   const { data, isLoading, isError, error, refetch } =
     useQuery<MatchSummaryResponse>({
-      queryKey: ["match-summary", matchId],
+      queryKey: ["match-summary", matchId, includeReplayTelemetry],
       queryFn: () =>
         apiFetchWithAuth<MatchSummaryResponse>(
-          `/api/matches/${encodeURIComponent(matchId ?? "")}/summary`,
+          `/api/matches/${encodeURIComponent(matchId ?? "")}/summary${includeReplayTelemetry ? "?includeReplayTelemetry=true" : ""}`,
           getIdToken,
         ),
       enabled: enabled && !!matchId && !!firebaseUser && !authLoading,

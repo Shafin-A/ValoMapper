@@ -1321,6 +1321,13 @@ const docTemplate = `{
                         "name": "matchId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include kill, plant, and defuse location telemetry for replay",
+                        "name": "includeReplayTelemetry",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2933,6 +2940,20 @@ const docTemplate = `{
                 }
             }
         },
+        "services.MatchPlayerLocation": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "$ref": "#/definitions/services.MatchWorldPosition"
+                },
+                "puuid": {
+                    "type": "string"
+                },
+                "viewRadians": {
+                    "type": "number"
+                }
+            }
+        },
         "services.MatchPlayerSummary": {
             "type": "object",
             "properties": {
@@ -3023,6 +3044,17 @@ const docTemplate = `{
                 }
             }
         },
+        "services.MatchWorldPosition": {
+            "type": "object",
+            "properties": {
+                "x": {
+                    "type": "integer"
+                },
+                "y": {
+                    "type": "integer"
+                }
+            }
+        },
         "services.RoundEventLogEntry": {
             "type": "object",
             "properties": {
@@ -3031,6 +3063,15 @@ const docTemplate = `{
                 },
                 "damageType": {
                     "type": "string"
+                },
+                "defuseLocation": {
+                    "$ref": "#/definitions/services.MatchWorldPosition"
+                },
+                "defusePlayerLocations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.MatchPlayerLocation"
+                    }
                 },
                 "defuserPuuid": {
                     "type": "string"
@@ -3041,11 +3082,29 @@ const docTemplate = `{
                 "killerPuuid": {
                     "type": "string"
                 },
+                "plantLocation": {
+                    "$ref": "#/definitions/services.MatchWorldPosition"
+                },
+                "plantPlayerLocations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.MatchPlayerLocation"
+                    }
+                },
                 "planterPuuid": {
                     "type": "string"
                 },
+                "playerLocations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.MatchPlayerLocation"
+                    }
+                },
                 "timeSinceRoundStartMillis": {
                     "type": "integer"
+                },
+                "victimLocation": {
+                    "$ref": "#/definitions/services.MatchWorldPosition"
                 },
                 "victimPuuid": {
                     "type": "string"

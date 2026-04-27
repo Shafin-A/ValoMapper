@@ -63,6 +63,7 @@ const MatchAccordionItem = ({
           }`}
         >
           <MatchDetails
+            matchId={match.matchId}
             matchSummary={matchSummary ?? null}
             isLoading={isLoading}
             isError={isError}

@@ -262,7 +262,7 @@ export const ToolsSidebar = ({
                   }}
                   rounded
                 >
-                  {Array.from({ length: 10 }, (_, i) => {
+                  {phases.map((_, i) => {
                     const phaseNum = i + 1;
                     const isPrevious = phaseNum === currentPhaseIndex;
                     const isNext = phaseNum === currentPhaseIndex + 2;

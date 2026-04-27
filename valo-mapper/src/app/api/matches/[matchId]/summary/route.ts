@@ -12,11 +12,17 @@ export const GET = withAuthRequired(
       return Response.json({ error: "matchId is required" }, { status: 400 });
     }
 
-    return proxyToBackend(`/matches/${encodeURIComponent(matchId)}/summary`, {
-      method: "GET",
-      token: authHeader,
-      errorMessage: "Failed to fetch match summary",
-      request,
-    });
+    const requestUrl = new URL(request.url);
+    const search = requestUrl.searchParams.toString();
+
+    return proxyToBackend(
+      `/matches/${encodeURIComponent(matchId)}/summary${search ? `?${search}` : ""}`,
+      {
+        method: "GET",
+        token: authHeader,
+        errorMessage: "Failed to fetch match summary",
+        request,
+      },
+    );
   },
 );

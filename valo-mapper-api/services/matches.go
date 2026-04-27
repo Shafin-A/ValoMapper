@@ -150,15 +150,32 @@ type EconomyInfo struct {
 	Remaining    int `json:"remaining"`
 }
 
+type MatchWorldPosition struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+type MatchPlayerLocation struct {
+	PUUID       string             `json:"puuid"`
+	ViewRadians float64            `json:"viewRadians"`
+	Location    MatchWorldPosition `json:"location"`
+}
+
 type RoundEventLogEntry struct {
-	EventType                 string  `json:"eventType"`
-	TimeSinceRoundStartMillis int     `json:"timeSinceRoundStartMillis"`
-	KillerPuuid               *string `json:"killerPuuid,omitempty"`
-	VictimPuuid               *string `json:"victimPuuid,omitempty"`
-	DamageType                *string `json:"damageType,omitempty"`
-	DamageItem                *string `json:"damageItem,omitempty"`
-	PlanterPuuid              *string `json:"planterPuuid,omitempty"`
-	DefuserPuuid              *string `json:"defuserPuuid,omitempty"`
+	EventType                 string                `json:"eventType"`
+	TimeSinceRoundStartMillis int                   `json:"timeSinceRoundStartMillis"`
+	KillerPuuid               *string               `json:"killerPuuid,omitempty"`
+	VictimPuuid               *string               `json:"victimPuuid,omitempty"`
+	DamageType                *string               `json:"damageType,omitempty"`
+	DamageItem                *string               `json:"damageItem,omitempty"`
+	PlanterPuuid              *string               `json:"planterPuuid,omitempty"`
+	DefuserPuuid              *string               `json:"defuserPuuid,omitempty"`
+	VictimLocation            *MatchWorldPosition   `json:"victimLocation,omitempty"`
+	PlayerLocations           []MatchPlayerLocation `json:"playerLocations,omitempty"`
+	PlantLocation             *MatchWorldPosition   `json:"plantLocation,omitempty"`
+	PlantPlayerLocations      []MatchPlayerLocation `json:"plantPlayerLocations,omitempty"`
+	DefuseLocation            *MatchWorldPosition   `json:"defuseLocation,omitempty"`
+	DefusePlayerLocations     []MatchPlayerLocation `json:"defusePlayerLocations,omitempty"`
 }
 
 // MatchService fetches match data from Riot and builds preview DTOs.
@@ -238,14 +255,18 @@ type riotDetailedMatchDTO struct {
 }
 
 type riotRoundDTO struct {
-	RoundNum        int                    `json:"roundNum"`
-	RoundResult     string                 `json:"roundResult"`
-	WinningTeam     string                 `json:"winningTeam"`
-	BombPlanter     *string                `json:"bombPlanter"`
-	BombDefuser     *string                `json:"bombDefuser"`
-	PlantRoundTime  int                    `json:"plantRoundTime"`
-	DefuseRoundTime int                    `json:"defuseRoundTime"`
-	PlayersStats    []riotRoundPlayerStats `json:"playerStats"`
+	RoundNum              int                    `json:"roundNum"`
+	RoundResult           string                 `json:"roundResult"`
+	WinningTeam           string                 `json:"winningTeam"`
+	BombPlanter           *string                `json:"bombPlanter"`
+	BombDefuser           *string                `json:"bombDefuser"`
+	PlantRoundTime        int                    `json:"plantRoundTime"`
+	PlantPlayerLocations  []riotPlayerLocation   `json:"plantPlayerLocations"`
+	PlantLocation         *riotWorldPosition     `json:"plantLocation"`
+	DefuseRoundTime       int                    `json:"defuseRoundTime"`
+	DefusePlayerLocations []riotPlayerLocation   `json:"defusePlayerLocations"`
+	DefuseLocation        *riotWorldPosition     `json:"defuseLocation"`
+	PlayersStats          []riotRoundPlayerStats `json:"playerStats"`
 }
 
 type riotRoundPlayerStats struct {
@@ -256,14 +277,25 @@ type riotRoundPlayerStats struct {
 }
 
 type riotKillEvent struct {
-	TimeSinceGameStartMillis  int                 `json:"timeSinceGameStartMillis"`
-	TimeSinceRoundStartMillis int                 `json:"timeSinceRoundStartMillis"`
-	Killer                    string              `json:"killer"`
-	Victim                    string              `json:"victim"`
-	Assistants                []string            `json:"assistants"`
-	VictimLocation            map[string]int      `json:"victimLocation"`
-	PlayerLocations           []map[string]any    `json:"playerLocations"`
-	FinishingDamage           riotFinishingDamage `json:"finishingDamage"`
+	TimeSinceGameStartMillis  int                  `json:"timeSinceGameStartMillis"`
+	TimeSinceRoundStartMillis int                  `json:"timeSinceRoundStartMillis"`
+	Killer                    string               `json:"killer"`
+	Victim                    string               `json:"victim"`
+	Assistants                []string             `json:"assistants"`
+	VictimLocation            *riotWorldPosition   `json:"victimLocation"`
+	PlayerLocations           []riotPlayerLocation `json:"playerLocations"`
+	FinishingDamage           riotFinishingDamage  `json:"finishingDamage"`
+}
+
+type riotWorldPosition struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+type riotPlayerLocation struct {
+	PUUID       string            `json:"puuid"`
+	ViewRadians float64           `json:"viewRadians"`
+	Location    riotWorldPosition `json:"location"`
 }
 
 type riotFinishingDamage struct {
@@ -538,6 +570,12 @@ func cloneMatchSummary(summary *MatchSummaryResponse) *MatchSummaryResponse {
 				DamageItem:                cloneStringPointer(event.DamageItem),
 				PlanterPuuid:              cloneStringPointer(event.PlanterPuuid),
 				DefuserPuuid:              cloneStringPointer(event.DefuserPuuid),
+				VictimLocation:            cloneMatchWorldPositionPointer(event.VictimLocation),
+				PlayerLocations:           cloneMatchPlayerLocations(event.PlayerLocations),
+				PlantLocation:             cloneMatchWorldPositionPointer(event.PlantLocation),
+				PlantPlayerLocations:      cloneMatchPlayerLocations(event.PlantPlayerLocations),
+				DefuseLocation:            cloneMatchWorldPositionPointer(event.DefuseLocation),
+				DefusePlayerLocations:     cloneMatchPlayerLocations(event.DefusePlayerLocations),
 			}
 		}
 
@@ -556,12 +594,34 @@ func cloneStringPointer(value *string) *string {
 	return &cloned
 }
 
-func buildMatchSummaryCacheKey(puuid, matchID string) string {
-	return fmt.Sprintf("%s:%s", puuid, matchID)
+func cloneMatchWorldPositionPointer(value *MatchWorldPosition) *MatchWorldPosition {
+	if value == nil {
+		return nil
+	}
+
+	cloned := *value
+	return &cloned
 }
 
-func (s *MatchService) getCachedMatchSummary(puuid, matchID string) (*MatchSummaryResponse, bool) {
-	cacheKey := buildMatchSummaryCacheKey(puuid, matchID)
+func cloneMatchPlayerLocations(locations []MatchPlayerLocation) []MatchPlayerLocation {
+	if len(locations) == 0 {
+		return nil
+	}
+
+	return append([]MatchPlayerLocation(nil), locations...)
+}
+
+func buildMatchSummaryCacheKey(puuid, matchID string, includeReplayTelemetry bool) string {
+	mode := "base"
+	if includeReplayTelemetry {
+		mode = "replay"
+	}
+
+	return fmt.Sprintf("%s:%s:%s", puuid, matchID, mode)
+}
+
+func (s *MatchService) getCachedMatchSummary(puuid, matchID string, includeReplayTelemetry bool) (*MatchSummaryResponse, bool) {
+	cacheKey := buildMatchSummaryCacheKey(puuid, matchID, includeReplayTelemetry)
 	now := s.timeNow()
 
 	s.matchSummaryCacheMu.RLock()
@@ -583,8 +643,8 @@ func (s *MatchService) getCachedMatchSummary(puuid, matchID string) (*MatchSumma
 	return cloneMatchSummary(entry.summary), true
 }
 
-func (s *MatchService) setCachedMatchSummary(puuid, matchID string, summary *MatchSummaryResponse) {
-	cacheKey := buildMatchSummaryCacheKey(puuid, matchID)
+func (s *MatchService) setCachedMatchSummary(puuid, matchID string, includeReplayTelemetry bool, summary *MatchSummaryResponse) {
+	cacheKey := buildMatchSummaryCacheKey(puuid, matchID, includeReplayTelemetry)
 
 	s.matchSummaryCacheMu.Lock()
 	if s.matchSummaryCache == nil {
@@ -891,7 +951,7 @@ func toAgentName(agentID string) string {
 }
 
 // GetMatchSummary returns a match summary with round details and event logs fetched from Riot API.
-func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, matchID string) (*MatchSummaryResponse, error) {
+func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, matchID string, includeReplayTelemetry bool) (*MatchSummaryResponse, error) {
 	if user == nil || user.RSOSubjectID == nil || strings.TrimSpace(*user.RSOSubjectID) == "" {
 		return nil, ErrRSOUserRequired
 	}
@@ -910,7 +970,7 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 	}
 
 	viewerPUUID := strings.TrimSpace(*user.FirebaseUID)
-	if cachedSummary, ok := s.getCachedMatchSummary(viewerPUUID, matchID); ok {
+	if cachedSummary, ok := s.getCachedMatchSummary(viewerPUUID, matchID, includeReplayTelemetry); ok {
 		return cachedSummary, nil
 	}
 
@@ -937,10 +997,10 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 		},
 		TotalRounds: len(match.Rounds),
 		Players:     s.buildPlayerSummaries(match),
-		Rounds:      s.buildRoundSummaries(match),
+		Rounds:      s.buildRoundSummaries(match, includeReplayTelemetry),
 	}
 
-	s.setCachedMatchSummary(viewerPUUID, matchID, summary)
+	s.setCachedMatchSummary(viewerPUUID, matchID, includeReplayTelemetry, summary)
 
 	return summary, nil
 }
@@ -979,7 +1039,7 @@ func (s *MatchService) buildPlayerSummaries(match riotDetailedMatchDTO) []MatchP
 	return summaries
 }
 
-func (s *MatchService) buildRoundSummaries(match riotDetailedMatchDTO) []RoundSummaryLite {
+func (s *MatchService) buildRoundSummaries(match riotDetailedMatchDTO, includeReplayTelemetry bool) []RoundSummaryLite {
 	summaries := make([]RoundSummaryLite, 0, len(match.Rounds))
 
 	// Map to track cumulative scores
@@ -1000,7 +1060,7 @@ func (s *MatchService) buildRoundSummaries(match riotDetailedMatchDTO) []RoundSu
 				Blue: scores["Blue"],
 			},
 			PlayerStats: s.buildPlayerStats(round, match.Players),
-			EventLog:    s.buildEventLog(round),
+			EventLog:    s.buildEventLog(round, includeReplayTelemetry),
 		}
 
 		summaries = append(summaries, roundSummary)
@@ -1050,7 +1110,7 @@ func (s *MatchService) buildPlayerStats(round riotRoundDTO, allPlayers []riotPla
 	return stats
 }
 
-func (s *MatchService) buildEventLog(round riotRoundDTO) []RoundEventLogEntry {
+func (s *MatchService) buildEventLog(round riotRoundDTO, includeReplayTelemetry bool) []RoundEventLogEntry {
 	events := make([]RoundEventLogEntry, 0)
 
 	// Process kill events
@@ -1067,6 +1127,10 @@ func (s *MatchService) buildEventLog(round riotRoundDTO) []RoundEventLogEntry {
 				DamageType:                ptrStrOrNil(damageType),
 				DamageItem:                ptrStrOrNil(damageItem),
 			}
+			if includeReplayTelemetry {
+				event.VictimLocation = toMatchWorldPositionPointer(kill.VictimLocation)
+				event.PlayerLocations = toMatchPlayerLocations(kill.PlayerLocations)
+			}
 			events = append(events, event)
 		}
 	}
@@ -1078,6 +1142,10 @@ func (s *MatchService) buildEventLog(round riotRoundDTO) []RoundEventLogEntry {
 			TimeSinceRoundStartMillis: round.PlantRoundTime,
 			PlanterPuuid:              round.BombPlanter,
 		}
+		if includeReplayTelemetry {
+			event.PlantLocation = toMatchWorldPositionPointer(round.PlantLocation)
+			event.PlantPlayerLocations = toMatchPlayerLocations(round.PlantPlayerLocations)
+		}
 		events = append(events, event)
 	}
 
@@ -1087,12 +1155,44 @@ func (s *MatchService) buildEventLog(round riotRoundDTO) []RoundEventLogEntry {
 			TimeSinceRoundStartMillis: round.DefuseRoundTime,
 			DefuserPuuid:              round.BombDefuser,
 		}
+		if includeReplayTelemetry {
+			event.DefuseLocation = toMatchWorldPositionPointer(round.DefuseLocation)
+			event.DefusePlayerLocations = toMatchPlayerLocations(round.DefusePlayerLocations)
+		}
 		events = append(events, event)
 	}
 
 	sortEventsByTime(events)
 
 	return events
+}
+
+func toMatchWorldPositionPointer(position *riotWorldPosition) *MatchWorldPosition {
+	if position == nil {
+		return nil
+	}
+
+	return &MatchWorldPosition{X: position.X, Y: position.Y}
+}
+
+func toMatchPlayerLocations(locations []riotPlayerLocation) []MatchPlayerLocation {
+	if len(locations) == 0 {
+		return nil
+	}
+
+	snapshots := make([]MatchPlayerLocation, 0, len(locations))
+	for _, location := range locations {
+		snapshots = append(snapshots, MatchPlayerLocation{
+			PUUID:       strings.TrimSpace(location.PUUID),
+			ViewRadians: location.ViewRadians,
+			Location: MatchWorldPosition{
+				X: location.Location.X,
+				Y: location.Location.Y,
+			},
+		})
+	}
+
+	return snapshots
 }
 
 func buildRoundCombatCounts(round riotRoundDTO) map[string]roundCombatCounts {

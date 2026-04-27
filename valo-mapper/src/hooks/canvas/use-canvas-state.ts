@@ -14,14 +14,32 @@ import { useParams } from "next/navigation";
 import { SetStateAction, useCallback, useEffect, useRef } from "react";
 import { parseTimestamp } from "@/lib/utils";
 
-export const useCanvasState = () => {
+interface UseCanvasStateOptions {
+  initialPhaseCount?: number;
+  initialState?: Partial<UndoableState>;
+}
+
+export const useCanvasState = ({
+  initialPhaseCount,
+  initialState: providedInitialState,
+}: UseCanvasStateOptions = {}) => {
   const params = useParams();
   const lobbyCode =
     typeof params?.lobbyCode === "string" ? params.lobbyCode : "";
+  const initialStateRef = useRef(providedInitialState);
+  const initialState = initialStateRef.current;
 
   const phaseTransitions = usePhaseTransitions();
-  const canvasUI = useCanvasUI();
-  const phaseManager = usePhaseManager();
+  const canvasUI = useCanvasUI({
+    initialMapSide: initialState?.mapSide,
+    initialSelectedMap: initialState?.selectedMap,
+  });
+  const phaseManager = usePhaseManager({
+    initialCurrentPhaseIndex: initialState?.currentPhaseIndex,
+    initialEditedPhases: initialState?.editedPhases,
+    initialPhases: initialState?.phases,
+    initialPhaseCount,
+  });
   const {
     agentsSettings,
     abilitiesSettings,
@@ -42,6 +60,16 @@ export const useCanvasState = () => {
 
   const lastLoadedLobbyRef = useRef<string>("");
   const lastAppliedLobbyUpdatedAt = useRef<string>("");
+
+  useEffect(() => {
+    if (initialState?.agentsSettings) {
+      updateAgentsSettings(initialState.agentsSettings);
+    }
+
+    if (initialState?.abilitiesSettings) {
+      updateAbilitiesSettings(initialState.abilitiesSettings);
+    }
+  }, [initialState, updateAgentsSettings, updateAbilitiesSettings]);
 
   const canvasItems = useCanvasItems(
     phaseManager.currentPhase,

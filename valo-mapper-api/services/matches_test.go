@@ -564,7 +564,13 @@ func TestGetMatchSummary_UsesCachedSummaryOnRepeatedRequest(t *testing.T) {
 												"victim": "enemy-puuid",
 												"assistants": [],
 												"victimLocation": {"x": 1, "y": 2},
-												"playerLocations": [],
+												"playerLocations": [
+													{
+														"puuid": "player-puuid",
+														"viewRadians": 1.5,
+														"location": {"x": 3, "y": 4}
+													}
+												],
 												"finishingDamage": {
 													"damageType": "Weapon",
 													"damageItem": "weapon-1",
@@ -598,7 +604,7 @@ func TestGetMatchSummary_UsesCachedSummaryOnRepeatedRequest(t *testing.T) {
 
 	user := &models.User{FirebaseUID: &firebaseUID, RSOSubjectID: &rsoSubjectID}
 
-	firstSummary, err := service.GetMatchSummary(context.Background(), user, "cached-summary-match")
+	firstSummary, err := service.GetMatchSummary(context.Background(), user, "cached-summary-match", true)
 	if err != nil {
 		t.Fatalf("first GetMatchSummary returned error: %v", err)
 	}
@@ -613,9 +619,17 @@ func TestGetMatchSummary_UsesCachedSummaryOnRepeatedRequest(t *testing.T) {
 	if firstSummary.Rounds[0].EventLog[0].KillerPuuid == nil {
 		t.Fatalf("expected first event killer in cached summary")
 	}
+	if firstSummary.Rounds[0].EventLog[0].VictimLocation == nil {
+		t.Fatalf("expected first event victim location in cached summary")
+	}
+	if len(firstSummary.Rounds[0].EventLog[0].PlayerLocations) != 1 {
+		t.Fatalf("expected one player location in cached summary, got %d", len(firstSummary.Rounds[0].EventLog[0].PlayerLocations))
+	}
 	*firstSummary.Rounds[0].EventLog[0].KillerPuuid = "mutated-killer"
+	firstSummary.Rounds[0].EventLog[0].VictimLocation.X = 99
+	firstSummary.Rounds[0].EventLog[0].PlayerLocations[0].Location.X = 123
 
-	secondSummary, err := service.GetMatchSummary(context.Background(), user, "cached-summary-match")
+	secondSummary, err := service.GetMatchSummary(context.Background(), user, "cached-summary-match", true)
 	if err != nil {
 		t.Fatalf("second GetMatchSummary returned error: %v", err)
 	}
@@ -638,6 +652,12 @@ func TestGetMatchSummary_UsesCachedSummaryOnRepeatedRequest(t *testing.T) {
 
 	if secondSummary.Rounds[0].EventLog[0].KillerPuuid == nil || *secondSummary.Rounds[0].EventLog[0].KillerPuuid != "player-puuid" {
 		t.Fatalf("expected cached summary killer to remain player-puuid, got %+v", secondSummary.Rounds[0].EventLog[0].KillerPuuid)
+	}
+	if secondSummary.Rounds[0].EventLog[0].VictimLocation == nil || secondSummary.Rounds[0].EventLog[0].VictimLocation.X != 1 || secondSummary.Rounds[0].EventLog[0].VictimLocation.Y != 2 {
+		t.Fatalf("expected cached summary victim location to remain {1,2}, got %+v", secondSummary.Rounds[0].EventLog[0].VictimLocation)
+	}
+	if len(secondSummary.Rounds[0].EventLog[0].PlayerLocations) != 1 || secondSummary.Rounds[0].EventLog[0].PlayerLocations[0].Location.X != 3 || secondSummary.Rounds[0].EventLog[0].PlayerLocations[0].Location.Y != 4 {
+		t.Fatalf("expected cached summary player locations to remain unchanged, got %+v", secondSummary.Rounds[0].EventLog[0].PlayerLocations)
 	}
 }
 
@@ -668,7 +688,23 @@ func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 				"bombPlanter": "red-player",
 				"bombDefuser": "blue-player",
 				"plantRoundTime": 12000,
+				"plantPlayerLocations": [
+					{
+						"puuid": "red-player",
+						"viewRadians": 2.5,
+						"location": {"x": 11, "y": 22}
+					}
+				],
+				"plantLocation": {"x": 33, "y": 44},
 				"defuseRoundTime": 18000,
+				"defusePlayerLocations": [
+					{
+						"puuid": "blue-player",
+						"viewRadians": 1.25,
+						"location": {"x": 55, "y": 66}
+					}
+				],
+				"defuseLocation": {"x": 77, "y": 88},
 				"playerStats": [
 					{
 						"puuid": "blue-player",
@@ -680,7 +716,18 @@ func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 								"victim": "red-player",
 								"assistants": ["blue-assist"],
 								"victimLocation": {"x": 1, "y": 2},
-								"playerLocations": [],
+								"playerLocations": [
+									{
+										"puuid": "blue-player",
+										"viewRadians": 0.5,
+										"location": {"x": 3, "y": 4}
+									},
+									{
+										"puuid": "red-player",
+										"viewRadians": 1.5,
+										"location": {"x": 5, "y": 6}
+									}
+								],
 								"finishingDamage": {
 									"damageType": "Weapon",
 									"damageItem": "weapon-1",
@@ -718,7 +765,7 @@ func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 	}
 
 	service := &MatchService{}
-	summaries := service.buildRoundSummaries(match)
+	summaries := service.buildRoundSummaries(match, true)
 	if len(summaries) != 1 {
 		t.Fatalf("expected 1 round summary, got %d", len(summaries))
 	}
@@ -760,6 +807,38 @@ func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 	}
 	if round.EventLog[0].DamageItem == nil || *round.EventLog[0].DamageItem != "weapon-1" {
 		t.Fatalf("expected kill event damageItem weapon-1, got %+v", round.EventLog[0].DamageItem)
+	}
+	if round.EventLog[0].VictimLocation == nil || round.EventLog[0].VictimLocation.X != 1 || round.EventLog[0].VictimLocation.Y != 2 {
+		t.Fatalf("expected kill event victim location {1,2}, got %+v", round.EventLog[0].VictimLocation)
+	}
+	if len(round.EventLog[0].PlayerLocations) != 2 {
+		t.Fatalf("expected kill event player locations, got %+v", round.EventLog[0].PlayerLocations)
+	}
+	if round.EventLog[1].PlantLocation == nil || round.EventLog[1].PlantLocation.X != 33 || round.EventLog[1].PlantLocation.Y != 44 {
+		t.Fatalf("expected plant location {33,44}, got %+v", round.EventLog[1].PlantLocation)
+	}
+	if len(round.EventLog[1].PlantPlayerLocations) != 1 || round.EventLog[1].PlantPlayerLocations[0].Location.X != 11 || round.EventLog[1].PlantPlayerLocations[0].Location.Y != 22 {
+		t.Fatalf("expected plant player locations, got %+v", round.EventLog[1].PlantPlayerLocations)
+	}
+	if round.EventLog[2].DefuseLocation == nil || round.EventLog[2].DefuseLocation.X != 77 || round.EventLog[2].DefuseLocation.Y != 88 {
+		t.Fatalf("expected defuse location {77,88}, got %+v", round.EventLog[2].DefuseLocation)
+	}
+	if len(round.EventLog[2].DefusePlayerLocations) != 1 || round.EventLog[2].DefusePlayerLocations[0].Location.X != 55 || round.EventLog[2].DefusePlayerLocations[0].Location.Y != 66 {
+		t.Fatalf("expected defuse player locations, got %+v", round.EventLog[2].DefusePlayerLocations)
+	}
+
+	summariesWithoutTelemetry := service.buildRoundSummaries(match, false)
+	if len(summariesWithoutTelemetry) != 1 {
+		t.Fatalf("expected 1 round summary without telemetry, got %d", len(summariesWithoutTelemetry))
+	}
+	if summariesWithoutTelemetry[0].EventLog[0].VictimLocation != nil || len(summariesWithoutTelemetry[0].EventLog[0].PlayerLocations) != 0 {
+		t.Fatalf("expected kill telemetry to be omitted without replay flag, got %+v", summariesWithoutTelemetry[0].EventLog[0])
+	}
+	if summariesWithoutTelemetry[0].EventLog[1].PlantLocation != nil || len(summariesWithoutTelemetry[0].EventLog[1].PlantPlayerLocations) != 0 {
+		t.Fatalf("expected plant telemetry to be omitted without replay flag, got %+v", summariesWithoutTelemetry[0].EventLog[1])
+	}
+	if summariesWithoutTelemetry[0].EventLog[2].DefuseLocation != nil || len(summariesWithoutTelemetry[0].EventLog[2].DefusePlayerLocations) != 0 {
+		t.Fatalf("expected defuse telemetry to be omitted without replay flag, got %+v", summariesWithoutTelemetry[0].EventLog[2])
 	}
 }
 

@@ -1,6 +1,7 @@
 import { DEFAULT_MAP_OPTIONS } from "@/lib/consts";
 import {
   MapOption,
+  MapSide,
   DrawLine,
   Tool,
   AbilityIconItem,
@@ -9,14 +10,20 @@ import {
 } from "@/lib/types";
 import { useRef, useState } from "react";
 
-export const useCanvasUI = () => {
+interface UseCanvasUIOptions {
+  initialMapSide?: MapSide;
+  initialSelectedMap?: MapOption;
+}
+
+export const useCanvasUI = ({
+  initialMapSide = "defense",
+  initialSelectedMap = DEFAULT_MAP_OPTIONS[0],
+}: UseCanvasUIOptions = {}) => {
   const [isAlly, setIsAlly] = useState(true);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
-  const [selectedMap, setSelectedMap] = useState<MapOption>(
-    DEFAULT_MAP_OPTIONS[0],
-  );
-  const [mapSide, setMapSide] = useState<"attack" | "defense">("defense");
+  const [selectedMap, setSelectedMap] = useState<MapOption>(initialSelectedMap);
+  const [mapSide, setMapSide] = useState<MapSide>(initialMapSide);
 
   const [currentStroke, setCurrentStroke] = useState<DrawLine | null>(null);
   const [tool, setTool] = useState<Tool>("pencil");

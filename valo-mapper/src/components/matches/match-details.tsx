@@ -8,6 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useUser } from "@/hooks/api/use-user";
 import {
   getMatchResultTone,
   MATCH_PAGE_CLASSES,
@@ -21,8 +22,10 @@ import {
 import { MatchSummaryResponse } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface MatchDetailsProps {
+  matchId: string;
   matchSummary: MatchSummaryResponse | null;
   isLoading: boolean;
   isError: boolean;
@@ -33,6 +36,7 @@ interface MatchDetailsProps {
 }
 
 export const MatchDetails = ({
+  matchId,
   matchSummary,
   isLoading,
   isError,
@@ -41,6 +45,8 @@ export const MatchDetails = ({
   selectedRoundNumber,
   onSelectRound,
 }: MatchDetailsProps) => {
+  const { data: user } = useUser();
+
   if (isLoading) {
     return (
       <section className="rounded-b-xl border border-slate-700 bg-slate-950/90 px-4 py-8 sm:px-5">
@@ -147,16 +153,26 @@ export const MatchDetails = ({
               )}
             </span>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex" tabIndex={0}>
-                <Button size="sm" disabled>
-                  Load Round
-                </Button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top">Coming soon.</TooltipContent>
-          </Tooltip>
+          {user?.id === 5 ? (
+            <Button size="sm" asChild>
+              <Link
+                href={`/matches/${encodeURIComponent(matchId)}?round=${selectedRound.roundNumber}`}
+              >
+                Load Round
+              </Link>
+            </Button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex" tabIndex={0}>
+                  <Button size="sm" disabled>
+                    Load Round
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">Coming soon.</TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
         <div className="grid gap-3 md:grid-cols-[1fr_280px]">

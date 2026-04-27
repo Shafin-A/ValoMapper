@@ -1,6 +1,8 @@
 import { PhaseState } from "@/lib/types";
 import { useState, useCallback, useRef } from "react";
 
+const DEFAULT_PHASE_COUNT = 10;
+
 const createEmptyPhaseState = (): PhaseState => ({
   agentsOnCanvas: [],
   abilitiesOnCanvas: [],
@@ -11,14 +13,51 @@ const createEmptyPhaseState = (): PhaseState => ({
   toolIconsOnCanvas: [],
 });
 
-export const usePhaseManager = () => {
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
-  const [phases, setPhases] = useState<PhaseState[]>(
-    Array.from({ length: 10 }, () => createEmptyPhaseState()),
+interface UsePhaseManagerOptions {
+  initialCurrentPhaseIndex?: number;
+  initialEditedPhases?: Iterable<number>;
+  initialPhases?: PhaseState[];
+  initialPhaseCount?: number;
+}
+
+const createInitialPhases = (
+  initialPhases?: PhaseState[],
+  initialPhaseCount: number = DEFAULT_PHASE_COUNT,
+) => {
+  if (initialPhases && initialPhases.length > 0) {
+    return initialPhases;
+  }
+
+  return Array.from(
+    { length: Math.max(initialPhaseCount, 1) },
+    createEmptyPhaseState,
   );
-  const [editedPhases, setEditedPhases] = useState<Set<number>>(new Set([0]));
+};
+
+export const usePhaseManager = ({
+  initialCurrentPhaseIndex = 0,
+  initialEditedPhases,
+  initialPhases,
+  initialPhaseCount = DEFAULT_PHASE_COUNT,
+}: UsePhaseManagerOptions = {}) => {
+  const initialPhasesRef = useRef(
+    createInitialPhases(initialPhases, initialPhaseCount),
+  );
+  const maxInitialIndex = initialPhasesRef.current.length - 1;
+  const clampedInitialPhaseIndex = Math.min(
+    Math.max(initialCurrentPhaseIndex, 0),
+    maxInitialIndex,
+  );
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(
+    clampedInitialPhaseIndex,
+  );
+  const [phases, setPhases] = useState<PhaseState[]>(initialPhasesRef.current);
+  const [editedPhases, setEditedPhases] = useState<Set<number>>(
+    new Set(initialEditedPhases ?? [clampedInitialPhaseIndex]),
+  );
 
   const phasesRef = useRef(phases);
+  const defaultPhaseCountRef = useRef(initialPhasesRef.current.length);
 
   const setPhasesWithRef = useCallback(
     (updater: PhaseState[] | ((prevPhases: PhaseState[]) => PhaseState[])) => {
@@ -51,7 +90,7 @@ export const usePhaseManager = () => {
 
   const switchToPhase = useCallback(
     (index: number) => {
-      if (index < 0 || index > 9) return;
+      if (index < 0 || index > phases.length - 1) return;
 
       if (!editedPhases.has(index)) {
         const editedPhasesBeforeCurrent = Array.from(editedPhases).filter(
@@ -95,7 +134,7 @@ export const usePhaseManager = () => {
 
   const duplicatePhase = useCallback(
     (index: number) => {
-      if (index < 9) {
+      if (index < phases.length - 1) {
         const duplicated = JSON.parse(JSON.stringify(phases[index]));
         setPhasesWithRef((prev) => {
           const newPhases = [...prev];
@@ -110,7 +149,12 @@ export const usePhaseManager = () => {
   );
 
   const resetAllPhases = useCallback(() => {
-    setPhasesWithRef(Array.from({ length: 10 }, () => createEmptyPhaseState()));
+    setPhasesWithRef(
+      Array.from(
+        { length: defaultPhaseCountRef.current },
+        createEmptyPhaseState,
+      ),
+    );
     setEditedPhases(new Set([0]));
     setCurrentPhaseIndex(0);
   }, [setPhasesWithRef]);

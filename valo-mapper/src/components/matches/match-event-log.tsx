@@ -1,5 +1,6 @@
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getMatchTone, MATCH_TONE_CLASSES } from "@/lib/consts";
+import { cn } from "@/lib/utils";
 import {
   MATCH_SPIKE_IMAGE_CLASS_NAME,
   MATCH_SPIKE_IMAGE_WRAPPER_CLASS_NAME,
@@ -15,19 +16,27 @@ import Image from "next/image";
 interface MatchEventLogProps {
   events: MatchRoundEvent[];
   players: MatchPlayers;
+  containerClassName?: string;
   currentPlayerPuuid?: string;
+  onSelectEvent?: (eventIndex: number) => void;
+  scrollAreaClassName?: string;
+  selectedEventIndex?: number | null;
 }
 
 interface RoundEventRowProps {
   event: MatchRoundEvent;
   players: MatchPlayers;
   currentPlayerPuuid?: string;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
 const RoundEventRow = ({
   event,
   players,
   currentPlayerPuuid,
+  isSelected = false,
+  onSelect,
 }: RoundEventRowProps) => {
   const actorPuuid =
     event.eventType === "kill"
@@ -54,12 +63,32 @@ const RoundEventRow = ({
   const iconShade = actorToneClasses.iconBg;
   const victimIconShade = victimToneClasses.iconBg;
   const contentShade = actorToneClasses.contentBg;
+  const interactiveProps = onSelect
+    ? {
+        onClick: onSelect,
+        onKeyDown: (event: React.KeyboardEvent<HTMLLIElement>) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelect();
+          }
+        },
+        role: "button" as const,
+        tabIndex: 0,
+      }
+    : {};
 
   if (event.eventType === "kill") {
     const killEventImage = getKillEventImage(event, players);
 
     return (
-      <li className="relative isolate overflow-hidden border border-slate-800/80">
+      <li
+        className={cn(
+          "relative isolate overflow-hidden border border-slate-800/80",
+          onSelect && "cursor-pointer transition-colors hover:bg-white/5",
+          isSelected && "ring-1 ring-inset ring-white/30 bg-white/5",
+        )}
+        {...interactiveProps}
+      >
         <div className={`absolute inset-y-0 left-0 w-1.5 ${leftAccent}`} />
         <div className={`absolute inset-y-0 right-0 w-1.5 ${rightAccent}`} />
 
@@ -115,7 +144,14 @@ const RoundEventRow = ({
   }
 
   return (
-    <li className="relative isolate overflow-hidden border border-slate-800/80">
+    <li
+      className={cn(
+        "relative isolate overflow-hidden border border-slate-800/80",
+        onSelect && "cursor-pointer transition-colors hover:bg-white/5",
+        isSelected && "ring-1 ring-inset ring-white/30 bg-white/5",
+      )}
+      {...interactiveProps}
+    >
       <div className={`absolute inset-y-0 left-0 w-1.5 ${leftAccent}`} />
 
       <div className="relative z-10 pl-2 pr-0">
@@ -178,14 +214,20 @@ const RoundEventRow = ({
 export const MatchEventLog = ({
   events,
   players,
+  containerClassName,
   currentPlayerPuuid,
+  onSelectEvent,
+  scrollAreaClassName,
+  selectedEventIndex,
 }: MatchEventLogProps) => {
   return (
-    <div className="md:h-[652px]">
+    <div className={cn("md:h-[652px]", containerClassName)}>
       <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/55">
         Event Log
       </p>
-      <ScrollArea className="h-[360px] w-full md:h-[620px]">
+      <ScrollArea
+        className={cn("h-[360px] w-full md:h-[620px]", scrollAreaClassName)}
+      >
         <ol className="space-y-1 pr-2">
           {events.map((event, index) => (
             <RoundEventRow
@@ -193,6 +235,8 @@ export const MatchEventLog = ({
               event={event}
               players={players}
               currentPlayerPuuid={currentPlayerPuuid}
+              isSelected={selectedEventIndex === index}
+              onSelect={onSelectEvent ? () => onSelectEvent(index) : undefined}
             />
           ))}
         </ol>

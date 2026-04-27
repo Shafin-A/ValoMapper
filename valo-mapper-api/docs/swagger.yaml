@@ -641,6 +641,15 @@ definitions:
       remaining:
         type: integer
     type: object
+  services.MatchPlayerLocation:
+    properties:
+      location:
+        $ref: '#/definitions/services.MatchWorldPosition'
+      puuid:
+        type: string
+      viewRadians:
+        type: number
+    type: object
   services.MatchPlayerSummary:
     properties:
       characterId:
@@ -700,22 +709,47 @@ definitions:
       total:
         type: integer
     type: object
+  services.MatchWorldPosition:
+    properties:
+      x:
+        type: integer
+      "y":
+        type: integer
+    type: object
   services.RoundEventLogEntry:
     properties:
       damageItem:
         type: string
       damageType:
         type: string
+      defuseLocation:
+        $ref: '#/definitions/services.MatchWorldPosition'
+      defusePlayerLocations:
+        items:
+          $ref: '#/definitions/services.MatchPlayerLocation'
+        type: array
       defuserPuuid:
         type: string
       eventType:
         type: string
       killerPuuid:
         type: string
+      plantLocation:
+        $ref: '#/definitions/services.MatchWorldPosition'
+      plantPlayerLocations:
+        items:
+          $ref: '#/definitions/services.MatchPlayerLocation'
+        type: array
       planterPuuid:
         type: string
+      playerLocations:
+        items:
+          $ref: '#/definitions/services.MatchPlayerLocation'
+        type: array
       timeSinceRoundStartMillis:
         type: integer
+      victimLocation:
+        $ref: '#/definitions/services.MatchWorldPosition'
       victimPuuid:
         type: string
     type: object
@@ -1632,6 +1666,11 @@ paths:
         name: matchId
         required: true
         type: string
+      - default: false
+        description: Include kill, plant, and defuse location telemetry for replay
+        in: query
+        name: includeReplayTelemetry
+        type: boolean
       produces:
       - application/json
       responses:

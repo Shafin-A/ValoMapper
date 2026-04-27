@@ -1,5 +1,6 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import { getMapCallouts, MAP_SIZE } from "@/lib/consts";
+import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
 import { Vector2d } from "konva/lib/types";
 import { Group, Label, Tag, Text } from "react-konva";
 
@@ -21,45 +22,21 @@ export const CanvasCallouts = ({ mapPosition }: CanvasCalloutsProps) => {
     return null;
   }
 
-  const {
-    xMultiplier,
-    yMultiplier,
-    xScalarToAdd,
-    yScalarToAdd,
-    rotation,
-    callouts,
-  } = calloutData;
+  const { callouts } = calloutData;
 
   const scale = 1.25;
-  const scaledSize = MAP_SIZE * scale;
-
-  const mapCenterX = mapPosition.x + MAP_SIZE / 2;
-  const mapCenterY = mapPosition.y + MAP_SIZE / 2;
 
   return (
     <Group>
       {callouts.map((callout, index) => {
-        // The swap of game_x and game_y at the start is correct.
-        const normalizedX = callout.location.y * xMultiplier + xScalarToAdd;
-        const normalizedY = callout.location.x * yMultiplier + yScalarToAdd;
-
-        let x = (normalizedX - 0.5) * scaledSize + mapCenterX;
-        let y = (normalizedY - 0.5) * scaledSize + mapCenterY;
-
-        if (rotation !== 0) {
-          const rad = (rotation * Math.PI) / 180;
-          const cos = Math.cos(rad);
-          const sin = Math.sin(rad);
-          const dx = x - mapCenterX;
-          const dy = y - mapCenterY;
-          x = mapCenterX + dx * cos - dy * sin;
-          y = mapCenterY + dx * sin + dy * cos;
-        }
-
-        if (mapSide === "attack") {
-          x = 2 * mapCenterX - x;
-          y = 2 * mapCenterY - y;
-        }
+        const { x, y } = transformRiotWorldToCanvasPoint({
+          position: callout.location,
+          transform: calloutData,
+          mapPosition,
+          mapSide,
+          mapSize: MAP_SIZE,
+          scale,
+        });
 
         const displayText = callout.superRegionName
           ? `${callout.superRegionName} ${callout.regionName}`

@@ -245,4 +245,66 @@ describe("usePhaseManager", () => {
     expect(result.current.phases[0].agentsOnCanvas).toHaveLength(0);
     expect(result.current.phases[2].agentsOnCanvas).toHaveLength(0);
   });
+
+  it("should support a custom initial phase count", () => {
+    const { result } = renderHook(() =>
+      usePhaseManager({ initialPhaseCount: 14 }),
+    );
+
+    expect(result.current.phases).toHaveLength(14);
+
+    act(() => {
+      result.current.switchToPhase(13);
+    });
+
+    expect(result.current.currentPhaseIndex).toBe(13);
+
+    act(() => {
+      result.current.resetAllPhases();
+    });
+
+    expect(result.current.phases).toHaveLength(14);
+    expect(result.current.currentPhaseIndex).toBe(0);
+  });
+
+  it("should initialize from provided phases", () => {
+    const initialPhases: PhaseState[] = Array.from(
+      { length: 3 },
+      (_, index) => ({
+        agentsOnCanvas:
+          index === 2
+            ? [
+                {
+                  id: "agent-1",
+                  name: "Sage",
+                  x: 120,
+                  y: 220,
+                  isAlly: true,
+                  role: "Sentinel",
+                },
+              ]
+            : [],
+        abilitiesOnCanvas: [],
+        drawLines: [],
+        textsOnCanvas: [],
+        imagesOnCanvas: [],
+        toolIconsOnCanvas: [],
+        connectingLines: [],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      usePhaseManager({
+        initialCurrentPhaseIndex: 2,
+        initialEditedPhases: [0, 2],
+        initialPhases,
+      }),
+    );
+
+    expect(result.current.phases).toHaveLength(3);
+    expect(result.current.currentPhaseIndex).toBe(2);
+    expect(result.current.editedPhases).toEqual(new Set([0, 2]));
+    expect(result.current.currentPhase.agentsOnCanvas).toHaveLength(1);
+    expect(result.current.currentPhase.agentsOnCanvas[0].name).toBe("Sage");
+  });
 });

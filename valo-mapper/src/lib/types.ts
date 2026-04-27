@@ -429,6 +429,17 @@ export type RoundPlayerStatsLite = {
   };
 };
 
+export type MatchWorldPosition = {
+  x: number;
+  y: number;
+};
+
+export type MatchPlayerLocation = {
+  puuid: string;
+  viewRadians: number;
+  location: MatchWorldPosition;
+};
+
 export type RoundEventLogEntry =
   | {
       eventType: "kill";
@@ -444,16 +455,22 @@ export type RoundEventLogEntry =
         | "Invalid"
         | "";
       damageItem?: string;
+      victimLocation?: MatchWorldPosition;
+      playerLocations?: MatchPlayerLocation[];
     }
   | {
       eventType: "spike_planted";
       timeSinceRoundStartMillis: number;
       planterPuuid: string;
+      plantLocation?: MatchWorldPosition;
+      plantPlayerLocations?: MatchPlayerLocation[];
     }
   | {
       eventType: "spike_defused";
       timeSinceRoundStartMillis: number;
       defuserPuuid: string;
+      defuseLocation?: MatchWorldPosition;
+      defusePlayerLocations?: MatchPlayerLocation[];
     };
 
 export type RoundSummaryLite = {

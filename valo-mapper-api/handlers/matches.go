@@ -107,6 +107,7 @@ func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, fireba
 // @Tags matches
 // @Produce json
 // @Param matchId path string true "Match ID"
+// @Param includeReplayTelemetry query boolean false "Include kill, plant, and defuse location telemetry for replay" default(false)
 // @Success 200 {object} MatchSummaryResponse
 // @Failure 400 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
@@ -135,9 +136,19 @@ func (h *MatchHandler) GetMatchSummary(w http.ResponseWriter, r *http.Request, f
 		return
 	}
 
-	summary, err := h.matchService.GetMatchSummary(r.Context(), user, matchID)
+	includeReplayTelemetry := false
+	if rawIncludeReplayTelemetry := r.URL.Query().Get("includeReplayTelemetry"); rawIncludeReplayTelemetry != "" {
+		parsedIncludeReplayTelemetry, parseErr := strconv.ParseBool(rawIncludeReplayTelemetry)
+		if parseErr != nil {
+			utils.SendJSONError(w, utils.NewBadRequest("includeReplayTelemetry must be a boolean"), requestID)
+			return
+		}
+		includeReplayTelemetry = parsedIncludeReplayTelemetry
+	}
+
+	summary, err := h.matchService.GetMatchSummary(r.Context(), user, matchID, includeReplayTelemetry)
 	if err != nil {
-		slog.Error("failed to load match summary", "request_id", requestID, "user_id", user.ID, "match_id", matchID, "error", err)
+		slog.Error("failed to load match summary", "request_id", requestID, "user_id", user.ID, "match_id", matchID, "include_replay_telemetry", includeReplayTelemetry, "error", err)
 		switch {
 		case errors.Is(err, services.ErrRSOUserRequired):
 			utils.SendJSONError(w, utils.NewForbidden("RSO login required"), requestID)
