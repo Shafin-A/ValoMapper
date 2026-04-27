@@ -88,8 +88,8 @@ const MatchReplayPage = () => {
       return null;
     }
 
-    return buildMatchReplayRoundStates(matchSummary);
-  }, [matchSummary]);
+    return buildMatchReplayRoundStates(matchSummary, agentsSettings);
+  }, [matchSummary, agentsSettings]);
 
   const roundOptions = useMemo(
     () => matchSummary?.rounds ?? [],

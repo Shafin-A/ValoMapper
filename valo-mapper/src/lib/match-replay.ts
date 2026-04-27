@@ -12,6 +12,7 @@ import type {
   AgentCanvas,
   AgentRole,
   ConnectingLine,
+  IconSettings,
   MapOption,
   MapSide,
   MatchPlayerLocation,
@@ -24,7 +25,7 @@ import type {
   UndoableState,
 } from "@/lib/types";
 
-const REPLAY_KILL_COLORS = {
+const FALLBACK_REPLAY_KILL_COLORS = {
   ally: "#34d399",
   enemy: "#fb7185",
 } as const;
@@ -234,6 +235,7 @@ const buildKillLine = ({
   playersByPuuid,
   roundNumber,
   viewerTeamId,
+  killColors,
 }: {
   event: Extract<RoundEventLogEntry, { eventType: "kill" }>;
   latestLocations: Map<string, MatchPlayerLocation>;
@@ -242,6 +244,10 @@ const buildKillLine = ({
   playersByPuuid: Map<string, MatchPlayerSummary>;
   roundNumber: number;
   viewerTeamId?: string;
+  killColors: {
+    ally: string;
+    enemy: string;
+  };
 }): ConnectingLine | null => {
   const killerLocation = latestLocations.get(event.killerPuuid)?.location;
   const start = toCanvasPoint({ mapId, mapSide, position: killerLocation });
@@ -262,9 +268,7 @@ const buildKillLine = ({
     id: `replay-kill-${roundNumber}-${event.timeSinceRoundStartMillis}-${event.killerPuuid}-${event.victimPuuid}`,
     fromId: `replay-agent-${event.killerPuuid}`,
     toId: `replay-agent-${event.victimPuuid}`,
-    strokeColor: isAllyKill
-      ? REPLAY_KILL_COLORS.ally
-      : REPLAY_KILL_COLORS.enemy,
+    strokeColor: isAllyKill ? killColors.ally : killColors.enemy,
     strokeWidth: 3,
     isInteractive: false,
   };
@@ -328,6 +332,7 @@ const buildRoundReplayState = ({
   playersByPuuid,
   round,
   viewerTeamId,
+  killColors,
 }: {
   mapOption: MapOption;
   mapSide: MapSide;
@@ -335,6 +340,10 @@ const buildRoundReplayState = ({
   playersByPuuid: Map<string, MatchPlayerSummary>;
   round: RoundSummaryLite;
   viewerTeamId?: string;
+  killColors: {
+    ally: string;
+    enemy: string;
+  };
 }): UndoableState => {
   const latestLocations = new Map<string, MatchPlayerLocation>();
   const deadPlayers = new Set<string>();
@@ -368,6 +377,7 @@ const buildRoundReplayState = ({
         playersByPuuid,
         roundNumber: round.roundNumber,
         viewerTeamId,
+        killColors,
       });
 
       if (killLine) {
@@ -435,12 +445,19 @@ const buildRoundReplayState = ({
   };
 };
 
-export const buildMatchReplayRoundStates = (match: MatchSummaryResponse) => {
+export const buildMatchReplayRoundStates = (
+  match: MatchSummaryResponse,
+  agentsSettings?: IconSettings,
+) => {
   const mapOption = resolveReplayMapOption(match);
   const playersByPuuid = new Map(
     match.players.map((player) => [player.puuid, player]),
   );
   const viewerTeamId = playersByPuuid.get(match.viewer.puuid)?.teamId;
+  const killColors = {
+    ally: agentsSettings?.allyColor ?? FALLBACK_REPLAY_KILL_COLORS.ally,
+    enemy: agentsSettings?.enemyColor ?? FALLBACK_REPLAY_KILL_COLORS.enemy,
+  };
   let fallbackSide: MapSide = "defense";
 
   const roundStates = Object.fromEntries(
@@ -464,6 +481,7 @@ export const buildMatchReplayRoundStates = (match: MatchSummaryResponse) => {
           playersByPuuid,
           round,
           viewerTeamId,
+          killColors,
         }),
       ];
     }),
