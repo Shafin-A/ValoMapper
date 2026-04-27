@@ -307,11 +307,12 @@ const seedLatestLocations = (
   deadPlayers: Set<string>,
 ) => {
   getEventPlayerLocations(event).forEach((playerLocation) => {
-    if (deadPlayers.has(playerLocation.puuid)) {
-      return;
-    }
-
+    const wasDead = deadPlayers.has(playerLocation.puuid);
     latestLocations.set(playerLocation.puuid, playerLocation);
+
+    if (wasDead) {
+      deadPlayers.delete(playerLocation.puuid);
+    }
   });
 
   if (event.eventType === "kill" && event.victimLocation) {

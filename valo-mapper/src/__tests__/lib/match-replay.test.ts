@@ -1,6 +1,11 @@
 import { buildMatchReplayRoundStates } from "@/lib/match-replay";
 import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
-import { getMapCallouts, MAP_SIZE, VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts";
+import {
+  getMapCallouts,
+  MAP_SIZE,
+  VIRTUAL_HEIGHT,
+  VIRTUAL_WIDTH,
+} from "@/lib/consts";
 import { MatchSummaryResponse } from "@/lib/types";
 
 describe("buildMatchReplayRoundStates", () => {
@@ -142,6 +147,14 @@ describe("buildMatchReplayRoundStates", () => {
       x: replayState.phases[1].toolIconsOnCanvas[0].x,
       y: replayState.phases[1].toolIconsOnCanvas[0].y,
     });
+
+    expect(replayState.phases[2].agentsOnCanvas).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "replay-agent-enemy-puuid",
+        }),
+      ]),
+    );
 
     const mapPosition = {
       x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
