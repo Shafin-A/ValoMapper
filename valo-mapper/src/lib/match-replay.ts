@@ -297,17 +297,24 @@ const buildSpikeImage = ({
 const seedLatestLocations = (
   latestLocations: Map<string, MatchPlayerLocation>,
   event: RoundEventLogEntry,
+  deadPlayers: Set<string>,
 ) => {
   getEventPlayerLocations(event).forEach((playerLocation) => {
+    if (deadPlayers.has(playerLocation.puuid)) {
+      return;
+    }
+
     latestLocations.set(playerLocation.puuid, playerLocation);
   });
 
   if (event.eventType === "kill" && event.victimLocation) {
-    latestLocations.set(event.victimPuuid, {
-      puuid: event.victimPuuid,
-      viewRadians: 0,
-      location: event.victimLocation,
-    });
+    if (!deadPlayers.has(event.victimPuuid)) {
+      latestLocations.set(event.victimPuuid, {
+        puuid: event.victimPuuid,
+        viewRadians: 0,
+        location: event.victimLocation,
+      });
+    }
   }
 };
 
@@ -327,13 +334,17 @@ const buildRoundReplayState = ({
   viewerTeamId?: string;
 }): UndoableState => {
   const latestLocations = new Map<string, MatchPlayerLocation>();
+  const deadPlayers = new Set<string>();
   const phases: PhaseState[] = [];
 
   round.eventLog.forEach((event) => {
-    seedLatestLocations(latestLocations, event);
+    seedLatestLocations(latestLocations, event, deadPlayers);
 
     const nextPhase = clonePhaseState(
       phases[phases.length - 1] ?? createEmptyPhaseState(),
+    );
+    nextPhase.connectingLines = nextPhase.connectingLines.filter(
+      (line) => !line.id.startsWith("replay-kill-"),
     );
     nextPhase.agentsOnCanvas = buildAgentsFromLocations({
       latestLocations,
@@ -362,6 +373,9 @@ const buildRoundReplayState = ({
           killLine,
         ];
       }
+
+      deadPlayers.add(event.victimPuuid);
+      latestLocations.delete(event.victimPuuid);
     }
 
     if (event.eventType === "spike_planted") {

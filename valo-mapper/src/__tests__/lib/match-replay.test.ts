@@ -100,6 +100,7 @@ describe("buildMatchReplayRoundStates", () => {
       toId: "replay-agent-enemy-puuid",
       isInteractive: false,
     });
+    expect(replayState.phases[1].connectingLines).toHaveLength(0);
     expect(replayState.phases[1].imagesOnCanvas).toHaveLength(1);
     expect(replayState.phases[1].imagesOnCanvas[0].src).toBe(
       "/tools/spike.webp",
