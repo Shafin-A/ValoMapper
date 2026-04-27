@@ -348,6 +348,7 @@ const buildRoundReplayState = ({
   const latestLocations = new Map<string, MatchPlayerLocation>();
   const deadPlayers = new Set<string>();
   const phases: PhaseState[] = [];
+  let plantedSpikeLocation: { x: number; y: number } | null = null;
 
   round.eventLog.forEach((event) => {
     seedLatestLocations(latestLocations, event, deadPlayers);
@@ -394,6 +395,8 @@ const buildRoundReplayState = ({
     }
 
     if (event.eventType === "spike_planted") {
+      plantedSpikeLocation = event.plantLocation ?? null;
+
       const spikeToolIcon = buildSpikeToolIcon({
         location: event.plantLocation,
         mapId: mapOption.id,
@@ -413,7 +416,7 @@ const buildRoundReplayState = ({
 
     if (event.eventType === "spike_defused") {
       const spikeToolIcon = buildSpikeToolIcon({
-        location: event.defuseLocation,
+        location: plantedSpikeLocation ?? undefined,
         mapId: mapOption.id,
         mapSide,
         roundNumber: round.roundNumber,

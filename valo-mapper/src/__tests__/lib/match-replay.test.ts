@@ -80,6 +80,24 @@ describe("buildMatchReplayRoundStates", () => {
                 },
               ],
             },
+            {
+              eventType: "spike_defused",
+              timeSinceRoundStartMillis: 40000,
+              defuserPuuid: "viewer-puuid",
+              defuseLocation: { x: 100, y: 100 },
+              defusePlayerLocations: [
+                {
+                  puuid: "viewer-puuid",
+                  viewRadians: 0,
+                  location: { x: -500, y: 2400 },
+                },
+                {
+                  puuid: "enemy-puuid",
+                  viewRadians: 0,
+                  location: { x: -1400, y: 1800 },
+                },
+              ],
+            },
           ],
         },
       ],
@@ -90,8 +108,8 @@ describe("buildMatchReplayRoundStates", () => {
 
     expect(replayState.selectedMap.id).toBe("ascent");
     expect(replayState.mapSide).toBe("attack");
-    expect(replayState.phases).toHaveLength(2);
-    expect(replayState.editedPhases).toEqual([0, 1]);
+    expect(replayState.phases).toHaveLength(3);
+    expect(replayState.editedPhases).toEqual([0, 1, 2]);
     expect(replayState.phases[0].agentsOnCanvas).toHaveLength(2);
     expect(replayState.phases[0].drawLines).toHaveLength(0);
     expect(replayState.phases[0].connectingLines).toHaveLength(1);
@@ -108,14 +126,19 @@ describe("buildMatchReplayRoundStates", () => {
         }),
       ]),
     );
-    expect(replayState.phases[1].connectingLines).toHaveLength(0);
-    expect(replayState.phases[1].imagesOnCanvas).toHaveLength(0);
-    expect(replayState.phases[1].toolIconsOnCanvas).toHaveLength(1);
-    expect(replayState.phases[1].toolIconsOnCanvas[0]).toMatchObject({
+    expect(replayState.phases[2].connectingLines).toHaveLength(0);
+    expect(replayState.phases[2].imagesOnCanvas).toHaveLength(0);
+    expect(replayState.phases[2].toolIconsOnCanvas).toHaveLength(1);
+    expect(replayState.phases[2].toolIconsOnCanvas[0]).toMatchObject({
       id: "replay-spike-1",
       name: "spike",
       width: 32,
       height: 32,
+    });
+
+    expect(replayState.phases[2].toolIconsOnCanvas[0]).toMatchObject({
+      x: replayState.phases[1].toolIconsOnCanvas[0].x,
+      y: replayState.phases[1].toolIconsOnCanvas[0].y,
     });
   });
 });
