@@ -90,12 +90,12 @@ describe("buildMatchReplayRoundStates", () => {
 
     expect(replayState.selectedMap.id).toBe("ascent");
     expect(replayState.mapSide).toBe("attack");
-    expect(replayState.phases).toHaveLength(3);
-    expect(replayState.editedPhases).toEqual([0, 1, 2]);
+    expect(replayState.phases).toHaveLength(2);
+    expect(replayState.editedPhases).toEqual([0, 1]);
     expect(replayState.phases[0].agentsOnCanvas).toHaveLength(2);
-    expect(replayState.phases[1].drawLines).toHaveLength(1);
-    expect(replayState.phases[2].imagesOnCanvas).toHaveLength(1);
-    expect(replayState.phases[2].imagesOnCanvas[0].src).toBe(
+    expect(replayState.phases[0].drawLines).toHaveLength(1);
+    expect(replayState.phases[1].imagesOnCanvas).toHaveLength(1);
+    expect(replayState.phases[1].imagesOnCanvas[0].src).toBe(
       "/tools/spike.webp",
     );
   });

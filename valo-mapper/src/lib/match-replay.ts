@@ -328,29 +328,14 @@ const buildRoundReplayState = ({
   viewerTeamId?: string;
 }): UndoableState => {
   const latestLocations = new Map<string, MatchPlayerLocation>();
-  const firstPositionedEvent = round.eventLog.find(
-    (event) => getEventPlayerLocations(event).length > 0,
-  );
-
-  if (firstPositionedEvent) {
-    seedLatestLocations(latestLocations, firstPositionedEvent);
-  }
-
-  const initialPhase = createEmptyPhaseState();
-  initialPhase.agentsOnCanvas = buildAgentsFromLocations({
-    latestLocations,
-    mapId: mapOption.id,
-    mapSide,
-    players,
-    viewerTeamId,
-  });
-
-  const phases = [initialPhase];
+  const phases: PhaseState[] = [];
 
   round.eventLog.forEach((event) => {
     seedLatestLocations(latestLocations, event);
 
-    const nextPhase = clonePhaseState(phases[phases.length - 1]);
+    const nextPhase = clonePhaseState(
+      phases[phases.length - 1] ?? createEmptyPhaseState(),
+    );
     nextPhase.agentsOnCanvas = buildAgentsFromLocations({
       latestLocations,
       mapId: mapOption.id,
@@ -416,6 +401,10 @@ const buildRoundReplayState = ({
 
     phases.push(nextPhase);
   });
+
+  if (phases.length === 0) {
+    phases.push(createEmptyPhaseState());
+  }
 
   return {
     phases,

@@ -19,7 +19,7 @@ import {
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH, MAP_SIZE } from "@/lib/consts";
 import { getPlayerSummary } from "@/lib/matches";
 import { UndoableState } from "@/lib/types";
-import { AlertCircle, ArrowLeft, Loader2, Play } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
@@ -296,7 +296,9 @@ const MatchReplayPage = () => {
     ? getPlayerSummary(matchSummary.players, matchSummary.viewer.puuid)
     : undefined;
   const selectedEventIndex =
-    currentPhaseIndex > 0 ? currentPhaseIndex - 1 : null;
+    selectedRound && currentPhaseIndex < selectedRound.eventLog.length
+      ? currentPhaseIndex
+      : null;
   const mapPosition = {
     x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
     y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
@@ -420,17 +422,6 @@ const MatchReplayPage = () => {
                       onSelectRound={handleSelectRound}
                     />
 
-                    <Button
-                      variant={
-                        selectedEventIndex === null ? "default" : "outline"
-                      }
-                      className="w-full justify-start"
-                      onClick={() => void handleSelectReplayPhase(0)}
-                    >
-                      <Play className="mr-2 h-4 w-4" />
-                      Round Start
-                    </Button>
-
                     <MatchEventLog
                       containerClassName="h-auto"
                       scrollAreaClassName="h-[280px]"
@@ -439,7 +430,7 @@ const MatchReplayPage = () => {
                       currentPlayerPuuid={matchSummary.viewer.puuid}
                       selectedEventIndex={selectedEventIndex}
                       onSelectEvent={(eventIndex) =>
-                        void handleSelectReplayPhase(eventIndex + 1)
+                        void handleSelectReplayPhase(eventIndex)
                       }
                     />
                   </div>
