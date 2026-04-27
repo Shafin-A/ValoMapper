@@ -6,7 +6,7 @@ import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useEffect, useRef } from "react";
 import { Group, Image as KonvaImage } from "react-konva";
-import useImage from "use-image";
+import { useGrayImage } from "@/hooks/use-gray-image";
 
 export interface CanvasIconProps {
   id: string;
@@ -55,9 +55,8 @@ export const CanvasIcon = ({
   unregisterNode,
   isGray = false,
 }: CanvasIconProps) => {
-  const [image] = useImage(src);
+  const resolvedImage = useGrayImage(src, isGray);
   const groupRef = useRef<Konva.Group>(null);
-  const imageRef = useRef<Konva.Image>(null);
 
   useEffect(() => {
     const group = groupRef.current;
@@ -69,12 +68,6 @@ export const CanvasIcon = ({
       if (unregisterNode) unregisterNode(id);
     };
   }, [id, registerNode, unregisterNode]);
-
-  useEffect(() => {
-    if (image && imageRef.current && isGray) {
-      imageRef.current.cache();
-    }
-  }, [image, isGray]);
 
   const handleOnDragStart = () => {
     if (groupRef.current) groupRef.current.opacity(0.5);
@@ -111,15 +104,13 @@ export const CanvasIcon = ({
       rotation={rotation}
     >
       <KonvaImage
-        ref={imageRef}
-        image={image}
+        image={resolvedImage}
         width={width}
         height={height}
         cornerRadius={radius}
         stroke={isAlly ? allyColor + alphaHex : enemyColor + alphaHex}
         strokeWidth={strokeWidth}
         fill={fill}
-        filters={isGray ? [Konva.Filters.Grayscale] : []}
       />
     </Group>
   );
