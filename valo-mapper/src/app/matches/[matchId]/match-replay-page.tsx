@@ -52,6 +52,15 @@ const MatchReplayPage = () => {
   const stageRef = useRef<MapStageHandle | null>(null);
   const hydratedMatchIdRef = useRef<string | null>(null);
   const currentRoundRef = useRef<number | null>(null);
+  const appliedRoundStateRef = useRef<{
+    matchId: string | null;
+    roundNumber: number | null;
+    state: UndoableState | null;
+  }>({
+    matchId: null,
+    roundNumber: null,
+    state: null,
+  });
   const [stageScale, setStageScale] = useState(1);
   const [isScaleReady, setIsScaleReady] = useState(false);
   const [selectedRoundNumber, setSelectedRoundNumber] = useState(1);
@@ -82,7 +91,11 @@ const MatchReplayPage = () => {
     return buildMatchReplayRoundStates(matchSummary);
   }, [matchSummary]);
 
-  const roundOptions = matchSummary?.rounds ?? [];
+  const roundOptions = useMemo(
+    () => matchSummary?.rounds ?? [],
+    [matchSummary],
+  );
+
   const resolvedRoundNumber = useMemo(() => {
     if (roundOptions.length === 0) {
       return 1;
@@ -106,19 +119,38 @@ const MatchReplayPage = () => {
 
     hydratedMatchIdRef.current = matchSummary.matchId;
     currentRoundRef.current = null;
+    appliedRoundStateRef.current = {
+      matchId: null,
+      roundNumber: null,
+      state: null,
+    };
     setRoundStates(replaySeed.roundStates);
     setSelectedRoundNumber(resolvedRoundNumber);
   }, [matchSummary, replaySeed, resolvedRoundNumber]);
 
   useEffect(() => {
     const nextRoundState = roundStates[selectedRoundNumber];
-    if (!nextRoundState) {
+    if (!nextRoundState || !matchSummary) {
+      return;
+    }
+
+    const lastApplied = appliedRoundStateRef.current;
+    if (
+      lastApplied.matchId === matchSummary.matchId &&
+      lastApplied.roundNumber === selectedRoundNumber &&
+      lastApplied.state === nextRoundState
+    ) {
       return;
     }
 
     applyRemoteState(cloneUndoableState(nextRoundState));
     currentRoundRef.current = selectedRoundNumber;
-  }, [applyRemoteState, roundStates, selectedRoundNumber]);
+    appliedRoundStateRef.current = {
+      matchId: matchSummary.matchId,
+      roundNumber: selectedRoundNumber,
+      state: nextRoundState,
+    };
+  }, [applyRemoteState, matchSummary, roundStates, selectedRoundNumber]);
 
   useLayoutEffect(() => {
     let scaleReady = false;
