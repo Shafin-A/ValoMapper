@@ -28,6 +28,7 @@ export const CanvasConnectingLines: React.FC<CanvasConnectingLinesProps> = ({
       {connectingLines?.map((line) => {
         const from = itemsById.get(line.fromId);
         const to = itemsById.get(line.toId);
+        const isInteractive = line.isInteractive !== false;
 
         if (!from || !to) return null;
 
@@ -37,15 +38,15 @@ export const CanvasConnectingLines: React.FC<CanvasConnectingLinesProps> = ({
             points={[from.x, from.y, to.x, to.y]}
             stroke={line.strokeColor}
             strokeWidth={line.strokeWidth}
-            isListening={true}
+            isListening={isInteractive}
             perfectDrawEnabled={false}
-            onClick={() => onLineClick?.(line)}
-            onTap={() => onLineClick?.(line)}
-            hitStrokeWidth={20}
+            onClick={isInteractive ? () => onLineClick?.(line) : undefined}
+            onTap={isInteractive ? () => onLineClick?.(line) : undefined}
+            hitStrokeWidth={isInteractive ? 20 : 0}
             onMouseEnter={(e) => {
               const container = e.target.getStage()?.container();
               if (container) {
-                container.style.cursor = "pointer";
+                container.style.cursor = isInteractive ? "pointer" : "default";
               }
             }}
             onMouseLeave={(e) => {

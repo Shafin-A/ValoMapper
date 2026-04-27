@@ -11,7 +11,7 @@ import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
 import type {
   AgentCanvas,
   AgentRole,
-  DrawLine,
+  ConnectingLine,
   ImageCanvas,
   MapOption,
   MapSide,
@@ -239,7 +239,7 @@ const buildKillLine = ({
   playersByPuuid: Map<string, MatchPlayerSummary>;
   roundNumber: number;
   viewerTeamId?: string;
-}): DrawLine | null => {
+}): ConnectingLine | null => {
   const killerLocation = latestLocations.get(event.killerPuuid)?.location;
   const start = toCanvasPoint({ mapId, mapSide, position: killerLocation });
   const end = toCanvasPoint({
@@ -257,14 +257,13 @@ const buildKillLine = ({
 
   return {
     id: `replay-kill-${roundNumber}-${event.timeSinceRoundStartMillis}-${event.killerPuuid}-${event.victimPuuid}`,
-    tool: "pencil",
-    points: [start, end],
-    color: isAllyKill ? REPLAY_KILL_COLORS.ally : REPLAY_KILL_COLORS.enemy,
-    size: 5,
-    isDashed: false,
-    isArrowHead: true,
-    shape: "straight",
-    opacity: 0.9,
+    fromId: `replay-agent-${event.killerPuuid}`,
+    toId: `replay-agent-${event.victimPuuid}`,
+    strokeColor: isAllyKill
+      ? REPLAY_KILL_COLORS.ally
+      : REPLAY_KILL_COLORS.enemy,
+    strokeWidth: 3,
+    isInteractive: false,
   };
 };
 
@@ -356,8 +355,10 @@ const buildRoundReplayState = ({
       });
 
       if (killLine) {
-        nextPhase.drawLines = [
-          ...nextPhase.drawLines.filter((line) => line.id !== killLine.id),
+        nextPhase.connectingLines = [
+          ...nextPhase.connectingLines.filter(
+            (line) => line.id !== killLine.id,
+          ),
           killLine,
         ];
       }

@@ -93,7 +93,13 @@ describe("buildMatchReplayRoundStates", () => {
     expect(replayState.phases).toHaveLength(2);
     expect(replayState.editedPhases).toEqual([0, 1]);
     expect(replayState.phases[0].agentsOnCanvas).toHaveLength(2);
-    expect(replayState.phases[0].drawLines).toHaveLength(1);
+    expect(replayState.phases[0].drawLines).toHaveLength(0);
+    expect(replayState.phases[0].connectingLines).toHaveLength(1);
+    expect(replayState.phases[0].connectingLines[0]).toMatchObject({
+      fromId: "replay-agent-viewer-puuid",
+      toId: "replay-agent-enemy-puuid",
+      isInteractive: false,
+    });
     expect(replayState.phases[1].imagesOnCanvas).toHaveLength(1);
     expect(replayState.phases[1].imagesOnCanvas[0].src).toBe(
       "/tools/spike.webp",

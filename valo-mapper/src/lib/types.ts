@@ -310,6 +310,7 @@ export type ConnectingLine = {
   uploadedImages?: string[];
   youtubeLink?: string;
   notes?: string;
+  isInteractive?: boolean;
 };
 
 export type MapSide = "attack" | "defense";
