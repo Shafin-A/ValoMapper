@@ -64,7 +64,7 @@ export const MAP_OPTIONS: MapOption[] = [
 ];
 
 export const DEFAULT_MAP_IDS: string[] = [
-  "bind",
+  "ascent",
   "breeze",
   "fracture",
   "haven",
