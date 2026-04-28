@@ -268,12 +268,14 @@ const seedLatestLocations = (
   });
 
   if (event.eventType === "kill" && event.victimLocation) {
-    if (!deadPlayers.has(event.victimPuuid)) {
-      latestLocations.set(event.victimPuuid, {
-        puuid: event.victimPuuid,
-        viewRadians: 0,
-        location: event.victimLocation,
-      });
+    latestLocations.set(event.victimPuuid, {
+      puuid: event.victimPuuid,
+      viewRadians: 0,
+      location: event.victimLocation,
+    });
+
+    if (deadPlayers.has(event.victimPuuid)) {
+      deadPlayers.delete(event.victimPuuid);
     }
   }
 };
