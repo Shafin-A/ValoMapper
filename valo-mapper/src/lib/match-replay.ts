@@ -112,49 +112,6 @@ const getEventPlayerLocations = (event: RoundEventLogEntry) => {
   }
 };
 
-const flipMapSide = (mapSide: MapSide): MapSide =>
-  mapSide === "attack" ? "defense" : "attack";
-
-const inferRoundMapSide = ({
-  fallbackSide,
-  playersByPuuid,
-  round,
-  roundNumber,
-  viewerTeamId,
-}: {
-  fallbackSide: MapSide;
-  playersByPuuid: Map<string, MatchPlayerSummary>;
-  round: RoundSummaryLite;
-  roundNumber: number;
-  viewerTeamId?: string;
-}): MapSide => {
-  const plantedEvent = round.eventLog.find(
-    (event) => event.eventType === "spike_planted",
-  );
-  if (plantedEvent?.eventType === "spike_planted") {
-    return playersByPuuid.get(plantedEvent.planterPuuid)?.teamId ===
-      viewerTeamId
-      ? "attack"
-      : "defense";
-  }
-
-  const defusedEvent = round.eventLog.find(
-    (event) => event.eventType === "spike_defused",
-  );
-  if (defusedEvent?.eventType === "spike_defused") {
-    return playersByPuuid.get(defusedEvent.defuserPuuid)?.teamId ===
-      viewerTeamId
-      ? "defense"
-      : "attack";
-  }
-
-  if (roundNumber === 13) {
-    return flipMapSide(fallbackSide);
-  }
-
-  return fallbackSide;
-};
-
 const getReplayMapPosition = () => ({
   x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
   y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
@@ -191,14 +148,12 @@ const buildAgentsFromLocations = ({
   mapId,
   mapSide,
   players,
-  viewerTeamId,
   grayPlayerIds,
 }: {
   latestLocations: Map<string, MatchPlayerLocation>;
   mapId: string;
   mapSide: MapSide;
   players: MatchPlayerSummary[];
-  viewerTeamId?: string;
   grayPlayerIds?: Set<string>;
 }): AgentCanvas[] => {
   return players.flatMap((player) => {
@@ -218,7 +173,7 @@ const buildAgentsFromLocations = ({
         id: `replay-agent-${player.puuid}`,
         name: player.characterName,
         role: getAgentRole(player.characterName),
-        isAlly: player.teamId === viewerTeamId,
+        isAlly: player.teamId === "Blue",
         isGray: grayPlayerIds?.has(player.puuid),
         x: canvasPoint.x,
         y: canvasPoint.y,
@@ -234,7 +189,6 @@ const buildKillLine = ({
   mapSide,
   playersByPuuid,
   roundNumber,
-  viewerTeamId,
   killColors,
 }: {
   event: Extract<RoundEventLogEntry, { eventType: "kill" }>;
@@ -243,7 +197,6 @@ const buildKillLine = ({
   mapSide: MapSide;
   playersByPuuid: Map<string, MatchPlayerSummary>;
   roundNumber: number;
-  viewerTeamId?: string;
   killColors: {
     ally: string;
     enemy: string;
@@ -261,8 +214,7 @@ const buildKillLine = ({
     return null;
   }
 
-  const isAllyKill =
-    playersByPuuid.get(event.killerPuuid)?.teamId === viewerTeamId;
+  const isAllyKill = playersByPuuid.get(event.killerPuuid)?.teamId === "Blue";
 
   return {
     id: `replay-kill-${roundNumber}-${event.timeSinceRoundStartMillis}-${event.killerPuuid}-${event.victimPuuid}`,
@@ -332,7 +284,6 @@ const buildRoundReplayState = ({
   players,
   playersByPuuid,
   round,
-  viewerTeamId,
   killColors,
 }: {
   mapOption: MapOption;
@@ -340,7 +291,6 @@ const buildRoundReplayState = ({
   players: MatchPlayerSummary[];
   playersByPuuid: Map<string, MatchPlayerSummary>;
   round: RoundSummaryLite;
-  viewerTeamId?: string;
   killColors: {
     ally: string;
     enemy: string;
@@ -365,7 +315,6 @@ const buildRoundReplayState = ({
       mapId: mapOption.id,
       mapSide,
       players,
-      viewerTeamId,
       grayPlayerIds:
         event.eventType === "kill" ? new Set([event.victimPuuid]) : undefined,
     });
@@ -378,7 +327,6 @@ const buildRoundReplayState = ({
         mapSide,
         playersByPuuid,
         roundNumber: round.roundNumber,
-        viewerTeamId,
         killColors,
       });
 
@@ -462,33 +410,19 @@ export const buildMatchReplayRoundStates = (
     ally: agentsSettings?.allyColor ?? FALLBACK_REPLAY_KILL_COLORS.ally,
     enemy: agentsSettings?.enemyColor ?? FALLBACK_REPLAY_KILL_COLORS.enemy,
   };
-  let fallbackSide: MapSide = "defense";
 
   const roundStates = Object.fromEntries(
-    match.rounds.map((round) => {
-      const roundSide = inferRoundMapSide({
-        fallbackSide,
+    match.rounds.map((round) => [
+      round.roundNumber,
+      buildRoundReplayState({
+        mapOption,
+        mapSide: "defense",
+        players: match.players,
         playersByPuuid,
         round,
-        roundNumber: round.roundNumber,
-        viewerTeamId,
-      });
-
-      fallbackSide = roundSide;
-
-      return [
-        round.roundNumber,
-        buildRoundReplayState({
-          mapOption,
-          mapSide: roundSide,
-          players: match.players,
-          playersByPuuid,
-          round,
-          viewerTeamId,
-          killColors,
-        }),
-      ];
-    }),
+        killColors,
+      }),
+    ]),
   ) as Record<number, UndoableState>;
 
   return {
