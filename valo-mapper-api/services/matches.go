@@ -102,7 +102,7 @@ type MatchSummaryResponse struct {
 	MapName     string               `json:"mapName"`
 	QueueLabel  string               `json:"queueLabel"`
 	GameStartAt string               `json:"gameStartAt"`
-	Viewer      ViewerContext        `json:"viewer"`
+	Viewer      *ViewerContext       `json:"viewer"`
 	TotalRounds int                  `json:"totalRounds"`
 	Players     []MatchPlayerSummary `json:"players"`
 	Rounds      []RoundSummaryLite   `json:"rounds"`
@@ -552,6 +552,10 @@ func cloneMatchSummary(summary *MatchSummaryResponse) *MatchSummaryResponse {
 	}
 
 	cloned := *summary
+	if summary.Viewer != nil {
+		viewer := *summary.Viewer
+		cloned.Viewer = &viewer
+	}
 	cloned.Players = append([]MatchPlayerSummary(nil), summary.Players...)
 	cloned.Rounds = make([]RoundSummaryLite, len(summary.Rounds))
 
@@ -611,17 +615,17 @@ func cloneMatchPlayerLocations(locations []MatchPlayerLocation) []MatchPlayerLoc
 	return append([]MatchPlayerLocation(nil), locations...)
 }
 
-func buildMatchSummaryCacheKey(puuid, matchID string, includeReplayTelemetry bool) string {
+func buildMatchSummaryCacheKey(matchID string, includeReplayTelemetry bool) string {
 	mode := "base"
 	if includeReplayTelemetry {
 		mode = "replay"
 	}
 
-	return fmt.Sprintf("%s:%s:%s", puuid, matchID, mode)
+	return fmt.Sprintf("%s:%s", matchID, mode)
 }
 
-func (s *MatchService) getCachedMatchSummary(puuid, matchID string, includeReplayTelemetry bool) (*MatchSummaryResponse, bool) {
-	cacheKey := buildMatchSummaryCacheKey(puuid, matchID, includeReplayTelemetry)
+func (s *MatchService) getCachedMatchSummary(matchID string, includeReplayTelemetry bool) (*MatchSummaryResponse, bool) {
+	cacheKey := buildMatchSummaryCacheKey(matchID, includeReplayTelemetry)
 	now := s.timeNow()
 
 	s.matchSummaryCacheMu.RLock()
@@ -643,8 +647,8 @@ func (s *MatchService) getCachedMatchSummary(puuid, matchID string, includeRepla
 	return cloneMatchSummary(entry.summary), true
 }
 
-func (s *MatchService) setCachedMatchSummary(puuid, matchID string, includeReplayTelemetry bool, summary *MatchSummaryResponse) {
-	cacheKey := buildMatchSummaryCacheKey(puuid, matchID, includeReplayTelemetry)
+func (s *MatchService) setCachedMatchSummary(matchID string, includeReplayTelemetry bool, summary *MatchSummaryResponse) {
+	cacheKey := buildMatchSummaryCacheKey(matchID, includeReplayTelemetry)
 
 	s.matchSummaryCacheMu.Lock()
 	if s.matchSummaryCache == nil {
@@ -661,6 +665,50 @@ func (s *MatchService) setCachedMatchSummary(puuid, matchID string, includeRepla
 		expiresAt: s.timeNow().Add(matchSummaryCacheTTL),
 	}
 	s.matchSummaryCacheMu.Unlock()
+}
+
+func buildViewerContext(summary *MatchSummaryResponse, requesterPUUID string) *ViewerContext {
+	requesterPUUID = strings.TrimSpace(requesterPUUID)
+	if summary == nil || requesterPUUID == "" {
+		return nil
+	}
+
+	viewerFound := false
+	for _, player := range summary.Players {
+		if strings.EqualFold(strings.TrimSpace(player.PUUID), requesterPUUID) {
+			viewerFound = true
+			break
+		}
+	}
+	if !viewerFound {
+		return nil
+	}
+
+	return &ViewerContext{
+		PUUID:           requesterPUUID,
+		BestRoundNumber: findBestRound(summary.Rounds, requesterPUUID),
+	}
+}
+
+func findBestRound(rounds []RoundSummaryLite, viewerPUUID string) int {
+	bestScore := -1
+	bestRound := 1
+
+	for _, round := range rounds {
+		for _, stats := range round.PlayerStats {
+			if !strings.EqualFold(strings.TrimSpace(stats.PUUID), viewerPUUID) {
+				continue
+			}
+
+			if stats.Score > bestScore {
+				bestScore = stats.Score
+				bestRound = round.RoundNumber
+			}
+			break
+		}
+	}
+
+	return bestRound
 }
 
 func buildRiotRegionOrder(preferredRegion string) []string {
@@ -952,14 +1000,6 @@ func toAgentName(agentID string) string {
 
 // GetMatchSummary returns a match summary with round details and event logs fetched from Riot API.
 func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, matchID string, includeReplayTelemetry bool) (*MatchSummaryResponse, error) {
-	if user == nil || user.RSOSubjectID == nil || strings.TrimSpace(*user.RSOSubjectID) == "" {
-		return nil, ErrRSOUserRequired
-	}
-
-	if user.FirebaseUID == nil {
-		return nil, ErrPUUIDUnavailable
-	}
-
 	matchID = strings.TrimSpace(matchID)
 	if matchID == "" {
 		return nil, fmt.Errorf("match id is required")
@@ -969,8 +1009,15 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 		return nil, ErrRiotAPIKeyMissing
 	}
 
-	viewerPUUID := strings.TrimSpace(*user.FirebaseUID)
-	if cachedSummary, ok := s.getCachedMatchSummary(viewerPUUID, matchID, includeReplayTelemetry); ok {
+	requesterPUUID := ""
+	if user != nil && user.FirebaseUID != nil {
+		if sanitizedRequesterPUUID, err := sanitizeRiotIdentifier(*user.FirebaseUID); err == nil {
+			requesterPUUID = sanitizedRequesterPUUID
+		}
+	}
+
+	if cachedSummary, ok := s.getCachedMatchSummary(matchID, includeReplayTelemetry); ok {
+		cachedSummary.Viewer = buildViewerContext(cachedSummary, requesterPUUID)
 		return cachedSummary, nil
 	}
 
@@ -983,45 +1030,22 @@ func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, m
 		return nil, fmt.Errorf("fetch match details: %w", err)
 	}
 
-	bestRound := s.findBestRound(match, viewerPUUID)
-
 	summary := &MatchSummaryResponse{
 		MatchID:     strings.TrimSpace(match.MatchInfo.MatchID),
 		MapID:       strings.TrimSpace(match.MatchInfo.MapID),
 		MapName:     toMapName(strings.TrimSpace(match.MatchInfo.MapID)),
 		QueueLabel:  normalizeQueueLabel(match.MatchInfo.QueueID),
 		GameStartAt: time.UnixMilli(match.MatchInfo.GameStartMillis).UTC().Format(time.RFC3339),
-		Viewer: ViewerContext{
-			PUUID:           viewerPUUID,
-			BestRoundNumber: bestRound,
-		},
+		Viewer:      nil,
 		TotalRounds: len(match.Rounds),
 		Players:     s.buildPlayerSummaries(match),
 		Rounds:      s.buildRoundSummaries(match, includeReplayTelemetry),
 	}
 
-	s.setCachedMatchSummary(viewerPUUID, matchID, includeReplayTelemetry, summary)
+	s.setCachedMatchSummary(matchID, includeReplayTelemetry, summary)
+	summary.Viewer = buildViewerContext(summary, requesterPUUID)
 
 	return summary, nil
-}
-
-func (s *MatchService) findBestRound(match riotDetailedMatchDTO, viewerPUUID string) int {
-	bestScore := -1
-	bestRound := 1
-
-	for _, round := range match.Rounds {
-		for _, stats := range round.PlayersStats {
-			if stats.PUUID == viewerPUUID {
-				if stats.Score > bestScore {
-					bestScore = stats.Score
-					bestRound = round.RoundNum + 1
-				}
-				break
-			}
-		}
-	}
-
-	return bestRound
 }
 
 func (s *MatchService) buildPlayerSummaries(match riotDetailedMatchDTO) []MatchPlayerSummary {

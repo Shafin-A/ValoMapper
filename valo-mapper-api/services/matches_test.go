@@ -661,6 +661,117 @@ func TestGetMatchSummary_UsesCachedSummaryOnRepeatedRequest(t *testing.T) {
 	}
 }
 
+func TestGetMatchSummary_SharesCachedMatchAcrossPublicAndViewerRequests(t *testing.T) {
+	viewerPUUID := "viewer-puuid"
+	spectatorPUUID := "spectator-puuid"
+	var requestCount atomic.Int32
+	fixedNow := time.Unix(1710000000, 0)
+
+	service := &MatchService{
+		httpClient: &http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				requestCount.Add(1)
+
+				switch req.URL.Path {
+				case "/val/match/v1/matches/shared-summary-match":
+					return newJSONResponse(t, `{
+						"matchInfo": {
+							"matchId": "shared-summary-match",
+							"mapId": "/Game/Maps/Ascent/Ascent",
+							"gameStartMillis": 1710000000000,
+							"queueId": "competitive",
+							"gameMode": "competitive"
+						},
+						"players": [
+							{
+								"puuid": "viewer-puuid",
+								"teamId": "Blue",
+								"gameName": "Viewer",
+								"tagLine": "NA1",
+								"characterId": "agent-1",
+								"stats": {"score": 250, "kills": 10, "deaths": 7, "assists": 4}
+							},
+							{
+								"puuid": "enemy-puuid",
+								"teamId": "Red",
+								"gameName": "Enemy",
+								"tagLine": "EUW",
+								"characterId": "agent-2",
+								"stats": {"score": 100, "kills": 7, "deaths": 10, "assists": 2}
+							}
+						],
+						"teams": [
+							{"teamId": "Blue", "won": true, "roundsWon": 1},
+							{"teamId": "Red", "won": false, "roundsWon": 0}
+						],
+						"roundResults": [
+							{
+								"roundNum": 0,
+								"roundResult": "Elimination",
+								"winningTeam": "Blue",
+								"playerStats": [
+									{
+										"puuid": "viewer-puuid",
+										"kills": [],
+										"economy": {"loadoutValue": 3900, "remaining": 200, "spent": 3700},
+										"score": 250
+									},
+									{
+										"puuid": "enemy-puuid",
+										"kills": [],
+										"economy": {"loadoutValue": 3400, "remaining": 0, "spent": 3400},
+										"score": 100
+									}
+								]
+							}
+						]
+					}`), nil
+				default:
+					t.Fatalf("unexpected request path %q", req.URL.Path)
+					return nil, nil
+				}
+			}),
+		},
+		riotAPIKey:        "test-riot-key",
+		matchSummaryCache: make(map[string]matchSummaryCacheEntry),
+		now:               func() time.Time { return fixedNow },
+	}
+
+	publicSummary, err := service.GetMatchSummary(context.Background(), nil, "shared-summary-match", true)
+	if err != nil {
+		t.Fatalf("public GetMatchSummary returned error: %v", err)
+	}
+	if publicSummary.Viewer != nil {
+		t.Fatalf("expected public summary to omit viewer context, got %+v", publicSummary.Viewer)
+	}
+
+	viewerSummary, err := service.GetMatchSummary(context.Background(), &models.User{FirebaseUID: &viewerPUUID}, "shared-summary-match", true)
+	if err != nil {
+		t.Fatalf("viewer GetMatchSummary returned error: %v", err)
+	}
+	if viewerSummary.Viewer == nil {
+		t.Fatalf("expected viewer summary to include viewer context")
+	}
+	if viewerSummary.Viewer.PUUID != viewerPUUID {
+		t.Fatalf("expected viewer puuid %q, got %q", viewerPUUID, viewerSummary.Viewer.PUUID)
+	}
+	if viewerSummary.Viewer.BestRoundNumber != 1 {
+		t.Fatalf("expected viewer best round 1, got %d", viewerSummary.Viewer.BestRoundNumber)
+	}
+
+	spectatorSummary, err := service.GetMatchSummary(context.Background(), &models.User{FirebaseUID: &spectatorPUUID}, "shared-summary-match", true)
+	if err != nil {
+		t.Fatalf("spectator GetMatchSummary returned error: %v", err)
+	}
+	if spectatorSummary.Viewer != nil {
+		t.Fatalf("expected non-participant summary to omit viewer context, got %+v", spectatorSummary.Viewer)
+	}
+
+	if requestCount.Load() != 1 {
+		t.Fatalf("expected one Riot request shared across public and viewer summaries, got %d", requestCount.Load())
+	}
+}
+
 func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 	payload := []byte(`{
 		"matchInfo": {

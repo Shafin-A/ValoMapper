@@ -139,3 +139,12 @@ func authenticateRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*
 
 	return user, nil
 }
+
+func authenticateOptionalRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*models.User, error) {
+	authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
+	if authHeader == "" {
+		return nil, nil
+	}
+
+	return authenticateRequest(r, firebaseAuth)
+}

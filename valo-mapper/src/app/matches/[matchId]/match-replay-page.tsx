@@ -8,7 +8,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
-import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
   buildMatchReplayRoundStates,
@@ -43,7 +42,6 @@ const MatchReplayPage = () => {
   const matchId =
     typeof params?.matchId === "string" ? params.matchId : undefined;
   const requestedRoundNumber = Number(searchParams.get("round") ?? "1");
-  const { user: firebaseUser, loading: authLoading } = useFirebaseAuth();
   const {
     data: matchSummary,
     isLoading,
@@ -356,9 +354,10 @@ const MatchReplayPage = () => {
     matchSummary?.rounds.find(
       (round) => round.roundNumber === selectedRoundNumber,
     ) ?? matchSummary?.rounds[0];
-  const currentPlayer = matchSummary
-    ? getPlayerSummary(matchSummary.players, matchSummary.viewer.puuid)
-    : undefined;
+  const currentPlayer =
+    matchSummary?.viewer != null
+      ? getPlayerSummary(matchSummary.players, matchSummary.viewer.puuid)
+      : undefined;
   const selectedEventIndex =
     selectedRound && currentPhaseIndex < selectedRound.eventLog.length
       ? currentPhaseIndex
@@ -368,7 +367,7 @@ const MatchReplayPage = () => {
     y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
   };
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -376,28 +375,6 @@ const MatchReplayPage = () => {
           <p className="text-muted-foreground font-medium">
             Loading match replay...
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!firebaseUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-md w-full space-y-4">
-          <Alert>
-            <AlertTitle>Sign in required</AlertTitle>
-            <AlertDescription>
-              Sign in with Riot Sign-On to load match replay telemetry.
-            </AlertDescription>
-          </Alert>
-          <Button asChild>
-            <Link
-              href={`/login?redirect=${encodeURIComponent(`/matches/${matchId ?? ""}`)}`}
-            >
-              Sign In
-            </Link>
-          </Button>
         </div>
       </div>
     );
@@ -439,10 +416,10 @@ const MatchReplayPage = () => {
           rounds: matchSummary.rounds,
           selectedRoundNumber: selectedRound.roundNumber,
           currentPlayerTeamId: currentPlayer?.teamId,
-          currentPlayerBestRoundNumber: matchSummary.viewer.bestRoundNumber,
+          currentPlayerBestRoundNumber: matchSummary.viewer?.bestRoundNumber,
           selectedEventIndex,
           players: matchSummary.players,
-          currentPlayerPuuid: matchSummary.viewer.puuid,
+          currentPlayerPuuid: matchSummary.viewer?.puuid,
           onSelectRound: handleSelectRound,
           onSelectEvent: (eventIndex) =>
             void handleSelectReplayPhase(eventIndex),

@@ -119,7 +119,7 @@ func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, fireba
 func (h *MatchHandler) GetMatchSummary(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := authenticateOptionalRequest(r, firebaseAuth)
 	if err != nil {
 		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
 			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
@@ -148,10 +148,13 @@ func (h *MatchHandler) GetMatchSummary(w http.ResponseWriter, r *http.Request, f
 
 	summary, err := h.matchService.GetMatchSummary(r.Context(), user, matchID, includeReplayTelemetry)
 	if err != nil {
-		slog.Error("failed to load match summary", "request_id", requestID, "user_id", user.ID, "match_id", matchID, "include_replay_telemetry", includeReplayTelemetry, "error", err)
+		var userID any
+		if user != nil {
+			userID = user.ID
+		}
+
+		slog.Error("failed to load match summary", "request_id", requestID, "user_id", userID, "match_id", matchID, "include_replay_telemetry", includeReplayTelemetry, "error", err)
 		switch {
-		case errors.Is(err, services.ErrRSOUserRequired):
-			utils.SendJSONError(w, utils.NewForbidden("RSO login required"), requestID)
 		case errors.Is(err, services.ErrRiotAPIKeyMissing):
 			utils.SendJSONError(w, utils.NewInternal("Matches integration is not configured", err), requestID)
 		case errors.Is(err, services.ErrMatchNotFound):

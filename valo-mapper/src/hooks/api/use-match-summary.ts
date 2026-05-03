@@ -1,4 +1,4 @@
-import { apiFetchWithAuth, authQueryOptions } from "@/lib/api";
+import { apiFetch, authQueryOptions } from "@/lib/api";
 import { MatchSummaryResponse } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useFirebaseAuth } from "../use-firebase-auth";
@@ -16,13 +16,20 @@ export const useMatchSummary = (
 
   const { data, isLoading, isError, error, refetch } =
     useQuery<MatchSummaryResponse>({
-      queryKey: ["match-summary", matchId, includeReplayTelemetry],
-      queryFn: () =>
-        apiFetchWithAuth<MatchSummaryResponse>(
+      queryKey: [
+        "match-summary",
+        matchId,
+        includeReplayTelemetry,
+        firebaseUser?.uid ?? null,
+      ],
+      queryFn: async () =>
+        apiFetch<MatchSummaryResponse>(
           `/api/matches/${encodeURIComponent(matchId ?? "")}/summary${includeReplayTelemetry ? "?includeReplayTelemetry=true" : ""}`,
-          getIdToken,
+          {
+            token: firebaseUser ? await getIdToken() : null,
+          },
         ),
-      enabled: enabled && !!matchId && !!firebaseUser && !authLoading,
+      enabled: enabled && !!matchId && !authLoading,
       ...authQueryOptions,
     });
 

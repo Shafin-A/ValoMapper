@@ -16,6 +16,8 @@ let mockToolsSidebarProps: {
   replayControls?: {
     onSelectRound: (roundNumber: number) => void;
     selectedRoundNumber: number;
+    currentPlayerBestRoundNumber?: number;
+    currentPlayerPuuid?: string;
   };
 } | null = null;
 
@@ -89,7 +91,7 @@ const matchSummary = {
     puuid: "viewer-puuid",
     bestRoundNumber: 1,
   },
-  totalRounds: 1,
+  totalRounds: 2,
   players: [
     {
       puuid: "viewer-puuid",
@@ -270,6 +272,46 @@ describe("MatchReplayPage", () => {
         "/matches/match-1?round=2&tab=replay",
         { scroll: false },
       );
+    });
+  });
+
+  it("renders replay without viewer context for public access", async () => {
+    const applyRemoteState = jest.fn();
+
+    mockUseCanvas.mockImplementation(() =>
+      createCanvasContext(applyRemoteState),
+    );
+    mockUseMatchSummary.mockReturnValue({
+      data: {
+        ...matchSummary,
+        viewer: null,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    mockBuildMatchReplayRoundStates.mockReturnValue({
+      roundStates: {
+        1: seededRoundState,
+        2: seededSecondRoundState,
+      },
+      viewerTeamId: undefined,
+    });
+
+    render(<MatchReplayPage />);
+
+    await waitFor(() => {
+      expect(applyRemoteState).toHaveBeenCalledTimes(1);
+      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+        1,
+      );
+      expect(
+        mockToolsSidebarProps?.replayControls?.currentPlayerBestRoundNumber,
+      ).toBeUndefined();
+      expect(
+        mockToolsSidebarProps?.replayControls?.currentPlayerPuuid,
+      ).toBeUndefined();
     });
   });
 });

@@ -407,7 +407,9 @@ export const buildMatchReplayRoundStates = (
   const playersByPuuid = new Map(
     match.players.map((player) => [player.puuid, player]),
   );
-  const viewerTeamId = playersByPuuid.get(match.viewer.puuid)?.teamId;
+  const viewerTeamId = match.viewer
+    ? playersByPuuid.get(match.viewer.puuid)?.teamId
+    : undefined;
   const killColors = {
     ally: agentsSettings?.allyColor ?? FALLBACK_REPLAY_KILL_COLORS.ally,
     enemy: agentsSettings?.enemyColor ?? FALLBACK_REPLAY_KILL_COLORS.enemy,

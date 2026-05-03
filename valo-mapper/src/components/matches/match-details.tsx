@@ -83,12 +83,11 @@ export const MatchDetails = ({
   }
 
   const players = matchSummary.players;
-  const currentPlayerPuuid = matchSummary.viewer.puuid;
-  const currentPlayerBestRoundNumber = matchSummary.viewer.bestRoundNumber;
-  const currentPlayerTeamId = getPlayerSummary(
-    players,
-    currentPlayerPuuid,
-  )?.teamId;
+  const currentPlayerPuuid = matchSummary.viewer?.puuid;
+  const currentPlayerBestRoundNumber = matchSummary.viewer?.bestRoundNumber;
+  const currentPlayerTeamId = currentPlayerPuuid
+    ? getPlayerSummary(players, currentPlayerPuuid)?.teamId
+    : undefined;
   const selectedRound =
     matchSummary.rounds.find(
       (round) => round.roundNumber === selectedRoundNumber,

@@ -505,7 +505,7 @@ export type MatchSummaryResponse = {
   viewer: {
     puuid: string;
     bestRoundNumber: number;
-  };
+  } | null;
   totalRounds: number;
   players: MatchPlayerSummary[];
   rounds: RoundSummaryLite[];
