@@ -4,15 +4,34 @@ import {
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useSettings } from "@/contexts/settings-context";
 import { MAP_OPTIONS, DEFAULT_MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
+import { MatchEventLog } from "@/components/matches/match-event-log";
+import { MatchRoundSelector } from "@/components/matches/match-round-selector";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MapOption } from "@/lib/types";
+import type { MatchPlayers, MatchRound } from "@/lib/matches";
 import { Vector2d } from "konva/lib/types";
-import { AlertCircle, Loader2, Info } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Loader2,
+} from "lucide-react";
+import Link from "next/link";
 import { RefObject, Suspense, useEffect } from "react";
 import { useState } from "react";
 import { MapStageHandle } from "@/components/canvas";
@@ -30,16 +49,32 @@ import { Label } from "@/components/ui/label";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface ReplayControls {
+  mapName: string;
+  rounds: MatchRound[];
+  selectedRoundNumber: number;
+  currentPlayerTeamId?: string;
+  currentPlayerBestRoundNumber?: number;
+  selectedEventIndex: number | null;
+  players: MatchPlayers;
+  currentPlayerPuuid?: string;
+  onSelectRound: (roundNumber: number) => void;
+  onSelectEvent: (eventIndex: number) => void;
+  backHref?: string;
+}
+
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
   mapPosition: Vector2d;
   stageRef?: RefObject<MapStageHandle | null>;
+  replayControls?: ReplayControls;
 }
 
 export const ToolsSidebar = ({
   sidebarOpen,
   mapPosition,
   stageRef,
+  replayControls,
 }: ToolsSidebarProps) => {
   const {
     selectedMap,
@@ -70,6 +105,7 @@ export const ToolsSidebar = ({
     useCollaborativeCanvas();
   const [mapSettingsOpen, setMapSettingsOpen] = useState(false);
   const [showAllMaps, setShowAllMaps] = useState(false);
+  const [isReplaySheetOpen, setIsReplaySheetOpen] = useState(false);
 
   useEffect(() => {
     notifyPhaseChangedCallback.current = notifyPhaseChanged;
@@ -92,6 +128,35 @@ export const ToolsSidebar = ({
   const [pendingPhaseIndex, setPendingPhaseIndex] = useState<number | null>(
     null,
   );
+
+  const selectedReplayRoundIndex = replayControls
+    ? replayControls.rounds.findIndex(
+        (round) => round.roundNumber === replayControls.selectedRoundNumber,
+      )
+    : -1;
+  const selectedReplayRound =
+    replayControls && selectedReplayRoundIndex >= 0
+      ? replayControls.rounds[selectedReplayRoundIndex]
+      : null;
+  const hasPreviousReplayRound = selectedReplayRoundIndex > 0;
+  const hasNextReplayRound =
+    replayControls != null &&
+    selectedReplayRoundIndex >= 0 &&
+    selectedReplayRoundIndex < replayControls.rounds.length - 1;
+
+  const handleReplayRoundStep = (direction: -1 | 1) => {
+    if (!replayControls || selectedReplayRoundIndex < 0) {
+      return;
+    }
+
+    const nextRound =
+      replayControls.rounds[selectedReplayRoundIndex + direction];
+    if (!nextRound) {
+      return;
+    }
+
+    replayControls.onSelectRound(nextRound.roundNumber);
+  };
 
   const handlePhaseSwitch = async (newIndex: number) => {
     if (isTransitioning.current) return;
@@ -222,6 +287,118 @@ export const ToolsSidebar = ({
                   : ""
               }
             >
+              {replayControls && selectedReplayRound && (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-base font-semibold">Rounds</span>
+                    {replayControls.backHref && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={replayControls.backHref}>
+                          <ArrowLeft className="mr-2 h-4 w-4" />
+                          Back
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-[auto_1fr_auto] gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-12 w-12 border-slate-700 bg-slate-950 text-white hover:bg-slate-900"
+                      onClick={() => handleReplayRoundStep(-1)}
+                      disabled={!hasPreviousReplayRound}
+                      aria-label="Select previous round"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+
+                    <Sheet
+                      open={isReplaySheetOpen}
+                      onOpenChange={setIsReplaySheetOpen}
+                    >
+                      <SheetTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-12 justify-between border-slate-700 bg-slate-950 px-4 text-left text-white hover:bg-slate-900"
+                        >
+                          <span className="text-base font-semibold">
+                            Round {replayControls.selectedRoundNumber}
+                          </span>
+                          <span className="text-xs uppercase tracking-[0.12em] text-white/55">
+                            {selectedReplayRound.eventLog.length} events
+                          </span>
+                        </Button>
+                      </SheetTrigger>
+
+                      <SheetContent
+                        side="left"
+                        className="gap-0 border-slate-800 bg-slate-950 px-0 text-white w-[min(420px,calc(100vw-1rem))] max-w-[420px] sm:max-w-[420px]"
+                      >
+                        <SheetHeader className="border-b border-slate-800 px-5 py-4 text-left">
+                          <div className="pr-8">
+                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/55">
+                              Match Replay
+                            </p>
+                            <SheetTitle className="mt-1 text-lg text-white">
+                              {replayControls.mapName} • Round{" "}
+                              {replayControls.selectedRoundNumber}
+                            </SheetTitle>
+                            <SheetDescription className="text-white/60">
+                              Browse rounds and replay events.
+                            </SheetDescription>
+                          </div>
+                        </SheetHeader>
+
+                        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-5 py-4">
+                          <MatchRoundSelector
+                            rounds={replayControls.rounds}
+                            selectedRoundNumber={
+                              replayControls.selectedRoundNumber
+                            }
+                            currentPlayerTeamId={
+                              replayControls.currentPlayerTeamId
+                            }
+                            currentPlayerBestRoundNumber={
+                              replayControls.currentPlayerBestRoundNumber
+                            }
+                            onSelectRound={replayControls.onSelectRound}
+                          />
+
+                          <MatchEventLog
+                            containerClassName="h-auto min-h-0 flex-1 md:h-auto"
+                            scrollAreaClassName="h-full md:h-full"
+                            events={selectedReplayRound.eventLog}
+                            players={replayControls.players}
+                            currentPlayerPuuid={
+                              replayControls.currentPlayerPuuid
+                            }
+                            selectedEventIndex={
+                              replayControls.selectedEventIndex
+                            }
+                            onSelectEvent={replayControls.onSelectEvent}
+                          />
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-12 w-12 border-slate-700 bg-slate-950 text-white hover:bg-slate-900"
+                      onClick={() => handleReplayRoundStep(1)}
+                      disabled={!hasNextReplayRound}
+                      aria-label="Select next round"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2 mt-4" data-tour="phases">
                 <div className="flex items-center justify-between">
                   <span className="text-base font-semibold">Phases</span>

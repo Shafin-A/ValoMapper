@@ -3,8 +3,6 @@
 import { AgentsSidebar } from "@/components/agents-sidebar";
 import { MapStage, MapStageHandle } from "@/components/canvas";
 import { SiteHeader } from "@/components/layout/site-header";
-import { MatchEventLog } from "@/components/matches/match-event-log";
-import { MatchRoundSelector } from "@/components/matches/match-round-selector";
 import { ToolsSidebar } from "@/components/tools-sidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -19,7 +17,7 @@ import {
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH, MAP_SIZE } from "@/lib/consts";
 import { getPlayerSummary } from "@/lib/matches";
 import { UndoableState } from "@/lib/types";
-import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
@@ -370,6 +368,20 @@ const MatchReplayPage = () => {
         sidebarOpen={sidebarState.leftSidebarOpen}
         mapPosition={mapPosition}
         stageRef={stageRef}
+        replayControls={{
+          mapName: matchSummary.mapName,
+          rounds: matchSummary.rounds,
+          selectedRoundNumber: selectedRound.roundNumber,
+          currentPlayerTeamId: currentPlayer?.teamId,
+          currentPlayerBestRoundNumber: matchSummary.viewer.bestRoundNumber,
+          selectedEventIndex,
+          players: matchSummary.players,
+          currentPlayerPuuid: matchSummary.viewer.puuid,
+          onSelectRound: handleSelectRound,
+          onSelectEvent: (eventIndex) =>
+            void handleSelectReplayPhase(eventIndex),
+          backHref: "/matches",
+        }}
       />
 
       <Suspense fallback={<ReplayLoadingSkeleton />}>
@@ -380,7 +392,7 @@ const MatchReplayPage = () => {
           {!isScaleReady ? (
             <ReplayLoadingSkeleton />
           ) : (
-            <div className="relative flex-1">
+            <div className="flex-1">
               <MapStage
                 ref={stageRef}
                 width={VIRTUAL_WIDTH}
@@ -388,54 +400,6 @@ const MatchReplayPage = () => {
                 scale={stageScale}
                 mapPosition={mapPosition}
               />
-
-              <div className="pointer-events-none absolute inset-x-3 top-3 z-20 md:inset-x-auto md:right-3 md:w-[380px]">
-                <section className="pointer-events-auto rounded-xl border border-slate-700/80 bg-slate-950/90 shadow-xl backdrop-blur">
-                  <div className="border-b border-slate-800 px-4 py-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/55">
-                          Match Replay
-                        </p>
-                        <h2 className="text-lg font-semibold text-white">
-                          {matchSummary.mapName} • Round{" "}
-                          {selectedRound.roundNumber}
-                        </h2>
-                      </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href="/matches">
-                          <ArrowLeft className="mr-2 h-4 w-4" />
-                          Back
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 p-4">
-                    <MatchRoundSelector
-                      rounds={matchSummary.rounds}
-                      selectedRoundNumber={selectedRound.roundNumber}
-                      currentPlayerTeamId={currentPlayer?.teamId}
-                      currentPlayerBestRoundNumber={
-                        matchSummary.viewer.bestRoundNumber
-                      }
-                      onSelectRound={handleSelectRound}
-                    />
-
-                    <MatchEventLog
-                      containerClassName="h-auto"
-                      scrollAreaClassName="h-[280px]"
-                      events={selectedRound.eventLog}
-                      players={matchSummary.players}
-                      currentPlayerPuuid={matchSummary.viewer.puuid}
-                      selectedEventIndex={selectedEventIndex}
-                      onSelectEvent={(eventIndex) =>
-                        void handleSelectReplayPhase(eventIndex)
-                      }
-                    />
-                  </div>
-                </section>
-              </div>
             </div>
           )}
         </div>
