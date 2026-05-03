@@ -117,6 +117,16 @@ const getReplayMapPosition = () => ({
   y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
 });
 
+const buildReplayAgentIdsByPuuid = (players: MatchPlayerSummary[]) =>
+  new Map(
+    players.map((player, index) => [player.puuid, `replay-agent-${index}`]),
+  );
+
+const getReplayAgentId = (
+  replayAgentIdsByPuuid: Map<string, string>,
+  puuid: string,
+) => replayAgentIdsByPuuid.get(puuid) ?? "replay-agent-unknown";
+
 const toCanvasPoint = ({
   mapId,
   mapSide,
@@ -149,12 +159,14 @@ const buildAgentsFromLocations = ({
   mapSide,
   players,
   grayPlayerIds,
+  replayAgentIdsByPuuid,
 }: {
   latestLocations: Map<string, MatchPlayerLocation>;
   mapId: string;
   mapSide: MapSide;
   players: MatchPlayerSummary[];
   grayPlayerIds?: Set<string>;
+  replayAgentIdsByPuuid: Map<string, string>;
 }): AgentCanvas[] => {
   return players.flatMap((player) => {
     const playerLocation = latestLocations.get(player.puuid);
@@ -170,7 +182,7 @@ const buildAgentsFromLocations = ({
 
     return [
       {
-        id: `replay-agent-${player.puuid}`,
+        id: getReplayAgentId(replayAgentIdsByPuuid, player.puuid),
         name: player.characterName,
         role: getAgentRole(player.characterName),
         isAlly: player.teamId === "Blue",
@@ -188,7 +200,9 @@ const buildKillLine = ({
   mapId,
   mapSide,
   playersByPuuid,
+  replayAgentIdsByPuuid,
   roundNumber,
+  eventIndex,
   killColors,
 }: {
   event: Extract<RoundEventLogEntry, { eventType: "kill" }>;
@@ -196,7 +210,9 @@ const buildKillLine = ({
   mapId: string;
   mapSide: MapSide;
   playersByPuuid: Map<string, MatchPlayerSummary>;
+  replayAgentIdsByPuuid: Map<string, string>;
   roundNumber: number;
+  eventIndex: number;
   killColors: {
     ally: string;
     enemy: string;
@@ -217,9 +233,9 @@ const buildKillLine = ({
   const isAllyKill = playersByPuuid.get(event.killerPuuid)?.teamId === "Blue";
 
   return {
-    id: `replay-kill-${roundNumber}-${event.timeSinceRoundStartMillis}-${event.killerPuuid}-${event.victimPuuid}`,
-    fromId: `replay-agent-${event.killerPuuid}`,
-    toId: `replay-agent-${event.victimPuuid}`,
+    id: `replay-kill-${roundNumber}-${eventIndex}`,
+    fromId: getReplayAgentId(replayAgentIdsByPuuid, event.killerPuuid),
+    toId: getReplayAgentId(replayAgentIdsByPuuid, event.victimPuuid),
     strokeColor: isAllyKill ? killColors.ally : killColors.enemy,
     strokeWidth: 3,
     isInteractive: false,
@@ -285,6 +301,7 @@ const buildRoundReplayState = ({
   mapSide,
   players,
   playersByPuuid,
+  replayAgentIdsByPuuid,
   round,
   killColors,
 }: {
@@ -292,6 +309,7 @@ const buildRoundReplayState = ({
   mapSide: MapSide;
   players: MatchPlayerSummary[];
   playersByPuuid: Map<string, MatchPlayerSummary>;
+  replayAgentIdsByPuuid: Map<string, string>;
   round: RoundSummaryLite;
   killColors: {
     ally: string;
@@ -303,7 +321,7 @@ const buildRoundReplayState = ({
   const phases: PhaseState[] = [];
   let plantedSpikeLocation: { x: number; y: number } | null = null;
 
-  round.eventLog.forEach((event) => {
+  round.eventLog.forEach((event, eventIndex) => {
     seedLatestLocations(latestLocations, event, deadPlayers);
 
     const nextPhase = clonePhaseState(
@@ -317,6 +335,7 @@ const buildRoundReplayState = ({
       mapId: mapOption.id,
       mapSide,
       players,
+      replayAgentIdsByPuuid,
       grayPlayerIds:
         event.eventType === "kill" ? new Set([event.victimPuuid]) : undefined,
     });
@@ -328,7 +347,9 @@ const buildRoundReplayState = ({
         mapId: mapOption.id,
         mapSide,
         playersByPuuid,
+        replayAgentIdsByPuuid,
         roundNumber: round.roundNumber,
+        eventIndex,
         killColors,
       });
 
@@ -407,6 +428,7 @@ export const buildMatchReplayRoundStates = (
   const playersByPuuid = new Map(
     match.players.map((player) => [player.puuid, player]),
   );
+  const replayAgentIdsByPuuid = buildReplayAgentIdsByPuuid(match.players);
   const viewerTeamId = match.viewer
     ? playersByPuuid.get(match.viewer.puuid)?.teamId
     : undefined;
@@ -423,6 +445,7 @@ export const buildMatchReplayRoundStates = (
         mapSide: "defense",
         players: match.players,
         playersByPuuid,
+        replayAgentIdsByPuuid,
         round,
         killColors,
       }),

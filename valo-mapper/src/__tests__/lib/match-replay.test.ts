@@ -121,14 +121,15 @@ describe("buildMatchReplayRoundStates", () => {
     expect(replayState.phases[0].drawLines).toHaveLength(0);
     expect(replayState.phases[0].connectingLines).toHaveLength(1);
     expect(replayState.phases[0].connectingLines[0]).toMatchObject({
-      fromId: "replay-agent-viewer-puuid",
-      toId: "replay-agent-enemy-puuid",
+      id: "replay-kill-1-0",
+      fromId: "replay-agent-0",
+      toId: "replay-agent-1",
       isInteractive: false,
     });
     expect(replayState.phases[0].agentsOnCanvas).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: "replay-agent-enemy-puuid",
+          id: "replay-agent-1",
           isGray: true,
         }),
       ]),
@@ -151,7 +152,7 @@ describe("buildMatchReplayRoundStates", () => {
     expect(replayState.phases[2].agentsOnCanvas).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: "replay-agent-enemy-puuid",
+          id: "replay-agent-1",
         }),
       ]),
     );
@@ -261,8 +262,103 @@ describe("buildMatchReplayRoundStates", () => {
 
     expect(replayState.phases[1].agentsOnCanvas).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: "replay-agent-enemy-puuid" }),
+        expect.objectContaining({ id: "replay-agent-1" }),
       ]),
     );
+  });
+
+  it("uses database-safe replay ids when player identifiers are long", () => {
+    const longViewerPuuid = `viewer-${"a".repeat(80)}`;
+    const longEnemyPuuid = `enemy-${"b".repeat(80)}`;
+
+    const matchSummary: MatchSummaryResponse = {
+      matchId: "match-1",
+      mapId: "/Game/Maps/Ascent/Ascent",
+      mapName: "Ascent",
+      queueLabel: "Competitive",
+      gameStartAt: "2024-01-01T00:00:00Z",
+      viewer: {
+        puuid: longViewerPuuid,
+        bestRoundNumber: 1,
+      },
+      totalRounds: 1,
+      players: [
+        {
+          puuid: longViewerPuuid,
+          gameName: "Viewer",
+          tagLine: "NA1",
+          teamId: "Blue",
+          characterId: "agent-1",
+          characterName: "Jett",
+        },
+        {
+          puuid: longEnemyPuuid,
+          gameName: "Enemy",
+          tagLine: "NA1",
+          teamId: "Red",
+          characterId: "agent-2",
+          characterName: "Sage",
+        },
+      ],
+      rounds: [
+        {
+          roundNumber: 1,
+          winningTeam: "Blue",
+          roundResultCode: "Elimination",
+          scoreAfterRound: {
+            red: 0,
+            blue: 1,
+          },
+          playerStats: [],
+          eventLog: [
+            {
+              eventType: "kill",
+              timeSinceRoundStartMillis: 9000,
+              killerPuuid: longViewerPuuid,
+              victimPuuid: longEnemyPuuid,
+              victimLocation: { x: -1200, y: 1800 },
+              playerLocations: [
+                {
+                  puuid: longViewerPuuid,
+                  viewRadians: 0,
+                  location: { x: -1000, y: 1500 },
+                },
+                {
+                  puuid: longEnemyPuuid,
+                  viewRadians: 0,
+                  location: { x: -1200, y: 1800 },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const replayState =
+      buildMatchReplayRoundStates(matchSummary).roundStates[1];
+
+    expect(replayState.phases[0].agentsOnCanvas).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "replay-agent-0" }),
+        expect.objectContaining({ id: "replay-agent-1" }),
+      ]),
+    );
+
+    const replayKillLine = replayState.phases[0].connectingLines[0];
+    expect(replayKillLine).toMatchObject({
+      id: "replay-kill-1-0",
+      fromId: "replay-agent-0",
+      toId: "replay-agent-1",
+    });
+
+    expect(
+      replayState.phases[0].agentsOnCanvas.every(
+        (agent) => agent.id.length <= 50,
+      ),
+    ).toBe(true);
+    expect(replayKillLine.id.length).toBeLessThanOrEqual(50);
+    expect(replayKillLine.fromId.length).toBeLessThanOrEqual(50);
+    expect(replayKillLine.toId.length).toBeLessThanOrEqual(50);
   });
 });
