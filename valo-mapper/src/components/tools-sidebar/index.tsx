@@ -35,7 +35,7 @@ import { useState } from "react";
 import { MapStageHandle } from "@/components/canvas";
 import { IconsSection } from "./icons-section";
 import { MapSelect } from "./map-select-button";
-import { ToolsSection } from "./tools-section";
+import { ToolsSection, type ToolsSectionAction } from "./tools-section";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import {
   Popover,
@@ -65,6 +65,7 @@ interface ToolsSidebarProps {
   mapPosition: Vector2d;
   stageRef?: RefObject<MapStageHandle | null>;
   replayControls?: ReplayControls;
+  saveAction?: ToolsSectionAction;
 }
 
 export const ToolsSidebar = ({
@@ -72,6 +73,7 @@ export const ToolsSidebar = ({
   mapPosition,
   stageRef,
   replayControls,
+  saveAction,
 }: ToolsSidebarProps) => {
   const {
     selectedMap,
@@ -465,7 +467,11 @@ export const ToolsSidebar = ({
                   })}
                 </ToggleGroup>
               </div>
-              <ToolsSection mapPosition={mapPosition} stageRef={stageRef} />
+              <ToolsSection
+                mapPosition={mapPosition}
+                stageRef={stageRef}
+                saveAction={saveAction}
+              />
               <IconsSection mapPosition={mapPosition} />
             </div>
           </Suspense>

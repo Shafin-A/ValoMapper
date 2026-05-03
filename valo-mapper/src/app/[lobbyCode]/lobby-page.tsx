@@ -9,6 +9,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
+import {
+  clearPendingLobbyToast,
+  readPendingLobbyToast,
+} from "@/lib/lobby-creation";
 import { AGENTS, MAP_OPTIONS, MAP_SIZE } from "@/lib/consts";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts/misc/consts";
@@ -212,25 +216,34 @@ const LobbyEditPage = () => {
   const params = useParams();
 
   useEffect(() => {
-    if (sessionStorage.getItem("showCreatedToast")) {
-      toast.success(`Lobby created • Code: ${params.lobbyCode}`, {
-        id: `lobby-created-${params.lobbyCode}`,
-        action: {
-          label: "Copy Link",
-          onClick: async () => {
-            try {
-              await navigator.clipboard.writeText(window.location.href);
-              toast.success("Link copied!");
-            } catch (err) {
-              console.error("Failed to copy link:", err);
-              toast.error("Failed to copy link to clipboard");
-            }
-          },
-        },
-      });
+    const pendingToast = readPendingLobbyToast();
 
-      sessionStorage.removeItem("showCreatedToast");
+    if (!pendingToast) {
+      return;
     }
+
+    const toastMessage =
+      pendingToast?.type === "replay-copy"
+        ? `Round ${pendingToast.roundNumber} copied to this lobby`
+        : `Lobby created • Code: ${params.lobbyCode}`;
+
+    toast.success(toastMessage, {
+      id: `lobby-created-${params.lobbyCode}`,
+      action: {
+        label: "Copy Link",
+        onClick: async () => {
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+            toast.success("Link copied!");
+          } catch (err) {
+            console.error("Failed to copy link:", err);
+            toast.error("Failed to copy link to clipboard");
+          }
+        },
+      },
+    });
+
+    clearPendingLobbyToast();
   }, [params.lobbyCode]);
 
   const isNotFound = lobbyError?.message?.includes("not found");

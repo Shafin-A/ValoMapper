@@ -1,10 +1,12 @@
-import { act, render, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import MatchReplayPage from "@/app/matches/[matchId]/match-replay-page";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { buildMatchReplayRoundStates } from "@/lib/match-replay";
+import type { UndoableState } from "@/lib/types";
 import {
   useParams,
   usePathname,
@@ -18,6 +20,12 @@ let mockToolsSidebarProps: {
     selectedRoundNumber: number;
     currentPlayerBestRoundNumber?: number;
     currentPlayerPuuid?: string;
+  };
+  saveAction?: {
+    label: string;
+    tooltip: string;
+    onClick: () => void;
+    isPending?: boolean;
   };
 } | null = null;
 
@@ -56,6 +64,10 @@ jest.mock("@/hooks/api/use-match-summary", () => ({
   useMatchSummary: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/use-create-lobby", () => ({
+  useCreateLobby: jest.fn(),
+}));
+
 jest.mock("@/hooks/use-firebase-auth", () => ({
   useFirebaseAuth: jest.fn(),
 }));
@@ -70,6 +82,7 @@ jest.mock("@/lib/match-replay", () => ({
 }));
 
 const mockUseCanvas = jest.mocked(useCanvas);
+const mockUseCreateLobby = jest.mocked(useCreateLobby);
 const mockUseMatchSummary = jest.mocked(useMatchSummary);
 const mockUseFirebaseAuth = jest.mocked(useFirebaseAuth);
 const mockUseSidebarState = jest.mocked(useSidebarState);
@@ -128,7 +141,7 @@ const matchSummary = {
   ],
 };
 
-const seededRoundState = {
+const seededRoundState: UndoableState = {
   phases: [
     {
       agentsOnCanvas: [],
@@ -150,24 +163,77 @@ const seededRoundState = {
   editedPhases: [0],
 };
 
-const seededSecondRoundState = {
+const seededSecondRoundState: UndoableState = {
   ...seededRoundState,
   editedPhases: [0],
 };
 
-const createCanvasContext = (applyRemoteState: jest.Mock) =>
+const multiPhaseRoundState: UndoableState = {
+  phases: [
+    {
+      agentsOnCanvas: [
+        {
+          id: "agent-phase-1",
+          name: "Jett",
+          role: "Duelist",
+          isAlly: true,
+          x: 100,
+          y: 120,
+        },
+      ],
+      abilitiesOnCanvas: [],
+      drawLines: [],
+      connectingLines: [],
+      textsOnCanvas: [],
+      imagesOnCanvas: [],
+      toolIconsOnCanvas: [],
+    },
+    {
+      agentsOnCanvas: [],
+      abilitiesOnCanvas: [],
+      drawLines: [
+        {
+          id: "line-phase-2",
+          tool: "pencil",
+          color: "#fff",
+          opacity: 1,
+          size: 2,
+          isDashed: false,
+          isArrowHead: false,
+          points: [
+            { x: 10, y: 10 },
+            { x: 20, y: 20 },
+          ],
+        },
+      ],
+      connectingLines: [],
+      textsOnCanvas: [],
+      imagesOnCanvas: [],
+      toolIconsOnCanvas: [],
+    },
+  ],
+  selectedMap: seededRoundState.selectedMap,
+  mapSide: "attack" as const,
+  currentPhaseIndex: 1,
+  editedPhases: [0, 1],
+};
+
+const createCanvasContext = (
+  applyRemoteState: jest.Mock,
+  state: UndoableState = seededRoundState,
+) =>
   ({
     agentsSettings: undefined,
     abilitiesSettings: undefined,
     applyRemoteState,
-    currentPhaseIndex: 0,
-    editedPhases: new Set([0]),
+    currentPhaseIndex: state.currentPhaseIndex,
+    editedPhases: new Set(state.editedPhases),
     isTransitioning: { current: false },
-    mapSide: "attack",
+    mapSide: state.mapSide,
     onApplyHistoryStateCallback: { current: null },
     notifyPhaseChangedCallback: { current: null },
-    phases: seededRoundState.phases,
-    selectedMap: seededRoundState.selectedMap,
+    phases: state.phases,
+    selectedMap: state.selectedMap,
     switchToPhase: jest.fn(),
     transitionToPhase: jest.fn(),
   }) as unknown as ReturnType<typeof useCanvas>;
@@ -204,6 +270,10 @@ describe("MatchReplayPage", () => {
       error: null,
       refetch: jest.fn(),
     });
+    mockUseCreateLobby.mockReturnValue({
+      mutate: jest.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof useCreateLobby>);
     mockBuildMatchReplayRoundStates.mockReturnValue({
       roundStates: {
         1: seededRoundState,
@@ -363,6 +433,59 @@ describe("MatchReplayPage", () => {
       expect(
         mockToolsSidebarProps?.replayControls?.currentPlayerPuuid,
       ).toBeUndefined();
+    });
+  });
+
+  it("copies the current replay state into a new lobby instead of opening save", async () => {
+    const applyRemoteState = jest.fn();
+    const mutate = jest.fn();
+
+    mockUseCanvas.mockImplementation(() =>
+      createCanvasContext(applyRemoteState, multiPhaseRoundState),
+    );
+    mockUseCreateLobby.mockReturnValue({
+      mutate,
+      isPending: false,
+    } as unknown as ReturnType<typeof useCreateLobby>);
+
+    render(<MatchReplayPage />);
+
+    await waitFor(() => {
+      expect(mockToolsSidebarProps?.saveAction?.label).toBe(
+        "Copy to new lobby",
+      );
+    });
+
+    act(() => {
+      mockToolsSidebarProps?.saveAction?.onClick();
+    });
+
+    expect(mutate).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("heading", {
+        name: "Copy Round 1 to a new lobby?",
+      }),
+    ).toBeInTheDocument();
+
+    act(() => {
+      screen.getByRole("button", { name: "Copy to Lobby" }).click();
+    });
+
+    expect(mutate).toHaveBeenCalledWith({
+      initialCanvasState: {
+        phases: multiPhaseRoundState.phases,
+        selectedMap: multiPhaseRoundState.selectedMap,
+        mapSide: "attack",
+        currentPhaseIndex: 1,
+        editedPhases: [0, 1],
+        agentsSettings: undefined,
+        abilitiesSettings: undefined,
+      },
+      pendingToast: {
+        type: "replay-copy",
+        roundNumber: 1,
+        matchId: "match-1",
+      },
     });
   });
 });

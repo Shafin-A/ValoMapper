@@ -12,6 +12,7 @@ import { Vector2d } from "konva/lib/types";
 import {
   Camera,
   Eraser,
+  Loader2,
   MapPinned,
   Pencil,
   Redo,
@@ -21,8 +22,9 @@ import {
   Undo,
   Info,
   Eye,
+  type LucideIcon,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type RefObject } from "react";
 import { DeleteSettings } from "./delete-settings";
 import { DrawSettings } from "./draw-settings";
 import { EraserSettings } from "./eraser-settings";
@@ -37,14 +39,28 @@ import { useRecenterCanvas } from "@/hooks/use-recenter-canvas";
 import { ImageUploadButton } from "./image-upload-button";
 import { TextAddButton } from "./text-add-button";
 import { MapStageHandle } from "@/components/canvas";
-import { RefObject } from "react";
+
+export interface ToolsSectionAction {
+  icon: LucideIcon;
+  label: string;
+  tooltip: string;
+  onClick: () => void;
+  disabled?: boolean;
+  isPending?: boolean;
+  tourId?: string;
+}
 
 interface ToolsSectionProps {
   mapPosition: Vector2d;
   stageRef?: RefObject<MapStageHandle | null>;
+  saveAction?: ToolsSectionAction;
 }
 
-export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
+export const ToolsSection = ({
+  mapPosition,
+  stageRef,
+  saveAction,
+}: ToolsSectionProps) => {
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [openLineupDialog, setOpenLineupDialog] = useState(false);
   const [visionConesOpen, setVisionConesOpen] = useState(false);
@@ -108,6 +124,7 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
   const { user } = useFirebaseAuth();
 
   const isAuthenticated = user !== null;
+  const SaveActionIcon = saveAction?.isPending ? Loader2 : saveAction?.icon;
 
   useEffect(() => {
     recenterCanvasCallback.current = handleRecenterCanvas;
@@ -140,9 +157,9 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
               </div>
               <div className="mt-2">
                 <p>
-                  Add text, images, and drawings here. Also recenter the view,
-                  screenshot the canvas, save to folders, sync changes to the
-                  lobby, or undo/redo any action.
+                  {saveAction
+                    ? "Add text, images, and drawings here. You can also copy the current replay state into a fresh lobby, keep editing there, and save it once you are ready."
+                    : "Add text, images, and drawings here. Also recenter the view, screenshot the canvas, save to folders, sync changes to the lobby, or undo/redo any action."}
                 </p>
               </div>
             </TooltipContent>
@@ -166,27 +183,55 @@ export const ToolsSection = ({ mapPosition, stageRef }: ToolsSectionProps) => {
             </TooltipContent>
           </Tooltip>
 
-          <Dialog open={openSaveDialog} onOpenChange={setOpenSaveDialog}>
+          {saveAction ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <DialogTrigger asChild>
-                  <Button
-                    data-tour="save-strategy"
-                    variant="ghost"
-                    size="lg"
-                    disabled={!isAuthenticated}
-                  >
+                <Button
+                  aria-label={saveAction.label}
+                  data-tour={saveAction.tourId}
+                  variant="ghost"
+                  size="lg"
+                  onClick={saveAction.onClick}
+                  disabled={saveAction.disabled || saveAction.isPending}
+                >
+                  {SaveActionIcon ? (
+                    <SaveActionIcon
+                      className={
+                        saveAction.isPending ? "animate-spin" : undefined
+                      }
+                    />
+                  ) : (
                     <Save />
-                  </Button>
-                </DialogTrigger>
+                  )}
+                </Button>
               </TooltipTrigger>
               <TooltipContent side="top" align="center">
-                {!isAuthenticated ? "Log in to save" : "Save"}
+                {saveAction.tooltip}
               </TooltipContent>
             </Tooltip>
+          ) : (
+            <Dialog open={openSaveDialog} onOpenChange={setOpenSaveDialog}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DialogTrigger asChild>
+                    <Button
+                      data-tour="save-strategy"
+                      variant="ghost"
+                      size="lg"
+                      disabled={!isAuthenticated}
+                    >
+                      <Save />
+                    </Button>
+                  </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="center">
+                  {!isAuthenticated ? "Log in to save" : "Save"}
+                </TooltipContent>
+              </Tooltip>
 
-            <TreeViewDialogContent setOpen={setOpenSaveDialog} />
-          </Dialog>
+              <TreeViewDialogContent setOpen={setOpenSaveDialog} />
+            </Dialog>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>

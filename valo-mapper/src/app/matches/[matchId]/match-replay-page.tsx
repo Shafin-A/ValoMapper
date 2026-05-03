@@ -6,7 +6,16 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { ToolsSidebar } from "@/components/tools-sidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
@@ -16,7 +25,7 @@ import {
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH, MAP_SIZE } from "@/lib/consts";
 import { getPlayerSummary } from "@/lib/matches";
 import { UndoableState } from "@/lib/types";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowUpRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import {
   useParams,
@@ -49,6 +58,7 @@ const MatchReplayPage = () => {
     error,
     refetch,
   } = useMatchSummary(matchId ?? null, true, true);
+  const createLobbyMutation = useCreateLobby();
 
   const sidebarState = useSidebarState();
   const divRef = useRef<HTMLDivElement>(null);
@@ -68,6 +78,7 @@ const MatchReplayPage = () => {
   });
   const [stageScale, setStageScale] = useState(1);
   const [isScaleReady, setIsScaleReady] = useState(false);
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [selectedRoundNumber, setSelectedRoundNumber] = useState(1);
   const [roundStates, setRoundStates] = useState<Record<number, UndoableState>>(
     {},
@@ -369,6 +380,26 @@ const MatchReplayPage = () => {
     [snapshotCurrentRoundState],
   );
 
+  const handleCopyToLobby = useCallback(() => {
+    createLobbyMutation.mutate({
+      initialCanvasState: snapshotCurrentRoundState(),
+      pendingToast: {
+        type: "replay-copy",
+        roundNumber: selectedRoundNumber,
+        matchId: matchSummary?.matchId,
+      },
+    });
+  }, [
+    createLobbyMutation,
+    matchSummary?.matchId,
+    selectedRoundNumber,
+    snapshotCurrentRoundState,
+  ]);
+
+  const handleOpenCopyDialog = useCallback(() => {
+    setIsCopyDialogOpen(true);
+  }, []);
+
   useEffect(() => {
     if (!matchSummary || roundOptions.length === 0) {
       return;
@@ -490,6 +521,15 @@ const MatchReplayPage = () => {
         sidebarOpen={sidebarState.leftSidebarOpen}
         mapPosition={mapPosition}
         stageRef={stageRef}
+        saveAction={{
+          icon: ArrowUpRight,
+          label: "Copy to new lobby",
+          tooltip: createLobbyMutation.isPending
+            ? "Creating a new lobby from the current replay state..."
+            : `Copy Round ${selectedRound.roundNumber} into a new editable lobby`,
+          onClick: handleOpenCopyDialog,
+          isPending: createLobbyMutation.isPending,
+        }}
         replayControls={{
           mapName: matchSummary.mapName,
           rounds: matchSummary.rounds,
@@ -530,6 +570,47 @@ const MatchReplayPage = () => {
         sidebarOpen={sidebarState.rightSidebarOpen}
         setSidebarOpen={sidebarState.setRightSidebarOpen}
       />
+
+      <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Copy Round {selectedRound.roundNumber} to a new lobby?
+            </DialogTitle>
+            <DialogDescription>
+              Creates an editable lobby from this round&apos;s canvas state.
+              Refine and save it there. The original replay stays untouched.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">What gets copied</p>
+            <p>
+              Map: {matchSummary.mapName} · Round {selectedRound.roundNumber}
+            </p>
+            <p>
+              All phases from this round, plus any drawings, icons, text,
+              images, and other canvas edits currently applied to it.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCopyDialogOpen(false)}
+              disabled={createLobbyMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCopyToLobby}
+              disabled={createLobbyMutation.isPending}
+            >
+              {createLobbyMutation.isPending ? "Creating..." : "Copy to Lobby"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
