@@ -4,12 +4,6 @@ import { MatchRoundSelector } from "@/components/matches/match-round-selector";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useUser } from "@/hooks/api/use-user";
-import {
   getMatchResultTone,
   MATCH_PAGE_CLASSES,
   MATCH_RESULT_CLASSES,
@@ -45,8 +39,6 @@ export const MatchDetails = ({
   selectedRoundNumber,
   onSelectRound,
 }: MatchDetailsProps) => {
-  const { data: user } = useUser();
-
   if (isLoading) {
     return (
       <section className="rounded-b-xl border border-slate-700 bg-slate-950/90 px-4 py-8 sm:px-5">
@@ -152,26 +144,14 @@ export const MatchDetails = ({
               )}
             </span>
           </div>
-          {user?.id === 5 ? (
-            <Button size="sm" asChild>
-              <Link
-                href={`/matches/${encodeURIComponent(matchId)}?round=${selectedRound.roundNumber}`}
-              >
-                Load Round
-              </Link>
-            </Button>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex" tabIndex={0}>
-                  <Button size="sm" disabled>
-                    Load Round
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top">Coming soon.</TooltipContent>
-            </Tooltip>
-          )}
+
+          <Button size="sm" asChild>
+            <Link
+              href={`/matches/${encodeURIComponent(matchId)}?round=${selectedRound.roundNumber}`}
+            >
+              Load Round
+            </Link>
+          </Button>
         </div>
 
         <div className="grid gap-3 md:grid-cols-[1fr_280px]">
