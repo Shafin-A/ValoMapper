@@ -38,6 +38,8 @@ const RoundEventRow = ({
   isSelected = false,
   onSelect,
 }: RoundEventRowProps) => {
+  const selectedStateClassName =
+    "border-sky-300/55 bg-sky-400/12 ring-2 ring-inset ring-sky-300/80 shadow-[0_0_0_1px_rgba(125,211,252,0.22)]";
   const actorPuuid =
     event.eventType === "kill"
       ? event.killerPuuid
@@ -84,8 +86,9 @@ const RoundEventRow = ({
       <li
         className={cn(
           "relative isolate overflow-hidden border border-slate-800/80",
-          onSelect && "cursor-pointer transition-colors hover:bg-white/5",
-          isSelected && "ring-1 ring-inset ring-white/30 bg-white/5",
+          onSelect &&
+            "cursor-pointer transition-[background-color,border-color,box-shadow] hover:border-white/15 hover:bg-white/5",
+          isSelected && selectedStateClassName,
         )}
         {...interactiveProps}
       >
@@ -147,8 +150,9 @@ const RoundEventRow = ({
     <li
       className={cn(
         "relative isolate overflow-hidden border border-slate-800/80",
-        onSelect && "cursor-pointer transition-colors hover:bg-white/5",
-        isSelected && "ring-1 ring-inset ring-white/30 bg-white/5",
+        onSelect &&
+          "cursor-pointer transition-[background-color,border-color,box-shadow] hover:border-white/15 hover:bg-white/5",
+        isSelected && selectedStateClassName,
       )}
       {...interactiveProps}
     >

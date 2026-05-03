@@ -1,11 +1,23 @@
-import { render, waitFor } from "@testing-library/react";
+import { act, render, waitFor } from "@testing-library/react";
 import MatchReplayPage from "@/app/matches/[matchId]/match-replay-page";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { buildMatchReplayRoundStates } from "@/lib/match-replay";
-import { useParams, useSearchParams } from "next/navigation";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+
+let mockToolsSidebarProps: {
+  replayControls?: {
+    onSelectRound: (roundNumber: number) => void;
+    selectedRoundNumber: number;
+  };
+} | null = null;
 
 jest.mock("@/components/agents-sidebar", () => ({
   AgentsSidebar: () => <div data-testid="agents-sidebar" />,
@@ -28,7 +40,10 @@ jest.mock("@/components/matches/match-round-selector", () => ({
 }));
 
 jest.mock("@/components/tools-sidebar", () => ({
-  ToolsSidebar: () => <div data-testid="tools-sidebar" />,
+  ToolsSidebar: (props: typeof mockToolsSidebarProps) => {
+    mockToolsSidebarProps = props;
+    return <div data-testid="tools-sidebar" />;
+  },
 }));
 
 jest.mock("@/contexts/canvas-context", () => ({
@@ -60,6 +75,8 @@ const mockBuildMatchReplayRoundStates = jest.mocked(
   buildMatchReplayRoundStates,
 );
 const mockUseParams = jest.mocked(useParams);
+const mockUsePathname = jest.mocked(usePathname);
+const mockUseRouter = jest.mocked(useRouter);
 const mockUseSearchParams = jest.mocked(useSearchParams);
 
 const matchSummary = {
@@ -95,6 +112,17 @@ const matchSummary = {
       playerStats: [],
       eventLog: [],
     },
+    {
+      roundNumber: 2,
+      winningTeam: "Red",
+      roundResultCode: "Elimination",
+      scoreAfterRound: {
+        red: 1,
+        blue: 1,
+      },
+      playerStats: [],
+      eventLog: [],
+    },
   ],
 };
 
@@ -120,6 +148,11 @@ const seededRoundState = {
   editedPhases: [0],
 };
 
+const seededSecondRoundState = {
+  ...seededRoundState,
+  editedPhases: [0],
+};
+
 const createCanvasContext = (applyRemoteState: jest.Mock) =>
   ({
     agentsSettings: undefined,
@@ -139,8 +172,13 @@ const createCanvasContext = (applyRemoteState: jest.Mock) =>
 describe("MatchReplayPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockToolsSidebarProps = null;
 
     mockUseParams.mockReturnValue({ matchId: "match-1" });
+    mockUsePathname.mockReturnValue("/matches/match-1");
+    mockUseRouter.mockReturnValue({
+      replace: jest.fn(),
+    } as unknown as ReturnType<typeof useRouter>);
     mockUseSearchParams.mockReturnValue(
       new URLSearchParams("round=1") as unknown as ReturnType<
         typeof useSearchParams
@@ -166,6 +204,7 @@ describe("MatchReplayPage", () => {
     mockBuildMatchReplayRoundStates.mockReturnValue({
       roundStates: {
         1: seededRoundState,
+        2: seededSecondRoundState,
       },
       viewerTeamId: "Blue",
     });
@@ -191,6 +230,46 @@ describe("MatchReplayPage", () => {
     await waitFor(() => {
       expect(firstApplyRemoteState).toHaveBeenCalledTimes(1);
       expect(secondApplyRemoteState).not.toHaveBeenCalled();
+    });
+  });
+
+  it("syncs replay round changes into the query params", async () => {
+    const applyRemoteState = jest.fn();
+    const replace = jest.fn();
+
+    mockUseCanvas.mockImplementation(() =>
+      createCanvasContext(applyRemoteState),
+    );
+    mockUseRouter.mockReturnValue({
+      replace,
+    } as unknown as ReturnType<typeof useRouter>);
+    mockUseSearchParams.mockReturnValue(
+      new URLSearchParams("round=1&tab=replay") as unknown as ReturnType<
+        typeof useSearchParams
+      >,
+    );
+
+    render(<MatchReplayPage />);
+
+    await waitFor(() => {
+      expect(applyRemoteState).toHaveBeenCalledTimes(1);
+      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+        1,
+      );
+    });
+
+    act(() => {
+      mockToolsSidebarProps?.replayControls?.onSelectRound(2);
+    });
+
+    await waitFor(() => {
+      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+        2,
+      );
+      expect(replace).toHaveBeenCalledWith(
+        "/matches/match-1?round=2&tab=replay",
+        { scroll: false },
+      );
     });
   });
 });

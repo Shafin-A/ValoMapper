@@ -19,7 +19,12 @@ import { getPlayerSummary } from "@/lib/matches";
 import { UndoableState } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import {
   Suspense,
   useCallback,
@@ -32,6 +37,8 @@ import {
 
 const MatchReplayPage = () => {
   const params = useParams();
+  const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const matchId =
     typeof params?.matchId === "string" ? params.matchId : undefined;
@@ -50,6 +57,7 @@ const MatchReplayPage = () => {
   const stageRef = useRef<MapStageHandle | null>(null);
   const hydratedMatchIdRef = useRef<string | null>(null);
   const currentRoundRef = useRef<number | null>(null);
+  const pendingRoundQuerySyncRef = useRef<number | null>(null);
   const appliedRoundStateRef = useRef<{
     matchId: string | null;
     roundNumber: number | null;
@@ -125,6 +133,34 @@ const MatchReplayPage = () => {
     setRoundStates(replaySeed.roundStates);
     setSelectedRoundNumber(resolvedRoundNumber);
   }, [matchSummary, replaySeed, resolvedRoundNumber]);
+
+  useEffect(() => {
+    if (!pathname || roundOptions.length === 0) {
+      return;
+    }
+
+    const hasSelectedRound = roundOptions.some(
+      (round) => round.roundNumber === selectedRoundNumber,
+    );
+    if (!hasSelectedRound) {
+      return;
+    }
+
+    const nextRoundParam = selectedRoundNumber.toString();
+    if (searchParams.get("round") === nextRoundParam) {
+      if (pendingRoundQuerySyncRef.current === selectedRoundNumber) {
+        pendingRoundQuerySyncRef.current = null;
+      }
+      return;
+    }
+
+    pendingRoundQuerySyncRef.current = selectedRoundNumber;
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    nextSearchParams.set("round", nextRoundParam);
+    router.replace(`${pathname}?${nextSearchParams.toString()}`, {
+      scroll: false,
+    });
+  }, [pathname, router, roundOptions, searchParams, selectedRoundNumber]);
 
   useEffect(() => {
     const nextRoundState = roundStates[selectedRoundNumber];
@@ -237,16 +273,12 @@ const MatchReplayPage = () => {
     selectedMap,
   ]);
 
-  const handleSelectRound = useCallback(
+  const setReplayRound = useCallback(
     (roundNumber: number) => {
-      if (roundNumber === selectedRoundNumber) {
-        return;
-      }
-
       setRoundStates((prev) => {
         const currentRound = currentRoundRef.current;
 
-        if (currentRound == null) {
+        if (currentRound == null || currentRound === roundNumber) {
           return prev;
         }
 
@@ -257,7 +289,41 @@ const MatchReplayPage = () => {
       });
       setSelectedRoundNumber(roundNumber);
     },
-    [selectedRoundNumber, snapshotCurrentRoundState],
+    [snapshotCurrentRoundState],
+  );
+
+  useEffect(() => {
+    if (!matchSummary || roundOptions.length === 0) {
+      return;
+    }
+
+    if (selectedRoundNumber === resolvedRoundNumber) {
+      return;
+    }
+
+    if (pendingRoundQuerySyncRef.current === selectedRoundNumber) {
+      return;
+    }
+
+    setReplayRound(resolvedRoundNumber);
+  }, [
+    matchSummary,
+    resolvedRoundNumber,
+    roundOptions.length,
+    selectedRoundNumber,
+    setReplayRound,
+  ]);
+
+  const handleSelectRound = useCallback(
+    (roundNumber: number) => {
+      if (roundNumber === selectedRoundNumber) {
+        return;
+      }
+
+      pendingRoundQuerySyncRef.current = roundNumber;
+      setReplayRound(roundNumber);
+    },
+    [selectedRoundNumber, setReplayRound],
   );
 
   const handleSelectReplayPhase = useCallback(
@@ -380,7 +446,6 @@ const MatchReplayPage = () => {
           onSelectRound: handleSelectRound,
           onSelectEvent: (eventIndex) =>
             void handleSelectReplayPhase(eventIndex),
-          backHref: "/matches",
         }}
       />
 

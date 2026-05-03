@@ -25,13 +25,11 @@ import type { MatchPlayers, MatchRound } from "@/lib/matches";
 import { Vector2d } from "konva/lib/types";
 import {
   AlertCircle,
-  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Info,
   Loader2,
 } from "lucide-react";
-import Link from "next/link";
 import { RefObject, Suspense, useEffect } from "react";
 import { useState } from "react";
 import { MapStageHandle } from "@/components/canvas";
@@ -60,7 +58,6 @@ interface ReplayControls {
   currentPlayerPuuid?: string;
   onSelectRound: (roundNumber: number) => void;
   onSelectEvent: (eventIndex: number) => void;
-  backHref?: string;
 }
 
 interface ToolsSidebarProps {
@@ -291,14 +288,6 @@ export const ToolsSidebar = ({
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-base font-semibold">Rounds</span>
-                    {replayControls.backHref && (
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={replayControls.backHref}>
-                          <ArrowLeft className="mr-2 h-4 w-4" />
-                          Back
-                        </Link>
-                      </Button>
-                    )}
                   </div>
 
                   <div className="grid grid-cols-[auto_1fr_auto] gap-2">
@@ -322,14 +311,9 @@ export const ToolsSidebar = ({
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-12 justify-between border-slate-700 bg-slate-950 px-4 text-left text-white hover:bg-slate-900"
+                          className="h-12 justify-center border-slate-700 bg-slate-950 px-4 text-center text-base font-semibold text-white hover:bg-slate-900"
                         >
-                          <span className="text-base font-semibold">
-                            Round {replayControls.selectedRoundNumber}
-                          </span>
-                          <span className="text-xs uppercase tracking-[0.12em] text-white/55">
-                            {selectedReplayRound.eventLog.length} events
-                          </span>
+                          Round {replayControls.selectedRoundNumber}
                         </Button>
                       </SheetTrigger>
 
