@@ -5,7 +5,10 @@ import { useState, useRef, useCallback, useEffect } from "react";
 interface HistoryManagerConfig {
   getCurrentState: () => UndoableState;
   applyState: (state: UndoableState) => void;
-  onApplyHistoryState?: (state: UndoableState) => void;
+  onApplyHistoryState?: (
+    state: UndoableState,
+    previousState: UndoableState,
+  ) => void;
 }
 
 export const useHistoryManager = ({
@@ -94,15 +97,16 @@ export const useHistoryManager = ({
 
   const applyHistoryState = useCallback(
     (state: UndoableState) => {
+      const previousState = getCurrentState();
       isUpdatingFromHistory.current = true;
       lastSavedState.current = state;
       applyState(state);
-      onApplyHistoryState?.(state);
+      onApplyHistoryState?.(state, previousState);
       setTimeout(() => {
         isUpdatingFromHistory.current = false;
       }, 10);
     },
-    [applyState, onApplyHistoryState],
+    [applyState, getCurrentState, onApplyHistoryState],
   );
 
   const undo = useCallback(() => {

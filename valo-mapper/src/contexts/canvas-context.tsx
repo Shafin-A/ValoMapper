@@ -105,6 +105,9 @@ interface CanvasContextType {
   setHoveredElementId: Dispatch<SetStateAction<string | null>>;
   recenterCanvasCallback: RefObject<(() => void) | null>;
   onUndoRedoCallback: RefObject<(() => void) | null>;
+  onApplyHistoryStateCallback: RefObject<
+    ((state: UndoableState, previousState: UndoableState) => void) | null
+  >;
   notifyPhaseChangedCallback: RefObject<((phaseIndex: number) => void) | null>;
   showCallouts: boolean;
   setShowCallouts: Dispatch<SetStateAction<boolean>>;
@@ -133,7 +136,15 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
   initialPhaseCount,
   initialState,
 }) => {
-  const canvasState = useCanvasState({ initialPhaseCount, initialState });
+  const onApplyHistoryStateCallback = useRef<
+    ((state: UndoableState, previousState: UndoableState) => void) | null
+  >(null);
+  const canvasState = useCanvasState({
+    initialPhaseCount,
+    initialState,
+    onApplyHistoryState: (state, previousState) =>
+      onApplyHistoryStateCallback.current?.(state, previousState),
+  });
   const [hoveredElementId, setHoveredElementIdState] = useState<string | null>(
     null,
   );
@@ -164,6 +175,7 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
         setHoveredElementId,
         recenterCanvasCallback,
         onUndoRedoCallback,
+        onApplyHistoryStateCallback,
         notifyPhaseChangedCallback,
         isMapTransitioning,
         setIsMapTransitioning,

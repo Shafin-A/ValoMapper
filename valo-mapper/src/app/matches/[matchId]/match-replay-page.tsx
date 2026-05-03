@@ -56,6 +56,7 @@ const MatchReplayPage = () => {
   const hydratedMatchIdRef = useRef<string | null>(null);
   const currentRoundRef = useRef<number | null>(null);
   const pendingRoundQuerySyncRef = useRef<number | null>(null);
+  const issuedRoundQueryRef = useRef<number | null>(null);
   const appliedRoundStateRef = useRef<{
     matchId: string | null;
     roundNumber: number | null;
@@ -80,6 +81,7 @@ const MatchReplayPage = () => {
     editedPhases,
     isTransitioning,
     mapSide,
+    onApplyHistoryStateCallback,
     notifyPhaseChangedCallback,
     phases,
     selectedMap,
@@ -145,14 +147,27 @@ const MatchReplayPage = () => {
     }
 
     const nextRoundParam = selectedRoundNumber.toString();
-    if (searchParams.get("round") === nextRoundParam) {
-      if (pendingRoundQuerySyncRef.current === selectedRoundNumber) {
+    const currentRoundParam = searchParams.get("round");
+
+    if (
+      issuedRoundQueryRef.current != null &&
+      currentRoundParam === issuedRoundQueryRef.current.toString()
+    ) {
+      issuedRoundQueryRef.current = null;
+    }
+
+    const effectiveRoundParam = issuedRoundQueryRef.current
+      ? issuedRoundQueryRef.current.toString()
+      : currentRoundParam;
+
+    if (effectiveRoundParam === nextRoundParam) {
+      if (currentRoundParam === nextRoundParam) {
         pendingRoundQuerySyncRef.current = null;
       }
       return;
     }
 
-    pendingRoundQuerySyncRef.current = selectedRoundNumber;
+    issuedRoundQueryRef.current = selectedRoundNumber;
     const nextSearchParams = new URLSearchParams(searchParams.toString());
     nextSearchParams.set("round", nextRoundParam);
     router.replace(`${pathname}?${nextSearchParams.toString()}`, {
@@ -269,6 +284,70 @@ const MatchReplayPage = () => {
     mapSide,
     phases,
     selectedMap,
+  ]);
+
+  const findMatchingReplayRoundNumber = useCallback(
+    (
+      state: UndoableState,
+      states: Record<number, UndoableState> = roundStates,
+    ): number | null => {
+      const serializedState = JSON.stringify(state);
+
+      for (const [roundNumber, roundState] of Object.entries(states)) {
+        if (JSON.stringify(roundState) === serializedState) {
+          return Number(roundNumber);
+        }
+      }
+
+      return null;
+    },
+    [roundStates],
+  );
+
+  useEffect(() => {
+    onApplyHistoryStateCallback.current = (nextState, previousState) => {
+      const previousRoundNumber =
+        currentRoundRef.current ?? selectedRoundNumber;
+      const nextRoundNumber =
+        findMatchingReplayRoundNumber(nextState) ?? previousRoundNumber;
+      const nextRoundStates = { ...roundStates };
+
+      if (
+        previousRoundNumber != null &&
+        previousRoundNumber !== nextRoundNumber
+      ) {
+        nextRoundStates[previousRoundNumber] =
+          cloneUndoableState(previousState);
+      }
+
+      if (nextRoundNumber != null) {
+        const nextRoundState = cloneUndoableState(nextState);
+        nextRoundStates[nextRoundNumber] = nextRoundState;
+        appliedRoundStateRef.current = {
+          matchId: matchSummary?.matchId ?? null,
+          roundNumber: nextRoundNumber,
+          state: nextRoundState,
+        };
+      }
+
+      setRoundStates(nextRoundStates);
+
+      if (nextRoundNumber != null && nextRoundNumber !== selectedRoundNumber) {
+        pendingRoundQuerySyncRef.current = nextRoundNumber;
+        currentRoundRef.current = nextRoundNumber;
+        setSelectedRoundNumber(nextRoundNumber);
+      }
+    };
+
+    return () => {
+      onApplyHistoryStateCallback.current = null;
+    };
+  }, [
+    findMatchingReplayRoundNumber,
+    matchSummary?.matchId,
+    onApplyHistoryStateCallback,
+    roundStates,
+    selectedRoundNumber,
   ]);
 
   const setReplayRound = useCallback(

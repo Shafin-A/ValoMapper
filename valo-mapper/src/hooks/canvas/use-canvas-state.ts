@@ -17,11 +17,16 @@ import { parseTimestamp } from "@/lib/utils";
 interface UseCanvasStateOptions {
   initialPhaseCount?: number;
   initialState?: Partial<UndoableState>;
+  onApplyHistoryState?: (
+    state: UndoableState,
+    previousState: UndoableState,
+  ) => void;
 }
 
 export const useCanvasState = ({
   initialPhaseCount,
   initialState: providedInitialState,
+  onApplyHistoryState,
 }: UseCanvasStateOptions = {}) => {
   const params = useParams();
   const lobbyCode =
@@ -265,7 +270,7 @@ export const useCanvasState = ({
   const historyManager = useHistoryManager({
     getCurrentState,
     applyState,
-    onApplyHistoryState: () => {},
+    onApplyHistoryState,
   });
 
   const resetState = useCallback(

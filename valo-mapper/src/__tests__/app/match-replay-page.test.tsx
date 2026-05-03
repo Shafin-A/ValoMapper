@@ -164,6 +164,7 @@ const createCanvasContext = (applyRemoteState: jest.Mock) =>
     editedPhases: new Set([0]),
     isTransitioning: { current: false },
     mapSide: "attack",
+    onApplyHistoryStateCallback: { current: null },
     notifyPhaseChangedCallback: { current: null },
     phases: seededRoundState.phases,
     selectedMap: seededRoundState.selectedMap,
@@ -272,6 +273,56 @@ describe("MatchReplayPage", () => {
         "/matches/match-1?round=2&tab=replay",
         { scroll: false },
       );
+    });
+  });
+
+  it("syncs round label and query params after undo applies a previous round state", async () => {
+    const applyRemoteState = jest.fn();
+    const replace = jest.fn();
+    const currentCanvasContext = createCanvasContext(applyRemoteState);
+
+    mockUseCanvas.mockImplementation(() => currentCanvasContext);
+    mockUseRouter.mockReturnValue({
+      replace,
+    } as unknown as ReturnType<typeof useRouter>);
+    mockUseSearchParams.mockReturnValue(
+      new URLSearchParams("round=1") as unknown as ReturnType<
+        typeof useSearchParams
+      >,
+    );
+
+    render(<MatchReplayPage />);
+
+    await waitFor(() => {
+      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+        1,
+      );
+    });
+
+    act(() => {
+      mockToolsSidebarProps?.replayControls?.onSelectRound(2);
+    });
+
+    await waitFor(() => {
+      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+        2,
+      );
+    });
+
+    act(() => {
+      currentCanvasContext.onApplyHistoryStateCallback.current?.(
+        seededRoundState,
+        seededSecondRoundState,
+      );
+    });
+
+    await waitFor(() => {
+      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+        1,
+      );
+      expect(replace).toHaveBeenCalledWith("/matches/match-1?round=1", {
+        scroll: false,
+      });
     });
   });
 
