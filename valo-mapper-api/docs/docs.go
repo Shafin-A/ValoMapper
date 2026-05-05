@@ -2473,6 +2473,9 @@ const docTemplate = `{
                 "isAlly": {
                     "type": "boolean"
                 },
+                "isGray": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },

@@ -223,7 +223,7 @@ func TestSaveCanvasState(t *testing.T) {
 
 		canvasState.Phases[0] = PhaseState{
 			AgentsOnCanvas: []CanvasAgent{
-				{ID: "a1", AgentName: "Cypher", Role: "Sentinel", IsAlly: true, X: 10, Y: 20},
+				{ID: "a1", AgentName: "Cypher", Role: "Sentinel", IsAlly: true, IsGray: true, X: 10, Y: 20},
 			},
 		}
 
@@ -248,6 +248,7 @@ func TestSaveCanvasState(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, phases[0].AgentsOnCanvas, 1)
 		assert.Equal(t, "a1", phases[0].AgentsOnCanvas[0].ID)
+		assert.True(t, phases[0].AgentsOnCanvas[0].IsGray)
 	})
 
 	t.Run("rejects invalid image source in SaveCanvasState", func(t *testing.T) {

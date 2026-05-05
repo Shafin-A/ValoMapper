@@ -84,6 +84,46 @@ func TestApplyCanvasPatch(t *testing.T) {
 		assert.Equal(t, lobby.Code, returnedLobby.Code)
 	})
 
+	t.Run("persists agent dead state through patch updates", func(t *testing.T) {
+		payload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{
+			Entity:     "agent",
+			Action:     "upsert",
+			PhaseIndex: 0,
+			ID:         "a-dead",
+			Payload: map[string]any{
+				"id":     "a-dead",
+				"name":   "Cypher",
+				"isAlly": true,
+				"isGray": true,
+				"x":      64,
+				"y":      96,
+			},
+		}}}
+		body, err := json.Marshal(payload)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(body)))
+		req.Header.Set("Content-Type", "application/json")
+		w := executeCanvasPatchRequest(req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		phases, err := models.GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		require.NotEmpty(t, phases[0].AgentsOnCanvas)
+
+		var deadAgent *models.CanvasAgent
+		for i := range phases[0].AgentsOnCanvas {
+			if phases[0].AgentsOnCanvas[i].ID == "a-dead" {
+				deadAgent = &phases[0].AgentsOnCanvas[i]
+				break
+			}
+		}
+
+		require.NotNil(t, deadAgent)
+		assert.True(t, deadAgent.IsGray)
+	})
+
 	t.Run("preserves image src after update without src", func(t *testing.T) {
 		// Add an image anchor with src
 		addPayload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{Entity: "image", Action: "add", PhaseIndex: 0, ID: "img1", Payload: map[string]any{"id": "img1", "src": "https://example.com/pic.png", "x": 100, "y": 100, "width": 150, "height": 150}}}}

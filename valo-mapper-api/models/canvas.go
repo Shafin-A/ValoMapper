@@ -40,6 +40,7 @@ type CanvasAgent struct {
 	AgentName string  `json:"name"`
 	Role      string  `json:"role"`
 	IsAlly    bool    `json:"isAlly"`
+	IsGray    bool    `json:"isGray"`
 	X         float64 `json:"x"`
 	Y         float64 `json:"y"`
 }

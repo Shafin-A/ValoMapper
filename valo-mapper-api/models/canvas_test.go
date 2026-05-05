@@ -27,6 +27,7 @@ func TestFullCanvasStateSerialization(t *testing.T) {
 							AgentName: "Jett",
 							Role:      "Duelist",
 							IsAlly:    true,
+							IsGray:    true,
 							X:         100.5,
 							Y:         200.5,
 						},
@@ -181,6 +182,7 @@ func TestCanvasAgentSerialization(t *testing.T) {
 			AgentName: "Omen",
 			Role:      "Controller",
 			IsAlly:    false,
+			IsGray:    true,
 			X:         150.75,
 			Y:         250.25,
 		}
@@ -196,6 +198,7 @@ func TestCanvasAgentSerialization(t *testing.T) {
 		assert.Equal(t, agent.AgentName, decoded.AgentName)
 		assert.Equal(t, agent.Role, decoded.Role)
 		assert.Equal(t, agent.IsAlly, decoded.IsAlly)
+		assert.Equal(t, agent.IsGray, decoded.IsGray)
 		assert.Equal(t, agent.X, decoded.X)
 		assert.Equal(t, agent.Y, decoded.Y)
 	})
