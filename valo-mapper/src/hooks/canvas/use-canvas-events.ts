@@ -185,6 +185,7 @@ export const useCanvasEvents = (
     handleSwapAbility,
     handleToggleAbilityIconOnly,
     handleToggleAbilityOuterCircle,
+    handleRemoveAttachedVisionCone,
     handleDetachVisionCone,
   } = useCanvasContextMenu(
     stageRef,
@@ -508,6 +509,7 @@ export const useCanvasEvents = (
     handleSwapAbility,
     handleToggleAbilityIconOnly,
     handleToggleAbilityOuterCircle,
+    handleRemoveAttachedVisionCone,
     handleDetachVisionCone,
     handleTouchStart,
     handleTouchMove,

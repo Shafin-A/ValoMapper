@@ -613,6 +613,39 @@ export const useCanvasContextMenu = (
     closeContextMenu,
   ]);
 
+  const handleRemoveAttachedVisionCone = useCallback(() => {
+    if (!contextMenu.open) return;
+
+    const { itemId, itemType } = contextMenu;
+
+    const hostId =
+      itemType === "agent" || itemType === "tool"
+        ? itemId
+        : itemType === "ability"
+          ? (() => {
+              const ability = abilitiesOnCanvas.find((a) => a.id === itemId);
+              return ability && !isVisionConeAction(ability.action)
+                ? ability.id
+                : null;
+            })()
+          : null;
+
+    if (
+      !hostId ||
+      getAttachedVisionConeIds(abilitiesOnCanvas, hostId).length === 0
+    ) {
+      return;
+    }
+
+    removeAttachedVisionCones(hostId);
+    closeContextMenu();
+  }, [
+    contextMenu,
+    abilitiesOnCanvas,
+    removeAttachedVisionCones,
+    closeContextMenu,
+  ]);
+
   const handleDetachVisionCone = useCallback(() => {
     if (!contextMenu.open || contextMenu.itemType !== "ability") return;
 
@@ -665,6 +698,7 @@ export const useCanvasContextMenu = (
     handleSwapAbility,
     handleToggleAbilityIconOnly,
     handleToggleAbilityOuterCircle,
+    handleRemoveAttachedVisionCone,
     handleDetachVisionCone,
     closeContextMenu,
   };

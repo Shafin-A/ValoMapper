@@ -24,6 +24,10 @@ import {
   findAbilityDefinitionByAction,
   getAbilityVariants,
 } from "@/lib/consts/configs/agent-icon/consts";
+import {
+  getAttachedVisionConeIds,
+  isVisionConeAction,
+} from "@/lib/vision-cone-utils";
 import { FullscreenImageModal } from "./fullscreen-image-modal";
 import { LineupViewDialog } from "./lineup-view-dialog";
 import { AbilityCanvas, ConnectingLine } from "@/lib/types";
@@ -78,6 +82,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       handleSwapAbility,
       handleToggleAbilityIconOnly,
       handleToggleAbilityOuterCircle,
+      handleRemoveAttachedVisionCone,
       handleDetachVisionCone,
       handlePopoverOpenChange,
       handleDragMove,
@@ -174,6 +179,34 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
         return def ? getAbilityVariants(def).length > 1 : false;
       })();
 
+    const canRemoveAttachedVisionCone =
+      contextMenu.open &&
+      (() => {
+        if (
+          contextMenu.itemType === "agent" ||
+          contextMenu.itemType === "tool"
+        ) {
+          return (
+            getAttachedVisionConeIds(abilitiesOnCanvas, contextMenu.itemId)
+              .length > 0
+          );
+        }
+
+        if (contextMenu.itemType !== "ability") {
+          return false;
+        }
+
+        const ability = abilitiesOnCanvas.find(
+          (item) => item.id === contextMenu.itemId,
+        );
+
+        return Boolean(
+          ability &&
+          !isVisionConeAction(ability.action) &&
+          getAttachedVisionConeIds(abilitiesOnCanvas, ability.id).length > 0,
+        );
+      })();
+
     return (
       <div
         style={{
@@ -265,6 +298,11 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           onToggleAbilityOuterCircle={
             contextMenu.itemType === "ability"
               ? handleToggleAbilityOuterCircle
+              : undefined
+          }
+          onRemoveAttachedVisionCone={
+            canRemoveAttachedVisionCone
+              ? handleRemoveAttachedVisionCone
               : undefined
           }
           onDetachVisionCone={

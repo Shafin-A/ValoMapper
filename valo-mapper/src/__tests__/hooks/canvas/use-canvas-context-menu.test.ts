@@ -496,6 +496,123 @@ describe("useCanvasContextMenu", () => {
     });
   });
 
+  it("removes an attached vision cone from an agent host", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    const agents: AgentCanvas[] = [
+      { id: "a1", name: "Jett", role: "Duelist", isAlly: true, x: 40, y: 50 },
+    ];
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: "cone-1",
+        name: "Vision Cone 60",
+        action: "vision_cone_60",
+        isAlly: true,
+        x: 40,
+        y: 50,
+        attachedToId: "a1",
+      },
+    ];
+
+    const setAbilities = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        agents,
+        jest.fn(),
+        abilitiesState,
+        setAbilities,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "a1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleRemoveAttachedVisionCone();
+    });
+
+    expect(abilitiesState).toHaveLength(0);
+  });
+
+  it("removes an attached vision cone from an ability host", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: "ability-1",
+        name: "knife",
+        action: "kayo_knife",
+        isAlly: true,
+        x: 10,
+        y: 20,
+      },
+      {
+        id: "cone-1",
+        name: "Vision Cone 60",
+        action: "vision_cone_60",
+        isAlly: true,
+        x: 10,
+        y: 20,
+        attachedToId: "ability-1",
+      },
+    ];
+
+    const setAbilities = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        [],
+        jest.fn(),
+        abilitiesState,
+        setAbilities,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "ability-1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleRemoveAttachedVisionCone();
+    });
+
+    expect(abilitiesState).toEqual([
+      expect.objectContaining({
+        id: "ability-1",
+      }),
+    ]);
+  });
+
   it("toggles ally flag for an agent", () => {
     const stageRef = { current: createStageMock() as unknown as Stage };
     let agentsState: AgentCanvas[] = [

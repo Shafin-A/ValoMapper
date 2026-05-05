@@ -16,6 +16,7 @@ import { CIRCLE_ABILITY_CONFIGS, ARC_ABILITY_CONFIGS } from "@/lib/consts";
 import {
   CircleDashed,
   Copy,
+  Eye,
   Heart,
   HeartCrack,
   Minus,
@@ -39,6 +40,7 @@ interface ContextMenuPopoverProps {
   onSwapAbility?: () => void;
   onToggleAbilityIconOnly?: () => void;
   onToggleAbilityOuterCircle?: () => void;
+  onRemoveAttachedVisionCone?: () => void;
   onDetachVisionCone?: () => void;
   onDelete: () => void;
 }
@@ -95,6 +97,7 @@ export const ContextMenuPopover = ({
   onSwapAbility,
   onToggleAbilityIconOnly,
   onToggleAbilityOuterCircle,
+  onRemoveAttachedVisionCone,
   onDetachVisionCone,
   onDelete,
 }: ContextMenuPopoverProps) => {
@@ -107,6 +110,7 @@ export const ContextMenuPopover = ({
   const snapshotHasSwap = useRef(false);
   const snapshotHasIconOnly = useRef(false);
   const snapshotHasOuterCircle = useRef(false);
+  const snapshotHasRemoveAttachedVisionCone = useRef(false);
   const snapshotHasDetachVisionCone = useRef(false);
   const snapshotAbilityIconOnly = useRef(false);
   const snapshotAbilityShowOuterCircle = useRef(true);
@@ -114,6 +118,7 @@ export const ContextMenuPopover = ({
   const onSwapAbilityRef = useRef(onSwapAbility);
   const onToggleAbilityIconOnlyRef = useRef(onToggleAbilityIconOnly);
   const onToggleAbilityOuterCircleRef = useRef(onToggleAbilityOuterCircle);
+  const onRemoveAttachedVisionConeRef = useRef(onRemoveAttachedVisionCone);
   const onDetachVisionConeRef = useRef(onDetachVisionCone);
 
   const pendingSnapshot = useRef({
@@ -122,6 +127,7 @@ export const ContextMenuPopover = ({
     onSwapAbility,
     onToggleAbilityIconOnly,
     onToggleAbilityOuterCircle,
+    onRemoveAttachedVisionCone,
     onDetachVisionCone,
   });
   pendingSnapshot.current = {
@@ -130,12 +136,14 @@ export const ContextMenuPopover = ({
     onSwapAbility,
     onToggleAbilityIconOnly,
     onToggleAbilityOuterCircle,
+    onRemoveAttachedVisionCone,
     onDetachVisionCone,
   };
 
   onSwapAbilityRef.current = onSwapAbility;
   onToggleAbilityIconOnlyRef.current = onToggleAbilityIconOnly;
   onToggleAbilityOuterCircleRef.current = onToggleAbilityOuterCircle;
+  onRemoveAttachedVisionConeRef.current = onRemoveAttachedVisionCone;
   onDetachVisionConeRef.current = onDetachVisionCone;
 
   useEffect(() => {
@@ -147,6 +155,7 @@ export const ContextMenuPopover = ({
       onSwapAbility,
       onToggleAbilityIconOnly,
       onToggleAbilityOuterCircle,
+      onRemoveAttachedVisionCone,
       onDetachVisionCone,
     } = pendingSnapshot.current;
 
@@ -185,6 +194,9 @@ export const ContextMenuPopover = ({
       Boolean(onToggleAbilityIconOnly) && !isIconAbility;
     snapshotHasOuterCircle.current =
       abilityHasOuterCircle && Boolean(onToggleAbilityOuterCircle);
+    snapshotHasRemoveAttachedVisionCone.current = Boolean(
+      onRemoveAttachedVisionCone,
+    );
     snapshotHasDetachVisionCone.current =
       Boolean(onDetachVisionCone) &&
       Boolean(abilityItem?.attachedToId) &&
@@ -323,6 +335,31 @@ export const ContextMenuPopover = ({
                     {snapshotAbilityShowOuterCircle.current && (
                       <Minus className="absolute rotate-135 text-destructive size-8" />
                     )}
+                  </span>
+                </Button>
+              </ConditionalTooltip>
+
+              <Separator
+                orientation="vertical"
+                className="data-[orientation=vertical]:h-6"
+              />
+            </>
+          )}
+
+          {snapshotHasRemoveAttachedVisionCone.current && (
+            <>
+              <ConditionalTooltip
+                enabled={allowTooltips}
+                content="Remove Vision Cone"
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveAttachedVisionConeRef.current?.()}
+                >
+                  <span className="relative inline-flex items-center justify-center size-4 overflow-visible">
+                    <Eye className="size-4" />
+                    <Minus className="absolute rotate-135 text-destructive size-8" />
                   </span>
                 </Button>
               </ConditionalTooltip>
