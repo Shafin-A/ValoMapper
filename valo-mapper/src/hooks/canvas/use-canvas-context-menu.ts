@@ -532,6 +532,30 @@ export const useCanvasContextMenu = (
     notifyAbilityMoved,
   ]);
 
+  const handleToggleAgentDead = useCallback(() => {
+    if (!contextMenu.open || contextMenu.itemType !== "agent") return;
+
+    const agent = agentsOnCanvas.find((item) => item.id === contextMenu.itemId);
+    if (!agent) return;
+
+    const updatedAgent: AgentCanvas = {
+      ...agent,
+      isGray: !agent.isGray,
+    };
+
+    setAgentsOnCanvas((prev) =>
+      prev.map((item) => (item.id === agent.id ? updatedAgent : item)),
+    );
+    notifyAgentMoved(updatedAgent);
+    closeContextMenu();
+  }, [
+    contextMenu,
+    agentsOnCanvas,
+    setAgentsOnCanvas,
+    notifyAgentMoved,
+    closeContextMenu,
+  ]);
+
   const handleSwapAbility = useCallback(() => {
     if (!contextMenu.open || contextMenu.itemType !== "ability") return;
 
@@ -695,6 +719,7 @@ export const useCanvasContextMenu = (
     handleDuplicate,
     handleDelete,
     handleToggleAlly,
+    handleToggleAgentDead,
     handleSwapAbility,
     handleToggleAbilityIconOnly,
     handleToggleAbilityOuterCircle,

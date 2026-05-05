@@ -655,6 +655,56 @@ describe("useCanvasContextMenu", () => {
     expect(agentsState[0].isAlly).toBe(true);
   });
 
+  it("toggles dead state for an agent", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    let agentsState: AgentCanvas[] = [
+      {
+        id: "a1",
+        name: "Sova",
+        role: "Initiator",
+        isAlly: false,
+        isGray: false,
+        x: 0,
+        y: 0,
+      },
+    ];
+    const setAgents = jest.fn((updater) => {
+      agentsState =
+        typeof updater === "function" ? updater(agentsState) : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        agentsState,
+        setAgents,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "a1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleToggleAgentDead();
+    });
+
+    expect(agentsState[0].isGray).toBe(true);
+  });
+
   it("toggles outer circle for circle ability", () => {
     const stageRef = { current: createStageMock() as unknown as Stage };
     let abilitiesState: AbilityCanvas[] = [

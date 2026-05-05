@@ -16,12 +16,14 @@ import { CIRCLE_ABILITY_CONFIGS, ARC_ABILITY_CONFIGS } from "@/lib/consts";
 import {
   CircleDashed,
   Copy,
+  Cross,
   Eye,
   Heart,
   HeartCrack,
   Minus,
   RefreshCw,
   Shapes,
+  Skull,
   Trash2,
 } from "lucide-react";
 import { Separator } from "../ui/separator";
@@ -37,6 +39,7 @@ interface ContextMenuPopoverProps {
   onOpenChange: (open: boolean) => void;
   onDuplicate: () => void;
   onToggleAlly: () => void;
+  onToggleAgentDead?: () => void;
   onSwapAbility?: () => void;
   onToggleAbilityIconOnly?: () => void;
   onToggleAbilityOuterCircle?: () => void;
@@ -94,6 +97,7 @@ export const ContextMenuPopover = ({
   onOpenChange,
   onDuplicate,
   onToggleAlly,
+  onToggleAgentDead,
   onSwapAbility,
   onToggleAbilityIconOnly,
   onToggleAbilityOuterCircle,
@@ -107,6 +111,8 @@ export const ContextMenuPopover = ({
   const snapshotItemType = useRef(itemType);
   const snapshotItem = useRef(currentItem);
   const snapshotIsAlly = useRef(false);
+  const snapshotIsGray = useRef(false);
+  const snapshotHasAgentDeadToggle = useRef(false);
   const snapshotHasSwap = useRef(false);
   const snapshotHasIconOnly = useRef(false);
   const snapshotHasOuterCircle = useRef(false);
@@ -116,6 +122,7 @@ export const ContextMenuPopover = ({
   const snapshotAbilityShowOuterCircle = useRef(true);
 
   const onSwapAbilityRef = useRef(onSwapAbility);
+  const onToggleAgentDeadRef = useRef(onToggleAgentDead);
   const onToggleAbilityIconOnlyRef = useRef(onToggleAbilityIconOnly);
   const onToggleAbilityOuterCircleRef = useRef(onToggleAbilityOuterCircle);
   const onRemoveAttachedVisionConeRef = useRef(onRemoveAttachedVisionCone);
@@ -124,6 +131,7 @@ export const ContextMenuPopover = ({
   const pendingSnapshot = useRef({
     itemType,
     currentItem,
+    onToggleAgentDead,
     onSwapAbility,
     onToggleAbilityIconOnly,
     onToggleAbilityOuterCircle,
@@ -133,6 +141,7 @@ export const ContextMenuPopover = ({
   pendingSnapshot.current = {
     itemType,
     currentItem,
+    onToggleAgentDead,
     onSwapAbility,
     onToggleAbilityIconOnly,
     onToggleAbilityOuterCircle,
@@ -141,6 +150,7 @@ export const ContextMenuPopover = ({
   };
 
   onSwapAbilityRef.current = onSwapAbility;
+  onToggleAgentDeadRef.current = onToggleAgentDead;
   onToggleAbilityIconOnlyRef.current = onToggleAbilityIconOnly;
   onToggleAbilityOuterCircleRef.current = onToggleAbilityOuterCircle;
   onRemoveAttachedVisionConeRef.current = onRemoveAttachedVisionCone;
@@ -152,6 +162,7 @@ export const ContextMenuPopover = ({
     const {
       itemType,
       currentItem,
+      onToggleAgentDead,
       onSwapAbility,
       onToggleAbilityIconOnly,
       onToggleAbilityOuterCircle,
@@ -189,6 +200,12 @@ export const ContextMenuPopover = ({
       currentItem && isAllyItem(currentItem, itemType)
         ? currentItem.isAlly
         : false;
+    snapshotIsGray.current =
+      itemType === "agent"
+        ? Boolean((currentItem as AgentCanvas | null)?.isGray)
+        : false;
+    snapshotHasAgentDeadToggle.current =
+      itemType === "agent" && Boolean(onToggleAgentDead);
     snapshotHasSwap.current = Boolean(onSwapAbility);
     snapshotHasIconOnly.current =
       Boolean(onToggleAbilityIconOnly) && !isIconAbility;
@@ -259,6 +276,30 @@ export const ContextMenuPopover = ({
                   orientation="vertical"
                   className="data-[orientation=vertical]:h-6"
                 />
+
+                {snapshotHasAgentDeadToggle.current && (
+                  <>
+                    <ConditionalTooltip
+                      enabled={allowTooltips}
+                      content={
+                        snapshotIsGray.current ? "Revive Agent" : "Kill Agent"
+                      }
+                    >
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onToggleAgentDeadRef.current?.()}
+                      >
+                        {snapshotIsGray.current ? <Cross /> : <Skull />}
+                      </Button>
+                    </ConditionalTooltip>
+
+                    <Separator
+                      orientation="vertical"
+                      className="data-[orientation=vertical]:h-6"
+                    />
+                  </>
+                )}
               </>
             )}
 
