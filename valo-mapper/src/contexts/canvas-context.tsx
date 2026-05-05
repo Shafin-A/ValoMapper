@@ -96,6 +96,7 @@ interface CanvasContextType {
   ) => Promise<void>;
   registerNode: (id: string, node: Konva.Node) => void;
   unregisterNode: (id: string) => void;
+  getRegisteredNode: (id: string) => Konva.Node | undefined;
   isTransitioning: RefObject<boolean>;
   applyRemoteState: (state: UndoableState) => void;
   isLoadingLobby: boolean;

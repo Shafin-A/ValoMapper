@@ -1,15 +1,18 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
+import {
+  applyVisionConeAttachment,
+  findVisionConeAttachmentTarget,
+  isVisionConeAction,
+} from "@/lib/vision-cone-utils";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import { getNextId, isAgent } from "@/lib/utils";
 import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
 import { useCallback, useRef, useEffect } from "react";
-import {
-  useCanvasContextMenu,
-  useCanvasDrawing,
-  useCanvasZoom,
-} from "@/hooks/canvas";
+import { useCanvasContextMenu } from "./use-canvas-context-menu";
+import { useCanvasDrawing } from "./use-canvas-drawing";
+import { useCanvasZoom } from "./use-canvas-zoom";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
 export const useCanvasEvents = (
@@ -43,10 +46,15 @@ export const useCanvasEvents = (
     setCurrentStroke,
   } = useCanvas();
 
-  const { drawSettings, eraserSettings } = useSettings();
+  const { agentsSettings, abilitiesSettings, drawSettings, eraserSettings } =
+    useSettings();
 
-  const { notifyAgentAdded, notifyAbilityAdded, notifyToolIconAdded } =
-    useCollaborativeCanvas();
+  const {
+    notifyAgentAdded,
+    notifyAbilityAdded,
+    notifyAbilityRemoved,
+    notifyToolIconAdded,
+  } = useCollaborativeCanvas();
 
   const frameRef = useRef<number | null>(null);
 
@@ -177,6 +185,7 @@ export const useCanvasEvents = (
     handleSwapAbility,
     handleToggleAbilityIconOnly,
     handleToggleAbilityOuterCircle,
+    handleDetachVisionCone,
   } = useCanvasContextMenu(
     stageRef,
     agentsOnCanvas,
@@ -233,19 +242,38 @@ export const useCanvasEvents = (
         const tempAbility = abilitiesOnCanvas.find(
           (a) => a.id === TEMP_DRAG_ID,
         );
+        const attachmentTarget = isVisionConeAction(selectedCanvasIcon.action)
+          ? findVisionConeAttachmentTarget({
+              point: pos,
+              agentsOnCanvas,
+              abilitiesOnCanvas,
+              toolIconsOnCanvas,
+              agentsSettings,
+              abilitiesSettings,
+              excludeId: TEMP_DRAG_ID,
+            })
+          : null;
         const newAbility = {
           ...selectedCanvasIcon,
           id: newId,
-          x: pos.x,
-          y: pos.y,
+          x: attachmentTarget?.x ?? pos.x,
+          y: attachmentTarget?.y ?? pos.y,
           isAlly: tempAbility?.isAlly ?? true,
           iconOnly: tempAbility?.iconOnly ?? false,
           showOuterCircle: tempAbility?.showOuterCircle ?? true,
+          attachedToId: attachmentTarget?.id,
         };
-        setAbilitiesOnCanvas((prev) =>
-          prev.map((ability) =>
-            ability.id === TEMP_DRAG_ID ? newAbility : ability,
-          ),
+
+        const { nextAbilitiesOnCanvas, removedAbilityIds } =
+          applyVisionConeAttachment({
+            abilitiesOnCanvas,
+            previousAbilityId: TEMP_DRAG_ID,
+            nextAbility: newAbility,
+          });
+
+        setAbilitiesOnCanvas(nextAbilitiesOnCanvas);
+        removedAbilityIds.forEach((abilityId) =>
+          notifyAbilityRemoved(abilityId),
         );
         notifyAbilityAdded(newAbility);
       } else {
@@ -269,6 +297,9 @@ export const useCanvasEvents = (
       selectedCanvasIcon,
       agentsOnCanvas,
       abilitiesOnCanvas,
+      toolIconsOnCanvas,
+      agentsSettings,
+      abilitiesSettings,
       setAbilitiesOnCanvas,
       setAgentsOnCanvas,
       setToolIconsOnCanvas,
@@ -276,6 +307,7 @@ export const useCanvasEvents = (
       stageRef,
       notifyAgentAdded,
       notifyAbilityAdded,
+      notifyAbilityRemoved,
       notifyToolIconAdded,
     ],
   );
@@ -476,6 +508,7 @@ export const useCanvasEvents = (
     handleSwapAbility,
     handleToggleAbilityIconOnly,
     handleToggleAbilityOuterCircle,
+    handleDetachVisionCone,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,

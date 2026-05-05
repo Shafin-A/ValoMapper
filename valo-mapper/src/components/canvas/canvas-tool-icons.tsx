@@ -1,6 +1,10 @@
 import { CanvasIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import {
+  getAttachedVisionConeIds,
+  syncAttachedVisionConeNodePositions,
+} from "@/lib/vision-cone-utils";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import Konva from "konva";
@@ -14,17 +18,36 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
   const {
     toolIconsOnCanvas,
     setToolIconsOnCanvas,
+    abilitiesOnCanvas,
+    setAbilitiesOnCanvas,
     isDrawMode,
     registerNode,
     unregisterNode,
+    getRegisteredNode,
     setHoveredElementId,
     selectedCanvasIcon,
     editingTextId,
     isSidebarDragActive,
   } = useCanvas();
 
-  const { notifyToolIconMoved, notifyToolIconRemoved } =
+  const { notifyToolIconMoved, notifyToolIconRemoved, notifyAbilityRemoved } =
     useCollaborativeCanvas();
+
+  const removeAttachedVisionCones = (hostId: string) => {
+    const removedAbilityIds = getAttachedVisionConeIds(
+      abilitiesOnCanvas,
+      hostId,
+    );
+    if (removedAbilityIds.length === 0) {
+      return;
+    }
+
+    const removedIds = new Set(removedAbilityIds);
+    setAbilitiesOnCanvas((prev) =>
+      prev.filter((ability) => !removedIds.has(ability.id)),
+    );
+    removedAbilityIds.forEach((abilityId) => notifyAbilityRemoved(abilityId));
+  };
 
   return toolIconsOnCanvas.map((toolIcon) => {
     if (isSidebarDragActive && toolIcon.id === TEMP_DRAG_ID) {
@@ -51,7 +74,15 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
           src={`/tools/${toolIcon.name}.webp`}
           draggable={!isDrawMode && !editingTextId}
           isListening={!isDrawMode && !editingTextId}
-          onDragMove={(e) => handleDragMove(e, deleteGroupRef)}
+          onDragMove={(e) => {
+            handleDragMove(e, deleteGroupRef);
+            syncAttachedVisionConeNodePositions({
+              hostId: toolIcon.id,
+              hostNode: e.target,
+              abilitiesOnCanvas,
+              getRegisteredNode,
+            });
+          }}
           onDragEnd={(e) => {
             handleDragEnd(
               e,
@@ -63,6 +94,7 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
               undefined,
               notifyToolIconRemoved,
               notifyToolIconMoved,
+              () => removeAttachedVisionCones(toolIcon.id),
             );
           }}
           width={toolIcon.width}

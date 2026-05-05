@@ -204,11 +204,12 @@ func TestCanvasAgentSerialization(t *testing.T) {
 func TestCanvasAbilitySerialization(t *testing.T) {
 	t.Run("serializes ability with optional fields", func(t *testing.T) {
 		ability := CanvasAbility{
-			ID:        "ability-1",
-			AgentName: "Viper",
-			Action:    "smoke",
-			X:         100,
-			Y:         200,
+			ID:           "ability-1",
+			AgentName:    "Viper",
+			Action:       "smoke",
+			X:            100,
+			Y:            200,
+			AttachedToID: "agent-1",
 			CurrentPath: []Position{
 				{X: 10, Y: 20},
 				{X: 30, Y: 40},
@@ -227,6 +228,7 @@ func TestCanvasAbilitySerialization(t *testing.T) {
 
 		assert.Equal(t, ability.ID, decoded.ID)
 		assert.Equal(t, ability.AgentName, decoded.AgentName)
+		assert.Equal(t, ability.AttachedToID, decoded.AttachedToID)
 		assert.Len(t, decoded.CurrentPath, 2)
 		assert.Equal(t, ability.CurrentLength, decoded.CurrentLength)
 		assert.Equal(t, ability.CurrentRotation, decoded.CurrentRotation)
@@ -250,6 +252,7 @@ func TestCanvasAbilitySerialization(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, ability.ID, decoded.ID)
+		assert.Empty(t, decoded.AttachedToID)
 		assert.Nil(t, decoded.CurrentPath)
 		assert.Zero(t, decoded.CurrentLength)
 		assert.Zero(t, decoded.CurrentRotation)

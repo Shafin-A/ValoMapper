@@ -10,6 +10,11 @@ import {
   ToolIconCanvas,
 } from "@/lib/types";
 import { getNextId } from "@/lib/utils";
+import {
+  findVisionConeAttachmentHost,
+  getAttachedVisionConeIds,
+  isVisionConeAction,
+} from "@/lib/vision-cone-utils";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import {
   findAbilityDefinitionByAction,
@@ -167,6 +172,75 @@ export const useCanvasContextMenu = (
     setContextMenu((prev) => ({ ...prev, open }));
   }, []);
 
+  const removeAttachedVisionCones = useCallback(
+    (hostId: string) => {
+      const removedAbilityIds = getAttachedVisionConeIds(
+        abilitiesOnCanvas,
+        hostId,
+      );
+      if (removedAbilityIds.length === 0) {
+        return;
+      }
+
+      const removedIds = new Set(removedAbilityIds);
+      setAbilitiesOnCanvas((prev) =>
+        prev.filter((ability) => !removedIds.has(ability.id)),
+      );
+      removedAbilityIds.forEach((abilityId) => notifyAbilityRemoved(abilityId));
+    },
+    [abilitiesOnCanvas, setAbilitiesOnCanvas, notifyAbilityRemoved],
+  );
+
+  const removeAbilityWithAttachedVisionCones = useCallback(
+    (abilityId: string) => {
+      const removedAbilityIds = [
+        abilityId,
+        ...getAttachedVisionConeIds(abilitiesOnCanvas, abilityId),
+      ];
+      const removedIds = new Set(removedAbilityIds);
+
+      if (!abilitiesOnCanvas.some((ability) => removedIds.has(ability.id))) {
+        return;
+      }
+
+      setAbilitiesOnCanvas((prev) =>
+        prev.filter((ability) => !removedIds.has(ability.id)),
+      );
+      removedAbilityIds.forEach((removedAbilityId) =>
+        notifyAbilityRemoved(removedAbilityId),
+      );
+    },
+    [abilitiesOnCanvas, setAbilitiesOnCanvas, notifyAbilityRemoved],
+  );
+
+  const duplicateAttachedVisionConesForHost = useCallback(
+    (hostId: string, duplicatedHostId: string, x: number, y: number) => {
+      const attachedCone = [...abilitiesOnCanvas]
+        .reverse()
+        .find(
+          (ability) =>
+            isVisionConeAction(ability.action) &&
+            ability.attachedToId === hostId,
+        );
+
+      if (!attachedCone) {
+        return;
+      }
+
+      const duplicatedCone = {
+        ...attachedCone,
+        id: getNextId("ability"),
+        x,
+        y,
+        attachedToId: duplicatedHostId,
+      };
+
+      setAbilitiesOnCanvas((prev) => [...prev, duplicatedCone]);
+      notifyAbilityAdded(duplicatedCone);
+    },
+    [abilitiesOnCanvas, setAbilitiesOnCanvas, notifyAbilityAdded],
+  );
+
   const handleDuplicate = useCallback(async () => {
     if (!contextMenu.open) return;
 
@@ -180,17 +254,90 @@ export const useCanvasContextMenu = (
           setAgentsOnCanvas,
           itemType,
         );
-        if (newAgent) notifyAgentAdded(newAgent as AgentCanvas);
+        if (newAgent) {
+          notifyAgentAdded(newAgent as AgentCanvas);
+          duplicateAttachedVisionConesForHost(
+            itemId,
+            newAgent.id,
+            newAgent.x,
+            newAgent.y,
+          );
+        }
         break;
       }
       case "ability": {
+        const ability = abilitiesOnCanvas.find((item) => item.id === itemId);
+        if (!ability) {
+          break;
+        }
+
+        const attachedAbilityHost =
+          isVisionConeAction(ability.action) && ability.attachedToId
+            ? abilitiesOnCanvas.find(
+                (item) =>
+                  item.id === ability.attachedToId &&
+                  !isVisionConeAction(item.action),
+              )
+            : undefined;
+
+        if (attachedAbilityHost) {
+          const newAbility = duplicateItem(
+            abilitiesOnCanvas,
+            attachedAbilityHost.id,
+            setAbilitiesOnCanvas,
+            itemType,
+          );
+          if (newAbility) {
+            notifyAbilityAdded(newAbility as AbilityCanvas);
+            duplicateAttachedVisionConesForHost(
+              attachedAbilityHost.id,
+              newAbility.id,
+              newAbility.x,
+              newAbility.y,
+            );
+          }
+          break;
+        }
+
+        if (isVisionConeAction(ability.action)) {
+          const attachmentHost = findVisionConeAttachmentHost({
+            attachedToId: ability.attachedToId,
+            agentsOnCanvas,
+            abilitiesOnCanvas,
+            toolIconsOnCanvas,
+            excludeId: ability.id,
+          });
+          const originX = attachmentHost?.x ?? ability.x;
+          const originY = attachmentHost?.y ?? ability.y;
+
+          const duplicatedCone: AbilityCanvas = {
+            ...ability,
+            id: getNextId(itemType),
+            x: originX + CONTEXT_MENU_DUPLICATE_OFFSET,
+            y: originY + CONTEXT_MENU_DUPLICATE_OFFSET,
+            attachedToId: undefined,
+          };
+
+          setAbilitiesOnCanvas((prev) => [...prev, duplicatedCone]);
+          notifyAbilityAdded(duplicatedCone);
+          break;
+        }
+
         const newAbility = duplicateItem(
           abilitiesOnCanvas,
           itemId,
           setAbilitiesOnCanvas,
           itemType,
         );
-        if (newAbility) notifyAbilityAdded(newAbility as AbilityCanvas);
+        if (newAbility) {
+          notifyAbilityAdded(newAbility as AbilityCanvas);
+          duplicateAttachedVisionConesForHost(
+            itemId,
+            newAbility.id,
+            newAbility.x,
+            newAbility.y,
+          );
+        }
         break;
       }
       case "text": {
@@ -222,7 +369,15 @@ export const useCanvasContextMenu = (
           setToolIconsOnCanvas,
           itemType,
         );
-        if (newToolIcon) notifyToolIconAdded(newToolIcon as ToolIconCanvas);
+        if (newToolIcon) {
+          notifyToolIconAdded(newToolIcon as ToolIconCanvas);
+          duplicateAttachedVisionConesForHost(
+            itemId,
+            newToolIcon.id,
+            newToolIcon.x,
+            newToolIcon.y,
+          );
+        }
         break;
       }
     }
@@ -245,6 +400,7 @@ export const useCanvasContextMenu = (
     toolIconsOnCanvas,
     setToolIconsOnCanvas,
     notifyToolIconAdded,
+    duplicateAttachedVisionConesForHost,
   ]);
 
   const handleDelete = useCallback(() => {
@@ -252,21 +408,38 @@ export const useCanvasContextMenu = (
 
     const { itemId, itemType } = contextMenu;
 
+    const targetAbility =
+      itemType === "ability"
+        ? abilitiesOnCanvas.find((ability) => ability.id === itemId)
+        : undefined;
+    const attachedAbilityHost =
+      targetAbility &&
+      isVisionConeAction(targetAbility.action) &&
+      targetAbility.attachedToId
+        ? abilitiesOnCanvas.find(
+            (ability) =>
+              ability.id === targetAbility.attachedToId &&
+              !isVisionConeAction(ability.action),
+          )
+        : undefined;
+    const effectiveItemId = attachedAbilityHost?.id ?? itemId;
+
     const connectedLine = connectingLines.find(
-      (line) => line.fromId === itemId || line.toId === itemId,
+      (line) =>
+        line.fromId === effectiveItemId || line.toId === effectiveItemId,
     );
 
     switch (itemType) {
       case "agent":
         deleteItem(itemId, setAgentsOnCanvas);
         notifyAgentRemoved(itemId);
+        removeAttachedVisionCones(itemId);
         if (connectedLine) {
           const connectedId =
             connectedLine.fromId === itemId
               ? connectedLine.toId
               : connectedLine.fromId;
-          deleteItem(connectedId, setAbilitiesOnCanvas);
-          notifyAbilityRemoved(connectedId);
+          removeAbilityWithAttachedVisionCones(connectedId);
           setConnectingLines((prev) =>
             prev.filter((line) => line.id !== connectedLine.id),
           );
@@ -274,15 +447,15 @@ export const useCanvasContextMenu = (
         }
         break;
       case "ability":
-        deleteItem(itemId, setAbilitiesOnCanvas);
-        notifyAbilityRemoved(itemId);
+        removeAbilityWithAttachedVisionCones(effectiveItemId);
         if (connectedLine) {
           const connectedId =
-            connectedLine.fromId === itemId
+            connectedLine.fromId === effectiveItemId
               ? connectedLine.toId
               : connectedLine.fromId;
           deleteItem(connectedId, setAgentsOnCanvas);
           notifyAgentRemoved(connectedId);
+          removeAttachedVisionCones(connectedId);
           setConnectingLines((prev) =>
             prev.filter((line) => line.id !== connectedLine.id),
           );
@@ -300,25 +473,27 @@ export const useCanvasContextMenu = (
       case "tool":
         deleteItem(itemId, setToolIconsOnCanvas);
         notifyToolIconRemoved(itemId);
+        removeAttachedVisionCones(itemId);
         break;
     }
     closeContextMenu();
   }, [
     contextMenu,
     closeContextMenu,
+    abilitiesOnCanvas,
     connectingLines,
     setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
     setConnectingLines,
     setTextsOnCanvas,
     setImagesOnCanvas,
     setToolIconsOnCanvas,
     notifyAgentRemoved,
-    notifyAbilityRemoved,
     notifyTextRemoved,
     notifyImageRemoved,
     notifyToolIconRemoved,
     notifyConnLineRemoved,
+    removeAttachedVisionCones,
+    removeAbilityWithAttachedVisionCones,
   ]);
 
   const handleToggleAlly = useCallback(() => {
@@ -438,6 +613,48 @@ export const useCanvasContextMenu = (
     closeContextMenu,
   ]);
 
+  const handleDetachVisionCone = useCallback(() => {
+    if (!contextMenu.open || contextMenu.itemType !== "ability") return;
+
+    const ability = abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId);
+    if (
+      !ability ||
+      !isVisionConeAction(ability.action) ||
+      !ability.attachedToId
+    ) {
+      return;
+    }
+
+    const attachmentHost = findVisionConeAttachmentHost({
+      attachedToId: ability.attachedToId,
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+      toolIconsOnCanvas,
+      excludeId: ability.id,
+    });
+
+    const updatedAbility: AbilityCanvas = {
+      ...ability,
+      x: attachmentHost?.x ?? ability.x,
+      y: attachmentHost?.y ?? ability.y,
+      attachedToId: undefined,
+    };
+
+    setAbilitiesOnCanvas((prev) =>
+      prev.map((item) => (item.id === ability.id ? updatedAbility : item)),
+    );
+    notifyAbilityMoved(updatedAbility);
+    closeContextMenu();
+  }, [
+    contextMenu,
+    abilitiesOnCanvas,
+    agentsOnCanvas,
+    toolIconsOnCanvas,
+    setAbilitiesOnCanvas,
+    notifyAbilityMoved,
+    closeContextMenu,
+  ]);
+
   return {
     contextMenu,
     handleContextMenu,
@@ -448,6 +665,7 @@ export const useCanvasContextMenu = (
     handleSwapAbility,
     handleToggleAbilityIconOnly,
     handleToggleAbilityOuterCircle,
+    handleDetachVisionCone,
     closeContextMenu,
   };
 };

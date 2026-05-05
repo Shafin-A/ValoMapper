@@ -45,10 +45,23 @@ export const CanvasCircleIcon = ({
   height,
   showAbilityShape = true,
   showOuterCircle = true,
+  registerNode,
+  unregisterNode,
 }: CanvasCircleIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const [image] = useImage(src);
   const { mapSide } = useCanvas();
+
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    registerNode?.(id, group);
+
+    return () => {
+      unregisterNode?.(id);
+    };
+  }, [id, registerNode, unregisterNode]);
 
   useEffect(() => {
     if (groupRef.current && image) {

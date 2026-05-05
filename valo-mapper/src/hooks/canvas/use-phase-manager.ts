@@ -3,6 +3,10 @@ import { useState, useCallback, useRef } from "react";
 
 const DEFAULT_PHASE_COUNT = 10;
 
+export type PhaseStateUpdate =
+  | Partial<PhaseState>
+  | ((currentPhase: PhaseState) => Partial<PhaseState>);
+
 const createEmptyPhaseState = (): PhaseState => ({
   agentsOnCanvas: [],
   abilitiesOnCanvas: [],
@@ -74,12 +78,16 @@ export const usePhaseManager = ({
   const currentPhase = phases[currentPhaseIndex];
 
   const updateCurrentPhase = useCallback(
-    (updates: Partial<PhaseState>) => {
+    (updates: PhaseStateUpdate) => {
       setPhasesWithRef((prevPhases) => {
         const newPhases = [...prevPhases];
+        const currentPhaseState = newPhases[currentPhaseIndex];
+        const resolvedUpdates =
+          typeof updates === "function" ? updates(currentPhaseState) : updates;
+
         newPhases[currentPhaseIndex] = {
-          ...newPhases[currentPhaseIndex],
-          ...updates,
+          ...currentPhaseState,
+          ...resolvedUpdates,
         };
         return newPhases;
       });

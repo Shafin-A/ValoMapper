@@ -44,6 +44,7 @@ interface AbilityIconProps extends CanvasIconProps {
   currentLength?: number;
   iconOnly?: boolean;
   showOuterCircle?: boolean;
+  showCenterIcon?: boolean;
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
   onInteractionEnd?: (data: InteractionData) => void;
 }
@@ -271,6 +272,7 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
       }
       rotationHandleDistance={config.rotationHandleDistance}
       allowLengthAdjustment={isVisionCone}
+      showCenterIcon={props.showCenterIcon}
       {...props}
     />
   );

@@ -49,6 +49,8 @@ export const CanvasCurvableLineIcon = ({
   rotation = 0,
   onInteractionEnd,
   showAbilityShape = true,
+  registerNode,
+  unregisterNode,
 }: CanvasCurvableLineIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const handleRef = useRef<Konva.Circle>(null);
@@ -63,6 +65,17 @@ export const CanvasCurvableLineIcon = ({
   const [image] = useImage(src);
 
   const { setAbilitiesOnCanvas, mapSide } = useCanvas();
+
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    registerNode?.(id, group);
+
+    return () => {
+      unregisterNode?.(id);
+    };
+  }, [id, registerNode, unregisterNode]);
 
   const calculatePathDistance = useCallback((points: Vector2d[]): number => {
     if (points.length < 2) return 0;

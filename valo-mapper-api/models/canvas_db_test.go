@@ -320,11 +320,12 @@ func TestSaveCanvasState(t *testing.T) {
 		canvasState.Phases[0] = PhaseState{
 			AbilitiesOnCanvas: []CanvasAbility{
 				{
-					ID:        "ab1",
-					AgentName: "Viper",
-					Action:    "wall",
-					X:         100,
-					Y:         200,
+					ID:           "ab1",
+					AgentName:    "Viper",
+					Action:       "wall",
+					X:            100,
+					Y:            200,
+					AttachedToID: "agent-1",
 					CurrentPath: []Position{
 						{X: 10, Y: 20},
 						{X: 30, Y: 40},
@@ -362,6 +363,7 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Equal(t, 45.0, phases[0].AbilitiesOnCanvas[0].CurrentRotation)
 		assert.True(t, phases[0].AbilitiesOnCanvas[0].IconOnly)
 		assert.True(t, phases[0].AbilitiesOnCanvas[0].ShowOuterCircle)
+		assert.Equal(t, "agent-1", phases[0].AbilitiesOnCanvas[0].AttachedToID)
 	})
 
 	t.Run("handles draw line with points", func(t *testing.T) {

@@ -78,6 +78,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       handleSwapAbility,
       handleToggleAbilityIconOnly,
       handleToggleAbilityOuterCircle,
+      handleDetachVisionCone,
       handlePopoverOpenChange,
       handleDragMove,
       contextMenu,
@@ -264,6 +265,11 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           onToggleAbilityOuterCircle={
             contextMenu.itemType === "ability"
               ? handleToggleAbilityOuterCircle
+              : undefined
+          }
+          onDetachVisionCone={
+            contextMenu.itemType === "ability"
+              ? handleDetachVisionCone
               : undefined
           }
           onDelete={handleDelete}

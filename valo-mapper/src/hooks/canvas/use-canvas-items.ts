@@ -8,6 +8,7 @@ import {
   TextCanvas,
   ToolIconCanvas,
 } from "@/lib/types";
+import { PhaseStateUpdate } from "@/hooks/canvas/use-phase-manager";
 import { useCallback, useMemo } from "react";
 
 const resolveValue = <T>(
@@ -17,7 +18,7 @@ const resolveValue = <T>(
 
 export const useCanvasItems = (
   currentPhase: PhaseState,
-  updateCurrentPhase: (updates: Partial<PhaseState>) => void,
+  updateCurrentPhase: (updates: PhaseStateUpdate) => void,
 ) => {
   const {
     textsOnCanvas,
@@ -33,63 +34,67 @@ export const useCanvasItems = (
     (
       value: ToolIconCanvas[] | ((prev: ToolIconCanvas[]) => ToolIconCanvas[]),
     ) => {
-      updateCurrentPhase({
-        toolIconsOnCanvas: resolveValue(value, toolIconsOnCanvas),
-      });
+      updateCurrentPhase((phase) => ({
+        toolIconsOnCanvas: resolveValue(value, phase.toolIconsOnCanvas),
+      }));
     },
-    [toolIconsOnCanvas, updateCurrentPhase],
+    [updateCurrentPhase],
   );
 
   const setTextsOnCanvas = useCallback(
     (value: TextCanvas[] | ((prev: TextCanvas[]) => TextCanvas[])) => {
-      updateCurrentPhase({ textsOnCanvas: resolveValue(value, textsOnCanvas) });
+      updateCurrentPhase((phase) => ({
+        textsOnCanvas: resolveValue(value, phase.textsOnCanvas),
+      }));
     },
-    [textsOnCanvas, updateCurrentPhase],
+    [updateCurrentPhase],
   );
 
   const setImagesOnCanvas = useCallback(
     (value: ImageCanvas[] | ((prev: ImageCanvas[]) => ImageCanvas[])) => {
-      updateCurrentPhase({
-        imagesOnCanvas: resolveValue(value, imagesOnCanvas),
-      });
+      updateCurrentPhase((phase) => ({
+        imagesOnCanvas: resolveValue(value, phase.imagesOnCanvas),
+      }));
     },
-    [imagesOnCanvas, updateCurrentPhase],
+    [updateCurrentPhase],
   );
 
   const setAgentsOnCanvas = useCallback(
     (value: AgentCanvas[] | ((prev: AgentCanvas[]) => AgentCanvas[])) => {
-      updateCurrentPhase({
-        agentsOnCanvas: resolveValue(value, agentsOnCanvas),
-      });
+      updateCurrentPhase((phase) => ({
+        agentsOnCanvas: resolveValue(value, phase.agentsOnCanvas),
+      }));
     },
-    [agentsOnCanvas, updateCurrentPhase],
+    [updateCurrentPhase],
   );
 
   const setAbilitiesOnCanvas = useCallback(
     (value: AbilityCanvas[] | ((prev: AbilityCanvas[]) => AbilityCanvas[])) => {
-      updateCurrentPhase({
-        abilitiesOnCanvas: resolveValue(value, abilitiesOnCanvas),
-      });
+      updateCurrentPhase((phase) => ({
+        abilitiesOnCanvas: resolveValue(value, phase.abilitiesOnCanvas),
+      }));
     },
-    [abilitiesOnCanvas, updateCurrentPhase],
+    [updateCurrentPhase],
   );
 
   const setDrawLines = useCallback(
     (value: DrawLine[] | ((prev: DrawLine[]) => DrawLine[])) => {
-      updateCurrentPhase({ drawLines: resolveValue(value, drawLines) });
+      updateCurrentPhase((phase) => ({
+        drawLines: resolveValue(value, phase.drawLines),
+      }));
     },
-    [drawLines, updateCurrentPhase],
+    [updateCurrentPhase],
   );
 
   const setConnectingLines = useCallback(
     (
       value: ConnectingLine[] | ((prev: ConnectingLine[]) => ConnectingLine[]),
     ) => {
-      updateCurrentPhase({
-        connectingLines: resolveValue(value, connectingLines),
-      });
+      updateCurrentPhase((phase) => ({
+        connectingLines: resolveValue(value, phase.connectingLines),
+      }));
     },
-    [connectingLines, updateCurrentPhase],
+    [updateCurrentPhase],
   );
 
   return useMemo(

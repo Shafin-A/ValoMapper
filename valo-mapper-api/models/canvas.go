@@ -82,6 +82,7 @@ type CanvasAbility struct {
 	Action          string     `json:"action"`
 	X               float64    `json:"x"`
 	Y               float64    `json:"y"`
+	AttachedToID    string     `json:"attachedToId,omitempty"`
 	CurrentPath     []Position `json:"currentPath,omitempty"`
 	CurrentLength   float64    `json:"currentLength,omitempty"`
 	CurrentRotation float64    `json:"currentRotation,omitempty"`

@@ -58,6 +58,8 @@ export const CanvasXIcon = ({
   endCircleRadius = 8,
   endCircleColor = "#ffffff",
   showAbilityShape = true,
+  registerNode,
+  unregisterNode,
 }: CanvasXIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const rotationHandleRef = useRef<Konva.Circle>(null);
@@ -72,6 +74,17 @@ export const CanvasXIcon = ({
   const [image] = useImage(src);
 
   const { setAbilitiesOnCanvas, mapSide } = useCanvas();
+
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    registerNode?.(id, group);
+
+    return () => {
+      unregisterNode?.(id);
+    };
+  }, [id, registerNode, unregisterNode]);
 
   useEffect(() => {
     if (groupRef.current && image) {

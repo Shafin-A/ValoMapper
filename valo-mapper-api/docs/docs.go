@@ -2426,6 +2426,9 @@ const docTemplate = `{
                 "action": {
                     "type": "string"
                 },
+                "attachedToId": {
+                    "type": "string"
+                },
                 "currentLength": {
                     "type": "number"
                 },

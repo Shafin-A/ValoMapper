@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { TEMP_DRAG_ID } from "@/lib/consts";
-import type { AgentCanvas, ToolIconCanvas } from "@/lib/types";
+import type { AbilityCanvas, AgentCanvas, ToolIconCanvas } from "@/lib/types";
 import type { Stage } from "konva/lib/Stage";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
@@ -215,6 +215,7 @@ describe("useCanvasEvents", () => {
       handleSwapAbility: jest.fn(),
       handleToggleAbilityIconOnly: jest.fn(),
       handleToggleAbilityOuterCircle: jest.fn(),
+      handleDetachVisionCone: jest.fn(),
       closeContextMenu: jest.fn(),
     });
   });
@@ -342,6 +343,84 @@ describe("useCanvasEvents", () => {
       id: "tool-new",
       x: 4,
       y: 8,
+    });
+    expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
+  });
+
+  it("attaches a selected vision cone to a host icon on placement", () => {
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: TEMP_DRAG_ID,
+        name: "Vision Cone 60",
+        action: "vision_cone_60",
+        isAlly: true,
+        x: 0,
+        y: 0,
+        iconOnly: false,
+        showOuterCircle: true,
+      },
+      {
+        id: "old-cone",
+        name: "Vision Cone 30",
+        action: "vision_cone_30",
+        isAlly: true,
+        x: 20,
+        y: 24,
+        attachedToId: "agent-1",
+      },
+    ];
+
+    const setAbilitiesOnCanvas = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    const setSelectedCanvasIcon = jest.fn();
+
+    mockGetNextId.mockReturnValue("ability-new");
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        selectedCanvasIcon: {
+          id: "vision_cone_60",
+          name: "Vision Cone 60",
+          action: "vision_cone_60",
+          src: "circle.svg",
+          slot: "",
+        },
+        setSelectedCanvasIcon,
+        abilitiesOnCanvas: abilitiesState,
+        setAbilitiesOnCanvas,
+        agentsOnCanvas: [
+          {
+            id: "agent-1",
+            name: "Jett",
+            role: "Duelist",
+            isAlly: true,
+            x: 4,
+            y: 8,
+          },
+        ],
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleStageClick();
+    });
+
+    expect(setAbilitiesOnCanvas).toHaveBeenCalled();
+    expect(abilitiesState).toHaveLength(1);
+    expect(abilitiesState[0]).toMatchObject({
+      id: "ability-new",
+      x: 4,
+      y: 8,
+      attachedToId: "agent-1",
     });
     expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
   });

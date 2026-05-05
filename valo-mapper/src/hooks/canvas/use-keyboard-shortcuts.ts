@@ -11,6 +11,7 @@ import type {
   Tool,
   ToolIconCanvas,
 } from "@/lib/types";
+import { getAttachedVisionConeIds } from "@/lib/vision-cone-utils";
 import { Dispatch, RefObject, SetStateAction, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -95,6 +96,13 @@ export const useKeyboardShortcuts = ({
     updateEraserSettings,
   } = useSettings();
 
+  const currentPhase = phases[currentPhaseIndex];
+  const agentsOnCanvas = currentPhase?.agentsOnCanvas ?? [];
+  const abilitiesOnCanvas = currentPhase?.abilitiesOnCanvas ?? [];
+  const imagesOnCanvas = currentPhase?.imagesOnCanvas ?? [];
+  const textsOnCanvas = currentPhase?.textsOnCanvas ?? [];
+  const toolIconsOnCanvas = currentPhase?.toolIconsOnCanvas ?? [];
+
   useEffect(() => {
     const handleModifierShortcuts = (
       key: string,
@@ -157,86 +165,121 @@ export const useKeyboardShortcuts = ({
           line.fromId === hoveredElementId || line.toId === hoveredElementId,
       );
 
-      setImagesOnCanvas((prev) => {
-        const filtered = prev.filter((img) => img.id !== hoveredElementId);
-        if (filtered.length < prev.length) {
-          notifyImageRemoved?.(hoveredElementId);
-        }
-        return filtered;
-      });
-      setTextsOnCanvas((prev) => {
-        const filtered = prev.filter((txt) => txt.id !== hoveredElementId);
-        if (filtered.length < prev.length) {
-          notifyTextRemoved?.(hoveredElementId);
-        }
-        return filtered;
-      });
-
-      setAgentsOnCanvas((prev) => {
-        const filtered = prev.filter((agent) => agent.id !== hoveredElementId);
-        if (connectedLine && connectedLine.fromId === hoveredElementId) {
-          setAbilitiesOnCanvas((abilities) =>
-            abilities.filter((ability) => ability.id !== connectedLine.toId),
-          );
-          setConnectingLines((lines) =>
-            lines.filter((line) => line.id !== connectedLine.id),
-          );
-          notifyConnLineRemoved?.(connectedLine.id);
-          notifyAbilityRemoved?.(connectedLine.toId);
-        } else if (connectedLine && connectedLine.toId === hoveredElementId) {
-          setAbilitiesOnCanvas((abilities) =>
-            abilities.filter((ability) => ability.id !== connectedLine.fromId),
-          );
-          setConnectingLines((lines) =>
-            lines.filter((line) => line.id !== connectedLine.id),
-          );
-          notifyConnLineRemoved?.(connectedLine.id);
-          notifyAbilityRemoved?.(connectedLine.fromId);
-        }
-        if (filtered.length < prev.length) {
-          notifyAgentRemoved?.(hoveredElementId);
-        }
-        return filtered;
-      });
-
-      setAbilitiesOnCanvas((prev) => {
-        const filtered = prev.filter(
-          (ability) => ability.id !== hoveredElementId,
+      if (imagesOnCanvas.some((image) => image.id === hoveredElementId)) {
+        setImagesOnCanvas((prev) =>
+          prev.filter((image) => image.id !== hoveredElementId),
         );
-        if (connectedLine && connectedLine.fromId === hoveredElementId) {
-          setAgentsOnCanvas((agents) =>
-            agents.filter((agent) => agent.id !== connectedLine.toId),
-          );
-          setConnectingLines((lines) =>
-            lines.filter((line) => line.id !== connectedLine.id),
-          );
-          notifyConnLineRemoved?.(connectedLine.id);
-          notifyAgentRemoved?.(connectedLine.toId);
-        } else if (connectedLine && connectedLine.toId === hoveredElementId) {
-          setAgentsOnCanvas((agents) =>
-            agents.filter((agent) => agent.id !== connectedLine.fromId),
-          );
-          setConnectingLines((lines) =>
-            lines.filter((line) => line.id !== connectedLine.id),
-          );
-          notifyConnLineRemoved?.(connectedLine.id);
-          notifyAgentRemoved?.(connectedLine.fromId);
-        }
-        if (filtered.length < prev.length) {
-          notifyAbilityRemoved?.(hoveredElementId);
-        }
-        return filtered;
-      });
+        notifyImageRemoved?.(hoveredElementId);
+      }
 
-      setToolIconsOnCanvas((prev) => {
-        const filtered = prev.filter(
-          (toolIcon) => toolIcon.id !== hoveredElementId,
+      if (textsOnCanvas.some((text) => text.id === hoveredElementId)) {
+        setTextsOnCanvas((prev) =>
+          prev.filter((text) => text.id !== hoveredElementId),
         );
-        if (filtered.length < prev.length) {
-          notifyToolIconRemoved?.(hoveredElementId);
+        notifyTextRemoved?.(hoveredElementId);
+      }
+
+      if (agentsOnCanvas.some((agent) => agent.id === hoveredElementId)) {
+        const removedAbilityIds = new Set(
+          getAttachedVisionConeIds(abilitiesOnCanvas, hoveredElementId),
+        );
+
+        if (connectedLine) {
+          const connectedAbilityId =
+            connectedLine.fromId === hoveredElementId
+              ? connectedLine.toId
+              : connectedLine.toId === hoveredElementId
+                ? connectedLine.fromId
+                : null;
+
+          if (connectedAbilityId) {
+            removedAbilityIds.add(connectedAbilityId);
+            getAttachedVisionConeIds(
+              abilitiesOnCanvas,
+              connectedAbilityId,
+            ).forEach((removedId) => removedAbilityIds.add(removedId));
+            setConnectingLines((lines) =>
+              lines.filter((line) => line.id !== connectedLine.id),
+            );
+            notifyConnLineRemoved?.(connectedLine.id);
+          }
         }
-        return filtered;
-      });
+
+        if (removedAbilityIds.size > 0) {
+          setAbilitiesOnCanvas((prev) =>
+            prev.filter((ability) => !removedAbilityIds.has(ability.id)),
+          );
+          removedAbilityIds.forEach((removedId) =>
+            notifyAbilityRemoved?.(removedId),
+          );
+        }
+
+        setAgentsOnCanvas((prev) =>
+          prev.filter((agent) => agent.id !== hoveredElementId),
+        );
+        notifyAgentRemoved?.(hoveredElementId);
+      }
+
+      if (
+        abilitiesOnCanvas.some((ability) => ability.id === hoveredElementId)
+      ) {
+        const removedAbilityIds = new Set([
+          hoveredElementId,
+          ...getAttachedVisionConeIds(abilitiesOnCanvas, hoveredElementId),
+        ]);
+
+        if (connectedLine) {
+          const connectedAgentId =
+            connectedLine.fromId === hoveredElementId
+              ? connectedLine.toId
+              : connectedLine.toId === hoveredElementId
+                ? connectedLine.fromId
+                : null;
+
+          if (connectedAgentId) {
+            setAgentsOnCanvas((agents) =>
+              agents.filter((agent) => agent.id !== connectedAgentId),
+            );
+            notifyAgentRemoved?.(connectedAgentId);
+            setConnectingLines((lines) =>
+              lines.filter((line) => line.id !== connectedLine.id),
+            );
+            notifyConnLineRemoved?.(connectedLine.id);
+          }
+        }
+
+        setAbilitiesOnCanvas((prev) =>
+          prev.filter((ability) => !removedAbilityIds.has(ability.id)),
+        );
+        removedAbilityIds.forEach((removedId) =>
+          notifyAbilityRemoved?.(removedId),
+        );
+      }
+
+      if (
+        toolIconsOnCanvas.some((toolIcon) => toolIcon.id === hoveredElementId)
+      ) {
+        const removedAbilityIds = getAttachedVisionConeIds(
+          abilitiesOnCanvas,
+          hoveredElementId,
+        );
+
+        if (removedAbilityIds.length > 0) {
+          const removedIdSet = new Set(removedAbilityIds);
+          setAbilitiesOnCanvas((prev) =>
+            prev.filter((ability) => !removedIdSet.has(ability.id)),
+          );
+          removedAbilityIds.forEach((removedId) =>
+            notifyAbilityRemoved?.(removedId),
+          );
+        }
+
+        setToolIconsOnCanvas((prev) =>
+          prev.filter((toolIcon) => toolIcon.id !== hoveredElementId),
+        );
+        notifyToolIconRemoved?.(hoveredElementId);
+      }
+
       setHoveredElementId(null);
       e.preventDefault();
       return true;
@@ -350,7 +393,10 @@ export const useKeyboardShortcuts = ({
     currentPhaseIndex,
     switchToPhase,
     notifyPhaseChanged,
+    agentsOnCanvas,
+    abilitiesOnCanvas,
     hoveredElementId,
+    imagesOnCanvas,
     setHoveredElementId,
     setImagesOnCanvas,
     setTextsOnCanvas,
@@ -358,6 +404,8 @@ export const useKeyboardShortcuts = ({
     setAbilitiesOnCanvas,
     setToolIconsOnCanvas,
     connectingLines,
+    textsOnCanvas,
+    toolIconsOnCanvas,
     setConnectingLines,
     recenterCanvasCallback,
     notifyImageRemoved,

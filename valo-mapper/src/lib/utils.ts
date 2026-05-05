@@ -342,6 +342,7 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
   onDeleteConnected?: (connectedId: string) => void,
   onItemRemoved?: (id: string) => void,
   onItemMoved?: (item: T) => void,
+  onDelete?: (item: T) => void,
 ) => {
   const node = e.target;
   const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
@@ -371,6 +372,7 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
       }
     }
 
+    onDelete?.(icon);
     setIconsOnCanvas((prev) => prev.filter((item) => item.id !== icon.id));
 
     onItemRemoved?.(icon.id);

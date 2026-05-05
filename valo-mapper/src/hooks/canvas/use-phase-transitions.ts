@@ -15,6 +15,10 @@ export const usePhaseTransitions = () => {
     nodeRefs.current.delete(id);
   }, []);
 
+  const getRegisteredNode = useCallback((id: string) => {
+    return nodeRefs.current.get(id);
+  }, []);
+
   const transitionToPhase = useCallback(
     (fromPhase: PhaseState, toPhase: PhaseState, duration: number = 200) => {
       transitionDuration.current = duration;
@@ -69,6 +73,7 @@ export const usePhaseTransitions = () => {
   return {
     registerNode,
     unregisterNode,
+    getRegisteredNode,
     transitionToPhase,
     isTransitioning,
   };

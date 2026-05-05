@@ -18,11 +18,17 @@ import {
 export const DeleteSettings = () => {
   const {
     resetState,
+    agentsOnCanvas,
     setAgentsOnCanvas,
+    abilitiesOnCanvas,
     setAbilitiesOnCanvas,
+    drawLines,
     setDrawLines,
+    textsOnCanvas,
     setTextsOnCanvas,
+    imagesOnCanvas,
     setImagesOnCanvas,
+    toolIconsOnCanvas,
     setToolIconsOnCanvas,
     connectingLines,
     setConnectingLines,
@@ -44,75 +50,71 @@ export const DeleteSettings = () => {
       connectingLines.flatMap((line) => [line.fromId, line.toId]),
     );
     const toKeep = new Set<string>(connectedAgentIds);
+    const removedAgents = agentsOnCanvas.filter(
+      (agent) => !toKeep.has(agent.id),
+    );
 
-    setAgentsOnCanvas((prev) => {
-      const removed = prev.filter((agent) => !toKeep.has(agent.id));
-      removed.forEach((agent) => notifyAgentRemoved(agent.id));
-      return prev.filter((agent) => toKeep.has(agent.id));
-    });
+    setAgentsOnCanvas(agentsOnCanvas.filter((agent) => toKeep.has(agent.id)));
+    removedAgents.forEach((agent) => notifyAgentRemoved(agent.id));
   };
 
   const resetAbilities = async () => {
     const connectedAbilityIds = new Set(
       connectingLines.flatMap((line) => [line.fromId, line.toId]),
     );
+    const removedAbilities = abilitiesOnCanvas.filter(
+      (ability) => !connectedAbilityIds.has(ability.id),
+    );
 
-    setAbilitiesOnCanvas((prev) => {
-      const removed = prev.filter(
-        (ability) => !connectedAbilityIds.has(ability.id),
-      );
-      removed.forEach((ability) => notifyAbilityRemoved(ability.id));
-      return prev.filter((ability) => connectedAbilityIds.has(ability.id));
-    });
+    setAbilitiesOnCanvas(
+      abilitiesOnCanvas.filter((ability) =>
+        connectedAbilityIds.has(ability.id),
+      ),
+    );
+    removedAbilities.forEach((ability) => notifyAbilityRemoved(ability.id));
 
-    setToolIconsOnCanvas((prev) => {
-      prev.forEach((toolIcon) => notifyToolIconRemoved(toolIcon.id));
-      return [];
-    });
+    setToolIconsOnCanvas([]);
+    toolIconsOnCanvas.forEach((toolIcon) => notifyToolIconRemoved(toolIcon.id));
   };
 
   const resetDrawings = async () => {
-    setDrawLines((prev) => {
-      prev.forEach((line) => notifyLineRemoved(line.id));
-      return [];
-    });
+    setDrawLines([]);
+    drawLines.forEach((line) => notifyLineRemoved(line.id));
   };
 
   const resetTexts = async () => {
-    setTextsOnCanvas((prev) => {
-      prev.forEach((text) => notifyTextRemoved(text.id));
-      return [];
-    });
+    setTextsOnCanvas([]);
+    textsOnCanvas.forEach((text) => notifyTextRemoved(text.id));
   };
 
   const resetImages = async () => {
-    setImagesOnCanvas((prev) => {
-      prev.forEach((image) => notifyImageRemoved(image.id));
-      return [];
-    });
+    setImagesOnCanvas([]);
+    imagesOnCanvas.forEach((image) => notifyImageRemoved(image.id));
   };
 
   const resetLineups = async () => {
     const connectedIds = new Set(
       connectingLines.flatMap((line) => [line.fromId, line.toId]),
     );
+    const removedAgents = agentsOnCanvas.filter((agent) =>
+      connectedIds.has(agent.id),
+    );
+    const removedAbilities = abilitiesOnCanvas.filter((ability) =>
+      connectedIds.has(ability.id),
+    );
 
-    setAgentsOnCanvas((prev) => {
-      const removed = prev.filter((agent) => connectedIds.has(agent.id));
-      removed.forEach((agent) => notifyAgentRemoved(agent.id));
-      return prev.filter((agent) => !connectedIds.has(agent.id));
-    });
+    setAgentsOnCanvas(
+      agentsOnCanvas.filter((agent) => !connectedIds.has(agent.id)),
+    );
+    removedAgents.forEach((agent) => notifyAgentRemoved(agent.id));
 
-    setAbilitiesOnCanvas((prev) => {
-      const removed = prev.filter((ability) => connectedIds.has(ability.id));
-      removed.forEach((ability) => notifyAbilityRemoved(ability.id));
-      return prev.filter((ability) => !connectedIds.has(ability.id));
-    });
+    setAbilitiesOnCanvas(
+      abilitiesOnCanvas.filter((ability) => !connectedIds.has(ability.id)),
+    );
+    removedAbilities.forEach((ability) => notifyAbilityRemoved(ability.id));
 
-    setConnectingLines((prev) => {
-      prev.forEach((line) => notifyConnLineRemoved(line.id));
-      return [];
-    });
+    setConnectingLines([]);
+    connectingLines.forEach((line) => notifyConnLineRemoved(line.id));
   };
 
   const handleResetState = async () => {

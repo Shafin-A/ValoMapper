@@ -31,6 +31,7 @@ interface CanvasArcIconProps extends CanvasIconProps {
   rotationHandleColor?: string;
   rotationHandleStrokeColor?: string;
   allowLengthAdjustment?: boolean;
+  showCenterIcon?: boolean;
 }
 
 export const CanvasArcIcon = ({
@@ -70,6 +71,9 @@ export const CanvasArcIcon = ({
   rotationHandleStrokeColor = "#ffffff",
   showAbilityShape = true,
   allowLengthAdjustment = false,
+  showCenterIcon = true,
+  registerNode,
+  unregisterNode,
 }: CanvasArcIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const rotationHandleRef = useRef<Konva.Circle>(null);
@@ -89,6 +93,17 @@ export const CanvasArcIcon = ({
   const { setAbilitiesOnCanvas, mapSide } = useCanvas();
 
   const [image] = useImage(src);
+
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    registerNode?.(id, group);
+
+    return () => {
+      unregisterNode?.(id);
+    };
+  }, [id, registerNode, unregisterNode]);
 
   useEffect(() => {
     if (groupRef.current && image) {
@@ -366,22 +381,24 @@ export const CanvasArcIcon = ({
           )}
         </>
       )}
-      <CanvasIcon
-        id={id}
-        isAlly={isAlly}
-        x={0}
-        y={0}
-        src={src}
-        isListening={isListening}
-        draggable={false}
-        width={width}
-        height={height}
-        radius={boxRadius}
-        borderOpacity={borderOpacity}
-        allyColor={allyColor}
-        enemyColor={enemyColor}
-        strokeWidth={strokeWidth}
-      />
+      {showCenterIcon && (
+        <CanvasIcon
+          id={id}
+          isAlly={isAlly}
+          x={0}
+          y={0}
+          src={src}
+          isListening={isListening}
+          draggable={false}
+          width={width}
+          height={height}
+          radius={boxRadius}
+          borderOpacity={borderOpacity}
+          allyColor={allyColor}
+          enemyColor={enemyColor}
+          strokeWidth={strokeWidth}
+        />
+      )}
     </Group>
   );
 };

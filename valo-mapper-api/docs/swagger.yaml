@@ -304,6 +304,8 @@ definitions:
     properties:
       action:
         type: string
+      attachedToId:
+        type: string
       currentLength:
         type: number
       currentPath:

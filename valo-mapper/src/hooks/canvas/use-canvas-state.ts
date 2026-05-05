@@ -166,7 +166,7 @@ export const useCanvasState = ({
   );
 
   const wrappedUpdateCurrentPhase = useCallback(
-    (updates: Partial<PhaseState>) => {
+    (updates: Parameters<typeof phaseManager.updateCurrentPhase>[0]) => {
       phaseManager.updateCurrentPhase(updates);
     },
     [phaseManager],

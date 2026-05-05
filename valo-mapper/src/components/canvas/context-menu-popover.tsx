@@ -10,6 +10,7 @@ import {
   ImageCanvas,
   TextCanvas,
 } from "@/lib/types";
+import { isVisionConeAction } from "@/lib/vision-cone-utils";
 import { isArcAbility, isCircleAbility } from "@/lib/utils";
 import { CIRCLE_ABILITY_CONFIGS, ARC_ABILITY_CONFIGS } from "@/lib/consts";
 import {
@@ -38,6 +39,7 @@ interface ContextMenuPopoverProps {
   onSwapAbility?: () => void;
   onToggleAbilityIconOnly?: () => void;
   onToggleAbilityOuterCircle?: () => void;
+  onDetachVisionCone?: () => void;
   onDelete: () => void;
 }
 
@@ -93,6 +95,7 @@ export const ContextMenuPopover = ({
   onSwapAbility,
   onToggleAbilityIconOnly,
   onToggleAbilityOuterCircle,
+  onDetachVisionCone,
   onDelete,
 }: ContextMenuPopoverProps) => {
   // Tooltip opens on its own after opening popover for some reason so need to delay it
@@ -104,12 +107,14 @@ export const ContextMenuPopover = ({
   const snapshotHasSwap = useRef(false);
   const snapshotHasIconOnly = useRef(false);
   const snapshotHasOuterCircle = useRef(false);
+  const snapshotHasDetachVisionCone = useRef(false);
   const snapshotAbilityIconOnly = useRef(false);
   const snapshotAbilityShowOuterCircle = useRef(true);
 
   const onSwapAbilityRef = useRef(onSwapAbility);
   const onToggleAbilityIconOnlyRef = useRef(onToggleAbilityIconOnly);
   const onToggleAbilityOuterCircleRef = useRef(onToggleAbilityOuterCircle);
+  const onDetachVisionConeRef = useRef(onDetachVisionCone);
 
   const pendingSnapshot = useRef({
     itemType,
@@ -117,6 +122,7 @@ export const ContextMenuPopover = ({
     onSwapAbility,
     onToggleAbilityIconOnly,
     onToggleAbilityOuterCircle,
+    onDetachVisionCone,
   });
   pendingSnapshot.current = {
     itemType,
@@ -124,11 +130,13 @@ export const ContextMenuPopover = ({
     onSwapAbility,
     onToggleAbilityIconOnly,
     onToggleAbilityOuterCircle,
+    onDetachVisionCone,
   };
 
   onSwapAbilityRef.current = onSwapAbility;
   onToggleAbilityIconOnlyRef.current = onToggleAbilityIconOnly;
   onToggleAbilityOuterCircleRef.current = onToggleAbilityOuterCircle;
+  onDetachVisionConeRef.current = onDetachVisionCone;
 
   useEffect(() => {
     if (!open) return;
@@ -139,6 +147,7 @@ export const ContextMenuPopover = ({
       onSwapAbility,
       onToggleAbilityIconOnly,
       onToggleAbilityOuterCircle,
+      onDetachVisionCone,
     } = pendingSnapshot.current;
 
     const abilityItem =
@@ -176,6 +185,10 @@ export const ContextMenuPopover = ({
       Boolean(onToggleAbilityIconOnly) && !isIconAbility;
     snapshotHasOuterCircle.current =
       abilityHasOuterCircle && Boolean(onToggleAbilityOuterCircle);
+    snapshotHasDetachVisionCone.current =
+      Boolean(onDetachVisionCone) &&
+      Boolean(abilityItem?.attachedToId) &&
+      Boolean(currentAbilityAction && isVisionConeAction(currentAbilityAction));
     snapshotAbilityIconOnly.current = abilityItem?.iconOnly ?? false;
     snapshotAbilityShowOuterCircle.current = abilityHasOuterCircle
       ? (abilityItem?.showOuterCircle ?? true)
@@ -311,6 +324,28 @@ export const ContextMenuPopover = ({
                       <Minus className="absolute rotate-135 text-destructive size-8" />
                     )}
                   </span>
+                </Button>
+              </ConditionalTooltip>
+
+              <Separator
+                orientation="vertical"
+                className="data-[orientation=vertical]:h-6"
+              />
+            </>
+          )}
+
+          {snapshotHasDetachVisionCone.current && (
+            <>
+              <ConditionalTooltip
+                enabled={allowTooltips}
+                content="Detach Vision Cone"
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDetachVisionConeRef.current?.()}
+                >
+                  <Minus />
                 </Button>
               </ConditionalTooltip>
 

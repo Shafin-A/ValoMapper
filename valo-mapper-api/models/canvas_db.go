@@ -181,7 +181,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- ABILITIES ----
 	rows, err = tx.Query(ctx, `
-		SELECT id, name, action, x, y, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, phase_index 
+		SELECT id, name, action, x, y, attached_to_id, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, phase_index 
 		FROM canvas_abilities 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index, sort_order`, lobbyCode)
@@ -192,9 +192,10 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var ability CanvasAbility
 		var phaseIndex int
 		var abilityName sql.NullString
+		var attachedToID sql.NullString
 		var pathArray []float64
 		if err := rows.Scan(&ability.ID, &abilityName, &ability.Action, &ability.X, &ability.Y,
-			&pathArray, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &ability.ShowOuterCircle, &phaseIndex); err != nil {
+			&attachedToID, &pathArray, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &ability.ShowOuterCircle, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -205,6 +206,10 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		ability.AgentName = ""
 		if abilityName.Valid {
 			ability.AgentName = abilityName.String
+		}
+		ability.AttachedToID = ""
+		if attachedToID.Valid {
+			ability.AttachedToID = attachedToID.String
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AbilitiesOnCanvas = append(phases[phaseIndex].AbilitiesOnCanvas, ability)
@@ -461,7 +466,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 			}
 			abilityRows = append(abilityRows, []any{
 				ab.ID, lobbyCode, ab.AgentName, ab.Action, ab.X, ab.Y,
-				pathArray, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, ab.ShowOuterCircle, phaseIndex,
+				ab.AttachedToID, pathArray, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, ab.ShowOuterCircle, phaseIndex,
 			})
 		}
 
@@ -546,11 +551,11 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(abilityRows) > 0 {
-		abilityRows = dedupeRows(abilityRows, []int{0, 1, 12})
+		abilityRows = dedupeRows(abilityRows, []int{0, 1, 13})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_abilities"},
-			[]string{"id", "lobby_code", "name", "action", "x", "y", "current_path", "current_rotation", "current_length", "is_ally", "icon_only", "show_outer_circle", "phase_index"},
+			[]string{"id", "lobby_code", "name", "action", "x", "y", "attached_to_id", "current_path", "current_rotation", "current_length", "is_ally", "icon_only", "show_outer_circle", "phase_index"},
 			pgx.CopyFromRows(abilityRows),
 		)
 		if err != nil {
@@ -771,14 +776,14 @@ func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_abilities (id, lobby_code, phase_index, name, action, x, y, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		INSERT INTO canvas_abilities (id, lobby_code, phase_index, name, action, x, y, attached_to_id, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
 		SET name = EXCLUDED.name, action = EXCLUDED.action, x = EXCLUDED.x, y = EXCLUDED.y,
-		    current_path = EXCLUDED.current_path, current_rotation = EXCLUDED.current_rotation, current_length = EXCLUDED.current_length,
+		    attached_to_id = EXCLUDED.attached_to_id, current_path = EXCLUDED.current_path, current_rotation = EXCLUDED.current_rotation, current_length = EXCLUDED.current_length,
 		    is_ally = EXCLUDED.is_ally, icon_only = EXCLUDED.icon_only, show_outer_circle = EXCLUDED.show_outer_circle,
 		    sort_order = nextval('canvas_abilities_sort_order_seq')`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Action, p.X, p.Y, pathArray, p.CurrentRotation, p.CurrentLength, p.IsAlly, p.IconOnly, p.ShowOuterCircle)
+		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Action, p.X, p.Y, p.AttachedToID, pathArray, p.CurrentRotation, p.CurrentLength, p.IsAlly, p.IconOnly, p.ShowOuterCircle)
 	return err
 }
 
