@@ -108,10 +108,22 @@ export const CanvasArcIcon = ({
   useEffect(() => {
     if (groupRef.current && image) {
       requestAnimationFrame(() => {
-        if (groupRef.current) {
-          groupRef.current.clearCache();
-          groupRef.current.cache({ pixelRatio: 2 });
+        const group = groupRef.current;
+        if (!group) {
+          return;
         }
+
+        group.clearCache();
+
+        const { width: cacheWidth, height: cacheHeight } = group.getClientRect({
+          skipTransform: true,
+        });
+
+        if (cacheWidth <= 0 || cacheHeight <= 0) {
+          return;
+        }
+
+        group.cache({ pixelRatio: 2 });
       });
     }
   }, [

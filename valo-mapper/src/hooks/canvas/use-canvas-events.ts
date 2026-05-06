@@ -2,8 +2,8 @@ import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
   applyVisionConeAttachment,
+  canAttachVisionCone,
   findVisionConeAttachmentTarget,
-  isVisionConeAction,
 } from "@/lib/vision-cone-utils";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import { getNextId, isAgent } from "@/lib/utils";
@@ -244,16 +244,17 @@ export const useCanvasEvents = (
         const tempAbility = abilitiesOnCanvas.find(
           (a) => a.id === TEMP_DRAG_ID,
         );
-        const attachmentTarget = isVisionConeAction(selectedCanvasIcon.action)
-          ? findVisionConeAttachmentTarget({
-              point: pos,
-              agentsOnCanvas,
-              abilitiesOnCanvas,
-              toolIconsOnCanvas,
-              agentsSettings,
-              abilitiesSettings,
-              excludeId: TEMP_DRAG_ID,
-            })
+        const attachmentTarget =
+          tempAbility && canAttachVisionCone(tempAbility)
+            ? findVisionConeAttachmentTarget({
+                point: pos,
+                agentsOnCanvas,
+                abilitiesOnCanvas,
+                toolIconsOnCanvas,
+                agentsSettings,
+                abilitiesSettings,
+                excludeId: TEMP_DRAG_ID,
+              })
           : null;
         const newAbility = {
           ...selectedCanvasIcon,

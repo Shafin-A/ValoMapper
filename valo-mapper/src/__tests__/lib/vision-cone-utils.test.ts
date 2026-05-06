@@ -1,6 +1,7 @@
 import type { AbilityCanvas } from "@/lib/types";
 import {
   applyVisionConeAttachment,
+  getAttachedVisionConeIds,
   syncAttachedVisionConeNodePositions,
 } from "@/lib/vision-cone-utils";
 import Konva from "konva";
@@ -121,5 +122,34 @@ describe("applyVisionConeAttachment", () => {
 
     expect(nextAbilitiesOnCanvas).toEqual([nextAbility]);
     expect(removedAbilityIds).toEqual(["cone-old"]);
+  });
+
+  it("ignores icon-only vision cones when listing attached cones for a host", () => {
+    expect(
+      getAttachedVisionConeIds(
+        [
+          {
+            id: "cone-hidden",
+            name: "Vision Cone 60",
+            action: "vision_cone_60",
+            isAlly: true,
+            x: 40,
+            y: 60,
+            iconOnly: true,
+            attachedToId: "agent-1",
+          },
+          {
+            id: "cone-visible",
+            name: "Vision Cone 30",
+            action: "vision_cone_30",
+            isAlly: true,
+            x: 40,
+            y: 60,
+            attachedToId: "agent-1",
+          },
+        ],
+        "agent-1",
+      ),
+    ).toEqual(["cone-visible"]);
   });
 });

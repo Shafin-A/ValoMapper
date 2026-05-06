@@ -1327,6 +1327,60 @@ describe("useCanvasContextMenu", () => {
     expect(abilitiesState[0].iconOnly).toBe(true);
   });
 
+  it("detaches an attached vision cone when toggling it to icon-only mode", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: "cone-1",
+        name: "Vision Cone 60",
+        action: "vision_cone_60",
+        isAlly: true,
+        x: 0,
+        y: 0,
+        iconOnly: false,
+        attachedToId: "agent-1",
+      },
+    ];
+    const setAbilities = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        [],
+        jest.fn(),
+        abilitiesState,
+        setAbilities,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "cone-1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleToggleAbilityIconOnly();
+    });
+
+    expect(abilitiesState[0]).toMatchObject({
+      iconOnly: true,
+      attachedToId: undefined,
+    });
+  });
+
   it("handles popover open change", () => {
     const stageRef = { current: createStageMock() as unknown as Stage };
 

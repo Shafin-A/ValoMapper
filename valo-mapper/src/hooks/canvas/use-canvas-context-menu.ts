@@ -11,6 +11,7 @@ import {
 } from "@/lib/types";
 import { getNextId } from "@/lib/utils";
 import {
+  canAttachVisionCone,
   findVisionConeAttachmentHost,
   getAttachedVisionConeIds,
   isVisionConeAction,
@@ -599,6 +600,13 @@ export const useCanvasContextMenu = (
       ...ability,
       iconOnly: !ability.iconOnly,
     };
+
+    if (
+      isVisionConeAction(ability.action) &&
+      !canAttachVisionCone(updatedAbility)
+    ) {
+      updatedAbility.attachedToId = undefined;
+    }
 
     setAbilitiesOnCanvas((prev) =>
       prev.map((a) => (a.id === ability.id ? updatedAbility : a)),

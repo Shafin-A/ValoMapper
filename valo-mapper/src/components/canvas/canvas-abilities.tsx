@@ -6,6 +6,7 @@ import { TEMP_DRAG_ID } from "@/lib/consts";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import {
   applyVisionConeAttachment,
+  canAttachVisionCone,
   findVisionConeAttachmentHost,
   findVisionConeAttachmentTarget,
   getAttachedVisionConeIds,
@@ -126,15 +127,17 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
     }
 
     const nextPoint = { x: node.x(), y: node.y() };
-    const attachmentTarget = findVisionConeAttachmentTarget({
-      point: nextPoint,
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      toolIconsOnCanvas,
-      agentsSettings,
-      abilitiesSettings,
-      excludeId: ability.id,
-    });
+    const attachmentTarget = canAttachVisionCone(ability)
+      ? findVisionConeAttachmentTarget({
+          point: nextPoint,
+          agentsOnCanvas,
+          abilitiesOnCanvas,
+          toolIconsOnCanvas,
+          agentsSettings,
+          abilitiesSettings,
+          excludeId: ability.id,
+        })
+      : null;
 
     const updatedAbility = {
       ...ability,
@@ -171,15 +174,16 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
       return null;
     }
 
-    const attachmentHost = findVisionConeAttachmentHost({
-      attachedToId: ability.attachedToId,
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      toolIconsOnCanvas,
-      excludeId: ability.id,
-    });
-    const isAttached =
-      isVisionConeAction(ability.action) && attachmentHost !== null;
+    const attachmentHost = canAttachVisionCone(ability)
+      ? findVisionConeAttachmentHost({
+          attachedToId: ability.attachedToId,
+          agentsOnCanvas,
+          abilitiesOnCanvas,
+          toolIconsOnCanvas,
+          excludeId: ability.id,
+        })
+      : null;
+    const isAttached = canAttachVisionCone(ability) && attachmentHost !== null;
 
     const lookupEntry = ABILITY_LOOKUP[ability.name];
     if (!lookupEntry) {

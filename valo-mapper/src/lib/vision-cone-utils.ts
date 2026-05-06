@@ -78,8 +78,12 @@ export const isVisionConeAction = (
   );
 };
 
+export const canAttachVisionCone = (ability: AbilityCanvas) => {
+  return isVisionConeAction(ability.action) && ability.iconOnly !== true;
+};
+
 export const isAttachedVisionCone = (ability: AbilityCanvas) => {
-  return isVisionConeAction(ability.action) && Boolean(ability.attachedToId);
+  return canAttachVisionCone(ability) && Boolean(ability.attachedToId);
 };
 
 export const findVisionConeAttachmentHost = ({
@@ -127,7 +131,7 @@ export const getAttachedVisionConeIds = (
   return abilitiesOnCanvas
     .filter(
       (ability) =>
-        isVisionConeAction(ability.action) && ability.attachedToId === hostId,
+        canAttachVisionCone(ability) && ability.attachedToId === hostId,
     )
     .map((ability) => ability.id);
 };
@@ -166,7 +170,7 @@ export const applyVisionConeAttachment = ({
     }
 
     if (
-      isVisionConeAction(nextAbility.action) &&
+      canAttachVisionCone(nextAbility) &&
       nextAbility.attachedToId &&
       isVisionConeAction(ability.action) &&
       ability.attachedToId === nextAbility.attachedToId
