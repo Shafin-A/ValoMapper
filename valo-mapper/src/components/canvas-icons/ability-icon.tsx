@@ -250,7 +250,8 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
   const isVisionCone =
     props.action === "vision_cone_30" ||
     props.action === "vision_cone_60" ||
-    props.action === "vision_cone_90";
+    props.action === "vision_cone_90" ||
+    props.action === "vision_cone_103";
 
   return (
     <CanvasArcIcon
@@ -414,6 +415,7 @@ const ABILITY_RENDERERS: Record<
   vision_cone_30: renderArcAbility,
   vision_cone_60: renderArcAbility,
   vision_cone_90: renderArcAbility,
+  vision_cone_103: renderArcAbility,
 };
 
 export const AbilityIcon = ({ action, ...props }: AbilityIconProps) => {

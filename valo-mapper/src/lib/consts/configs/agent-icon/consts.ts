@@ -884,6 +884,13 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       action: "vision_cone_90",
       slot: "",
     },
+    {
+      id: "vision_cone_103",
+      src: "circle.svg",
+      name: "Vision Cone 103",
+      action: "vision_cone_103",
+      slot: "",
+    },
   ],
   Yoru: [
     {

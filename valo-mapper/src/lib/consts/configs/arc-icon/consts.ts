@@ -56,4 +56,12 @@ export const ARC_ABILITY_CONFIGS: Record<ArcAbility, ArcAbilityConfig> = {
     rotationHandleDistance: 90,
     showInactiveRotationHandleRing: true,
   },
+  vision_cone_103: {
+    arcRadius: 14,
+    fov: 103,
+    useFillGradient: true,
+    fill: "#ffffff",
+    rotationHandleDistance: 90,
+    showInactiveRotationHandleRing: true,
+  },
 };

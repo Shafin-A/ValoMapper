@@ -95,4 +95,10 @@ export const VISION_CONE_ITEMS = [
     icon: "cone-slice-90",
     tooltip: "90°",
   },
+  {
+    action: "vision_cone_103",
+    name: "Vision Cone 103",
+    icon: "cone-slice-90",
+    tooltip: "103°",
+  },
 ];

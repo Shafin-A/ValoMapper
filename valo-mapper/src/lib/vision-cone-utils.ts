@@ -10,7 +10,7 @@ import { Vector2d } from "konva/lib/types";
 
 export type VisionConeAction = Extract<
   AbilityAction,
-  "vision_cone_30" | "vision_cone_60" | "vision_cone_90"
+  "vision_cone_30" | "vision_cone_60" | "vision_cone_90" | "vision_cone_103"
 >;
 
 type VisionConeAttachmentTarget = {
@@ -74,7 +74,8 @@ export const isVisionConeAction = (
   return (
     action === "vision_cone_30" ||
     action === "vision_cone_60" ||
-    action === "vision_cone_90"
+    action === "vision_cone_90" ||
+    action === "vision_cone_103"
   );
 };
 

@@ -193,7 +193,8 @@ export type AbilityAction =
   | "waylay_ult"
   | "vision_cone_30"
   | "vision_cone_60"
-  | "vision_cone_90";
+  | "vision_cone_90"
+  | "vision_cone_103";
 export type LineAbility = Extract<
   AbilityAction,
   | "astra_ult"
@@ -221,6 +222,7 @@ export type ArcAbility = Extract<
   | "vision_cone_30"
   | "vision_cone_60"
   | "vision_cone_90"
+  | "vision_cone_103"
 >;
 
 export type XLineAbility = Extract<AbilityAction, "deadlock_wall">;
