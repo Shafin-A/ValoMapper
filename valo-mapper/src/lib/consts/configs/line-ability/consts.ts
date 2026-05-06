@@ -34,6 +34,7 @@ export const X_LINE_ABILITY_CONFIGS: Record<
     endCircleRadius?: number;
     endCircleColor?: string;
     rotationHandleDistance?: number;
+    showInactiveRotationHandleRing?: boolean;
   }
 > = {
   deadlock_wall: {
@@ -59,6 +60,7 @@ export const DOUBLE_LINE_ABILITY_CONFIGS: Record<
     thickEndWidth?: number;
     thickEndStroke?: string;
     lineGap?: number;
+    showInactiveRotationHandleRing?: boolean;
   }
 > = {
   neon_wall: {
@@ -84,6 +86,7 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
     thickEndLength?: number;
     thickEndWidth?: number;
     thickEndStroke?: string;
+    showInactiveRotationHandleRing?: boolean;
   }
 > = {
   breach_stun: {
@@ -100,6 +103,7 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
     strokeWidth: 0.5,
     minLength: 4,
     maxLength: 15,
+    showInactiveRotationHandleRing: true,
   },
 };
 
@@ -116,6 +120,7 @@ export const LINE_ABILITY_CONFIGS: Record<
     thickEndLength?: number;
     thickEndWidth?: number;
     thickEndStroke?: string;
+    showInactiveRotationHandleRing?: boolean;
   }
 > = {
   astra_ult: {

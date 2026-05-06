@@ -11,6 +11,7 @@ interface ArcAbilityConfig {
   outerArcFill?: string;
   outerArcOpacity?: number;
   rotationHandleDistance?: number;
+  showInactiveRotationHandleRing?: boolean;
 }
 
 export const ARC_ABILITY_CONFIGS: Record<ArcAbility, ArcAbilityConfig> = {
@@ -37,6 +38,7 @@ export const ARC_ABILITY_CONFIGS: Record<ArcAbility, ArcAbilityConfig> = {
     useFillGradient: true,
     fill: "#ffffff",
     rotationHandleDistance: 70,
+    showInactiveRotationHandleRing: true,
   },
   vision_cone_60: {
     arcRadius: 12,
@@ -44,6 +46,7 @@ export const ARC_ABILITY_CONFIGS: Record<ArcAbility, ArcAbilityConfig> = {
     useFillGradient: true,
     fill: "#ffffff",
     rotationHandleDistance: 80,
+    showInactiveRotationHandleRing: true,
   },
   vision_cone_90: {
     arcRadius: 14,
@@ -51,5 +54,6 @@ export const ARC_ABILITY_CONFIGS: Record<ArcAbility, ArcAbilityConfig> = {
     useFillGradient: true,
     fill: "#ffffff",
     rotationHandleDistance: 90,
+    showInactiveRotationHandleRing: true,
   },
 };

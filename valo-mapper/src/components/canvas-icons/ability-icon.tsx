@@ -106,6 +106,7 @@ const renderAdjustableLineAbility = (props: AbilityIconProps): ReactNode => {
       iconLineGap={
         config.iconLineGap ? mToPixels(config.iconLineGap) : undefined
       }
+      showInactiveRotationHandleRing={config.showInactiveRotationHandleRing}
       showThickEnd={config.showThickEnd}
       thickEndLength={
         config.thickEndLength ? mToPixels(config.thickEndLength) : undefined
@@ -137,6 +138,7 @@ const renderLineAbility = (props: AbilityIconProps): ReactNode => {
         config.strokeWidth ? mToPixels(config.strokeWidth) : undefined
       }
       rotationHandleDistance={config.rotationHandleDistance}
+      showInactiveRotationHandleRing={config.showInactiveRotationHandleRing}
       iconLineGap={
         config.iconLineGap ? mToPixels(config.iconLineGap) : undefined
       }
@@ -176,6 +178,7 @@ const renderDoubleLineAbility = (props: AbilityIconProps): ReactNode => {
       iconLineGap={
         config.iconLineGap ? mToPixels(config.iconLineGap) : undefined
       }
+      showInactiveRotationHandleRing={config.showInactiveRotationHandleRing}
       showThickEnd={config.showThickEnd}
       thickEndLength={
         config.thickEndLength ? mToPixels(config.thickEndLength) : undefined
@@ -211,6 +214,7 @@ const renderXLineAbility = (props: AbilityIconProps): ReactNode => {
       }
       endCircleColor={config.endCircleColor}
       rotationHandleDistance={config.rotationHandleDistance}
+      showInactiveRotationHandleRing={config.showInactiveRotationHandleRing}
       {...props}
     />
   );
@@ -271,6 +275,7 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
           : undefined
       }
       rotationHandleDistance={config.rotationHandleDistance}
+      showInactiveRotationHandleRing={config.showInactiveRotationHandleRing}
       allowLengthAdjustment={isVisionCone}
       showCenterIcon={props.showCenterIcon}
       {...props}

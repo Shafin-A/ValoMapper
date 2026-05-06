@@ -30,6 +30,7 @@ interface CanvasDoubleLineIconProps extends CanvasIconProps {
   rotationHandleColor?: string;
   rotationHandleStrokeColor?: string;
   rotationHandleDistance?: number;
+  showInactiveRotationHandleRing?: boolean;
   iconPosition?: IconPosition;
   handleMode?: HandleMode;
   minLength?: number;
@@ -70,6 +71,7 @@ export const CanvasDoubleLineIcon = ({
   rotationHandleColor = "#e54646",
   rotationHandleStrokeColor = "#ffffff",
   rotationHandleDistance = 150,
+  showInactiveRotationHandleRing = false,
   strokeWidth,
   iconPosition = "start",
   handleMode = "rotation",
@@ -330,7 +332,14 @@ export const CanvasDoubleLineIcon = ({
   const handleX = handleDistance * Math.cos(radians);
   const handleY = handleDistance * Math.sin(radians);
 
-  const handleColor = handleMode === "length" ? "#46e546" : rotationHandleColor;
+  const isHandleActive = isInteracting || isHoveringHandle;
+  const activeHandleColor =
+    handleMode === "length" ? "#46e546" : rotationHandleColor;
+  const handleColor = isHandleActive
+    ? activeHandleColor
+    : showInactiveRotationHandleRing
+      ? "rgba(0, 0, 0, 0)"
+      : activeHandleColor;
 
   return (
     <Group
@@ -400,7 +409,7 @@ export const CanvasDoubleLineIcon = ({
               fill={handleColor}
               stroke={rotationHandleStrokeColor}
               strokeWidth={2}
-              opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
+              opacity={isHandleActive ? 0.8 : 0.6}
               onMouseDown={isListening ? handleInteractionStart : undefined}
               onTouchStart={isListening ? handleInteractionStart : undefined}
               onMouseOver={

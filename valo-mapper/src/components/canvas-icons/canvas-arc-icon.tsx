@@ -30,6 +30,7 @@ interface CanvasArcIconProps extends CanvasIconProps {
   rotationHandleRadius?: number;
   rotationHandleColor?: string;
   rotationHandleStrokeColor?: string;
+  showInactiveRotationHandleRing?: boolean;
   allowLengthAdjustment?: boolean;
   showCenterIcon?: boolean;
 }
@@ -69,6 +70,7 @@ export const CanvasArcIcon = ({
   rotationHandleRadius = 12,
   rotationHandleColor = "#e54646",
   rotationHandleStrokeColor = "#ffffff",
+  showInactiveRotationHandleRing = false,
   showAbilityShape = true,
   allowLengthAdjustment = false,
   showCenterIcon = true,
@@ -326,6 +328,13 @@ export const CanvasArcIcon = ({
     setIsHoveringHandle(false);
   };
 
+  const isHandleActive = isInteracting || isHoveringHandle;
+  const rotationHandleFill = isHandleActive
+    ? rotationHandleColor
+    : showInactiveRotationHandleRing
+      ? "rgba(0, 0, 0, 0)"
+      : rotationHandleColor;
+
   return (
     <Group
       id={id}
@@ -378,10 +387,10 @@ export const CanvasArcIcon = ({
               x={handleX}
               y={handleY}
               radius={rotationHandleRadius}
-              fill={rotationHandleColor}
+              fill={rotationHandleFill}
               stroke={rotationHandleStrokeColor}
               strokeWidth={2}
-              opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
+              opacity={isHandleActive ? 0.8 : 0.6}
               onMouseDown={isListening ? handleInteractionStart : undefined}
               onTouchStart={isListening ? handleInteractionStart : undefined}
               onMouseOver={

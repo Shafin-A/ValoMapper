@@ -23,6 +23,7 @@ interface CanvasXIconProps extends CanvasIconProps {
   rotationHandleColor?: string;
   rotationHandleStrokeColor?: string;
   rotationHandleDistance?: number;
+  showInactiveRotationHandleRing?: boolean;
   endCircleRadius?: number;
   endCircleColor?: string;
 }
@@ -54,6 +55,7 @@ export const CanvasXIcon = ({
   rotationHandleColor = "#e54646",
   rotationHandleStrokeColor = "#ffffff",
   rotationHandleDistance = 150,
+  showInactiveRotationHandleRing = false,
   strokeWidth,
   endCircleRadius = 8,
   endCircleColor = "#ffffff",
@@ -241,6 +243,12 @@ export const CanvasXIcon = ({
 
   const handleX = rotationHandleDistance * Math.cos(handleRadians);
   const handleY = rotationHandleDistance * Math.sin(handleRadians);
+  const isHandleActive = isInteracting || isHoveringHandle;
+  const rotationHandleFill = isHandleActive
+    ? rotationHandleColor
+    : showInactiveRotationHandleRing
+      ? "rgba(0, 0, 0, 0)"
+      : rotationHandleColor;
 
   return (
     <Group
@@ -310,10 +318,10 @@ export const CanvasXIcon = ({
               y={handleY}
               listening={isListening}
               radius={rotationHandleRadius}
-              fill={rotationHandleColor}
+              fill={rotationHandleFill}
               stroke={rotationHandleStrokeColor}
               strokeWidth={2}
-              opacity={isInteracting || isHoveringHandle ? 0.8 : 0.6}
+              opacity={isHandleActive ? 0.8 : 0.6}
               onMouseDown={isListening ? handleInteractionStart : undefined}
               onTouchStart={isListening ? handleInteractionStart : undefined}
               onMouseOver={

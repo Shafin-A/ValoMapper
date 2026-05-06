@@ -255,7 +255,7 @@ export const useCanvasEvents = (
                 abilitiesSettings,
                 excludeId: TEMP_DRAG_ID,
               })
-          : null;
+            : null;
         const newAbility = {
           ...selectedCanvasIcon,
           id: newId,
