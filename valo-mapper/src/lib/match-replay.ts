@@ -11,6 +11,7 @@ import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
 import type {
   AgentCanvas,
   AgentRole,
+  AbilityCanvas,
   ConnectingLine,
   IconSettings,
   MapOption,
@@ -31,6 +32,8 @@ const FALLBACK_REPLAY_KILL_COLORS = {
 } as const;
 
 const REPLAY_SPIKE_SIZE = 32;
+const REPLAY_VIEW_VECTOR_LENGTH = 100;
+const REPLAY_VISION_CONE_NAME = "Vision Cone 103";
 
 const createEmptyPhaseState = (): PhaseState => ({
   agentsOnCanvas: [],
@@ -153,6 +156,57 @@ const toCanvasPoint = ({
   });
 };
 
+const toCanvasRotation = ({
+  mapId,
+  mapSide,
+  location,
+  viewRadians,
+}: {
+  mapId: string;
+  mapSide: MapSide;
+  location?: MatchPlayerLocation["location"];
+  viewRadians?: number;
+}) => {
+  if (
+    !location ||
+    typeof viewRadians !== "number" ||
+    !Number.isFinite(viewRadians)
+  ) {
+    return 0;
+  }
+
+  const transform = getMapCallouts(mapId);
+  if (!transform) {
+    return 0;
+  }
+
+  const mapPosition = getReplayMapPosition();
+  const origin = transformRiotWorldToCanvasPoint({
+    position: location,
+    transform,
+    mapPosition,
+    mapSide,
+  });
+  const facingPoint = transformRiotWorldToCanvasPoint({
+    position: {
+      x: location.x + Math.cos(viewRadians) * REPLAY_VIEW_VECTOR_LENGTH,
+      y: location.y + Math.sin(viewRadians) * REPLAY_VIEW_VECTOR_LENGTH,
+    },
+    transform,
+    mapPosition,
+    mapSide,
+  });
+
+  if (!origin || !facingPoint) {
+    return 0;
+  }
+
+  return (
+    (Math.atan2(facingPoint.y - origin.y, facingPoint.x - origin.x) * 180) /
+    Math.PI
+  );
+};
+
 const buildAgentsFromLocations = ({
   latestLocations,
   mapId,
@@ -189,6 +243,55 @@ const buildAgentsFromLocations = ({
         isGray: grayPlayerIds?.has(player.puuid),
         x: canvasPoint.x,
         y: canvasPoint.y,
+      },
+    ];
+  });
+};
+
+const buildVisionConesFromLocations = ({
+  latestLocations,
+  mapId,
+  mapSide,
+  players,
+  replayAgentIdsByPuuid,
+}: {
+  latestLocations: Map<string, MatchPlayerLocation>;
+  mapId: string;
+  mapSide: MapSide;
+  players: MatchPlayerSummary[];
+  replayAgentIdsByPuuid: Map<string, string>;
+}): AbilityCanvas[] => {
+  return players.flatMap((player) => {
+    const playerLocation = latestLocations.get(player.puuid);
+    const canvasPoint = toCanvasPoint({
+      mapId,
+      mapSide,
+      position: playerLocation?.location,
+    });
+
+    if (!playerLocation || !canvasPoint) {
+      return [];
+    }
+
+    const agentId = getReplayAgentId(replayAgentIdsByPuuid, player.puuid);
+
+    return [
+      {
+        id: `${agentId}-cone`,
+        name: REPLAY_VISION_CONE_NAME,
+        action: "vision_cone_103",
+        attachedToId: agentId,
+        isAlly: player.teamId === "Blue",
+        x: canvasPoint.x,
+        y: canvasPoint.y,
+        currentRotation: toCanvasRotation({
+          mapId,
+          mapSide,
+          location: playerLocation.location,
+          viewRadians: playerLocation.viewRadians,
+        }),
+        iconOnly: false,
+        showOuterCircle: true,
       },
     ];
   });
@@ -284,9 +387,11 @@ const seedLatestLocations = (
   });
 
   if (event.eventType === "kill" && event.victimLocation) {
+    const existingVictimLocation = latestLocations.get(event.victimPuuid);
+
     latestLocations.set(event.victimPuuid, {
       puuid: event.victimPuuid,
-      viewRadians: 0,
+      viewRadians: existingVictimLocation?.viewRadians ?? 0,
       location: event.victimLocation,
     });
 
@@ -338,6 +443,13 @@ const buildRoundReplayState = ({
       replayAgentIdsByPuuid,
       grayPlayerIds:
         event.eventType === "kill" ? new Set([event.victimPuuid]) : undefined,
+    });
+    nextPhase.abilitiesOnCanvas = buildVisionConesFromLocations({
+      latestLocations,
+      mapId: mapOption.id,
+      mapSide,
+      players,
+      replayAgentIdsByPuuid,
     });
 
     if (event.eventType === "kill") {

@@ -8,6 +8,51 @@ import {
 } from "@/lib/consts";
 import { MatchSummaryResponse } from "@/lib/types";
 
+const REPLAY_VIEW_VECTOR_LENGTH = 100;
+
+const getExpectedReplayConeRotation = ({
+  mapId,
+  mapSide,
+  position,
+  viewRadians,
+}: {
+  mapId: string;
+  mapSide: "attack" | "defense";
+  position: { x: number; y: number };
+  viewRadians: number;
+}) => {
+  const transform = getMapCallouts(mapId);
+  if (!transform) {
+    throw new Error(`Missing callouts for ${mapId}`);
+  }
+
+  const mapPosition = {
+    x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
+    y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
+  };
+
+  const origin = transformRiotWorldToCanvasPoint({
+    position,
+    transform,
+    mapPosition,
+    mapSide,
+  });
+  const facingPoint = transformRiotWorldToCanvasPoint({
+    position: {
+      x: position.x + Math.cos(viewRadians) * REPLAY_VIEW_VECTOR_LENGTH,
+      y: position.y + Math.sin(viewRadians) * REPLAY_VIEW_VECTOR_LENGTH,
+    },
+    transform,
+    mapPosition,
+    mapSide,
+  });
+
+  return (
+    (Math.atan2(facingPoint.y - origin.y, facingPoint.x - origin.x) * 180) /
+    Math.PI
+  );
+};
+
 describe("buildMatchReplayRoundStates", () => {
   it("builds cumulative replay phases from match telemetry", () => {
     const matchSummary: MatchSummaryResponse = {
@@ -176,6 +221,136 @@ describe("buildMatchReplayRoundStates", () => {
       x: plantCanvasPoint.x,
       y: plantCanvasPoint.y,
     });
+  });
+
+  it("attaches 103 vision cones to replay agents using player view radians", () => {
+    const viewerViewRadians = Math.PI / 2;
+    const enemyViewRadians = Math.PI;
+
+    const matchSummary: MatchSummaryResponse = {
+      matchId: "match-1",
+      mapId: "/Game/Maps/Ascent/Ascent",
+      mapName: "Ascent",
+      queueLabel: "Competitive",
+      gameStartAt: "2024-01-01T00:00:00Z",
+      viewer: {
+        puuid: "viewer-puuid",
+        bestRoundNumber: 1,
+      },
+      totalRounds: 1,
+      players: [
+        {
+          puuid: "viewer-puuid",
+          gameName: "Viewer",
+          tagLine: "NA1",
+          teamId: "Blue",
+          characterId: "agent-1",
+          characterName: "Jett",
+        },
+        {
+          puuid: "enemy-puuid",
+          gameName: "Enemy",
+          tagLine: "NA1",
+          teamId: "Red",
+          characterId: "agent-2",
+          characterName: "Sage",
+        },
+      ],
+      rounds: [
+        {
+          roundNumber: 1,
+          winningTeam: "Blue",
+          roundResultCode: "Elimination",
+          scoreAfterRound: {
+            red: 0,
+            blue: 1,
+          },
+          playerStats: [],
+          eventLog: [
+            {
+              eventType: "kill",
+              timeSinceRoundStartMillis: 9000,
+              killerPuuid: "viewer-puuid",
+              victimPuuid: "enemy-puuid",
+              victimLocation: { x: -1200, y: 1800 },
+              playerLocations: [
+                {
+                  puuid: "viewer-puuid",
+                  viewRadians: viewerViewRadians,
+                  location: { x: -1000, y: 1500 },
+                },
+                {
+                  puuid: "enemy-puuid",
+                  viewRadians: enemyViewRadians,
+                  location: { x: -1200, y: 1800 },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const replayState =
+      buildMatchReplayRoundStates(matchSummary).roundStates[1];
+    const firstPhase = replayState.phases[0];
+    const viewerAgent = firstPhase.agentsOnCanvas.find(
+      (agent) => agent.id === "replay-agent-0",
+    );
+    const enemyAgent = firstPhase.agentsOnCanvas.find(
+      (agent) => agent.id === "replay-agent-1",
+    );
+    const viewerCone = firstPhase.abilitiesOnCanvas.find(
+      (ability) => ability.attachedToId === "replay-agent-0",
+    );
+    const enemyCone = firstPhase.abilitiesOnCanvas.find(
+      (ability) => ability.attachedToId === "replay-agent-1",
+    );
+
+    if (!viewerAgent || !enemyAgent || !viewerCone || !enemyCone) {
+      throw new Error("Expected replay agents and attached vision cones");
+    }
+
+    expect(firstPhase.abilitiesOnCanvas).toHaveLength(2);
+    expect(viewerCone).toMatchObject({
+      id: "replay-agent-0-cone",
+      name: "Vision Cone 103",
+      action: "vision_cone_103",
+      attachedToId: "replay-agent-0",
+      iconOnly: false,
+      showOuterCircle: true,
+      x: viewerAgent.x,
+      y: viewerAgent.y,
+    });
+    expect(enemyCone).toMatchObject({
+      id: "replay-agent-1-cone",
+      name: "Vision Cone 103",
+      action: "vision_cone_103",
+      attachedToId: "replay-agent-1",
+      iconOnly: false,
+      showOuterCircle: true,
+      x: enemyAgent.x,
+      y: enemyAgent.y,
+    });
+
+    expect(viewerCone.currentRotation).toBeCloseTo(
+      getExpectedReplayConeRotation({
+        mapId: "ascent",
+        mapSide: "defense",
+        position: { x: -1000, y: 1500 },
+        viewRadians: viewerViewRadians,
+      }),
+      5,
+    );
+    expect(enemyCone.currentRotation).toBeCloseTo(
+      getExpectedReplayConeRotation({
+        mapId: "ascent",
+        mapSide: "defense",
+        position: { x: -1200, y: 1800 },
+        viewRadians: enemyViewRadians,
+      }),
+      5,
+    );
   });
 
   it("restores a previously killed player when they appear again in a later kill event", () => {
