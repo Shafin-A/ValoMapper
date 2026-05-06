@@ -217,6 +217,7 @@ describe("useCanvasEvents", () => {
       handleToggleAbilityOuterCircle: jest.fn(),
       handleRemoveAttachedVisionCone: jest.fn(),
       handleDetachVisionCone: jest.fn(),
+      handleToggleAgentDead: jest.fn(),
       closeContextMenu: jest.fn(),
     });
   });
