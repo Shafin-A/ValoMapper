@@ -122,6 +122,7 @@ export const CanvasArcIcon = ({
     isAlly,
     mapSide,
     showAbilityShape,
+    showCenterIcon,
     showOuterCircle,
     width,
     height,
