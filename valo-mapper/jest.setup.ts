@@ -123,8 +123,12 @@ jest.mock("react-konva", () => {
       React.createElement("div", { "data-testid": "konva-rect", ...props }),
     Circle: (props: Record<string, unknown>) =>
       React.createElement("div", { "data-testid": "konva-circle", ...props }),
+    Ellipse: (props: Record<string, unknown>) =>
+      React.createElement("div", { "data-testid": "konva-ellipse", ...props }),
     Line: (props: Record<string, unknown>) =>
       React.createElement("div", { "data-testid": "konva-line", ...props }),
+    Arrow: (props: Record<string, unknown>) =>
+      React.createElement("div", { "data-testid": "konva-arrow", ...props }),
     Text: (props: Record<string, unknown>) =>
       React.createElement("div", { "data-testid": "konva-text", ...props }),
     Group: ({ children, ...props }: MockComponentProps) =>

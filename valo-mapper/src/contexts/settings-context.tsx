@@ -45,6 +45,7 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     isArrowHead: false,
     shape: "freehand",
     opacity: 1,
+    traversalTime: null,
   });
 
   const [eraserSettings, setEraserSettings] = useState<EraserSettings>({

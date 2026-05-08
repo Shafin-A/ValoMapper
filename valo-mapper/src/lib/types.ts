@@ -80,6 +80,21 @@ export type EraserSettings = {
 
 export type DrawShape = "freehand" | "straight" | "rectangle" | "circle";
 
+export type TraversalTimeOption =
+  | "knife-run"
+  | "knife-walk"
+  | "phantom-vandal-run"
+  | "phantom-vandal-walk";
+
+export type TraversalWeapon = "knife" | "phantom-vandal";
+
+export type TraversalMovement = "run" | "walk";
+
+export type TraversalSelection = {
+  weapon: TraversalWeapon | null;
+  movement: TraversalMovement | null;
+};
+
 export type DrawSettings = {
   size: number;
   color: string;
@@ -87,6 +102,7 @@ export type DrawSettings = {
   isArrowHead: boolean;
   shape: DrawShape;
   opacity: number;
+  traversalTime?: TraversalTimeOption | null;
 };
 
 export type IconSettings = {
@@ -300,6 +316,7 @@ export type DrawLine = {
   isArrowHead: boolean;
   shape?: DrawShape;
   opacity?: number;
+  traversalTime?: TraversalTimeOption | null;
   parentId?: string;
   chunkIndex?: number;
   totalChunks?: number;

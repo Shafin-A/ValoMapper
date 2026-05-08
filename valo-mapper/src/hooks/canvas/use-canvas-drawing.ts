@@ -15,6 +15,13 @@ import {
 } from "react";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
+const getTraversalTimeForShape = (tool: Tool, drawSettings: DrawSettings) =>
+  tool === "eraser" ||
+  drawSettings.shape === "rectangle" ||
+  drawSettings.shape === "circle"
+    ? null
+    : (drawSettings.traversalTime ?? null);
+
 export const useCanvasDrawing = (
   getWorldPointerPosition: () => Vector2d | null,
   isDrawing: RefObject<boolean>,
@@ -54,6 +61,7 @@ export const useCanvasDrawing = (
         isArrowHead: drawSettings.isArrowHead,
         shape: tool === "eraser" ? "freehand" : drawSettings.shape,
         opacity: tool === "eraser" ? 1 : drawSettings.opacity,
+        traversalTime: getTraversalTimeForShape(tool, drawSettings),
       });
     } else {
       const lastPoint =
@@ -65,6 +73,14 @@ export const useCanvasDrawing = (
 
       if (distance > 5) {
         drawingBufferRef.current.push(worldPos);
+        const startPoint = drawingBufferRef.current[0];
+        const previewPoints =
+          tool === "pencil" &&
+          (drawSettings.shape === "straight" ||
+            drawSettings.shape === "rectangle" ||
+            drawSettings.shape === "circle")
+            ? [startPoint, worldPos]
+            : [...drawingBufferRef.current];
 
         if (tool === "eraser" && eraserSettings.mode === "line") {
           const currentSegment = [lastPoint, worldPos];
@@ -93,7 +109,6 @@ export const useCanvasDrawing = (
         }
 
         if (currentLineRef.current) {
-          const startPoint = drawingBufferRef.current[0];
           if (tool === "pencil" && drawSettings.shape === "rectangle") {
             const x = Math.min(startPoint.x, worldPos.x);
             const y = Math.min(startPoint.y, worldPos.y);
@@ -119,10 +134,10 @@ export const useCanvasDrawing = (
               radiusY,
             });
           } else {
-            const flatPoints =
-              tool === "pencil" && drawSettings.shape === "straight"
-                ? [startPoint.x, startPoint.y, worldPos.x, worldPos.y]
-                : drawingBufferRef.current.flatMap((p) => [p.x, p.y]);
+            const flatPoints = previewPoints.flatMap((point) => [
+              point.x,
+              point.y,
+            ]);
 
             (currentLineRef.current as Konva.Line | Konva.Arrow).points(
               flatPoints,
@@ -130,6 +145,15 @@ export const useCanvasDrawing = (
           }
           currentLineRef.current.getLayer()?.batchDraw();
         }
+
+        setCurrentStroke((currentStroke) =>
+          currentStroke
+            ? {
+                ...currentStroke,
+                points: previewPoints,
+              }
+            : currentStroke,
+        );
       }
     }
   }, [
@@ -167,6 +191,7 @@ export const useCanvasDrawing = (
         isArrowHead: drawSettings.isArrowHead,
         shape: tool === "eraser" ? ("freehand" as const) : drawSettings.shape,
         opacity: tool === "eraser" ? 1 : drawSettings.opacity,
+        traversalTime: getTraversalTimeForShape(tool, drawSettings),
       };
 
       if (tool === "eraser") {

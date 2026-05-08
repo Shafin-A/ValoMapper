@@ -419,6 +419,174 @@ describe("useCanvasDrawing", () => {
     );
   });
 
+  it("copies traversal time into the preview and final stroke", () => {
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 20, y: 20 },
+    ];
+    const getWorldPointerPosition = jest
+      .fn()
+      .mockReturnValueOnce(positions[0])
+      .mockReturnValueOnce(positions[1]);
+    const isDrawing = { current: false };
+    const setDrawLines = jest.fn();
+    const setCurrentStroke = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "straight" as const,
+          opacity: 1,
+          traversalTime: "knife-walk",
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        setDrawLines,
+        setCurrentStroke,
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleMouseUp();
+    });
+
+    expect(setCurrentStroke).toHaveBeenCalledWith(
+      expect.objectContaining({ traversalTime: "knife-walk" }),
+    );
+
+    const updateArg = (
+      setDrawLines.mock.calls[0][0] as (prev: DrawLine[]) => DrawLine[]
+    )([]);
+
+    expect(updateArg[0]).toMatchObject({ traversalTime: "knife-walk" });
+  });
+
+  it("updates the preview stroke points while drawing", () => {
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 60, y: 80 },
+    ];
+    const getWorldPointerPosition = jest
+      .fn()
+      .mockReturnValueOnce(positions[0])
+      .mockReturnValueOnce(positions[1]);
+    const isDrawing = { current: false };
+    const setDrawLines = jest.fn();
+    const setCurrentStroke = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "straight" as const,
+          opacity: 1,
+          traversalTime: "knife-walk",
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        setDrawLines,
+        setCurrentStroke,
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+    });
+
+    const updateCurrentStroke = setCurrentStroke.mock.calls.find(
+      ([arg]) => typeof arg === "function",
+    )?.[0] as ((line: DrawLine | null) => DrawLine | null) | undefined;
+
+    expect(updateCurrentStroke).toBeDefined();
+    expect(
+      updateCurrentStroke?.({
+        id: "line-1",
+        tool: "pencil",
+        points: [positions[0]],
+        color: "#000",
+        size: 2,
+        isDashed: false,
+        isArrowHead: false,
+        shape: "straight",
+        opacity: 1,
+        traversalTime: "knife-walk",
+      }),
+    ).toMatchObject({
+      points: positions,
+      traversalTime: "knife-walk",
+    });
+  });
+
+  it("ignores traversal time for rectangle strokes", () => {
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 40, y: 50 },
+    ];
+    const getWorldPointerPosition = jest
+      .fn()
+      .mockReturnValueOnce(positions[0])
+      .mockReturnValueOnce(positions[1]);
+    const isDrawing = { current: false };
+    const setDrawLines = jest.fn();
+    const setCurrentStroke = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "rectangle" as const,
+          opacity: 1,
+          traversalTime: "knife-walk",
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        setDrawLines,
+        setCurrentStroke,
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleMouseUp();
+    });
+
+    expect(setCurrentStroke).toHaveBeenCalledWith(
+      expect.objectContaining({ traversalTime: null }),
+    );
+
+    const updateArg = (
+      setDrawLines.mock.calls[0][0] as (prev: DrawLine[]) => DrawLine[]
+    )([]);
+
+    expect(updateArg[0]).toMatchObject({
+      shape: "rectangle",
+      traversalTime: null,
+    });
+  });
+
   it("creates a rectangle with exactly two points on mouse up", () => {
     const positions = [
       { x: 0, y: 0 },

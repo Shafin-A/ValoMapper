@@ -58,4 +58,13 @@ export {
   getMapSpawnBarriers,
   MAP_SPAWN_BARRIERS,
 } from "./spawn-barriers/consts";
+export {
+  getTraversalSelection,
+  getTraversalDurationSeconds,
+  TRAVERSAL_TIME_BY_PARTS,
+  TRAVERSAL_TIME_BY_OPTION,
+  TRAVERSAL_TIME_OPTIONS,
+  TRAVERSAL_WEAPON_OPTIONS,
+  type TraversalTimeConfig,
+} from "./traversal-time";
 export { getMapUltOrbs, MAP_ULT_ORBS } from "./ult-orbs/consts";
