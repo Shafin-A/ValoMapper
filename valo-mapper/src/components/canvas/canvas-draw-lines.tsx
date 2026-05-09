@@ -1,10 +1,26 @@
 import React, { Ref } from "react";
 import Konva from "konva";
-import { Arrow, Ellipse, Group, Line, Rect, Text } from "react-konva";
+import {
+  Arrow,
+  Ellipse,
+  Group,
+  Image as KonvaImage,
+  Line,
+  Rect,
+  Text,
+} from "react-konva";
 import { useCanvas } from "@/contexts/canvas-context";
-import { getTraversalDurationSeconds } from "@/lib/consts";
+import {
+  getTraversalDurationSeconds,
+  getTraversalSelection,
+  TRAVERSAL_TIME_BY_OPTION,
+} from "@/lib/consts";
 import type { DrawLine } from "@/lib/types";
 import { Vector2d } from "konva/lib/types";
+import useImage from "use-image";
+
+const TRAVERSAL_RUN_ICON_SRC = "/agents/neon/high_gear.png";
+const TRAVERSAL_WALK_ICON_SRC = "/footprints.svg";
 
 const getRectProps = (p1: Vector2d, p2: Vector2d) => ({
   x: Math.min(p1.x, p2.x),
@@ -73,6 +89,136 @@ const getTraversalLabelPosition = (line: Pick<DrawLine, "points">) => {
   };
 };
 
+const getContainedImageDimensions = (
+  image: HTMLImageElement | undefined,
+  maxWidth: number,
+  maxHeight: number,
+  fallback: { width: number; height: number },
+) => {
+  const imageWidth = image?.naturalWidth ?? image?.width;
+  const imageHeight = image?.naturalHeight ?? image?.height;
+
+  if (!imageWidth || !imageHeight) {
+    return fallback;
+  }
+
+  const scale = Math.min(maxWidth / imageWidth, maxHeight / imageHeight);
+
+  return {
+    width: imageWidth * scale,
+    height: imageHeight * scale,
+  };
+};
+
+type TraversalLabelProps = {
+  line: DrawLine;
+  labelKey: string;
+  labelText: string;
+  labelPosition: { x: number; y: number };
+};
+
+const TraversalLabel = ({
+  line,
+  labelKey,
+  labelText,
+  labelPosition,
+}: TraversalLabelProps) => {
+  const traversalConfig = line.traversalTime
+    ? TRAVERSAL_TIME_BY_OPTION[line.traversalTime]
+    : null;
+  const traversalSelection = getTraversalSelection(line.traversalTime);
+  const isKnife = traversalSelection.weapon === "knife";
+  const mainIconSrc = traversalConfig?.imageSrc;
+  const movementIconSrc =
+    traversalSelection.movement === "run"
+      ? TRAVERSAL_RUN_ICON_SRC
+      : traversalSelection.movement === "walk"
+        ? TRAVERSAL_WALK_ICON_SRC
+        : undefined;
+
+  const [mainIcon] = useImage(mainIconSrc ?? "");
+  const [movementIcon] = useImage(movementIconSrc ?? "");
+
+  const labelHeight = 24;
+  const paddingX = 8;
+  const mainIconDimensions = mainIconSrc
+    ? getContainedImageDimensions(mainIcon, isKnife ? 16 : 20, 12, {
+        width: isKnife ? 16 : 20,
+        height: isKnife ? 10 : 10,
+      })
+    : { width: 0, height: 0 };
+  const movementIconDimensions = movementIconSrc
+    ? getContainedImageDimensions(movementIcon, 10, 10, {
+        width: 10,
+        height: 10,
+      })
+    : { width: 0, height: 0 };
+  const iconGap =
+    mainIconDimensions.width && movementIconDimensions.width ? 4 : 0;
+  const mainIconWidth = mainIconDimensions.width;
+  const mainIconHeight = mainIconDimensions.height;
+  const movementIconWidth = movementIconDimensions.width;
+  const movementIconHeight = movementIconDimensions.height;
+  const textGap = mainIconWidth || movementIconWidth ? 6 : 0;
+  const iconsWidth = mainIconWidth + movementIconWidth + iconGap;
+  const textX = paddingX + iconsWidth + textGap;
+  const labelWidth = Math.max(76, textX + labelText.length * 8 + paddingX);
+  const textWidth = labelWidth - textX - paddingX;
+  const mainIconY = (labelHeight - mainIconHeight) / 2;
+  const movementIconY = (labelHeight - movementIconHeight) / 2;
+
+  return (
+    <Group
+      key={labelKey}
+      x={labelPosition.x - labelWidth / 2}
+      y={labelPosition.y - labelHeight / 2}
+      listening={false}
+    >
+      <Rect
+        isListening={false}
+        width={labelWidth}
+        height={labelHeight}
+        cornerRadius={2}
+        fill="#18181bcc"
+        stroke={"#18181b"}
+        strokeWidth={1.5}
+      />
+      {mainIcon && (
+        <KonvaImage
+          isListening={false}
+          image={mainIcon}
+          x={paddingX}
+          y={mainIconY}
+          width={mainIconWidth}
+          height={mainIconHeight}
+        />
+      )}
+      {movementIcon && (
+        <KonvaImage
+          isListening={false}
+          image={movementIcon}
+          x={paddingX + mainIconWidth + iconGap}
+          y={movementIconY}
+          width={movementIconWidth}
+          height={movementIconHeight}
+        />
+      )}
+      <Text
+        isListening={false}
+        x={textX}
+        text={labelText}
+        width={textWidth}
+        height={labelHeight}
+        align="left"
+        verticalAlign="middle"
+        fontSize={13}
+        fontStyle="bold"
+        fill="#f8fafc"
+      />
+    </Group>
+  );
+};
+
 const renderTraversalLabel = (line: DrawLine, key: string) => {
   const labelText = getTraversalLabelText(line);
   if (!labelText) {
@@ -84,37 +230,13 @@ const renderTraversalLabel = (line: DrawLine, key: string) => {
     return null;
   }
 
-  const labelWidth = Math.max(48, labelText.length * 9 + 18);
-  const labelHeight = 24;
-
   return (
-    <Group
-      key={key}
-      x={labelPosition.x - labelWidth / 2}
-      y={labelPosition.y - labelHeight / 2}
-      listening={false}
-    >
-      <Rect
-        isListening={false}
-        width={labelWidth}
-        height={labelHeight}
-        cornerRadius={999}
-        fill="#0f172acc"
-        stroke={line.color}
-        strokeWidth={1.5}
-      />
-      <Text
-        isListening={false}
-        text={labelText}
-        width={labelWidth}
-        height={labelHeight}
-        align="center"
-        verticalAlign="middle"
-        fontSize={13}
-        fontStyle="bold"
-        fill="#f8fafc"
-      />
-    </Group>
+    <TraversalLabel
+      line={line}
+      labelKey={key}
+      labelText={labelText}
+      labelPosition={labelPosition}
+    />
   );
 };
 

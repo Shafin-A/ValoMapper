@@ -43,9 +43,11 @@ describe("CanvasDrawLines", () => {
     );
 
     const texts = container.querySelectorAll('[data-testid="konva-text"]');
+    const images = container.querySelectorAll('[data-testid="konva-image"]');
     const traversalDuration = getTraversalDurationSeconds(200, "knife-walk");
 
     expect(texts).toHaveLength(1);
+    expect(images).toHaveLength(2);
     expect(texts[0]).toHaveAttribute(
       "text",
       `${traversalDuration?.toFixed(1)}s`,
@@ -77,10 +79,18 @@ describe("CanvasDrawLines", () => {
     );
 
     const text = container.querySelector('[data-testid="konva-text"]');
+    const images = container.querySelectorAll('[data-testid="konva-image"]');
     const group = container.querySelector('[data-testid="konva-group"]');
     const traversalDuration = getTraversalDurationSeconds(100, "knife-walk");
 
     expect(text).toHaveAttribute("text", `${traversalDuration?.toFixed(1)}s`);
+    expect(images).toHaveLength(2);
+    expect(Number(images[0]?.getAttribute("x"))).toBeLessThan(
+      Number(images[1]?.getAttribute("x")),
+    );
+    expect(Number(text?.getAttribute("x"))).toBeGreaterThan(
+      Number(images[1]?.getAttribute("x")),
+    );
     expect(Number(group?.getAttribute("x"))).toBeGreaterThan(80);
     expect(Number(group?.getAttribute("y"))).toBeLessThan(60);
   });
@@ -111,7 +121,9 @@ describe("CanvasDrawLines", () => {
     );
 
     const texts = container.querySelectorAll('[data-testid="konva-text"]');
+    const images = container.querySelectorAll('[data-testid="konva-image"]');
     expect(texts).toHaveLength(0);
+    expect(images).toHaveLength(0);
   });
 
   it("does not render traversal labels for rectangle or ellipse drawings", () => {
@@ -156,6 +168,8 @@ describe("CanvasDrawLines", () => {
     );
 
     const texts = container.querySelectorAll('[data-testid="konva-text"]');
+    const images = container.querySelectorAll('[data-testid="konva-image"]');
     expect(texts).toHaveLength(0);
+    expect(images).toHaveLength(0);
   });
 });
