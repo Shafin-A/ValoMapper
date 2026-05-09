@@ -8,10 +8,17 @@ import {
 } from "@/hooks/canvas";
 import { useCanvasPatch } from "@/hooks/canvas/use-canvas-patch";
 import { useSettings } from "@/contexts/settings-context";
+import { defaultIconSettings } from "@/contexts/settings-context";
 import { MapOption, MapSide, PhaseState, UndoableState } from "@/lib/types";
 import { MAP_SIZE, VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts";
 import { useParams } from "next/navigation";
-import { SetStateAction, useCallback, useEffect, useRef } from "react";
+import {
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { parseTimestamp } from "@/lib/utils";
 
 interface UseCanvasStateOptions {
@@ -21,12 +28,29 @@ interface UseCanvasStateOptions {
     state: UndoableState,
     previousState: UndoableState,
   ) => void;
+  onHistoryReplaySettled?: (
+    settledState: UndoableState,
+    previousState: UndoableState,
+    targetState: UndoableState,
+  ) => void;
 }
+
+type PendingHistorySeed =
+  | {
+      scope: string;
+      source: "expected";
+      baseline: UndoableState;
+    }
+  | {
+      scope: string;
+      source: "current";
+    };
 
 export const useCanvasState = ({
   initialPhaseCount,
   initialState: providedInitialState,
   onApplyHistoryState,
+  onHistoryReplaySettled,
 }: UseCanvasStateOptions = {}) => {
   const params = useParams();
   const lobbyCode =
@@ -52,6 +76,23 @@ export const useCanvasState = ({
     updateAbilitiesSettings,
   } = useSettings();
 
+  // Delayed history and sync callbacks must read the latest committed state.
+  const getLatestPhasesRef = useRef(phaseManager.getLatestPhases);
+  const currentPhaseIndexRef = useRef(phaseManager.currentPhaseIndex);
+  const editedPhasesRef = useRef(phaseManager.editedPhases);
+  const selectedMapRef = useRef(canvasUI.selectedMap);
+  const mapSideRef = useRef(canvasUI.mapSide);
+  const agentsSettingsRef = useRef(agentsSettings);
+  const abilitiesSettingsRef = useRef(abilitiesSettings);
+
+  getLatestPhasesRef.current = phaseManager.getLatestPhases;
+  currentPhaseIndexRef.current = phaseManager.currentPhaseIndex;
+  editedPhasesRef.current = phaseManager.editedPhases;
+  selectedMapRef.current = canvasUI.selectedMap;
+  mapSideRef.current = canvasUI.mapSide;
+  agentsSettingsRef.current = agentsSettings;
+  abilitiesSettingsRef.current = abilitiesSettings;
+
   const phaseUnloadRef = useRef<(() => void) | null>(null);
   const { enqueueCanvasPatchEntry } = useCanvasPatch(lobbyCode, phaseUnloadRef);
 
@@ -61,10 +102,19 @@ export const useCanvasState = ({
     isError: isErrorLobby,
     error: lobbyError,
   } = useLobby(lobbyCode);
-  const lastSavedStateRef = useRef<UndoableState | null>(null);
 
   const lastLoadedLobbyRef = useRef<string>("");
   const lastAppliedLobbyUpdatedAt = useRef<string>("");
+  const lastHistoryScopeRef = useRef<string>("");
+  const [isHistoryTrackingEnabled, setIsHistoryTrackingEnabled] = useState(
+    () => !lobbyCode,
+  );
+  const [pendingHistorySeed, setPendingHistorySeed] =
+    useState<PendingHistorySeed | null>(null);
+  const pendingHistoryReplayCompletionRef = useRef<
+    ((settledState: UndoableState) => void) | null
+  >(null);
+  const [historyReplayCommitTick, setHistoryReplayCommitTick] = useState(0);
 
   useEffect(() => {
     if (initialState?.agentsSettings) {
@@ -130,27 +180,55 @@ export const useCanvasState = ({
     [canvasItems],
   );
 
-  const getCurrentState = useCallback(
-    (): UndoableState => ({
-      phases: phaseManager.getLatestPhases(),
-      selectedMap: canvasUI.selectedMap,
-      mapSide: canvasUI.mapSide,
-      currentPhaseIndex: phaseManager.currentPhaseIndex,
-      editedPhases: Array.from(phaseManager.editedPhases),
-      agentsSettings,
-      abilitiesSettings,
+  const getCurrentState = useCallback((): UndoableState => {
+    void phaseManager;
+    void canvasUI.selectedMap;
+    void canvasUI.mapSide;
+    void agentsSettings;
+    void abilitiesSettings;
+
+    return {
+      phases: getLatestPhasesRef.current(),
+      selectedMap: selectedMapRef.current,
+      mapSide: mapSideRef.current,
+      currentPhaseIndex: currentPhaseIndexRef.current,
+      editedPhases: Array.from(editedPhasesRef.current),
+      agentsSettings: agentsSettingsRef.current,
+      abilitiesSettings: abilitiesSettingsRef.current,
+    };
+  }, [
+    phaseManager,
+    canvasUI.selectedMap,
+    canvasUI.mapSide,
+    agentsSettings,
+    abilitiesSettings,
+  ]);
+
+  const normalizeHistoryState = useCallback(
+    (state: UndoableState): UndoableState => ({
+      ...state,
+      agentsSettings:
+        state.agentsSettings ??
+        agentsSettingsRef.current ??
+        defaultIconSettings,
+      abilitiesSettings:
+        state.abilitiesSettings ??
+        abilitiesSettingsRef.current ??
+        defaultIconSettings,
     }),
-    [
-      phaseManager,
-      canvasUI.selectedMap,
-      canvasUI.mapSide,
-      agentsSettings,
-      abilitiesSettings,
-    ],
+    [],
   );
 
   const applyState = useCallback(
-    (state: UndoableState) => {
+    (
+      state: UndoableState,
+      onSettled?: (settledState: UndoableState) => void,
+    ) => {
+      pendingHistoryReplayCompletionRef.current = onSettled ?? null;
+      if (onSettled) {
+        setHistoryReplayCommitTick((prev) => prev + 1);
+      }
+
       phaseManager.setPhases(state.phases);
 
       if (state.currentPhaseIndex !== undefined) {
@@ -161,9 +239,22 @@ export const useCanvasState = ({
 
       canvasUI.setSelectedMap(state.selectedMap);
       canvasUI.setMapSide(state.mapSide);
+
+      updateAgentsSettings(state.agentsSettings ?? defaultIconSettings);
+      updateAbilitiesSettings(state.abilitiesSettings ?? defaultIconSettings);
     },
-    [phaseManager, canvasUI],
+    [phaseManager, canvasUI, updateAgentsSettings, updateAbilitiesSettings],
   );
+
+  useEffect(() => {
+    if (!pendingHistoryReplayCompletionRef.current) {
+      return;
+    }
+
+    const onSettled = pendingHistoryReplayCompletionRef.current;
+    pendingHistoryReplayCompletionRef.current = null;
+    onSettled(getCurrentState());
+  }, [historyReplayCommitTick, getCurrentState]);
 
   const wrappedUpdateCurrentPhase = useCallback(
     (updates: Parameters<typeof phaseManager.updateCurrentPhase>[0]) => {
@@ -270,8 +361,64 @@ export const useCanvasState = ({
   const historyManager = useHistoryManager({
     getCurrentState,
     applyState,
+    isTrackingEnabled: isHistoryTrackingEnabled,
     onApplyHistoryState,
+    onHistoryReplaySettled,
   });
+  const {
+    history,
+    undo: historyUndo,
+    redo: historyRedo,
+    canUndo: historyCanUndo,
+    canRedo: historyCanRedo,
+    saveToHistory: historySaveToHistory,
+    resetHistory,
+  } = historyManager;
+
+  const isHistoryReady =
+    !lobbyCode ||
+    (lastHistoryScopeRef.current === lobbyCode &&
+      isHistoryTrackingEnabled &&
+      pendingHistorySeed === null);
+
+  const undo = useCallback(() => {
+    if (!isHistoryReady) return;
+    historyUndo();
+  }, [historyUndo, isHistoryReady]);
+
+  const redo = useCallback(() => {
+    if (!isHistoryReady) return;
+    historyRedo();
+  }, [historyRedo, isHistoryReady]);
+
+  const saveToHistory = useCallback(() => {
+    if (!isHistoryReady) return;
+    historySaveToHistory();
+  }, [historySaveToHistory, isHistoryReady]);
+
+  useEffect(() => {
+    if (!pendingHistorySeed) return;
+
+    if (pendingHistorySeed.scope !== lobbyCode) {
+      setPendingHistorySeed(null);
+      return;
+    }
+
+    const baseline =
+      pendingHistorySeed.source === "expected"
+        ? pendingHistorySeed.baseline
+        : normalizeHistoryState(getCurrentState());
+
+    resetHistory(baseline);
+    setIsHistoryTrackingEnabled(true);
+    setPendingHistorySeed(null);
+  }, [
+    pendingHistorySeed,
+    lobbyCode,
+    normalizeHistoryState,
+    getCurrentState,
+    resetHistory,
+  ]);
 
   const resetState = useCallback(
     (resetAllPhases = false) => {
@@ -391,6 +538,20 @@ export const useCanvasState = ({
   }, [phaseManager.getLatestPhases, enqueueCanvasPatchEntry, phaseManager]);
 
   useEffect(() => {
+    if (lobbyCode === lastHistoryScopeRef.current) return;
+
+    lastHistoryScopeRef.current = lobbyCode;
+    setPendingHistorySeed(null);
+    resetHistory();
+    setIsHistoryTrackingEnabled(!lobbyCode);
+
+    if (!lobbyCode) {
+      lastLoadedLobbyRef.current = "";
+      lastAppliedLobbyUpdatedAt.current = "";
+    }
+  }, [lobbyCode, resetHistory]);
+
+  useEffect(() => {
     if (!lobbyCode || !lobby) return;
 
     const isNewLobby = lobbyCode !== lastLoadedLobbyRef.current;
@@ -407,19 +568,20 @@ export const useCanvasState = ({
       lastAppliedLobbyUpdatedAt.current = lobbyUpdatedAt;
 
       if (lobby.canvasState) {
-        applyState(lobby.canvasState);
-        lastSavedStateRef.current = lobby.canvasState;
+        const normalizedLobbyState = normalizeHistoryState(lobby.canvasState);
 
-        if (lobby.canvasState.agentsSettings) {
-          updateAgentsSettings(lobby.canvasState.agentsSettings);
-        }
-        if (lobby.canvasState.abilitiesSettings) {
-          updateAbilitiesSettings(lobby.canvasState.abilitiesSettings);
-        }
+        setIsHistoryTrackingEnabled(false);
+        setPendingHistorySeed({
+          scope: lobbyCode,
+          source: "expected",
+          baseline: normalizedLobbyState,
+        });
+        applyState(normalizedLobbyState);
       } else {
         phaseManager.resetAllPhases();
         canvasUI.resetEdits();
-        lastSavedStateRef.current = null;
+        setIsHistoryTrackingEnabled(false);
+        setPendingHistorySeed({ scope: lobbyCode, source: "current" });
       }
     }
   }, [
@@ -428,23 +590,14 @@ export const useCanvasState = ({
     applyState,
     phaseManager,
     canvasUI,
-    updateAgentsSettings,
-    updateAbilitiesSettings,
+    normalizeHistoryState,
   ]);
 
   const applyRemoteState = useCallback(
     (state: UndoableState) => {
       applyState(state);
-      lastSavedStateRef.current = state;
-
-      if (state.agentsSettings) {
-        updateAgentsSettings(state.agentsSettings);
-      }
-      if (state.abilitiesSettings) {
-        updateAbilitiesSettings(state.abilitiesSettings);
-      }
     },
-    [applyState, updateAgentsSettings, updateAbilitiesSettings],
+    [applyState],
   );
 
   const rotateCanvasItemsForSideSwap = useCallback(
@@ -513,21 +666,15 @@ export const useCanvasState = ({
 
   const getCurrentStateForSync = useCallback(
     () => ({
-      phases: phaseManager.getLatestPhases(),
-      selectedMap: canvasUI.selectedMap,
-      mapSide: canvasUI.mapSide,
-      currentPhaseIndex: phaseManager.currentPhaseIndex,
-      editedPhases: Array.from(phaseManager.editedPhases),
-      agentsSettings,
-      abilitiesSettings,
+      phases: getLatestPhasesRef.current(),
+      selectedMap: selectedMapRef.current,
+      mapSide: mapSideRef.current,
+      currentPhaseIndex: currentPhaseIndexRef.current,
+      editedPhases: Array.from(editedPhasesRef.current),
+      agentsSettings: agentsSettingsRef.current,
+      abilitiesSettings: abilitiesSettingsRef.current,
     }),
-    [
-      phaseManager,
-      canvasUI.selectedMap,
-      canvasUI.mapSide,
-      agentsSettings,
-      abilitiesSettings,
-    ],
+    [],
   );
 
   return {
@@ -541,6 +688,12 @@ export const useCanvasState = ({
     resetAllPhases: wrappedResetAllPhases,
     ...phaseTransitions,
     ...historyManager,
+    history: isHistoryReady ? history : [],
+    undo,
+    redo,
+    canUndo: isHistoryReady ? historyCanUndo : false,
+    canRedo: isHistoryReady ? historyCanRedo : false,
+    saveToHistory,
     ...canvasItems,
     setAgentsOnCanvas: wrappedSetAgentsOnCanvas,
     setAbilitiesOnCanvas: wrappedSetAbilitiesOnCanvas,

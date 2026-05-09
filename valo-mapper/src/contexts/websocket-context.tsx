@@ -636,13 +636,12 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
   }, [users]);
 
   useEffect(() => {
-    onUndoRedoCallback.current = () => {
-      broadcastStateSyncRef.current?.();
+    onUndoRedoCallback.current = (settledState) => {
+      sendMessage<FullSyncData>(WS_MESSAGE_TYPES.FULL_SYNC, settledState);
 
-      const currentState = getCurrentStateForSync();
       if (lobbyCode) {
         try {
-          updateLobby(currentState);
+          updateLobby(settledState);
         } catch (error) {
           console.error("Failed to persist undo/redo canvas state", error);
         }

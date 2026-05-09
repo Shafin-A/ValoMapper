@@ -11,7 +11,6 @@ export const KeyboardShortcuts = () => {
   useKeyboardShortcuts({
     undo: canvas.undo,
     redo: canvas.redo,
-    onUndoRedo: () => canvas.onUndoRedoCallback.current?.(),
     tool: canvas.tool,
     setTool: canvas.setTool,
     isDrawMode: canvas.isDrawMode,

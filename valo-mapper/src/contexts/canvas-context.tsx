@@ -105,7 +105,14 @@ interface CanvasContextType {
   hoveredElementId: string | null;
   setHoveredElementId: Dispatch<SetStateAction<string | null>>;
   recenterCanvasCallback: RefObject<(() => void) | null>;
-  onUndoRedoCallback: RefObject<(() => void) | null>;
+  onUndoRedoCallback: RefObject<
+    | ((
+        settledState: UndoableState,
+        previousState: UndoableState,
+        targetState: UndoableState,
+      ) => void)
+    | null
+  >;
   onApplyHistoryStateCallback: RefObject<
     ((state: UndoableState, previousState: UndoableState) => void) | null
   >;
@@ -145,13 +152,22 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
     initialState,
     onApplyHistoryState: (state, previousState) =>
       onApplyHistoryStateCallback.current?.(state, previousState),
+    onHistoryReplaySettled: (settledState, previousState, targetState) =>
+      onUndoRedoCallback.current?.(settledState, previousState, targetState),
   });
   const [hoveredElementId, setHoveredElementIdState] = useState<string | null>(
     null,
   );
   const [isMapTransitioning, setIsMapTransitioning] = useState(false);
   const recenterCanvasCallback = useRef<(() => void) | null>(null);
-  const onUndoRedoCallback = useRef<(() => void) | null>(null);
+  const onUndoRedoCallback = useRef<
+    | ((
+        settledState: UndoableState,
+        previousState: UndoableState,
+        targetState: UndoableState,
+      ) => void)
+    | null
+  >(null);
   const notifyPhaseChangedCallback = useRef<
     ((phaseIndex: number) => void) | null
   >(null);

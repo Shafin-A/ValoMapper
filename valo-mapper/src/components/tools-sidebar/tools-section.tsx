@@ -78,19 +78,16 @@ export const ToolsSection = ({
     setIsDeleteSettingsOpen,
     setEditingTextId,
     recenterCanvasCallback,
-    onUndoRedoCallback,
   } = useCanvas();
 
   const { notifyImageAdded } = useCollaborativeCanvas();
 
   const handleUndo = () => {
     undo();
-    setTimeout(() => onUndoRedoCallback.current?.(), 50);
   };
 
   const handleRedo = () => {
     redo();
-    setTimeout(() => onUndoRedoCallback.current?.(), 50);
   };
 
   const handleDrawPressedChange = (pressed: boolean, tool: Tool) => {

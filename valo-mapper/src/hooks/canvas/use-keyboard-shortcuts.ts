@@ -18,7 +18,6 @@ import { toast } from "sonner";
 interface UseKeyboardShortcutsProps {
   undo: () => void;
   redo: () => void;
-  onUndoRedo?: () => void;
   tool: Tool;
   setTool: Dispatch<SetStateAction<Tool>>;
   isDrawMode: boolean;
@@ -60,7 +59,6 @@ const isInputElement = (target: HTMLElement | null): boolean => {
 export const useKeyboardShortcuts = ({
   undo,
   redo,
-  onUndoRedo,
   tool,
   setTool,
   isDrawMode,
@@ -115,7 +113,6 @@ export const useKeyboardShortcuts = ({
         } else {
           undo();
         }
-        setTimeout(() => onUndoRedo?.(), 50);
         e.preventDefault();
         return true;
       }
@@ -377,7 +374,6 @@ export const useKeyboardShortcuts = ({
   }, [
     undo,
     redo,
-    onUndoRedo,
     setIsDrawMode,
     tool,
     setTool,
