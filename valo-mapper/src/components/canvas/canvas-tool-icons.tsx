@@ -107,6 +107,7 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
           enemyColor={"#ffffff"}
           registerNode={registerNode}
           unregisterNode={unregisterNode}
+          hasShadow={true}
         />
       </Group>
     );

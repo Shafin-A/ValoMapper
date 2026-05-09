@@ -25,6 +25,7 @@ export interface CanvasIconProps {
   fill?: string;
   strokeWidth: number;
   isGray?: boolean;
+  hasShadow?: boolean;
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
   onDragEnd?: (e: KonvaEventObject<DragEvent>) => void;
   rotation?: number;
@@ -54,6 +55,7 @@ export const CanvasIcon = ({
   registerNode,
   unregisterNode,
   isGray = false,
+  hasShadow = false,
 }: CanvasIconProps) => {
   const resolvedImage = useGrayImage(src, isGray);
   const groupRef = useRef<Konva.Group>(null);
@@ -111,6 +113,12 @@ export const CanvasIcon = ({
         stroke={isAlly ? allyColor + alphaHex : enemyColor + alphaHex}
         strokeWidth={strokeWidth}
         fill={fill}
+        {...(hasShadow && {
+          shadowColor: "#000000",
+          shadowBlur: 10,
+          shadowOffsetX: 0,
+          shadowOffsetY: 0,
+        })}
       />
     </Group>
   );
