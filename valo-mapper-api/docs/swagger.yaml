@@ -389,6 +389,8 @@ definitions:
         type: number
       tool:
         type: string
+      traversalTime:
+        type: string
     type: object
   models.CanvasImage:
     properties:

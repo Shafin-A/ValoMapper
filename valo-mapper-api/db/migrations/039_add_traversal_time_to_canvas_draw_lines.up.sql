@@ -1,0 +1,1 @@
+ALTER TABLE canvas_draw_lines ADD COLUMN traversal_time TEXT NOT NULL DEFAULT '';

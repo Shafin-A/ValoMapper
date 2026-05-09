@@ -2554,6 +2554,9 @@ const docTemplate = `{
                 },
                 "tool": {
                     "type": "string"
+                },
+                "traversalTime": {
+                    "type": "string"
                 }
             }
         },

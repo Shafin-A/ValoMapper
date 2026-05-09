@@ -311,6 +311,53 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Equal(t, "new2", phases[0].AgentsOnCanvas[1].ID)
 	})
 
+	t.Run("persists draw line traversal metadata across full save and reload", func(t *testing.T) {
+		lobby, _ := createCanvasTestLobby(t, pool)
+
+		canvasState := FullCanvasState{
+			Phases: make([]PhaseState, 10),
+		}
+
+		canvasState.Phases[0] = PhaseState{
+			DrawLines: []CanvasDrawLine{
+				{
+					ID:            "line-1",
+					Tool:          "pencil",
+					Points:        []Position{{X: 10, Y: 20}, {X: 110, Y: 20}},
+					Color:         "#FFFFFF",
+					Size:          3,
+					IsDashed:      false,
+					IsArrowHead:   false,
+					Shape:         "straight",
+					Opacity:       1,
+					TraversalTime: "knife-walk",
+				},
+			},
+		}
+
+		for i := 1; i < 10; i++ {
+			canvasState.Phases[i] = PhaseState{
+				AgentsOnCanvas:    []CanvasAgent{},
+				AbilitiesOnCanvas: []CanvasAbility{},
+				DrawLines:         []CanvasDrawLine{},
+				ConnectingLines:   []CanvasConnectingLine{},
+				TextsOnCanvas:     []CanvasText{},
+				ImagesOnCanvas:    []CanvasImage{},
+				ToolIconsOnCanvas: []CanvasToolIcon{},
+			}
+		}
+
+		err := SaveCanvasState(lobby.Code, canvasState)
+		require.NoError(t, err)
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		require.Len(t, phases[0].DrawLines, 1)
+		assert.Equal(t, "straight", phases[0].DrawLines[0].Shape)
+		assert.Equal(t, 1.0, phases[0].DrawLines[0].Opacity)
+		assert.Equal(t, "knife-walk", phases[0].DrawLines[0].TraversalTime)
+	})
+
 	t.Run("handles ability with current path", func(t *testing.T) {
 		lobby, _ := createCanvasTestLobby(t, pool)
 
@@ -797,15 +844,15 @@ func TestApplyCanvasPatch(t *testing.T) {
 		assert.Equal(t, "#aabbcc", updatedLobby.CanvasState.AbilitiesSettings.EnemyColor)
 	})
 
-	t.Run("persists draw line shape field across save and reload", func(t *testing.T) {
+	t.Run("persists draw line shape and traversal fields across patch save and reload", func(t *testing.T) {
 		patch := CanvasPatch{Entries: []CanvasPatchEntry{
 			{Entity: "drawline", Action: "upsert", PhaseIndex: 0, ID: "dl-rect-1", Payload: map[string]any{
 				"id": "dl-rect-1", "tool": "draw", "points": []map[string]any{{"x": 10.0, "y": 20.0}, {"x": 100.0, "y": 80.0}},
-				"color": "#FF0000", "size": 3.0, "isDashed": false, "isArrowHead": false, "shape": "rectangle",
+				"color": "#FF0000", "size": 3.0, "isDashed": false, "isArrowHead": false, "shape": "rectangle", "traversalTime": "knife-walk",
 			}},
 			{Entity: "drawline", Action: "upsert", PhaseIndex: 0, ID: "dl-straight-1", Payload: map[string]any{
 				"id": "dl-straight-1", "tool": "draw", "points": []map[string]any{{"x": 0.0, "y": 0.0}, {"x": 50.0, "y": 50.0}},
-				"color": "#00FF00", "size": 2.0, "isDashed": true, "isArrowHead": false, "shape": "straight",
+				"color": "#00FF00", "size": 2.0, "isDashed": true, "isArrowHead": false, "shape": "straight", "traversalTime": "phantom-vandal-run",
 			}},
 			{Entity: "drawline", Action: "upsert", PhaseIndex: 0, ID: "dl-freehand-1", Payload: map[string]any{
 				"id": "dl-freehand-1", "tool": "draw", "points": []map[string]any{{"x": 5.0, "y": 5.0}, {"x": 10.0, "y": 15.0}, {"x": 20.0, "y": 10.0}},
@@ -826,12 +873,15 @@ func TestApplyCanvasPatch(t *testing.T) {
 
 		require.Contains(t, lineByID, "dl-rect-1")
 		assert.Equal(t, "rectangle", lineByID["dl-rect-1"].Shape)
+		assert.Equal(t, "knife-walk", lineByID["dl-rect-1"].TraversalTime)
 
 		require.Contains(t, lineByID, "dl-straight-1")
 		assert.Equal(t, "straight", lineByID["dl-straight-1"].Shape)
+		assert.Equal(t, "phantom-vandal-run", lineByID["dl-straight-1"].TraversalTime)
 
 		require.Contains(t, lineByID, "dl-freehand-1")
 		assert.Equal(t, "freehand", lineByID["dl-freehand-1"].Shape)
+		assert.Empty(t, lineByID["dl-freehand-1"].TraversalTime)
 	})
 
 	t.Run("ability moved to front persists sort order after reload", func(t *testing.T) {

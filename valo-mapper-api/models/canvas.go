@@ -93,15 +93,16 @@ type CanvasAbility struct {
 }
 
 type CanvasDrawLine struct {
-	ID          string     `json:"id"`
-	Tool        string     `json:"tool"`
-	Points      []Position `json:"points"`
-	Color       string     `json:"color"`
-	Size        float64    `json:"size"`
-	IsDashed    bool       `json:"isDashed"`
-	IsArrowHead bool       `json:"isArrowHead"`
-	Shape       string     `json:"shape,omitempty"`
-	Opacity     float64    `json:"opacity,omitempty"`
+	ID            string     `json:"id"`
+	Tool          string     `json:"tool"`
+	Points        []Position `json:"points"`
+	Color         string     `json:"color"`
+	Size          float64    `json:"size"`
+	IsDashed      bool       `json:"isDashed"`
+	IsArrowHead   bool       `json:"isArrowHead"`
+	Shape         string     `json:"shape,omitempty"`
+	Opacity       float64    `json:"opacity,omitempty"`
+	TraversalTime string     `json:"traversalTime,omitempty"`
 }
 
 type CanvasConnectingLine struct {

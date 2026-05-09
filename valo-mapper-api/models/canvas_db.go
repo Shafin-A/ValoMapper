@@ -224,7 +224,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- DRAW LINES ----
 	rows, err = tx.Query(ctx, `
-		SELECT id, tool, points, color, size, is_dashed, is_arrow_head, shape, opacity, phase_index 
+		SELECT id, tool, points, color, size, is_dashed, is_arrow_head, shape, opacity, traversal_time, phase_index 
 		FROM canvas_draw_lines 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index, sort_order`, lobbyCode)
@@ -235,7 +235,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var line CanvasDrawLine
 		var phaseIndex int
 		var pointsArray []float64
-		if err := rows.Scan(&line.ID, &line.Tool, &pointsArray, &line.Color, &line.Size, &line.IsDashed, &line.IsArrowHead, &line.Shape, &line.Opacity, &phaseIndex); err != nil {
+		if err := rows.Scan(&line.ID, &line.Tool, &pointsArray, &line.Color, &line.Size, &line.IsDashed, &line.IsArrowHead, &line.Shape, &line.Opacity, &line.TraversalTime, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -478,7 +478,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 			}
 			lineRows = append(lineRows, []any{
 				l.ID, lobbyCode, l.Tool, pointsArray, l.Color, l.Size,
-				l.IsDashed, l.IsArrowHead, phaseIndex,
+				l.IsDashed, l.IsArrowHead, l.Shape, l.Opacity, l.TraversalTime, phaseIndex,
 			})
 		}
 
@@ -564,11 +564,11 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(lineRows) > 0 {
-		lineRows = dedupeRows(lineRows, []int{0, 1, 8})
+		lineRows = dedupeRows(lineRows, []int{0, 1, 11})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_draw_lines"},
-			[]string{"id", "lobby_code", "tool", "points", "color", "size", "is_dashed", "is_arrow_head", "phase_index"},
+			[]string{"id", "lobby_code", "tool", "points", "color", "size", "is_dashed", "is_arrow_head", "shape", "opacity", "traversal_time", "phase_index"},
 			pgx.CopyFromRows(lineRows),
 		)
 		if err != nil {
@@ -820,13 +820,13 @@ func applyDrawLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_draw_lines (id, lobby_code, phase_index, tool, points, color, size, is_dashed, is_arrow_head, shape, opacity)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO canvas_draw_lines (id, lobby_code, phase_index, tool, points, color, size, is_dashed, is_arrow_head, shape, opacity, traversal_time)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
 		SET tool = EXCLUDED.tool, points = EXCLUDED.points, color = EXCLUDED.color, size = EXCLUDED.size,
 		    is_dashed = EXCLUDED.is_dashed, is_arrow_head = EXCLUDED.is_arrow_head, shape = EXCLUDED.shape,
-		    opacity = EXCLUDED.opacity`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.Tool, pointsArray, p.Color, p.Size, p.IsDashed, p.IsArrowHead, p.Shape, p.Opacity)
+		    opacity = EXCLUDED.opacity, traversal_time = EXCLUDED.traversal_time`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Tool, pointsArray, p.Color, p.Size, p.IsDashed, p.IsArrowHead, p.Shape, p.Opacity, p.TraversalTime)
 	return err
 }
 
