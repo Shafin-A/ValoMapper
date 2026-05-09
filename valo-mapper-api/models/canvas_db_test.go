@@ -485,7 +485,7 @@ func TestSaveCanvasState(t *testing.T) {
 				{ID: "i1", Src: "test.png", X: 50, Y: 60, Width: 100, Height: 100},
 			},
 			ToolIconsOnCanvas: []CanvasToolIcon{
-				{ID: "ti1", X: 200, Y: 300, Width: 32, Height: 32},
+				{ID: "ti1", X: 200, Y: 300, Width: 32, Height: 32, AttachedToID: "agent-1"},
 			},
 		}
 
@@ -519,6 +519,7 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Empty(t, phases[2].AgentsOnCanvas)
 		assert.Len(t, phases[2].ImagesOnCanvas, 1)
 		assert.Len(t, phases[2].ToolIconsOnCanvas, 1)
+		assert.Equal(t, "agent-1", phases[2].ToolIconsOnCanvas[0].AttachedToID)
 
 		// Verify phase 1 is empty
 		assert.Empty(t, phases[1].AgentsOnCanvas)

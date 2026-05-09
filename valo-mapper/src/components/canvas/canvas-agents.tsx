@@ -7,8 +7,14 @@ import {
   getAttachedVisionConeIds,
   syncAttachedVisionConeNodePositions,
 } from "@/lib/vision-cone-utils";
+import {
+  getAttachedToolIconIds,
+  getToolIconAttachmentPosition,
+  syncAttachedToolIconNodePositions,
+} from "@/lib/tool-icon";
 import { getAgentImgSrc, handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
+import type { KonvaEventObject } from "konva/lib/Node";
 import { Group } from "react-konva";
 
 interface CanvasAgentProps {
@@ -21,6 +27,8 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
     setAgentsOnCanvas,
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
+    toolIconsOnCanvas,
+    setToolIconsOnCanvas,
     connectingLines,
     setConnectingLines,
     isDrawMode,
@@ -34,8 +42,13 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
   } = useCanvas();
 
   const { agentsSettings } = useSettings();
-  const { notifyAgentMoved, notifyAgentRemoved, notifyAbilityRemoved } =
-    useCollaborativeCanvas();
+  const {
+    notifyAgentMoved,
+    notifyAgentRemoved,
+    notifyAbilityRemoved,
+    notifyToolIconMoved,
+    notifyToolIconRemoved,
+  } = useCollaborativeCanvas();
 
   const removeAttachedVisionCones = (hostId: string) => {
     const removedAbilityIds = getAttachedVisionConeIds(
@@ -51,6 +64,24 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
       prev.filter((ability) => !removedIds.has(ability.id)),
     );
     removedAbilityIds.forEach((abilityId) => notifyAbilityRemoved(abilityId));
+  };
+
+  const removeAttachedToolIcons = (hostId: string) => {
+    const removedToolIconIds = getAttachedToolIconIds(
+      toolIconsOnCanvas,
+      hostId,
+    );
+    if (removedToolIconIds.length === 0) {
+      return;
+    }
+
+    const removedIds = new Set(removedToolIconIds);
+    setToolIconsOnCanvas((prev) =>
+      prev.filter((toolIcon) => !removedIds.has(toolIcon.id)),
+    );
+    removedToolIconIds.forEach((toolIconId) =>
+      notifyToolIconRemoved(toolIconId),
+    );
   };
 
   const removeAbilityWithAttachedVisionCones = (abilityId: string) => {
@@ -69,6 +100,56 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
     );
     removedAbilityIds.forEach((removedAbilityId) =>
       notifyAbilityRemoved(removedAbilityId),
+    );
+  };
+
+  const handleAgentDragEnd = (
+    e: KonvaEventObject<DragEvent>,
+    agent: (typeof agentsOnCanvas)[number],
+  ) => {
+    handleDragEnd(
+      e,
+      agent,
+      setAgentsOnCanvas,
+      deleteGroupRef,
+      connectingLines,
+      setConnectingLines,
+      (connectedId) => removeAbilityWithAttachedVisionCones(connectedId),
+      notifyAgentRemoved,
+      (movedAgent) => {
+        const attachedToolIcons = toolIconsOnCanvas.filter(
+          (toolIcon) => toolIcon.attachedToId === agent.id,
+        );
+
+        if (attachedToolIcons.length > 0) {
+          const updatedToolIcons = attachedToolIcons.map((toolIcon) => ({
+            ...toolIcon,
+            ...getToolIconAttachmentPosition(
+              toolIcon,
+              movedAgent.x,
+              movedAgent.y,
+              agentsSettings,
+            ),
+          }));
+
+          setToolIconsOnCanvas((prev) =>
+            prev.map((toolIcon) => {
+              const updated = updatedToolIcons.find(
+                (updatedToolIcon) => updatedToolIcon.id === toolIcon.id,
+              );
+              return updated ?? toolIcon;
+            }),
+          );
+
+          updatedToolIcons.forEach(notifyToolIconMoved);
+        }
+
+        notifyAgentMoved(movedAgent);
+      },
+      () => {
+        removeAttachedVisionCones(agent.id);
+        removeAttachedToolIcons(agent.id);
+      },
     );
   };
 
@@ -104,21 +185,16 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
               abilitiesOnCanvas,
               getRegisteredNode,
             });
+            syncAttachedToolIconNodePositions({
+              hostId: agent.id,
+              hostNode: e.target,
+              toolIconsOnCanvas,
+              agentsSettings,
+              getRegisteredNode,
+            });
           }}
           onDragEnd={(e) => {
-            handleDragEnd(
-              e,
-              agent,
-              setAgentsOnCanvas,
-              deleteGroupRef,
-              connectingLines,
-              setConnectingLines,
-              (connectedId) =>
-                removeAbilityWithAttachedVisionCones(connectedId),
-              notifyAgentRemoved,
-              notifyAgentMoved,
-              () => removeAttachedVisionCones(agent.id),
-            );
+            handleAgentDragEnd(e, agent);
           }}
           width={agentsSettings.scale}
           height={agentsSettings.scale}

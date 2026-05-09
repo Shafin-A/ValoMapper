@@ -5,6 +5,11 @@ import {
   canAttachVisionCone,
   findVisionConeAttachmentTarget,
 } from "@/lib/vision-cone-utils";
+import {
+  canAttachToolIcon,
+  findToolIconAttachmentTarget,
+  getToolIconAttachmentPosition,
+} from "@/lib/tool-icon";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import { getNextId, isAgent } from "@/lib/utils";
 import { Stage } from "konva/lib/Stage";
@@ -280,11 +285,35 @@ export const useCanvasEvents = (
         );
         notifyAbilityAdded(newAbility);
       } else {
+        const tempToolIcon = toolIconsOnCanvas.find(
+          (toolIcon) => toolIcon.id === TEMP_DRAG_ID,
+        );
+
+        const attachmentHost =
+          tempToolIcon && canAttachToolIcon(tempToolIcon)
+            ? findToolIconAttachmentTarget({
+                point: pos,
+                agentsOnCanvas,
+                agentsSettings,
+                excludeId: TEMP_DRAG_ID,
+              })
+            : null;
+
+        const toolIconPosition = attachmentHost
+          ? getToolIconAttachmentPosition(
+              tempToolIcon ?? selectedCanvasIcon,
+              attachmentHost.x,
+              attachmentHost.y,
+              agentsSettings,
+            )
+          : { x: pos.x, y: pos.y };
+
         const newToolIcon = {
           ...selectedCanvasIcon,
           id: newId,
-          x: pos.x,
-          y: pos.y,
+          x: toolIconPosition.x,
+          y: toolIconPosition.y,
+          attachedToId: attachmentHost?.id,
         };
         setToolIconsOnCanvas((prev) =>
           prev.map((toolIcon) =>

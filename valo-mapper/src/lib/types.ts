@@ -350,6 +350,7 @@ export type ToolIconCanvas = BaseCanvasItem & {
   name: string;
   width: number;
   height: number;
+  attachedToId?: string;
 };
 
 export type PhaseState = {

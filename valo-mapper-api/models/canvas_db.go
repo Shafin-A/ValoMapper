@@ -310,7 +310,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- TOOL ICONS ----
 	rows, err = tx.Query(ctx, `
-		SELECT id, name, x, y, width, height, phase_index 
+		SELECT id, name, x, y, width, height, attached_to_id, phase_index 
 		FROM canvas_tool_icons 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index`, lobbyCode)
@@ -321,13 +321,18 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var icon CanvasToolIcon
 		var phaseIndex int
 		var iconName sql.NullString
-		if err := rows.Scan(&icon.ID, &iconName, &icon.X, &icon.Y, &icon.Width, &icon.Height, &phaseIndex); err != nil {
+		var attachedToID sql.NullString
+		if err := rows.Scan(&icon.ID, &iconName, &icon.X, &icon.Y, &icon.Width, &icon.Height, &attachedToID, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
 		icon.Name = ""
 		if iconName.Valid {
 			icon.Name = iconName.String
+		}
+		icon.AttachedToID = ""
+		if attachedToID.Valid {
+			icon.AttachedToID = attachedToID.String
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].ToolIconsOnCanvas = append(phases[phaseIndex].ToolIconsOnCanvas, icon)
@@ -499,7 +504,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		// Tool Icons
 		for _, ic := range phase.ToolIconsOnCanvas {
 			iconRows = append(iconRows, []any{
-				ic.ID, lobbyCode, ic.Name, ic.X, ic.Y, ic.Width, ic.Height, phaseIndex,
+				ic.ID, lobbyCode, ic.Name, ic.X, ic.Y, ic.Width, ic.Height, ic.AttachedToID, phaseIndex,
 			})
 		}
 
@@ -603,11 +608,11 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 
 	if len(iconRows) > 0 {
-		iconRows = dedupeRows(iconRows, []int{0, 1, 7})
+		iconRows = dedupeRows(iconRows, []int{0, 1, 8})
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_tool_icons"},
-			[]string{"id", "lobby_code", "name", "x", "y", "width", "height", "phase_index"},
+			[]string{"id", "lobby_code", "name", "x", "y", "width", "height", "attached_to_id", "phase_index"},
 			pgx.CopyFromRows(iconRows),
 		)
 		if err != nil {
@@ -993,11 +998,11 @@ func applyToolIconPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_tool_icons (id, lobby_code, phase_index, name, x, y, width, height)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO canvas_tool_icons (id, lobby_code, phase_index, name, x, y, width, height, attached_to_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
-		SET name = EXCLUDED.name, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.Name, p.X, p.Y, p.Width, p.Height)
+		SET name = EXCLUDED.name, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height, attached_to_id = EXCLUDED.attached_to_id`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Name, p.X, p.Y, p.Width, p.Height, p.AttachedToID)
 	return err
 }
 

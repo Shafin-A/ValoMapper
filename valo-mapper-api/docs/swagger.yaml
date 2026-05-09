@@ -445,6 +445,8 @@ definitions:
     type: object
   models.CanvasToolIcon:
     properties:
+      attachedToId:
+        type: string
       height:
         type: number
       id:

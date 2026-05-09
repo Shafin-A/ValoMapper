@@ -352,12 +352,13 @@ func TestCanvasImageSerialization(t *testing.T) {
 func TestCanvasToolIconSerialization(t *testing.T) {
 	t.Run("serializes tool icon element", func(t *testing.T) {
 		icon := CanvasToolIcon{
-			ID:     "icon-1",
-			Name:   "Spike",
-			X:      300,
-			Y:      400,
-			Width:  32,
-			Height: 32,
+			ID:           "icon-1",
+			Name:         "Spike",
+			X:            300,
+			Y:            400,
+			Width:        32,
+			Height:       32,
+			AttachedToID: "agent-1",
 		}
 
 		jsonData, err := json.Marshal(icon)
@@ -373,6 +374,7 @@ func TestCanvasToolIconSerialization(t *testing.T) {
 		assert.Equal(t, icon.Y, decoded.Y)
 		assert.Equal(t, icon.Width, decoded.Width)
 		assert.Equal(t, icon.Height, decoded.Height)
+		assert.Equal(t, icon.AttachedToID, decoded.AttachedToID)
 	})
 }
 

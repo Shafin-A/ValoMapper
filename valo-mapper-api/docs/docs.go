@@ -2641,6 +2641,9 @@ const docTemplate = `{
         "models.CanvasToolIcon": {
             "type": "object",
             "properties": {
+                "attachedToId": {
+                    "type": "string"
+                },
                 "height": {
                     "type": "number"
                 },
