@@ -87,7 +87,7 @@ export const LineupViewContent = ({
 
       {isInvalidYoutubeLink && (
         <div className="space-y-2">
-          <Label>YouTube Link</Label>
+          <Label>Link</Label>
           <div className="p-3 rounded-md border bg-muted/50">
             <a
               href={ensureAbsoluteUrl(youtubeLink)}
@@ -98,7 +98,7 @@ export const LineupViewContent = ({
               {youtubeLink}
             </a>
             <p className="text-xs text-muted-foreground mt-1">
-              Could not embed video. Click link to open in new tab.
+              Open link in new tab.
             </p>
           </div>
         </div>

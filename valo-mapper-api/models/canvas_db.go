@@ -33,7 +33,7 @@ func hasBlockedProtocol(raw string) bool {
 	return strings.HasPrefix(trimmed, "javascript:") || strings.HasPrefix(trimmed, "data:") || strings.HasPrefix(trimmed, "vbscript:") || strings.HasPrefix(trimmed, "file:")
 }
 
-func isAllowedYoutubeLink(raw string) bool {
+func isAllowedLink(raw string) bool {
 	link := strings.TrimSpace(raw)
 	if link == "" {
 		return true
@@ -48,12 +48,19 @@ func isAllowedYoutubeLink(raw string) bool {
 		return false
 	}
 
-	host := strings.ToLower(parsed.Host)
-	if host == "youtube.com" || host == "www.youtube.com" || host == "m.youtube.com" || host == "youtu.be" {
+	if parsed.Scheme == "" {
 		return true
 	}
 
-	return false
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return false
+	}
+
+	if parsed.Host == "" {
+		return false
+	}
+
+	return true
 }
 
 func isAllowedImageSource(raw string) bool {
@@ -393,8 +400,8 @@ func validateCanvasState(state FullCanvasState) error {
 				}
 			}
 
-			if cl.YoutubeLink != "" && !isAllowedYoutubeLink(cl.YoutubeLink) {
-				return fmt.Errorf("invalid youtube link in connecting line canvas state: %s", cl.YoutubeLink)
+			if cl.YoutubeLink != "" && !isAllowedLink(cl.YoutubeLink) {
+				return fmt.Errorf("invalid link in connecting line canvas state: %s", cl.YoutubeLink)
 			}
 		}
 	}
@@ -868,8 +875,8 @@ func applyConnectingLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntr
 		}
 	}
 
-	if p.YoutubeLink != "" && !isAllowedYoutubeLink(p.YoutubeLink) {
-		return fmt.Errorf("invalid youtube link in connecting line: %s", p.YoutubeLink)
+	if p.YoutubeLink != "" && !isAllowedLink(p.YoutubeLink) {
+		return fmt.Errorf("invalid link in connecting line: %s", p.YoutubeLink)
 	}
 
 	_, err := tx.Exec(context.Background(), `

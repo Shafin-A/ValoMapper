@@ -61,12 +61,12 @@ describe("LineupEditContent", () => {
     render(<LineupEditContent {...defaultProps} />);
 
     expect(screen.getByTestId("lineup-image-upload")).toBeInTheDocument();
-    expect(screen.getByLabelText("YouTube Link")).toBeInTheDocument();
+    expect(screen.getByLabelText("Link")).toBeInTheDocument();
     expect(screen.getByLabelText("Notes")).toBeInTheDocument();
     expect(screen.getByLabelText("Line Color")).toBeInTheDocument();
   });
 
-  it("should display current youtube link value", () => {
+  it("should display current link value", () => {
     render(
       <LineupEditContent
         {...defaultProps}
@@ -74,7 +74,7 @@ describe("LineupEditContent", () => {
       />,
     );
 
-    const input = screen.getByLabelText("YouTube Link") as HTMLInputElement;
+    const input = screen.getByLabelText("Link") as HTMLInputElement;
     expect(input.value).toBe("https://youtube.com/watch?v=test123");
   });
 
@@ -94,7 +94,7 @@ describe("LineupEditContent", () => {
     expect(colorInput.value).toBe("#ff0000");
   });
 
-  it("should call onYoutubeLinkChange when youtube input changes", () => {
+  it("should call onYoutubeLinkChange when link input changes", () => {
     const onYoutubeLinkChange = jest.fn();
     render(
       <LineupEditContent
@@ -103,7 +103,7 @@ describe("LineupEditContent", () => {
       />,
     );
 
-    const input = screen.getByLabelText("YouTube Link");
+    const input = screen.getByLabelText("Link");
     fireEvent.change(input, {
       target: { value: "https://youtube.com/watch?v=newvideo" },
     });
@@ -182,14 +182,11 @@ describe("LineupEditContent", () => {
     expect(onImageExpand).toHaveBeenCalledWith(0);
   });
 
-  it("should have correct placeholder text for youtube input", () => {
+  it("should have correct placeholder text for link input", () => {
     render(<LineupEditContent {...defaultProps} />);
 
-    const input = screen.getByLabelText("YouTube Link");
-    expect(input).toHaveAttribute(
-      "placeholder",
-      "https://www.youtube.com/watch?v=...",
-    );
+    const input = screen.getByLabelText("Link");
+    expect(input).toHaveAttribute("placeholder", "https://example.com/...");
   });
 
   it("should have correct placeholder text for notes textarea", () => {
@@ -202,10 +199,10 @@ describe("LineupEditContent", () => {
     );
   });
 
-  it("should have url type for youtube input", () => {
+  it("should have url type for link input", () => {
     render(<LineupEditContent {...defaultProps} />);
 
-    const input = screen.getByLabelText("YouTube Link");
+    const input = screen.getByLabelText("Link");
     expect(input).toHaveAttribute("type", "url");
   });
 
@@ -219,12 +216,10 @@ describe("LineupEditContent", () => {
   it("should render with empty values", () => {
     render(<LineupEditContent {...defaultProps} />);
 
-    const youtubeInput = screen.getByLabelText(
-      "YouTube Link",
-    ) as HTMLInputElement;
+    const linkInput = screen.getByLabelText("Link") as HTMLInputElement;
     const notesTextarea = screen.getByLabelText("Notes") as HTMLTextAreaElement;
 
-    expect(youtubeInput.value).toBe("");
+    expect(linkInput.value).toBe("");
     expect(notesTextarea.value).toBe("");
     expect(screen.getByTestId("image-count")).toHaveTextContent("0");
   });

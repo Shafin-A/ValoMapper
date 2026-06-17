@@ -84,13 +84,11 @@ describe("LineupViewContent", () => {
       />,
     );
 
-    expect(screen.getByText("YouTube Link")).toBeInTheDocument();
+    expect(screen.getByText("Link")).toBeInTheDocument();
     expect(
       screen.getByText("https://invalid-youtube-link.com"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("Could not embed video. Click link to open in new tab."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Open link in new tab.")).toBeInTheDocument();
   });
 
   it("should not render fallback link when isInvalidYoutubeLink is false", () => {
@@ -103,11 +101,7 @@ describe("LineupViewContent", () => {
       />,
     );
 
-    expect(
-      screen.queryByText(
-        "Could not embed video. Click link to open in new tab.",
-      ),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Open link in new tab.")).not.toBeInTheDocument();
   });
 
   it("should render notes section when notes are not empty", () => {

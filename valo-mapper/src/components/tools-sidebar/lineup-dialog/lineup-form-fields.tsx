@@ -112,11 +112,11 @@ export const LineupFormFields = ({
         onImageExpand={onImageExpand}
       />
       <div className="space-y-2">
-        <Label htmlFor="youtube-link">YouTube Link</Label>
+        <Label htmlFor="link">Link</Label>
         <Input
-          id="youtube-link"
+          id="link"
           type="url"
-          placeholder="https://www.youtube.com/watch?v=..."
+          placeholder="https://example.com/..."
           value={youtubeLink}
           onChange={(e) => onYoutubeLinkChange(e.target.value)}
         />

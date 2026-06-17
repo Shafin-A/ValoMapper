@@ -664,12 +664,16 @@ func TestSaveCanvasState(t *testing.T) {
 	})
 }
 
-func TestIsAllowedYoutubeLink(t *testing.T) {
-	assert.True(t, isAllowedYoutubeLink("https://youtube.com/watch?v=abc123"))
-	assert.True(t, isAllowedYoutubeLink("https://youtube.com/new"))
-	assert.True(t, isAllowedYoutubeLink("https://www.youtube.com/watch?v=abc123"))
-	assert.False(t, isAllowedYoutubeLink("https://evil.com/watch?v=abc123"))
-	assert.False(t, isAllowedYoutubeLink("javascript:alert(1)"))
+func TestIsAllowedLink(t *testing.T) {
+	assert.True(t, isAllowedLink("https://youtube.com/watch?v=abc123"))
+	assert.True(t, isAllowedLink("https://youtube.com/new"))
+	assert.True(t, isAllowedLink("https://www.youtube.com/watch?v=abc123"))
+	assert.True(t, isAllowedLink("https://example.com/anything"))
+	assert.True(t, isAllowedLink("http://example.com/anything"))
+	assert.True(t, isAllowedLink("example.com/anything"))
+	assert.False(t, isAllowedLink("javascript:alert(1)"))
+	assert.False(t, isAllowedLink("data:text/plain,hello"))
+	assert.False(t, isAllowedLink("ftp://example.com"))
 }
 
 func TestApplyCanvasPatch(t *testing.T) {
@@ -725,14 +729,14 @@ func TestApplyCanvasPatch(t *testing.T) {
 		assert.Contains(t, err.Error(), "invalid uploaded image source")
 	})
 
-	t.Run("rejects invalid youtube link in connecting line patch", func(t *testing.T) {
+	t.Run("rejects invalid link in connecting line patch", func(t *testing.T) {
 		patch := CanvasPatch{Entries: []CanvasPatchEntry{{
 			Entity: "connectingline", Action: "upsert", PhaseIndex: 0, ID: "cl2", Payload: map[string]any{"id": "cl2", "fromId": "a", "toId": "b", "strokeColor": "#FFFFFF", "strokeWidth": 1, "youtubeLink": "javascript:alert(1)"},
 		}}}
 
 		err := ApplyCanvasPatch(lobby.Code, patch)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid youtube link")
+		assert.Contains(t, err.Error(), "invalid link")
 	})
 
 	t.Run("updates lobby map/side/phase via patch", func(t *testing.T) {

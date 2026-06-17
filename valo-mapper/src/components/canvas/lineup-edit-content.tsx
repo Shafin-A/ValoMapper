@@ -44,11 +44,11 @@ export const LineupEditContent = ({
         onImageExpand={onImageExpand}
       />
       <div className="space-y-2">
-        <Label htmlFor="edit-youtube-link">YouTube Link</Label>
+        <Label htmlFor="edit-link">Link</Label>
         <Input
-          id="edit-youtube-link"
+          id="edit-link"
           type="url"
-          placeholder="https://www.youtube.com/watch?v=..."
+          placeholder="https://example.com/..."
           value={youtubeLink}
           onChange={(e) => onYoutubeLinkChange(e.target.value)}
         />
