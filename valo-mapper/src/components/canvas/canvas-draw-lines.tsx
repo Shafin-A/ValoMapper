@@ -263,7 +263,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
               stroke={line.color}
               strokeWidth={line.size}
               dash={line.isDashed ? [15, 10] : []}
-              fill="transparent"
+              fillEnabled={false}
               opacity={line.opacity ?? 1}
               globalCompositeOperation={"source-over"}
             />
@@ -275,7 +275,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
               stroke={line.color}
               strokeWidth={line.size}
               dash={line.isDashed ? [15, 10] : []}
-              fill="transparent"
+              fillEnabled={false}
               opacity={line.opacity ?? 1}
               globalCompositeOperation={"source-over"}
             />
@@ -324,7 +324,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
               stroke={currentStroke.color}
               strokeWidth={currentStroke.size}
               dash={currentStroke.isDashed ? [15, 10] : []}
-              fill="transparent"
+              fillEnabled={false}
               opacity={currentStroke.opacity ?? 1}
               globalCompositeOperation={"source-over"}
             />
@@ -346,7 +346,7 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
               stroke={currentStroke.color}
               strokeWidth={currentStroke.size}
               dash={currentStroke.isDashed ? [15, 10] : []}
-              fill="transparent"
+              fillEnabled={false}
               opacity={currentStroke.opacity ?? 1}
               globalCompositeOperation={"source-over"}
             />
