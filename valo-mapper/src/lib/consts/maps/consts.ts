@@ -71,11 +71,11 @@ export const MAP_OPTIONS: MapOption[] = [
 export const DEFAULT_MAP_IDS: string[] = [
   "ascent",
   "breeze",
-  "fracture",
   "haven",
   "lotus",
-  "pearl",
   "split",
+  "summit",
+  "sunset",
 ];
 
 export const DEFAULT_MAP_OPTIONS: MapOption[] = MAP_OPTIONS.filter((m) =>

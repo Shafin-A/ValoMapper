@@ -2317,6 +2317,207 @@ export const MAP_CALLOUTS: Record<string, MapCalloutData> = {
       },
     ],
   },
+  summit: {
+    xMultiplier: 0.000075,
+    yMultiplier: -0.000075,
+    xScalarToAdd: 0.047401,
+    yScalarToAdd: 0.978891,
+    rotation: 180,
+    callouts: [
+      {
+        regionName: "Bottom",
+        superRegionName: "Mid",
+        location: {
+          x: 7500,
+          y: 5825,
+        },
+      },
+      {
+        regionName: "Top",
+        superRegionName: "Mid",
+        location: {
+          x: 4025,
+          y: 6525,
+        },
+      },
+      {
+        regionName: "Lobby",
+        superRegionName: "A",
+        location: {
+          x: 3174.9998,
+          y: 8625,
+        },
+      },
+      {
+        regionName: "Main",
+        superRegionName: "A",
+        location: {
+          x: 5500,
+          y: 9225,
+        },
+      },
+      {
+        regionName: "Garden",
+        superRegionName: "A",
+        location: {
+          x: 7675,
+          y: 9925,
+        },
+      },
+      {
+        regionName: "Site",
+        superRegionName: "A",
+        location: {
+          x: 7675,
+          y: 11600,
+        },
+      },
+      {
+        regionName: "Art",
+        superRegionName: "A",
+        location: {
+          x: 9525,
+          y: 9925,
+        },
+      },
+      {
+        regionName: "Cave",
+        superRegionName: "A",
+        location: {
+          x: 9525,
+          y: 12125,
+        },
+      },
+      {
+        regionName: "Hall",
+        superRegionName: "A",
+        location: {
+          x: 9525,
+          y: 8600,
+        },
+      },
+      {
+        regionName: "Link",
+        superRegionName: "A",
+        location: {
+          x: 8250,
+          y: 8050,
+        },
+      },
+      {
+        regionName: "Lobby",
+        superRegionName: "B",
+        location: {
+          x: 4125,
+          y: 2825,
+        },
+      },
+      {
+        regionName: "Spawn",
+        superRegionName: "Defender Side",
+        location: {
+          x: 12075,
+          y: 6175,
+        },
+      },
+      {
+        regionName: "Window",
+        superRegionName: "Mid",
+        location: {
+          x: 8700,
+          y: 5825,
+        },
+      },
+      {
+        regionName: "Gym",
+        superRegionName: "B",
+        location: {
+          x: 10525,
+          y: 3100.0002,
+        },
+      },
+      {
+        regionName: "Trophy",
+        superRegionName: "B",
+        location: {
+          x: 9075,
+          y: 3675.0002,
+        },
+      },
+      {
+        regionName: "Tower",
+        superRegionName: "B",
+        location: {
+          x: 10175,
+          y: 1450.0001,
+        },
+      },
+      {
+        regionName: "Drop",
+        superRegionName: "B",
+        location: {
+          x: 9850,
+          y: 75.00015,
+        },
+      },
+      {
+        regionName: "Site",
+        superRegionName: "B",
+        location: {
+          x: 8550,
+          y: 1375.0001,
+        },
+      },
+      {
+        regionName: "Link",
+        superRegionName: "B",
+        location: {
+          x: 7500,
+          y: 3775,
+        },
+      },
+      {
+        regionName: "Fountain",
+        superRegionName: "Mid",
+        location: {
+          x: 5675,
+          y: 6175,
+        },
+      },
+      {
+        regionName: "Bend",
+        superRegionName: "Mid",
+        location: {
+          x: 6475,
+          y: 7850,
+        },
+      },
+      {
+        regionName: "Tiles",
+        superRegionName: "Mid",
+        location: {
+          x: 4960.938,
+          y: 4233.579,
+        },
+      },
+      {
+        regionName: "Main",
+        superRegionName: "B",
+        location: {
+          x: 6500,
+          y: 1849.9999,
+        },
+      },
+      {
+        regionName: "Spawn",
+        superRegionName: "Attacker Side",
+        location: {
+          x: 1100,
+          y: 5800,
+        },
+      },
+    ],
+  },
 };
 
 export const getMapCallouts = (mapId: string): MapCalloutData | undefined => {
