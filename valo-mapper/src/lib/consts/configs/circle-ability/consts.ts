@@ -158,7 +158,7 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     colors: { stroke: "#3b1d49", fill: "#b8864980" },
   },
   veto_teleport: {
-    radius: 28.5,
+    radius: 34.5,
     colors: { stroke: "#2ab7ed", fill: "#2ab7ed80" },
   },
   veto_molly: {
