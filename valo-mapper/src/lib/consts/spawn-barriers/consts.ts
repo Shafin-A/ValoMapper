@@ -161,6 +161,19 @@ export const MAP_SPAWN_BARRIERS: Record<string, MapSpawnBarrierData> = {
       { startX: 96, startY: 186, endX: 239, endY: 186, isAlly: false },
     ],
   },
+  summit: {
+    barriers: [
+      { startX: 942, startY: 574, endX: 1003, endY: 574, isAlly: true },
+      { startX: 650, startY: 551, endX: 650, endY: 594, isAlly: true },
+      { startX: 312, startY: 603, endX: 355, endY: 603, isAlly: true },
+      { startX: 78, startY: 496, endX: 176, endY: 497, isAlly: true },
+      { startX: 490, startY: 691, endX: 551, endY: 691, isAlly: true },
+      { startX: 763, startY: 396, endX: 833, endY: 396, isAlly: false },
+      { startX: 210, startY: 291, endX: 288, endY: 291, isAlly: false },
+      { startX: 332, startY: 232, endX: 373, endY: 232, isAlly: false },
+      { startX: 700, startY: 312, endX: 731, endY: 341, isAlly: false },
+    ],
+  },
 };
 
 export const getMapSpawnBarriers = (

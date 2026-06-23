@@ -79,6 +79,12 @@ export const MAP_ULT_ORBS: Record<string, MapUltOrbData> = {
       { x: 950, y: 340 },
     ],
   },
+  summit: {
+    orbs: [
+      { x: 150, y: 440 },
+      { x: 960, y: 500 },
+    ],
+  },
 };
 
 export const getMapUltOrbs = (mapId: string): MapUltOrbData | undefined => {
