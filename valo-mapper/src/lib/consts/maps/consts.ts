@@ -61,6 +61,11 @@ export const MAP_OPTIONS: MapOption[] = [
     text: "Sunset",
     textColor: "text-white",
   },
+  {
+    id: "summit",
+    text: "Summit",
+    textColor: "text-white",
+  },
 ];
 
 export const DEFAULT_MAP_IDS: string[] = [
