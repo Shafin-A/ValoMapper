@@ -655,8 +655,9 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     getCurrentStateForSync,
     updateLobby,
     lobbyCode,
-    user?.name,
+    user,
     users.length,
+    sendMessage,
   ]);
 
   const broadcastToolIconAdded = useCallback(

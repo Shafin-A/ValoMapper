@@ -12,7 +12,7 @@ import type {
   ToolIconCanvas,
 } from "@/lib/types";
 import { getAttachedVisionConeIds } from "@/lib/vision-cone-utils";
-import { Dispatch, RefObject, SetStateAction, useEffect } from "react";
+import { Dispatch, RefObject, SetStateAction, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 interface UseKeyboardShortcutsProps {
@@ -47,6 +47,16 @@ interface UseKeyboardShortcutsProps {
   recenterCanvasCallback: RefObject<(() => void) | null>;
 }
 
+type SettingsSlice = Pick<
+  ReturnType<typeof useSettings>,
+  | "drawSettings"
+  | "eraserSettings"
+  | "updateDrawSettings"
+  | "updateEraserSettings"
+>;
+
+type ShortcutContext = UseKeyboardShortcutsProps & SettingsSlice;
+
 const isInputElement = (target: HTMLElement | null): boolean => {
   if (!target) return false;
   return (
@@ -56,37 +66,199 @@ const isInputElement = (target: HTMLElement | null): boolean => {
   );
 };
 
-export const useKeyboardShortcuts = ({
-  undo,
-  redo,
-  tool,
-  setTool,
-  isDrawMode,
-  setIsDrawMode,
-  editingTextId,
-  setEditingTextId,
-  setIsDeleteSettingsOpen,
-  phases,
-  currentPhaseIndex,
-  switchToPhase,
-  notifyPhaseChanged,
-  hoveredElementId,
-  setHoveredElementId,
-  setImagesOnCanvas,
-  setTextsOnCanvas,
-  setAgentsOnCanvas,
-  setAbilitiesOnCanvas,
-  setToolIconsOnCanvas,
-  connectingLines,
-  setConnectingLines,
-  recenterCanvasCallback,
-  notifyAgentRemoved,
-  notifyAbilityRemoved,
-  notifyConnLineRemoved,
-  notifyTextRemoved,
-  notifyImageRemoved,
-  notifyToolIconRemoved,
-}: UseKeyboardShortcutsProps): void => {
+const getOtherEnd = (line: ConnectingLine, id: string): string =>
+  line.fromId === id ? line.toId : line.fromId;
+
+const removeAbilities = (ctx: ShortcutContext, ids: Iterable<string>): void => {
+  const idSet = new Set(ids);
+  if (idSet.size === 0) return;
+
+  ctx.setAbilitiesOnCanvas((prev) =>
+    prev.filter((ability) => !idSet.has(ability.id)),
+  );
+  idSet.forEach((id) => ctx.notifyAbilityRemoved?.(id));
+};
+
+const removeAgent = (ctx: ShortcutContext, id: string): void => {
+  ctx.setAgentsOnCanvas((prev) => prev.filter((agent) => agent.id !== id));
+  ctx.notifyAgentRemoved?.(id);
+};
+
+const removeConnectingLine = (
+  ctx: ShortcutContext,
+  line: ConnectingLine,
+): void => {
+  ctx.setConnectingLines((lines) => lines.filter((l) => l.id !== line.id));
+  ctx.notifyConnLineRemoved?.(line.id);
+};
+
+const handleModifierShortcuts = (
+  ctx: ShortcutContext,
+  key: string,
+  e: KeyboardEvent,
+): boolean => {
+  if (key === "z") {
+    if (e.shiftKey) ctx.redo();
+    else ctx.undo();
+    e.preventDefault();
+    return true;
+  }
+
+  if (key === "q") {
+    if (e.shiftKey) {
+      ctx.updateDrawSettings({
+        isArrowHead: !ctx.drawSettings.isArrowHead,
+      });
+    } else {
+      ctx.updateDrawSettings({ isDashed: !ctx.drawSettings.isDashed });
+    }
+    e.preventDefault();
+    return true;
+  }
+
+  return false;
+};
+
+const handleEraserModeToggle = (
+  ctx: ShortcutContext,
+  key: string,
+  e: KeyboardEvent,
+): boolean => {
+  if (key !== "w" || !e.shiftKey) return false;
+
+  ctx.updateEraserSettings({
+    mode: ctx.eraserSettings.mode === "line" ? "pixel" : "line",
+  });
+  e.preventDefault();
+  return true;
+};
+
+const handlePhaseNavigation = (
+  ctx: ShortcutContext,
+  key: string,
+  e: KeyboardEvent,
+): boolean => {
+  const { currentPhaseIndex, phases } = ctx;
+
+  let newIndex: number | null = null;
+  if (key === "a" && currentPhaseIndex > 0) {
+    newIndex = currentPhaseIndex - 1;
+  } else if (key === "d" && currentPhaseIndex < phases.length - 1) {
+    newIndex = currentPhaseIndex + 1;
+  }
+
+  if (newIndex === null) return false;
+
+  ctx.switchToPhase(newIndex);
+  ctx.notifyPhaseChanged?.(newIndex);
+  e.preventDefault();
+  return true;
+};
+
+const handleDeleteHoveredElement = (
+  ctx: ShortcutContext,
+  key: string,
+  e: KeyboardEvent,
+): boolean => {
+  if (key !== "e") return false;
+
+  const { hoveredElementId, isDrawMode, editingTextId } = ctx;
+  if (!hoveredElementId || isDrawMode || editingTextId) return false;
+
+  const currentPhase = ctx.phases[ctx.currentPhaseIndex];
+  const agents = currentPhase?.agentsOnCanvas ?? [];
+  const abilities = currentPhase?.abilitiesOnCanvas ?? [];
+  const images = currentPhase?.imagesOnCanvas ?? [];
+  const texts = currentPhase?.textsOnCanvas ?? [];
+  const toolIcons = currentPhase?.toolIconsOnCanvas ?? [];
+
+  const id = hoveredElementId;
+  const connectedLine = ctx.connectingLines.find(
+    (line) => line.fromId === id || line.toId === id,
+  );
+
+  if (images.some((image) => image.id === id)) {
+    ctx.setImagesOnCanvas((prev) => prev.filter((image) => image.id !== id));
+    ctx.notifyImageRemoved?.(id);
+  } else if (texts.some((text) => text.id === id)) {
+    ctx.setTextsOnCanvas((prev) => prev.filter((text) => text.id !== id));
+    ctx.notifyTextRemoved?.(id);
+  } else if (agents.some((agent) => agent.id === id)) {
+    const removedAbilityIds = new Set(getAttachedVisionConeIds(abilities, id));
+
+    if (connectedLine) {
+      const connectedAbilityId = getOtherEnd(connectedLine, id);
+      removedAbilityIds.add(connectedAbilityId);
+      getAttachedVisionConeIds(abilities, connectedAbilityId).forEach(
+        (coneId) => removedAbilityIds.add(coneId),
+      );
+      removeConnectingLine(ctx, connectedLine);
+    }
+
+    removeAbilities(ctx, removedAbilityIds);
+    removeAgent(ctx, id);
+  } else if (abilities.some((ability) => ability.id === id)) {
+    const removedAbilityIds = new Set([
+      id,
+      ...getAttachedVisionConeIds(abilities, id),
+    ]);
+
+    if (connectedLine) {
+      removeAgent(ctx, getOtherEnd(connectedLine, id));
+      removeConnectingLine(ctx, connectedLine);
+    }
+
+    removeAbilities(ctx, removedAbilityIds);
+  } else if (toolIcons.some((toolIcon) => toolIcon.id === id)) {
+    removeAbilities(ctx, getAttachedVisionConeIds(abilities, id));
+    ctx.setToolIconsOnCanvas((prev) =>
+      prev.filter((toolIcon) => toolIcon.id !== id),
+    );
+    ctx.notifyToolIconRemoved?.(id);
+  }
+
+  ctx.setHoveredElementId(null);
+  e.preventDefault();
+  return true;
+};
+
+const handleRecenter = (
+  ctx: ShortcutContext,
+  key: string,
+  e: KeyboardEvent,
+): boolean => {
+  if (key !== "r") return false;
+
+  ctx.recenterCanvasCallback.current?.();
+  e.preventDefault();
+  return true;
+};
+
+const handleDrawToolToggle = (
+  ctx: ShortcutContext,
+  key: string,
+  e: KeyboardEvent,
+): boolean => {
+  let target: Tool;
+  if (key === "q") target = "pencil";
+  else if (key === "w") target = "eraser";
+  else return false;
+
+  if (ctx.tool === target && ctx.isDrawMode) {
+    ctx.setIsDrawMode(false);
+  } else {
+    ctx.setIsDeleteSettingsOpen(false);
+    ctx.setEditingTextId(null);
+    ctx.setIsDrawMode(true);
+    ctx.setTool(target);
+  }
+  e.preventDefault();
+  return true;
+};
+
+export const useKeyboardShortcuts = (
+  props: UseKeyboardShortcutsProps,
+): void => {
   const {
     drawSettings,
     eraserSettings,
@@ -94,273 +266,50 @@ export const useKeyboardShortcuts = ({
     updateEraserSettings,
   } = useSettings();
 
-  const currentPhase = phases[currentPhaseIndex];
-  const agentsOnCanvas = currentPhase?.agentsOnCanvas ?? [];
-  const abilitiesOnCanvas = currentPhase?.abilitiesOnCanvas ?? [];
-  const imagesOnCanvas = currentPhase?.imagesOnCanvas ?? [];
-  const textsOnCanvas = currentPhase?.textsOnCanvas ?? [];
-  const toolIconsOnCanvas = currentPhase?.toolIconsOnCanvas ?? [];
+  const contextRef = useRef<ShortcutContext>({
+    ...props,
+    drawSettings,
+    eraserSettings,
+    updateDrawSettings,
+    updateEraserSettings,
+  });
 
   useEffect(() => {
-    const handleModifierShortcuts = (
-      key: string,
-      e: KeyboardEvent,
-      shiftKey: boolean,
-    ): boolean => {
-      if (key === "z") {
-        if (shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
-        e.preventDefault();
-        return true;
-      }
-
-      if (key === "q") {
-        if (shiftKey) {
-          updateDrawSettings({ isArrowHead: !drawSettings.isArrowHead });
-        } else {
-          updateDrawSettings({ isDashed: !drawSettings.isDashed });
-        }
-        e.preventDefault();
-        return true;
-      }
-
-      return false;
+    contextRef.current = {
+      ...props,
+      drawSettings,
+      eraserSettings,
+      updateDrawSettings,
+      updateEraserSettings,
     };
+  });
 
-    const handlePhaseNavigation = (key: string, e: KeyboardEvent): boolean => {
-      if (key === "a" && currentPhaseIndex > 0) {
-        const newIndex = currentPhaseIndex - 1;
-        switchToPhase(newIndex);
-        notifyPhaseChanged?.(newIndex);
-        e.preventDefault();
-        return true;
-      }
-
-      if (key === "d" && currentPhaseIndex < phases.length - 1) {
-        const newIndex = currentPhaseIndex + 1;
-        switchToPhase(newIndex);
-        notifyPhaseChanged?.(newIndex);
-        e.preventDefault();
-        return true;
-      }
-
-      return false;
-    };
-
-    const handleDeleteHoveredElement = (
-      key: string,
-      e: KeyboardEvent,
-    ): boolean => {
-      if (key !== "e") return false;
-      if (!hoveredElementId || isDrawMode || editingTextId) return false;
-
-      const connectedLine = connectingLines.find(
-        (line) =>
-          line.fromId === hoveredElementId || line.toId === hoveredElementId,
-      );
-
-      if (imagesOnCanvas.some((image) => image.id === hoveredElementId)) {
-        setImagesOnCanvas((prev) =>
-          prev.filter((image) => image.id !== hoveredElementId),
-        );
-        notifyImageRemoved?.(hoveredElementId);
-      }
-
-      if (textsOnCanvas.some((text) => text.id === hoveredElementId)) {
-        setTextsOnCanvas((prev) =>
-          prev.filter((text) => text.id !== hoveredElementId),
-        );
-        notifyTextRemoved?.(hoveredElementId);
-      }
-
-      if (agentsOnCanvas.some((agent) => agent.id === hoveredElementId)) {
-        const removedAbilityIds = new Set(
-          getAttachedVisionConeIds(abilitiesOnCanvas, hoveredElementId),
-        );
-
-        if (connectedLine) {
-          const connectedAbilityId =
-            connectedLine.fromId === hoveredElementId
-              ? connectedLine.toId
-              : connectedLine.toId === hoveredElementId
-                ? connectedLine.fromId
-                : null;
-
-          if (connectedAbilityId) {
-            removedAbilityIds.add(connectedAbilityId);
-            getAttachedVisionConeIds(
-              abilitiesOnCanvas,
-              connectedAbilityId,
-            ).forEach((removedId) => removedAbilityIds.add(removedId));
-            setConnectingLines((lines) =>
-              lines.filter((line) => line.id !== connectedLine.id),
-            );
-            notifyConnLineRemoved?.(connectedLine.id);
-          }
-        }
-
-        if (removedAbilityIds.size > 0) {
-          setAbilitiesOnCanvas((prev) =>
-            prev.filter((ability) => !removedAbilityIds.has(ability.id)),
-          );
-          removedAbilityIds.forEach((removedId) =>
-            notifyAbilityRemoved?.(removedId),
-          );
-        }
-
-        setAgentsOnCanvas((prev) =>
-          prev.filter((agent) => agent.id !== hoveredElementId),
-        );
-        notifyAgentRemoved?.(hoveredElementId);
-      }
-
-      if (
-        abilitiesOnCanvas.some((ability) => ability.id === hoveredElementId)
-      ) {
-        const removedAbilityIds = new Set([
-          hoveredElementId,
-          ...getAttachedVisionConeIds(abilitiesOnCanvas, hoveredElementId),
-        ]);
-
-        if (connectedLine) {
-          const connectedAgentId =
-            connectedLine.fromId === hoveredElementId
-              ? connectedLine.toId
-              : connectedLine.toId === hoveredElementId
-                ? connectedLine.fromId
-                : null;
-
-          if (connectedAgentId) {
-            setAgentsOnCanvas((agents) =>
-              agents.filter((agent) => agent.id !== connectedAgentId),
-            );
-            notifyAgentRemoved?.(connectedAgentId);
-            setConnectingLines((lines) =>
-              lines.filter((line) => line.id !== connectedLine.id),
-            );
-            notifyConnLineRemoved?.(connectedLine.id);
-          }
-        }
-
-        setAbilitiesOnCanvas((prev) =>
-          prev.filter((ability) => !removedAbilityIds.has(ability.id)),
-        );
-        removedAbilityIds.forEach((removedId) =>
-          notifyAbilityRemoved?.(removedId),
-        );
-      }
-
-      if (
-        toolIconsOnCanvas.some((toolIcon) => toolIcon.id === hoveredElementId)
-      ) {
-        const removedAbilityIds = getAttachedVisionConeIds(
-          abilitiesOnCanvas,
-          hoveredElementId,
-        );
-
-        if (removedAbilityIds.length > 0) {
-          const removedIdSet = new Set(removedAbilityIds);
-          setAbilitiesOnCanvas((prev) =>
-            prev.filter((ability) => !removedIdSet.has(ability.id)),
-          );
-          removedAbilityIds.forEach((removedId) =>
-            notifyAbilityRemoved?.(removedId),
-          );
-        }
-
-        setToolIconsOnCanvas((prev) =>
-          prev.filter((toolIcon) => toolIcon.id !== hoveredElementId),
-        );
-        notifyToolIconRemoved?.(hoveredElementId);
-      }
-
-      setHoveredElementId(null);
-      e.preventDefault();
-      return true;
-    };
-
-    const handleRecenter = (key: string, e: KeyboardEvent): boolean => {
-      if (key !== "r") return false;
-
-      recenterCanvasCallback.current?.();
-      e.preventDefault();
-      return true;
-    };
-
-    const handleDrawToolToggle = (key: string, e: KeyboardEvent): boolean => {
-      if (key === "q") {
-        if (tool === "pencil" && isDrawMode) {
-          setIsDrawMode(false);
-        } else {
-          setIsDeleteSettingsOpen(false);
-          setEditingTextId(null);
-          setIsDrawMode(true);
-          setTool("pencil");
-        }
-        e.preventDefault();
-        return true;
-      }
-
-      if (key === "w") {
-        if (tool === "eraser" && isDrawMode) {
-          setIsDrawMode(false);
-        } else {
-          setIsDeleteSettingsOpen(false);
-          setEditingTextId(null);
-          setIsDrawMode(true);
-          setTool("eraser");
-        }
-        e.preventDefault();
-        return true;
-      }
-
-      return false;
-    };
-
-    const handleEraserModeToggle = (
-      key: string,
-      e: KeyboardEvent,
-      shiftKey: boolean,
-    ): boolean => {
-      if (key === "w" && shiftKey) {
-        updateEraserSettings({
-          mode: eraserSettings.mode === "line" ? "pixel" : "line",
-        });
-        e.preventDefault();
-        return true;
-      }
-      return false;
-    };
-
+  useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       try {
         if (isInputElement(e.target as HTMLElement)) return;
 
+        const ctx = contextRef.current;
         const key = e.key.toLowerCase();
         const isModifier = e.ctrlKey || e.metaKey;
 
-        // Handle modifier key shortcuts (Ctrl/Cmd + key)
-        if (isModifier) {
-          if (handleModifierShortcuts(key, e, e.shiftKey)) return;
-        }
+        // Ctrl/Cmd + key
+        if (isModifier && handleModifierShortcuts(ctx, key, e)) return;
 
-        // Handle Shift+W for eraser mode toggle
-        if (handleEraserModeToggle(key, e, e.shiftKey)) return;
+        // Shift + W: toggle eraser mode
+        if (handleEraserModeToggle(ctx, key, e)) return;
 
-        // Handle phase navigation (A/D keys)
-        if (handlePhaseNavigation(key, e)) return;
+        // A / D: previous / next phase
+        if (handlePhaseNavigation(ctx, key, e)) return;
 
-        // Handle delete hovered element (E key)
-        if (handleDeleteHoveredElement(key, e)) return;
+        // E: delete hovered element
+        if (handleDeleteHoveredElement(ctx, key, e)) return;
 
-        // Handle recenter canvas (R key)
-        if (handleRecenter(key, e)) return;
+        // R: recenter canvas
+        if (handleRecenter(ctx, key, e)) return;
 
-        // Handle draw tool toggles (Q/W keys without modifiers)
-        if (handleDrawToolToggle(key, e)) return;
+        // Q / W: toggle pencil / eraser
+        if (handleDrawToolToggle(ctx, key, e)) return;
       } catch (err) {
         console.error("Keyboard shortcut error:", err);
         toast.error("An unexpected error occurred with keyboard shortcuts");
@@ -371,44 +320,5 @@ export const useKeyboardShortcuts = ({
     window.addEventListener("keydown", onKeyDown, listenerOptions);
     return () =>
       window.removeEventListener("keydown", onKeyDown, listenerOptions);
-  }, [
-    undo,
-    redo,
-    setIsDrawMode,
-    tool,
-    setTool,
-    setIsDeleteSettingsOpen,
-    setEditingTextId,
-    isDrawMode,
-    editingTextId,
-    drawSettings,
-    eraserSettings,
-    updateDrawSettings,
-    updateEraserSettings,
-    phases,
-    currentPhaseIndex,
-    switchToPhase,
-    notifyPhaseChanged,
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    hoveredElementId,
-    imagesOnCanvas,
-    setHoveredElementId,
-    setImagesOnCanvas,
-    setTextsOnCanvas,
-    setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
-    setToolIconsOnCanvas,
-    connectingLines,
-    textsOnCanvas,
-    toolIconsOnCanvas,
-    setConnectingLines,
-    recenterCanvasCallback,
-    notifyImageRemoved,
-    notifyTextRemoved,
-    notifyConnLineRemoved,
-    notifyAbilityRemoved,
-    notifyAgentRemoved,
-    notifyToolIconRemoved,
-  ]);
+  }, []);
 };
