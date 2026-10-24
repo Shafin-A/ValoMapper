@@ -932,6 +932,7 @@ var valorantMapURLToDisplayName = map[string]string{
 	"/Game/Maps/Port/Port":         "Icebox",
 	"/Game/Maps/Rook/Rook":         "Corrode",
 	"/Game/Maps/Triad/Triad":       "Haven",
+	"/Game/Maps/Plummet/Plummet":   "Summit",
 }
 
 var valorantAgentIDToDisplayName = map[string]string{
