@@ -67,6 +67,7 @@ export const WEAPONS = {
     { name: "guardian", width: 508 / 7, height: 108 / 7 },
     { name: "phantom", width: 508 / 7, height: 120 / 7 },
     { name: "vandal", width: 420 / 7, height: 128 / 7 },
+    { name: "warden", width: 512 / 7, height: 140 / 7 },
   ],
   snipers: [
     { name: "marshal", width: 508 / 7, height: 92 / 7 },
