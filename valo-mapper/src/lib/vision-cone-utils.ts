@@ -79,6 +79,10 @@ export const isVisionConeAction = (
   );
 };
 
+export const isVisionOcclusionAction = (action: AbilityAction) => {
+  return isVisionConeAction(action) || action === "kj_turret";
+};
+
 export const canAttachVisionCone = (ability: AbilityCanvas) => {
   return isVisionConeAction(ability.action) && ability.iconOnly !== true;
 };
@@ -152,6 +156,10 @@ export const syncAttachedVisionConeNodePositions = ({
     }
 
     coneNode.position(nextPosition);
+    const refreshVisionCone = coneNode.getAttr("refreshVisionCone");
+    if (typeof refreshVisionCone === "function") {
+      refreshVisionCone(nextPosition);
+    }
     coneNode.getLayer()?.batchDraw();
   });
 };

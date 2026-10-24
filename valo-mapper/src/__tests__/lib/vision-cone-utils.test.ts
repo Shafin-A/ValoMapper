@@ -2,19 +2,30 @@ import type { AbilityCanvas } from "@/lib/types";
 import {
   applyVisionConeAttachment,
   getAttachedVisionConeIds,
+  isVisionOcclusionAction,
   syncAttachedVisionConeNodePositions,
 } from "@/lib/vision-cone-utils";
 import Konva from "konva";
+
+describe("isVisionOcclusionAction", () => {
+  it("includes vision cones and Killjoy's turret only", () => {
+    expect(isVisionOcclusionAction("vision_cone_60")).toBe(true);
+    expect(isVisionOcclusionAction("kj_turret")).toBe(true);
+    expect(isVisionOcclusionAction("miks_ult")).toBe(false);
+  });
+});
 
 type MockNode = {
   x: jest.Mock<number, []>;
   y: jest.Mock<number, []>;
   position: jest.Mock<void, [{ x: number; y: number }]>;
+  getAttr: jest.Mock<unknown, [string]>;
   getLayer: jest.Mock<{ batchDraw: jest.Mock<void, []> }, []>;
 };
 
 const createMockNode = (x: number, y: number) => {
   const batchDraw = jest.fn<void, []>();
+  const refreshVisionCone = jest.fn<void, [{ x: number; y: number }]>();
 
   const node = {
     x: jest.fn(() => x),
@@ -23,6 +34,9 @@ const createMockNode = (x: number, y: number) => {
       x = nextPosition.x;
       y = nextPosition.y;
     }),
+    getAttr: jest.fn((key: string) =>
+      key === "refreshVisionCone" ? refreshVisionCone : undefined,
+    ),
     getLayer: jest.fn(() => ({ batchDraw })),
   } satisfies MockNode;
 
@@ -30,6 +44,7 @@ const createMockNode = (x: number, y: number) => {
     node: node as unknown as Konva.Node,
     position: () => ({ x, y }),
     batchDraw,
+    refreshVisionCone,
   };
 };
 
@@ -77,8 +92,13 @@ describe("syncAttachedVisionConeNodePositions", () => {
     });
 
     expect(attachedCone.position()).toEqual({ x: 160, y: 220 });
+    expect(attachedCone.refreshVisionCone).toHaveBeenCalledWith({
+      x: 160,
+      y: 220,
+    });
     expect(attachedCone.batchDraw).toHaveBeenCalledTimes(1);
     expect(detachedCone.position()).toEqual({ x: 30, y: 40 });
+    expect(detachedCone.refreshVisionCone).not.toHaveBeenCalled();
     expect(detachedCone.batchDraw).not.toHaveBeenCalled();
   });
 });

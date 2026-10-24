@@ -18,6 +18,7 @@ import {
   X_LINE_ABILITY_CONFIGS,
 } from "@/lib/consts";
 import { AbilityAction } from "@/lib/types";
+import { isVisionOcclusionAction } from "@/lib/vision-cone-utils";
 import {
   isAdjustableLineAbility,
   isArcAbility,
@@ -39,6 +40,7 @@ type InteractionData =
 
 interface AbilityIconProps extends CanvasIconProps {
   action: AbilityAction;
+  mapPosition?: Vector2d;
   rotation?: number;
   currentPath?: Vector2d[];
   currentLength?: number;
@@ -278,6 +280,9 @@ const renderArcAbility = (props: AbilityIconProps): ReactNode => {
       rotationHandleDistance={config.rotationHandleDistance}
       showInactiveRotationHandleRing={config.showInactiveRotationHandleRing}
       allowLengthAdjustment={isVisionCone}
+      useWallOcclusion={
+        isVisionOcclusionAction(props.action) && props.mapPosition !== undefined
+      }
       showCenterIcon={props.showCenterIcon}
       {...props}
     />

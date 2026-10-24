@@ -17,13 +17,18 @@ import {
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
+import type { Vector2d } from "konva/lib/types";
 import { Group } from "react-konva";
 
 interface CanvasAbilityProps {
   deleteGroupRef: React.RefObject<Konva.Group | null>;
+  mapPosition: Vector2d;
 }
 
-export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
+export const CanvasAbilities = ({
+  deleteGroupRef,
+  mapPosition,
+}: CanvasAbilityProps) => {
   const {
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
@@ -209,6 +214,7 @@ export const CanvasAbilities = ({ deleteGroupRef }: CanvasAbilityProps) => {
           id={ability.id}
           isAlly={ability.isAlly}
           action={ability.action}
+          mapPosition={mapPosition}
           x={attachmentHost?.x ?? ability.x}
           y={attachmentHost?.y ?? ability.y}
           rotation={ability.currentRotation}

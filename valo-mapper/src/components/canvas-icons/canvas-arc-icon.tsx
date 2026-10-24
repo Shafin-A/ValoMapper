@@ -1,12 +1,18 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
+import { MAP_SIZE } from "@/lib/consts";
+import { CANVAS_MAP_RENDER_SCALE } from "@/lib/map-positioning";
+import { loadVisionMask } from "@/lib/vision-mask-loader";
+import { traceVisionCone, VisionMask } from "@/lib/vision-cone-visibility";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
+import type { Vector2d } from "konva/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Arc, Circle, Group } from "react-konva";
+import { Arc, Circle, Group, Line } from "react-konva";
 import useImage from "use-image";
 
 interface CanvasArcIconProps extends CanvasIconProps {
+  mapPosition?: Vector2d;
   boxRadius: number;
   arcRadius: number;
   fov: number;
@@ -33,11 +39,13 @@ interface CanvasArcIconProps extends CanvasIconProps {
   showInactiveRotationHandleRing?: boolean;
   allowLengthAdjustment?: boolean;
   showCenterIcon?: boolean;
+  useWallOcclusion?: boolean;
 }
 
 export const CanvasArcIcon = ({
   id,
   isAlly,
+  mapPosition = { x: 0, y: 0 },
   x,
   y,
   src,
@@ -74,10 +82,12 @@ export const CanvasArcIcon = ({
   showAbilityShape = true,
   allowLengthAdjustment = false,
   showCenterIcon = true,
+  useWallOcclusion = false,
   registerNode,
   unregisterNode,
 }: CanvasArcIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
+  const visibilityLineRef = useRef<Konva.Line>(null);
   const rotationHandleRef = useRef<Konva.Circle>(null);
   const [currentRotation, setCurrentRotation] = useState(rotation);
   const [currentArcRadius, setCurrentArcRadius] = useState(arcRadius);
@@ -92,9 +102,58 @@ export const CanvasArcIcon = ({
   const initialArcRadiusRef = useRef<number>(arcRadius);
   const initialPointerDistanceRef = useRef<number>(0);
 
-  const { setAbilitiesOnCanvas, mapSide } = useCanvas();
+  const { setAbilitiesOnCanvas, mapSide, selectedMap } = useCanvas();
+  const [maskState, setMaskState] = useState<{
+    source: string;
+    mask: VisionMask;
+  } | null>(null);
 
   const [image] = useImage(src);
+  const maskSource = useWallOcclusion
+    ? `/maps/vision-masks/${selectedMap.id}.png`
+    : null;
+  const visionMask = maskState?.source === maskSource ? maskState.mask : null;
+  const refreshVisibilityRef = useRef<(origin: Vector2d) => void>(() => {});
+  refreshVisibilityRef.current = (origin) => {
+    if (!useWallOcclusion || !visionMask) return;
+
+    const points = traceVisionCone({
+      mask: visionMask,
+      frame: {
+        centerX: mapPosition.x + MAP_SIZE / 2,
+        centerY: mapPosition.y + MAP_SIZE / 2,
+        renderScale: CANVAS_MAP_RENDER_SCALE,
+        rotate180: mapSide === "attack",
+      },
+      origin,
+      directionDegrees: currentRotation,
+      apertureDegrees: fov,
+      radius: currentArcRadius,
+    }).flatMap((point) => [point.x, point.y]);
+
+    visibilityLineRef.current?.points(points);
+    visibilityLineRef.current?.getLayer()?.batchDraw();
+  };
+
+  useEffect(() => {
+    if (!maskSource) {
+      setMaskState(null);
+      return;
+    }
+
+    let active = true;
+    void loadVisionMask(maskSource)
+      .then((mask) => {
+        if (active) setMaskState({ source: maskSource, mask });
+      })
+      .catch(() => {
+        if (active) setMaskState(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [maskSource]);
 
   useEffect(() => {
     const group = groupRef.current;
@@ -116,6 +175,7 @@ export const CanvasArcIcon = ({
         }
 
         group.clearCache();
+        if (useWallOcclusion) return;
 
         const { width: cacheWidth, height: cacheHeight } = group.getClientRect({
           skipTransform: true,
@@ -131,6 +191,9 @@ export const CanvasArcIcon = ({
   }, [
     image,
     currentRotation,
+    maskSource,
+    visionMask,
+    useWallOcclusion,
     isInteracting,
     isHoveringHandle,
     isAlly,
@@ -155,6 +218,22 @@ export const CanvasArcIcon = ({
     initialArcRadiusRef.current = arcRadius;
   }, [rotation, arcRadius]);
 
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    const refreshVisionCone = (origin: Vector2d) => {
+      refreshVisibilityRef.current(origin);
+    };
+    group.setAttr("refreshVisionCone", refreshVisionCone);
+
+    return () => {
+      if (group.getAttr("refreshVisionCone") === refreshVisionCone) {
+        group.setAttr("refreshVisionCone", undefined);
+      }
+    };
+  }, [id]);
+
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (!groupRef.current) return;
     const className = e.target.getClassName();
@@ -178,6 +257,11 @@ export const CanvasArcIcon = ({
       groupRef.current.opacity(1);
     }
     onDragEnd?.(e);
+  };
+
+  const handleGroupDragMove = (e: KonvaEventObject<DragEvent>) => {
+    onDragMove?.(e);
+    refreshVisibilityRef.current({ x: e.target.x(), y: e.target.y() });
   };
 
   const handleInteractionStart = useCallback(
@@ -316,6 +400,23 @@ export const CanvasArcIcon = ({
       }
     : {};
 
+  const visibilityPoints =
+    showAbilityShape && useWallOcclusion && visionMask
+      ? traceVisionCone({
+          mask: visionMask,
+          frame: {
+            centerX: mapPosition.x + MAP_SIZE / 2,
+            centerY: mapPosition.y + MAP_SIZE / 2,
+            renderScale: CANVAS_MAP_RENDER_SCALE,
+            rotate180: mapSide === "attack",
+          },
+          origin: { x, y },
+          directionDegrees: currentRotation,
+          apertureDegrees: fov,
+          radius: currentArcRadius,
+        }).flatMap((point) => [point.x, point.y])
+      : null;
+
   const resolvedOuterArcThickness = Math.max(0, outerArcThickness);
 
   const handleRotationHandleMouseOver = () => {
@@ -345,21 +446,33 @@ export const CanvasArcIcon = ({
       draggable={draggable}
       onMouseDown={isListening ? handleMouseDown : undefined}
       onDragStart={isListening ? handleDragStart : undefined}
-      onDragMove={isListening ? onDragMove : undefined}
+      onDragMove={isListening ? handleGroupDragMove : undefined}
       onDragEnd={isListening ? handleDragEnd : undefined}
     >
       {showAbilityShape && (
         <>
-          <Arc
-            listening={false}
-            strokeWidth={circleStrokeWidth}
-            angle={fov}
-            innerRadius={0}
-            outerRadius={currentArcRadius}
-            rotation={currentRotation - fov / 2}
-            fill={fill}
-            {...gradientFillProps}
-          />
+          {visibilityPoints ? (
+            <Line
+              ref={visibilityLineRef}
+              listening={false}
+              points={visibilityPoints}
+              closed
+              fill={fill}
+              lineJoin="round"
+              {...gradientFillProps}
+            />
+          ) : (
+            <Arc
+              listening={false}
+              strokeWidth={circleStrokeWidth}
+              angle={fov}
+              innerRadius={0}
+              outerRadius={currentArcRadius}
+              rotation={currentRotation - fov / 2}
+              fill={fill}
+              {...gradientFillProps}
+            />
+          )}
           {showOuterArc && (
             <Arc
               angle={fov}
