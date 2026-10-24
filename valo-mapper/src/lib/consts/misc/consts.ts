@@ -16,6 +16,9 @@ export const STRATEGY_CLEANUP_GRACE_PERIOD_DAYS = 14;
 
 export const MAX_DRAWLINE_POINTS = 1500;
 
+export const TOOL_ICON_CONTOUR_COLOR = "#0f1923";
+export const TOOL_ICON_CONTOUR_WIDTH = 2;
+
 export const ALLOWED_IMAGE_UPLOAD_MIME_TYPES = [
   "image/jpeg",
   "image/png",

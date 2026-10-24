@@ -12,7 +12,11 @@ import {
   getToolIconAttachmentPosition,
 } from "@/lib/tool-icon";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
-import { TEMP_DRAG_ID } from "@/lib/consts";
+import {
+  TEMP_DRAG_ID,
+  TOOL_ICON_CONTOUR_COLOR,
+  TOOL_ICON_CONTOUR_WIDTH,
+} from "@/lib/consts";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Group } from "react-konva";
@@ -163,6 +167,8 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
           height={toolIcon.height}
           borderOpacity={0}
           strokeWidth={0}
+          contourColor={TOOL_ICON_CONTOUR_COLOR}
+          contourWidth={TOOL_ICON_CONTOUR_WIDTH}
           radius={0}
           fill=""
           allyColor={"#ffffff"}

@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import useImage from "use-image";
 
 export const useGrayImage = (
-  src: string,
+  image: HTMLImageElement | undefined,
   isGray: boolean,
 ): HTMLCanvasElement | HTMLImageElement | undefined => {
-  const [image] = useImage(src);
   const [grayCanvas, setGrayCanvas] = useState<
     HTMLCanvasElement | HTMLImageElement | undefined
   >(undefined);

@@ -1,6 +1,12 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
-import { MAP_SIZE, WEAPONS, TEMP_DRAG_ID } from "@/lib/consts";
+import {
+  MAP_SIZE,
+  WEAPONS,
+  TEMP_DRAG_ID,
+  TOOL_ICON_CONTOUR_COLOR,
+  TOOL_ICON_CONTOUR_WIDTH,
+} from "@/lib/consts";
 import { getNextId } from "@/lib/utils";
 import { Vector2d } from "konva/lib/types";
 import { CanvasIcon } from "@/components/canvas-icons";
@@ -363,6 +369,8 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
                   height={selectedCanvasIcon.height}
                   borderOpacity={0}
                   strokeWidth={0}
+                  contourColor={TOOL_ICON_CONTOUR_COLOR}
+                  contourWidth={TOOL_ICON_CONTOUR_WIDTH}
                   radius={0}
                   fill=""
                   allyColor="#ffffff"

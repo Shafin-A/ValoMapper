@@ -6,7 +6,9 @@ import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useEffect, useRef } from "react";
 import { Group, Image as KonvaImage } from "react-konva";
+import useImage from "use-image";
 import { useGrayImage } from "@/hooks/use-gray-image";
+import { useIconContour } from "@/hooks/use-icon-contour";
 
 export interface CanvasIconProps {
   id: string;
@@ -24,6 +26,8 @@ export interface CanvasIconProps {
   enemyColor: string;
   fill?: string;
   strokeWidth: number;
+  contourColor?: string;
+  contourWidth?: number;
   isGray?: boolean;
   hasShadow?: boolean;
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
@@ -49,6 +53,8 @@ export const CanvasIcon = ({
   enemyColor,
   fill = "#1b1b1b",
   strokeWidth,
+  contourColor,
+  contourWidth = 0,
   onDragMove,
   onDragEnd,
   rotation = 0,
@@ -57,7 +63,15 @@ export const CanvasIcon = ({
   isGray = false,
   hasShadow = false,
 }: CanvasIconProps) => {
-  const resolvedImage = useGrayImage(src, isGray);
+  const [iconImage] = useImage(src);
+  const resolvedImage = useGrayImage(iconImage, isGray);
+  const contour = useIconContour({
+    image: iconImage,
+    color: contourColor,
+    thickness: contourWidth,
+    width,
+    height,
+  });
   const groupRef = useRef<Konva.Group>(null);
 
   useEffect(() => {
@@ -105,6 +119,17 @@ export const CanvasIcon = ({
       onDragEnd={isListening ? handleDragEnd : undefined}
       rotation={rotation}
     >
+      {contour && (
+        <KonvaImage
+          image={contour.image}
+          x={contour.x}
+          y={contour.y}
+          width={contour.width}
+          height={contour.height}
+          listening={false}
+          perfectDrawEnabled={false}
+        />
+      )}
       <KonvaImage
         image={resolvedImage}
         width={width}
