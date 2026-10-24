@@ -1,6 +1,7 @@
 import type { AbilityCanvas } from "@/lib/types";
 import {
   applyVisionConeAttachment,
+  createDefaultAttachedVisionCone,
   getAttachedVisionConeIds,
   isVisionOcclusionAction,
   syncAttachedVisionConeNodePositions,
@@ -12,6 +13,50 @@ describe("isVisionOcclusionAction", () => {
     expect(isVisionOcclusionAction("vision_cone_60")).toBe(true);
     expect(isVisionOcclusionAction("kj_turret")).toBe(true);
     expect(isVisionOcclusionAction("miks_ult")).toBe(false);
+  });
+});
+
+describe("createDefaultAttachedVisionCone", () => {
+  it("gives Cypher's Spycam a normal 103 vision cone", () => {
+    const cone = createDefaultAttachedVisionCone(
+      {
+        id: "spycam-1",
+        name: "Spycam",
+        action: "icon",
+        isAlly: true,
+        x: 120,
+        y: 140,
+      },
+      "cone-1",
+    );
+
+    expect(cone).toMatchObject({
+      id: "cone-1",
+      name: "Vision Cone 103",
+      action: "vision_cone_103",
+      x: 120,
+      y: 140,
+      isAlly: true,
+      iconOnly: false,
+      showOuterCircle: true,
+      attachedToId: "spycam-1",
+    });
+  });
+
+  it("does not add a cone to other icon-only abilities", () => {
+    expect(
+      createDefaultAttachedVisionCone(
+        {
+          id: "ability-1",
+          name: "Neural Theft",
+          action: "icon",
+          isAlly: true,
+          x: 0,
+          y: 0,
+        },
+        "cone-1",
+      ),
+    ).toBeNull();
   });
 });
 

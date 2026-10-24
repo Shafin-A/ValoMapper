@@ -427,6 +427,74 @@ describe("useCanvasEvents", () => {
     expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
   });
 
+  it("places Cypher's Spycam with an attached 103 vision cone", () => {
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: TEMP_DRAG_ID,
+        name: "Spycam",
+        action: "icon",
+        isAlly: true,
+        x: 0,
+        y: 0,
+      },
+    ];
+
+    const setAbilitiesOnCanvas = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    const setSelectedCanvasIcon = jest.fn();
+
+    mockGetNextId
+      .mockReturnValueOnce("spycam-new")
+      .mockReturnValueOnce("cone-new");
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        selectedCanvasIcon: {
+          id: "spycam",
+          name: "Spycam",
+          action: "icon",
+          src: "/agents/cypher/spycam.png",
+          slot: "Ability2",
+        },
+        setSelectedCanvasIcon,
+        abilitiesOnCanvas: abilitiesState,
+        setAbilitiesOnCanvas,
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleStageClick();
+    });
+
+    expect(abilitiesState).toHaveLength(2);
+    expect(abilitiesState[0]).toMatchObject({
+      id: "spycam-new",
+      name: "Spycam",
+      action: "icon",
+      x: 4,
+      y: 8,
+    });
+    expect(abilitiesState[1]).toMatchObject({
+      id: "cone-new",
+      name: "Vision Cone 103",
+      action: "vision_cone_103",
+      x: 4,
+      y: 8,
+      attachedToId: "spycam-new",
+      iconOnly: false,
+    });
+    expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
+  });
+
   it("does not attach a hidden-shape vision cone to a host icon on placement", () => {
     let abilitiesState: AbilityCanvas[] = [
       {

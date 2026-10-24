@@ -3,6 +3,7 @@ import { useSettings } from "@/contexts/settings-context";
 import {
   applyVisionConeAttachment,
   canAttachVisionCone,
+  createDefaultAttachedVisionCone,
   findVisionConeAttachmentTarget,
 } from "@/lib/vision-cone-utils";
 import {
@@ -279,11 +280,22 @@ export const useCanvasEvents = (
             nextAbility: newAbility,
           });
 
+        const defaultAttachedCone = createDefaultAttachedVisionCone(
+          newAbility,
+          getNextId("ability"),
+        );
+        if (defaultAttachedCone) {
+          nextAbilitiesOnCanvas.push(defaultAttachedCone);
+        }
+
         setAbilitiesOnCanvas(nextAbilitiesOnCanvas);
         removedAbilityIds.forEach((abilityId) =>
           notifyAbilityRemoved(abilityId),
         );
         notifyAbilityAdded(newAbility);
+        if (defaultAttachedCone) {
+          notifyAbilityAdded(defaultAttachedCone);
+        }
       } else {
         const tempToolIcon = toolIconsOnCanvas.find(
           (toolIcon) => toolIcon.id === TEMP_DRAG_ID,

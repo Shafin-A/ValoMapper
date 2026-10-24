@@ -1,3 +1,4 @@
+import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import {
   AbilityAction,
   AbilityCanvas,
@@ -81,6 +82,37 @@ export const isVisionConeAction = (
 
 export const isVisionOcclusionAction = (action: AbilityAction) => {
   return isVisionConeAction(action) || action === "kj_turret";
+};
+
+const DEFAULT_ATTACHED_VISION_CONE_NAMES: Record<string, string> = {
+  Spycam: "Vision Cone 103",
+};
+
+export const createDefaultAttachedVisionCone = (
+  host: AbilityCanvas,
+  id: string,
+): AbilityCanvas | null => {
+  const coneName = DEFAULT_ATTACHED_VISION_CONE_NAMES[host.name];
+  if (!coneName) {
+    return null;
+  }
+
+  const cone = ABILITY_LOOKUP[coneName];
+  if (!cone) {
+    return null;
+  }
+
+  return {
+    ...cone,
+    id,
+    x: host.x,
+    y: host.y,
+    isAlly: host.isAlly,
+    iconOnly: false,
+    showOuterCircle: true,
+    attachedToId: host.id,
+    currentRotation: host.currentRotation ?? 0,
+  };
 };
 
 export const canAttachVisionCone = (ability: AbilityCanvas) => {
