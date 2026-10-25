@@ -35,8 +35,16 @@ export const isShieldToolIcon = (name: string) => {
   return name.endsWith("_shield");
 };
 
+export const isSpikeToolIcon = (name: string) => {
+  return name === "spike";
+};
+
 export const canAttachToolIcon = (toolIcon: ToolIconCanvas) => {
-  return isGunToolIcon(toolIcon.name) || isShieldToolIcon(toolIcon.name);
+  return (
+    isGunToolIcon(toolIcon.name) ||
+    isShieldToolIcon(toolIcon.name) ||
+    isSpikeToolIcon(toolIcon.name)
+  );
 };
 
 export const getAttachedToolIconIds = (
@@ -99,6 +107,13 @@ export const getToolIconAttachmentPosition = (
     return {
       x: hostX + agentHalfSize + CORNER_PADDING,
       y: hostY - agentHalfSize - CORNER_PADDING,
+    };
+  }
+
+  if (isSpikeToolIcon(toolIcon.name)) {
+    return {
+      x: hostX + agentHalfSize + CORNER_PADDING,
+      y: hostY + agentHalfSize + CORNER_PADDING,
     };
   }
 

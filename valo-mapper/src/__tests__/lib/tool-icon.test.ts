@@ -24,7 +24,7 @@ describe("tool-icon-utils", () => {
     role: "Duelist",
   };
 
-  it("identifies gun and shield tool icons as attachable", () => {
+  it("identifies gun, shield and spike tool icons as attachable", () => {
     expect(
       canAttachToolIcon({
         id: "tool-1",
@@ -52,6 +52,18 @@ describe("tool-icon-utils", () => {
     expect(
       canAttachToolIcon({
         id: "tool-3",
+        name: "spike",
+        isAlly: true,
+        x: 0,
+        y: 0,
+        width: 20,
+        height: 20,
+      } as ToolIconCanvas),
+    ).toBe(true);
+
+    expect(
+      canAttachToolIcon({
+        id: "tool-4",
         name: "smoke",
         isAlly: true,
         x: 0,
@@ -82,7 +94,7 @@ describe("tool-icon-utils", () => {
     expect(target).toBeNull();
   });
 
-  it("positions guns at the bottom-left and shields at the top-right of an agent", () => {
+  it("positions guns at the bottom-left, shields at the top-right and spikes at the bottom-right of an agent", () => {
     const gunIcon: ToolIconCanvas = {
       id: "gun",
       name: "vandal",
@@ -95,6 +107,15 @@ describe("tool-icon-utils", () => {
     const shieldIcon: ToolIconCanvas = {
       id: "shield",
       name: "operator_shield",
+      x: 0,
+      y: 0,
+      width: 16,
+      height: 16,
+    };
+
+    const spikeIcon: ToolIconCanvas = {
+      id: "spike",
+      name: "spike",
       x: 0,
       y: 0,
       width: 16,
@@ -118,6 +139,13 @@ describe("tool-icon-utils", () => {
     ).toEqual({
       x: agent.x + agentSettings.scale / 2 + 8,
       y: agent.y - agentSettings.scale / 2 - 8,
+    });
+
+    expect(
+      getToolIconAttachmentPosition(spikeIcon, agent.x, agent.y, agentSettings),
+    ).toEqual({
+      x: agent.x + agentSettings.scale / 2 + 8,
+      y: agent.y + agentSettings.scale / 2 + 8,
     });
   });
 });
