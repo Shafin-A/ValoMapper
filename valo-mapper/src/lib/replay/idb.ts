@@ -6,7 +6,7 @@ import type { ReplayMatch } from "./types";
  * must degrade gracefully instead of losing the current session.
  */
 const DB_NAME = "valomapper-replays";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const REPLAYS_STORE = "replays";
 const META_STORE = "meta";
 
@@ -21,6 +21,8 @@ export type StoredReplayMeta = {
   sequence: number;
   /** Serialized size estimate, used only for pruning. */
   bytes: number;
+  /** Storage schema the record was written with; older records are ignored. */
+  schemaVersion: number;
 };
 
 let writeSequence = 0;
@@ -49,13 +51,15 @@ const openDatabase = () => {
 
     request.onupgradeneeded = () => {
       const database = request.result;
-      const existing = Array.from(database.objectStoreNames);
-      if (!existing.includes(REPLAYS_STORE)) {
-        database.createObjectStore(REPLAYS_STORE, { keyPath: "replayId" });
+
+      // Recreating both stores drops every older record. A previous schema
+      // cannot be upgraded in place, and serving its frames would show stale
+      // player state until the next parse.
+      for (const storeName of Array.from(database.objectStoreNames)) {
+        database.deleteObjectStore(storeName);
       }
-      if (!existing.includes(META_STORE)) {
-        database.createObjectStore(META_STORE, { keyPath: "replayId" });
-      }
+      database.createObjectStore(REPLAYS_STORE, { keyPath: "replayId" });
+      database.createObjectStore(META_STORE, { keyPath: "replayId" });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => {
@@ -100,9 +104,9 @@ export const listReplayMeta = async (): Promise<StoredReplayMeta[]> => {
     const entries = await requestResult(
       transaction.objectStore(META_STORE).getAll(),
     );
-    return (entries as StoredReplayMeta[]).sort(
-      (a, b) => a.savedAt - b.savedAt || a.sequence - b.sequence,
-    );
+    return (entries as StoredReplayMeta[])
+      .filter((entry) => entry.schemaVersion === DB_VERSION)
+      .sort((a, b) => a.savedAt - b.savedAt || a.sequence - b.sequence);
   } catch {
     return [];
   }
@@ -143,6 +147,7 @@ const writeReplay = async (
     savedAt: Date.now(),
     sequence: ++writeSequence,
     bytes,
+    schemaVersion: DB_VERSION,
   } satisfies StoredReplayMeta);
   await transactionDone(transaction);
 };
@@ -192,11 +197,19 @@ export const getReplay = async (
   }
 
   try {
-    const transaction = database.transaction(REPLAYS_STORE, "readonly");
-    const stored = await requestResult(
-      transaction.objectStore(REPLAYS_STORE).get(replayId),
+    const transaction = database.transaction(
+      [REPLAYS_STORE, META_STORE],
+      "readonly",
     );
-    if (!stored) {
+    const [stored, meta] = await Promise.all([
+      requestResult(transaction.objectStore(REPLAYS_STORE).get(replayId)),
+      requestResult(transaction.objectStore(META_STORE).get(replayId)),
+    ]);
+    if (
+      !stored ||
+      !meta ||
+      (meta as StoredReplayMeta).schemaVersion !== DB_VERSION
+    ) {
       return null;
     }
     return (stored as { match: ReplayMatch }).match ?? null;

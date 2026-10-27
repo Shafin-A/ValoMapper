@@ -538,6 +538,80 @@ export const getReplayFrameAtTime = (
   };
 };
 
+const playerFrameIndexes = new WeakMap<
+  ReplayRound,
+  Map<string, number[]>
+>();
+
+/**
+ * Index the frames a player appears in so a state lookup can binary-search
+ * that player's samples instead of walking every frame.
+ */
+const getPlayerFrameIndexes = (round: ReplayRound) => {
+  const cached = playerFrameIndexes.get(round);
+  if (cached) {
+    return cached;
+  }
+
+  const indexes = new Map<string, number[]>();
+  round.frames.forEach((frame, frameIndex) => {
+    for (const player of frame.players) {
+      const playerIndexes = indexes.get(player.puuid);
+      if (playerIndexes) {
+        playerIndexes.push(frameIndex);
+      } else {
+        indexes.set(player.puuid, [frameIndex]);
+      }
+    }
+  });
+
+  playerFrameIndexes.set(round, indexes);
+  return indexes;
+};
+
+/**
+ * Latest state sample for a player at or before `timeMs`, scoped to one round.
+ * A dead player stops appearing in movement frames, so their last sample must
+ * be looked up by time rather than by frame membership. Returns `null` when the
+ * player has no sample in this round at all.
+ */
+export const getReplayPlayerStateAtTime = (
+  round: ReplayRound,
+  puuid: string,
+  timeMs: number,
+): ReplayFramePlayer | null => {
+  const indexes = getPlayerFrameIndexes(round).get(puuid);
+  if (!indexes || indexes.length === 0) {
+    return null;
+  }
+
+  const clampedTime = clamp(timeMs, 0, round.durationMs);
+  let low = 0;
+  let high = indexes.length - 1;
+  let latestIndex = -1;
+
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const frameIndex = indexes[middle];
+
+    if (round.frames[frameIndex].timeMs <= clampedTime) {
+      latestIndex = frameIndex;
+      low = middle + 1;
+    } else {
+      high = middle - 1;
+    }
+  }
+
+  if (latestIndex < 0) {
+    return null;
+  }
+
+  return (
+    round.frames[latestIndex].players.find((player) => player.puuid === puuid) ??
+    null
+  );
+};
+
 export const getActiveEventIndex = (
   round: Pick<ReplayRound, "eventLog">,
   timeMs: number,

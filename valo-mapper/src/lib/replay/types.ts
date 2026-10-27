@@ -37,6 +37,8 @@ export type ReplayFramePlayer = {
   credits: number;
   weaponId?: string;
   armorId?: string;
+  /** Remaining points on the equipped armour item; absent means no item. */
+  armorPoints?: number;
   alive: boolean;
 };
 

@@ -100,7 +100,6 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={round}
-        frame={frame}
         currentTimeMs={4000}
         viewerPuuid="blue-1"
       />,
@@ -120,7 +119,6 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={round}
-        frame={frame}
         currentTimeMs={4000}
         viewerPuuid="blue-1"
       />,
@@ -134,5 +132,59 @@ describe("ReplayScoreboard", () => {
     expect(
       screen.getByTitle("Blade Storm (X) — available"),
     ).toBeInTheDocument();
+  });
+
+  it("renders a dead player after their last frame sample and excludes them from alive", () => {
+    const deadRound: ReplayRound = {
+      ...round,
+      frames: [
+        {
+          timeMs: 1000,
+          spike: null,
+          players: [
+            { ...frame.players[0] },
+            { ...frame.players[1], hp: 100, alive: true },
+          ],
+        },
+        {
+          timeMs: 2000,
+          spike: null,
+          players: [{ ...frame.players[1], hp: 0, alive: false }],
+        },
+        {
+          timeMs: 3000,
+          spike: null,
+          players: [{ ...frame.players[0], hp: 50 }],
+        },
+      ],
+    };
+
+    const { container } = render(
+      <ReplayScoreboard
+        players={players}
+        round={deadRound}
+        currentTimeMs={4000}
+        viewerPuuid="blue-1"
+      />,
+    );
+
+    expect(screen.getByText("1 alive")).toBeInTheDocument();
+    expect(screen.getByText("0 alive")).toBeInTheDocument();
+    expect(container.querySelectorAll(".opacity-45")).toHaveLength(1);
+  });
+
+  it("falls back to round stats before the player has a sample", () => {
+    render(
+      <ReplayScoreboard
+        players={players}
+        round={{ ...round, frames: [] }}
+        currentTimeMs={0}
+        viewerPuuid="blue-1"
+      />,
+    );
+
+    expect(screen.getAllByText("/100").length).toBeGreaterThan(0);
+    expect(screen.getByText("¢900")).toBeInTheDocument();
+    expect(screen.getByText("¢0")).toBeInTheDocument();
   });
 });

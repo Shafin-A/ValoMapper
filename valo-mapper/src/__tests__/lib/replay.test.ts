@@ -304,7 +304,7 @@ describe("getReplayPlayerState", () => {
   });
 
   it("falls back to round stats when there is no frame player", () => {
-    const state = getReplayPlayerState(undefined, {
+    const state = getReplayPlayerState(null, {
       credits: 900,
       weaponId: "CLASSIC",
       armorId: "822bcab2-40a2-324e-c137-e09195ad7692",

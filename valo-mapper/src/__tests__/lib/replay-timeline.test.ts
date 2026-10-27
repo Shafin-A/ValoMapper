@@ -3,6 +3,7 @@ import { CANVAS_MAP_RENDER_SCALE } from "@/lib/map-positioning";
 import { getReplayPlayerState } from "@/lib/replay/display";
 import {
   getReplayFrameAtTime,
+  getReplayPlayerStateAtTime,
   REPLAY_MAX_INTERPOLATION_GAP_MS,
 } from "@/lib/replay/frames";
 import {
@@ -141,6 +142,69 @@ describe("getReplayFrameAtTime", () => {
   });
 });
 
+describe("getReplayPlayerStateAtTime", () => {
+  it("returns the latest sample at or before the requested time", () => {
+    const round = roundWith([
+      frame(0, [player("a", { hp: 100, credits: 900 })]),
+      frame(125, [player("a", { hp: 80, credits: 800 })]),
+    ]);
+
+    expect(getReplayPlayerStateAtTime(round, "a", 62)?.hp).toBe(100);
+    expect(getReplayPlayerStateAtTime(round, "a", 125)?.hp).toBe(80);
+    expect(getReplayPlayerStateAtTime(round, "a", 500)?.hp).toBe(80);
+  });
+
+  it("keeps a dead player dead after they stop appearing in frames", () => {
+    const round = roundWith([
+      frame(0, [player("a", { hp: 100, alive: true })]),
+      frame(125, [player("a", { hp: 0, alive: false })]),
+      frame(250, []),
+    ]);
+
+    const state = getReplayPlayerStateAtTime(round, "a", 250);
+    expect(state?.hp).toBe(0);
+    expect(state?.alive).toBe(false);
+  });
+
+  it("switches weapon and armour at the sample time, not before", () => {
+    const round = roundWith([
+      frame(0, [player("a", { weaponId: "CLASSIC", armorPoints: 25 })]),
+      frame(125, [player("a", { weaponId: "VANDAL", armorPoints: 50 })]),
+    ]);
+
+    expect(getReplayPlayerStateAtTime(round, "a", 124)?.weaponId).toBe(
+      "CLASSIC",
+    );
+    expect(getReplayPlayerStateAtTime(round, "a", 125)?.weaponId).toBe(
+      "VANDAL",
+    );
+    expect(getReplayPlayerStateAtTime(round, "a", 124)?.armorPoints).toBe(25);
+    expect(getReplayPlayerStateAtTime(round, "a", 125)?.armorPoints).toBe(50);
+  });
+
+  it("returns null when the player has no sample at or before the time", () => {
+    const round = roundWith([
+      frame(125, [player("a")]),
+      frame(250, [player("a")]),
+    ]);
+
+    expect(getReplayPlayerStateAtTime(round, "a", 0)).toBeNull();
+    expect(getReplayPlayerStateAtTime(round, "missing", 250)).toBeNull();
+  });
+
+  it("does not reuse another round's final state", () => {
+    const first = roundWith([
+      frame(0, [player("a", { hp: 12, alive: false })]),
+    ]);
+    const second = roundWith([
+      frame(0, [player("a", { hp: 100, alive: true })]),
+    ]);
+
+    expect(getReplayPlayerStateAtTime(first, "a", 0)?.alive).toBe(false);
+    expect(getReplayPlayerStateAtTime(second, "a", 0)?.alive).toBe(true);
+  });
+});
+
 describe("isReplayPointOnMap", () => {
   const mapPosition = getReplayMapPosition();
   const center = {
@@ -171,10 +235,10 @@ describe("isReplayPointOnMap", () => {
 });
 
 describe("getReplayPlayerState", () => {
-  it("treats an omitted player as having no sample, not as dead", () => {
-    // The client drops a player from the frame across a gap longer than the
-    // interpolation limit. An omitted player falls back to a full bar.
-    const state = getReplayPlayerState(undefined);
+  it("treats a player with no sample as having no state yet, not as dead", () => {
+    // A round can start before the player's first movement sample arrives. The
+    // fallback is a full bar rather than a death.
+    const state = getReplayPlayerState(null);
     expect(state.hp).toBe(100);
     expect(state.alive).toBe(true);
     expect(state.credits).toBe(0);

@@ -4,7 +4,8 @@ import { AbilityIcon, CanvasIcon } from "@/components/canvas-icons";
 import { useSettings } from "@/contexts/settings-context";
 import { getAgentImageSrc } from "@/lib/matches";
 import type { MapSide } from "@/lib/types";
-import type { ReplayFrame, ReplayMatch } from "@/lib/replay/types";
+import { getReplayPlayerStateAtTime } from "@/lib/replay/frames";
+import type { ReplayFrame, ReplayMatch, ReplayRound } from "@/lib/replay/types";
 import {
   getReplayAgentId,
   isReplayPointOnMap,
@@ -53,11 +54,15 @@ const ReplaySpike = ({
 
 export const ReplayCanvasLayer = ({
   match,
+  round,
   frame,
+  currentTimeMs,
   mapSide = "defense",
 }: {
   match: ReplayMatch;
+  round: ReplayRound;
   frame: ReplayFrame | null;
+  currentTimeMs: number;
   mapSide?: MapSide;
 }) => {
   const { agentsSettings, abilitiesSettings } = useSettings();
@@ -75,6 +80,13 @@ export const ReplayCanvasLayer = ({
         if (!framePlayer) {
           return null;
         }
+
+        // Position still comes from the interpolated frame. Liveness comes from
+        // the round-scoped scan-back so a body's last pose cannot keep a vision
+        // cone after death.
+        const alive =
+          getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
+            ?.alive ?? true;
 
         const point = toReplayCanvasPoint({
           mapId: match.mapId,
@@ -101,7 +113,7 @@ export const ReplayCanvasLayer = ({
 
         return (
           <Group key={player.puuid}>
-            {framePlayer.alive && (
+            {alive && (
               <AbilityIcon
                 id={`${agentId}-overlay-cone`}
                 action="vision_cone_103"
@@ -140,7 +152,7 @@ export const ReplayCanvasLayer = ({
               enemyColor={agentsSettings.enemyColor}
               draggable={false}
               isListening={false}
-              isGray={!framePlayer.alive}
+              isGray={!alive}
             />
           </Group>
         );

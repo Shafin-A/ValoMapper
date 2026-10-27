@@ -303,7 +303,9 @@ export const ReplayPlayer = ({
                 replayOverlay={
                   <ReplayCanvasLayer
                     match={match}
+                    round={round}
                     frame={frame}
+                    currentTimeMs={currentTimeMs}
                     mapSide={mapSide}
                   />
                 }
@@ -338,7 +340,6 @@ export const ReplayPlayer = ({
         sidebarOpen={sidebarState.rightSidebarOpen}
         players={match.players}
         round={round}
-        frame={frame}
         currentTimeMs={currentTimeMs}
         viewerPuuid={match.viewer?.puuid}
         selectedEventIndex={selectedEventIndex}

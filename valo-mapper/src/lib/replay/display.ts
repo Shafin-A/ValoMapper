@@ -103,21 +103,36 @@ export const getPlayerHpBarColor = (hp: number, alive: boolean) => {
 };
 
 /**
- * Absence from a frame means "no positional sample this tick", not "dead": the
- * server omits a player across a gap longer than the interpolation limit. The
- * scoreboard shows a full bar for them instead of flashing gray. A real death
- * arrives as a frame sample with `alive: false`.
+ * State shown for a player at the current scrub position. A missing sample
+ * means the round has no data for that player yet, not that they are dead, so
+ * the round-stats fallback fills credits, weapon and armour and assumes a full
+ * health bar. Samples that do exist are used as-is: an absent weapon or armour
+ * id means the player has no known item, not that the round stats apply.
  */
 export const getReplayPlayerState = (
-  player: ReplayFramePlayer | undefined,
+  player: ReplayFramePlayer | null,
   fallback?: { credits: number; weaponId?: string; armorId?: string },
-) => ({
-  hp: player?.hp ?? 100,
-  alive: player?.alive ?? true,
-  credits: player?.credits ?? fallback?.credits ?? 0,
-  weaponId: player?.weaponId ?? fallback?.weaponId,
-  armorId: player?.armorId ?? fallback?.armorId,
-});
+) => {
+  if (!player) {
+    return {
+      hp: 100,
+      alive: true,
+      credits: fallback?.credits ?? 0,
+      weaponId: fallback?.weaponId,
+      armorId: fallback?.armorId,
+      armorPoints: undefined,
+    };
+  }
+
+  return {
+    hp: player.hp,
+    alive: player.alive,
+    credits: player.credits,
+    weaponId: player.weaponId,
+    armorId: player.armorId,
+    armorPoints: player.armorPoints,
+  };
+};
 
 const REPLAY_ARMOR_BY_ID: Record<string, { label: string; value: number }> = {
   // Heavy Armor

@@ -13,9 +13,9 @@ import {
   isAbilityUsed,
   type ReplayAbilityDisplay,
 } from "@/lib/replay/display";
+import { getReplayPlayerStateAtTime } from "@/lib/replay/frames";
 import { getReplayAgentLabels } from "@/lib/replay/snapshot";
 import type {
-  ReplayFrame,
   ReplayFramePlayer,
   ReplayRound,
   ReplayRoundPlayer,
@@ -24,9 +24,7 @@ import type { MatchPlayerSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Shield } from "lucide-react";
 import Image from "next/image";
-
-const getFramePlayer = (frame: ReplayFrame | null, puuid: string) =>
-  frame?.players.find((player) => player.puuid === puuid);
+import { useMemo } from "react";
 
 const PIP_ROW_SIZE = 4;
 
@@ -127,7 +125,7 @@ const PlayerRow = ({
   player: MatchPlayerSummary;
   label: string;
   stats?: ReplayRoundPlayer;
-  framePlayer?: ReplayFramePlayer;
+  framePlayer: ReplayFramePlayer | null;
   currentTimeMs: number;
 }) => {
   const state = getReplayPlayerState(framePlayer, {
@@ -142,7 +140,9 @@ const PlayerRow = ({
   const ultimate = abilities.find((ability) => ability.slot === "Ultimate");
   const basics = abilities.filter((ability) => ability.slot !== "Ultimate");
   const armor = getReplayArmor(state.armorId);
-  const armorValue = state.alive ? (armor?.value ?? 0) : 0;
+  const armorValue = state.alive
+    ? (state.armorPoints ?? armor?.value ?? 0)
+    : 0;
   const weaponSrc = getWeaponImageSrc(state.weaponId);
   const hpPercent = Math.max(0, Math.min(100, state.hp));
   const hpValue = state.alive ? state.hp : 0;
@@ -254,7 +254,7 @@ const TeamBlock = ({
   players,
   labels,
   round,
-  frame,
+  states,
   currentTimeMs,
   tone,
 }: {
@@ -262,12 +262,12 @@ const TeamBlock = ({
   players: MatchPlayerSummary[];
   labels: Map<string, string>;
   round: ReplayRound;
-  frame: ReplayFrame | null;
+  states: Map<string, ReplayFramePlayer | null>;
   currentTimeMs: number;
   tone: "blue" | "red";
 }) => {
   const aliveCount = players.filter(
-    (player) => getFramePlayer(frame, player.puuid)?.alive ?? true,
+    (player) => states.get(player.puuid)?.alive ?? true,
   ).length;
   const toneClasses = MATCH_TONE_CLASSES[tone];
 
@@ -301,7 +301,7 @@ const TeamBlock = ({
             stats={round.playerStats.find(
               (candidate) => candidate.puuid === player.puuid,
             )}
-            framePlayer={getFramePlayer(frame, player.puuid)}
+            framePlayer={states.get(player.puuid) ?? null}
             currentTimeMs={currentTimeMs}
           />
         ))}
@@ -313,17 +313,25 @@ const TeamBlock = ({
 export const ReplayScoreboard = ({
   players,
   round,
-  frame,
   currentTimeMs,
   viewerPuuid,
 }: {
   players: MatchPlayerSummary[];
   round: ReplayRound;
-  frame: ReplayFrame | null;
   currentTimeMs: number;
   viewerPuuid?: string;
 }) => {
   const labels = getReplayAgentLabels(players);
+  const states = useMemo(() => {
+    const next = new Map<string, ReplayFramePlayer | null>();
+    for (const player of players) {
+      next.set(
+        player.puuid,
+        getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs),
+      );
+    }
+    return next;
+  }, [currentTimeMs, players, round]);
   const viewerTeamId =
     players.find((player) => player.puuid === viewerPuuid)?.teamId ?? "Blue";
   const allyTeamId = viewerTeamId;
@@ -339,7 +347,7 @@ export const ReplayScoreboard = ({
         players={allies}
         labels={labels}
         round={round}
-        frame={frame}
+        states={states}
         currentTimeMs={currentTimeMs}
         tone="blue"
       />
@@ -348,7 +356,7 @@ export const ReplayScoreboard = ({
         players={enemies}
         labels={labels}
         round={round}
-        frame={frame}
+        states={states}
         currentTimeMs={currentTimeMs}
         tone="red"
       />

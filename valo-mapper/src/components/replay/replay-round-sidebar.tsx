@@ -8,7 +8,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import { SIDEBAR_WIDTH } from "@/lib/consts";
-import type { ReplayFrame, ReplayRound } from "@/lib/replay/types";
+import type { ReplayRound } from "@/lib/replay/types";
 import type { MatchPlayers } from "@/lib/matches";
 import { ReplayScoreHeader, ReplayScoreboard } from "./replay-scoreboard";
 
@@ -16,7 +16,6 @@ export const ReplayRoundSidebar = ({
   sidebarOpen,
   players,
   round,
-  frame,
   currentTimeMs,
   viewerPuuid,
   selectedEventIndex,
@@ -25,7 +24,6 @@ export const ReplayRoundSidebar = ({
   sidebarOpen: boolean;
   players: MatchPlayers;
   round: ReplayRound;
-  frame: ReplayFrame | null;
   currentTimeMs: number;
   viewerPuuid?: string;
   selectedEventIndex: number | null;
@@ -60,7 +58,6 @@ export const ReplayRoundSidebar = ({
           <ReplayScoreboard
             players={players}
             round={round}
-            frame={frame}
             currentTimeMs={currentTimeMs}
             viewerPuuid={viewerPuuid}
           />
