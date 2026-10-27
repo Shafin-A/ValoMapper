@@ -370,4 +370,3 @@ func GetPendingStackInvites(w http.ResponseWriter, r *http.Request, firebaseAuth
 func parseIDVar(r *http.Request, name string) (int, error) {
 	return strconv.Atoi(mux.Vars(r)[name])
 }
-

@@ -1657,4 +1657,3 @@ func buildStripeEventPayload(t *testing.T, eventID, eventType string, dataObject
 
 	return payload
 }
-

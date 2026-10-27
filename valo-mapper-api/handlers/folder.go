@@ -207,4 +207,3 @@ func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
 	w.WriteHeader(http.StatusNoContent)
 }
-

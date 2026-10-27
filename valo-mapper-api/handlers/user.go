@@ -257,4 +257,3 @@ func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAu
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
 }
-
