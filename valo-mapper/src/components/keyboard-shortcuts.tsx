@@ -3,12 +3,16 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useKeyboardShortcuts } from "@/hooks/canvas/use-keyboard-shortcuts";
+import { usePathname } from "next/navigation";
 
 export const KeyboardShortcuts = () => {
   const canvas = useCanvas();
   const collab = useCollaborativeCanvas();
+  const pathname = usePathname();
+  const isReplayRoute = Boolean(pathname?.startsWith("/replay"));
 
   useKeyboardShortcuts({
+    enabled: !isReplayRoute,
     undo: canvas.undo,
     redo: canvas.redo,
     tool: canvas.tool,

@@ -17,6 +17,13 @@ export const HeaderActions = () => {
     return (
       <div className="absolute top-8 right-8 flex gap-3">
         <Button
+          variant="ghost"
+          className="transition-all hover:scale-105 will-change-transform"
+          asChild
+        >
+          <Link href="/replay">Replays</Link>
+        </Button>
+        <Button
           variant="outline"
           className="transition-all hover:scale-105 will-change-transform"
           asChild
@@ -31,6 +38,13 @@ export const HeaderActions = () => {
 
   return (
     <div className="absolute top-8 right-8 flex gap-3">
+      <Button
+        variant="ghost"
+        className="transition-all hover:scale-105 will-change-transform"
+        asChild
+      >
+        <Link href="/replay">Replays</Link>
+      </Button>
       <Button
         variant="ghost"
         className="transition-all hover:scale-105 will-change-transform"

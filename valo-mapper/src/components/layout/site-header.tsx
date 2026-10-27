@@ -34,11 +34,14 @@ import { HelpTab } from "@/components/help/help-tab";
 interface SiteHeaderProps {
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
+  /** Hide the canvas sidebar toggles on pages without sidebars. */
+  showSidebarToggles?: boolean;
 }
 
 export const SiteHeader = ({
   setLeftSidebarOpen,
   setRightSidebarOpen,
+  showSidebarToggles = true,
 }: SiteHeaderProps) => {
   const { logout } = useFirebaseAuth();
   const { data: user, isLoading } = useUser();
@@ -56,15 +59,19 @@ export const SiteHeader = ({
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
       <div className="flex h-(--header-height) w-full items-center justify-between gap-2 px-2">
         <div className="flex items-center gap-2 h-full">
-          <Button
-            className="h-8 w-8"
-            variant="ghost"
-            size="icon"
-            onClick={() => setLeftSidebarOpen((prev) => !prev)}
-          >
-            <SidebarIcon />
-          </Button>
-          <Separator orientation="vertical" className="mr-2 h-4" />
+          {showSidebarToggles && (
+            <>
+              <Button
+                className="h-8 w-8"
+                variant="ghost"
+                size="icon"
+                onClick={() => setLeftSidebarOpen((prev) => !prev)}
+              >
+                <SidebarIcon />
+              </Button>
+              <Separator orientation="vertical" className="mr-2 h-4" />
+            </>
+          )}
 
           <div className="flex items-center gap-2">
             <Link href="/">
@@ -87,6 +94,23 @@ export const SiteHeader = ({
         </div>
 
         <div className="flex items-center gap-2 h-full">
+          <Button
+            asChild
+            variant="ghost"
+            className={`h-8 px-2.5 text-sm font-medium ${
+              pathname?.startsWith("/replay")
+                ? "text-white"
+                : "text-white/70"
+            }`}
+          >
+            <Link
+              href="/replay"
+              aria-current={pathname?.startsWith("/replay") ? "page" : undefined}
+            >
+              Replays
+            </Link>
+          </Button>
+
           <Dialog>
             <DialogTrigger asChild>
               <Button className="h-8 w-8" variant="ghost" size="icon">
@@ -151,15 +175,19 @@ export const SiteHeader = ({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Separator orientation="vertical" className="ml-2 h-4" />
-          <Button
-            className="h-8 w-8"
-            variant="ghost"
-            size="icon"
-            onClick={() => setRightSidebarOpen((prev) => !prev)}
-          >
-            <SidebarIcon className="rotate-180" />
-          </Button>
+          {showSidebarToggles && (
+            <>
+              <Separator orientation="vertical" className="ml-2 h-4" />
+              <Button
+                className="h-8 w-8"
+                variant="ghost"
+                size="icon"
+                onClick={() => setRightSidebarOpen((prev) => !prev)}
+              >
+                <SidebarIcon className="rotate-180" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

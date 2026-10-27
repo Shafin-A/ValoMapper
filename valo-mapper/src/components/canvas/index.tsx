@@ -5,7 +5,14 @@ import { useWebSocket } from "@/contexts/websocket-context";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useEffect, useRef, forwardRef, useState, useCallback } from "react";
+import {
+  useEffect,
+  useRef,
+  forwardRef,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { Layer, Stage } from "react-konva";
 import { CanvasAbilities } from "./canvas-abilities";
 import { CanvasAgents } from "./canvas-agents";
@@ -42,10 +49,15 @@ interface MapStageProps {
   height: number;
   scale: number;
   mapPosition: Vector2d;
+  /**
+   * Read-only entities rendered underneath user drawings. Used by the replay
+   * player so playback never mutates the canvas history.
+   */
+  replayOverlay?: ReactNode;
 }
 
 export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
-  ({ width, height, scale, mapPosition }, forwardedRef) => {
+  ({ width, height, scale, mapPosition, replayOverlay }, forwardedRef) => {
     const {
       agentsOnCanvas,
       abilitiesOnCanvas,
@@ -254,6 +266,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
             <CanvasUltOrbs mapPosition={mapPosition} />
             <CanvasSpawnBarriers mapPosition={mapPosition} />
             <CanvasCallouts mapPosition={mapPosition} />
+            {replayOverlay}
           </Layer>
           <Layer isListening={!isDrawMode}>
             <CanvasConnectingLines onLineClick={setSelectedConnectingLine} />

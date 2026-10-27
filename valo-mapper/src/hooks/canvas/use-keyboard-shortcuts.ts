@@ -45,6 +45,8 @@ interface UseKeyboardShortcutsProps {
   connectingLines: ConnectingLine[];
   setConnectingLines: Dispatch<SetStateAction<ConnectingLine[]>>;
   recenterCanvasCallback: RefObject<(() => void) | null>;
+  /** Disable editing shortcuts on routes that own the keyboard (e.g. replay). */
+  enabled?: boolean;
 }
 
 type SettingsSlice = Pick<
@@ -259,6 +261,7 @@ const handleDrawToolToggle = (
 export const useKeyboardShortcuts = (
   props: UseKeyboardShortcutsProps,
 ): void => {
+  const { enabled = true } = props;
   const {
     drawSettings,
     eraserSettings,
@@ -285,6 +288,10 @@ export const useKeyboardShortcuts = (
   });
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const onKeyDown = (e: KeyboardEvent) => {
       try {
         if (isInputElement(e.target as HTMLElement)) return;
@@ -320,5 +327,5 @@ export const useKeyboardShortcuts = (
     window.addEventListener("keydown", onKeyDown, listenerOptions);
     return () =>
       window.removeEventListener("keydown", onKeyDown, listenerOptions);
-  }, []);
+  }, [enabled]);
 };
