@@ -342,6 +342,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 	}
 
 	logs := buildRoundLogs(windows, players, index, events, fields, warnings)
+	applyRoundStats(windows, players, index, puuidBySubject, state, &fields.State, logs, warnings)
 	framesByRound, timeline := buildTimelineFrames(
 		players, puuidBySubject, windows, movement, state, logs, warnings,
 	)
@@ -448,6 +449,11 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		"armor_unplaced", state.ArmorUnplaced,
 		"armor_unattributed", state.ArmorUnattributed,
 		"state_elements_incomplete", state.DamageIncomplete,
+		"casts_unique", state.CastsUnique,
+		"casts_skipped", state.CastsSkipped,
+		"casts_unknown_slot", state.CastsUnknownSlot,
+		"casts_unresolved", state.CastsUnresolved,
+		"casts_without_buy_end", state.CastsWithoutBuyEnd,
 		"response_bytes", len(encoded),
 		"gzip_bytes", len(gz),
 		"content_blocks_lost", quality.ContentBlocksLost,

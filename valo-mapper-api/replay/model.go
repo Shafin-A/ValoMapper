@@ -6,7 +6,7 @@ package replay
 // ParserVersion is part of the cache key, the X-Parser-Version response header
 // and the parse log. Bump the leading number whenever the normalised output can
 // change, even if VRFKit itself did not change.
-const ParserVersion = "3+vrfkit.0.3.0"
+const ParserVersion = "4+vrfkit.0.3.0"
 
 // Match mirrors ReplayMatch in the frontend. Field names and JSON tags are the
 // wire contract; do not rename them without a frontend change.
@@ -72,6 +72,8 @@ type PlayerStats struct {
 
 	IncomingDamage int            `json:"incomingDamage"`
 	AbilityCasts   map[string]int `json:"abilityCasts"`
+	WeaponID       string         `json:"weaponId,omitempty"`
+	ArmorID        string         `json:"armorId,omitempty"`
 }
 
 type Economy struct {

@@ -55,6 +55,10 @@ type stateSample struct {
 type stateScan struct {
 	Timelines map[string][]stateSample
 
+	// Incoming records every damage write that landed on a manifest pawn. The
+	// per-round total is summed once the round windows exist.
+	Incoming []incomingWrite
+
 	HPWrites            int
 	HPUnresolvedSection int
 	HPNonPlayer         int
@@ -73,7 +77,21 @@ type stateScan struct {
 	ArmorUnattributed int
 	DamageIncomplete  int
 
+	CastsUnique        int
+	CastsSkipped       int
+	CastsUnknownSlot   int
+	CastsUnresolved    int
+	CastsWithoutBuyEnd int
+
 	Warnings []string
+}
+
+// incomingWrite is one damage event against a player, kept in absolute time so
+// it can be attributed to the round it landed in.
+type incomingWrite struct {
+	Subject string
+	TimeMS  uint32
+	Damage  float64
 }
 
 // stateWrite is a field row the state builder consumes later: its actor, time,
@@ -119,12 +137,14 @@ type fieldStateRows struct {
 	Money     []stateWrite
 	Inventory []stateWrite
 	Owners    map[uint32]uint32
+	Casts     map[castKey]*castElement
 }
 
 func newFieldStateRows() fieldStateRows {
 	return fieldStateRows{
 		Damage: make(map[damageKey]*damageElement),
 		Owners: make(map[uint32]uint32),
+		Casts:  make(map[castKey]*castElement),
 	}
 }
 
@@ -136,12 +156,15 @@ func stateFieldCandidate(name string) bool {
 		return true
 	}
 	return strings.Contains(name, ".LifeChangeEvents[") ||
-		strings.Contains(name, ".LifeChangeBySection[")
+		strings.Contains(name, ".LifeChangeBySection[") ||
+		strings.Contains(name, "AbilityCastsThisRound[")
 }
 
 // collectStateField folds the state rows into the existing scanFields pass.
 func (s *fieldScan) collectStateField(row *fieldRow, name string) {
 	switch {
+	case strings.Contains(name, "AbilityCastsThisRound["):
+		s.collectCastField(row, name)
 	case strings.Contains(name, ".LifeChangeEvents[") || strings.Contains(name, ".LifeChangeBySection["):
 		function, index, member, ok := parseDamageChild(name)
 		if !ok || !isStateDamageFunction(function) {
@@ -420,6 +443,13 @@ func scanState(exportDir string, index *playerIndex, raw *fieldStateRows) (*stat
 				continue
 			}
 			scan.HPWrites++
+			if row.Element.Delta < 0 {
+				scan.Incoming = append(scan.Incoming, incomingWrite{
+					Subject: subject,
+					TimeMS:  row.Key.TimeMS,
+					Damage:  -row.Element.Delta,
+				})
+			}
 			hp := int(math.Round(row.Element.Result))
 			if hp < 0 {
 				hp = 0
