@@ -1,8 +1,11 @@
 package replay
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/parquet-go/parquet-go"
@@ -424,5 +427,355 @@ func TestWeaponFolderDoesNotAnchorOnEarlierPathText(t *testing.T) {
 	folder, ok := weaponFolder("/Some/Prefix/Game/Equippables/Guns/Rifles/AK/AK.AK_C")
 	if !ok || folder != "Guns/Rifles/AK" {
 		t.Fatalf("folder = %q/%v", folder, ok)
+	}
+}
+
+// TestWeaponAssetsExist guards the link between the folder table and the
+// killstream images the browser player loads. Renaming or deleting an asset
+// must fail here rather than leave a broken image in the client.
+func TestWeaponAssetsExist(t *testing.T) {
+	assetDir := filepath.Join("..", "..", "valo-mapper", "public", "weapons")
+	if _, err := os.Stat(assetDir); err != nil {
+		t.Fatalf("weapon asset directory %s: %v", assetDir, err)
+	}
+
+	for folder, id := range weaponUUIDByFolder {
+		if !strings.HasPrefix(folder, "Guns/") {
+			t.Errorf("%s is not a gun folder", folder)
+		}
+		path := filepath.Join(assetDir, id+"_killstream.png")
+		info, err := os.Stat(path)
+		if err != nil {
+			t.Errorf("%s: missing killstream asset %s: %v", folder, path, err)
+			continue
+		}
+		if info.Size() == 0 {
+			t.Errorf("%s: killstream asset %s is empty", folder, path)
+		}
+	}
+}
+
+func TestSampleAtUsesExactTimeAndLatestSample(t *testing.T) {
+	timeline := []stateSample{
+		{TimeMS: 100, HP: 80, Alive: true, Credits: 800, HealthTimeMS: 100},
+		{TimeMS: 200, HP: 40, Alive: true, Credits: 900, HealthTimeMS: 200},
+	}
+
+	exact := sampleAt(timeline, 200, 0)
+	if exact.HP != 40 || exact.Credits != 900 {
+		t.Errorf("exact frame time = %+v, want the write at 200", exact)
+	}
+
+	// Before the later write the earlier sample is still the latest one.
+	latest := sampleAt(timeline, 199, 0)
+	if latest.HP != 80 || latest.Credits != 800 {
+		t.Errorf("latest sample = %+v, want the write at 100", latest)
+	}
+
+	// A frame before any write has no state: the round seed applies.
+	seed := sampleAt(timeline, 50, 0)
+	if seed.HP != 100 || !seed.Alive || seed.Credits != 0 || seed.WeaponID != "" {
+		t.Errorf("pre-write seed = %+v", seed)
+	}
+}
+
+func TestTimelineBuilderZeroHPDeathReviveAndArmour(t *testing.T) {
+	builder := &timelineBuilder{}
+	builder.add(stateEvent{TimeMS: 100, Kind: eventWeapon, WeaponID: "GUN"})
+	builder.add(stateEvent{TimeMS: 150, Kind: eventArmourOpen, ArmorItem: 7,
+		ArmorID: "HEAVY", ArmorPoints: 50})
+	// A 0 HP sample that is still alive (KAY-O after a revive or during a
+	// damage tick) must not be treated as a death.
+	builder.add(stateEvent{TimeMS: 200, Kind: eventHealth, HP: 0, Alive: true})
+	// Armour damage at 0 HP changes only the armour points.
+	builder.add(stateEvent{TimeMS: 250, Kind: eventArmourDamage, ArmorItem: 7, ArmorPoints: 20})
+	builder.add(stateEvent{TimeMS: 300, Kind: eventHealth, HP: 0, Alive: false})
+	builder.add(stateEvent{TimeMS: 400, Kind: eventHealth, HP: 100, Alive: true})
+
+	timeline := builder.build()
+
+	zero := sampleAt(timeline, 220, 0)
+	if zero.HP != 0 || !zero.Alive {
+		t.Fatalf("0 HP alive = %+v", zero)
+	}
+	if zero.WeaponID != "GUN" || zero.ArmorID != "HEAVY" || zero.ArmorPoints != 50 {
+		t.Errorf("equipment at 0 HP = %+v", zero)
+	}
+
+	afterArmour := sampleAt(timeline, 260, 0)
+	if afterArmour.HP != zero.HP || afterArmour.Alive != zero.Alive {
+		t.Errorf("armour damage changed health: %+v -> %+v", zero, afterArmour)
+	}
+	if afterArmour.ArmorPoints != 20 {
+		t.Errorf("armour points = %d, want 20", afterArmour.ArmorPoints)
+	}
+
+	dead := sampleAt(timeline, 350, 0)
+	if dead.Alive || dead.WeaponID != "" || dead.ArmorID != "" || dead.ArmorPoints != 0 {
+		t.Errorf("death did not clear equipment: %+v", dead)
+	}
+
+	revived := sampleAt(timeline, 450, 0)
+	if revived.HP != 100 || !revived.Alive {
+		t.Errorf("revive = %+v", revived)
+	}
+	if revived.WeaponID != "" || revived.ArmorID != "" {
+		t.Errorf("revive restored equipment that was lost on death: %+v", revived)
+	}
+}
+
+func TestArmourClassesMapToUIIDs(t *testing.T) {
+	tests := map[string]armourClass{
+		heavyArmorClass:  {"822BCAB2-40A2-324E-C137-E09195AD7692", 50},
+		lightArmorClass:  {"4DEC83D5-4902-9AB3-BED6-A7A390761157", 25},
+		plasmaArmorClass: {"B1B9086D-41BD-A516-5D29-E3B34A6F1644", 25},
+	}
+	if len(armourClasses) != len(tests) {
+		t.Fatalf("armour table = %d classes, want %d", len(armourClasses), len(tests))
+	}
+	seen := make(map[string]string, len(tests))
+	for class, want := range tests {
+		got, ok := armourClasses[class]
+		if !ok {
+			t.Errorf("missing class %s", class)
+			continue
+		}
+		if got != want {
+			t.Errorf("%s = %+v, want %+v", class, got, want)
+		}
+		if previous, exists := seen[got.ID]; exists {
+			t.Errorf("%s reuses %s's id", class, previous)
+		}
+		seen[got.ID] = class
+	}
+}
+
+func TestCollectStateFieldIgnoresZeroOwner(t *testing.T) {
+	scan := &fieldScan{State: newFieldStateRows()}
+
+	zero := int64(0)
+	scan.collectStateField(&fieldRow{
+		ActorNetGUID: 700, FieldName: ptr("Owner"), ValueI64: &zero,
+	}, "Owner")
+	if _, ok := scan.State.Owners[700]; ok {
+		t.Fatal("Owner 0 registered an owner")
+	}
+
+	owner := int64(200)
+	scan.collectStateField(&fieldRow{
+		ActorNetGUID: 701, FieldName: ptr("Owner"), ValueI64: &owner,
+	}, "Owner")
+	if scan.State.Owners[701] != 200 {
+		t.Errorf("owner = %d, want 200", scan.State.Owners[701])
+	}
+}
+
+func TestScanStateCreditsPersistAcrossRoundsAndSideSwitch(t *testing.T) {
+	const pawn = uint32(200)
+	state := scanStateFromRows(t, testPlayerIndex(pawn), []fieldRow{
+		moneyRow(1000, 1, 100, 3900),
+		moneyRow(60000, 2, 100, 800),
+	}, nil, nil)
+
+	first := state.stateFor(testSubject, 50000, 10000)
+	if first.Credits != 3900 {
+		t.Errorf("first-round credits = %d, want 3900", first.Credits)
+	}
+
+	// Money is never reset at a round boundary, so the last write carries.
+	between := state.stateFor(testSubject, 55000, 50000)
+	if between.Credits != 3900 {
+		t.Errorf("credits between rounds = %d, want 3900", between.Credits)
+	}
+
+	// A side-switch drop is a real write and is kept.
+	second := state.stateFor(testSubject, 70000, 55000)
+	if second.Credits != 800 {
+		t.Errorf("post-side-switch credits = %d, want 800", second.Credits)
+	}
+}
+
+func TestScanStateKeepsLastGunForNonGunEquippables(t *testing.T) {
+	const pawn = uint32(200)
+	const gun = uint32(500)
+	const melee = uint32(501)
+	const spike = uint32(502)
+	const totem = uint32(503)
+	const unlisted = uint32(504)
+	const akFolder = "Guns/Rifles/AK"
+
+	state := scanStateFromRows(t, testPlayerIndex(pawn), []fieldRow{
+		inventoryRow(100, 1, pawn, gun),
+		inventoryRow(200, 2, pawn, melee),
+		inventoryRow(250, 3, pawn, spike),
+		inventoryRow(270, 4, pawn, totem),
+		inventoryRow(300, 5, pawn, unlisted),
+	}, nil, []stateActorRow{
+		{ActorNetGUID: gun, Event: "open",
+			ClassPath: ptr("/Game/Equippables/Guns/Rifles/AK/AssaultRifle_AK.AssaultRifle_AK_C")},
+		{ActorNetGUID: melee, Event: "open",
+			ClassPath: ptr("/Game/Equippables/Melee/Ability_Melee_Base.Ability_Melee_Base_C")},
+		{ActorNetGUID: spike, Event: "open",
+			ClassPath: ptr("/Game/Equippables/Spike/Spike.Spike_C")},
+		{ActorNetGUID: totem, Event: "open",
+			ClassPath: ptr("/Game/Equippables/Totem/KilljoyTurret.KilljoyTurret_C")},
+		{ActorNetGUID: unlisted, Event: "open",
+			ClassPath: ptr("/Game/Equippables/Guns/Rifles/Unlisted/Unlisted.Unlisted_C")},
+	})
+
+	if state.WeaponChanges != 1 {
+		t.Errorf("weapon changes = %d, want 1", state.WeaponChanges)
+	}
+	// The gun and the three non-gun equippables are all writes; the unlisted
+	// folder is counted as unresolved instead.
+	if state.WeaponWrites != 4 {
+		t.Errorf("weapon writes = %d, want 4", state.WeaponWrites)
+	}
+	if state.WeaponUnresolved != 1 {
+		t.Errorf("unresolved weapons = %d, want 1", state.WeaponUnresolved)
+	}
+
+	got := state.stateFor(testSubject, 400, 0)
+	if got.WeaponID != weaponUUIDByFolder[akFolder] {
+		t.Errorf("weapon = %q, want the AK to survive melee and unknown equips", got.WeaponID)
+	}
+}
+
+func TestScanStateArmourCarriesAndIgnoresHealthSectionResults(t *testing.T) {
+	const pawn = uint32(200)
+	const item = uint32(700)
+	const section = uint32(710)
+
+	rows := []fieldRow{
+		// Owner 0 is a no-op; the outer chain still attributes the item.
+		{TimeMS: 50, PacketID: 1, ActorNetGUID: item,
+			FieldName: ptr("Owner"), ValueI64: ptr(int64(0))},
+	}
+	// Damage on the item's own section is armour damage, never HP.
+	rows = append(rows, damageRows(30000, 4, pawn, "MulticastNotifyDamage_Point", 0, int64(section), 30, -20, true)...)
+
+	state := scanStateFromRows(t, testPlayerIndex(pawn), rows, []netGuidRow{
+		{NetGUID: item, Path: heavyArmorClass, OuterNetGUID: ptr(pawn)},
+		{NetGUID: section, Path: attachedDamageSection, OuterNetGUID: ptr(item)},
+	}, []stateActorRow{
+		{TimeMS: 1000, PacketID: 2, ActorNetGUID: item, Event: "open", ClassPath: ptr(heavyArmorClass)},
+		{TimeMS: 60000, PacketID: 3, ActorNetGUID: item, Event: "close", ClassPath: ptr(heavyArmorClass)},
+	})
+
+	if state.HPWrites != 0 {
+		t.Errorf("armour section was counted as %d health writes", state.HPWrites)
+	}
+	if state.ArmorUnattributed != 0 {
+		t.Errorf("armour damage was not attributed: %d", state.ArmorUnattributed)
+	}
+
+	during := state.stateFor(testSubject, 35000, 0)
+	if during.HP != 100 || !during.Alive {
+		t.Errorf("armour damage changed HP: %+v", during)
+	}
+	if during.ArmorID != armourClasses[heavyArmorClass].ID || during.ArmorPoints != 30 {
+		t.Errorf("armour during round = %q/%d, want heavy/30", during.ArmorID, during.ArmorPoints)
+	}
+
+	// The item closes after the next round starts, so a survivor carries it.
+	carried := state.stateFor(testSubject, 55000, 50000)
+	if carried.ArmorID != armourClasses[heavyArmorClass].ID || carried.ArmorPoints != 30 {
+		t.Errorf("carried armour = %q/%d, want heavy/30", carried.ArmorID, carried.ArmorPoints)
+	}
+
+	closed := state.stateFor(testSubject, 60000, 50000)
+	if closed.ArmorID != "" || closed.ArmorPoints != 0 {
+		t.Errorf("closed armour = %q/%d, want clear", closed.ArmorID, closed.ArmorPoints)
+	}
+}
+
+// scanStateFromRows writes the small state-only export and returns the built
+// scan. Nil guid or actor slices get one harmless row so the parquet files
+// still carry a schema.
+func scanStateFromRows(
+	t *testing.T,
+	index *playerIndex,
+	rows []fieldRow,
+	guids []netGuidRow,
+	actors []stateActorRow,
+) *stateScan {
+	t.Helper()
+
+	dir := t.TempDir()
+	writeStateRows(t, dir, rows)
+	if len(guids) == 0 {
+		guids = []netGuidRow{{NetGUID: 1, Path: "PersistentLevel"}}
+	}
+	if len(actors) == 0 {
+		actors = []stateActorRow{{ActorNetGUID: 1, Event: "open"}}
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "net_guids.parquet"), guids); err != nil {
+		t.Fatalf("write net guids: %v", err)
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatalf("write actors: %v", err)
+	}
+
+	fields, err := scanFields(dir)
+	if err != nil {
+		t.Fatalf("scanFields: %v", err)
+	}
+	state, err := scanState(dir, index, &fields.State)
+	if err != nil {
+		t.Fatalf("scanState: %v", err)
+	}
+	return state
+}
+
+func testPlayerIndex(pawn uint32) *playerIndex {
+	return newPlayerIndex(&Manifest{Players: []ManifestPlayer{{
+		ActorNetGUID:      100,
+		Subject:           testSubject,
+		CharacterNetGUID:  ptr(pawn),
+		CharacterNetGUIDs: []uint32{pawn},
+	}}})
+}
+
+func moneyRow(timeMS, packetID uint32, actor uint32, value int64) fieldRow {
+	return fieldRow{
+		TimeMS:       timeMS,
+		PacketID:     packetID,
+		ActorNetGUID: actor,
+		GroupPath:    "/Script/ShooterGame.MoneyManagementComponent",
+		FieldName:    ptr("Money"),
+		ValueI64:     ptr(value),
+	}
+}
+
+func inventoryRow(timeMS, packetID uint32, pawn, guid uint32) fieldRow {
+	return fieldRow{
+		TimeMS:       timeMS,
+		PacketID:     packetID,
+		ActorNetGUID: pawn,
+		GroupPath:    "/Script/ShooterGame.AresInventory",
+		FieldName:    ptr("CurrentEquippable"),
+		ValueI64:     ptr(int64(guid)),
+	}
+}
+
+// damageRows builds the four member rows of one LifeChangeEvents element.
+func damageRows(
+	timeMS, packetID, actor uint32,
+	function string,
+	element int,
+	section int64,
+	result, delta float64,
+	alive bool,
+) []fieldRow {
+	prefix := fmt.Sprintf("%s.LifeChangeEvents[%d].", function, element)
+	return []fieldRow{
+		{TimeMS: timeMS, PacketID: packetID, ActorNetGUID: actor,
+			FieldName: ptr(prefix + "ChangedComponent"), ValueI64: ptr(section)},
+		{TimeMS: timeMS, PacketID: packetID, ActorNetGUID: actor,
+			FieldName: ptr(prefix + "LifeResult"), ValueF64: ptr(result)},
+		{TimeMS: timeMS, PacketID: packetID, ActorNetGUID: actor,
+			FieldName: ptr(prefix + "DeltaLife"), ValueF64: ptr(delta)},
+		{TimeMS: timeMS, PacketID: packetID, ActorNetGUID: actor,
+			FieldName: ptr(prefix + "bAliveAfterChange"), ValueBool: ptr(alive)},
 	}
 }

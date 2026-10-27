@@ -333,6 +333,32 @@ func TestServiceRejectsUnavailableParser(t *testing.T) {
 	}
 }
 
+func TestServiceSyntheticGzipWithinBudget(t *testing.T) {
+	exporter := &fakeExporter{
+		build: "13.08",
+		export: func(dir string) error {
+			writeSyntheticExport(t, dir)
+			return nil
+		},
+	}
+	service := newTestService(exporter)
+	hash := strings.Repeat("e", 64)
+
+	if _, err := service.Parse(context.Background(), testFilePath(t), hash); err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	_, gz, ok := service.GetCached(hash)
+	if !ok || len(gz) == 0 {
+		t.Fatalf("GetCached = %d bytes/%v", len(gz), ok)
+	}
+
+	// The synthetic export is small, but the gate stays in front of the cache
+	// so a fixture that grows a runaway payload fails here.
+	if len(gz) > 6<<20 {
+		t.Errorf("gzip payload = %d bytes, above the 6 MB payload target", len(gz))
+	}
+}
+
 func editManifest(t *testing.T, dir string, edit func(*Manifest)) {
 	t.Helper()
 	path := filepath.Join(dir, "manifest.json")

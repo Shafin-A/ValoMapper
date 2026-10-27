@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
@@ -22,32 +23,59 @@ func integrationFrameHz() int {
 	return hz
 }
 
-// TestIntegrationRealReplay exercises the whole normaliser against a real
-// export. It is skipped unless both variables are set:
+// TestIntegrationRealReplay exercises the whole normaliser against real replay
+// data. It is skipped unless one of these is set:
 //
-//	VRF_TEST_FILE  path to a .vrf
-//	VRFKIT_BIN     path to the vrfkit executable
+//	VRF_TEST_EXPORT            pre-made VRFKit export directory
+//	VRF_TEST_FILE + VRFKIT_BIN path to a .vrf and the vrfkit executable
 //
-// Run it when changing movement, events or rounds:
+// A pre-made export skips the decoder and is the faster way to iterate on
+// state, casts or frames. VRF_TEST_BUILD selects the build reported for it
+// (default 13.08). Run it when changing movement, events, rounds or state:
 //
 //	go test ./replay -run TestIntegrationRealReplay -v -timeout 15m
 func TestIntegrationRealReplay(t *testing.T) {
 	file := os.Getenv("VRF_TEST_FILE")
 	bin := os.Getenv("VRFKIT_BIN")
-	if file == "" || bin == "" {
-		t.Skip("set VRF_TEST_FILE and VRFKIT_BIN to run the real-replay integration test")
-	}
+	exportDir := os.Getenv("VRF_TEST_EXPORT")
 
-	service := NewService(Config{
-		VRFKitBin:      bin,
-		InspectTimeout: 30 * time.Second,
-		ExportTimeout:  5 * time.Minute,
-		ParseTimeout:   10 * time.Minute,
-		MaxUploadBytes: 250 << 20,
-		FrameHz:        integrationFrameHz(),
-	})
-	if !service.Available() {
-		t.Fatalf("vrfkit is not available at %s", bin)
+	var service *Service
+	source := exportDir
+	switch {
+	case exportDir != "":
+		build := os.Getenv("VRF_TEST_BUILD")
+		if build == "" {
+			build = "13.08"
+		}
+		service = NewService(Config{
+			Exporter: &fakeExporter{
+				build: build,
+				export: func(dir string) error {
+					return copyExportDirectory(exportDir, dir)
+				},
+			},
+			ParseTimeout:   10 * time.Minute,
+			MaxUploadBytes: 250 << 20,
+			FrameHz:        integrationFrameHz(),
+		})
+		// The exporter ignores the input file, but the service still needs one
+		// beside the temporary export directory.
+		file = testFilePath(t)
+	case file != "" && bin != "":
+		source = file
+		service = NewService(Config{
+			VRFKitBin:      bin,
+			InspectTimeout: 30 * time.Second,
+			ExportTimeout:  5 * time.Minute,
+			ParseTimeout:   10 * time.Minute,
+			MaxUploadBytes: 250 << 20,
+			FrameHz:        integrationFrameHz(),
+		})
+		if !service.Available() {
+			t.Fatalf("vrfkit is not available at %s", bin)
+		}
+	default:
+		t.Skip("set VRF_TEST_EXPORT, or VRF_TEST_FILE and VRFKIT_BIN, to run the real-replay integration test")
 	}
 
 	const replayID = "integration"
@@ -71,11 +99,13 @@ func TestIntegrationRealReplay(t *testing.T) {
 
 	totalFrames := 0
 	totalSamples := 0
+	deaths := 0
 	for _, round := range match.Rounds {
 		if len(round.Frames) == 0 {
 			t.Fatalf("round %d has no frames", round.RoundNumber)
 		}
 		previous := -1
+		roundHasState := false
 		for i, frame := range round.Frames {
 			if frame.TimeMS <= previous {
 				t.Fatalf("round %d frame %d time %d is not increasing", round.RoundNumber, i, frame.TimeMS)
@@ -88,12 +118,34 @@ func TestIntegrationRealReplay(t *testing.T) {
 				t.Fatalf("round %d frame %d time %d outside 0..%d",
 					round.RoundNumber, i, frame.TimeMS, round.DurationMS)
 			}
+			for _, player := range frame.Players {
+				if player.HP < 0 || player.HP > 200 {
+					t.Fatalf("round %d frame %d player %s hp = %d, outside 0..200",
+						round.RoundNumber, i, player.Puuid, player.HP)
+				}
+				if player.Credits < 0 || player.Credits > 9000 {
+					t.Fatalf("round %d frame %d player %s credits = %d, outside 0..9000",
+						round.RoundNumber, i, player.Puuid, player.Credits)
+				}
+				if !player.Alive {
+					deaths++
+				}
+				if !placeholderFramePlayer(player) {
+					roundHasState = true
+				}
+			}
 			totalSamples += len(frame.Players)
+		}
+		if !roundHasState {
+			t.Errorf("round %d only has placeholder samples", round.RoundNumber)
 		}
 		totalFrames += len(round.Frames)
 		if round.EventLog == nil {
 			t.Errorf("round %d has no event log", round.RoundNumber)
 		}
+	}
+	if deaths == 0 {
+		t.Error("no sample is dead; the fixture should contain a death")
 	}
 
 	encoded, err := json.Marshal(envelope)
@@ -105,8 +157,9 @@ func TestIntegrationRealReplay(t *testing.T) {
 		t.Fatal("parsed replay was not cached")
 	}
 
-	t.Logf("file=%s build=%s map=%s", file, match.Build, match.MapName)
-	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d", elapsed, len(match.Rounds), totalFrames, totalSamples)
+	t.Logf("source=%s build=%s map=%s", source, match.Build, match.MapName)
+	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d deaths=%d",
+		elapsed, len(match.Rounds), totalFrames, totalSamples, deaths)
 	t.Logf("json_bytes=%d gzip_bytes=%d teleport_cuts_logged=see parse log", len(encoded), len(gz))
 
 	if totalFrames < len(match.Rounds)*2 {
@@ -116,4 +169,37 @@ func TestIntegrationRealReplay(t *testing.T) {
 	if len(gz) > 6<<20 {
 		t.Errorf("gzip payload = %d bytes, above the 6 MB payload target", len(gz))
 	}
+}
+
+// placeholderFramePlayer reports the M1 sample shape: a default bar with no
+// state behind it.
+func placeholderFramePlayer(player FramePlayer) bool {
+	return player.HP == 100 &&
+		player.Alive &&
+		player.Credits == 0 &&
+		player.WeaponID == "" &&
+		player.ArmorID == "" &&
+		player.ArmorPoints == nil
+}
+
+// copyExportDirectory copies the flat VRFKit export files into the service's
+// temporary export directory.
+func copyExportDirectory(src, dst string) error {
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(src, entry.Name()))
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(dst, entry.Name()), data, 0o600); err != nil {
+			return err
+		}
+	}
+	return nil
 }

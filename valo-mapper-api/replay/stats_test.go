@@ -1,6 +1,9 @@
 package replay
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestParseCastChild(t *testing.T) {
 	tests := []struct {
@@ -229,6 +232,9 @@ func TestApplyRoundStatsFillsScoreboard(t *testing.T) {
 	raw.Casts[castKey{Actor: actor, TimeMS: 30000, PacketID: 3, Index: 0}] = &castElement{
 		Slot: 9, HasSlot: true, CastTime: 31, HasCastTime: true, Round: 0, HasRound: true,
 	}
+	raw.Casts[castKey{Actor: actor, TimeMS: 40000, PacketID: 4, Index: 0}] = &castElement{
+		Slot: 5, HasSlot: true, CastTime: 20, HasCastTime: true, Round: 0, HasRound: true,
+	}
 
 	state := &stateScan{
 		Timelines: map[string][]stateSample{subject: {
@@ -269,11 +275,15 @@ func TestApplyRoundStatsFillsScoreboard(t *testing.T) {
 	if stats.AbilityCasts["Ultimate"] != 35000 {
 		t.Errorf("ultimate = %d, want 35000", stats.AbilityCasts["Ultimate"])
 	}
-	if len(stats.AbilityCasts) != 2 {
-		t.Errorf("ability casts = %v, want two entries", stats.AbilityCasts)
+	// Slot 5 is Ability2, the second basic ability.
+	if stats.AbilityCasts["Ability2"] != 24000 {
+		t.Errorf("ability2 = %d, want 24000", stats.AbilityCasts["Ability2"])
 	}
-	if state.CastsUnique != 3 {
-		t.Errorf("cast counter = %d, want 3", state.CastsUnique)
+	if len(stats.AbilityCasts) != 3 {
+		t.Errorf("ability casts = %v, want three entries", stats.AbilityCasts)
+	}
+	if state.CastsUnique != 4 {
+		t.Errorf("cast counter = %d, want 4", state.CastsUnique)
 	}
 }
 
@@ -314,5 +324,59 @@ func TestApplyRoundStatsFallsBackToRoundStart(t *testing.T) {
 	}
 	if len(stats.AbilityCasts) != 0 {
 		t.Errorf("ability casts = %v, want none", stats.AbilityCasts)
+	}
+}
+
+// TestApplyRoundStatsWarnsOnceWhenBuyEndMissing covers a round with no
+// resolvable buy phase: every cast falls back to its replication time, but the
+// user sees one warning rather than one per cast.
+func TestApplyRoundStatsWarnsOnceWhenBuyEndMissing(t *testing.T) {
+	const subject = testSubject
+	const puuid = "vrf-test"
+	const actor = uint32(500)
+
+	windows := []roundWindow{
+		{RoundNumber: 1, StartMS: 1000, EndMS: 90000},
+	}
+	players := []Player{{Puuid: puuid}}
+	index := newPlayerIndex(&Manifest{Players: []ManifestPlayer{{
+		ActorNetGUID:      100,
+		Subject:           subject,
+		CharacterNetGUID:  ptr(actor),
+		CharacterNetGUIDs: []uint32{actor},
+	}}})
+	puuidBySubject := map[string]string{subject: puuid}
+
+	raw := newFieldStateRows()
+	raw.Casts[castKey{Actor: actor, TimeMS: 20000, PacketID: 1, Index: 0}] = &castElement{
+		Slot: 3, HasSlot: true, CastTime: 5, HasCastTime: true, Round: 0, HasRound: true,
+	}
+	raw.Casts[castKey{Actor: actor, TimeMS: 26000, PacketID: 2, Index: 0}] = &castElement{
+		Slot: 9, HasSlot: true, CastTime: 6, HasCastTime: true, Round: 0, HasRound: true,
+	}
+
+	state := &stateScan{
+		Timelines: map[string][]stateSample{subject: {
+			{TimeMS: 1000, HP: 100, Alive: true, HealthTimeMS: 1000},
+		}},
+	}
+	logs := map[int]*roundLog{
+		1: {Stats: map[string]*PlayerStats{
+			puuid: {Puuid: puuid, AbilityCasts: map[string]int{}},
+		}},
+	}
+	warnings := newWarnings()
+
+	applyRoundStats(windows, players, index, puuidBySubject, state, &raw, logs, warnings)
+
+	if state.CastsWithoutBuyEnd != 2 {
+		t.Errorf("casts without a buy end = %d, want 2", state.CastsWithoutBuyEnd)
+	}
+	got := warnings.all()
+	if len(got) != 1 {
+		t.Fatalf("warnings = %v, want one", got)
+	}
+	if !strings.Contains(got[0], "buy phase") {
+		t.Errorf("warning = %q, want the missing-buy-phase message", got[0])
 	}
 }
