@@ -59,7 +59,7 @@ export const ReplayEntryPage = () => {
           return;
         }
 
-        const replayId = saveReplaySession(match, fixedReplayId);
+        const replayId = await saveReplaySession(match, fixedReplayId);
         router.push(`/replay/${replayId}`);
       } catch (loadError) {
         if (

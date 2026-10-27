@@ -42,7 +42,7 @@ export const ReplaySessionPage = () => {
 
       if (!session) {
         setError(
-          "This replay is no longer available in this tab. Open the .vrf file again to start a new session.",
+          "This replay has expired. Reopen the .vrf file to parse it again — parsed replays are kept on this device, and the server copy only lasts a short time.",
         );
         return;
       }

@@ -2,6 +2,13 @@ import "@testing-library/jest-dom";
 import "jest-canvas-mock";
 import React from "react";
 
+// fake-indexeddb clones values with structuredClone, which jsdom does not
+// expose. Tests only store JSON-shaped matches, so a JSON round trip is exact.
+if (typeof globalThis.structuredClone !== "function") {
+  globalThis.structuredClone = <T>(value: T): T =>
+    JSON.parse(JSON.stringify(value));
+}
+
 type MockComponentProps = {
   children?: React.ReactNode;
   [key: string]: unknown;

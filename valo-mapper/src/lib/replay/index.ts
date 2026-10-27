@@ -3,5 +3,6 @@ export * from "./frames";
 export * from "./mock-source";
 export * from "./vrf-source";
 export * from "./session-store";
+export * from "./idb";
 export * from "./snapshot";
 export * from "./display";
