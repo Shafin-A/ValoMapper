@@ -1,25 +1,54 @@
 package replay
 
 import (
-	"errors"
-	"io/fs"
 	"math"
 	"sort"
-
-	"github.com/parquet-go/parquet-go"
 )
 
-// roundStartSampleWindowMS is how far after a phase-3 start M0 looks for a
-// player's pose. The player is normally moving within the first frame; a spawn
-// is only used when no movement sample exists in this window.
-const roundStartSampleWindowMS = 2000
-
 const (
+	// defaultFrameHz is the wire rate the browser player receives. The plan's
+	// budget is derived from 8 Hz; 15 Hz is a calibration option only.
+	defaultFrameHz = 8
+	fastFrameHz    = 15
+
+	// teleportDistanceCM and teleportWindowMS define a cut. A player crossing
+	// more than this distance inside this window did not walk there, so the
+	// timeline duplicates the pre-jump pose 1 ms before the post-jump pose and
+	// the client interpolates across a 1 ms span instead of sliding.
+	teleportDistanceCM = 1500.0
+	teleportWindowMS   = 500
+
+	// maxTimelineSamples is a warning threshold, not a rate switch. Exceeding
+	// it means the payload budget is at risk and the rate decision needs data.
+	maxTimelineSamples = 400_000
+
 	positionBucketsLimit  = 32768
 	timeBucketsLimit      = 32768
 	distinctCharactersCap = 256
 )
 
+// NormaliseFrameHz accepts only the rates M1 supports. A caller that passes
+// anything else gets the default and false, so the service can warn instead of
+// silently changing fidelity.
+func NormaliseFrameHz(hz int) (int, bool) {
+	switch hz {
+	case 0:
+		return defaultFrameHz, true
+	case defaultFrameHz, fastFrameHz:
+		return hz, true
+	default:
+		return defaultFrameHz, false
+	}
+}
+
+func binWidthMS(frameHz int) uint32 {
+	if frameHz <= 0 {
+		frameHz = defaultFrameHz
+	}
+	return uint32(math.Round(1000.0 / float64(frameHz)))
+}
+
+// movementSample is one decoded pose at its binned round-relative timestamp.
 type movementSample struct {
 	TimeMS uint32
 	X      float64
@@ -28,15 +57,34 @@ type movementSample struct {
 	Yaw    float64
 }
 
+// sampleKey identifies one player's bin inside one round. The subject is used
+// rather than a pawn so a reconnect's second pawn merges into the same stream.
+type sampleKey struct {
+	Round   uint16
+	Bin     uint32
+	Subject string
+}
+
 type movementScan struct {
 	Rows               int64
 	FiniteRows         int64
+	UnmatchedRows      int64
 	DistinctCharacters int
 	MaxPositionRows    int64
 	MaxTimeRows        int64
 
-	samples  map[int]map[uint32]movementSample
-	firstAny map[uint32]movementSample
+	BinMS uint32
+
+	bins      map[sampleKey]movementSample
+	timelines []map[string][]timelineSample
+}
+
+// timelineSample is a decimated pose, round-relative, on the binned grid.
+type timelineSample struct {
+	TimeMS uint32
+	X      float64
+	Y      float64
+	Yaw    float64
 }
 
 type actorRow struct {
@@ -49,25 +97,14 @@ type actorRow struct {
 	SpawnYaw     *float32 `parquet:"spawn_yaw,optional"`
 }
 
-type actorSpawn struct {
-	TimeMS uint32
-	X      float64
-	Y      float64
-	Z      float64
-	Yaw    float64
-}
-
-// scanMovement reads movement.parquet once. It feeds both the transform
-// plausibility gate and the single static frame M0 emits for each round.
-func scanMovement(exportDir string, windows []roundWindow) (*movementScan, error) {
+// scanMovement reads movement.parquet once, bins every usable pose to the
+// configured frame rate and keeps the latest row per (round, subject, bin).
+// It also feeds the transform plausibility gate.
+func scanMovement(exportDir string, windows []roundWindow, index *playerIndex, frameHz int) (*movementScan, error) {
 	scan := &movementScan{
-		samples:  make(map[int]map[uint32]movementSample, len(windows)),
-		firstAny: make(map[uint32]movementSample),
-	}
-
-	starts := make([]uint32, len(windows))
-	for i := range windows {
-		starts[i] = windows[i].StartMS
+		BinMS:     binWidthMS(frameHz),
+		bins:      make(map[sampleKey]movementSample),
+		timelines: make([]map[string][]timelineSample, len(windows)),
 	}
 
 	seenCharacters := make(map[uint32]struct{})
@@ -128,31 +165,28 @@ func scanMovement(exportDir string, windows []roundWindow) (*movementScan, error
 				continue
 			}
 
-			sample := movementSample{
-				TimeMS: row.TimeMS,
+			subject, ok := index.subjectForPawn(row.CharacterNetGUID)
+			if !ok {
+				scan.UnmatchedRows++
+				continue
+			}
+
+			roundIndex, ok := roundIndexAt(windows, row.TimeMS)
+			if !ok {
+				continue
+			}
+			window := &windows[roundIndex]
+			relative := row.TimeMS - window.StartMS
+			bin := relative / scan.BinMS
+
+			scan.bins[sampleKey{Round: uint16(roundIndex), Bin: bin, Subject: subject}] = movementSample{
+				// The bin start is the frame timestamp, so every player in a
+				// bin shares one frame instead of creating a per-row union.
+				TimeMS: bin * scan.BinMS,
 				X:      float64(row.PosX),
 				Y:      float64(row.PosY),
 				Z:      float64(row.PosZ),
 				Yaw:    float64(row.Yaw),
-			}
-			if _, exists := scan.firstAny[row.CharacterNetGUID]; !exists {
-				scan.firstAny[row.CharacterNetGUID] = sample
-			}
-
-			index := sort.Search(len(starts), func(i int) bool { return starts[i] > row.TimeMS }) - 1
-			if index < 0 || row.TimeMS < starts[index] {
-				continue
-			}
-			if row.TimeMS-starts[index] > roundStartSampleWindowMS {
-				continue
-			}
-			roundSamples := scan.samples[index]
-			if roundSamples == nil {
-				roundSamples = make(map[uint32]movementSample)
-				scan.samples[index] = roundSamples
-			}
-			if _, exists := roundSamples[row.CharacterNetGUID]; !exists {
-				roundSamples[row.CharacterNetGUID] = sample
 			}
 		}
 		return nil
@@ -161,7 +195,45 @@ func scanMovement(exportDir string, windows []roundWindow) (*movementScan, error
 		return nil, err
 	}
 
+	scan.buildTimelines()
 	return scan, nil
+}
+
+// buildTimelines converts the bin map into sorted per-round, per-subject
+// slices and releases the map. Memory stays bounded by the decimated sample
+// count, not the raw row count.
+func (s *movementScan) buildTimelines() {
+	for key, sample := range s.bins {
+		round := s.timelines[key.Round]
+		if round == nil {
+			round = make(map[string][]timelineSample)
+			s.timelines[key.Round] = round
+		}
+		round[key.Subject] = append(round[key.Subject], timelineSample{
+			TimeMS: sample.TimeMS,
+			X:      sample.X,
+			Y:      sample.Y,
+			Yaw:    sample.Yaw,
+		})
+	}
+	s.bins = nil
+
+	for _, round := range s.timelines {
+		for subject := range round {
+			samples := round[subject]
+			sort.Slice(samples, func(i, j int) bool {
+				return samples[i].TimeMS < samples[j].TimeMS
+			})
+			round[subject] = samples
+		}
+	}
+}
+
+func (s *movementScan) samplesFor(roundIndex int, subject string) []timelineSample {
+	if roundIndex < 0 || roundIndex >= len(s.timelines) {
+		return nil
+	}
+	return s.timelines[roundIndex][subject]
 }
 
 func isFinite32(value float32) bool {
@@ -199,180 +271,217 @@ func (s *movementScan) transformCheckError() *Error {
 	return nil
 }
 
-// scanActorSpawns reads channel-open rows for player pawns. It is a fallback
-// for a round where movement has not started yet, so a missing or broken
-// actors table is not fatal. Rows are keyed by subject, not pawn, because the
-// actors table names the actor NetGUID rather than the character NetGUID.
-func scanActorSpawns(exportDir string, index *playerIndex) (map[string][]actorSpawn, error) {
-	spawns := make(map[string][]actorSpawn)
-
-	_, err := readParquetRows[actorRow](exportDir+"/actors.parquet", func(rows []actorRow) error {
-		for i := range rows {
-			row := &rows[i]
-			if row.Event != "open" {
-				continue
-			}
-			subject, ok := index.subjectForActor(row.ActorNetGUID)
-			if !ok {
-				continue
-			}
-			if row.SpawnX == nil || row.SpawnY == nil || row.SpawnZ == nil {
-				continue
-			}
-			if !isFinite32(*row.SpawnX) || !isFinite32(*row.SpawnY) || !isFinite32(*row.SpawnZ) {
-				continue
-			}
-			yaw := float64(0)
-			if row.SpawnYaw != nil && isFinite32(*row.SpawnYaw) {
-				yaw = float64(*row.SpawnYaw)
-			}
-			spawns[subject] = append(spawns[subject], actorSpawn{
-				TimeMS: row.TimeMS,
-				X:      float64(*row.SpawnX),
-				Y:      float64(*row.SpawnY),
-				Z:      float64(*row.SpawnZ),
-				Yaw:    yaw,
-			})
-		}
-		return nil
-	})
-	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return spawns, nil
-		}
-		return nil, err
-	}
-
-	for subject := range spawns {
-		sort.SliceStable(spawns[subject], func(i, j int) bool {
-			return spawns[subject][i].TimeMS < spawns[subject][j].TimeMS
-		})
-	}
-	return spawns, nil
+// timelineStats is logged with the parse and used by the M1 acceptance gates.
+type timelineStats struct {
+	Samples      int
+	Frames       int
+	TeleportCuts int
+	Missing      int
 }
 
-// buildStaticFrames emits one frame per round at the round's start. M0 is
-// deliberately static: no decimation, interpolation or live state yet.
-func buildStaticFrames(
+// buildTimelineFrames turns the decimated movement stream into one frame slice
+// per round. M1 keeps the M0 state placeholders: HP 100, no credits, alive.
+func buildTimelineFrames(
 	players []Player,
-	subjectByPuuid map[string]string,
-	index *playerIndex,
+	puuidBySubject map[string]string,
 	windows []roundWindow,
 	movement *movementScan,
-	spawns map[string][]actorSpawn,
+	logs map[int]*roundLog,
 	warnings *warningList,
-) []Frame {
-	frames := make([]Frame, 0, len(windows))
+) ([][]Frame, timelineStats) {
+	stats := timelineStats{}
+	roundFrames := make([][]Frame, len(windows))
 
-	for roundIndex, window := range windows {
-		frame := Frame{
-			TimeMS:  0,
-			Players: make([]FramePlayer, 0, len(players)),
-			Spike:   nil,
+	subjectByPuuid := make(map[string]string, len(puuidBySubject))
+	for subject, puuid := range puuidBySubject {
+		subjectByPuuid[puuid] = subject
+	}
+
+	for roundIndex := range windows {
+		window := &windows[roundIndex]
+		duration := uint32(0)
+		if window.EndMS > window.StartMS {
+			duration = window.EndMS - window.StartMS
 		}
+		keyframes := roundKeyframes(window, logs[window.RoundNumber], duration)
 
+		perPlayer := make(map[string][]timelineSample, len(players))
 		for _, player := range players {
 			subject := subjectByPuuid[player.Puuid]
-			playerPosition, hasManifest := index.bySubject[subject]
-			var manifestPlayer ManifestPlayer
-			if hasManifest {
-				manifestPlayer = index.players[playerPosition]
+			samples := movement.samplesFor(roundIndex, subject)
+			if len(samples) == 0 {
+				stats.Missing++
+				continue
 			}
 
-			x, y, yaw, found := movement.sampleForRound(roundIndex, manifestPlayer, hasManifest)
-			if !found {
-				x, y, yaw, found = spawnForRound(spawns, subject, window.StartMS)
-			}
-			if !found {
-				x, y, yaw, found = movement.firstAnyForPlayer(manifestPlayer, hasManifest)
-			}
-			if !found {
-				warnings.add("Some players had no position at the start of a round.")
-			}
+			samples = insertKeyframes(samples, keyframes)
+			samples, cuts := insertTeleportCuts(samples)
+			stats.TeleportCuts += cuts
+			stats.Samples += len(samples)
+			perPlayer[player.Puuid] = samples
+		}
 
-			frame.Players = append(frame.Players, FramePlayer{
+		frames := assembleFrames(players, perPlayer)
+		stats.Frames += len(frames)
+		roundFrames[roundIndex] = frames
+	}
+
+	if stats.Missing > 0 {
+		warnings.add("Some players had no movement data in a round.")
+	}
+	if stats.Samples > maxTimelineSamples {
+		warnings.add("This replay exceeded the movement sample budget; the frame rate may need lowering.")
+	}
+
+	return roundFrames, stats
+}
+
+// roundKeyframes lists the round-relative times the timeline must pin exactly:
+// the round start, the barrier drop, every logged event and the round end.
+func roundKeyframes(window *roundWindow, log *roundLog, duration uint32) []uint32 {
+	times := make([]uint32, 0, 8)
+	times = append(times, 0, duration)
+
+	if window.BuyEndMS != nil && *window.BuyEndMS >= window.StartMS {
+		if relative := *window.BuyEndMS - window.StartMS; relative <= duration {
+			times = append(times, relative)
+		}
+	}
+	if log != nil {
+		for _, event := range log.Events {
+			if event.TimeSinceRoundStartMillis < 0 {
+				continue
+			}
+			relative := uint32(event.TimeSinceRoundStartMillis)
+			if relative <= duration {
+				times = append(times, relative)
+			}
+		}
+	}
+
+	sort.Slice(times, func(i, j int) bool { return times[i] < times[j] })
+
+	unique := times[:0]
+	for _, value := range times {
+		if len(unique) > 0 && unique[len(unique)-1] == value {
+			continue
+		}
+		unique = append(unique, value)
+	}
+	return unique
+}
+
+// insertKeyframes pins each keyframe to the last real pose at or before it. A
+// keyframe never invents a position: with no earlier sample the frame is left
+// to the first real sample instead.
+func insertKeyframes(samples []timelineSample, keyframes []uint32) []timelineSample {
+	if len(samples) == 0 || len(keyframes) == 0 {
+		return samples
+	}
+
+	out := make([]timelineSample, 0, len(samples)+len(keyframes))
+	index := 0
+
+	for _, keyframe := range keyframes {
+		for index < len(samples) && samples[index].TimeMS < keyframe {
+			out = append(out, samples[index])
+			index++
+		}
+
+		if index < len(samples) && samples[index].TimeMS == keyframe {
+			out = append(out, samples[index])
+			index++
+			continue
+		}
+
+		if len(out) == 0 {
+			continue
+		}
+		previous := out[len(out)-1]
+		if previous.TimeMS >= keyframe {
+			// A duplicate keyframe (or one equal to an existing pose).
+			continue
+		}
+		previous.TimeMS = keyframe
+		out = append(out, previous)
+	}
+
+	out = append(out, samples[index:]...)
+	return out
+}
+
+// insertTeleportCuts duplicates the pre-jump pose 1 ms before a jump so client
+// interpolation crosses a 1 ms span instead of sliding across the map.
+func insertTeleportCuts(samples []timelineSample) ([]timelineSample, int) {
+	if len(samples) < 2 {
+		return samples, 0
+	}
+
+	out := make([]timelineSample, 0, len(samples)+4)
+	out = append(out, samples[0])
+	cuts := 0
+
+	for i := 1; i < len(samples); i++ {
+		previous := out[len(out)-1]
+		current := samples[i]
+		span := current.TimeMS - previous.TimeMS
+
+		if span > 0 && span <= teleportWindowMS &&
+			distance2D(previous, current) > teleportDistanceCM &&
+			current.TimeMS > previous.TimeMS+1 {
+			cut := previous
+			cut.TimeMS = current.TimeMS - 1
+			out = append(out, cut)
+			cuts++
+		}
+
+		out = append(out, current)
+	}
+
+	return out, cuts
+}
+
+func distance2D(a, b timelineSample) float64 {
+	dx := b.X - a.X
+	dy := b.Y - a.Y
+	return math.Sqrt(dx*dx + dy*dy)
+}
+
+// assembleFrames unions every player's sample times and emits a frame at each
+// one. A player missing from a frame is deliberate: the client decides whether
+// to hold or hide, never the server.
+func assembleFrames(players []Player, timelines map[string][]timelineSample) []Frame {
+	byTime := make(map[uint32][]FramePlayer)
+
+	for _, player := range players {
+		for _, sample := range timelines[player.Puuid] {
+			byTime[sample.TimeMS] = append(byTime[sample.TimeMS], FramePlayer{
 				Puuid:       player.Puuid,
-				X:           x,
-				Y:           y,
-				ViewRadians: yawRadians(yaw),
+				X:           sample.X,
+				Y:           sample.Y,
+				ViewRadians: yawRadians(sample.Yaw),
 				HP:          100,
 				Credits:     0,
 				Alive:       true,
 			})
 		}
-
-		frames = append(frames, frame)
 	}
 
+	times := make([]uint32, 0, len(byTime))
+	for timeMS := range byTime {
+		times = append(times, timeMS)
+	}
+	sort.Slice(times, func(i, j int) bool { return times[i] < times[j] })
+
+	frames := make([]Frame, 0, len(times))
+	for _, timeMS := range times {
+		frames = append(frames, Frame{
+			TimeMS:  int(timeMS),
+			Players: byTime[timeMS],
+			Spike:   nil,
+		})
+	}
 	return frames
-}
-
-func (s *movementScan) sampleForRound(roundIndex int, player ManifestPlayer, hasPlayer bool) (float64, float64, float64, bool) {
-	if !hasPlayer {
-		return 0, 0, 0, false
-	}
-	roundSamples := s.samples[roundIndex]
-	if roundSamples == nil {
-		return 0, 0, 0, false
-	}
-	for _, pawn := range pawnGUIDs(player) {
-		if sample, ok := roundSamples[pawn]; ok {
-			return sample.X, sample.Y, sample.Yaw, true
-		}
-	}
-	return 0, 0, 0, false
-}
-
-func (s *movementScan) firstAnyForPlayer(player ManifestPlayer, hasPlayer bool) (float64, float64, float64, bool) {
-	if !hasPlayer {
-		return 0, 0, 0, false
-	}
-	for _, pawn := range pawnGUIDs(player) {
-		if sample, ok := s.firstAny[pawn]; ok {
-			return sample.X, sample.Y, sample.Yaw, true
-		}
-	}
-	return 0, 0, 0, false
-}
-
-func spawnForRound(spawns map[string][]actorSpawn, subject string, roundStart uint32) (float64, float64, float64, bool) {
-	candidates := spawns[subject]
-	if len(candidates) == 0 {
-		return 0, 0, 0, false
-	}
-
-	// Latest open at or before the round start. A later open belongs to a later
-	// round; the caller falls back to the first movement sample instead.
-	position := sort.Search(len(candidates), func(i int) bool {
-		return candidates[i].TimeMS > roundStart
-	}) - 1
-	if position < 0 {
-		return 0, 0, 0, false
-	}
-	chosen := candidates[position]
-	return chosen.X, chosen.Y, chosen.Yaw, true
-}
-
-func pawnGUIDs(player ManifestPlayer) []uint32 {
-	pawns := make([]uint32, 0, len(player.CharacterNetGUIDs)+1)
-	seen := make(map[uint32]struct{}, len(player.CharacterNetGUIDs)+1)
-	add := func(guid uint32) {
-		if guid == 0 {
-			return
-		}
-		if _, exists := seen[guid]; exists {
-			return
-		}
-		seen[guid] = struct{}{}
-		pawns = append(pawns, guid)
-	}
-	if player.CharacterNetGUID != nil {
-		add(*player.CharacterNetGUID)
-	}
-	for _, pawn := range player.CharacterNetGUIDs {
-		add(pawn)
-	}
-	return pawns
 }
 
 func yawRadians(yaw float64) float64 {
@@ -382,7 +491,3 @@ func yawRadians(yaw float64) float64 {
 	}
 	return degrees * math.Pi / 180
 }
-
-// Ensure the generic reader type is instantiated for actorRow during tests and
-// production alike.
-var _ = parquet.NewGenericReader[actorRow]

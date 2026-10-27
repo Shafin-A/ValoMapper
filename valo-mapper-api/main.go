@@ -217,6 +217,7 @@ func main() {
 		CacheMaxEntries: getEnvInt("REPLAY_CACHE_MAX_ENTRIES", 8),
 		CacheMaxBytes:   int64(getEnvInt("REPLAY_CACHE_MAX_MB", 64)) << 20,
 		MaxConcurrent:   getEnvInt("REPLAY_MAX_CONCURRENT", 1),
+		FrameHz:         getEnvInt("REPLAY_FRAME_HZ", 8),
 	})
 
 	r := mux.NewRouter()

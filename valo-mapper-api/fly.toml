@@ -45,3 +45,4 @@ primary_region = 'yyz'
   REPLAY_MAX_CONCURRENT = "1"
   REPLAY_CACHE_MAX_MB = "32"
   REPLAY_CACHE_MAX_ENTRIES = "4"
+  REPLAY_FRAME_HZ = "8"

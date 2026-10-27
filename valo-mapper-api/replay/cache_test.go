@@ -5,6 +5,22 @@ import (
 	"time"
 )
 
+func TestCacheKeyIncludesParserVersionAndFrameRate(t *testing.T) {
+	eight := NewService(Config{FrameHz: 8, Exporter: &fakeExporter{build: "13.08", export: func(string) error { return nil }}})
+	fifteen := NewService(Config{FrameHz: 15, Exporter: &fakeExporter{build: "13.08", export: func(string) error { return nil }}})
+
+	eightKey := eight.cacheKey("abc")
+	if eightKey != "abc:"+ParserVersion+":8" {
+		t.Fatalf("cache key = %q", eightKey)
+	}
+	if fifteen.cacheKey("abc") == eightKey {
+		t.Fatal("frame rate is not part of the cache key")
+	}
+	if eight.cacheKey("def") == eightKey {
+		t.Fatal("file hash is not part of the cache key")
+	}
+}
+
 func TestReplayCacheExpiresEntries(t *testing.T) {
 	now := time.Unix(0, 0)
 	cache := newReplayCache(time.Minute, 4, 1<<20)

@@ -36,6 +36,7 @@ type Config struct {
 	CacheMaxEntries int
 	CacheMaxBytes   int64
 	MaxConcurrent   int
+	FrameHz         int
 	Exporter        Exporter
 }
 
@@ -62,6 +63,14 @@ func NewService(config Config) *Service {
 	if config.MaxConcurrent <= 0 {
 		config.MaxConcurrent = defaultMaxConcurrent
 	}
+	frameHz, valid := NormaliseFrameHz(config.FrameHz)
+	if !valid {
+		slog.Warn("unsupported replay frame rate; using the default",
+			"requested_hz", config.FrameHz,
+			"frame_hz", frameHz,
+		)
+	}
+	config.FrameHz = frameHz
 
 	exporter := config.Exporter
 	if exporter == nil {
@@ -99,19 +108,26 @@ func (s *Service) MaxUploadBytes() int64 {
 	return s.config.MaxUploadBytes
 }
 
+// cacheKey binds a cached body to the normaliser version and the frame rate.
+// A parser bump or a rate change must never serve a stale timeline.
+func (s *Service) cacheKey(hash string) string {
+	return fmt.Sprintf("%s:%s:%d", hash, ParserVersion, s.config.FrameHz)
+}
+
 // GetCached returns a parsed replay from the short-lived cache. gz is the exact
 // gzip body to write for a GET; env is supplied for callers that need a struct.
 func (s *Service) GetCached(id string) (*Envelope, []byte, bool) {
 	if s == nil {
 		return nil, nil, false
 	}
-	gz, ok := s.cache.get(id)
+	key := s.cacheKey(id)
+	gz, ok := s.cache.get(key)
 	if !ok {
 		return nil, nil, false
 	}
 	envelope, err := decodeEnvelope(gz)
 	if err != nil {
-		s.cache.delete(id)
+		s.cache.delete(key)
 		return nil, nil, false
 	}
 	return envelope, gz, true
@@ -136,7 +152,7 @@ func (s *Service) Parse(ctx context.Context, filePath, hash string) (*Envelope, 
 		return envelope, nil
 	}
 
-	result, err, _ := s.group.Do(hash, func() (any, error) {
+	result, err, _ := s.group.Do(s.cacheKey(hash), func() (any, error) {
 		if envelope, _, ok := s.GetCached(hash); ok {
 			slog.Info("replay cache hit",
 				"replay_hash_prefix", hashPrefix(hash),
@@ -157,7 +173,7 @@ func (s *Service) Parse(ctx context.Context, filePath, hash string) (*Envelope, 
 		if err != nil {
 			return nil, err
 		}
-		s.cache.put(hash, gz)
+		s.cache.put(s.cacheKey(hash), gz)
 		return envelope, nil
 	})
 	if err != nil {
@@ -309,7 +325,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 			"The replay's round results could not be decoded.", nil)
 	}
 
-	movement, err := scanMovement(exportDir, windows)
+	movement, err := scanMovement(exportDir, windows, index, s.config.FrameHz)
 	if err != nil {
 		return nil, nil, NewError(CodeCorrupt,
 			"The replay's movement data could not be read.", err)
@@ -318,17 +334,12 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		return nil, nil, transformErr
 	}
 
-	spawns, err := scanActorSpawns(exportDir, index)
-	if err != nil {
-		warnings.add("The replay's actor spawns could not be read; movement samples were used instead.")
-		spawns = nil
-	}
-
-	frames := buildStaticFrames(players, puuidBySubject, index, windows, movement, spawns, warnings)
 	logs := buildRoundLogs(windows, players, index, events, fields, warnings)
+	framesByRound, timeline := buildTimelineFrames(
+		players, puuidBySubject, windows, movement, logs, warnings,
+	)
 
 	rounds := make([]Round, 0, len(windows))
-	sampleCount := 0
 	for i := range windows {
 		window := &windows[i]
 		round := Round{
@@ -338,7 +349,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 			ScoreAfterRound: window.Score,
 			AttackTeamID:    window.AttackTeamID,
 			DurationMS:      int(window.EndMS - window.StartMS),
-			Frames:          []Frame{frames[i]},
+			Frames:          framesByRound[i],
 		}
 
 		if window.BuyEndMS != nil && *window.BuyEndMS >= window.StartMS {
@@ -366,7 +377,6 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 			}
 		}
 
-		sampleCount += len(round.Frames[0].Players)
 		rounds = append(rounds, round)
 	}
 
@@ -405,14 +415,19 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		"bytes", inputBytes,
 		"build", build,
 		"parser_version", ParserVersion,
+		"frame_hz", s.config.FrameHz,
 		"cache_hit", false,
 		"inspect_ms", inspectMS.Milliseconds(),
 		"export_ms", exportMS.Milliseconds(),
 		"total_ms", time.Since(started).Milliseconds(),
 		"rounds", len(rounds),
-		"frames", len(rounds),
+		"frames", timeline.Frames,
 		"players", len(players),
-		"samples", sampleCount,
+		"samples", timeline.Samples,
+		"teleport_cuts", timeline.TeleportCuts,
+		"movement_rows", movement.Rows,
+		"unmatched_pawns", movement.UnmatchedRows,
+		"missing_player_rounds", timeline.Missing,
 		"response_bytes", len(encoded),
 		"gzip_bytes", len(gz),
 		"content_blocks_lost", quality.ContentBlocksLost,

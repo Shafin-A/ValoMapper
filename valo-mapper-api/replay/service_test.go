@@ -133,8 +133,29 @@ func TestServiceParseSyntheticReplay(t *testing.T) {
 	if first.BuyEndTimeMS == nil || *first.BuyEndTimeMS != 500 {
 		t.Errorf("round 1 buyEndTimeMs = %v", first.BuyEndTimeMS)
 	}
-	if len(first.Frames) != 1 || len(first.Frames[0].Players) != 10 {
-		t.Fatalf("round 1 frames = %d/%d", len(first.Frames), len(first.Frames[0].Players))
+	if len(first.Frames) < 2 {
+		t.Fatalf("round 1 frames = %d", len(first.Frames))
+	}
+	previousTime := -1
+	for i, frame := range first.Frames {
+		if frame.TimeMS <= previousTime {
+			t.Fatalf("round 1 frame %d time %d is not increasing", i, frame.TimeMS)
+		}
+		previousTime = frame.TimeMS
+		if len(frame.Players) == 0 || len(frame.Players) > 10 {
+			t.Fatalf("round 1 frame %d players = %d", i, len(frame.Players))
+		}
+		if frame.TimeMS < 0 || frame.TimeMS > first.DurationMS {
+			t.Fatalf("round 1 frame %d time %d outside the round", i, frame.TimeMS)
+		}
+	}
+	if first.Frames[0].TimeMS != 0 {
+		t.Errorf("round 1 first frame = %d", first.Frames[0].TimeMS)
+	}
+	// The synthetic fixture moves player 0 from (1000,2000): a frame at the
+	// round start must carry that pose rather than the origin.
+	if first.Frames[0].Players[0].X == 0 && first.Frames[0].Players[0].Y == 0 {
+		t.Errorf("round 1 first frame is still at the origin: %+v", first.Frames[0].Players[0])
 	}
 	if len(first.EventLog) != 2 {
 		t.Fatalf("round 1 events = %+v", first.EventLog)
