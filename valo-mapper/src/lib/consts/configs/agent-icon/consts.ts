@@ -13,6 +13,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Gravity Well",
       action: "astra_suck",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "nova_pulse",
@@ -20,6 +21,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Nova Pulse",
       action: "astra_stun",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "nebula__dissipate",
@@ -27,6 +29,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Nebula / Dissipate",
       action: "astra_smoke",
       slot: "Ability2",
+      charges: 2,
     },
     {
       id: "cosmic_divide",
@@ -50,6 +53,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Aftershock",
       action: "breach_aftershock",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "flashpoint",
@@ -57,6 +61,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Flashpoint",
       action: "icon",
       slot: "Ability1",
+      charges: 2,
     },
     {
       id: "fault_line",
@@ -64,6 +69,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Fault Line",
       action: "breach_stun",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "rolling_thunder",
@@ -80,6 +86,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Stim Beacon",
       action: "brim_stim",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "incendiary",
@@ -87,6 +94,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Incendiary",
       action: "brim_molly",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "sky_smoke",
@@ -94,6 +102,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Sky Smoke",
       action: "brim_smoke",
       slot: "Ability2",
+      charges: 3,
     },
     {
       id: "orbital_strike",
@@ -110,6 +119,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Trademark",
       action: "chamber_trip",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "headhunter",
@@ -117,6 +127,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Headhunter",
       action: "icon",
       slot: "Ability1",
+      charges: 8,
     },
     {
       id: "rendezvous",
@@ -124,6 +135,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Rendezvous",
       action: "chamber_tp",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "tour_de_force",
@@ -140,6 +152,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Pick Me Up",
       action: "icon",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "meddle",
@@ -147,6 +160,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Meddle",
       action: "clove_meddle",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "ruse",
@@ -154,6 +168,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Ruse",
       action: "clove_smoke",
       slot: "Ability2",
+      charges: 2,
     },
     {
       id: "not_dead_yet",
@@ -170,6 +185,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Trapwire",
       action: "cypher_trip",
       slot: "Grenade",
+      charges: 2,
     },
     {
       id: "cyber_cage",
@@ -177,6 +193,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Cyber Cage",
       action: "cypher_cage",
       slot: "Ability1",
+      charges: 2,
     },
     {
       id: "spycam",
@@ -184,6 +201,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Spycam",
       action: "icon",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "neural_theft",
@@ -200,6 +218,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Barrier Mesh",
       action: "deadlock_wall",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "sonic_sensor",
@@ -207,6 +226,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Sonic Sensor",
       action: "deadlock_trip",
       slot: "Ability1",
+      charges: 2,
     },
     {
       id: "gravnet",
@@ -214,6 +234,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "GravNet",
       action: "deadlock_net",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "annihilation",
@@ -230,6 +251,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Prowler",
       action: "icon",
       slot: "Grenade",
+      charges: 2,
     },
     {
       id: "seize",
@@ -237,6 +259,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Seize",
       action: "fade_seize",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "haunt",
@@ -244,6 +267,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Haunt",
       action: "fade_eye",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "nightfall",
@@ -260,6 +284,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Mosh Pit",
       action: "gekko_molly",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "wingman",
@@ -267,6 +292,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Wingman",
       action: "icon",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "dizzy",
@@ -274,6 +300,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Dizzy",
       action: "icon",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "thrash",
@@ -290,6 +317,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Storm Surge",
       action: "harbor_blind",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "high_tide",
@@ -297,6 +325,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "High Tide",
       action: "harbor_wall",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "cove",
@@ -304,6 +333,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Cove",
       action: "harbor_cove",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "reckoning",
@@ -350,6 +380,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Contingency",
       action: "iso_wall",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "undercut",
@@ -357,6 +388,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Undercut",
       action: "iso_vuln",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "double_tap",
@@ -364,6 +396,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Double Tap",
       action: "icon",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "kill_contract",
@@ -380,6 +413,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Cloudburst",
       action: "jett_smoke",
       slot: "Grenade",
+      charges: 2,
     },
     {
       id: "updraft",
@@ -387,6 +421,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Updraft",
       action: "icon",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "tailwind",
@@ -394,6 +429,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Tailwind",
       action: "icon",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "blade_storm",
@@ -410,6 +446,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "FRAG/ment",
       action: "kayo_molly",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "flashdrive",
@@ -417,6 +454,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "FLASH/drive",
       action: "icon",
       slot: "Ability1",
+      charges: 2,
     },
     {
       id: "zeropoint",
@@ -424,6 +462,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "ZERO/point",
       action: "kayo_knife",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "nullcmd",
@@ -440,6 +479,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Nanoswarm",
       action: "kj_molly",
       slot: "Grenade",
+      charges: 2,
     },
     {
       id: "alarmbot",
@@ -447,6 +487,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Alarmbot",
       action: "kj_alarmbot",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "turret",
@@ -454,6 +495,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Turret",
       action: "kj_turret",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "lockdown",
@@ -470,6 +512,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "M-Pulse Concuss",
       action: "miks_stun",
       slot: "Grenade",
+      charges: 2,
       alternates: [
         {
           id: "mpulse_concuss",
@@ -486,6 +529,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Harmonize",
       action: "icon",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "waveform",
@@ -493,6 +537,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Waveform",
       action: "miks_smoke",
       slot: "Ability2",
+      charges: 2,
     },
     {
       id: "bassquake",
@@ -509,6 +554,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Fast Lane",
       action: "neon_wall",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "relay_bolt",
@@ -516,6 +562,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Relay Bolt",
       action: "neon_stun",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "high_gear",
@@ -523,6 +570,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "High Gear",
       action: "icon",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "overdrive",
@@ -539,6 +587,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Shrouded Step",
       action: "icon",
       slot: "Grenade",
+      charges: 2,
     },
     {
       id: "paranoia",
@@ -546,6 +595,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Paranoia",
       action: "omen_blind",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "dark_cover",
@@ -553,6 +603,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Dark Cover",
       action: "omen_smoke",
       slot: "Ability2",
+      charges: 2,
     },
     {
       id: "from_the_shadows",
@@ -569,6 +620,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Blaze",
       action: "phoenix_wall",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "hot_hands",
@@ -576,6 +628,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Hot Hands",
       action: "phoenix_molly",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "curveball",
@@ -583,6 +636,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Curveball",
       action: "icon",
       slot: "Ability2",
+      charges: 2,
     },
     {
       id: "run_it_back",
@@ -599,6 +653,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Boom Bot",
       action: "icon",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "blast_pack",
@@ -606,6 +661,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Blast Pack",
       action: "icon",
       slot: "Ability1",
+      charges: 2,
     },
     {
       id: "paint_shells",
@@ -613,6 +669,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Paint Shells",
       action: "icon",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "showstopper",
@@ -629,6 +686,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Leer",
       action: "icon",
       slot: "Grenade",
+      charges: 2,
     },
     {
       id: "devour",
@@ -636,6 +694,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Devour",
       action: "icon",
       slot: "Ability1",
+      charges: 2,
     },
     {
       id: "dismiss",
@@ -643,6 +702,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Dismiss",
       action: "icon",
       slot: "Ability2",
+      charges: 2,
     },
     {
       id: "empress",
@@ -659,6 +719,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Barrier Orb",
       action: "sage_wall",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "slow_orb",
@@ -666,6 +727,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Slow Orb",
       action: "icon",
       slot: "Ability1",
+      charges: 2,
     },
     {
       id: "healing_orb",
@@ -673,6 +735,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Healing Orb",
       action: "icon",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "resurrection",
@@ -689,6 +752,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Regrowth",
       action: "skye_heal",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "trailblazer",
@@ -696,6 +760,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Trailblazer",
       action: "icon",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "guiding_light",
@@ -703,6 +768,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Guiding Light",
       action: "icon",
       slot: "Ability2",
+      charges: 2,
     },
     {
       id: "seekers",
@@ -719,6 +785,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Owl Drone",
       action: "icon",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "shock_bolt",
@@ -726,6 +793,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Shock Bolt",
       action: "sova_shock_dart",
       slot: "Ability1",
+      charges: 2,
     },
     {
       id: "recon_bolt",
@@ -733,6 +801,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Recon Bolt",
       action: "sova_dart",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "hunters_fury",
@@ -749,6 +818,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Stealth Drone",
       action: "tejo_drone",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "special_delivery",
@@ -756,6 +826,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Special Delivery",
       action: "tejo_stun",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "guided_salvo",
@@ -763,6 +834,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Guided Salvo",
       action: "tejo_missile",
       slot: "Ability2",
+      charges: 2,
     },
     {
       id: "armageddon",
@@ -779,6 +851,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Crosscut",
       action: "veto_teleport",
       slot: "Grenade",
+      charges: 2,
     },
     {
       id: "chokehold",
@@ -786,6 +859,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Chokehold",
       action: "veto_molly",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "interceptor",
@@ -793,6 +867,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Interceptor",
       action: "veto_interceptor",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "evolution",
@@ -809,6 +884,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Snake Bite",
       action: "viper_molly",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "poison_cloud",
@@ -816,6 +892,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Poison Cloud",
       action: "viper_smoke",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "toxic_screen",
@@ -823,6 +900,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Toxic Screen",
       action: "viper_wall",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "vipers_pit",
@@ -839,6 +917,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Razor Vine",
       action: "vyse_slow",
       slot: "Grenade",
+      charges: 2,
     },
     {
       id: "shear",
@@ -846,6 +925,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Shear",
       action: "vyse_wall",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "arc_rose",
@@ -853,6 +933,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Arc Rose",
       action: "icon",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "steel_garden",
@@ -869,6 +950,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Saturate",
       action: "waylay_slow",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "lightspeed",
@@ -876,6 +958,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Lightspeed",
       action: "icon",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "refract",
@@ -883,6 +966,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Refract",
       action: "icon",
       slot: "Ability2",
+      charges: 1,
     },
     {
       id: "convergent_paths",
@@ -929,6 +1013,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Fakeout",
       action: "icon",
       slot: "Grenade",
+      charges: 1,
     },
     {
       id: "blindside",
@@ -936,6 +1021,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Blindside",
       action: "icon",
       slot: "Ability1",
+      charges: 1,
     },
     {
       id: "gatecrash",
@@ -943,6 +1029,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       name: "Gatecrash",
       action: "icon",
       slot: "Ability2",
+      charges: 2,
     },
     {
       id: "dimensional_drift",

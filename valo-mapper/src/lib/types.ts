@@ -120,6 +120,8 @@ export type AbilityIconItem = {
   name: string;
   action: AbilityAction;
   slot: string;
+  /** Max charges available at the start of a round, when the ability uses charges. */
+  charges?: number;
 };
 
 export type AbilityAlternate = {
