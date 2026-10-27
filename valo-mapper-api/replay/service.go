@@ -24,7 +24,7 @@ const (
 )
 
 // Config is the replay service's deployment knobs. The zero value uses the
-// production defaults from the plan; tests override Exporter to avoid VRFKit.
+// production defaults; tests override Exporter to avoid VRFKit.
 type Config struct {
 	VRFKitBin       string
 	InspectTimeout  time.Duration
@@ -307,6 +307,13 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 	}
 	warnings.addAll(playerWarnings)
 
+	state, err := scanState(exportDir, index, &fields.State)
+	if err != nil {
+		return nil, nil, NewError(CodeCorrupt,
+			"The replay's player state could not be read.", err)
+	}
+	warnings.addAll(state.Warnings)
+
 	windows, windowWarnings := buildRoundWindows(fields, events.Starts, manifest.DurationMS)
 	warnings.addAll(windowWarnings)
 	if len(windows) == 0 {
@@ -336,7 +343,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 
 	logs := buildRoundLogs(windows, players, index, events, fields, warnings)
 	framesByRound, timeline := buildTimelineFrames(
-		players, puuidBySubject, windows, movement, logs, warnings,
+		players, puuidBySubject, windows, movement, state, logs, warnings,
 	)
 
 	rounds := make([]Round, 0, len(windows))
@@ -428,6 +435,19 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		"movement_rows", movement.Rows,
 		"unmatched_pawns", movement.UnmatchedRows,
 		"missing_player_rounds", timeline.Missing,
+		"hp_writes", state.HPWrites,
+		"hp_unresolved_section", state.HPUnresolvedSection,
+		"hp_non_player", state.HPNonPlayer,
+		"deaths", state.Deaths,
+		"money_writes", state.MoneyWrites,
+		"weapon_changes", state.WeaponChanges,
+		"weapon_unresolved", state.WeaponUnresolved,
+		"weapon_zero", state.WeaponZero,
+		"armor_items", state.ArmorItems,
+		"armor_unowned", state.ArmorUnowned,
+		"armor_unplaced", state.ArmorUnplaced,
+		"armor_unattributed", state.ArmorUnattributed,
+		"state_elements_incomplete", state.DamageIncomplete,
 		"response_bytes", len(encoded),
 		"gzip_bytes", len(gz),
 		"content_blocks_lost", quality.ContentBlocksLost,

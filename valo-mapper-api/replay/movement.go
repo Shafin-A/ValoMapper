@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	// defaultFrameHz is the wire rate the browser player receives. The plan's
-	// budget is derived from 8 Hz; 15 Hz is a calibration option only.
+	// defaultFrameHz is the wire rate the browser player receives. The payload
+	// budget is derived from 8 Hz; 15 Hz is for measurement only.
 	defaultFrameHz = 8
 	fastFrameHz    = 15
 
@@ -27,9 +27,9 @@ const (
 	distinctCharactersCap = 256
 )
 
-// NormaliseFrameHz accepts only the rates M1 supports. A caller that passes
-// anything else gets the default and false, so the service can warn instead of
-// silently changing fidelity.
+// NormaliseFrameHz accepts only the rates the player supports. A caller that
+// passes anything else gets the default and false, so the service can warn
+// instead of silently changing fidelity.
 func NormaliseFrameHz(hz int) (int, bool) {
 	switch hz {
 	case 0:
@@ -79,12 +79,20 @@ type movementScan struct {
 	timelines []map[string][]timelineSample
 }
 
-// timelineSample is a decimated pose, round-relative, on the binned grid.
+// timelineSample is a decimated pose, round-relative, on the binned grid. The
+// state fields are resolved from the subject's absolute timeline after
+// keyframes and teleport cuts have fixed the final sample times.
 type timelineSample struct {
-	TimeMS uint32
-	X      float64
-	Y      float64
-	Yaw    float64
+	TimeMS      uint32
+	X           float64
+	Y           float64
+	Yaw         float64
+	HP          int
+	Credits     int
+	Alive       bool
+	WeaponID    string
+	ArmorID     string
+	ArmorPoints int
 }
 
 type actorRow struct {
@@ -246,8 +254,8 @@ func float32IsInf(value float32) bool {
 	return value > math.MaxFloat32 || value < -math.MaxFloat32
 }
 
-// transformCheckError applies the cheap invariants from the plan. A decode
-// that produced noise must fail here rather than become a match.
+// transformCheckError applies the cheap pose invariants. A decode that
+// produced noise must fail here rather than become a match.
 func (s *movementScan) transformCheckError() *Error {
 	if s.Rows == 0 || s.FiniteRows == 0 {
 		return NewError(CodeTransformCheck, "The replay contained no usable movement data.", nil)
@@ -271,7 +279,8 @@ func (s *movementScan) transformCheckError() *Error {
 	return nil
 }
 
-// timelineStats is logged with the parse and used by the M1 acceptance gates.
+// timelineStats is logged with the parse and is what the payload budget is
+// checked against.
 type timelineStats struct {
 	Samples      int
 	Frames       int
@@ -280,12 +289,14 @@ type timelineStats struct {
 }
 
 // buildTimelineFrames turns the decimated movement stream into one frame slice
-// per round. M1 keeps the M0 state placeholders: HP 100, no credits, alive.
+// per round. Every sample carries the full state: HP, credits, alive, the last
+// real gun and the armour item with its points.
 func buildTimelineFrames(
 	players []Player,
 	puuidBySubject map[string]string,
 	windows []roundWindow,
 	movement *movementScan,
+	state *stateScan,
 	logs map[int]*roundLog,
 	warnings *warningList,
 ) ([][]Frame, timelineStats) {
@@ -318,6 +329,16 @@ func buildTimelineFrames(
 			samples, cuts := insertTeleportCuts(samples)
 			stats.TeleportCuts += cuts
 			stats.Samples += len(samples)
+			for i := range samples {
+				sample := &samples[i]
+				sampled := state.stateFor(subject, window.StartMS+sample.TimeMS, window.StartMS)
+				sample.HP = sampled.HP
+				sample.Credits = sampled.Credits
+				sample.Alive = sampled.Alive
+				sample.WeaponID = sampled.WeaponID
+				sample.ArmorID = sampled.ArmorID
+				sample.ArmorPoints = sampled.ArmorPoints
+			}
 			perPlayer[player.Puuid] = samples
 		}
 
@@ -455,15 +476,24 @@ func assembleFrames(players []Player, timelines map[string][]timelineSample) []F
 
 	for _, player := range players {
 		for _, sample := range timelines[player.Puuid] {
-			byTime[sample.TimeMS] = append(byTime[sample.TimeMS], FramePlayer{
+			framePlayer := FramePlayer{
 				Puuid:       player.Puuid,
 				X:           sample.X,
 				Y:           sample.Y,
 				ViewRadians: yawRadians(sample.Yaw),
-				HP:          100,
-				Credits:     0,
-				Alive:       true,
-			})
+				HP:          sample.HP,
+				Credits:     sample.Credits,
+				WeaponID:    sample.WeaponID,
+				ArmorID:     sample.ArmorID,
+				Alive:       sample.Alive,
+			}
+			if sample.ArmorID != "" {
+				// A broken item is still equipped and 0 points is a known value,
+				// so keep the pointer to distinguish it from "no armour".
+				points := sample.ArmorPoints
+				framePlayer.ArmorPoints = &points
+			}
+			byTime[sample.TimeMS] = append(byTime[sample.TimeMS], framePlayer)
 		}
 	}
 

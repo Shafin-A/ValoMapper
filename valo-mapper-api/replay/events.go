@@ -39,8 +39,8 @@ type eventScan struct {
 }
 
 // scanEvents reads events.parquet. Unknown groups are counted and ignored: a
-// newer build may add events M0 does not understand, which must not fail a
-// replay that still has every round and kill.
+// newer build may add events the normaliser does not understand, which must not
+// fail a replay that still has every round and kill.
 func scanEvents(exportDir string) (*eventScan, error) {
 	scan := &eventScan{}
 	order := 0

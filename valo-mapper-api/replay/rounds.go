@@ -51,6 +51,10 @@ type fieldScan struct {
 	PlantSitesRPC  []rpcWrite
 	PlantLocations []rpcWrite
 	Defusers       []rpcWrite
+
+	// State holds the HP/credits/weapon/armour rows collected by the same pass.
+	// scanState turns them into timelines after this scan.
+	State fieldStateRows
 }
 
 type teamPairKey struct {
@@ -64,8 +68,8 @@ type teamPair struct {
 }
 
 // scanFields reads fields.parquet once and collects the small set of values
-// the M0 normaliser needs: phase writes, RoundResults, combat-report teams and
-// the plant/defuse RPC details.
+// the normaliser needs: phase writes, RoundResults, combat-report teams and the
+// plant/defuse RPC details.
 func scanFields(exportDir string) (*fieldScan, error) {
 	scan := &fieldScan{
 		Results:        make(map[int]*resultWrite),
@@ -74,6 +78,7 @@ func scanFields(exportDir string) (*fieldScan, error) {
 		PlantSitesRPC:  nil,
 		PlantLocations: nil,
 		Defusers:       nil,
+		State:          newFieldStateRows(),
 	}
 
 	// The combat report writes ParticipantSubject and ParticipantTeamName as
@@ -144,6 +149,8 @@ func scanFields(exportDir string) (*fieldScan, error) {
 				if row.ValueI64 != nil {
 					scan.Defusers = append(scan.Defusers, rpcWrite{timeMS, strconv.FormatInt(*row.ValueI64, 10)})
 				}
+			case stateFieldCandidate(name):
+				scan.collectStateField(row, name)
 			}
 		}
 		return nil

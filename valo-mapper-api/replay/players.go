@@ -8,8 +8,8 @@ import (
 )
 
 // expectedPlayers is the competitive roster size. A replay with any other
-// number cannot establish a 5v5 match, so M0 rejects it instead of inventing a
-// side.
+// number cannot establish a 5v5 match, so the normaliser rejects it instead of
+// inventing a side.
 const expectedPlayers = 10
 
 // playerIndex joins the manifest's actor and pawn identifiers back to a

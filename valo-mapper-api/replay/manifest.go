@@ -10,9 +10,9 @@ import (
 	"valo-mapper-api/valorant"
 )
 
-// Manifest mirrors the subset of vrfkit's manifest.json the M0 normaliser
-// keeps. Large members such as net_field_export_groups are deliberately not
-// declared so they are never decoded into memory.
+// Manifest mirrors the subset of vrfkit's manifest.json the normaliser keeps.
+// Large members such as net_field_export_groups are deliberately not declared
+// so they are never decoded into memory.
 type Manifest struct {
 	ReplayBuild        string             `json:"replay_build"`
 	ReplayVersion      string             `json:"replay_version"`

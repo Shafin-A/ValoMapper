@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// integrationFrameHz defaults to 8 and lets a calibration run pick 15.
+// integrationFrameHz defaults to 8 and lets a measurement run pick 15.
 func integrationFrameHz() int {
 	value, err := strconv.Atoi(os.Getenv("VRF_FRAME_HZ"))
 	if err != nil {
@@ -114,6 +114,6 @@ func TestIntegrationRealReplay(t *testing.T) {
 			totalFrames, len(match.Rounds))
 	}
 	if len(gz) > 6<<20 {
-		t.Errorf("gzip payload = %d bytes, above the 6 MB M1 target", len(gz))
+		t.Errorf("gzip payload = %d bytes, above the 6 MB payload target", len(gz))
 	}
 }

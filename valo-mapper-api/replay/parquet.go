@@ -11,9 +11,9 @@ import (
 
 const parquetBatchSize = 8192
 
-// fieldRow projects only the sparse columns the M0 normaliser reads. The
-// parquet tags must match vrfkit's fields schema exactly; nullable columns are
-// pointers so a missing value is distinguishable from zero.
+// fieldRow projects only the sparse columns the normaliser reads. The parquet
+// tags must match vrfkit's fields schema exactly; nullable columns are pointers
+// so a missing value is distinguishable from zero.
 type fieldRow struct {
 	TimeMS        uint32   `parquet:"time_ms"`
 	PacketID      uint32   `parquet:"packet_id"`

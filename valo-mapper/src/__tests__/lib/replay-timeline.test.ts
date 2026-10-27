@@ -173,7 +173,7 @@ describe("isReplayPointOnMap", () => {
 describe("getReplayPlayerState", () => {
   it("treats an omitted player as having no sample, not as dead", () => {
     // The client drops a player from the frame across a gap longer than the
-    // interpolation limit. M1 keeps everyone at the placeholder state.
+    // interpolation limit. An omitted player falls back to a full bar.
     const state = getReplayPlayerState(undefined);
     expect(state.hp).toBe(100);
     expect(state.alive).toBe(true);

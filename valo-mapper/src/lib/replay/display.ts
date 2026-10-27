@@ -105,8 +105,8 @@ export const getPlayerHpBarColor = (hp: number, alive: boolean) => {
 /**
  * Absence from a frame means "no positional sample this tick", not "dead": the
  * server omits a player across a gap longer than the interpolation limit. The
- * scoreboard keeps the M1 placeholder state for them instead of flashing gray.
- * A real death arrives as a frame sample with `alive: false` (M2).
+ * scoreboard shows a full bar for them instead of flashing gray. A real death
+ * arrives as a frame sample with `alive: false`.
  */
 export const getReplayPlayerState = (
   player: ReplayFramePlayer | undefined,

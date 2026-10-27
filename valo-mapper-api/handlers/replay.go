@@ -53,7 +53,7 @@ type ReplayHandler struct {
 type ReplayHandlerOption func(*ReplayHandler)
 
 // WithParseRate overrides the per-IP parse budget. Tests use a high rate; the
-// default is the plan's 3 parses per 10 minutes, burst 3.
+// default is 3 parses per 10 minutes with a burst of 3.
 func WithParseRate(limit rate.Limit, burst int) ReplayHandlerOption {
 	return func(h *ReplayHandler) {
 		if limit <= 0 || burst <= 0 {

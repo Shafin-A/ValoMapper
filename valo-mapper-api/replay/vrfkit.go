@@ -20,7 +20,7 @@ const (
 	maxProcessOutput      = 64 << 10
 )
 
-// InspectResult is the small subset of `vrfkit inspect` M0 needs.
+// InspectResult is the small subset of `vrfkit inspect` the service needs.
 type InspectResult struct {
 	Branch string
 	Build  string

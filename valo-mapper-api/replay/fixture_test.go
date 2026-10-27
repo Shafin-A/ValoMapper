@@ -109,6 +109,9 @@ func writeSyntheticExport(t *testing.T, dir string) *syntheticExport {
 	if err := export.writeActors(); err != nil {
 		t.Fatalf("write actors: %v", err)
 	}
+	if err := export.writeNetGuids(); err != nil {
+		t.Fatalf("write net guids: %v", err)
+	}
 
 	return export
 }
@@ -303,6 +306,14 @@ func (e *syntheticExport) writeActors() error {
 		)
 	}
 	return parquet.WriteFile(filepath.Join(e.dir, "actors.parquet"), rows)
+}
+
+// writeNetGuids writes the small object-path table scanState reads. The
+// synthetic fixture has no damage or inventory rows, so the table only needs
+// to exist and be readable.
+func (e *syntheticExport) writeNetGuids() error {
+	rows := []netGuidRow{{NetGUID: 1, Path: "PersistentLevel"}}
+	return parquet.WriteFile(filepath.Join(e.dir, "net_guids.parquet"), rows)
 }
 
 func ptr[T any](value T) *T {

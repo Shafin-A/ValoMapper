@@ -209,8 +209,11 @@ func TestRoundKeyframesIncludesStartBuyEndEventsAndEnd(t *testing.T) {
 func TestAssembleFramesUnionsSampleTimes(t *testing.T) {
 	players := []Player{{Puuid: "a"}, {Puuid: "b"}}
 	timelines := map[string][]timelineSample{
-		"a": {{TimeMS: 0, X: 1}, {TimeMS: 125, X: 2}},
-		"b": {{TimeMS: 0, X: 3}},
+		"a": {
+			{TimeMS: 0, X: 1, HP: 73, Credits: 900, Alive: true, WeaponID: "GUN"},
+			{TimeMS: 125, X: 2, HP: 0, Credits: 900, Alive: false},
+		},
+		"b": {{TimeMS: 0, X: 3, HP: 100, Alive: true}},
 	}
 
 	frames := assembleFrames(players, timelines)
@@ -223,8 +226,12 @@ func TestAssembleFramesUnionsSampleTimes(t *testing.T) {
 	if frames[0].Players[0].Puuid != "a" || frames[0].Players[1].Puuid != "b" {
 		t.Errorf("player order = %+v", frames[0].Players)
 	}
-	if frames[0].Players[0].HP != 100 || !frames[0].Players[0].Alive {
-		t.Errorf("placeholder state = %+v", frames[0].Players[0])
+	if frames[0].Players[0].HP != 73 || frames[0].Players[0].Credits != 900 ||
+		!frames[0].Players[0].Alive || frames[0].Players[0].WeaponID != "GUN" {
+		t.Errorf("copied state = %+v", frames[0].Players[0])
+	}
+	if frames[1].Players[0].Alive {
+		t.Errorf("death was not copied: %+v", frames[1].Players[0])
 	}
 }
 
@@ -238,7 +245,7 @@ func TestBuildTimelineFramesWarnsAboutMissingPlayers(t *testing.T) {
 	}
 	warnings := newWarnings()
 
-	frames, stats := buildTimelineFrames(players, puuidBySubject, windows, scan, nil, warnings)
+	frames, stats := buildTimelineFrames(players, puuidBySubject, windows, scan, nil, nil, warnings)
 	if len(frames) != 1 || len(frames[0]) != 0 {
 		t.Fatalf("frames = %+v", frames)
 	}

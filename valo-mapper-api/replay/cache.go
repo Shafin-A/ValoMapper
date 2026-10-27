@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-// cache stores gzipped response bodies, never Go match structs. M0 responses
-// are tiny, but keeping the same shape as the M1 budget avoids a rewrite when
-// frames grow.
+// cache stores gzipped response bodies, never Go match structs. Responses are
+// tiny today, but caching the compressed bytes keeps the payload budget honest
+// as frames grow.
 type cacheEntry struct {
 	key       string
 	gz        []byte
