@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"valo-mapper-api/db"
@@ -17,9 +18,18 @@ const (
 	transientDBMaxAttempts = 3
 )
 
+// bypassesDBHealth reports the endpoints that do not read or write PostgreSQL.
+// Replay parsing keeps its output in memory, so a database hiccup must not take
+// the replay player down with it.
+func bypassesDBHealth(path string) bool {
+	return path == "/health" ||
+		path == "/api/replays" ||
+		strings.HasPrefix(path, "/api/replays/")
+}
+
 func DBHealthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/health" {
+		if bypassesDBHealth(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}

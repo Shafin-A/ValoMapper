@@ -1,13 +1,14 @@
 package routes
 
 import (
+	"valo-mapper-api/handlers"
 	"valo-mapper-api/websocket"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/gorilla/mux"
 )
 
-func SetupRoutes(r *mux.Router, firebaseAuth *auth.Client, hub *websocket.Hub) {
+func SetupRoutes(r *mux.Router, firebaseAuth *auth.Client, hub *websocket.Hub, replayParser handlers.ReplayParser) {
 	RegisterHealthRoutes(r)
 	RegisterMetricsRoutes(r, hub)
 	RegisterAdminRoutes(r)
@@ -19,4 +20,5 @@ func SetupRoutes(r *mux.Router, firebaseAuth *auth.Client, hub *websocket.Hub) {
 	RegisterFolderRoutes(r, firebaseAuth)
 	RegisterStrategyRoutes(r, firebaseAuth)
 	RegisterImageRoutes(r)
+	RegisterReplayRoutes(r, replayParser)
 }

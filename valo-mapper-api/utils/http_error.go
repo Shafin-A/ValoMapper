@@ -5,12 +5,19 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 type HTTPError struct {
 	Status  int
 	Message string
 	Err     error
+	// Code is an optional stable machine-readable code (for example a replay
+	// code). It is included in the JSON body only when set.
+	Code string
+	// RetryAfter, when positive, is written as a Retry-After header.
+	RetryAfter time.Duration
 }
 
 func (he *HTTPError) Error() string {
@@ -51,10 +58,20 @@ func SendJSONError(w http.ResponseWriter, he *HTTPError, requestID string) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Request-ID", requestID)
+	if he.RetryAfter > 0 {
+		seconds := int(he.RetryAfter / time.Second)
+		if seconds < 1 {
+			seconds = 1
+		}
+		w.Header().Set("Retry-After", strconv.Itoa(seconds))
+	}
 	w.WriteHeader(he.Status)
 
 	response := map[string]string{
 		"error": he.Message,
+	}
+	if he.Code != "" {
+		response["code"] = he.Code
 	}
 	if requestID != "" {
 		response["requestId"] = requestID

@@ -15,6 +15,7 @@ import (
 	"valo-mapper-api/handlers"
 	"valo-mapper-api/logger"
 	"valo-mapper-api/middleware"
+	"valo-mapper-api/replay"
 	"valo-mapper-api/routes"
 	"valo-mapper-api/scheduler"
 	"valo-mapper-api/storage"
@@ -77,6 +78,34 @@ func getEnvFloat(name string, defaultValue float64) float64 {
 
 	if parsedValue <= 0 {
 		slog.Warn("non-positive env var value, using default", "name", name, "value", rawValue, "default", defaultValue)
+		return defaultValue
+	}
+
+	return parsedValue
+}
+
+func getEnvString(name, defaultValue string) string {
+	rawValue := strings.TrimSpace(os.Getenv(name))
+	if rawValue == "" {
+		return defaultValue
+	}
+	return rawValue
+}
+
+func getEnvDuration(name string, defaultValue time.Duration) time.Duration {
+	rawValue := strings.TrimSpace(os.Getenv(name))
+	if rawValue == "" {
+		return defaultValue
+	}
+
+	parsedValue, err := time.ParseDuration(rawValue)
+	if err != nil {
+		slog.Warn("invalid duration env var, using default", "name", name, "value", rawValue, "default", defaultValue)
+		return defaultValue
+	}
+
+	if parsedValue <= 0 {
+		slog.Warn("non-positive duration env var, using default", "name", name, "value", rawValue, "default", defaultValue)
 		return defaultValue
 	}
 
@@ -176,8 +205,22 @@ func main() {
 	hub := websocket.NewHub()
 	go hub.Run()
 
+	replay.CleanStaleTempDirs(time.Hour)
+	replayService := replay.NewService(replay.Config{
+		VRFKitBin:       getEnvString("VRFKIT_BIN", "vrfkit"),
+		InspectTimeout:  getEnvDuration("REPLAY_INSPECT_TIMEOUT", 15*time.Second),
+		ExportTimeout:   getEnvDuration("REPLAY_EXPORT_TIMEOUT", 3*time.Minute),
+		ParseTimeout:    getEnvDuration("REPLAY_PARSE_TIMEOUT", 3*time.Minute),
+		QueueWait:       getEnvDuration("REPLAY_QUEUE_WAIT", 30*time.Second),
+		MaxUploadBytes:  int64(getEnvInt("REPLAY_MAX_UPLOAD_MB", 250)) << 20,
+		CacheTTL:        getEnvDuration("REPLAY_CACHE_TTL", 30*time.Minute),
+		CacheMaxEntries: getEnvInt("REPLAY_CACHE_MAX_ENTRIES", 8),
+		CacheMaxBytes:   int64(getEnvInt("REPLAY_CACHE_MAX_MB", 64)) << 20,
+		MaxConcurrent:   getEnvInt("REPLAY_MAX_CONCURRENT", 1),
+	})
+
 	r := mux.NewRouter()
-	routes.SetupRoutes(r, firebaseAuth, hub)
+	routes.SetupRoutes(r, firebaseAuth, hub, replayService)
 	r.PathPrefix("/swagger/").Handler(middleware.SwaggerBasicAuth(httpSwagger.WrapHandler))
 
 	rateLimitRPS := getEnvFloat("RATE_LIMIT_RPS", 20)
@@ -199,17 +242,19 @@ func main() {
 		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		ExposedHeaders:   []string{"X-Request-ID", "Retry-After", "X-Parser-Version", "X-Replay-Parse-Ms"},
 		AllowCredentials: true,
 	})
 	handler = c.Handler(handler)
 	handler = middleware.SecurityHeadersMiddleware(handler)
 
 	srv := &http.Server{
-		Addr:         ":8080",
-		Handler:      handler,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		Addr:              ":8080",
+		Handler:           handler,
+		ReadTimeout:       15 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	go func() {

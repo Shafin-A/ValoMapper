@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,6 +35,30 @@ func TestDBHealthMiddleware_BypassesHealthEndpoint(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.True(t, handlerCalled)
+	assert.Equal(t, 0, calls)
+}
+
+func TestDBHealthMiddleware_BypassesReplayEndpoints(t *testing.T) {
+	originalEnsure := ensureDBConnection
+	defer func() { ensureDBConnection = originalEnsure }()
+
+	calls := 0
+	ensureDBConnection = func(ctx context.Context) error {
+		calls++
+		return errors.New("database connection not initialized")
+	}
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	middleware := DBHealthMiddleware(next)
+
+	for _, path := range []string{"/api/replays", "/api/replays/" + strings.Repeat("a", 64)} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		w := httptest.NewRecorder()
+		middleware.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code)
+	}
 	assert.Equal(t, 0, calls)
 }
 

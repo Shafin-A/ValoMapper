@@ -13,6 +13,9 @@ primary_region = 'yyz'
   auto_start_machines = true
   min_machines_running = 0
   processes = ['app']
+  # Replay upload + decode can take minutes; the default idle timeout would cut
+  # an upload before the Go read/write deadlines apply.
+  idle_timeout = 300
 
 [http_service.concurrency]
   type = "connections"
@@ -34,3 +37,11 @@ primary_region = 'yyz'
 [env]
   # CORS configuration
   ALLOWED_ORIGINS = "https://valomapper.com,https://www.valomapper.com"
+
+  VRFKIT_BIN = "/usr/local/bin/vrfkit"
+  REPLAY_MAX_UPLOAD_MB = "120"
+  REPLAY_PARSE_TIMEOUT = "3m"
+  REPLAY_CACHE_TTL = "30m"
+  REPLAY_MAX_CONCURRENT = "1"
+  REPLAY_CACHE_MAX_MB = "32"
+  REPLAY_CACHE_MAX_ENTRIES = "4"

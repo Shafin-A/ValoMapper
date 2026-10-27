@@ -1,0 +1,28 @@
+ValoMapper parses untrusted .vrf uploads behind a network boundary. VRFKit's
+FxHash aliases are not HashDoS-resistant, so this patch switches the aliases
+(and therefore every vrf-net/vrfkit map that uses them) to std's default
+SipHash hasher. See docs/vrf-parsing-plan.md section 6.2.
+
+diff --git a/crates/vrf-schema/src/hash.rs b/crates/vrf-schema/src/hash.rs
+--- a/crates/vrf-schema/src/hash.rs
++++ b/crates/vrf-schema/src/hash.rs
+@@ -1,13 +1,13 @@
+ //! The hasher the cache's maps use. Not HashDoS-resistant, by design; the
+ //! rationale and figures are in docs/PERFORMANCE_NOTES.md#fxhash-over-siphash.
+ //! If this ever sits behind a network boundary, revert to std's default hasher.
+ 
+-use std::hash::{BuildHasherDefault, Hasher};
++use std::hash::Hasher;
+ 
+-/// A `HashMap` using [`FxHasher`].
+-pub type FxHashMap<K, V> = std::collections::HashMap<K, V, BuildHasherDefault<FxHasher>>;
++/// A `HashMap` using std's default (HashDoS-resistant) hasher.
++pub type FxHashMap<K, V> = std::collections::HashMap<K, V>;
+ 
+-/// A `HashSet` using [`FxHasher`].
+-pub type FxHashSet<T> = std::collections::HashSet<T, BuildHasherDefault<FxHasher>>;
++/// A `HashSet` using std's default (HashDoS-resistant) hasher.
++pub type FxHashSet<T> = std::collections::HashSet<T>;
+ 
+ /// `rustc_hash`'s constant (2^64 / pi, rounded): the mixing rustc exercises.
+ const SEED: u64 = 0x51_7c_c1_b7_27_22_0a_95;

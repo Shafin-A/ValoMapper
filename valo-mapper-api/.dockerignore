@@ -1,5 +1,9 @@
 # Ignore service account key (sensitive!)
 serviceAccountKey.json
 
+# Local environment: secrets must not enter the build context or layer cache.
+.env
+.env.*
+
 # Fly.io
 .fly/

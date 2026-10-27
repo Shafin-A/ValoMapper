@@ -77,6 +77,13 @@ func (i *IPRateLimiter) cleanupLoop() {
 	}
 }
 
+// GetIP resolves the client IP from the proxy headers Fly/Cloudflare set. It is
+// exported for route-specific limits (for example the replay parse budget) that
+// must key on the same identity as the global limiter.
+func GetIP(r *http.Request) string {
+	return getIP(r)
+}
+
 func getIP(r *http.Request) string {
 	parseCandidateIP := func(value string) string {
 		trimmed := strings.TrimSpace(value)
