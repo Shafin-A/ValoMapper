@@ -1,6 +1,12 @@
 export type PendingLobbyToast =
   | { type: "created" }
-  | { type: "replay-copy"; roundNumber: number; matchId?: string };
+  | { type: "review-copy"; roundNumber: number; matchId?: string }
+  | {
+      type: "replay-save";
+      roundNumber: number;
+      timeMs: number;
+      replayId: string;
+    };
 
 export const PENDING_LOBBY_TOAST_STORAGE_KEY = "pendingLobbyToast";
 
@@ -41,14 +47,28 @@ export const readPendingLobbyToast = (): PendingLobbyToast | null => {
     }
 
     if (
-      parsed.type === "replay-copy" &&
+      parsed.type === "review-copy" &&
       typeof parsed.roundNumber === "number"
     ) {
       return {
-        type: "replay-copy",
+        type: "review-copy",
         roundNumber: parsed.roundNumber,
         matchId:
           typeof parsed.matchId === "string" ? parsed.matchId : undefined,
+      };
+    }
+
+    if (
+      parsed.type === "replay-save" &&
+      typeof parsed.roundNumber === "number" &&
+      typeof parsed.timeMs === "number" &&
+      typeof parsed.replayId === "string"
+    ) {
+      return {
+        type: "replay-save",
+        roundNumber: parsed.roundNumber,
+        timeMs: parsed.timeMs,
+        replayId: parsed.replayId,
       };
     }
   } catch {

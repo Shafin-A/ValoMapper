@@ -223,9 +223,11 @@ const LobbyEditPage = () => {
     }
 
     const toastMessage =
-      pendingToast?.type === "replay-copy"
+      pendingToast?.type === "review-copy"
         ? `Round ${pendingToast.roundNumber} copied to this lobby`
-        : `Lobby created • Code: ${params.lobbyCode}`;
+        : pendingToast?.type === "replay-save"
+          ? `Replay snapshot copied to this lobby`
+          : `Lobby created • Code: ${params.lobbyCode}`;
 
     toast.success(toastMessage, {
       id: `lobby-created-${params.lobbyCode}`,

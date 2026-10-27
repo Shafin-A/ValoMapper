@@ -79,7 +79,7 @@ export const cloneUndoableState = (state: UndoableState): UndoableState => ({
     : undefined,
 });
 
-const resolveReplayMapOption = (match: MatchSummaryResponse): MapOption => {
+export const resolveMatchMapOption = (match: MatchSummaryResponse): MapOption => {
   const mapNameKey = normalizeMapKey(match.mapName);
   const mapIdKey = normalizeMapKey(match.mapId.split("/").pop());
 
@@ -532,11 +532,11 @@ const buildRoundReplayState = ({
   };
 };
 
-export const buildMatchReplayRoundStates = (
+export const buildMatchReviewRoundStates = (
   match: MatchSummaryResponse,
   agentsSettings?: IconSettings,
 ) => {
-  const mapOption = resolveReplayMapOption(match);
+  const mapOption = resolveMatchMapOption(match);
   const playersByPuuid = new Map(
     match.players.map((player) => [player.puuid, player]),
   );

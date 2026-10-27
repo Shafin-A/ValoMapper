@@ -1,4 +1,4 @@
-import { buildMatchReplayRoundStates } from "@/lib/match-replay";
+import { buildMatchReviewRoundStates } from "@/lib/match-review";
 import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
 import {
   getMapCallouts,
@@ -53,7 +53,7 @@ const getExpectedReplayConeRotation = ({
   );
 };
 
-describe("buildMatchReplayRoundStates", () => {
+describe("buildMatchReviewRoundStates", () => {
   it("builds cumulative replay phases from match telemetry", () => {
     const matchSummary: MatchSummaryResponse = {
       matchId: "match-1",
@@ -156,7 +156,7 @@ describe("buildMatchReplayRoundStates", () => {
     };
 
     const replayState =
-      buildMatchReplayRoundStates(matchSummary).roundStates[1];
+      buildMatchReviewRoundStates(matchSummary).roundStates[1];
 
     expect(replayState.selectedMap.id).toBe("ascent");
     expect(replayState.mapSide).toBe("defense");
@@ -292,7 +292,7 @@ describe("buildMatchReplayRoundStates", () => {
     };
 
     const replayState =
-      buildMatchReplayRoundStates(matchSummary).roundStates[1];
+      buildMatchReviewRoundStates(matchSummary).roundStates[1];
     const firstPhase = replayState.phases[0];
     const viewerAgent = firstPhase.agentsOnCanvas.find(
       (agent) => agent.id === "replay-agent-0",
@@ -433,7 +433,7 @@ describe("buildMatchReplayRoundStates", () => {
     };
 
     const replayState =
-      buildMatchReplayRoundStates(matchSummary).roundStates[1];
+      buildMatchReviewRoundStates(matchSummary).roundStates[1];
 
     expect(replayState.phases[1].agentsOnCanvas).toEqual(
       expect.arrayContaining([
@@ -511,7 +511,7 @@ describe("buildMatchReplayRoundStates", () => {
     };
 
     const replayState =
-      buildMatchReplayRoundStates(matchSummary).roundStates[1];
+      buildMatchReviewRoundStates(matchSummary).roundStates[1];
 
     expect(replayState.phases[0].agentsOnCanvas).toEqual(
       expect.arrayContaining([

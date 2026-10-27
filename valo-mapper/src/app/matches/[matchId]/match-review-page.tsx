@@ -19,9 +19,9 @@ import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
-  buildMatchReplayRoundStates,
+  buildMatchReviewRoundStates,
   cloneUndoableState,
-} from "@/lib/match-replay";
+} from "@/lib/match-review";
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH, MAP_SIZE } from "@/lib/consts";
 import { getPlayerSummary } from "@/lib/matches";
 import { UndoableState } from "@/lib/types";
@@ -43,7 +43,7 @@ import {
   useState,
 } from "react";
 
-const MatchReplayPage = () => {
+const MatchReviewPage = () => {
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -100,12 +100,12 @@ const MatchReplayPage = () => {
     transitionToPhase,
   } = useCanvas();
 
-  const replaySeed = useMemo(() => {
+  const reviewSeed = useMemo(() => {
     if (!matchSummary) {
       return null;
     }
 
-    return buildMatchReplayRoundStates(matchSummary, agentsSettings);
+    return buildMatchReviewRoundStates(matchSummary, agentsSettings);
   }, [matchSummary, agentsSettings]);
 
   const roundOptions = useMemo(
@@ -126,7 +126,7 @@ const MatchReplayPage = () => {
   }, [requestedRoundNumber, roundOptions]);
 
   useEffect(() => {
-    if (!matchSummary || !replaySeed) {
+    if (!matchSummary || !reviewSeed) {
       return;
     }
 
@@ -141,9 +141,9 @@ const MatchReplayPage = () => {
       roundNumber: null,
       state: null,
     };
-    setRoundStates(replaySeed.roundStates);
+    setRoundStates(reviewSeed.roundStates);
     setSelectedRoundNumber(resolvedRoundNumber);
-  }, [matchSummary, replaySeed, resolvedRoundNumber]);
+  }, [matchSummary, reviewSeed, resolvedRoundNumber]);
 
   useEffect(() => {
     if (!pathname || roundOptions.length === 0) {
@@ -297,7 +297,7 @@ const MatchReplayPage = () => {
     selectedMap,
   ]);
 
-  const findMatchingReplayRoundNumber = useCallback(
+  const findMatchingReviewRoundNumber = useCallback(
     (
       state: UndoableState,
       states: Record<number, UndoableState> = roundStates,
@@ -320,7 +320,7 @@ const MatchReplayPage = () => {
       const previousRoundNumber =
         currentRoundRef.current ?? selectedRoundNumber;
       const nextRoundNumber =
-        findMatchingReplayRoundNumber(nextState) ?? previousRoundNumber;
+        findMatchingReviewRoundNumber(nextState) ?? previousRoundNumber;
       const nextRoundStates = { ...roundStates };
 
       if (
@@ -354,14 +354,14 @@ const MatchReplayPage = () => {
       onApplyHistoryStateCallback.current = null;
     };
   }, [
-    findMatchingReplayRoundNumber,
+    findMatchingReviewRoundNumber,
     matchSummary?.matchId,
     onApplyHistoryStateCallback,
     roundStates,
     selectedRoundNumber,
   ]);
 
-  const setReplayRound = useCallback(
+  const setReviewRound = useCallback(
     (roundNumber: number) => {
       setRoundStates((prev) => {
         const currentRound = currentRoundRef.current;
@@ -384,7 +384,7 @@ const MatchReplayPage = () => {
     createLobbyMutation.mutate({
       initialCanvasState: snapshotCurrentRoundState(),
       pendingToast: {
-        type: "replay-copy",
+        type: "review-copy",
         roundNumber: selectedRoundNumber,
         matchId: matchSummary?.matchId,
       },
@@ -413,13 +413,13 @@ const MatchReplayPage = () => {
       return;
     }
 
-    setReplayRound(resolvedRoundNumber);
+    setReviewRound(resolvedRoundNumber);
   }, [
     matchSummary,
     resolvedRoundNumber,
     roundOptions.length,
     selectedRoundNumber,
-    setReplayRound,
+    setReviewRound,
   ]);
 
   const handleSelectRound = useCallback(
@@ -429,12 +429,12 @@ const MatchReplayPage = () => {
       }
 
       pendingRoundQuerySyncRef.current = roundNumber;
-      setReplayRound(roundNumber);
+      setReviewRound(roundNumber);
     },
-    [selectedRoundNumber, setReplayRound],
+    [selectedRoundNumber, setReviewRound],
   );
 
-  const handleSelectReplayPhase = useCallback(
+  const handleSelectReviewPhase = useCallback(
     async (phaseIndex: number) => {
       if (phaseIndex === currentPhaseIndex || isTransitioning.current) {
         return;
@@ -483,7 +483,7 @@ const MatchReplayPage = () => {
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
           <p className="text-muted-foreground font-medium">
-            Loading match replay...
+            Loading match review...
           </p>
         </div>
       </div>
@@ -496,10 +496,10 @@ const MatchReplayPage = () => {
         <div className="max-w-md w-full space-y-4">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Failed to load match replay</AlertTitle>
+            <AlertTitle>Failed to load match review</AlertTitle>
             <AlertDescription>
               {error?.message ||
-                "Something went wrong while loading replay telemetry for this match."}
+                "Something went wrong while loading review telemetry for this match."}
             </AlertDescription>
           </Alert>
           <div className="flex gap-2">
@@ -525,12 +525,12 @@ const MatchReplayPage = () => {
           icon: ArrowUpRight,
           label: "Copy to new lobby",
           tooltip: createLobbyMutation.isPending
-            ? "Creating a new lobby from the current replay state..."
+            ? "Creating a new lobby from the current review state..."
             : `Copy Round ${selectedRound.roundNumber} into a new editable lobby`,
           onClick: handleOpenCopyDialog,
           isPending: createLobbyMutation.isPending,
         }}
-        replayControls={{
+        reviewControls={{
           mapName: matchSummary.mapName,
           rounds: matchSummary.rounds,
           selectedRoundNumber: selectedRound.roundNumber,
@@ -541,17 +541,17 @@ const MatchReplayPage = () => {
           currentPlayerPuuid: matchSummary.viewer?.puuid,
           onSelectRound: handleSelectRound,
           onSelectEvent: (eventIndex) =>
-            void handleSelectReplayPhase(eventIndex),
+            void handleSelectReviewPhase(eventIndex),
         }}
       />
 
-      <Suspense fallback={<ReplayLoadingSkeleton />}>
+      <Suspense fallback={<MatchReviewLoadingSkeleton />}>
         <div
           className="flex h-[calc(100svh-1px-var(--header-height))] overflow-hidden"
           ref={divRef}
         >
           {!isScaleReady ? (
-            <ReplayLoadingSkeleton />
+            <MatchReviewLoadingSkeleton />
           ) : (
             <div className="flex-1">
               <MapStage
@@ -579,7 +579,7 @@ const MatchReplayPage = () => {
             </DialogTitle>
             <DialogDescription>
               Creates an editable lobby from this round&apos;s canvas state.
-              Refine and save it there. The original replay stays untouched.
+              Refine and save it there. The original match stays untouched.
             </DialogDescription>
           </DialogHeader>
 
@@ -615,15 +615,15 @@ const MatchReplayPage = () => {
   );
 };
 
-const ReplayLoadingSkeleton = () => {
+const MatchReviewLoadingSkeleton = () => {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div className="text-center space-y-4">
         <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
-        <p className="text-muted-foreground font-medium">Preparing replay...</p>
+        <p className="text-muted-foreground font-medium">Preparing review...</p>
       </div>
     </div>
   );
 };
 
-export default MatchReplayPage;
+export default MatchReviewPage;

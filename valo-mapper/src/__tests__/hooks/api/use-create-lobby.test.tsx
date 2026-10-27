@@ -142,7 +142,7 @@ describe("useCreateLobby", () => {
       await result.current.mutateAsync({
         initialCanvasState: canvasState,
         pendingToast: {
-          type: "replay-copy",
+          type: "review-copy",
           roundNumber: 7,
           matchId: "match-123",
         },
@@ -166,7 +166,7 @@ describe("useCreateLobby", () => {
     expect(push).toHaveBeenCalledWith("/EFGH");
     expect(sessionStorage.getItem(PENDING_LOBBY_TOAST_STORAGE_KEY)).toBe(
       JSON.stringify({
-        type: "replay-copy",
+        type: "review-copy",
         roundNumber: 7,
         matchId: "match-123",
       }),

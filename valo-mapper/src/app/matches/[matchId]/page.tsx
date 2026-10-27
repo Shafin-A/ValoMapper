@@ -1,7 +1,7 @@
-import MatchReplayPage from "./match-replay-page";
+import MatchReviewPage from "./match-review-page";
 
-const Page = () => {
-  return <MatchReplayPage />;
+const MatchPage = () => {
+  return <MatchReviewPage />;
 };
 
-export default Page;
+export default MatchPage;

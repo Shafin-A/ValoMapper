@@ -23,6 +23,7 @@ interface MapSelectProps {
   setMapSide: React.Dispatch<React.SetStateAction<MapSide>>;
   onMapRotate?: () => void;
   disabled?: boolean;
+  readOnly?: boolean;
 }
 
 export const MapSelect = ({
@@ -37,6 +38,7 @@ export const MapSelect = ({
   setMapSide,
   onMapRotate,
   disabled = false,
+  readOnly = false,
 }: MapSelectProps) => {
   const { notifyMapChanged, notifySideChanged } = useCollaborativeCanvas();
 
@@ -60,6 +62,59 @@ export const MapSelect = ({
     return null;
   }
 
+  const mapCardInner = (
+    <>
+      <div className="absolute inset-0 bg-black/30" />
+
+      <div className="relative z-10 flex items-center justify-center w-full h-full">
+        <span
+          className={`font-semibold text-lg drop-shadow-lg ${selectedMap.textColor}`}
+        >
+          {selectedMap.text}
+        </span>
+      </div>
+    </>
+  );
+
+  const rotateButton = (
+    <Button
+      data-tour="map-rotation"
+      variant="outline"
+      onClick={handleRotationToggle}
+      className="h-20 w-16 transition-all duration-200 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled={disabled}
+    >
+      <RefreshCw
+        className={`size-8 transition-transform duration-500 ${
+          mapSide === "attack" ? "rotate-0" : "rotate-180"
+        }`}
+        color={mapSide === "attack" ? enemyColor : allyColor}
+      />
+      <span className="text-xs text-white font-semibold uppercase">
+        {mapSide}
+      </span>
+    </Button>
+  );
+
+  if (readOnly) {
+    return (
+      <div className={`flex items-center justify-center gap-2 ${className}`}>
+        <div
+          className="relative h-20 w-56 overflow-hidden rounded-md border-2 border-gray-300 p-0 dark:border-input"
+          style={{
+            backgroundImage: `url(/maps/listviewicons/${selectedMap.id}.webp)`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {mapCardInner}
+        </div>
+
+        {rotateButton}
+      </div>
+    );
+  }
+
   return (
     <div className={`flex items-center justify-center gap-2 ${className}`}>
       <DropdownMenu>
@@ -75,15 +130,7 @@ export const MapSelect = ({
             }}
             disabled={disabled}
           >
-            <div className="absolute inset-0 bg-black/30" />
-
-            <div className="relative z-10 flex items-center justify-center w-full h-full">
-              <span
-                className={`font-semibold text-lg drop-shadow-lg ${selectedMap.textColor}`}
-              >
-                {selectedMap.text}
-              </span>
-            </div>
+            {mapCardInner}
 
             <ChevronDown
               className={`w-4 h-4 ${selectedMap.textColor} absolute bottom-2 right-2 z-10 drop-shadow-lg`}
@@ -128,23 +175,7 @@ export const MapSelect = ({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Button
-        data-tour="map-rotation"
-        variant="outline"
-        onClick={handleRotationToggle}
-        className="h-20 w-16 transition-all duration-200 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={disabled}
-      >
-        <RefreshCw
-          className={`size-8 transition-transform duration-500 ${
-            mapSide === "attack" ? "rotate-0" : "rotate-180"
-          }`}
-          color={mapSide === "attack" ? enemyColor : allyColor}
-        />
-        <span className="text-xs text-white font-semibold uppercase">
-          {mapSide}
-        </span>
-      </Button>
+      {rotateButton}
     </div>
   );
 };

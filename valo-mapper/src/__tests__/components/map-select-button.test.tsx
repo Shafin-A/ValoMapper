@@ -21,10 +21,12 @@ describe("MapSelect", () => {
   const mockSetSelectedMap = jest.fn();
   const mockSetMapSide = jest.fn();
   const mockOnMapSelect = jest.fn();
+  const mockOnMapRotate = jest.fn();
 
   const renderComponent = (
     selectedMap: MapOption = mapOptions[0],
     mapSide: MapSide = "attack",
+    readOnly = false,
   ) => {
     return render(
       <MapSelect
@@ -36,7 +38,9 @@ describe("MapSelect", () => {
         enemyColor="#ff0000"
         mapSide={mapSide}
         setMapSide={mockSetMapSide}
+        onMapRotate={mockOnMapRotate}
         disabled={false}
+        readOnly={readOnly}
       />,
     );
   };
@@ -73,5 +77,28 @@ describe("MapSelect", () => {
     expect(mockSetSelectedMap).toHaveBeenCalledWith(mapOptions[1]);
     expect(mockNotifyMapChanged).toHaveBeenCalledWith(mapOptions[1], true);
     expect(mockOnMapSelect).toHaveBeenCalledWith(mapOptions[1]);
+  });
+
+  it("does not open the map menu when readOnly", async () => {
+    const user = userEvent.setup();
+    renderComponent(mapOptions[0], "defense", true);
+
+    await user.click(screen.getByText("Ascent"));
+
+    expect(screen.queryByText("Bind")).not.toBeInTheDocument();
+    expect(mockSetSelectedMap).not.toHaveBeenCalled();
+    expect(mockNotifyMapChanged).not.toHaveBeenCalled();
+    expect(mockOnMapSelect).not.toHaveBeenCalled();
+  });
+
+  it("still rotates the map when readOnly", async () => {
+    const user = userEvent.setup();
+    renderComponent(mapOptions[0], "defense", true);
+
+    await user.click(screen.getByRole("button", { name: /defense/i }));
+
+    expect(mockSetMapSide).toHaveBeenCalledWith("attack");
+    expect(mockNotifySideChanged).toHaveBeenCalledWith("attack");
+    expect(mockOnMapRotate).toHaveBeenCalled();
   });
 });

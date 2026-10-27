@@ -1,11 +1,11 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
-import MatchReplayPage from "@/app/matches/[matchId]/match-replay-page";
+import MatchReviewPage from "@/app/matches/[matchId]/match-review-page";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
-import { buildMatchReplayRoundStates } from "@/lib/match-replay";
+import { buildMatchReviewRoundStates } from "@/lib/match-review";
 import type { UndoableState } from "@/lib/types";
 import {
   useParams,
@@ -15,7 +15,7 @@ import {
 } from "next/navigation";
 
 let mockToolsSidebarProps: {
-  replayControls?: {
+  reviewControls?: {
     onSelectRound: (roundNumber: number) => void;
     selectedRoundNumber: number;
     currentPlayerBestRoundNumber?: number;
@@ -76,8 +76,8 @@ jest.mock("@/hooks/use-sidebar-state", () => ({
   useSidebarState: jest.fn(),
 }));
 
-jest.mock("@/lib/match-replay", () => ({
-  buildMatchReplayRoundStates: jest.fn(),
+jest.mock("@/lib/match-review", () => ({
+  buildMatchReviewRoundStates: jest.fn(),
   cloneUndoableState: jest.fn((state) => state),
 }));
 
@@ -86,8 +86,8 @@ const mockUseCreateLobby = jest.mocked(useCreateLobby);
 const mockUseMatchSummary = jest.mocked(useMatchSummary);
 const mockUseFirebaseAuth = jest.mocked(useFirebaseAuth);
 const mockUseSidebarState = jest.mocked(useSidebarState);
-const mockBuildMatchReplayRoundStates = jest.mocked(
-  buildMatchReplayRoundStates,
+const mockBuildMatchReviewRoundStates = jest.mocked(
+  buildMatchReviewRoundStates,
 );
 const mockUseParams = jest.mocked(useParams);
 const mockUsePathname = jest.mocked(usePathname);
@@ -238,7 +238,7 @@ const createCanvasContext = (
     transitionToPhase: jest.fn(),
   }) as unknown as ReturnType<typeof useCanvas>;
 
-describe("MatchReplayPage", () => {
+describe("MatchReviewPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockToolsSidebarProps = null;
@@ -274,7 +274,7 @@ describe("MatchReplayPage", () => {
       mutate: jest.fn(),
       isPending: false,
     } as unknown as ReturnType<typeof useCreateLobby>);
-    mockBuildMatchReplayRoundStates.mockReturnValue({
+    mockBuildMatchReviewRoundStates.mockReturnValue({
       roundStates: {
         1: seededRoundState,
         2: seededSecondRoundState,
@@ -289,7 +289,7 @@ describe("MatchReplayPage", () => {
 
     mockUseCanvas.mockImplementation(() => currentCanvasContext);
 
-    const { rerender } = render(<MatchReplayPage />);
+    const { rerender } = render(<MatchReviewPage />);
 
     await waitFor(() => {
       expect(firstApplyRemoteState).toHaveBeenCalledTimes(1);
@@ -298,7 +298,7 @@ describe("MatchReplayPage", () => {
     const secondApplyRemoteState = jest.fn();
     currentCanvasContext = createCanvasContext(secondApplyRemoteState);
 
-    rerender(<MatchReplayPage />);
+    rerender(<MatchReviewPage />);
 
     await waitFor(() => {
       expect(firstApplyRemoteState).toHaveBeenCalledTimes(1);
@@ -322,21 +322,21 @@ describe("MatchReplayPage", () => {
       >,
     );
 
-    render(<MatchReplayPage />);
+    render(<MatchReviewPage />);
 
     await waitFor(() => {
       expect(applyRemoteState).toHaveBeenCalledTimes(1);
-      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+      expect(mockToolsSidebarProps?.reviewControls?.selectedRoundNumber).toBe(
         1,
       );
     });
 
     act(() => {
-      mockToolsSidebarProps?.replayControls?.onSelectRound(2);
+      mockToolsSidebarProps?.reviewControls?.onSelectRound(2);
     });
 
     await waitFor(() => {
-      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+      expect(mockToolsSidebarProps?.reviewControls?.selectedRoundNumber).toBe(
         2,
       );
       expect(replace).toHaveBeenCalledWith(
@@ -361,20 +361,20 @@ describe("MatchReplayPage", () => {
       >,
     );
 
-    render(<MatchReplayPage />);
+    render(<MatchReviewPage />);
 
     await waitFor(() => {
-      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+      expect(mockToolsSidebarProps?.reviewControls?.selectedRoundNumber).toBe(
         1,
       );
     });
 
     act(() => {
-      mockToolsSidebarProps?.replayControls?.onSelectRound(2);
+      mockToolsSidebarProps?.reviewControls?.onSelectRound(2);
     });
 
     await waitFor(() => {
-      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+      expect(mockToolsSidebarProps?.reviewControls?.selectedRoundNumber).toBe(
         2,
       );
     });
@@ -387,7 +387,7 @@ describe("MatchReplayPage", () => {
     });
 
     await waitFor(() => {
-      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+      expect(mockToolsSidebarProps?.reviewControls?.selectedRoundNumber).toBe(
         1,
       );
       expect(replace).toHaveBeenCalledWith("/matches/match-1?round=1", {
@@ -412,7 +412,7 @@ describe("MatchReplayPage", () => {
       error: null,
       refetch: jest.fn(),
     });
-    mockBuildMatchReplayRoundStates.mockReturnValue({
+    mockBuildMatchReviewRoundStates.mockReturnValue({
       roundStates: {
         1: seededRoundState,
         2: seededSecondRoundState,
@@ -420,18 +420,18 @@ describe("MatchReplayPage", () => {
       viewerTeamId: undefined,
     });
 
-    render(<MatchReplayPage />);
+    render(<MatchReviewPage />);
 
     await waitFor(() => {
       expect(applyRemoteState).toHaveBeenCalledTimes(1);
-      expect(mockToolsSidebarProps?.replayControls?.selectedRoundNumber).toBe(
+      expect(mockToolsSidebarProps?.reviewControls?.selectedRoundNumber).toBe(
         1,
       );
       expect(
-        mockToolsSidebarProps?.replayControls?.currentPlayerBestRoundNumber,
+        mockToolsSidebarProps?.reviewControls?.currentPlayerBestRoundNumber,
       ).toBeUndefined();
       expect(
-        mockToolsSidebarProps?.replayControls?.currentPlayerPuuid,
+        mockToolsSidebarProps?.reviewControls?.currentPlayerPuuid,
       ).toBeUndefined();
     });
   });
@@ -448,7 +448,7 @@ describe("MatchReplayPage", () => {
       isPending: false,
     } as unknown as ReturnType<typeof useCreateLobby>);
 
-    render(<MatchReplayPage />);
+    render(<MatchReviewPage />);
 
     await waitFor(() => {
       expect(mockToolsSidebarProps?.saveAction?.label).toBe(
@@ -482,7 +482,7 @@ describe("MatchReplayPage", () => {
         abilitiesSettings: undefined,
       },
       pendingToast: {
-        type: "replay-copy",
+        type: "review-copy",
         roundNumber: 1,
         matchId: "match-1",
       },

@@ -47,7 +47,7 @@ import { Label } from "@/components/ui/label";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface ReplayControls {
+interface MatchReviewControls {
   mapName: string;
   rounds: MatchRound[];
   selectedRoundNumber: number;
@@ -60,21 +60,26 @@ interface ReplayControls {
   onSelectEvent: (eventIndex: number) => void;
 }
 
+type ToolsSidebarVariant = "lobby" | "match-review" | "replay";
+
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
   mapPosition: Vector2d;
   stageRef?: RefObject<MapStageHandle | null>;
-  replayControls?: ReplayControls;
+  reviewControls?: MatchReviewControls;
   saveAction?: ToolsSectionAction;
+  variant?: ToolsSidebarVariant;
 }
 
 export const ToolsSidebar = ({
   sidebarOpen,
   mapPosition,
   stageRef,
-  replayControls,
+  reviewControls,
   saveAction,
+  variant = "lobby",
 }: ToolsSidebarProps) => {
+  const isReplayVariant = variant === "replay";
   const {
     selectedMap,
     setSelectedMap,
@@ -104,7 +109,7 @@ export const ToolsSidebar = ({
     useCollaborativeCanvas();
   const [mapSettingsOpen, setMapSettingsOpen] = useState(false);
   const [showAllMaps, setShowAllMaps] = useState(false);
-  const [isReplaySheetOpen, setIsReplaySheetOpen] = useState(false);
+  const [isReviewSheetOpen, setIsReviewSheetOpen] = useState(false);
 
   useEffect(() => {
     notifyPhaseChangedCallback.current = notifyPhaseChanged;
@@ -128,33 +133,33 @@ export const ToolsSidebar = ({
     null,
   );
 
-  const selectedReplayRoundIndex = replayControls
-    ? replayControls.rounds.findIndex(
-        (round) => round.roundNumber === replayControls.selectedRoundNumber,
+  const selectedReviewRoundIndex = reviewControls
+    ? reviewControls.rounds.findIndex(
+        (round) => round.roundNumber === reviewControls.selectedRoundNumber,
       )
     : -1;
-  const selectedReplayRound =
-    replayControls && selectedReplayRoundIndex >= 0
-      ? replayControls.rounds[selectedReplayRoundIndex]
+  const selectedReviewRound =
+    reviewControls && selectedReviewRoundIndex >= 0
+      ? reviewControls.rounds[selectedReviewRoundIndex]
       : null;
-  const hasPreviousReplayRound = selectedReplayRoundIndex > 0;
-  const hasNextReplayRound =
-    replayControls != null &&
-    selectedReplayRoundIndex >= 0 &&
-    selectedReplayRoundIndex < replayControls.rounds.length - 1;
+  const hasPreviousReviewRound = selectedReviewRoundIndex > 0;
+  const hasNextReviewRound =
+    reviewControls != null &&
+    selectedReviewRoundIndex >= 0 &&
+    selectedReviewRoundIndex < reviewControls.rounds.length - 1;
 
-  const handleReplayRoundStep = (direction: -1 | 1) => {
-    if (!replayControls || selectedReplayRoundIndex < 0) {
+  const handleReviewRoundStep = (direction: -1 | 1) => {
+    if (!reviewControls || selectedReviewRoundIndex < 0) {
       return;
     }
 
     const nextRound =
-      replayControls.rounds[selectedReplayRoundIndex + direction];
+      reviewControls.rounds[selectedReviewRoundIndex + direction];
     if (!nextRound) {
       return;
     }
 
-    replayControls.onSelectRound(nextRound.roundNumber);
+    reviewControls.onSelectRound(nextRound.roundNumber);
   };
 
   const handlePhaseSwitch = async (newIndex: number) => {
@@ -248,32 +253,48 @@ export const ToolsSidebar = ({
                 </PopoverContent>
               </Popover>
             </div>
-            <MapSelect
-              mapOptions={showAllMaps ? MAP_OPTIONS : DEFAULT_MAP_OPTIONS}
-              selectedMap={selectedMap}
-              setSelectedMap={setSelectedMap}
-              onMapSelect={handleMapSelect}
-              allyColor={agentsSettings.allyColor}
-              enemyColor={agentsSettings.enemyColor}
-              mapSide={mapSide}
-              setMapSide={setMapSide}
-              onMapRotate={handleRotationToggle}
-              disabled={isLoadingLobby || isErrorLobby}
-            />
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="show-all-maps"
-                checked={showAllMaps}
-                onCheckedChange={(checked) => setShowAllMaps(checked === true)}
-                disabled={isLoadingLobby || isErrorLobby}
+            {isReplayVariant ? (
+              <MapSelect
+                readOnly
+                mapOptions={[selectedMap]}
+                selectedMap={selectedMap}
+                setSelectedMap={setSelectedMap}
+                allyColor={agentsSettings.allyColor}
+                enemyColor={agentsSettings.enemyColor}
+                mapSide={mapSide}
+                setMapSide={setMapSide}
+                onMapRotate={handleRotationToggle}
               />
-              <Label
-                htmlFor="show-all-maps"
-                className="text-xs text-muted-foreground cursor-pointer"
-              >
-                All maps
-              </Label>
-            </div>
+            ) : (
+              <>
+                <MapSelect
+                  mapOptions={showAllMaps ? MAP_OPTIONS : DEFAULT_MAP_OPTIONS}
+                  selectedMap={selectedMap}
+                  setSelectedMap={setSelectedMap}
+                  onMapSelect={handleMapSelect}
+                  allyColor={agentsSettings.allyColor}
+                  enemyColor={agentsSettings.enemyColor}
+                  mapSide={mapSide}
+                  setMapSide={setMapSide}
+                  onMapRotate={handleRotationToggle}
+                  disabled={isLoadingLobby || isErrorLobby}
+                />
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="show-all-maps"
+                    checked={showAllMaps}
+                    onCheckedChange={(checked) => setShowAllMaps(checked === true)}
+                    disabled={isLoadingLobby || isErrorLobby}
+                  />
+                  <Label
+                    htmlFor="show-all-maps"
+                    className="text-xs text-muted-foreground cursor-pointer"
+                  >
+                    All maps
+                  </Label>
+                </div>
+              </>
+            )}
           </div>
         </SidebarHeader>
 
@@ -286,7 +307,7 @@ export const ToolsSidebar = ({
                   : ""
               }
             >
-              {replayControls && selectedReplayRound && (
+              {!isReplayVariant && reviewControls && selectedReviewRound && (
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-base font-semibold">Rounds</span>
@@ -298,16 +319,16 @@ export const ToolsSidebar = ({
                       variant="outline"
                       size="icon"
                       className="h-12 w-12 border-slate-700 bg-slate-950 text-white hover:bg-slate-900"
-                      onClick={() => handleReplayRoundStep(-1)}
-                      disabled={!hasPreviousReplayRound}
+                      onClick={() => handleReviewRoundStep(-1)}
+                      disabled={!hasPreviousReviewRound}
                       aria-label="Select previous round"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
 
                     <Sheet
-                      open={isReplaySheetOpen}
-                      onOpenChange={setIsReplaySheetOpen}
+                      open={isReviewSheetOpen}
+                      onOpenChange={setIsReviewSheetOpen}
                     >
                       <SheetTrigger asChild>
                         <Button
@@ -315,7 +336,7 @@ export const ToolsSidebar = ({
                           variant="outline"
                           className="h-12 justify-center border-slate-700 bg-slate-950 px-4 text-center text-base font-semibold text-white hover:bg-slate-900"
                         >
-                          Round {replayControls.selectedRoundNumber}
+                          Round {reviewControls.selectedRoundNumber}
                         </Button>
                       </SheetTrigger>
 
@@ -326,45 +347,45 @@ export const ToolsSidebar = ({
                         <SheetHeader className="border-b border-slate-800 px-5 py-4 text-left">
                           <div className="pr-8">
                             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/55">
-                              Match Replay
+                              Match Review
                             </p>
                             <SheetTitle className="mt-1 text-lg text-white">
-                              {replayControls.mapName} • Round{" "}
-                              {replayControls.selectedRoundNumber}
+                              {reviewControls.mapName} • Round{" "}
+                              {reviewControls.selectedRoundNumber}
                             </SheetTitle>
                             <SheetDescription className="text-white/60">
-                              Browse rounds and replay events.
+                              Browse rounds and review events.
                             </SheetDescription>
                           </div>
                         </SheetHeader>
 
                         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-5 py-4">
                           <MatchRoundSelector
-                            rounds={replayControls.rounds}
+                            rounds={reviewControls.rounds}
                             selectedRoundNumber={
-                              replayControls.selectedRoundNumber
+                              reviewControls.selectedRoundNumber
                             }
                             currentPlayerTeamId={
-                              replayControls.currentPlayerTeamId
+                              reviewControls.currentPlayerTeamId
                             }
                             currentPlayerBestRoundNumber={
-                              replayControls.currentPlayerBestRoundNumber
+                              reviewControls.currentPlayerBestRoundNumber
                             }
-                            onSelectRound={replayControls.onSelectRound}
+                            onSelectRound={reviewControls.onSelectRound}
                           />
 
                           <MatchEventLog
                             containerClassName="h-auto min-h-0 flex-1 md:h-auto"
                             scrollAreaClassName="h-full md:h-full"
-                            events={selectedReplayRound.eventLog}
-                            players={replayControls.players}
+                            events={selectedReviewRound.eventLog}
+                            players={reviewControls.players}
                             currentPlayerPuuid={
-                              replayControls.currentPlayerPuuid
+                              reviewControls.currentPlayerPuuid
                             }
                             selectedEventIndex={
-                              replayControls.selectedEventIndex
+                              reviewControls.selectedEventIndex
                             }
-                            onSelectEvent={replayControls.onSelectEvent}
+                            onSelectEvent={reviewControls.onSelectEvent}
                           />
                         </div>
                       </SheetContent>
@@ -375,8 +396,8 @@ export const ToolsSidebar = ({
                       variant="outline"
                       size="icon"
                       className="h-12 w-12 border-slate-700 bg-slate-950 text-white hover:bg-slate-900"
-                      onClick={() => handleReplayRoundStep(1)}
-                      disabled={!hasNextReplayRound}
+                      onClick={() => handleReviewRoundStep(1)}
+                      disabled={!hasNextReviewRound}
                       aria-label="Select next round"
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -385,6 +406,7 @@ export const ToolsSidebar = ({
                 </div>
               )}
 
+              {!isReplayVariant && (
               <div className="space-y-2 mt-4" data-tour="phases">
                 <div className="flex items-center justify-between">
                   <span className="text-base font-semibold">Phases</span>
@@ -467,6 +489,7 @@ export const ToolsSidebar = ({
                   })}
                 </ToggleGroup>
               </div>
+              )}
               <ToolsSection
                 mapPosition={mapPosition}
                 stageRef={stageRef}
