@@ -88,6 +88,7 @@ export const ReplayPlayer = ({
     useReplayPlayback({
       durationMs: round?.durationMs ?? 0,
       resetKey: `${replayId}:${round?.roundNumber ?? 0}`,
+      startTimeMs: round?.buyEndTimeMs ?? 0,
     });
 
   const frame = useMemo(

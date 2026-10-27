@@ -310,9 +310,10 @@ describe("getReplayPlayerState", () => {
       armorId: "822bcab2-40a2-324e-c137-e09195ad7692",
     });
 
+    // Absence from a frame means "no positional sample", not "dead".
     expect(state).toMatchObject({
-      hp: 0,
-      alive: false,
+      hp: 100,
+      alive: true,
       credits: 900,
       weaponId: "CLASSIC",
       armorId: "822bcab2-40a2-324e-c137-e09195ad7692",

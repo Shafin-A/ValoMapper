@@ -7,6 +7,7 @@ import type { MapSide } from "@/lib/types";
 import type { ReplayFrame, ReplayMatch } from "@/lib/replay/types";
 import {
   getReplayAgentId,
+  isReplayPointOnMap,
   toReplayCanvasPoint,
   toReplayCanvasRotation,
 } from "@/lib/replay/snapshot";
@@ -81,6 +82,11 @@ export const ReplayCanvasLayer = ({
           position: { x: framePlayer.x, y: framePlayer.y },
         });
         if (!point) {
+          return null;
+        }
+
+        // Off-map actors are hidden rather than drawn past the minimap bounds.
+        if (!isReplayPointOnMap({ point })) {
           return null;
         }
 

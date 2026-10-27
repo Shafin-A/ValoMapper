@@ -26,15 +26,23 @@ const isEditableTarget = (target: EventTarget | null) => {
 export const useReplayPlayback = ({
   durationMs,
   resetKey,
+  startTimeMs = 0,
 }: {
   durationMs: number;
   resetKey: string | number;
+  /**
+   * Where playback begins and where it resets to. The replay player passes the
+   * round's barrier-drop time so a round starts at the action, not at the buy
+   * phase; seeking is still allowed across the whole round.
+   */
+  startTimeMs?: number;
 }) => {
-  const [currentTimeMs, setCurrentTimeMs] = useState(0);
+  const start = clamp(startTimeMs, 0, durationMs);
+  const [currentTimeMs, setCurrentTimeMs] = useState(start);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState<ReplaySpeed>(1);
 
-  const timeRef = useRef(0);
+  const timeRef = useRef(start);
   const frameRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
 
@@ -60,14 +68,14 @@ export const useReplayPlayback = ({
 
   const togglePlay = useCallback(() => {
     if (timeRef.current >= durationMs) {
-      timeRef.current = 0;
-      setCurrentTimeMs(0);
+      timeRef.current = start;
+      setCurrentTimeMs(start);
       setIsPlaying(true);
       return;
     }
 
     setIsPlaying((previous) => !previous);
-  }, [durationMs]);
+  }, [durationMs, start]);
 
   const cycleSpeed = useCallback((direction: -1 | 1) => {
     setSpeed((previous) => {
@@ -82,10 +90,10 @@ export const useReplayPlayback = ({
   }, []);
 
   useEffect(() => {
-    timeRef.current = 0;
-    setCurrentTimeMs(0);
+    timeRef.current = start;
+    setCurrentTimeMs(start);
     setIsPlaying(false);
-  }, [resetKey]);
+  }, [resetKey, start]);
 
   useEffect(() => {
     if (!isPlaying) {

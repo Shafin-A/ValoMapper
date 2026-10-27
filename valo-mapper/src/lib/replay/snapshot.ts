@@ -5,7 +5,10 @@ import {
   VIRTUAL_HEIGHT,
   VIRTUAL_WIDTH,
 } from "@/lib/consts";
-import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
+import {
+  CANVAS_MAP_RENDER_SCALE,
+  transformRiotWorldToCanvasPoint,
+} from "@/lib/map-positioning";
 import { resolveMatchMapOption } from "@/lib/match-review";
 import type {
   AbilityCanvas,
@@ -64,6 +67,33 @@ export const getReplayMapPosition = () => ({
   x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
   y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
 });
+
+/** Extra canvas units an icon may overhang the map image before it is hidden. */
+export const REPLAY_MAP_ICON_MARGIN = 24;
+
+/**
+ * True when a canvas point lands on the rendered map image. Used to hide actors
+ * whose world position is outside the playable map (the Iso kill-contract arena
+ * and out-of-bounds spawns) rather than freezing or drawing them off-map.
+ */
+export const isReplayPointOnMap = ({
+  point,
+  mapPosition = getReplayMapPosition(),
+  margin = REPLAY_MAP_ICON_MARGIN,
+}: {
+  point: { x: number; y: number };
+  mapPosition?: { x: number; y: number };
+  margin?: number;
+}) => {
+  const centerX = mapPosition.x + MAP_SIZE / 2;
+  const centerY = mapPosition.y + MAP_SIZE / 2;
+  const halfExtent = (MAP_SIZE * CANVAS_MAP_RENDER_SCALE) / 2 + margin;
+
+  return (
+    Math.abs(point.x - centerX) <= halfExtent &&
+    Math.abs(point.y - centerY) <= halfExtent
+  );
+};
 
 export const getReplayAgentId = (playerIndex: number) =>
   `${REPLAY_PREFIX}agent-${playerIndex}`;
@@ -199,7 +229,7 @@ const buildReplayAgents = ({
       position: { x: framePlayer.x, y: framePlayer.y },
     });
 
-    if (!point) {
+    if (!point || !isReplayPointOnMap({ point })) {
       return [];
     }
 
@@ -238,7 +268,7 @@ const buildReplayVisionCones = ({
       position: { x: framePlayer.x, y: framePlayer.y },
     });
 
-    if (!point) {
+    if (!point || !isReplayPointOnMap({ point })) {
       return [];
     }
 

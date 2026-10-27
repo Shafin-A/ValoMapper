@@ -15,6 +15,14 @@ import type {
 
 export const REPLAY_FRAME_INTERVAL_MS = 500;
 
+/**
+ * Longest gap between two movement samples the player will interpolate across.
+ * A longer gap means the stream lost the player (death, off-map, reconnect), so
+ * the pose is shown at the sample and the player is hidden until the next one
+ * instead of sliding across the map.
+ */
+export const REPLAY_MAX_INTERPOLATION_GAP_MS = 500;
+
 const FALLBACK_WORLD_CENTER = { x: 7_000, y: 4_500 };
 const SPAWN_OFFSET = 700;
 
@@ -435,6 +443,13 @@ export const getReplayFrameAtTime = (
 
   const clampedTime = clamp(timeMs, 0, round.durationMs);
 
+  // Before the round's first frame no player has a sample yet. Returning the
+  // first frame here would draw everyone at their first pose, so the timeline is
+  // empty until movement starts.
+  if (clampedTime < frames[0].timeMs) {
+    return { timeMs: clampedTime, players: [], spike: null };
+  }
+
   let low = 0;
   let high = frames.length - 1;
 
@@ -457,27 +472,63 @@ export const getReplayFrameAtTime = (
 
   const span = next.timeMs - previous.timeMs;
   const progress = span > 0 ? (clampedTime - previous.timeMs) / span : 0;
+  const canInterpolate = span <= REPLAY_MAX_INTERPOLATION_GAP_MS;
+
+  // Union both frames: a sample can appear in one and not the other after a
+  // reconnect, a death or an off-map excursion.
+  const previousByPuuid = new Map(
+    previous.players.map((player) => [player.puuid, player]),
+  );
+  const nextByPuuid = new Map(
+    next.players.map((player) => [player.puuid, player]),
+  );
+
+  const order = previous.players.map((player) => player.puuid);
+  for (const player of next.players) {
+    if (!previousByPuuid.has(player.puuid)) {
+      order.push(player.puuid);
+    }
+  }
+
+  const players: ReplayFramePlayer[] = [];
+  for (const puuid of order) {
+    const priorPlayer = previousByPuuid.get(puuid);
+    const upcomingPlayer = nextByPuuid.get(puuid);
+
+    // First sample for this player: do not draw them before it.
+    if (!priorPlayer) {
+      continue;
+    }
+
+    // Last sample for this player, or a gap too long to trust: show the pose
+    // only at the sample itself, then hide until movement resumes.
+    if (!upcomingPlayer || !canInterpolate) {
+      if (clampedTime <= previous.timeMs) {
+        players.push(priorPlayer);
+      }
+      continue;
+    }
+
+    players.push({
+      ...priorPlayer,
+      x: lerp(priorPlayer.x, upcomingPlayer.x, progress),
+      y: lerp(priorPlayer.y, upcomingPlayer.y, progress),
+      viewRadians: lerpAngle(
+        priorPlayer.viewRadians,
+        upcomingPlayer.viewRadians,
+        progress,
+      ),
+    });
+  }
 
   return {
     timeMs: clampedTime,
-    players: previous.players.map((player) => {
-      const nextPlayer =
-        next.players.find((candidate) => candidate.puuid === player.puuid) ??
-        player;
-
-      return {
-        ...player,
-        x: lerp(player.x, nextPlayer.x, progress),
-        y: lerp(player.y, nextPlayer.y, progress),
-        viewRadians: lerpAngle(
-          player.viewRadians,
-          nextPlayer.viewRadians,
-          progress,
-        ),
-      };
-    }),
+    players,
     spike:
-      previous.spike && next.spike && previous.spike.state === next.spike.state
+      canInterpolate &&
+      previous.spike &&
+      next.spike &&
+      previous.spike.state === next.spike.state
         ? {
             x: lerp(previous.spike.x, next.spike.x, progress),
             y: lerp(previous.spike.y, next.spike.y, progress),
