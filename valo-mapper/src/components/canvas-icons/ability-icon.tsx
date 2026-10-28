@@ -343,6 +343,10 @@ const ABILITY_RENDERERS: Record<
   harbor_wall: renderCurvableLineAbility,
   harbor_ult: renderLineAbility,
 
+  // Hush
+  hush_suck: renderCircleAbility,
+  hush_ult: renderCircleAbility,
+
   // Iso
   iso_wall: renderLineAbility,
   iso_vuln: renderLineAbility,

@@ -313,6 +313,36 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       slot: "Ultimate",
     },
   ],
+  Hush: [
+    {
+      id: "flow",
+      src: "/agents/hush/flow.png",
+      name: "Flow",
+      action: "icon",
+      slot: "Grenade",
+    },
+    {
+      id: "flashbulb",
+      src: "/agents/hush/flashbulb.png",
+      name: "Flashbulb",
+      action: "icon",
+      slot: "Ability1",
+    },
+    {
+      id: "displacement",
+      src: "/agents/hush/displacement.png",
+      name: "Displacement",
+      action: "hush_suck",
+      slot: "Ability2",
+    },
+    {
+      id: "suspension",
+      src: "/agents/hush/suspension.png",
+      name: "Suspension",
+      action: "hush_ult",
+      slot: "Ultimate",
+    },
+  ],
   Iso: [
     {
       id: "contingency",

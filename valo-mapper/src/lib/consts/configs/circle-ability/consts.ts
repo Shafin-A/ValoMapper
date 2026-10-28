@@ -80,6 +80,14 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
     radius: 6,
     colors: { stroke: "#f2d6a3", fill: "#1e3c4c80" },
   },
+  hush_suck: {
+    radius: 5.75,
+    colors: { stroke: "#fa88fd", fill: "#e6afeb80" },
+  },
+  hush_ult: {
+    radius: 7,
+    colors: { stroke: "#fa88fd", fill: "#fa88fd80" },
+  },
   jett_smoke: {
     radius: 3.35,
     colors: { stroke: "#bbd3e6", fill: "#658ea780" },
