@@ -84,6 +84,11 @@ type stateScan struct {
 	CastsWithoutBuyEnd int
 
 	Warnings []string
+
+	// Actors and Outer are retained from scanState so the spike builder can
+	// classify owners without reading actors.parquet a second time.
+	Actors *stateActorView
+	Outer  map[uint32]uint32
 }
 
 // incomingWrite is one damage event against a player, kept in absolute time so
@@ -138,6 +143,12 @@ type fieldStateRows struct {
 	Inventory []stateWrite
 	Owners    map[uint32]uint32
 	Casts     map[castKey]*castElement
+
+	// Ownership history is kept in addition to the last-wins Owners map:
+	// armour only needs the final owner, while spike custody needs every write.
+	OwnerWrites      []stateWrite
+	InstigatorWrites []stateWrite
+	PlantedAtSites   []stateWrite
 }
 
 func newFieldStateRows() fieldStateRows {
@@ -152,10 +163,11 @@ func newFieldStateRows() fieldStateRows {
 // parses the handful of names the state builder cares about.
 func stateFieldCandidate(name string) bool {
 	switch name {
-	case "Money", "Owner", "CurrentEquippable", "NewCurrentEquippable":
+	case "Money", "Owner", "Instigator", "CurrentEquippable", "NewCurrentEquippable":
 		return true
 	}
-	return strings.Contains(name, ".LifeChangeEvents[") ||
+	return strings.HasSuffix(name, ".PlantedAtSite") ||
+		strings.Contains(name, ".LifeChangeEvents[") ||
 		strings.Contains(name, ".LifeChangeBySection[") ||
 		strings.Contains(name, "AbilityCastsThisRound[")
 }
@@ -219,7 +231,22 @@ func (s *fieldScan) collectStateField(row *fieldRow, name string) {
 		}
 	case name == "Owner":
 		if row.ValueI64 != nil && *row.ValueI64 != 0 {
+			s.State.OwnerWrites = append(s.State.OwnerWrites, stateWrite{
+				TimeMS: row.TimeMS, PacketID: row.PacketID, Actor: row.ActorNetGUID, Value: *row.ValueI64,
+			})
 			s.State.Owners[row.ActorNetGUID] = uint32(*row.ValueI64)
+		}
+	case name == "Instigator":
+		if row.ValueI64 != nil && *row.ValueI64 != 0 {
+			s.State.InstigatorWrites = append(s.State.InstigatorWrites, stateWrite{
+				TimeMS: row.TimeMS, PacketID: row.PacketID, Actor: row.ActorNetGUID, Value: *row.ValueI64,
+			})
+		}
+	case name == "PlantedAtSite" || strings.HasSuffix(name, ".PlantedAtSite"):
+		if row.ValueI64 != nil {
+			s.State.PlantedAtSites = append(s.State.PlantedAtSites, stateWrite{
+				TimeMS: row.TimeMS, PacketID: row.PacketID, Actor: row.ActorNetGUID, Value: *row.ValueI64,
+			})
 		}
 	}
 }
@@ -339,6 +366,8 @@ func scanState(exportDir string, index *playerIndex, raw *fieldStateRows) (*stat
 	if err != nil {
 		return nil, err
 	}
+	scan.Actors = actors
+	scan.Outer = outer
 
 	builders := make(map[string]*timelineBuilder, len(index.bySubject))
 	for subject := range index.bySubject {

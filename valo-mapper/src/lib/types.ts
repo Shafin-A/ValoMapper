@@ -500,6 +500,10 @@ export type RoundEventLogEntry =
       defuserPuuid: string;
       defuseLocation?: MatchWorldPosition;
       defusePlayerLocations?: MatchPlayerLocation[];
+    }
+  | {
+      eventType: "spike_exploded";
+      timeSinceRoundStartMillis: number;
     };
 
 export type RoundSummaryLite = {

@@ -245,7 +245,7 @@ func TestBuildTimelineFramesWarnsAboutMissingPlayers(t *testing.T) {
 	}
 	warnings := newWarnings()
 
-	frames, stats := buildTimelineFrames(players, puuidBySubject, windows, scan, nil, nil, warnings)
+	frames, stats := buildTimelineFrames(players, puuidBySubject, windows, scan, nil, nil, nil, warnings)
 	if len(frames) != 1 || len(frames[0]) != 0 {
 		t.Fatalf("frames = %+v", frames)
 	}

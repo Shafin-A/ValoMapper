@@ -343,8 +343,9 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 
 	logs := buildRoundLogs(windows, players, index, events, fields, warnings)
 	applyRoundStats(windows, players, index, puuidBySubject, state, &fields.State, logs, warnings)
+	spike := buildSpikeTimeline(fields, state, index, windows, events, warnings)
 	framesByRound, timeline := buildTimelineFrames(
-		players, puuidBySubject, windows, movement, state, logs, warnings,
+		players, puuidBySubject, windows, movement, state, logs, spike, warnings,
 	)
 
 	rounds := make([]Round, 0, len(windows))
@@ -454,6 +455,15 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		"casts_unknown_slot", state.CastsUnknownSlot,
 		"casts_unresolved", state.CastsUnresolved,
 		"casts_without_buy_end", state.CastsWithoutBuyEnd,
+		"spike_actors", spike.Actors,
+		"spike_owner_writes", spike.OwnerWrites,
+		"spike_loose_spans", spike.LooseSpans,
+		"spike_ties", spike.Ties,
+		"spike_unresolved", spike.Unresolved,
+		"spike_plants", spike.Plants,
+		"spike_site_warnings", spike.SiteWarnings,
+		"spike_missing_positions", spike.MissingSpots,
+		"spike_out_of_round", spike.OutOfRound,
 		"response_bytes", len(encoded),
 		"gzip_bytes", len(gz),
 		"content_blocks_lost", quality.ContentBlocksLost,

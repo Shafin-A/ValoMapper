@@ -254,6 +254,21 @@ func buildRoundLogs(
 		}
 	}
 
+	for _, explode := range events.Explodes {
+		windowIndex, ok := roundIndexAt(windows, explode.TimeMS)
+		if !ok {
+			continue
+		}
+		window := &windows[windowIndex]
+		event := Event{
+			EventType:                 "spike_exploded",
+			TimeSinceRoundStartMillis: roundRelative(explode.TimeMS, window),
+		}
+		if log := logs[window.RoundNumber]; log != nil {
+			log.Events = append(log.Events, event)
+		}
+	}
+
 	for _, log := range logs {
 		if len(log.Events) < 2 {
 			continue

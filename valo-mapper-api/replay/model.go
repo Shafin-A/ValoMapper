@@ -6,7 +6,7 @@ package replay
 // ParserVersion is part of the cache key, the X-Parser-Version response header
 // and the parse log. Bump the leading number whenever the normalised output can
 // change, even if VRFKit itself did not change.
-const ParserVersion = "4+vrfkit.0.3.0"
+const ParserVersion = "5+vrfkit.0.3.0"
 
 // Match mirrors ReplayMatch in the frontend. Field names and JSON tags are the
 // wire contract; do not rename them without a frontend change.
@@ -121,9 +121,11 @@ type FramePlayer struct {
 }
 
 type SpikeFrame struct {
-	X     float64 `json:"x"`
-	Y     float64 `json:"y"`
-	State string  `json:"state"`
+	X            float64 `json:"x"`
+	Y            float64 `json:"y"`
+	State        string  `json:"state"`
+	Site         string  `json:"site,omitempty"`
+	CarrierPuuid string  `json:"carrierPuuid,omitempty"`
 }
 
 // Envelope is the POST/GET /api/replays response body.

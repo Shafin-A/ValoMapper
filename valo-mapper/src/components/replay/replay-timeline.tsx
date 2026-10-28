@@ -18,6 +18,10 @@ const getMarkerClassName = (
     return "bg-cyan-300";
   }
 
+  if (event.eventType === "spike_exploded") {
+    return "bg-rose-400";
+  }
+
   const killer = players.find((player) => player.puuid === event.killerPuuid);
   return killer?.teamId === "Blue" ? "bg-[#42EEC7]" : "bg-[#FF4655]";
 };
@@ -34,6 +38,10 @@ const getMarkerLabel = (
 
   if (event.eventType === "spike_defused") {
     return `${time} — Spike defused`;
+  }
+
+  if (event.eventType === "spike_exploded") {
+    return `${time} — Spike detonated`;
   }
 
   const killer = players.find((player) => player.puuid === event.killerPuuid);

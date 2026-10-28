@@ -45,7 +45,9 @@ const RoundEventRow = ({
       ? event.killerPuuid
       : event.eventType === "spike_planted"
         ? event.planterPuuid
-        : event.defuserPuuid;
+        : event.eventType === "spike_defused"
+          ? event.defuserPuuid
+          : "";
   const isActorCurrentPlayer = actorPuuid === currentPlayerPuuid;
   const isVictimCurrentPlayer =
     event.eventType === "kill" && event.victimPuuid === currentPlayerPuuid;
@@ -161,13 +163,23 @@ const RoundEventRow = ({
       <div className="relative z-10 pl-2 pr-0">
         <div className="grid grid-cols-[32px_50px_1fr_auto] items-stretch">
           <div className={`relative h-8 overflow-hidden ${iconShade}`}>
-            <Image
-              src={getPlayerAgentIconSrc(players, actorPuuid)}
-              alt="Player"
-              fill
-              sizes="32px"
-              className="object-fill"
-            />
+            {event.eventType === "spike_exploded" ? (
+              <Image
+                src="/tools/spike.webp"
+                alt="Spike"
+                fill
+                sizes="32px"
+                className={MATCH_SPIKE_IMAGE_CLASS_NAME}
+              />
+            ) : (
+              <Image
+                src={getPlayerAgentIconSrc(players, actorPuuid)}
+                alt="Player"
+                fill
+                sizes="32px"
+                className="object-fill"
+              />
+            )}
           </div>
 
           <div className={`flex items-center justify-center ${contentShade}`}>
@@ -179,7 +191,8 @@ const RoundEventRow = ({
           <div className={`min-w-0 ${contentShade}`}>
             <div
               className={
-                event.eventType === "spike_planted"
+                event.eventType === "spike_planted" ||
+                event.eventType === "spike_exploded"
                   ? MATCH_SPIKE_IMAGE_WRAPPER_CLASS_NAME
                   : "relative h-8 w-full px-2"
               }
@@ -191,6 +204,14 @@ const RoundEventRow = ({
                   fill
                   sizes="32px"
                   className={MATCH_SPIKE_IMAGE_CLASS_NAME}
+                />
+              ) : event.eventType === "spike_exploded" ? (
+                <Image
+                  src="/matchOutcomes/explosionwin1.png"
+                  alt="Detonation"
+                  fill
+                  sizes="32px"
+                  className="object-contain object-left"
                 />
               ) : (
                 <Image
@@ -205,8 +226,17 @@ const RoundEventRow = ({
           </div>
 
           <div className={`flex items-center pl-2 pr-0 ${contentShade}`}>
-            <span className="pr-1 text-sm tracking-[0.04em] text-white/90">
-              {event.eventType === "spike_planted" ? "Planted" : "Defused"}
+            <span
+              className={cn(
+                "pr-1 text-sm tracking-[0.04em] text-white/90",
+                event.eventType === "spike_exploded" && "text-rose-300",
+              )}
+            >
+              {event.eventType === "spike_planted"
+                ? "Planted"
+                : event.eventType === "spike_exploded"
+                  ? "Detonated"
+                  : "Defused"}
             </span>
           </div>
         </div>

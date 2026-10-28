@@ -298,6 +298,7 @@ func buildTimelineFrames(
 	movement *movementScan,
 	state *stateScan,
 	logs map[int]*roundLog,
+	spike *spikeTimeline,
 	warnings *warningList,
 ) ([][]Frame, timelineStats) {
 	stats := timelineStats{}
@@ -343,6 +344,12 @@ func buildTimelineFrames(
 		}
 
 		frames := assembleFrames(players, perPlayer)
+		poseAt := func(subject string, timeMS uint32) (Position, bool) {
+			return spikeCarrierPose(movement.samplesFor(roundIndex, subject), timeMS)
+		}
+		for i := range frames {
+			frames[i].Spike = spike.frameAt(roundIndex, uint32(frames[i].TimeMS), poseAt, puuidBySubject)
+		}
 		stats.Frames += len(frames)
 		roundFrames[roundIndex] = frames
 	}
@@ -508,10 +515,29 @@ func assembleFrames(players []Player, timelines map[string][]timelineSample) []F
 		frames = append(frames, Frame{
 			TimeMS:  int(timeMS),
 			Players: byTime[timeMS],
-			Spike:   nil,
 		})
 	}
 	return frames
+}
+
+// spikeCarrierPose finds the last decimated pose at or before timeMS. A pose
+// older than the client's interpolation limit is not used, so the spike is
+// hidden instead of snapping across a gap.
+func spikeCarrierPose(samples []timelineSample, timeMS uint32) (Position, bool) {
+	if len(samples) == 0 {
+		return Position{}, false
+	}
+	index := sort.Search(len(samples), func(i int) bool {
+		return samples[i].TimeMS > timeMS
+	}) - 1
+	if index < 0 {
+		return Position{}, false
+	}
+	sample := samples[index]
+	if timeMS-sample.TimeMS > spikePoseGapMS {
+		return Position{}, false
+	}
+	return Position{X: sample.X, Y: sample.Y}, true
 }
 
 func yawRadians(yaw float64) float64 {
