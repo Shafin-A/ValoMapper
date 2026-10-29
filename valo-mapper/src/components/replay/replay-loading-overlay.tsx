@@ -47,7 +47,7 @@ export const ReplayLoadingOverlay = ({
                   {progress?.label ?? "Reading replay…"}
                 </p>
                 <p className="text-xs text-white/45">
-                  Parsing is running locally for this demo.
+                  Larger replays can take a moment. Keep this tab open.
                 </p>
               </div>
             </div>
