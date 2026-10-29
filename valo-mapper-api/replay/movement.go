@@ -18,6 +18,12 @@ const (
 	teleportDistanceCM = 1500.0
 	teleportWindowMS   = 500
 
+	// roundStartPoseWindowMS bounds the poses at the top of a round that may
+	// still describe the previous life. The engine respawns players shortly
+	// after the round-start phase, so a pose in this window that is followed by
+	// a teleport is the stale pre-respawn sample, not movement.
+	roundStartPoseWindowMS = 500
+
 	// maxTimelineSamples is a warning threshold, not a rate switch. Exceeding
 	// it means the payload budget is at risk and the rate decision needs data.
 	maxTimelineSamples = 400_000
@@ -383,6 +389,7 @@ func buildTimelineFrames(
 			}
 
 			samples = insertKeyframes(samples, keyframes)
+			samples = normaliseRoundStartPoses(samples)
 			samples, cuts := insertTeleportCuts(samples)
 			stats.TeleportCuts += cuts
 			stats.Samples += len(samples)
@@ -498,6 +505,30 @@ func insertKeyframes(samples []timelineSample, keyframes []uint32) []timelineSam
 
 	out = append(out, samples[index:]...)
 	return out
+}
+
+// normaliseRoundStartPoses drops the pre-respawn poses that can arrive after
+// the round-start keyframe but before the engine moves the player to spawn.
+// The first pose after that jump is the player's real round-start pose, so it
+// is pinned to zero: otherwise the opening frame shows a handful of players at
+// their previous life's position while the rest have not spawned yet.
+func normaliseRoundStartPoses(samples []timelineSample) []timelineSample {
+	if len(samples) == 0 {
+		return samples
+	}
+
+	for i := 1; i < len(samples) && samples[i].TimeMS <= roundStartPoseWindowMS; i++ {
+		if distance2D(samples[i-1], samples[i]) > teleportDistanceCM {
+			samples = samples[i:]
+			break
+		}
+	}
+
+	if samples[0].TimeMS > 0 && samples[0].TimeMS <= roundStartPoseWindowMS {
+		samples[0].TimeMS = 0
+	}
+
+	return samples
 }
 
 // insertTeleportCuts duplicates the pre-jump pose 1 ms before a jump so client

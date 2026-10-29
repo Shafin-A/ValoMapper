@@ -3,6 +3,7 @@ package replay
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -167,6 +168,24 @@ func TestIntegrationRealReplay(t *testing.T) {
 		totalFrames += len(round.Frames)
 		if round.EventLog == nil {
 			t.Errorf("round %d has no event log", round.RoundNumber)
+		}
+
+		// The opening pose must never be the pre-respawn sample. A player that
+		// jumps more than the teleport threshold inside the start window means
+		// a stale pose survived normalisation.
+		firstPoses := make(map[string]FramePlayer)
+		for _, frame := range round.Frames {
+			if frame.TimeMS > roundStartPoseWindowMS {
+				break
+			}
+			for _, player := range frame.Players {
+				previous, ok := firstPoses[player.Puuid]
+				if ok && math.Hypot(player.X-previous.X, player.Y-previous.Y) > teleportDistanceCM {
+					t.Errorf("round %d player %s jumps from (%.0f,%.0f) to (%.0f,%.0f) at the round start",
+						round.RoundNumber, player.Puuid, previous.X, previous.Y, player.X, player.Y)
+				}
+				firstPoses[player.Puuid] = player
+			}
 		}
 	}
 	if deaths == 0 {

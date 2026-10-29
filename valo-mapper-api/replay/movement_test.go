@@ -320,6 +320,50 @@ func TestInsertKeyframesIgnoresLeadingEvents(t *testing.T) {
 	}
 }
 
+func TestNormaliseRoundStartPosesDropsPreRespawnPose(t *testing.T) {
+	samples := []timelineSample{
+		{TimeMS: 0, X: 6000, Y: -2000},
+		{TimeMS: 125, X: 600, Y: 500},
+		{TimeMS: 250, X: 620, Y: 510},
+	}
+
+	got := normaliseRoundStartPoses(samples)
+	if len(got) != 2 {
+		t.Fatalf("samples = %+v", got)
+	}
+	if got[0].TimeMS != 0 || got[0].X != 600 || got[0].Y != 500 {
+		t.Errorf("round start = %+v, want the post-respawn pose at zero", got[0])
+	}
+	if got[1].TimeMS != 250 {
+		t.Errorf("next sample = %+v", got[1])
+	}
+}
+
+func TestNormaliseRoundStartPosesKeepsALaterTeleport(t *testing.T) {
+	samples := []timelineSample{
+		{TimeMS: 0, X: 100, Y: 100},
+		{TimeMS: 125, X: 100, Y: 100},
+		{TimeMS: 1000, X: 9000, Y: 9000},
+	}
+
+	got := normaliseRoundStartPoses(samples)
+	if len(got) != 3 || got[0].TimeMS != 0 || got[2].TimeMS != 1000 {
+		t.Fatalf("samples = %+v", got)
+	}
+}
+
+func TestNormaliseRoundStartPosesAnchorsTheFirstSampleAtZero(t *testing.T) {
+	samples := []timelineSample{
+		{TimeMS: 125, X: 600, Y: 500},
+		{TimeMS: 250, X: 620, Y: 510},
+	}
+
+	got := normaliseRoundStartPoses(samples)
+	if got[0].TimeMS != 0 || got[0].X != 600 {
+		t.Errorf("round start = %+v", got[0])
+	}
+}
+
 func TestInsertTeleportCuts(t *testing.T) {
 	samples := []timelineSample{
 		{TimeMS: 0, X: 0, Y: 0},
