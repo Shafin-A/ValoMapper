@@ -19,6 +19,7 @@ type playerIndex struct {
 	bySubject      map[string]int
 	subjectByActor map[uint32]string
 	subjectByPawn  map[uint32]string
+	pawnsBySubject map[string][]uint32
 	ambiguousPawns map[uint32]struct{}
 	ambiguousActs  map[uint32]struct{}
 }
@@ -29,6 +30,7 @@ func newPlayerIndex(m *Manifest) *playerIndex {
 		bySubject:      make(map[string]int, len(m.Players)),
 		subjectByActor: make(map[uint32]string, len(m.Players)),
 		subjectByPawn:  make(map[uint32]string, len(m.Players)),
+		pawnsBySubject: make(map[string][]uint32, len(m.Players)),
 		ambiguousPawns: make(map[uint32]struct{}),
 		ambiguousActs:  make(map[uint32]struct{}),
 	}
@@ -73,6 +75,18 @@ func (p *playerIndex) addPawn(pawn uint32, subject string) {
 		return
 	}
 	p.subjectByPawn[pawn] = subject
+	for _, known := range p.pawnsBySubject[subject] {
+		if known == pawn {
+			return
+		}
+	}
+	p.pawnsBySubject[subject] = append(p.pawnsBySubject[subject], pawn)
+}
+
+// pawnsForSubject returns the manifest pawns in the order the manifest listed
+// them. That order picks the survivor when two intervals overlap.
+func (p *playerIndex) pawnsForSubject(subject string) []uint32 {
+	return p.pawnsBySubject[subject]
 }
 
 // subjectForPawn resolves a character NetGUID. The second result is false when

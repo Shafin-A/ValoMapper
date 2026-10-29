@@ -251,6 +251,39 @@ func TestScanStateDropsZeroLengthArmour(t *testing.T) {
 	}
 }
 
+func TestBuildPawnIntervalsUsesActorRows(t *testing.T) {
+	oldPawn := uint32(200)
+	newPawn := uint32(201)
+	unrelated := uint32(900)
+	index := reconnectIndex(oldPawn, newPawn)
+	view := &stateActorView{
+		OpenByActor: map[uint32]actorMoment{
+			oldPawn:   {TimeMS: 1000},
+			newPawn:   {TimeMS: 5000},
+			unrelated: {TimeMS: 2000},
+		},
+		CloseByActor: map[uint32]actorMoment{
+			oldPawn:   {TimeMS: 4000},
+			unrelated: {TimeMS: 3000},
+		},
+		PawnIntervals: make(map[uint32]pawnInterval),
+	}
+
+	buildPawnIntervals(view, index)
+
+	oldInterval := view.PawnIntervals[oldPawn]
+	if !oldInterval.HasOpen || oldInterval.OpenMS != 1000 || !oldInterval.HasClose || oldInterval.CloseMS != 4000 {
+		t.Fatalf("old pawn interval = %+v", oldInterval)
+	}
+	newInterval := view.PawnIntervals[newPawn]
+	if !newInterval.HasOpen || newInterval.OpenMS != 5000 || newInterval.HasClose {
+		t.Fatalf("new pawn interval = %+v", newInterval)
+	}
+	if _, exists := view.PawnIntervals[unrelated]; exists {
+		t.Fatal("a non-pawn actor became a pawn interval")
+	}
+}
+
 func TestTimelineBuilderClosesBeforeOpeningAtTheSameTime(t *testing.T) {
 	builder := &timelineBuilder{}
 	builder.add(stateEvent{TimeMS: 100, Kind: eventArmourOpen, ArmorItem: 1,

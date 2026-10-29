@@ -58,7 +58,7 @@ func TestScanMovementKeepsLastRowPerBin(t *testing.T) {
 		CharacterNetGUID: &pawn,
 	}}})
 
-	scan, err := scanMovement(dir, windows, index, 8)
+	scan, err := scanMovement(dir, windows, index, 8, nil)
 	if err != nil {
 		t.Fatalf("scanMovement: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestScanMovementDropsUnmatchedAndNonFiniteRows(t *testing.T) {
 		CharacterNetGUID: &pawn,
 	}}})
 
-	scan, err := scanMovement(dir, windows, index, 8)
+	scan, err := scanMovement(dir, windows, index, 8, nil)
 	if err != nil {
 		t.Fatalf("scanMovement: %v", err)
 	}
@@ -99,6 +99,187 @@ func TestScanMovementDropsUnmatchedAndNonFiniteRows(t *testing.T) {
 	}
 	if samples := scan.samplesFor(0, testSubject); len(samples) != 1 {
 		t.Errorf("samples = %+v", samples)
+	}
+}
+
+func TestActivePawnUsesTimeBounds(t *testing.T) {
+	oldPawn := uint32(200)
+	newPawn := uint32(201)
+	index := reconnectIndex(oldPawn, newPawn)
+	view := &stateActorView{PawnIntervals: map[uint32]pawnInterval{
+		oldPawn: {OpenMS: 1000, HasOpen: true, CloseMS: 60000, HasClose: true},
+		newPawn: {OpenMS: 90000, HasOpen: true},
+	}}
+
+	tests := []struct {
+		name      string
+		timeMS    uint32
+		want      uint32
+		ok        bool
+		ambiguous bool
+	}{
+		{name: "before open", timeMS: 999},
+		{name: "old pawn", timeMS: 1000, want: oldPawn, ok: true},
+		{name: "old pawn before close", timeMS: 59999, want: oldPawn, ok: true},
+		{name: "gap after death", timeMS: 60000},
+		{name: "before reconnect", timeMS: 89999},
+		{name: "reconnected pawn", timeMS: 90000, want: newPawn, ok: true},
+		{name: "overtime", timeMS: 300000, want: newPawn, ok: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			pawn, ok, ambiguous := view.activePawn(index, testSubject, test.timeMS)
+			if pawn != test.want || ok != test.ok || ambiguous != test.ambiguous {
+				t.Fatalf("activePawn(%d) = %d/%v/%v, want %d/%v/%v",
+					test.timeMS, pawn, ok, ambiguous, test.want, test.ok, test.ambiguous)
+			}
+		})
+	}
+
+	view.PawnIntervals[newPawn] = pawnInterval{OpenMS: 50000, HasOpen: true}
+	pawn, ok, ambiguous := view.activePawn(index, testSubject, 55000)
+	if pawn != oldPawn || !ok || !ambiguous {
+		t.Fatalf("overlap = %d/%v/%v, want first pawn and ambiguous", pawn, ok, ambiguous)
+	}
+}
+
+func TestScanMovementReconnectKeepsActivePawn(t *testing.T) {
+	dir := t.TempDir()
+	oldPawn := uint32(200)
+	newPawn := uint32(201)
+	index := reconnectIndex(oldPawn, newPawn)
+	view := &stateActorView{PawnIntervals: map[uint32]pawnInterval{
+		oldPawn: {OpenMS: 1000, HasOpen: true, CloseMS: 2000, HasClose: true},
+		newPawn: {OpenMS: 5000, HasOpen: true},
+	}}
+	writeMovementRows(t, dir, []movementRow{
+		{TimeMS: 1500, CharacterNetGUID: oldPawn, PosX: 10, PosY: 20},
+		{TimeMS: 1600, CharacterNetGUID: oldPawn, PosX: 11, PosY: 21},
+		{TimeMS: 2100, CharacterNetGUID: oldPawn, PosX: 99, PosY: 99},
+		{TimeMS: 3000, CharacterNetGUID: newPawn, PosX: 98, PosY: 98},
+		{TimeMS: 5100, CharacterNetGUID: newPawn, PosX: 30, PosY: 40},
+	})
+
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 9000}}
+	scan, err := scanMovement(dir, windows, index, 8, view)
+	if err != nil {
+		t.Fatalf("scanMovement: %v", err)
+	}
+
+	samples := scan.samplesFor(0, testSubject)
+	if len(samples) != 2 {
+		t.Fatalf("samples = %+v", samples)
+	}
+	if samples[0].TimeMS != 500 || samples[0].X != 11 || samples[0].Y != 21 {
+		t.Errorf("old pawn bin = %+v", samples[0])
+	}
+	if samples[1].TimeMS != 4000 || samples[1].X != 30 || samples[1].Y != 40 {
+		t.Errorf("reconnected pawn bin = %+v", samples[1])
+	}
+	if scan.PawnInactiveRows != 2 {
+		t.Errorf("inactive rows = %d, want 2", scan.PawnInactiveRows)
+	}
+	if scan.PawnOverlaps != 0 {
+		t.Errorf("overlaps = %d, want 0", scan.PawnOverlaps)
+	}
+}
+
+func TestScanMovementOverlappingPawnsKeepFirstPawn(t *testing.T) {
+	dir := t.TempDir()
+	oldPawn := uint32(200)
+	newPawn := uint32(201)
+	index := reconnectIndex(oldPawn, newPawn)
+	view := &stateActorView{PawnIntervals: map[uint32]pawnInterval{
+		oldPawn: {OpenMS: 1000, HasOpen: true, CloseMS: 3000, HasClose: true},
+		newPawn: {OpenMS: 1500, HasOpen: true},
+	}}
+	writeMovementRows(t, dir, []movementRow{
+		// The newer pawn writes first; the first pawn in the manifest must
+		// still win the shared bin.
+		{TimeMS: 1600, CharacterNetGUID: newPawn, PosX: 20, PosY: 20},
+		{TimeMS: 1620, CharacterNetGUID: oldPawn, PosX: 10, PosY: 10},
+	})
+
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 5000}}
+	scan, err := scanMovement(dir, windows, index, 8, view)
+	if err != nil {
+		t.Fatalf("scanMovement: %v", err)
+	}
+
+	samples := scan.samplesFor(0, testSubject)
+	if len(samples) != 1 {
+		t.Fatalf("samples = %+v", samples)
+	}
+	if samples[0].X != 10 || samples[0].Y != 10 {
+		t.Errorf("overlapping bin = %+v, want the first pawn's pose", samples[0])
+	}
+	if scan.PawnOverlaps != 1 {
+		t.Errorf("overlaps = %d, want 1", scan.PawnOverlaps)
+	}
+	if scan.PawnInactiveRows != 0 {
+		t.Errorf("inactive rows = %d, want 0", scan.PawnInactiveRows)
+	}
+}
+
+func TestScanMovementReconnectStaysInsideItsRound(t *testing.T) {
+	dir := t.TempDir()
+	oldPawn := uint32(200)
+	newPawn := uint32(201)
+	index := reconnectIndex(oldPawn, newPawn)
+	view := &stateActorView{PawnIntervals: map[uint32]pawnInterval{
+		oldPawn: {OpenMS: 1000, HasOpen: true, CloseMS: 2000, HasClose: true},
+		newPawn: {OpenMS: 2000, HasOpen: true},
+	}}
+	writeMovementRows(t, dir, []movementRow{
+		{TimeMS: 1200, CharacterNetGUID: oldPawn, PosX: 10, PosY: 10},
+		{TimeMS: 2200, CharacterNetGUID: newPawn, PosX: 20, PosY: 20},
+	})
+
+	windows := []roundWindow{
+		{RoundNumber: 1, StartMS: 1000, EndMS: 2000},
+		{RoundNumber: 2, StartMS: 2000, EndMS: 3000},
+	}
+	scan, err := scanMovement(dir, windows, index, 8, view)
+	if err != nil {
+		t.Fatalf("scanMovement: %v", err)
+	}
+
+	first := scan.samplesFor(0, testSubject)
+	second := scan.samplesFor(1, testSubject)
+	if len(first) != 1 || first[0].X != 10 {
+		t.Fatalf("round 1 samples = %+v", first)
+	}
+	if len(second) != 1 || second[0].X != 20 {
+		t.Fatalf("round 2 samples = %+v", second)
+	}
+}
+
+func TestScanMovementSinglePawnPathUnchanged(t *testing.T) {
+	dir := t.TempDir()
+	pawn := uint32(200)
+	index := reconnectIndex(pawn)
+	view := &stateActorView{PawnIntervals: map[uint32]pawnInterval{
+		pawn: {OpenMS: 1000, HasOpen: true, CloseMS: 2000, HasClose: true},
+	}}
+	writeMovementRows(t, dir, []movementRow{
+		{TimeMS: 1500, CharacterNetGUID: pawn, PosX: 10, PosY: 10},
+		// A single pawn keeps the legacy path, including rows after close.
+		{TimeMS: 2500, CharacterNetGUID: pawn, PosX: 20, PosY: 20},
+	})
+
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 5000}}
+	scan, err := scanMovement(dir, windows, index, 8, view)
+	if err != nil {
+		t.Fatalf("scanMovement: %v", err)
+	}
+
+	samples := scan.samplesFor(0, testSubject)
+	if len(samples) != 2 || samples[1].X != 20 {
+		t.Fatalf("samples = %+v", samples)
+	}
+	if scan.PawnInactiveRows != 0 {
+		t.Errorf("inactive rows = %d, want 0", scan.PawnInactiveRows)
 	}
 }
 
@@ -255,6 +436,14 @@ func TestBuildTimelineFramesWarnsAboutMissingPlayers(t *testing.T) {
 	if len(warnings.all()) == 0 {
 		t.Error("expected a missing-movement warning")
 	}
+}
+
+func reconnectIndex(pawns ...uint32) *playerIndex {
+	return newPlayerIndex(&Manifest{Players: []ManifestPlayer{{
+		Subject:           testSubject,
+		CharacterNetGUID:  &pawns[0],
+		CharacterNetGUIDs: append([]uint32(nil), pawns...),
+	}}})
 }
 
 func writeMovementRows(t *testing.T, dir string, rows []movementRow) {

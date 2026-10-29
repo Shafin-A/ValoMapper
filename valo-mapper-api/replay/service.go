@@ -332,7 +332,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 			"The replay's round results could not be decoded.", nil)
 	}
 
-	movement, err := scanMovement(exportDir, windows, index, s.config.FrameHz)
+	movement, err := scanMovement(exportDir, windows, index, s.config.FrameHz, state.Actors)
 	if err != nil {
 		return nil, nil, NewError(CodeCorrupt,
 			"The replay's movement data could not be read.", err)
@@ -436,6 +436,8 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		"teleport_cuts", timeline.TeleportCuts,
 		"movement_rows", movement.Rows,
 		"unmatched_pawns", movement.UnmatchedRows,
+		"pawn_overlaps", movement.PawnOverlaps,
+		"pawn_inactive_rows", movement.PawnInactiveRows,
 		"missing_player_rounds", timeline.Missing,
 		"hp_writes", state.HPWrites,
 		"hp_unresolved_section", state.HPUnresolvedSection,

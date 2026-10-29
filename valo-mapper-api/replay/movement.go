@@ -55,6 +55,7 @@ type movementSample struct {
 	Y      float64
 	Z      float64
 	Yaw    float64
+	Pawn   uint32
 }
 
 // sampleKey identifies one player's bin inside one round. The subject is used
@@ -72,6 +73,11 @@ type movementScan struct {
 	DistinctCharacters int
 	MaxPositionRows    int64
 	MaxTimeRows        int64
+	// PawnOverlaps counts bins where two reconnect pawns were active together.
+	PawnOverlaps int
+	// PawnInactiveRows counts poses dropped because their pawn was outside its
+	// known open interval.
+	PawnInactiveRows int
 
 	BinMS uint32
 
@@ -108,11 +114,31 @@ type actorRow struct {
 // scanMovement reads movement.parquet once, bins every usable pose to the
 // configured frame rate and keeps the latest row per (round, subject, bin).
 // It also feeds the transform plausibility gate.
-func scanMovement(exportDir string, windows []roundWindow, index *playerIndex, frameHz int) (*movementScan, error) {
+func scanMovement(
+	exportDir string,
+	windows []roundWindow,
+	index *playerIndex,
+	frameHz int,
+	actors *stateActorView,
+) (*movementScan, error) {
 	scan := &movementScan{
 		BinMS:     binWidthMS(frameHz),
 		bins:      make(map[sampleKey]movementSample),
 		timelines: make([]map[string][]timelineSample, len(windows)),
+	}
+	overlapBins := make(map[sampleKey]struct{})
+	markOverlap := func(key sampleKey) {
+		if _, seen := overlapBins[key]; seen {
+			return
+		}
+		overlapBins[key] = struct{}{}
+		scan.PawnOverlaps++
+	}
+	reconnectSubjects := make(map[string]struct{})
+	for subject, pawns := range index.pawnsBySubject {
+		if len(pawns) > 1 {
+			reconnectSubjects[subject] = struct{}{}
+		}
 	}
 
 	seenCharacters := make(map[uint32]struct{})
@@ -186,8 +212,21 @@ func scanMovement(exportDir string, windows []roundWindow, index *playerIndex, f
 			window := &windows[roundIndex]
 			relative := row.TimeMS - window.StartMS
 			bin := relative / scan.BinMS
+			key := sampleKey{Round: uint16(roundIndex), Bin: bin, Subject: subject}
+			_, reconnect := reconnectSubjects[subject]
+			reconnect = reconnect && actors != nil
 
-			scan.bins[sampleKey{Round: uint16(roundIndex), Bin: bin, Subject: subject}] = movementSample{
+			if reconnect {
+				// A pawn that has already closed (or has not opened yet) is
+				// the old or next life; its late poses must not land in this
+				// life's bin.
+				if active, known := actors.pawnActiveAt(row.CharacterNetGUID, row.TimeMS); known && !active {
+					scan.PawnInactiveRows++
+					continue
+				}
+			}
+
+			sample := movementSample{
 				// The bin start is the frame timestamp, so every player in a
 				// bin shares one frame instead of creating a per-row union.
 				TimeMS: bin * scan.BinMS,
@@ -195,7 +234,24 @@ func scanMovement(exportDir string, windows []roundWindow, index *playerIndex, f
 				Y:      float64(row.PosY),
 				Z:      float64(row.PosZ),
 				Yaw:    float64(row.Yaw),
+				Pawn:   row.CharacterNetGUID,
 			}
+
+			if previous, exists := scan.bins[key]; exists && reconnect && previous.Pawn != sample.Pawn {
+				binTime := window.StartMS + bin*scan.BinMS
+				activePawn, hasActive, ambiguous := actors.activePawn(index, subject, binTime)
+				if hasActive && activePawn != sample.Pawn {
+					if ambiguous {
+						markOverlap(key)
+					}
+					continue
+				}
+				if ambiguous {
+					markOverlap(key)
+				}
+			}
+
+			scan.bins[key] = sample
 		}
 		return nil
 	})
@@ -356,6 +412,12 @@ func buildTimelineFrames(
 
 	if stats.Missing > 0 {
 		warnings.add("Some players had no movement data in a round.")
+	}
+	if movement != nil && movement.PawnOverlaps > 0 {
+		warnings.add("Some reconnect pawns were active together; the first pawn's pose was kept.")
+	}
+	if movement != nil && movement.PawnInactiveRows > 0 {
+		warnings.add("Some movement poses came from an inactive reconnect pawn and were dropped.")
 	}
 	if stats.Samples > maxTimelineSamples {
 		warnings.add("This replay exceeded the movement sample budget; the frame rate may need lowering.")

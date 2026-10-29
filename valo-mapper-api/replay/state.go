@@ -345,6 +345,25 @@ type actorMoment struct {
 	PacketID uint32
 }
 
+// pawnInterval is one manifest pawn's open interval. A missing open starts at
+// the beginning of the match; a missing close runs to the end.
+type pawnInterval struct {
+	OpenMS   uint32
+	HasOpen  bool
+	CloseMS  uint32
+	HasClose bool
+}
+
+func (i pawnInterval) activeAt(timeMS uint32) bool {
+	if i.HasOpen && timeMS < i.OpenMS {
+		return false
+	}
+	if i.HasClose && timeMS >= i.CloseMS {
+		return false
+	}
+	return true
+}
+
 type stateActorView struct {
 	ClassByActor map[uint32]string
 	OpenByActor  map[uint32]actorMoment
@@ -352,6 +371,43 @@ type stateActorView struct {
 	// SpawnByActor keeps the actor's open position. Pickup actors use it as the
 	// spike's ground position while the bomb is loose.
 	SpawnByActor map[uint32]Position
+	// PawnIntervals bounds every manifest pawn by its actor open and close
+	// rows, so a reconnect's old pawn cannot keep writing poses.
+	PawnIntervals map[uint32]pawnInterval
+}
+
+// activePawn returns the first manifest pawn active at timeMS. ambiguous is
+// true when a second pawn is active at the same instant; the caller keeps the
+// first pawn's sample.
+func (v *stateActorView) activePawn(index *playerIndex, subject string, timeMS uint32) (pawn uint32, ok bool, ambiguous bool) {
+	if v == nil || index == nil {
+		return 0, false, false
+	}
+	for _, candidate := range index.pawnsForSubject(subject) {
+		interval, known := v.PawnIntervals[candidate]
+		if !known || !interval.activeAt(timeMS) {
+			continue
+		}
+		if !ok {
+			pawn = candidate
+			ok = true
+			continue
+		}
+		ambiguous = true
+	}
+	return pawn, ok, ambiguous
+}
+
+// pawnActiveAt reports whether a pawn's interval is known and covers timeMS.
+func (v *stateActorView) pawnActiveAt(pawn uint32, timeMS uint32) (active bool, known bool) {
+	if v == nil {
+		return false, false
+	}
+	interval, known := v.PawnIntervals[pawn]
+	if !known {
+		return false, false
+	}
+	return interval.activeAt(timeMS), true
 }
 
 // scanState builds the state timelines. The 1.9 M-row fields file is not read
@@ -368,7 +424,7 @@ func scanState(exportDir string, index *playerIndex, raw *fieldStateRows) (*stat
 	if err != nil {
 		return nil, err
 	}
-	actors, err := readStateActors(exportDir)
+	actors, err := readStateActors(exportDir, index)
 	if err != nil {
 		return nil, err
 	}
@@ -679,12 +735,13 @@ func readNetGuids(exportDir string) (map[uint32]string, map[uint32]uint32, error
 	return paths, outer, nil
 }
 
-func readStateActors(exportDir string) (*stateActorView, error) {
+func readStateActors(exportDir string, index *playerIndex) (*stateActorView, error) {
 	view := &stateActorView{
-		ClassByActor: make(map[uint32]string),
-		OpenByActor:  make(map[uint32]actorMoment),
-		CloseByActor: make(map[uint32]actorMoment),
-		SpawnByActor: make(map[uint32]Position),
+		ClassByActor:  make(map[uint32]string),
+		OpenByActor:   make(map[uint32]actorMoment),
+		CloseByActor:  make(map[uint32]actorMoment),
+		SpawnByActor:  make(map[uint32]Position),
+		PawnIntervals: make(map[uint32]pawnInterval),
 	}
 	_, err := readParquetRows[stateActorRow](exportDir+"/actors.parquet", func(rows []stateActorRow) error {
 		for i := range rows {
@@ -715,7 +772,34 @@ func readStateActors(exportDir string) (*stateActorView, error) {
 	if err != nil {
 		return nil, err
 	}
+	buildPawnIntervals(view, index)
 	return view, nil
+}
+
+// buildPawnIntervals fills one interval per manifest pawn from the actor rows
+// already read. Pawns with neither an open nor a close row stay unbounded and
+// do not narrow the single-pawn path.
+func buildPawnIntervals(view *stateActorView, index *playerIndex) {
+	if view == nil || index == nil {
+		return
+	}
+	if view.PawnIntervals == nil {
+		view.PawnIntervals = make(map[uint32]pawnInterval)
+	}
+	for _, pawns := range index.pawnsBySubject {
+		for _, pawn := range pawns {
+			interval := pawnInterval{}
+			if open, ok := view.OpenByActor[pawn]; ok {
+				interval.OpenMS = open.TimeMS
+				interval.HasOpen = true
+			}
+			if closeMoment, ok := view.CloseByActor[pawn]; ok {
+				interval.CloseMS = closeMoment.TimeMS
+				interval.HasClose = true
+			}
+			view.PawnIntervals[pawn] = interval
+		}
+	}
 }
 
 // Event ordering at one timestamp. A replacement closes the old item before
