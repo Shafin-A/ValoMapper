@@ -157,6 +157,9 @@ const getWeaponKillstreamImageSrc = (damageItem: string) => {
   return `/weapons/${damageItem.trim().toUpperCase()}_killstream.png`;
 };
 
+const KILLSTREAM_UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const getAbilityKillIconSrc = (
   players: MatchPlayers,
   killerPuuid: string,
@@ -202,6 +205,19 @@ export const getKillEventImage = (
         wrapperClassName: "relative ml-1 h-8 w-full",
       };
     case "Ability": {
+      // Replays map known abilities to a curated killstream UUID; live match
+      // data still names the ability slot, so both shapes are supported.
+      if (
+        event.damageItem &&
+        KILLSTREAM_UUID_PATTERN.test(event.damageItem.trim())
+      ) {
+        return {
+          src: getWeaponKillstreamImageSrc(event.damageItem),
+          alt: "Ability",
+          className: "object-contain object-right scale-x-[-1]",
+        };
+      }
+
       const abilityIconSrc = getAbilityKillIconSrc(
         players,
         event.killerPuuid,

@@ -25,6 +25,10 @@ type fieldRow struct {
 	ValueF64      *float64 `parquet:"value_f64,optional"`
 	ValueBool     *bool    `parquet:"value_bool,optional"`
 	ValueStr      *string  `parquet:"value_str,optional"`
+	// RawBits keeps a replicated array's undecoded members. Only KillData rows
+	// are inspected; every other row leaves it nil.
+	BitCount int32  `parquet:"bit_count"`
+	RawBits  []byte `parquet:"raw_bits,optional"`
 }
 
 // movementRow is one decoded pose. Only the columns needed for round-start

@@ -102,6 +102,7 @@ func TestIntegrationRealReplay(t *testing.T) {
 	totalSamples := 0
 	deaths := 0
 	looseFrames := 0
+	killSources := make(map[string]int)
 	for _, round := range match.Rounds {
 		if len(round.Frames) == 0 {
 			t.Fatalf("round %d has no frames", round.RoundNumber)
@@ -169,6 +170,19 @@ func TestIntegrationRealReplay(t *testing.T) {
 		if round.EventLog == nil {
 			t.Errorf("round %d has no event log", round.RoundNumber)
 		}
+		for _, event := range round.EventLog {
+			if event.EventType != "kill" {
+				continue
+			}
+			killSources[event.DamageType]++
+			switch event.DamageType {
+			case damageTypeAbility, damageTypeMelee:
+				if event.DamageItem == "" {
+					t.Errorf("round %d kill at %d is %q but has no damageItem",
+						round.RoundNumber, event.TimeSinceRoundStartMillis, event.DamageType)
+				}
+			}
+		}
 
 		// The opening pose must never be the pre-respawn sample. A player that
 		// jumps more than the teleport threshold inside the start window means
@@ -208,6 +222,7 @@ func TestIntegrationRealReplay(t *testing.T) {
 	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d deaths=%d loose_frames=%d",
 		elapsed, len(match.Rounds), totalFrames, totalSamples, deaths, looseFrames)
 	t.Logf("json_bytes=%d gzip_bytes=%d teleport_cuts_logged=see parse log", len(encoded), len(gz))
+	t.Logf("kill_sources=%v", killSources)
 
 	if totalFrames < len(match.Rounds)*2 {
 		t.Errorf("frames = %d for %d rounds; a movement timeline should exceed one frame per round",

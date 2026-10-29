@@ -103,6 +103,51 @@ func scanEvents(exportDir string) (*eventScan, error) {
 	return scan, nil
 }
 
+// killDataMatchWindowMS bounds the lag between CharacterDeath and its
+// PlayerMatchStatsComponent.KillData snapshot. Observed lags are under 50 ms;
+// the wider window only forgives an export that batches writes.
+const killDataMatchWindowMS = 250
+
+// matchKillData finds the KillData snapshot for a death. The two streams name
+// players through different actor tables, so the comparison happens on the
+// resolved subjects. The closest snapshot in time wins.
+func matchKillData(
+	state *stateScan,
+	killerSubject string,
+	victimSubject string,
+	timeMS uint32,
+) (killDataSample, bool) {
+	if state == nil || victimSubject == "" {
+		return killDataSample{}, false
+	}
+
+	var best killDataSample
+	bestDelta := uint32(killDataMatchWindowMS) + 1
+	for _, sample := range state.Kills {
+		if sample.VictimSubject != victimSubject {
+			continue
+		}
+		if killerSubject != "" && sample.KillerSubject != killerSubject {
+			continue
+		}
+		delta := sample.TimeMS
+		if delta > timeMS {
+			delta -= timeMS
+		} else {
+			delta = timeMS - delta
+		}
+		if delta < bestDelta {
+			best = sample
+			bestDelta = delta
+		}
+	}
+
+	if bestDelta > killDataMatchWindowMS {
+		return killDataSample{}, false
+	}
+	return best, true
+}
+
 func normaliseEventGroup(group string) string {
 	trimmed := strings.TrimSpace(group)
 	if index := strings.LastIndex(trimmed, "::"); index >= 0 {
@@ -126,6 +171,7 @@ func buildRoundLogs(
 	index *playerIndex,
 	events *eventScan,
 	fields *fieldScan,
+	state *stateScan,
 	warnings *warningList,
 ) map[int]*roundLog {
 	logs := make(map[int]*roundLog, len(windows))
@@ -155,8 +201,10 @@ func buildRoundLogs(
 		victimPuuid := pseudonymousID(victimSubject)
 
 		killerPuuid := ""
+		killerSubject := ""
 		if kill.Killer != nil {
-			killerSubject, ok := index.subjectForCharacter(*kill.Killer)
+			var ok bool
+			killerSubject, ok = index.subjectForCharacter(*kill.Killer)
 			if !ok {
 				warnings.add("A kill's killer could not be identified; the kill was omitted.")
 				continue
@@ -169,6 +217,14 @@ func buildRoundLogs(
 			TimeSinceRoundStartMillis: roundRelative(kill.TimeMS, window),
 			KillerPuuid:               killerPuuid,
 			VictimPuuid:               victimPuuid,
+		}
+
+		if sample, ok := matchKillData(state, killerSubject, victimSubject, kill.TimeMS); ok {
+			event.DamageType = sample.DamageType
+			event.DamageItem = sample.DamageItem
+			if sample.DamageType == damageTypeWeapon && event.DamageItem == "" {
+				event.DamageItem = state.stateFor(killerSubject, kill.TimeMS, window.StartMS).WeaponID
+			}
 		}
 
 		log := logs[window.RoundNumber]

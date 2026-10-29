@@ -341,7 +341,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		return nil, nil, transformErr
 	}
 
-	logs := buildRoundLogs(windows, players, index, events, fields, warnings)
+	logs := buildRoundLogs(windows, players, index, events, fields, state, warnings)
 	applyRoundStats(windows, players, index, puuidBySubject, state, &fields.State, logs, warnings)
 	spike := buildSpikeTimeline(fields, state, index, windows, events, warnings)
 	framesByRound, timeline := buildTimelineFrames(
