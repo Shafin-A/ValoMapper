@@ -14,8 +14,35 @@ import { formatReplayTime } from "@/lib/replay/display";
 import type { ReplayRound } from "@/lib/replay/types";
 import { REPLAY_SPEEDS, type ReplaySpeed } from "@/hooks/use-replay-playback";
 import { Pause, Play } from "lucide-react";
+import { memo } from "react";
 import { ReplaySettingsMenu } from "./replay-settings-menu";
 import { ReplayTimeline } from "./replay-timeline";
+
+const ReplaySpeedSelect = memo(function ReplaySpeedSelect({
+  speed,
+  onSpeedChange,
+}: {
+  speed: ReplaySpeed;
+  onSpeedChange: (speed: ReplaySpeed) => void;
+}) {
+  return (
+    <Select
+      value={String(speed)}
+      onValueChange={(value) => onSpeedChange(Number(value) as ReplaySpeed)}
+    >
+      <SelectTrigger size="sm" className="h-8 w-[68px] shrink-0">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent align="end">
+        {REPLAY_SPEEDS.map((option) => (
+          <SelectItem key={option} value={String(option)}>
+            {option}×
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+});
 
 export const ReplayControlsBar = ({
   rounds,
@@ -93,7 +120,10 @@ export const ReplayControlsBar = ({
 
         <div className="w-20 shrink-0 text-[11px] font-semibold tabular-nums text-white/80">
           {formatReplayTime(currentTimeMs)}
-          <span className="text-white/35"> / {formatReplayTime(round.durationMs)}</span>
+          <span className="text-white/35">
+            {" "}
+            / {formatReplayTime(round.durationMs)}
+          </span>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -105,21 +135,7 @@ export const ReplayControlsBar = ({
           />
         </div>
 
-        <Select
-          value={String(speed)}
-          onValueChange={(value) => onSpeedChange(Number(value) as ReplaySpeed)}
-        >
-          <SelectTrigger size="sm" className="h-8 w-[68px] shrink-0">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent align="end">
-            {REPLAY_SPEEDS.map((option) => (
-              <SelectItem key={option} value={String(option)}>
-                {option}×
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ReplaySpeedSelect speed={speed} onSpeedChange={onSpeedChange} />
 
         <ReplaySettingsMenu
           hideDeadAgents={hideDeadAgents}
@@ -135,16 +151,22 @@ export const ReplayControlsBar = ({
 
       <div className="hidden items-center gap-3 px-2 pb-2 text-[10px] text-white/35 md:flex">
         <span>
-          <kbd className="rounded border border-sidebar-border px-1">Space</kbd> play /
-          pause
+          <kbd className="rounded border border-sidebar-border px-1">Space</kbd>{" "}
+          play / pause
         </span>
         <span>
           <kbd className="rounded border border-sidebar-border px-1">←</kbd>
-          <kbd className="ml-1 rounded border border-sidebar-border px-1">→</kbd> seek
+          <kbd className="ml-1 rounded border border-sidebar-border px-1">
+            →
+          </kbd>{" "}
+          seek
         </span>
         <span>
           <kbd className="rounded border border-sidebar-border px-1">,</kbd>
-          <kbd className="ml-1 rounded border border-sidebar-border px-1">.</kbd> speed
+          <kbd className="ml-1 rounded border border-sidebar-border px-1">
+            .
+          </kbd>{" "}
+          speed
         </span>
       </div>
     </div>
