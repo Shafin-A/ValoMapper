@@ -47,6 +47,7 @@ interface AbilityIconProps extends CanvasIconProps {
   iconOnly?: boolean;
   showOuterCircle?: boolean;
   showCenterIcon?: boolean;
+  showRotationHandle?: boolean;
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
   onInteractionEnd?: (data: InteractionData) => void;
 }

@@ -4,6 +4,10 @@ import { MAP_SIZE } from "@/lib/consts";
 import { CANVAS_MAP_RENDER_SCALE } from "@/lib/map-positioning";
 import { loadVisionMask } from "@/lib/vision-mask-loader";
 import { traceVisionCone, VisionMask } from "@/lib/vision-cone-visibility";
+import {
+  VISION_CONE_MAX_LENGTH,
+  VISION_CONE_MIN_LENGTH,
+} from "@/lib/vision-cone-utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import type { Vector2d } from "konva/lib/types";
@@ -298,8 +302,8 @@ export const CanvasArcIcon = ({
 
         const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        const minRadius = 10;
-        const maxRadius = 250;
+        const minRadius = VISION_CONE_MIN_LENGTH;
+        const maxRadius = VISION_CONE_MAX_LENGTH;
 
         rotationRef.current = angle;
         if (allowLengthAdjustment) {

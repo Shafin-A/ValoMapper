@@ -8,10 +8,12 @@ import { getReplayPlayerStateAtTime } from "@/lib/replay/frames";
 import type { ReplayFrame, ReplayMatch, ReplayRound } from "@/lib/replay/types";
 import {
   getReplayAgentId,
+  getReplayMapPosition,
   isReplayPointOnMap,
   toReplayCanvasPoint,
   toReplayCanvasRotation,
 } from "@/lib/replay/snapshot";
+import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
 import { Group, Image as KonvaImage } from "react-konva";
 import useImage from "use-image";
 
@@ -92,6 +94,9 @@ export const ReplayCanvasLayer = ({
         const alive =
           getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
             ?.alive ?? true;
+        if (!alive) {
+          return null;
+        }
 
         const point = toReplayCanvasPoint({
           mapId: match.mapId,
@@ -107,59 +112,84 @@ export const ReplayCanvasLayer = ({
           return null;
         }
 
-        const isAlly = player.teamId === "Blue";
         const agentId = getReplayAgentId(index);
-        const rotation = toReplayCanvasRotation({
-          mapId: match.mapId,
-          mapSide,
-          location: { x: framePlayer.x, y: framePlayer.y },
-          viewRadians: framePlayer.viewRadians,
-        });
 
         return (
-          <Group key={player.puuid}>
-            {alive && (
-              <AbilityIcon
-                id={`${agentId}-overlay-cone`}
-                action="vision_cone_103"
-                mapPosition={{ x: 0, y: 0 }}
-                isAlly={isAlly}
-                x={point.x}
-                y={point.y}
-                rotation={rotation}
-                src={getAgentImageSrc(player.characterName)}
-                width={abilitiesSettings.scale}
-                height={abilitiesSettings.scale}
-                borderOpacity={abilitiesSettings.borderOpacity}
-                strokeWidth={abilitiesSettings.borderWidth}
-                radius={abilitiesSettings.radius}
-                allyColor={abilitiesSettings.allyColor}
-                enemyColor={abilitiesSettings.enemyColor}
-                draggable={false}
-                isListening={false}
-                iconOnly={false}
-                showOuterCircle
-                showCenterIcon={false}
-              />
-            )}
-            <CanvasIcon
-              id={`${agentId}-overlay`}
-              isAlly={isAlly}
-              x={point.x}
-              y={point.y}
-              src={getAgentImageSrc(player.characterName)}
-              width={agentsSettings.scale}
-              height={agentsSettings.scale}
-              borderOpacity={agentsSettings.borderOpacity}
-              strokeWidth={agentsSettings.borderWidth}
-              radius={agentsSettings.radius}
-              allyColor={agentsSettings.allyColor}
-              enemyColor={agentsSettings.enemyColor}
-              draggable={false}
-              isListening={false}
-              isGray={!alive}
-            />
-          </Group>
+          <AbilityIcon
+            key={`${agentId}-overlay-cone`}
+            id={`${agentId}-overlay-cone`}
+            action="vision_cone_103"
+            mapPosition={getReplayMapPosition()}
+            isAlly={player.teamId === "Blue"}
+            x={point.x}
+            y={point.y}
+            rotation={toReplayCanvasRotation({
+              mapId: match.mapId,
+              mapSide,
+              location: { x: framePlayer.x, y: framePlayer.y },
+              viewRadians: framePlayer.viewRadians,
+            })}
+            src={getAgentImageSrc(player.characterName)}
+            width={abilitiesSettings.scale}
+            height={abilitiesSettings.scale}
+            borderOpacity={abilitiesSettings.borderOpacity}
+            strokeWidth={abilitiesSettings.borderWidth}
+            radius={abilitiesSettings.radius}
+            allyColor={abilitiesSettings.allyColor}
+            enemyColor={abilitiesSettings.enemyColor}
+            draggable={false}
+            isListening={false}
+            iconOnly={false}
+            showOuterCircle
+            showCenterIcon={false}
+            showRotationHandle={false}
+            currentLength={VISION_CONE_MAX_LENGTH}
+          />
+        );
+      })}
+
+      {match.players.map((player, index) => {
+        const framePlayer = frame.players.find(
+          (candidate) => candidate.puuid === player.puuid,
+        );
+        if (!framePlayer) {
+          return null;
+        }
+
+        const alive =
+          getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
+            ?.alive ?? true;
+
+        const point = toReplayCanvasPoint({
+          mapId: match.mapId,
+          mapSide,
+          position: { x: framePlayer.x, y: framePlayer.y },
+        });
+        if (!point || !isReplayPointOnMap({ point })) {
+          return null;
+        }
+
+        const agentId = getReplayAgentId(index);
+
+        return (
+          <CanvasIcon
+            key={`${agentId}-overlay`}
+            id={`${agentId}-overlay`}
+            isAlly={player.teamId === "Blue"}
+            x={point.x}
+            y={point.y}
+            src={getAgentImageSrc(player.characterName)}
+            width={agentsSettings.scale}
+            height={agentsSettings.scale}
+            borderOpacity={agentsSettings.borderOpacity}
+            strokeWidth={agentsSettings.borderWidth}
+            radius={agentsSettings.radius}
+            allyColor={agentsSettings.allyColor}
+            enemyColor={agentsSettings.enemyColor}
+            draggable={false}
+            isListening={false}
+            isGray={!alive}
+          />
         );
       })}
 

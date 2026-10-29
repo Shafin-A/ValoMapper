@@ -84,6 +84,9 @@ export const isVisionOcclusionAction = (action: AbilityAction) => {
   return isVisionConeAction(action) || action === "kj_turret";
 };
 
+export const VISION_CONE_MIN_LENGTH = 10;
+export const VISION_CONE_MAX_LENGTH = 250;
+
 const DEFAULT_ATTACHED_VISION_CONE_NAMES: Record<string, string> = {
   Spycam: "Vision Cone 103",
 };
