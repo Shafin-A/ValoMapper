@@ -14,6 +14,7 @@ import { formatReplayTime } from "@/lib/replay/display";
 import type { ReplayRound } from "@/lib/replay/types";
 import { REPLAY_SPEEDS, type ReplaySpeed } from "@/hooks/use-replay-playback";
 import { Pause, Play } from "lucide-react";
+import { ReplaySettingsMenu } from "./replay-settings-menu";
 import { ReplayTimeline } from "./replay-timeline";
 
 export const ReplayControlsBar = ({
@@ -32,6 +33,10 @@ export const ReplayControlsBar = ({
   onTogglePlay,
   onSeek,
   onSpeedChange,
+  hideDeadAgents,
+  onHideDeadAgentsChange,
+  showVisionCones,
+  onShowVisionConesChange,
 }: {
   rounds: ReplayRound[];
   selectedRoundNumber: number;
@@ -46,6 +51,10 @@ export const ReplayControlsBar = ({
   onTogglePlay: () => void;
   onSeek: (timeMs: number) => void;
   onSpeedChange: (speed: ReplaySpeed) => void;
+  hideDeadAgents: boolean;
+  onHideDeadAgentsChange: (hideDeadAgents: boolean) => void;
+  showVisionCones: boolean;
+  onShowVisionConesChange: (showVisionCones: boolean) => void;
 }) => {
   return (
     <div className="border-t border-sidebar-border bg-sidebar">
@@ -103,6 +112,13 @@ export const ReplayControlsBar = ({
             ))}
           </SelectContent>
         </Select>
+
+        <ReplaySettingsMenu
+          hideDeadAgents={hideDeadAgents}
+          onHideDeadAgentsChange={onHideDeadAgentsChange}
+          showVisionCones={showVisionCones}
+          onShowVisionConesChange={onShowVisionConesChange}
+        />
       </div>
 
       <div className="hidden items-center gap-3 px-2 pb-2 text-[10px] text-white/35 md:flex">

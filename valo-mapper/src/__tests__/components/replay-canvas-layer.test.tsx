@@ -26,7 +26,22 @@ jest.mock("@/components/canvas-icons", () => ({
       data-current-length={currentLength}
     />
   ),
-  CanvasIcon: () => <span data-testid="canvas-icon" />,
+  CanvasIcon: ({
+    isGray,
+    x,
+    y,
+  }: {
+    isGray?: boolean;
+    x?: number;
+    y?: number;
+  }) => (
+    <span
+      data-testid="canvas-icon"
+      data-gray={String(isGray)}
+      data-x={x}
+      data-y={y}
+    />
+  ),
 }));
 
 jest.mock("@/contexts/settings-context", () => ({
@@ -99,6 +114,119 @@ describe("ReplayCanvasLayer vision cones", () => {
       "data-current-length",
       String(VISION_CONE_MAX_LENGTH),
     );
+  });
+
+  it("keeps a dead player on the map when the current frame omits them", () => {
+    const playerMatch = {
+      ...match,
+      players: [
+        { puuid: "blue-1", teamId: "Blue", characterName: "Jett" },
+      ],
+    } as unknown as ReplayMatch;
+    const deathFrame: ReplayFrame = {
+      timeMs: 0,
+      spike: null,
+      players: [
+        {
+          puuid: "blue-1",
+          x: 1_000,
+          y: 1_000,
+          viewRadians: 0,
+          hp: 0,
+          credits: 0,
+          alive: false,
+        },
+      ],
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={playerMatch}
+        round={{ ...round, frames: [deathFrame] }}
+        frame={{ timeMs: 500, spike: null, players: [] }}
+        currentTimeMs={500}
+      />,
+    );
+
+    expect(screen.getByTestId("canvas-icon")).toHaveAttribute(
+      "data-gray",
+      "true",
+    );
+    expect(screen.queryByTestId("ability-icon")).not.toBeInTheDocument();
+  });
+
+  it("can hide vision cones while keeping agent icons", () => {
+    const playerMatch = {
+      ...match,
+      players: [
+        { puuid: "blue-1", teamId: "Blue", characterName: "Jett" },
+      ],
+    } as unknown as ReplayMatch;
+    const frame: ReplayFrame = {
+      timeMs: 0,
+      spike: null,
+      players: [
+        {
+          puuid: "blue-1",
+          x: 1_000,
+          y: 1_000,
+          viewRadians: 0,
+          hp: 100,
+          credits: 0,
+          alive: true,
+        },
+      ],
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={playerMatch}
+        round={round}
+        frame={frame}
+        currentTimeMs={0}
+        showVisionCones={false}
+      />,
+    );
+
+    expect(screen.queryByTestId("ability-icon")).not.toBeInTheDocument();
+    expect(screen.getByTestId("canvas-icon")).toBeInTheDocument();
+  });
+
+  it("hides dead players when requested", () => {
+    const playerMatch = {
+      ...match,
+      players: [
+        { puuid: "blue-1", teamId: "Blue", characterName: "Jett" },
+      ],
+    } as unknown as ReplayMatch;
+    const deathFrame: ReplayFrame = {
+      timeMs: 0,
+      spike: null,
+      players: [
+        {
+          puuid: "blue-1",
+          x: 1_000,
+          y: 1_000,
+          viewRadians: 0,
+          hp: 0,
+          credits: 0,
+          alive: false,
+        },
+      ],
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={playerMatch}
+        round={{ ...round, frames: [deathFrame] }}
+        frame={{ timeMs: 500, spike: null, players: [] }}
+        currentTimeMs={500}
+        hideDeadAgents
+      />,
+    );
+
+    expect(screen.queryByTestId("canvas-icon")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("ability-icon")).not.toBeInTheDocument();
   });
 
   it("paints every vision cone beneath the agent icons", () => {

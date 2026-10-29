@@ -74,6 +74,8 @@ export const ReplayPlayer = ({
   const [stageScale, setStageScale] = useState(1);
   const [isScaleReady, setIsScaleReady] = useState(false);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [hideDeadAgents, setHideDeadAgents] = useState(false);
+  const [showVisionCones, setShowVisionCones] = useState(true);
 
   const round =
     match.rounds.find(
@@ -307,6 +309,8 @@ export const ReplayPlayer = ({
                     frame={frame}
                     currentTimeMs={currentTimeMs}
                     mapSide={mapSide}
+                    hideDeadAgents={hideDeadAgents}
+                    showVisionCones={showVisionCones}
                   />
                 }
               />
@@ -331,6 +335,10 @@ export const ReplayPlayer = ({
               onTogglePlay={togglePlay}
               onSeek={seek}
               onSpeedChange={setSpeed}
+              hideDeadAgents={hideDeadAgents}
+              onHideDeadAgentsChange={setHideDeadAgents}
+              showVisionCones={showVisionCones}
+              onShowVisionConesChange={setShowVisionCones}
             />
           </div>
         </div>

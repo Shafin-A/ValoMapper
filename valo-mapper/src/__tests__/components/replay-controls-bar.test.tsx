@@ -38,6 +38,10 @@ const renderBar = (
       onTogglePlay={jest.fn()}
       onSeek={jest.fn()}
       onSpeedChange={jest.fn()}
+      hideDeadAgents={false}
+      onHideDeadAgentsChange={jest.fn()}
+      showVisionCones
+      onShowVisionConesChange={jest.fn()}
     />,
   );
 

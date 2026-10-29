@@ -65,12 +65,16 @@ export const ReplayCanvasLayer = ({
   frame,
   currentTimeMs,
   mapSide = "defense",
+  hideDeadAgents = false,
+  showVisionCones = true,
 }: {
   match: ReplayMatch;
   round: ReplayRound;
   frame: ReplayFrame | null;
   currentTimeMs: number;
   mapSide?: MapSide;
+  hideDeadAgents?: boolean;
+  showVisionCones?: boolean;
 }) => {
   const { agentsSettings, abilitiesSettings } = useSettings();
 
@@ -78,12 +82,21 @@ export const ReplayCanvasLayer = ({
     return null;
   }
 
+  const getPlayerState = (puuid: string) => {
+    const current = frame.players.find((player) => player.puuid === puuid);
+    if (current) {
+      return current;
+    }
+
+    const latest = getReplayPlayerStateAtTime(round, puuid, currentTimeMs);
+    return latest && !latest.alive ? latest : null;
+  };
+
   return (
     <Group listening={false}>
-      {match.players.map((player, index) => {
-        const framePlayer = frame.players.find(
-          (candidate) => candidate.puuid === player.puuid,
-        );
+      {showVisionCones &&
+        match.players.map((player, index) => {
+        const framePlayer = getPlayerState(player.puuid);
         if (!framePlayer) {
           return null;
         }
@@ -149,9 +162,7 @@ export const ReplayCanvasLayer = ({
       })}
 
       {match.players.map((player, index) => {
-        const framePlayer = frame.players.find(
-          (candidate) => candidate.puuid === player.puuid,
-        );
+        const framePlayer = getPlayerState(player.puuid);
         if (!framePlayer) {
           return null;
         }
@@ -159,6 +170,9 @@ export const ReplayCanvasLayer = ({
         const alive =
           getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
             ?.alive ?? true;
+        if (hideDeadAgents && !alive) {
+          return null;
+        }
 
         const point = toReplayCanvasPoint({
           mapId: match.mapId,
