@@ -35,6 +35,8 @@ export const ReplayControlsBar = ({
   onSpeedChange,
   hideDeadAgents,
   onHideDeadAgentsChange,
+  hideAgentWeapons,
+  onHideAgentWeaponsChange,
   showVisionCones,
   onShowVisionConesChange,
   startAtBarrierDrop,
@@ -55,6 +57,8 @@ export const ReplayControlsBar = ({
   onSpeedChange: (speed: ReplaySpeed) => void;
   hideDeadAgents: boolean;
   onHideDeadAgentsChange: (hideDeadAgents: boolean) => void;
+  hideAgentWeapons: boolean;
+  onHideAgentWeaponsChange: (hideAgentWeapons: boolean) => void;
   showVisionCones: boolean;
   onShowVisionConesChange: (showVisionCones: boolean) => void;
   startAtBarrierDrop: boolean;
@@ -120,6 +124,8 @@ export const ReplayControlsBar = ({
         <ReplaySettingsMenu
           hideDeadAgents={hideDeadAgents}
           onHideDeadAgentsChange={onHideDeadAgentsChange}
+          hideAgentWeapons={hideAgentWeapons}
+          onHideAgentWeaponsChange={onHideAgentWeaponsChange}
           showVisionCones={showVisionCones}
           onShowVisionConesChange={onShowVisionConesChange}
           startAtBarrierDrop={startAtBarrierDrop}

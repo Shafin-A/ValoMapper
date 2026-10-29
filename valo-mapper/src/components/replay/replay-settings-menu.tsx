@@ -14,6 +14,8 @@ import { useState } from "react";
 export const ReplaySettingsMenu = ({
   hideDeadAgents,
   onHideDeadAgentsChange,
+  hideAgentWeapons,
+  onHideAgentWeaponsChange,
   showVisionCones,
   onShowVisionConesChange,
   startAtBarrierDrop,
@@ -21,6 +23,8 @@ export const ReplaySettingsMenu = ({
 }: {
   hideDeadAgents: boolean;
   onHideDeadAgentsChange: (hideDeadAgents: boolean) => void;
+  hideAgentWeapons: boolean;
+  onHideAgentWeaponsChange: (hideAgentWeapons: boolean) => void;
   showVisionCones: boolean;
   onShowVisionConesChange: (showVisionCones: boolean) => void;
   startAtBarrierDrop: boolean;
@@ -54,6 +58,16 @@ export const ReplaySettingsMenu = ({
               id="hide-agent-vision"
               checked={!showVisionCones}
               onCheckedChange={(hidden) => onShowVisionConesChange(!hidden)}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="hide-agent-weapons" className="text-sm">
+              Hide agent weapons
+            </Label>
+            <Switch
+              id="hide-agent-weapons"
+              checked={hideAgentWeapons}
+              onCheckedChange={onHideAgentWeaponsChange}
             />
           </div>
           <div className="flex items-center justify-between gap-3">

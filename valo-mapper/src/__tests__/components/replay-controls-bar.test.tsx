@@ -40,6 +40,8 @@ const renderBar = (
       onSpeedChange={jest.fn()}
       hideDeadAgents={false}
       onHideDeadAgentsChange={jest.fn()}
+      hideAgentWeapons={false}
+      onHideAgentWeaponsChange={jest.fn()}
       showVisionCones
       onShowVisionConesChange={jest.fn()}
       startAtBarrierDrop

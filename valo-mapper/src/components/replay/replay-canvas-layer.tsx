@@ -7,6 +7,7 @@ import { TOOL_ICON_CONTOUR_COLOR, TOOL_ICON_CONTOUR_WIDTH } from "@/lib/consts";
 import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
 import type { IconSettings, MapSide, ToolIconCanvas } from "@/lib/types";
 import { getReplayPlayerStateAtTime } from "@/lib/replay/frames";
+import { getReplayWeaponIcon } from "@/lib/replay/display";
 import type { ReplayFrame, ReplayMatch, ReplayRound } from "@/lib/replay/types";
 import {
   getReplayAgentId,
@@ -105,6 +106,7 @@ export const ReplayCanvasLayer = ({
   currentTimeMs,
   mapSide = "defense",
   hideDeadAgents = false,
+  hideAgentWeapons = false,
   showVisionCones = true,
 }: {
   match: ReplayMatch;
@@ -113,6 +115,7 @@ export const ReplayCanvasLayer = ({
   currentTimeMs: number;
   mapSide?: MapSide;
   hideDeadAgents?: boolean;
+  hideAgentWeapons?: boolean;
   showVisionCones?: boolean;
 }) => {
   const { agentsSettings, abilitiesSettings } = useSettings();
@@ -257,6 +260,61 @@ export const ReplayCanvasLayer = ({
           />
         );
       })}
+
+      {!hideAgentWeapons &&
+        match.players.map((player, index) => {
+          const alive =
+            getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
+              ?.alive ?? true;
+          if (!alive) {
+            return null;
+          }
+
+          const point = playerPoints.get(player.puuid);
+          const weapon = getReplayWeaponIcon(
+            getPlayerState(player.puuid)?.weaponId,
+          );
+          if (!point || !weapon) {
+            return null;
+          }
+
+          const toolIcon: ToolIconCanvas = {
+            id: `replay-weapon-${index}`,
+            x: point.x,
+            y: point.y,
+            ...weapon,
+          };
+          const position = getToolIconAttachmentPosition(
+            toolIcon,
+            point.x,
+            point.y,
+            agentsSettings,
+          );
+
+          return (
+            <CanvasIcon
+              key={toolIcon.id}
+              id={toolIcon.id}
+              isAlly={player.teamId === "Blue"}
+              x={position.x}
+              y={position.y}
+              src={`/tools/${weapon.name}.webp`}
+              width={weapon.width}
+              height={weapon.height}
+              borderOpacity={0}
+              strokeWidth={0}
+              contourColor={TOOL_ICON_CONTOUR_COLOR}
+              contourWidth={TOOL_ICON_CONTOUR_WIDTH}
+              radius={0}
+              fill=""
+              allyColor="#ffffff"
+              enemyColor="#ffffff"
+              draggable={false}
+              isListening={false}
+              hasShadow
+            />
+          );
+        })}
 
       <ReplaySpike
         match={match}

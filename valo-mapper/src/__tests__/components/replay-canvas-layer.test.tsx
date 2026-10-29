@@ -4,6 +4,7 @@ import {
   TOOL_ICON_CONTOUR_COLOR,
   TOOL_ICON_CONTOUR_WIDTH,
 } from "@/lib/consts";
+import { getReplayWeaponIcon } from "@/lib/replay/display";
 import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
 import {
   getReplayMapPosition,
@@ -25,6 +26,8 @@ const mockIconSettings = {
   allyColor: "#ffffff",
   enemyColor: "#ffffff",
 };
+
+const CLASSIC_WEAPON_ID = "29A0CFAB-485B-F5D5-779A-B59F85E204A8";
 
 jest.mock("@/components/canvas-icons", () => ({
   AbilityIcon: ({
@@ -49,6 +52,9 @@ jest.mock("@/components/canvas-icons", () => ({
     isGray,
     x,
     y,
+    src,
+    width,
+    height,
     contourColor,
     contourWidth,
   }: {
@@ -56,6 +62,9 @@ jest.mock("@/components/canvas-icons", () => ({
     isGray?: boolean;
     x?: number;
     y?: number;
+    src?: string;
+    width?: number;
+    height?: number;
     contourColor?: string;
     contourWidth?: number;
   }) => (
@@ -65,6 +74,9 @@ jest.mock("@/components/canvas-icons", () => ({
       data-gray={String(isGray)}
       data-x={x}
       data-y={y}
+      data-src={src}
+      data-width={width}
+      data-height={height}
       data-contour-color={contourColor}
       data-contour-width={contourWidth}
     />
@@ -428,6 +440,90 @@ describe("ReplayCanvasLayer spike", () => {
     expect(image).toHaveAttribute(
       "data-contour-width",
       String(TOOL_ICON_CONTOUR_WIDTH),
+    );
+  });
+});
+
+describe("ReplayCanvasLayer agent weapons", () => {
+  const playerMatch = {
+    ...match,
+    players: [{ puuid: "blue-1", teamId: "Blue", characterName: "Jett" }],
+  } as unknown as ReplayMatch;
+
+  const frameWithWeapon = (weaponId?: string): ReplayFrame => ({
+    timeMs: 0,
+    spike: null,
+    players: [
+      {
+        puuid: "blue-1",
+        x: 1_000,
+        y: 1_000,
+        viewRadians: 0,
+        hp: 100,
+        credits: 0,
+        weaponId,
+        alive: true,
+      },
+    ],
+  });
+
+  it("attaches the equipped weapon to the agent", () => {
+    render(
+      <ReplayCanvasLayer
+        match={playerMatch}
+        round={round}
+        frame={frameWithWeapon(CLASSIC_WEAPON_ID)}
+        currentTimeMs={0}
+      />,
+    );
+
+    const weapon = getReplayWeaponIcon(CLASSIC_WEAPON_ID)!;
+    const agentPoint = toReplayCanvasPoint({
+      mapId: "pearl",
+      mapSide: "defense",
+      position: { x: 1_000, y: 1_000 },
+    })!;
+    const expected = getToolIconAttachmentPosition(
+      {
+        id: "replay-weapon-0",
+        x: agentPoint.x,
+        y: agentPoint.y,
+        ...weapon,
+      },
+      agentPoint.x,
+      agentPoint.y,
+      mockIconSettings,
+    );
+
+    const icon = screen
+      .getAllByTestId("canvas-icon")
+      .find((node) => node.getAttribute("data-id") === "replay-weapon-0");
+    expect(icon).toBeDefined();
+    expect(icon).toHaveAttribute("data-src", "/tools/classic.webp");
+    expect(icon).toHaveAttribute("data-width", String(weapon.width));
+    expect(Number(icon!.getAttribute("data-x"))).toBeCloseTo(expected.x);
+    expect(Number(icon!.getAttribute("data-y"))).toBeCloseTo(expected.y);
+  });
+
+  it("hides agent weapons when requested", () => {
+    render(
+      <ReplayCanvasLayer
+        match={playerMatch}
+        round={round}
+        frame={frameWithWeapon(CLASSIC_WEAPON_ID)}
+        currentTimeMs={0}
+        hideAgentWeapons
+      />,
+    );
+
+    expect(
+      screen
+        .queryAllByTestId("canvas-icon")
+        .find((node) => node.getAttribute("data-id") === "replay-weapon-0"),
+    ).toBeUndefined();
+    expect(screen.getByTestId("canvas-icon")).toHaveAttribute(
+      "data-id",
+      "replay-agent-0-overlay",
     );
   });
 });
