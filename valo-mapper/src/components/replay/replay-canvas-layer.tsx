@@ -39,6 +39,11 @@ const ReplaySpike = ({
     return null;
   }
 
+  // Off-map spikes are hidden rather than drawn past the minimap bounds.
+  if (!isReplayPointOnMap({ point })) {
+    return null;
+  }
+
   return (
     <KonvaImage
       image={spikeImage}

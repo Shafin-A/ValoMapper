@@ -40,8 +40,13 @@ const report = (
   options: ReplayLoadOptions | undefined,
   percent: number,
   label: string,
+  indeterminate = false,
 ) => {
-  options?.onProgress?.({ percent: Math.min(100, Math.max(0, percent)), label });
+  options?.onProgress?.({
+    percent: Math.min(100, Math.max(0, percent)),
+    label,
+    ...(indeterminate ? { indeterminate: true } : {}),
+  });
 };
 
 const abortError = () =>
@@ -126,6 +131,11 @@ export const parseReplayEnvelope = (payload: unknown): ReplayMatch => {
         )
       : undefined;
 
+  if (warnings && warnings.length > 0) {
+    // Keep parser diagnostics out of the UI, but leave them in the browser log.
+    console.warn("[replay] parser warnings", warnings);
+  }
+
   return {
     ...(match as unknown as ReplayMatch),
     replayId,
@@ -178,6 +188,7 @@ export class VrfReplayDataSource implements ReplayDataSource {
 
       xhr.upload.onprogress = (event) => {
         if (!event.lengthComputable || event.total <= 0) {
+          report(options, 0, "Uploading replay…", true);
           return;
         }
         const percent = Math.round((event.loaded / event.total) * 70);
@@ -185,7 +196,7 @@ export class VrfReplayDataSource implements ReplayDataSource {
       };
 
       xhr.upload.onload = () => {
-        report(options, 72, "Decoding replay…");
+        report(options, 0, "Decoding replay…", true);
       };
 
       xhr.onload = () => {

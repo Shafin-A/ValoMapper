@@ -116,9 +116,40 @@ describe("VrfReplayDataSource", () => {
     expect(match.source).toBe("vrf");
     expect(match.replayId).toBe(matchPayload.replayId);
     expect(progress.map((update) => update.percent)).toEqual([
-      0, 35, 72, 100,
+      0, 35, 0, 100,
     ]);
+    expect(progress[2]).toMatchObject({
+      label: "Decoding replay…",
+      indeterminate: true,
+    });
     expect(progress.at(-1)?.label).toBe("Ready");
+    expect(progress.at(-1)?.indeterminate).toBeUndefined();
+  });
+
+  it("reports indeterminate upload progress when the total is unknown", async () => {
+    const progress: ReplayLoadProgress[] = [];
+    const source = new VrfReplayDataSource();
+    const promise = source.load(makeFile(), {
+      onProgress: (update) => progress.push(update),
+    });
+    const xhr = FakeXMLHttpRequest.instances[0];
+
+    xhr.upload.onprogress?.({
+      lengthComputable: false,
+      loaded: 1024,
+      total: 0,
+    });
+
+    expect(progress.at(-1)).toMatchObject({
+      label: "Uploading replay…",
+      indeterminate: true,
+    });
+
+    xhr.status = 200;
+    xhr.responseText = JSON.stringify(matchPayload);
+    xhr.onload?.();
+
+    await promise;
   });
 
   it("maps a coded 422 error to friendly prose", async () => {
@@ -203,6 +234,25 @@ describe("fetchReplayById", () => {
       `http://api.test/api/replays/${matchPayload.replayId}`,
       expect.objectContaining({ method: "GET" }),
     );
+  });
+
+  it("logs parser warnings without putting them in the UI payload", async () => {
+    const warn = jest.mocked(console.warn);
+    warn.mockClear();
+    const payload = {
+      ...matchPayload,
+      warnings: ["Some events were skipped.", "Movement was missing."],
+    };
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify(payload),
+    }) as unknown as typeof fetch;
+
+    const match = await fetchReplayById(matchPayload.replayId);
+
+    expect(match?.warnings).toEqual(payload.warnings);
+    expect(warn).toHaveBeenCalledWith("[replay] parser warnings", payload.warnings);
   });
 
   it("returns null when the cache has expired", async () => {

@@ -34,7 +34,8 @@ const player = (
 const frame = (
   timeMs: number,
   players: ReplayFramePlayer[],
-): ReplayFrame => ({ timeMs, players, spike: null });
+  spike: ReplayFrame["spike"] = null,
+): ReplayFrame => ({ timeMs, players, spike });
 
 const roundWith = (frames: ReplayFrame[]): ReplayRound =>
   ({
@@ -139,6 +140,75 @@ describe("getReplayFrameAtTime", () => {
 
     expect(getReplayFrameAtTime(round, 124)?.players[0].x).toBe(0);
     expect(getReplayFrameAtTime(round, 125)?.players[0].x).toBe(5000);
+  });
+});
+
+describe("getReplayFrameAtTime spike custody", () => {
+  it("interpolates while the state and carrier are unchanged", () => {
+    const round = roundWith([
+      frame(0, [], { x: 0, y: 0, state: "carried", carrierPuuid: "a" }),
+      frame(125, [], { x: 100, y: 50, state: "carried", carrierPuuid: "a" }),
+    ]);
+
+    const midway = getReplayFrameAtTime(round, 62.5);
+    expect(midway?.spike).toMatchObject({
+      x: 50,
+      y: 25,
+      state: "carried",
+      carrierPuuid: "a",
+    });
+  });
+
+  it("snaps instead of sliding when the carrier changes", () => {
+    const round = roundWith([
+      frame(0, [], { x: 0, y: 0, state: "carried", carrierPuuid: "a" }),
+      frame(125, [], { x: 100, y: 0, state: "carried", carrierPuuid: "b" }),
+    ]);
+
+    expect(getReplayFrameAtTime(round, 62.5)?.spike).toMatchObject({
+      x: 0,
+      state: "carried",
+      carrierPuuid: "a",
+    });
+  });
+
+  it("snaps instead of sliding when the state changes", () => {
+    const round = roundWith([
+      frame(0, [], { x: 0, y: 0, state: "carried", carrierPuuid: "a" }),
+      frame(125, [], { x: 100, y: 0, state: "planted", site: "A" }),
+    ]);
+
+    expect(getReplayFrameAtTime(round, 62.5)?.spike).toMatchObject({
+      x: 0,
+      state: "carried",
+      carrierPuuid: "a",
+    });
+  });
+
+  it("keeps the 500 ms gap rule for the spike", () => {
+    const gap = REPLAY_MAX_INTERPOLATION_GAP_MS + 500;
+    const round = roundWith([
+      frame(0, [], { x: 0, y: 0, state: "carried", carrierPuuid: "a" }),
+      frame(gap, [], { x: 100, y: 0, state: "carried", carrierPuuid: "a" }),
+    ]);
+
+    expect(getReplayFrameAtTime(round, gap / 2)?.spike).toMatchObject({
+      x: 0,
+      carrierPuuid: "a",
+    });
+  });
+
+  it("keeps the plant site while interpolating post-plant movement", () => {
+    const round = roundWith([
+      frame(0, [], { x: 0, y: 0, state: "planted", site: "B" }),
+      frame(125, [], { x: 100, y: 0, state: "planted", site: "B" }),
+    ]);
+
+    expect(getReplayFrameAtTime(round, 62.5)?.spike).toMatchObject({
+      x: 50,
+      state: "planted",
+      site: "B",
+    });
   });
 });
 

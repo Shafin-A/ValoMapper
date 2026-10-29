@@ -45,10 +45,18 @@ export type ReplayFramePlayer = {
 export type ReplaySpikeState =
   "carried" | "loose" | "planted" | "defused" | "detonated";
 
+export type ReplaySpike = MatchWorldPosition & {
+  state: ReplaySpikeState;
+  /** Plant site, present for every post-plant state. */
+  site?: "A" | "B" | "C";
+  /** Set only while the spike is carried by a player. */
+  carrierPuuid?: string;
+};
+
 export type ReplayFrame = {
   timeMs: number;
   players: ReplayFramePlayer[];
-  spike: (MatchWorldPosition & { state: ReplaySpikeState }) | null;
+  spike: ReplaySpike | null;
 };
 
 export type ReplayRound = Omit<RoundSummaryLite, "playerStats"> & {
@@ -104,9 +112,11 @@ export type ReplaySeed = {
 };
 
 export type ReplayLoadProgress = {
-  /** 0 - 100 */
+  /** 0 - 100. Ignored by the UI when `indeterminate` is set. */
   percent: number;
   label: string;
+  /** The phase has no measurable total, so render an animated bar. */
+  indeterminate?: boolean;
 };
 
 export type ReplayLoadOptions = {

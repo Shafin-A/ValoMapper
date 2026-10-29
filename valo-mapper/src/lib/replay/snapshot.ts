@@ -321,6 +321,12 @@ const buildReplaySpike = ({
     return null;
   }
 
+  // Keep the copied lobby consistent with the canvas: off-map spikes are
+  // hidden rather than pasted outside the minimap.
+  if (!isReplayPointOnMap({ point })) {
+    return null;
+  }
+
   return {
     id: `${REPLAY_PREFIX}spike-${round.roundNumber}`,
     name: "spike",

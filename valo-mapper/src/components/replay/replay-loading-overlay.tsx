@@ -16,6 +16,9 @@ export const ReplayLoadingOverlay = ({
   onRetry?: () => void;
   onBack?: () => void;
 }) => {
+  const isIndeterminate = progress?.indeterminate === true;
+  const percent = Math.round(progress?.percent ?? 0);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/80 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-xl border border-neutral-800 bg-neutral-950 p-6 shadow-2xl">
@@ -51,14 +54,21 @@ export const ReplayLoadingOverlay = ({
 
             <div className="space-y-2">
               <div className="h-2 overflow-hidden rounded-full bg-neutral-800">
-                <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-200"
-                  style={{ width: `${progress?.percent ?? 0}%` }}
-                />
+                {isIndeterminate ? (
+                  <div
+                    data-testid="replay-progress-indeterminate"
+                    className="h-full w-1/3 animate-[replay-progress_1.2s_ease-in-out_infinite] rounded-full bg-primary"
+                  />
+                ) : (
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-200"
+                    style={{ width: `${percent}%` }}
+                  />
+                )}
               </div>
               <div className="flex justify-between text-[11px] text-white/40">
                 <span>Loading replay</span>
-                <span>{Math.round(progress?.percent ?? 0)}%</span>
+                {!isIndeterminate && <span>{percent}%</span>}
               </div>
             </div>
           </div>

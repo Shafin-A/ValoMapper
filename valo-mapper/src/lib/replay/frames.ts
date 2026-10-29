@@ -59,7 +59,7 @@ const lerpAngle = (from: number, to: number, progress: number) => {
 };
 
 const cloneSpike = (spike: ReplayFrame["spike"]): ReplayFrame["spike"] =>
-  spike ? { x: spike.x, y: spike.y, state: spike.state } : null;
+  spike ? { ...spike } : null;
 
 const cloneLocations = (locations: Map<string, SnapshotLocation>) =>
   new Map(
@@ -335,14 +335,20 @@ const interpolateSpike = (
     return next.spike ? { ...next.spike } : null;
   }
 
-  if (!next.spike || next.spike.state !== previous.spike.state) {
+  // A different carrier or state is a custody change, not movement: snap to
+  // the previous sample instead of sliding between two owners.
+  if (
+    !next.spike ||
+    next.spike.state !== previous.spike.state ||
+    next.spike.carrierPuuid !== previous.spike.carrierPuuid
+  ) {
     return { ...previous.spike };
   }
 
   return {
+    ...previous.spike,
     x: lerp(previous.spike.x, next.spike.x, progress),
     y: lerp(previous.spike.y, next.spike.y, progress),
-    state: previous.spike.state,
   };
 };
 
@@ -521,20 +527,25 @@ export const getReplayFrameAtTime = (
     });
   }
 
+  let spike = previous.spike ? { ...previous.spike } : null;
+  if (
+    canInterpolate &&
+    previous.spike &&
+    next.spike &&
+    previous.spike.state === next.spike.state &&
+    previous.spike.carrierPuuid === next.spike.carrierPuuid
+  ) {
+    spike = {
+      ...previous.spike,
+      x: lerp(previous.spike.x, next.spike.x, progress),
+      y: lerp(previous.spike.y, next.spike.y, progress),
+    };
+  }
+
   return {
     timeMs: clampedTime,
     players,
-    spike:
-      canInterpolate &&
-      previous.spike &&
-      next.spike &&
-      previous.spike.state === next.spike.state
-        ? {
-            x: lerp(previous.spike.x, next.spike.x, progress),
-            y: lerp(previous.spike.y, next.spike.y, progress),
-            state: previous.spike.state,
-          }
-        : previous.spike,
+    spike,
   };
 };
 
