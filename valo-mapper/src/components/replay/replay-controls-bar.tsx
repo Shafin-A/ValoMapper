@@ -19,7 +19,9 @@ import { ReplayTimeline } from "./replay-timeline";
 export const ReplayControlsBar = ({
   rounds,
   selectedRoundNumber,
-  currentPlayerTeamId,
+  // Replays have no viewer, so the canvas and scoreboard treat Blue as the
+  // ally side. Use the same convention for the timeline's win/loss icons.
+  currentPlayerTeamId = "Blue",
   currentPlayerBestRoundNumber,
   onSelectRound,
   round,

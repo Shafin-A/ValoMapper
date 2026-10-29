@@ -173,6 +173,37 @@ describe("ReplayScoreboard", () => {
     expect(container.querySelectorAll(".opacity-45")).toHaveLength(1);
   });
 
+  it("labels each team block by its team color", () => {
+    render(
+      <ReplayScoreboard
+        players={players}
+        round={round}
+        currentTimeMs={4000}
+        viewerPuuid="blue-1"
+      />,
+    );
+
+    expect(screen.getByText("Blue Team")).toBeInTheDocument();
+    expect(screen.getByText("Red Team")).toBeInTheDocument();
+    expect(screen.queryByText("Allies")).not.toBeInTheDocument();
+    expect(screen.queryByText("Enemies")).not.toBeInTheDocument();
+  });
+
+  it("keeps team labels tied to team color for an enemy-side viewer", () => {
+    render(
+      <ReplayScoreboard
+        players={players}
+        round={round}
+        currentTimeMs={4000}
+        viewerPuuid="red-1"
+      />,
+    );
+
+    expect(screen.getAllByText(/ Team$/).map((node) => node.textContent)).toEqual(
+      ["Red Team", "Blue Team"],
+    );
+  });
+
   it("falls back to round stats before the player has a sample", () => {
     render(
       <ReplayScoreboard

@@ -343,22 +343,22 @@ export const ReplayScoreboard = ({
   return (
     <div className="space-y-2">
       <TeamBlock
-        title="Allies"
+        title={`${allyTeamId} Team`}
         players={allies}
         labels={labels}
         round={round}
         states={states}
         currentTimeMs={currentTimeMs}
-        tone="blue"
+        tone={allyTeamId === "Blue" ? "blue" : "red"}
       />
       <TeamBlock
-        title="Enemies"
+        title={`${enemyTeamId} Team`}
         players={enemies}
         labels={labels}
         round={round}
         states={states}
         currentTimeMs={currentTimeMs}
-        tone="red"
+        tone={enemyTeamId === "Blue" ? "blue" : "red"}
       />
     </div>
   );
