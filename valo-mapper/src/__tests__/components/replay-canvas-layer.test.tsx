@@ -28,6 +28,7 @@ const mockIconSettings = {
 };
 
 const CLASSIC_WEAPON_ID = "29A0CFAB-485B-F5D5-779A-B59F85E204A8";
+const KNIFE_WEAPON_ID = "2F59173C-4BED-B6C3-2191-DEA9B58BE9C7";
 
 jest.mock("@/components/canvas-icons", () => ({
   AbilityIcon: ({
@@ -503,6 +504,27 @@ describe("ReplayCanvasLayer agent weapons", () => {
     expect(icon).toHaveAttribute("data-width", String(weapon.width));
     expect(Number(icon!.getAttribute("data-x"))).toBeCloseTo(expected.x);
     expect(Number(icon!.getAttribute("data-y"))).toBeCloseTo(expected.y);
+  });
+
+  it("attaches the knife when the player has melee equipped", () => {
+    render(
+      <ReplayCanvasLayer
+        match={playerMatch}
+        round={round}
+        frame={frameWithWeapon(KNIFE_WEAPON_ID)}
+        currentTimeMs={0}
+      />,
+    );
+
+    const weapon = getReplayWeaponIcon(KNIFE_WEAPON_ID)!;
+    expect(weapon).toMatchObject({ name: "knife" });
+
+    const icon = screen
+      .getAllByTestId("canvas-icon")
+      .find((node) => node.getAttribute("data-id") === "replay-weapon-0");
+    expect(icon).toBeDefined();
+    expect(icon).toHaveAttribute("data-src", "/tools/knife.webp");
+    expect(icon).toHaveAttribute("data-width", String(weapon.width));
   });
 
   it("hides agent weapons when requested", () => {

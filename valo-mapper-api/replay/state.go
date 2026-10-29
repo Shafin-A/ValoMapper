@@ -641,7 +641,8 @@ func scanState(exportDir string, index *playerIndex, raw *fieldStateRows) (*stat
 	}
 
 	// Inventory is on the pawn. Zero GUIDs are clears: ignore them so the last
-	// real gun stays on screen, and ignore every non-gun equippable.
+	// equipped item stays on screen. Guns and the knife are shown; every other
+	// equippable (abilities, totems, the spike, unarmed) keeps the last gun.
 	for _, write := range raw.Inventory {
 		if write.Value == 0 {
 			scan.WeaponZero++
@@ -657,13 +658,19 @@ func scanState(exportDir string, index *playerIndex, raw *fieldStateRows) (*stat
 			continue
 		}
 		folder, isGun := weaponFolder(path)
-		if !isGun {
+		var weaponID string
+		switch {
+		case isGun:
+			id, ok := weaponUUIDByFolder[folder]
+			if !ok {
+				scan.WeaponUnresolved++
+				continue
+			}
+			weaponID = id
+		case isMeleeEquippable(path):
+			weaponID = meleeWeaponID
+		default:
 			scan.WeaponWrites++
-			continue
-		}
-		weaponID, ok := weaponUUIDByFolder[folder]
-		if !ok {
-			scan.WeaponUnresolved++
 			continue
 		}
 		scan.WeaponWrites++

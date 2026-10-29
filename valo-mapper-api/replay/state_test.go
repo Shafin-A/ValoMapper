@@ -628,7 +628,7 @@ func TestScanStateCreditsPersistAcrossRoundsAndSideSwitch(t *testing.T) {
 	}
 }
 
-func TestScanStateKeepsLastGunForNonGunEquippables(t *testing.T) {
+func TestScanStateShowsKnifeAndKeepsLastGunForOtherEquippables(t *testing.T) {
 	const pawn = uint32(200)
 	const gun = uint32(500)
 	const melee = uint32(501)
@@ -656,11 +656,11 @@ func TestScanStateKeepsLastGunForNonGunEquippables(t *testing.T) {
 			ClassPath: ptr("/Game/Equippables/Guns/Rifles/Unlisted/Unlisted.Unlisted_C")},
 	})
 
-	if state.WeaponChanges != 1 {
-		t.Errorf("weapon changes = %d, want 1", state.WeaponChanges)
+	if state.WeaponChanges != 2 {
+		t.Errorf("weapon changes = %d, want 2 (the gun and the knife)", state.WeaponChanges)
 	}
-	// The gun and the three non-gun equippables are all writes; the unlisted
-	// folder is counted as unresolved instead.
+	// The gun, the knife and the two ignored equippables are all writes; the
+	// unlisted folder is counted as unresolved instead.
 	if state.WeaponWrites != 4 {
 		t.Errorf("weapon writes = %d, want 4", state.WeaponWrites)
 	}
@@ -669,8 +669,13 @@ func TestScanStateKeepsLastGunForNonGunEquippables(t *testing.T) {
 	}
 
 	got := state.stateFor(testSubject, 400, 0)
-	if got.WeaponID != weaponUUIDByFolder[akFolder] {
-		t.Errorf("weapon = %q, want the AK to survive melee and unknown equips", got.WeaponID)
+	if got.WeaponID != meleeWeaponID {
+		t.Errorf("weapon = %q, want the knife to survive the unknown equips", got.WeaponID)
+	}
+
+	afterGun := state.stateFor(testSubject, 150, 0)
+	if afterGun.WeaponID != weaponUUIDByFolder[akFolder] {
+		t.Errorf("weapon at 150 = %q, want the AK before melee", afterGun.WeaponID)
 	}
 }
 

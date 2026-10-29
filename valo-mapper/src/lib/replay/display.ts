@@ -64,7 +64,8 @@ export const getWeaponImageSrc = (weaponId?: string) => {
 
 /**
  * Riot weapon UUIDs the replay parser emits, mapped to the lobby tool icon
- * name. Keep this aligned with the server's weaponUUIDByFolder table.
+ * name. Keep this aligned with the server's weaponUUIDByFolder table and its
+ * melee id.
  */
 const REPLAY_WEAPON_NAME_BY_ID: Record<string, string> = {
   "29A0CFAB-485B-F5D5-779A-B59F85E204A8": "classic",
@@ -87,6 +88,7 @@ const REPLAY_WEAPON_NAME_BY_ID: Record<string, string> = {
   "63E6C2B6-4A8E-869C-3D4C-E38355226584": "odin",
   "55D8A0F4-4274-CA67-FE2C-06AB45EFDF58": "ares",
   "EC845BF4-4F79-DDDA-A3DA-0DB3774B2794": "judge",
+  "2F59173C-4BED-B6C3-2191-DEA9B58BE9C7": "knife",
 };
 
 const WEAPON_DIMENSIONS_BY_NAME = new Map(
@@ -100,7 +102,7 @@ const WEAPON_DIMENSIONS_BY_NAME = new Map(
 
 export type ReplayWeaponIcon = Pick<ToolIconCanvas, "name" | "width" | "height">;
 
-/** The lobby tool icon for a player's equipped weapon, if it is a gun. */
+/** The lobby tool icon for a player's equipped weapon, if the replay knows it. */
 export const getReplayWeaponIcon = (
   weaponId?: string,
 ): ReplayWeaponIcon | null => {

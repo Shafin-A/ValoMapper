@@ -102,6 +102,7 @@ func TestIntegrationRealReplay(t *testing.T) {
 	totalSamples := 0
 	deaths := 0
 	looseFrames := 0
+	knifeFrames := 0
 	killSources := make(map[string]int)
 	for _, round := range match.Rounds {
 		if len(round.Frames) == 0 {
@@ -146,6 +147,9 @@ func TestIntegrationRealReplay(t *testing.T) {
 				}
 			}
 			for _, player := range frame.Players {
+				if player.WeaponID == meleeWeaponID {
+					knifeFrames++
+				}
 				if player.HP < 0 || player.HP > 200 {
 					t.Fatalf("round %d frame %d player %s hp = %d, outside 0..200",
 						round.RoundNumber, i, player.Puuid, player.HP)
@@ -208,6 +212,9 @@ func TestIntegrationRealReplay(t *testing.T) {
 	if looseFrames == 0 {
 		t.Error("no frame rendered a loose spike")
 	}
+	if knifeFrames == 0 {
+		t.Error("no frame rendered the knife; melee equips should be visible")
+	}
 
 	encoded, err := json.Marshal(envelope)
 	if err != nil {
@@ -219,8 +226,8 @@ func TestIntegrationRealReplay(t *testing.T) {
 	}
 
 	t.Logf("source=%s build=%s map=%s", source, match.Build, match.MapName)
-	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d deaths=%d loose_frames=%d",
-		elapsed, len(match.Rounds), totalFrames, totalSamples, deaths, looseFrames)
+	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d deaths=%d loose_frames=%d knife_frames=%d",
+		elapsed, len(match.Rounds), totalFrames, totalSamples, deaths, looseFrames, knifeFrames)
 	t.Logf("json_bytes=%d gzip_bytes=%d teleport_cuts_logged=see parse log", len(encoded), len(gz))
 	t.Logf("kill_sources=%v", killSources)
 

@@ -34,6 +34,21 @@ var weaponUUIDByFolder = map[string]string{
 
 const gunClassPrefix = "/Game/Equippables/Guns/"
 
+// meleeClassPrefix is the folder every melee equippable lives in. Real exports
+// only carry Ability_Melee_Base there, which is the knife.
+const meleeClassPrefix = "/Game/Equippables/Melee/"
+
+// meleeWeaponID is the knife killstream UUID. The lobby has a matching "knife"
+// tool icon, so the replay can attach it exactly like a gun.
+const meleeWeaponID = "2F59173C-4BED-B6C3-2191-DEA9B58BE9C7"
+
+// isMeleeEquippable reports whether a class path is the knife. Ability
+// equippables, totems, the spike and unarmed look similar on the wire but must
+// keep the last gun on screen.
+func isMeleeEquippable(classPath string) bool {
+	return strings.Contains(classPath, meleeClassPrefix)
+}
+
 // weaponFolder returns the "Guns/<category>/<folder>" key for a gun class path.
 // The second result is false for anything outside the Guns tree, which this
 // parser deliberately ignores (melee, spike, ability equippables and totems).
