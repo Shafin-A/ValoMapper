@@ -7,6 +7,7 @@ describe("ReplaySettingsMenu", () => {
     const user = userEvent.setup();
     const onHideDeadAgentsChange = jest.fn();
     const onShowVisionConesChange = jest.fn();
+    const onStartAtBarrierDropChange = jest.fn();
 
     render(
       <ReplaySettingsMenu
@@ -14,6 +15,8 @@ describe("ReplaySettingsMenu", () => {
         onHideDeadAgentsChange={onHideDeadAgentsChange}
         showVisionCones
         onShowVisionConesChange={onShowVisionConesChange}
+        startAtBarrierDrop
+        onStartAtBarrierDropChange={onStartAtBarrierDropChange}
       />,
     );
 
@@ -35,5 +38,12 @@ describe("ReplaySettingsMenu", () => {
     await user.click(deadToggle);
 
     expect(onHideDeadAgentsChange).toHaveBeenCalledWith(true);
+
+    const barrierDropToggle = screen.getByRole("switch", {
+      name: "Start at barrier drop",
+    });
+    await user.click(barrierDropToggle);
+
+    expect(onStartAtBarrierDropChange).toHaveBeenCalledWith(false);
   });
 });

@@ -37,6 +37,8 @@ export const ReplayControlsBar = ({
   onHideDeadAgentsChange,
   showVisionCones,
   onShowVisionConesChange,
+  startAtBarrierDrop,
+  onStartAtBarrierDropChange,
 }: {
   rounds: ReplayRound[];
   selectedRoundNumber: number;
@@ -55,6 +57,8 @@ export const ReplayControlsBar = ({
   onHideDeadAgentsChange: (hideDeadAgents: boolean) => void;
   showVisionCones: boolean;
   onShowVisionConesChange: (showVisionCones: boolean) => void;
+  startAtBarrierDrop: boolean;
+  onStartAtBarrierDropChange: (startAtBarrierDrop: boolean) => void;
 }) => {
   return (
     <div className="border-t border-sidebar-border bg-sidebar">
@@ -118,6 +122,8 @@ export const ReplayControlsBar = ({
           onHideDeadAgentsChange={onHideDeadAgentsChange}
           showVisionCones={showVisionCones}
           onShowVisionConesChange={onShowVisionConesChange}
+          startAtBarrierDrop={startAtBarrierDrop}
+          onStartAtBarrierDropChange={onStartAtBarrierDropChange}
         />
       </div>
 

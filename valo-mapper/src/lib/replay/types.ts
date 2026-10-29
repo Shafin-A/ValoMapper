@@ -65,7 +65,6 @@ export type ReplayRound = Omit<RoundSummaryLite, "playerStats"> & {
   durationMs: number;
   playerStats: ReplayRoundPlayer[];
   frames: ReplayFrame[];
-  /** Round-relative barrier drop. Playback starts here when present. */
   buyEndTimeMs?: number;
 };
 

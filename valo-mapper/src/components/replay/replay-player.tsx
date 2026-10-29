@@ -76,6 +76,7 @@ export const ReplayPlayer = ({
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [hideDeadAgents, setHideDeadAgents] = useState(false);
   const [showVisionCones, setShowVisionCones] = useState(true);
+  const [startAtBarrierDrop, setStartAtBarrierDrop] = useState(true);
 
   const round =
     match.rounds.find(
@@ -90,7 +91,7 @@ export const ReplayPlayer = ({
     useReplayPlayback({
       durationMs: round?.durationMs ?? 0,
       resetKey: `${replayId}:${round?.roundNumber ?? 0}`,
-      startTimeMs: round?.buyEndTimeMs ?? 0,
+      startTimeMs: startAtBarrierDrop ? (round?.buyEndTimeMs ?? 0) : 0,
     });
 
   const frame = useMemo(
@@ -339,6 +340,8 @@ export const ReplayPlayer = ({
               onHideDeadAgentsChange={setHideDeadAgents}
               showVisionCones={showVisionCones}
               onShowVisionConesChange={setShowVisionCones}
+              startAtBarrierDrop={startAtBarrierDrop}
+              onStartAtBarrierDropChange={setStartAtBarrierDrop}
             />
           </div>
         </div>

@@ -32,6 +32,28 @@ describe("useReplayPlayback start time", () => {
     expect(result.current.currentTimeMs).toBe(1_500);
   });
 
+  it("only applies a new start time when the round changes", () => {
+    const { result, rerender } = renderHook(
+      ({ startTimeMs }) =>
+        useReplayPlayback({
+          durationMs: 10_000,
+          resetKey: "round-1",
+          startTimeMs,
+        }),
+      { initialProps: { startTimeMs: 2_500 } },
+    );
+
+    act(() => result.current.seek(6_000));
+    rerender({ startTimeMs: 0 });
+
+    expect(result.current.currentTimeMs).toBe(6_000);
+
+    act(() => result.current.seek(10_000));
+    act(() => result.current.togglePlay());
+
+    expect(result.current.currentTimeMs).toBe(2_500);
+  });
+
   it("restarts at the barrier drop after the round ends", () => {
     const { result } = renderHook(() =>
       useReplayPlayback({

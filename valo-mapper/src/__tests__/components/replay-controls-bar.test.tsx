@@ -42,6 +42,8 @@ const renderBar = (
       onHideDeadAgentsChange={jest.fn()}
       showVisionCones
       onShowVisionConesChange={jest.fn()}
+      startAtBarrierDrop
+      onStartAtBarrierDropChange={jest.fn()}
     />,
   );
 

@@ -16,11 +16,15 @@ export const ReplaySettingsMenu = ({
   onHideDeadAgentsChange,
   showVisionCones,
   onShowVisionConesChange,
+  startAtBarrierDrop,
+  onStartAtBarrierDropChange,
 }: {
   hideDeadAgents: boolean;
   onHideDeadAgentsChange: (hideDeadAgents: boolean) => void;
   showVisionCones: boolean;
   onShowVisionConesChange: (showVisionCones: boolean) => void;
+  startAtBarrierDrop: boolean;
+  onStartAtBarrierDropChange: (startAtBarrierDrop: boolean) => void;
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -60,6 +64,16 @@ export const ReplaySettingsMenu = ({
               id="hide-dead-agents"
               checked={hideDeadAgents}
               onCheckedChange={onHideDeadAgentsChange}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="start-at-barrier-drop" className="text-sm">
+              Start at barrier drop
+            </Label>
+            <Switch
+              id="start-at-barrier-drop"
+              checked={startAtBarrierDrop}
+              onCheckedChange={onStartAtBarrierDropChange}
             />
           </div>
         </div>

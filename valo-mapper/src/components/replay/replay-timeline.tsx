@@ -63,10 +63,29 @@ export const ReplayTimeline = ({
   currentTimeMs: number;
   onSeek: (timeMs: number) => void;
 }) => {
+  const barrierDropTimeMs = round.buyEndTimeMs;
+
   return (
     <div className="w-full space-y-1.5">
       <div className="relative h-3 w-full">
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-sidebar-border" />
+        {typeof barrierDropTimeMs === "number" &&
+          barrierDropTimeMs > 0 &&
+          barrierDropTimeMs <= round.durationMs && (
+            <button
+              type="button"
+              title={`${formatReplayTime(barrierDropTimeMs)} — Barrier drop`}
+              aria-label={`${formatReplayTime(barrierDropTimeMs)} — Barrier drop`}
+              onClick={() => onSeek(barrierDropTimeMs)}
+              className="absolute top-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white/70 transition-transform hover:scale-125"
+              style={{
+                left: `${Math.min(
+                  100,
+                  (barrierDropTimeMs / Math.max(1, round.durationMs)) * 100,
+                )}%`,
+              }}
+            />
+          )}
         {round.eventLog.map((event, index) => {
           const left = Math.max(
             0,

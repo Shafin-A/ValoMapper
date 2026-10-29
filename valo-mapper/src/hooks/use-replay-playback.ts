@@ -31,13 +31,15 @@ export const useReplayPlayback = ({
   durationMs: number;
   resetKey: string | number;
   /**
-   * Where playback begins and where it resets to. The replay player passes the
-   * round's barrier-drop time so a round starts at the action, not at the buy
-   * phase; seeking is still allowed across the whole round.
+   * Where playback begins and where it resets to. Seeking is still allowed
+   * across the whole round.
    */
   startTimeMs?: number;
 }) => {
   const start = clamp(startTimeMs, 0, durationMs);
+  const startRef = useRef(start);
+  startRef.current = start;
+  const activeStartRef = useRef(start);
   const [currentTimeMs, setCurrentTimeMs] = useState(start);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState<ReplaySpeed>(1);
@@ -68,14 +70,15 @@ export const useReplayPlayback = ({
 
   const togglePlay = useCallback(() => {
     if (timeRef.current >= durationMs) {
-      timeRef.current = start;
-      setCurrentTimeMs(start);
+      const nextStart = activeStartRef.current;
+      timeRef.current = nextStart;
+      setCurrentTimeMs(nextStart);
       setIsPlaying(true);
       return;
     }
 
     setIsPlaying((previous) => !previous);
-  }, [durationMs, start]);
+  }, [durationMs]);
 
   const cycleSpeed = useCallback((direction: -1 | 1) => {
     setSpeed((previous) => {
@@ -90,10 +93,12 @@ export const useReplayPlayback = ({
   }, []);
 
   useEffect(() => {
-    timeRef.current = start;
-    setCurrentTimeMs(start);
+    const nextStart = startRef.current;
+    activeStartRef.current = nextStart;
+    timeRef.current = nextStart;
+    setCurrentTimeMs(nextStart);
     setIsPlaying(false);
-  }, [resetKey, start]);
+  }, [resetKey]);
 
   useEffect(() => {
     if (!isPlaying) {
