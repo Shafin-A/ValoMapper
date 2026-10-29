@@ -330,11 +330,14 @@ type netGuidRow struct {
 }
 
 type stateActorRow struct {
-	TimeMS       uint32  `parquet:"time_ms"`
-	PacketID     uint32  `parquet:"packet_id"`
-	ActorNetGUID uint32  `parquet:"actor_net_guid"`
-	Event        string  `parquet:"event"`
-	ClassPath    *string `parquet:"class_path,optional"`
+	TimeMS       uint32   `parquet:"time_ms"`
+	PacketID     uint32   `parquet:"packet_id"`
+	ActorNetGUID uint32   `parquet:"actor_net_guid"`
+	Event        string   `parquet:"event"`
+	ClassPath    *string  `parquet:"class_path,optional"`
+	SpawnX       *float32 `parquet:"spawn_x,optional"`
+	SpawnY       *float32 `parquet:"spawn_y,optional"`
+	SpawnZ       *float32 `parquet:"spawn_z,optional"`
 }
 
 type actorMoment struct {
@@ -346,6 +349,9 @@ type stateActorView struct {
 	ClassByActor map[uint32]string
 	OpenByActor  map[uint32]actorMoment
 	CloseByActor map[uint32]actorMoment
+	// SpawnByActor keeps the actor's open position. Pickup actors use it as the
+	// spike's ground position while the bomb is loose.
+	SpawnByActor map[uint32]Position
 }
 
 // scanState builds the state timelines. The 1.9 M-row fields file is not read
@@ -678,12 +684,22 @@ func readStateActors(exportDir string) (*stateActorView, error) {
 		ClassByActor: make(map[uint32]string),
 		OpenByActor:  make(map[uint32]actorMoment),
 		CloseByActor: make(map[uint32]actorMoment),
+		SpawnByActor: make(map[uint32]Position),
 	}
 	_, err := readParquetRows[stateActorRow](exportDir+"/actors.parquet", func(rows []stateActorRow) error {
 		for i := range rows {
 			row := &rows[i]
 			if row.ClassPath != nil && *row.ClassPath != "" {
 				view.ClassByActor[row.ActorNetGUID] = *row.ClassPath
+			}
+			if row.SpawnX != nil && row.SpawnY != nil &&
+				isFinite32(*row.SpawnX) && isFinite32(*row.SpawnY) {
+				if _, exists := view.SpawnByActor[row.ActorNetGUID]; !exists {
+					view.SpawnByActor[row.ActorNetGUID] = Position{
+						X: float64(*row.SpawnX),
+						Y: float64(*row.SpawnY),
+					}
+				}
 			}
 			switch row.Event {
 			case "open":

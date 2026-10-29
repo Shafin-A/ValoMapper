@@ -42,7 +42,8 @@ export type ReplayFramePlayer = {
   alive: boolean;
 };
 
-export type ReplaySpikeState = "carried" | "planted" | "defused" | "detonated";
+export type ReplaySpikeState =
+  "carried" | "loose" | "planted" | "defused" | "detonated";
 
 export type ReplayFrame = {
   timeMs: number;

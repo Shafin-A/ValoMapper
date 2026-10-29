@@ -100,12 +100,14 @@ func TestIntegrationRealReplay(t *testing.T) {
 	totalFrames := 0
 	totalSamples := 0
 	deaths := 0
+	looseFrames := 0
 	for _, round := range match.Rounds {
 		if len(round.Frames) == 0 {
 			t.Fatalf("round %d has no frames", round.RoundNumber)
 		}
 		previous := -1
 		roundHasState := false
+		planted := false
 		for i, frame := range round.Frames {
 			if frame.TimeMS <= previous {
 				t.Fatalf("round %d frame %d time %d is not increasing", round.RoundNumber, i, frame.TimeMS)
@@ -117,6 +119,29 @@ func TestIntegrationRealReplay(t *testing.T) {
 			if frame.TimeMS < 0 || frame.TimeMS > round.DurationMS {
 				t.Fatalf("round %d frame %d time %d outside 0..%d",
 					round.RoundNumber, i, frame.TimeMS, round.DurationMS)
+			}
+			if frame.Spike != nil {
+				switch frame.Spike.State {
+				case "loose":
+					if planted {
+						t.Errorf("round %d frame %d is loose after the plant", round.RoundNumber, i)
+					}
+					if frame.Spike.CarrierPuuid != "" {
+						t.Errorf("round %d frame %d loose spike has a carrier", round.RoundNumber, i)
+					}
+					looseFrames++
+				case "carried":
+					if frame.Spike.CarrierPuuid == "" {
+						t.Errorf("round %d frame %d carried spike has no carrier", round.RoundNumber, i)
+					}
+				case "planted", "defused", "detonated":
+					planted = true
+					if frame.Spike.Site == "" {
+						t.Errorf("round %d frame %d %s spike has no site", round.RoundNumber, i, frame.Spike.State)
+					}
+				default:
+					t.Errorf("round %d frame %d has unknown spike state %q", round.RoundNumber, i, frame.Spike.State)
+				}
 			}
 			for _, player := range frame.Players {
 				if player.HP < 0 || player.HP > 200 {
@@ -147,6 +172,9 @@ func TestIntegrationRealReplay(t *testing.T) {
 	if deaths == 0 {
 		t.Error("no sample is dead; the fixture should contain a death")
 	}
+	if looseFrames == 0 {
+		t.Error("no frame rendered a loose spike")
+	}
 
 	encoded, err := json.Marshal(envelope)
 	if err != nil {
@@ -158,8 +186,8 @@ func TestIntegrationRealReplay(t *testing.T) {
 	}
 
 	t.Logf("source=%s build=%s map=%s", source, match.Build, match.MapName)
-	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d deaths=%d",
-		elapsed, len(match.Rounds), totalFrames, totalSamples, deaths)
+	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d deaths=%d loose_frames=%d",
+		elapsed, len(match.Rounds), totalFrames, totalSamples, deaths, looseFrames)
 	t.Logf("json_bytes=%d gzip_bytes=%d teleport_cuts_logged=see parse log", len(encoded), len(gz))
 
 	if totalFrames < len(match.Rounds)*2 {

@@ -15,11 +15,14 @@ const (
 )
 
 // spikeCustodySpan is one round-relative custody interval. An empty Subject
-// means the spike was loose or the write could not be resolved, so the frame
-// carries no spike.
+// means the write could not be resolved, so the frame carries no spike. Loose
+// spans carry the pickup actor's spawn position when it is known.
 type spikeCustodySpan struct {
-	StartMS uint32
-	Subject string
+	StartMS     uint32
+	Subject     string
+	Loose       bool
+	Position    Position
+	HasPosition bool
 }
 
 // spikeRound is everything needed to place the spike inside one round.
@@ -43,14 +46,17 @@ type spikeRound struct {
 type spikeTimeline struct {
 	Rounds []spikeRound
 
-	Actors       int
-	OwnerWrites  int
-	LooseSpans   int
-	Ties         int
-	Unresolved   int
-	Plants       int
-	SiteWarnings int
-	MissingSpots int
+	Actors      int
+	OwnerWrites int
+	LooseSpans  int
+	// LooseUnplaced counts loose spans whose pickup actor had no spawn
+	// position, so the frame carries no spike.
+	LooseUnplaced int
+	Ties          int
+	Unresolved    int
+	Plants        int
+	SiteWarnings  int
+	MissingSpots  int
 	// OutOfRound counts spike events that did not land inside any round window.
 	// They are kept out of playback rather than stretched into a neighbour.
 	OutOfRound int
@@ -192,6 +198,8 @@ func buildCustodySpans(
 		start := spikeRelative(writes[i].TimeMS, window)
 		kind := "unresolved"
 		subject := ""
+		var position Position
+		hasPosition := false
 
 		switch {
 		case len(owners) > 1:
@@ -200,7 +208,9 @@ func buildCustodySpans(
 		case len(owners) == 1:
 			var loose bool
 			var resolved bool
-			subject, loose, resolved = resolveSpikeOwner(uint32(writes[i].Value), state, index, instigatorByActor, writes[i].TimeMS)
+			subject, loose, position, hasPosition, resolved = resolveSpikeOwner(
+				uint32(writes[i].Value), state, index, instigatorByActor, writes[i].TimeMS,
+			)
 			switch {
 			case !resolved:
 				timeline.Unresolved++
@@ -216,25 +226,46 @@ func buildCustodySpans(
 			timeline.LooseSpans++
 		}
 		lastKind = kind
-		spans = appendSpikeSpan(spans, start, subject)
+		before := len(spans)
+		spans = appendSpikeSpan(spans, spikeCustodySpan{
+			StartMS:     start,
+			Subject:     subject,
+			Loose:       kind == "loose",
+			Position:    position,
+			HasPosition: hasPosition,
+		})
+		if kind == "loose" && !hasPosition && len(spans) > before {
+			timeline.LooseUnplaced++
+			warnings.add("Some loose spike states had no pickup position; the spike was not shown.")
+		}
 		i = j
 	}
 
 	return spans
 }
 
-func appendSpikeSpan(spans []spikeCustodySpan, start uint32, subject string) []spikeCustodySpan {
+func appendSpikeSpan(spans []spikeCustodySpan, span spikeCustodySpan) []spikeCustodySpan {
 	if len(spans) > 0 {
 		last := &spans[len(spans)-1]
-		if last.StartMS == start {
-			last.Subject = subject
+		if last.StartMS == span.StartMS {
+			*last = span
 			return spans
 		}
-		if last.Subject == subject {
+		if sameSpikeSpan(*last, span) {
 			return spans
 		}
 	}
-	return append(spans, spikeCustodySpan{StartMS: start, Subject: subject})
+	return append(spans, span)
+}
+
+func sameSpikeSpan(a, b spikeCustodySpan) bool {
+	if a.Subject != b.Subject || a.Loose != b.Loose {
+		return false
+	}
+	if !a.Loose {
+		return true
+	}
+	return a.HasPosition == b.HasPosition && (!a.HasPosition || a.Position == b.Position)
 }
 
 func spikeRelative(timeMS uint32, window *roundWindow) uint32 {
@@ -253,33 +284,36 @@ func resolveSpikeOwner(
 	index *playerIndex,
 	instigatorByActor map[uint32][]stateWrite,
 	timeMS uint32,
-) (subject string, loose bool, resolved bool) {
+) (subject string, loose bool, position Position, hasPosition bool, resolved bool) {
 	current := guid
 	visited := make(map[uint32]struct{})
 
 	for depth := 0; depth < 8; depth++ {
 		if _, seen := visited[current]; seen {
-			return "", false, false
+			return "", false, Position{}, false, false
 		}
 		visited[current] = struct{}{}
 
 		if subject, ok := index.subjectForCharacter(current); ok {
-			return subject, false, true
+			return subject, false, Position{}, false, true
 		}
 		class := state.Actors.ClassByActor[current]
 		if isSpikePickupClass(class) {
-			return "", true, true
+			// The pickup actor's spawn is the landing point for a ground pickup
+			// and the throw origin for an in-flight projectile.
+			position, ok := state.Actors.SpawnByActor[current]
+			return "", true, position, ok, true
 		}
 		if next, ok := spikeInstigator(current, timeMS, instigatorByActor); ok && next != 0 && next != current {
 			current = next
 			continue
 		}
 		if subject, ok := spikeOuterSubject(current, index, state.Outer); ok {
-			return subject, false, true
+			return subject, false, Position{}, false, true
 		}
-		return "", false, false
+		return "", false, Position{}, false, false
 	}
-	return "", false, false
+	return "", false, Position{}, false, false
 }
 
 func spikeInstigator(actor uint32, timeMS uint32, writes map[uint32][]stateWrite) (uint32, bool) {
@@ -467,8 +501,9 @@ func siteName(ordinal int64) string {
 	}
 }
 
-// frameAt returns the spike state at one round-relative timestamp. poseAt
-// supplies the carrier's current pose; a stale or missing pose hides the spike.
+// frameAt returns the spike state at one round-relative timestamp. Loose spans
+// use the pickup actor's recorded position. poseAt supplies the carrier's
+// current pose; a stale or missing pose hides a carried spike.
 func (t *spikeTimeline) frameAt(
 	roundIndex int,
 	timeMS uint32,
@@ -489,11 +524,24 @@ func (t *spikeTimeline) frameAt(
 		return round.plantedFrame("planted")
 	}
 
-	subject := round.custodyAt(timeMS)
-	if subject == "" {
+	span, ok := round.custodyAt(timeMS)
+	if !ok {
 		return nil
 	}
-	position, ok := poseAt(subject, timeMS)
+	if span.Loose {
+		if !span.HasPosition {
+			return nil
+		}
+		return &SpikeFrame{
+			X:     span.Position.X,
+			Y:     span.Position.Y,
+			State: "loose",
+		}
+	}
+	if span.Subject == "" {
+		return nil
+	}
+	position, ok := poseAt(span.Subject, timeMS)
 	if !ok {
 		return nil
 	}
@@ -501,21 +549,21 @@ func (t *spikeTimeline) frameAt(
 		X:            position.X,
 		Y:            position.Y,
 		State:        "carried",
-		CarrierPuuid: puuidBySubject[subject],
+		CarrierPuuid: puuidBySubject[span.Subject],
 	}
 }
 
-func (r *spikeRound) custodyAt(timeMS uint32) string {
+func (r *spikeRound) custodyAt(timeMS uint32) (spikeCustodySpan, bool) {
 	if len(r.Custody) == 0 {
-		return ""
+		return spikeCustodySpan{}, false
 	}
 	index := sort.Search(len(r.Custody), func(i int) bool {
 		return r.Custody[i].StartMS > timeMS
 	}) - 1
 	if index < 0 {
-		return ""
+		return spikeCustodySpan{}, false
 	}
-	return r.Custody[index].Subject
+	return r.Custody[index], true
 }
 
 func (r *spikeRound) plantedFrame(state string) *SpikeFrame {

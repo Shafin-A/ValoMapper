@@ -458,6 +458,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		"spike_actors", spike.Actors,
 		"spike_owner_writes", spike.OwnerWrites,
 		"spike_loose_spans", spike.LooseSpans,
+		"spike_loose_unplaced", spike.LooseUnplaced,
 		"spike_ties", spike.Ties,
 		"spike_unresolved", spike.Unresolved,
 		"spike_plants", spike.Plants,
