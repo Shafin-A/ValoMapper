@@ -3,7 +3,9 @@
 import { AbilityIcon, CanvasIcon } from "@/components/canvas-icons";
 import { useSettings } from "@/contexts/settings-context";
 import { getAgentImageSrc } from "@/lib/matches";
-import type { MapSide } from "@/lib/types";
+import { TOOL_ICON_CONTOUR_COLOR, TOOL_ICON_CONTOUR_WIDTH } from "@/lib/consts";
+import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
+import type { IconSettings, MapSide, ToolIconCanvas } from "@/lib/types";
 import { getReplayPlayerStateAtTime } from "@/lib/replay/frames";
 import type { ReplayFrame, ReplayMatch, ReplayRound } from "@/lib/replay/types";
 import {
@@ -14,48 +16,85 @@ import {
   toReplayCanvasRotation,
 } from "@/lib/replay/snapshot";
 import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
-import { Group, Image as KonvaImage } from "react-konva";
-import useImage from "use-image";
+import { Group } from "react-konva";
 
 const REPLAY_SPIKE_SIZE = 32;
+
+const REPLAY_SPIKE_TOOL_ICON: ToolIconCanvas = {
+  id: "replay-spike",
+  x: 0,
+  y: 0,
+  name: "spike",
+  width: REPLAY_SPIKE_SIZE,
+  height: REPLAY_SPIKE_SIZE,
+};
 
 const ReplaySpike = ({
   match,
   frame,
   mapSide,
+  carrierPoint,
+  agentsSettings,
 }: {
   match: ReplayMatch;
   frame: ReplayFrame;
   mapSide: MapSide;
+  carrierPoint: { x: number; y: number } | null;
+  agentsSettings: IconSettings;
 }) => {
-  const [spikeImage] = useImage("/tools/spike.webp");
-  const point = frame.spike
-    ? toReplayCanvasPoint({
-        mapId: match.mapId,
-        mapSide,
-        position: frame.spike,
-      })
-    : null;
+  const isCarried = frame.spike?.state === "carried";
+  const attachedPoint =
+    isCarried && carrierPoint
+      ? getToolIconAttachmentPosition(
+          REPLAY_SPIKE_TOOL_ICON,
+          carrierPoint.x,
+          carrierPoint.y,
+          agentsSettings,
+        )
+      : null;
+  const point =
+    attachedPoint ??
+    (frame.spike
+      ? toReplayCanvasPoint({
+          mapId: match.mapId,
+          mapSide,
+          position: frame.spike,
+        })
+      : null);
 
-  if (!point || !spikeImage) {
+  if (!point) {
     return null;
   }
 
-  // Off-map spikes are hidden rather than drawn past the minimap bounds.
-  if (!isReplayPointOnMap({ point })) {
+  // Off-map spikes are hidden rather than drawn past the minimap bounds, but a
+  // carried spike is anchored to an agent that is already on the map.
+  if (!attachedPoint && !isReplayPointOnMap({ point })) {
     return null;
   }
 
   return (
-    <KonvaImage
-      image={spikeImage}
-      x={point.x - REPLAY_SPIKE_SIZE / 2}
-      y={point.y - REPLAY_SPIKE_SIZE / 2}
-      width={REPLAY_SPIKE_SIZE}
-      height={REPLAY_SPIKE_SIZE}
-      listening={false}
-      opacity={frame.spike?.state === "defused" ? 0.45 : 1}
-    />
+    <Group opacity={frame.spike?.state === "defused" ? 0.45 : 1}>
+      <CanvasIcon
+        id="replay-spike"
+        isAlly
+        x={point.x}
+        y={point.y}
+        src="/tools/spike.webp"
+        width={REPLAY_SPIKE_SIZE}
+        height={REPLAY_SPIKE_SIZE}
+        borderOpacity={0}
+        strokeWidth={0}
+        contourColor={TOOL_ICON_CONTOUR_COLOR}
+        contourWidth={TOOL_ICON_CONTOUR_WIDTH}
+        radius={0}
+        fill=""
+        allyColor="#ffffff"
+        enemyColor="#ffffff"
+        draggable={false}
+        isListening={false}
+        hasShadow
+      />
+    </Group>
   );
 };
 
@@ -91,6 +130,27 @@ export const ReplayCanvasLayer = ({
     const latest = getReplayPlayerStateAtTime(round, puuid, currentTimeMs);
     return latest && !latest.alive ? latest : null;
   };
+
+  const playerPoints = new Map<string, { x: number; y: number }>();
+  for (const player of match.players) {
+    const framePlayer = getPlayerState(player.puuid);
+    if (!framePlayer) continue;
+
+    const point = toReplayCanvasPoint({
+      mapId: match.mapId,
+      mapSide,
+      position: { x: framePlayer.x, y: framePlayer.y },
+    });
+    if (!point || !isReplayPointOnMap({ point })) continue;
+
+    playerPoints.set(player.puuid, point);
+  }
+
+  const spike = frame.spike;
+  const carrierPoint =
+    spike?.state === "carried" && spike.carrierPuuid
+      ? (playerPoints.get(spike.carrierPuuid) ?? null)
+      : null;
 
   return (
     <Group listening={false}>
@@ -162,11 +222,6 @@ export const ReplayCanvasLayer = ({
       })}
 
       {match.players.map((player, index) => {
-        const framePlayer = getPlayerState(player.puuid);
-        if (!framePlayer) {
-          return null;
-        }
-
         const alive =
           getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
             ?.alive ?? true;
@@ -174,12 +229,8 @@ export const ReplayCanvasLayer = ({
           return null;
         }
 
-        const point = toReplayCanvasPoint({
-          mapId: match.mapId,
-          mapSide,
-          position: { x: framePlayer.x, y: framePlayer.y },
-        });
-        if (!point || !isReplayPointOnMap({ point })) {
+        const point = playerPoints.get(player.puuid);
+        if (!point) {
           return null;
         }
 
@@ -207,7 +258,13 @@ export const ReplayCanvasLayer = ({
         );
       })}
 
-      <ReplaySpike match={match} frame={frame} mapSide={mapSide} />
+      <ReplaySpike
+        match={match}
+        frame={frame}
+        mapSide={mapSide}
+        carrierPoint={carrierPoint}
+        agentsSettings={agentsSettings}
+      />
     </Group>
   );
 };
