@@ -76,6 +76,7 @@ export const ReplayPlayer = ({
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [hideDeadAgents, setHideDeadAgents] = useState(false);
   const [hideAgentWeapons, setHideAgentWeapons] = useState(false);
+  const [hideWeaponHits, setHideWeaponHits] = useState(false);
   const [showVisionCones, setShowVisionCones] = useState(true);
   const [startAtBarrierDrop, setStartAtBarrierDrop] = useState(true);
 
@@ -313,6 +314,7 @@ export const ReplayPlayer = ({
                     mapSide={mapSide}
                     hideDeadAgents={hideDeadAgents}
                     hideAgentWeapons={hideAgentWeapons}
+                    hideWeaponHits={hideWeaponHits}
                     showVisionCones={showVisionCones}
                   />
                 }
@@ -342,6 +344,8 @@ export const ReplayPlayer = ({
               onHideDeadAgentsChange={setHideDeadAgents}
               hideAgentWeapons={hideAgentWeapons}
               onHideAgentWeaponsChange={setHideAgentWeapons}
+              hideWeaponHits={hideWeaponHits}
+              onHideWeaponHitsChange={setHideWeaponHits}
               showVisionCones={showVisionCones}
               onShowVisionConesChange={setShowVisionCones}
               startAtBarrierDrop={startAtBarrierDrop}

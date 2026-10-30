@@ -368,6 +368,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 
 		if log := logs[window.RoundNumber]; log != nil {
 			round.EventLog = log.Events
+			round.Hits = log.Hits
 			round.PlayerStats = make([]PlayerStats, 0, len(players))
 			for _, player := range players {
 				stats := log.Stats[player.Puuid]

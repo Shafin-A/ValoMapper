@@ -549,3 +549,101 @@ describe("ReplayCanvasLayer agent weapons", () => {
     );
   });
 });
+
+describe("ReplayCanvasLayer weapon hits", () => {
+  const shooter = {
+    puuid: "blue-1",
+    x: 1_000,
+    y: 1_000,
+    viewRadians: 0,
+    hp: 100,
+    credits: 0,
+    alive: true,
+  };
+  const victim = {
+    puuid: "red-1",
+    x: 3_000,
+    y: 1_500,
+    viewRadians: Math.PI,
+    hp: 80,
+    credits: 0,
+    alive: true,
+  };
+  const hitFrame: ReplayFrame = {
+    timeMs: 1_000,
+    players: [shooter, victim],
+    spike: null,
+  };
+  const hitMatch = {
+    ...match,
+    players: [
+      { puuid: "blue-1", teamId: "Blue", characterName: "Jett" },
+      { puuid: "red-1", teamId: "Red", characterName: "Raze" },
+    ],
+  } as unknown as ReplayMatch;
+  const hitRound = {
+    ...round,
+    durationMs: 2_000,
+    frames: [hitFrame],
+    hits: [{ timeMs: 1_000, shooterPuuid: "blue-1", victimPuuid: "red-1" }],
+  } as unknown as ReplayRound;
+
+  const tracer = () =>
+    screen
+      .queryAllByTestId("konva-line")
+      .find((node) => node.id === "replay-tracer-0");
+
+  it("draws a line that reaches the victim when the hit lands", () => {
+    render(
+      <ReplayCanvasLayer
+        match={hitMatch}
+        round={hitRound}
+        frame={hitFrame}
+        currentTimeMs={1_000}
+      />,
+    );
+
+    const line = tracer();
+    expect(line).toBeDefined();
+
+    const points = (line!.getAttribute("points") ?? "")
+      .split(",")
+      .map(Number);
+    expect(points).toHaveLength(4);
+
+    const victimPoint = toReplayCanvasPoint({
+      mapId: "pearl",
+      mapSide: "defense",
+      position: { x: victim.x, y: victim.y },
+    })!;
+    expect(points[2]).toBeCloseTo(victimPoint.x);
+    expect(points[3]).toBeCloseTo(victimPoint.y);
+  });
+
+  it("hides weapon hits when requested", () => {
+    render(
+      <ReplayCanvasLayer
+        match={hitMatch}
+        round={hitRound}
+        frame={hitFrame}
+        currentTimeMs={1_000}
+        hideWeaponHits
+      />,
+    );
+
+    expect(tracer()).toBeUndefined();
+  });
+
+  it("does not draw before the tracer travel window", () => {
+    render(
+      <ReplayCanvasLayer
+        match={hitMatch}
+        round={hitRound}
+        frame={hitFrame}
+        currentTimeMs={800}
+      />,
+    );
+
+    expect(tracer()).toBeUndefined();
+  });
+});

@@ -16,6 +16,8 @@ export const ReplaySettingsMenu = ({
   onHideDeadAgentsChange,
   hideAgentWeapons,
   onHideAgentWeaponsChange,
+  hideWeaponHits,
+  onHideWeaponHitsChange,
   showVisionCones,
   onShowVisionConesChange,
   startAtBarrierDrop,
@@ -25,6 +27,8 @@ export const ReplaySettingsMenu = ({
   onHideDeadAgentsChange: (hideDeadAgents: boolean) => void;
   hideAgentWeapons: boolean;
   onHideAgentWeaponsChange: (hideAgentWeapons: boolean) => void;
+  hideWeaponHits: boolean;
+  onHideWeaponHitsChange: (hideWeaponHits: boolean) => void;
   showVisionCones: boolean;
   onShowVisionConesChange: (showVisionCones: boolean) => void;
   startAtBarrierDrop: boolean;
@@ -68,6 +72,16 @@ export const ReplaySettingsMenu = ({
               id="hide-agent-weapons"
               checked={hideAgentWeapons}
               onCheckedChange={onHideAgentWeaponsChange}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="hide-weapon-hits" className="text-sm">
+              Hide weapon hits
+            </Label>
+            <Switch
+              id="hide-weapon-hits"
+              checked={hideWeaponHits}
+              onCheckedChange={onHideWeaponHitsChange}
             />
           </div>
           <div className="flex items-center justify-between gap-3">

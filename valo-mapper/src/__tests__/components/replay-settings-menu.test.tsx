@@ -7,6 +7,7 @@ describe("ReplaySettingsMenu", () => {
     const user = userEvent.setup();
     const onHideDeadAgentsChange = jest.fn();
     const onHideAgentWeaponsChange = jest.fn();
+    const onHideWeaponHitsChange = jest.fn();
     const onShowVisionConesChange = jest.fn();
     const onStartAtBarrierDropChange = jest.fn();
 
@@ -16,6 +17,8 @@ describe("ReplaySettingsMenu", () => {
         onHideDeadAgentsChange={onHideDeadAgentsChange}
         hideAgentWeapons={false}
         onHideAgentWeaponsChange={onHideAgentWeaponsChange}
+        hideWeaponHits={false}
+        onHideWeaponHitsChange={onHideWeaponHitsChange}
         showVisionCones
         onShowVisionConesChange={onShowVisionConesChange}
         startAtBarrierDrop
@@ -41,6 +44,13 @@ describe("ReplaySettingsMenu", () => {
     await user.click(weaponsToggle);
 
     expect(onHideAgentWeaponsChange).toHaveBeenCalledWith(true);
+
+    const hitsToggle = screen.getByRole("switch", {
+      name: "Hide weapon hits",
+    });
+    await user.click(hitsToggle);
+
+    expect(onHideWeaponHitsChange).toHaveBeenCalledWith(true);
 
     const deadToggle = screen.getByRole("switch", {
       name: "Hide dead agents",

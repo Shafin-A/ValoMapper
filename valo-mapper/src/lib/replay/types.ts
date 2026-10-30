@@ -21,15 +21,12 @@ export type ReplayAbilityCasts = Partial<Record<ReplayAbilitySlot, number>>;
 export type ReplayRoundPlayer = RoundPlayerStatsLite & {
   weaponId?: string;
   armorId?: string;
-  /** Total damage this player received during the round. */
   incomingDamage: number;
-  /** Timestamp (ms since round start) at which each ability was cast. */
   abilityCasts: ReplayAbilityCasts;
 };
 
 export type ReplayFramePlayer = {
   puuid: string;
-  /** Riot world-space position. Converted to canvas space at render time. */
   x: number;
   y: number;
   viewRadians: number;
@@ -37,19 +34,20 @@ export type ReplayFramePlayer = {
   credits: number;
   weaponId?: string;
   armorId?: string;
-  /** Remaining points on the equipped armour item; absent means no item. */
   armorPoints?: number;
   alive: boolean;
 };
 
 export type ReplaySpikeState =
-  "carried" | "loose" | "planted" | "defused" | "detonated";
+  | "carried"
+  | "loose"
+  | "planted"
+  | "defused"
+  | "detonated";
 
 export type ReplaySpike = MatchWorldPosition & {
   state: ReplaySpikeState;
-  /** Plant site, present for every post-plant state. */
   site?: "A" | "B" | "C";
-  /** Set only while the spike is carried by a player. */
   carrierPuuid?: string;
 };
 
@@ -59,12 +57,19 @@ export type ReplayFrame = {
   spike: ReplaySpike | null;
 };
 
+export type ReplayHit = {
+  timeMs: number;
+  shooterPuuid: string;
+  victimPuuid: string;
+};
+
 export type ReplayRound = Omit<RoundSummaryLite, "playerStats"> & {
   /** Team attacking during this round ("Red" | "Blue"). */
   attackTeamId: string;
   durationMs: number;
   playerStats: ReplayRoundPlayer[];
   frames: ReplayFrame[];
+  hits?: ReplayHit[];
   buyEndTimeMs?: number;
 };
 

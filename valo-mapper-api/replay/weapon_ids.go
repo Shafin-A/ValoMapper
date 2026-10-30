@@ -32,6 +32,52 @@ var weaponUUIDByFolder = map[string]string{
 	"Guns/Shotguns/AutoShotgun":      "EC845BF4-4F79-DDDA-A3DA-0DB3774B2794", // Judge
 }
 
+// gunDamageClasses are the bullet damage classes seen in real exports. Some
+// builds leave EquippableUsed empty, so the damage class has to name the
+// source; only these known classes are trusted, because ability ticks arrive
+// without an equippable too (DmgType_Phoenix_Q_Fire_Production_C).
+var gunDamageClasses = map[string]struct{}{
+	"DmgType_AK_C":                  {},
+	"DmgType_ACR_C":                 {},
+	"DmgType_MP5_C":                 {},
+	"DmgType_Glock_C":               {},
+	"DmgType_AutomaticPistol_C":     {},
+	"DmgType_Luger_C":               {},
+	"DmgType_BoltSniperRifle_C":     {},
+	"DmgType_SubMachineGunVector_C": {},
+	"DmgType_Revolver_C":            {},
+	"DmgType_DS_C":                  {},
+	"DmgType_AssaultRifleBurst_C":   {},
+	"DmgType_SawedOffShotgun_C":     {},
+	"DmgType_LeverSniperRifle_C":    {},
+	"DmgType_AutomaticShotgun_C":    {},
+	"DmgType_DMR_C":                 {},
+	"CompactDmgType_C":              {},
+	"DmgType_Deadeye_Q_Pistol_C":    {},
+	"DmgType_Deadeye_Giantslayer_C": {},
+}
+
+func damageClassName(classPath string) string {
+	if index := strings.LastIndexAny(classPath, "/."); index >= 0 {
+		return classPath[index+1:]
+	}
+	return classPath
+}
+
+func isGunDamageClass(classPath string) bool {
+	_, ok := gunDamageClasses[damageClassName(classPath)]
+	return ok
+}
+
+// isAbilityDamageClass recognises the agent/slot shape of ability damage
+// classes. Guns are one CamelCase token (DmgType_AK_C, CompactDmgType_C), while
+// abilities name the agent and slot (DmgType_Phoenix_Q_Fire_Production_C).
+func isAbilityDamageClass(classPath string) bool {
+	name := strings.TrimSuffix(damageClassName(classPath), "_C")
+	name = strings.TrimPrefix(name, "DmgType_")
+	return strings.Contains(name, "_")
+}
+
 const gunClassPrefix = "/Game/Equippables/Guns/"
 
 // meleeClassPrefix is the folder every melee equippable lives in. Real exports

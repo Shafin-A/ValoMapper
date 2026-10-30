@@ -103,7 +103,12 @@ func TestIntegrationRealReplay(t *testing.T) {
 	deaths := 0
 	looseFrames := 0
 	knifeFrames := 0
+	totalHits := 0
 	killSources := make(map[string]int)
+	knownPlayers := make(map[string]struct{}, len(match.Players))
+	for _, player := range match.Players {
+		knownPlayers[player.Puuid] = struct{}{}
+	}
 	for _, round := range match.Rounds {
 		if len(round.Frames) == 0 {
 			t.Fatalf("round %d has no frames", round.RoundNumber)
@@ -187,6 +192,22 @@ func TestIntegrationRealReplay(t *testing.T) {
 				}
 			}
 		}
+		for _, hit := range round.Hits {
+			totalHits++
+			if hit.TimeMS < 0 || hit.TimeMS > round.DurationMS {
+				t.Errorf("round %d hit time %d outside 0..%d",
+					round.RoundNumber, hit.TimeMS, round.DurationMS)
+			}
+			if hit.ShooterPuuid == hit.VictimPuuid {
+				t.Errorf("round %d hit at %d targets its own shooter", round.RoundNumber, hit.TimeMS)
+			}
+			if _, ok := knownPlayers[hit.ShooterPuuid]; !ok {
+				t.Errorf("round %d hit shooter %q is not in the match", round.RoundNumber, hit.ShooterPuuid)
+			}
+			if _, ok := knownPlayers[hit.VictimPuuid]; !ok {
+				t.Errorf("round %d hit victim %q is not in the match", round.RoundNumber, hit.VictimPuuid)
+			}
+		}
 
 		// The opening pose must never be the pre-respawn sample. A player that
 		// jumps more than the teleport threshold inside the start window means
@@ -215,6 +236,9 @@ func TestIntegrationRealReplay(t *testing.T) {
 	if knifeFrames == 0 {
 		t.Error("no frame rendered the knife; melee equips should be visible")
 	}
+	if totalHits == 0 {
+		t.Error("no gun hits; the player cannot draw a tracer")
+	}
 
 	encoded, err := json.Marshal(envelope)
 	if err != nil {
@@ -226,8 +250,8 @@ func TestIntegrationRealReplay(t *testing.T) {
 	}
 
 	t.Logf("source=%s build=%s map=%s", source, match.Build, match.MapName)
-	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d deaths=%d loose_frames=%d knife_frames=%d",
-		elapsed, len(match.Rounds), totalFrames, totalSamples, deaths, looseFrames, knifeFrames)
+	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d deaths=%d loose_frames=%d knife_frames=%d hits=%d",
+		elapsed, len(match.Rounds), totalFrames, totalSamples, deaths, looseFrames, knifeFrames, totalHits)
 	t.Logf("json_bytes=%d gzip_bytes=%d teleport_cuts_logged=see parse log", len(encoded), len(gz))
 	t.Logf("kill_sources=%v", killSources)
 

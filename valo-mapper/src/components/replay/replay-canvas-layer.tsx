@@ -8,7 +8,12 @@ import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
 import type { IconSettings, MapSide, ToolIconCanvas } from "@/lib/types";
 import { getReplayPlayerStateAtTime } from "@/lib/replay/frames";
 import { getReplayWeaponIcon } from "@/lib/replay/display";
-import type { ReplayFrame, ReplayMatch, ReplayRound } from "@/lib/replay/types";
+import type {
+  ReplayFrame,
+  ReplayHit,
+  ReplayMatch,
+  ReplayRound,
+} from "@/lib/replay/types";
 import {
   getReplayAgentId,
   getReplayMapPosition,
@@ -17,9 +22,15 @@ import {
   toReplayCanvasRotation,
 } from "@/lib/replay/snapshot";
 import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
-import { Group } from "react-konva";
+import { Group, Line } from "react-konva";
 
 const REPLAY_SPIKE_SIZE = 32;
+
+const REPLAY_TRACER_TRAVEL_MS = 120;
+
+const REPLAY_TRACER_TAIL_PX = 50;
+
+const REPLAY_TRACER_COLOR = "#ff6b6b";
 
 const REPLAY_SPIKE_TOOL_ICON: ToolIconCanvas = {
   id: "replay-spike",
@@ -99,6 +110,64 @@ const ReplaySpike = ({
   );
 };
 
+const getReplayHitPoint = ({
+  match,
+  round,
+  mapSide,
+  puuid,
+  timeMs,
+}: {
+  match: ReplayMatch;
+  round: ReplayRound;
+  mapSide: MapSide;
+  puuid: string;
+  timeMs: number;
+}) => {
+  const player = getReplayPlayerStateAtTime(round, puuid, timeMs);
+  if (!player) {
+    return null;
+  }
+
+  const point = toReplayCanvasPoint({
+    mapId: match.mapId,
+    mapSide,
+    position: { x: player.x, y: player.y },
+  });
+  if (!point || !isReplayPointOnMap({ point })) {
+    return null;
+  }
+  return point;
+};
+
+const buildReplayTracer = (
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  progress: number,
+) => {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const distance = Math.hypot(dx, dy);
+  if (distance < 1) {
+    return null;
+  }
+
+  const ux = dx / distance;
+  const uy = dy / distance;
+  const head = distance * Math.min(1, Math.max(0, progress));
+  const tail = Math.max(0, head - REPLAY_TRACER_TAIL_PX);
+
+  return [
+    start.x + ux * tail,
+    start.y + uy * tail,
+    start.x + ux * head,
+    start.y + uy * head,
+  ];
+};
+
+const isReplayHitActive = (hit: ReplayHit, currentTimeMs: number) =>
+  currentTimeMs >= hit.timeMs - REPLAY_TRACER_TRAVEL_MS &&
+  currentTimeMs <= hit.timeMs;
+
 export const ReplayCanvasLayer = ({
   match,
   round,
@@ -107,6 +176,7 @@ export const ReplayCanvasLayer = ({
   mapSide = "defense",
   hideDeadAgents = false,
   hideAgentWeapons = false,
+  hideWeaponHits = false,
   showVisionCones = true,
 }: {
   match: ReplayMatch;
@@ -116,6 +186,7 @@ export const ReplayCanvasLayer = ({
   mapSide?: MapSide;
   hideDeadAgents?: boolean;
   hideAgentWeapons?: boolean;
+  hideWeaponHits?: boolean;
   showVisionCones?: boolean;
 }) => {
   const { agentsSettings, abilitiesSettings } = useSettings();
@@ -159,70 +230,119 @@ export const ReplayCanvasLayer = ({
     <Group listening={false}>
       {showVisionCones &&
         match.players.map((player, index) => {
-        const framePlayer = getPlayerState(player.puuid);
-        if (!framePlayer) {
-          return null;
-        }
+          const framePlayer = getPlayerState(player.puuid);
+          if (!framePlayer) {
+            return null;
+          }
 
-        // Position still comes from the interpolated frame. Liveness comes from
-        // the round-scoped scan-back so a body's last pose cannot keep a vision
-        // cone after death.
-        const alive =
-          getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
-            ?.alive ?? true;
-        if (!alive) {
-          return null;
-        }
+          // Position still comes from the interpolated frame. Liveness comes from
+          // the round-scoped scan-back so a body's last pose cannot keep a vision
+          // cone after death.
+          const alive =
+            getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
+              ?.alive ?? true;
+          if (!alive) {
+            return null;
+          }
 
-        const point = toReplayCanvasPoint({
-          mapId: match.mapId,
-          mapSide,
-          position: { x: framePlayer.x, y: framePlayer.y },
-        });
-        if (!point) {
-          return null;
-        }
+          const point = toReplayCanvasPoint({
+            mapId: match.mapId,
+            mapSide,
+            position: { x: framePlayer.x, y: framePlayer.y },
+          });
+          if (!point) {
+            return null;
+          }
 
-        // Off-map actors are hidden rather than drawn past the minimap bounds.
-        if (!isReplayPointOnMap({ point })) {
-          return null;
-        }
+          // Off-map actors are hidden rather than drawn past the minimap bounds.
+          if (!isReplayPointOnMap({ point })) {
+            return null;
+          }
 
-        const agentId = getReplayAgentId(index);
+          const agentId = getReplayAgentId(index);
 
-        return (
-          <AbilityIcon
-            key={`${agentId}-overlay-cone`}
-            id={`${agentId}-overlay-cone`}
-            action="vision_cone_103"
-            mapPosition={getReplayMapPosition()}
-            isAlly={player.teamId === "Blue"}
-            x={point.x}
-            y={point.y}
-            rotation={toReplayCanvasRotation({
-              mapId: match.mapId,
-              mapSide,
-              location: { x: framePlayer.x, y: framePlayer.y },
-              viewRadians: framePlayer.viewRadians,
-            })}
-            src={getAgentImageSrc(player.characterName)}
-            width={abilitiesSettings.scale}
-            height={abilitiesSettings.scale}
-            borderOpacity={abilitiesSettings.borderOpacity}
-            strokeWidth={abilitiesSettings.borderWidth}
-            radius={abilitiesSettings.radius}
-            allyColor={abilitiesSettings.allyColor}
-            enemyColor={abilitiesSettings.enemyColor}
-            draggable={false}
-            isListening={false}
-            iconOnly={false}
-            showOuterCircle
-            showCenterIcon={false}
-            showRotationHandle={false}
-            currentLength={VISION_CONE_MAX_LENGTH}
-          />
-        );
-      })}
+          return (
+            <AbilityIcon
+              key={`${agentId}-overlay-cone`}
+              id={`${agentId}-overlay-cone`}
+              action="vision_cone_103"
+              mapPosition={getReplayMapPosition()}
+              isAlly={player.teamId === "Blue"}
+              x={point.x}
+              y={point.y}
+              rotation={toReplayCanvasRotation({
+                mapId: match.mapId,
+                mapSide,
+                location: { x: framePlayer.x, y: framePlayer.y },
+                viewRadians: framePlayer.viewRadians,
+              })}
+              src={getAgentImageSrc(player.characterName)}
+              width={abilitiesSettings.scale}
+              height={abilitiesSettings.scale}
+              borderOpacity={abilitiesSettings.borderOpacity}
+              strokeWidth={abilitiesSettings.borderWidth}
+              radius={abilitiesSettings.radius}
+              allyColor={abilitiesSettings.allyColor}
+              enemyColor={abilitiesSettings.enemyColor}
+              draggable={false}
+              isListening={false}
+              iconOnly={false}
+              showOuterCircle
+              showCenterIcon={false}
+              showRotationHandle={false}
+              currentLength={VISION_CONE_MAX_LENGTH}
+            />
+          );
+        })}
+
+      {!hideWeaponHits &&
+        (round.hits ?? []).map((hit, index) => {
+          if (!isReplayHitActive(hit, currentTimeMs)) {
+            return null;
+          }
+
+          const start = getReplayHitPoint({
+            match,
+            round,
+            mapSide,
+            puuid: hit.shooterPuuid,
+            timeMs: hit.timeMs,
+          });
+          const end = getReplayHitPoint({
+            match,
+            round,
+            mapSide,
+            puuid: hit.victimPuuid,
+            timeMs: hit.timeMs,
+          });
+          if (!start || !end) {
+            return null;
+          }
+
+          const progress =
+            (currentTimeMs - (hit.timeMs - REPLAY_TRACER_TRAVEL_MS)) /
+            REPLAY_TRACER_TRAVEL_MS;
+          const points = buildReplayTracer(start, end, progress);
+          if (!points) {
+            return null;
+          }
+
+          return (
+            <Line
+              key={`replay-tracer-${index}-${hit.timeMs}`}
+              id={`replay-tracer-${index}`}
+              points={points}
+              stroke={REPLAY_TRACER_COLOR}
+              strokeWidth={2.5}
+              opacity={0.9}
+              lineCap="round"
+              shadowColor={REPLAY_TRACER_COLOR}
+              shadowBlur={8}
+              shadowOpacity={0.7}
+              listening={false}
+            />
+          );
+        })}
 
       {match.players.map((player, index) => {
         const alive =

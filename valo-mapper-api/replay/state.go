@@ -59,6 +59,10 @@ type stateScan struct {
 	// per-round total is summed once the round windows exist.
 	Incoming []incomingWrite
 
+	// Hits records gun damage events with both subjects resolved, ready to
+	// attach to a round window.
+	Hits []hitSample
+
 	HPWrites            int
 	HPUnresolvedSection int
 	HPNonPlayer         int
@@ -117,6 +121,33 @@ type damageKey struct {
 	Index    int
 }
 
+// damageHitKey groups the scalar RPC params of one MulticastNotifyDamage_*
+// call. The lifecycle array is handled separately, so the key has no index.
+type damageHitKey struct {
+	Function string
+	Actor    uint32
+	TimeMS   uint32
+	PacketID uint32
+}
+
+// damageHitWrite is one damage call while its params are still net GUIDs.
+type damageHitWrite struct {
+	Damage      float64
+	HasDamage   bool
+	Shooter     uint32
+	PlayerState uint32
+	Victim      uint32
+	Equippable  uint32
+	DamageType  uint32
+}
+
+// hitSample is a damage call after both players and its source resolved.
+type hitSample struct {
+	TimeMS         uint32
+	ShooterSubject string
+	VictimSubject  string
+}
+
 // damageElement is one LifeChangeEvents[i] / LifeChangeBySection[i] element.
 // The four members arrive as separate rows, so the booleans distinguish a real
 // zero from a missing member.
@@ -140,6 +171,7 @@ func (e *damageElement) complete() bool {
 // rows are collected while that file is already open.
 type fieldStateRows struct {
 	Damage    map[damageKey]*damageElement
+	Hits      map[damageHitKey]*damageHitWrite
 	Money     []stateWrite
 	Inventory []stateWrite
 	Owners    map[uint32]uint32
@@ -177,6 +209,7 @@ type killDataSample struct {
 func newFieldStateRows() fieldStateRows {
 	return fieldStateRows{
 		Damage: make(map[damageKey]*damageElement),
+		Hits:   make(map[damageHitKey]*damageHitWrite),
 		Owners: make(map[uint32]uint32),
 		Casts:  make(map[castKey]*castElement),
 	}
@@ -190,6 +223,8 @@ func stateFieldCandidate(name string) bool {
 		return true
 	}
 	return strings.HasSuffix(name, ".PlantedAtSite") ||
+		strings.HasPrefix(name, "MulticastNotifyDamage_Point.") ||
+		strings.HasPrefix(name, "MulticastNotifyDamage_Base.") ||
 		strings.Contains(name, ".LifeChangeEvents[") ||
 		strings.Contains(name, ".LifeChangeBySection[") ||
 		strings.Contains(name, "AbilityCastsThisRound[")
@@ -252,6 +287,9 @@ func (s *fieldScan) collectStateField(row *fieldRow, name string) {
 				element.HasAlive = true
 			}
 		}
+	case strings.HasPrefix(name, "MulticastNotifyDamage_Point.") ||
+		strings.HasPrefix(name, "MulticastNotifyDamage_Base."):
+		s.collectDamageHitField(row, name)
 	case name == "Money" && strings.Contains(row.GroupPath, "MoneyManagementComponent"):
 		if row.ValueI64 != nil {
 			s.State.Money = append(s.State.Money, stateWrite{
@@ -283,6 +321,63 @@ func (s *fieldScan) collectStateField(row *fieldRow, name string) {
 			s.State.PlantedAtSites = append(s.State.PlantedAtSites, stateWrite{
 				TimeMS: row.TimeMS, PacketID: row.PacketID, Actor: row.ActorNetGUID, Value: *row.ValueI64,
 			})
+		}
+	}
+}
+
+// collectDamageHitField folds one RPC param into its damage call. Only the
+// params a tracer needs are kept; the LifeChangeEvents children are consumed by
+// collectStateField's earlier branch.
+func (s *fieldScan) collectDamageHitField(row *fieldRow, name string) {
+	dot := strings.IndexByte(name, '.')
+	if dot < 0 || dot == len(name)-1 {
+		return
+	}
+	function, member := name[:dot], name[dot+1:]
+	switch member {
+	case "DamageTaken", "EventInstigatorPawn", "DamagerPlayerState",
+		"Character", "EquippableUsed", "DamageType":
+	default:
+		return
+	}
+
+	key := damageHitKey{
+		Function: function,
+		Actor:    row.ActorNetGUID,
+		TimeMS:   row.TimeMS,
+		PacketID: row.PacketID,
+	}
+	hit := s.State.Hits[key]
+	if hit == nil {
+		hit = &damageHitWrite{}
+		s.State.Hits[key] = hit
+	}
+
+	switch member {
+	case "DamageTaken":
+		if row.ValueF64 != nil {
+			hit.Damage = *row.ValueF64
+			hit.HasDamage = true
+		}
+	case "EventInstigatorPawn":
+		if row.ValueI64 != nil {
+			hit.Shooter = uint32(*row.ValueI64)
+		}
+	case "DamagerPlayerState":
+		if row.ValueI64 != nil {
+			hit.PlayerState = uint32(*row.ValueI64)
+		}
+	case "Character":
+		if row.ValueI64 != nil && *row.ValueI64 != 0 {
+			hit.Victim = uint32(*row.ValueI64)
+		}
+	case "EquippableUsed":
+		if row.ValueI64 != nil {
+			hit.Equippable = uint32(*row.ValueI64)
+		}
+	case "DamageType":
+		if row.ValueI64 != nil {
+			hit.DamageType = uint32(*row.ValueI64)
 		}
 	}
 }
@@ -695,6 +790,7 @@ func scanState(exportDir string, index *playerIndex, raw *fieldStateRows) (*stat
 	}
 
 	scan.Kills = resolveKillData(raw.KillData, paths, index, outer)
+	scan.Hits = resolveDamageHits(raw.Hits, paths, actors.ClassByActor, index, outer)
 
 	scan.Warnings = append(scan.Warnings,
 		coverageWarning(scan.HPUnresolvedSection,
@@ -1173,6 +1269,147 @@ func killDataSubject(
 	}
 	if outerActor, ok := outer[actor]; ok {
 		return index.subjectForActor(outerActor)
+	}
+	return "", false
+}
+
+// resolveDamageHits keeps only gun damage with both players resolved. Ability,
+// melee, fall and bomb damage never draw a tracer, and a self-hit is skipped.
+func resolveDamageHits(
+	writes map[damageHitKey]*damageHitWrite,
+	paths map[uint32]string,
+	classByActor map[uint32]string,
+	index *playerIndex,
+	outer map[uint32]uint32,
+) []hitSample {
+	keys := make([]damageHitKey, 0, len(writes))
+	for key := range writes {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		if keys[i].TimeMS != keys[j].TimeMS {
+			return keys[i].TimeMS < keys[j].TimeMS
+		}
+		if keys[i].PacketID != keys[j].PacketID {
+			return keys[i].PacketID < keys[j].PacketID
+		}
+		if keys[i].Actor != keys[j].Actor {
+			return keys[i].Actor < keys[j].Actor
+		}
+		return keys[i].Function < keys[j].Function
+	})
+
+	type signature struct {
+		TimeMS     uint32
+		Shooter    uint32
+		Victim     uint32
+		DamageType uint32
+	}
+	seen := make(map[signature]struct{}, len(keys))
+	hits := make([]hitSample, 0, len(keys))
+
+	for _, key := range keys {
+		write := writes[key]
+		if write == nil || !write.HasDamage || write.Damage <= 0 {
+			continue
+		}
+
+		damageClass := damageClassPath(write.DamageType, paths, classByActor)
+		equippableClass := damageClassPath(write.Equippable, paths, classByActor)
+		if !isGunHit(equippableClass, damageClass) {
+			continue
+		}
+
+		shooter, ok := damageSubject(index, outer, write.Shooter, write.PlayerState, 0)
+		if !ok {
+			continue
+		}
+		victim, ok := damageSubject(index, outer, write.Victim, 0, key.Actor)
+		if !ok || shooter == victim {
+			continue
+		}
+
+		sig := signature{
+			TimeMS:     key.TimeMS,
+			Shooter:    write.Shooter,
+			Victim:     write.Victim,
+			DamageType: write.DamageType,
+		}
+		if _, duplicate := seen[sig]; duplicate {
+			continue
+		}
+		seen[sig] = struct{}{}
+
+		hits = append(hits, hitSample{
+			TimeMS:         key.TimeMS,
+			ShooterSubject: shooter,
+			VictimSubject:  victim,
+		})
+	}
+
+	return hits
+}
+
+func damageClassPath(
+	guid uint32,
+	paths map[uint32]string,
+	classByActor map[uint32]string,
+) string {
+	if guid == 0 {
+		return ""
+	}
+	if path := paths[guid]; path != "" {
+		return path
+	}
+	return classByActor[guid]
+}
+
+// isGunHit keeps tracers to bullets. Ability and melee equippables look like
+// normal objects on the wire, so only the gun tree, Chamber's ability guns and
+// an unresolved-equippable fallback may produce a hit.
+func isGunHit(equippableClass, damageClass string) bool {
+	if _, isGun := weaponFolder(equippableClass); isGun {
+		return !isAbilityDamageClass(damageClass) &&
+			resolveKillSource(equippableClass, damageClass).DamageType == damageTypeWeapon
+	}
+	if classContains(equippableClass, "Deadeye_Q_Pistol") ||
+		classContains(equippableClass, "Giantslayer") {
+		return true
+	}
+	if equippableClass == "" {
+		// EquippableUsed did not resolve. The damage class still names the gun
+		// in older exports, but ability damage also arrives this way, so trust
+		// only bullet classes.
+		return isGunDamageClass(damageClass)
+	}
+	return false
+}
+
+// damageSubject resolves a damage RPC subject. The victim usually arrives in
+// Character, but older builds leave it zero and only name the damaged actor, so
+// the fallback GUID is tried after the primary one.
+func damageSubject(
+	index *playerIndex,
+	outer map[uint32]uint32,
+	pawn uint32,
+	playerState uint32,
+	fallback uint32,
+) (string, bool) {
+	for _, guid := range []uint32{pawn, fallback} {
+		if guid == 0 {
+			continue
+		}
+		if subject, ok := index.subjectForCharacter(guid); ok {
+			return subject, true
+		}
+		if subject, ok := killDataSubject(index, outer, guid); ok {
+			return subject, true
+		}
+	}
+	if playerState != 0 {
+		if subject, ok := index.subjectForActor(playerState); ok {
+			return subject, true
+		}
 	}
 	return "", false
 }

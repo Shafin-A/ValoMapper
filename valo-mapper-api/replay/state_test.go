@@ -679,6 +679,148 @@ func TestScanStateShowsKnifeAndKeepsLastGunForOtherEquippables(t *testing.T) {
 	}
 }
 
+func TestResolveDamageHitsKeepsOnlyGunDamage(t *testing.T) {
+	const (
+		shooterPawn       = uint32(200)
+		victimPawn        = uint32(300)
+		gunClass          = uint32(900)
+		abilityType       = uint32(901)
+		abilityEquippable = uint32(903)
+		meleeType         = uint32(902)
+		fireType          = uint32(904)
+	)
+	const (
+		shooterSubject = "11111111-2222-3333-4444-555555555555"
+		victimSubject  = "66666666-7777-8888-9999-aaaaaaaaaaaa"
+	)
+
+	index := newPlayerIndex(&Manifest{Players: []ManifestPlayer{
+		{
+			ActorNetGUID:      100,
+			Subject:           shooterSubject,
+			CharacterNetGUID:  ptr(shooterPawn),
+			CharacterNetGUIDs: []uint32{shooterPawn},
+		},
+		{
+			ActorNetGUID:      101,
+			Subject:           victimSubject,
+			CharacterNetGUID:  ptr(victimPawn),
+			CharacterNetGUIDs: []uint32{victimPawn},
+		},
+	}})
+
+	rows := damageHitRows(100, 1, "MulticastNotifyDamage_Point", victimPawn, shooterPawn, victimPawn, gunClass)
+	// The same call broadcast through the Base variant must not draw twice.
+	rows = append(rows, damageHitRows(100, 1, "MulticastNotifyDamage_Base", victimPawn, shooterPawn, victimPawn, gunClass)...)
+	// Ability and melee damage never draw a tracer. The ability's damage type
+	// is not in the killstream table, so its equippable class is what excludes
+	// it from the gun fallback.
+	abilityRows := damageHitRows(200, 2, "MulticastNotifyDamage_Point", victimPawn, shooterPawn, victimPawn, abilityType)
+	abilityRows = append(abilityRows, fieldRow{
+		TimeMS: 200, PacketID: 2, ActorNetGUID: victimPawn,
+		FieldName: ptr("MulticastNotifyDamage_Point.EquippableUsed"),
+		ValueI64:  ptr(int64(abilityEquippable)),
+	})
+	rows = append(rows, abilityRows...)
+	rows = append(rows, damageHitRows(300, 3, "MulticastNotifyDamage_Point", victimPawn, shooterPawn, victimPawn, meleeType)...)
+	// Ability ticks can arrive with no EquippableUsed; the damage class alone
+	// must not turn Phoenix's fire wall into a tracer.
+	rows = append(rows, damageHitRows(500, 5, "MulticastNotifyDamage_Base", victimPawn, shooterPawn, victimPawn, fireType)...)
+	// A self-hit is not a shot between two players.
+	rows = append(rows, damageHitRows(400, 4, "MulticastNotifyDamage_Point", shooterPawn, shooterPawn, shooterPawn, gunClass)...)
+
+	state := scanStateFromRows(t, index, rows, []netGuidRow{
+		{NetGUID: gunClass, Path: "DmgType_AK_C"},
+		{NetGUID: abilityType, Path: "DmgType_Test_Nuke_C"},
+		{NetGUID: abilityEquippable, Path: "/Game/Characters/Test/S0/Ability_Q/Ability_Test_Nuke.Ability_Test_Nuke_C"},
+		{NetGUID: meleeType, Path: "DmgType_Knife_C"},
+		{NetGUID: fireType, Path: "DmgType_Phoenix_Q_Fire_Production_C"},
+	}, nil)
+
+	if len(state.Hits) != 1 {
+		t.Fatalf("hits = %d, want only the AK hit: %+v", len(state.Hits), state.Hits)
+	}
+	hit := state.Hits[0]
+	if hit.TimeMS != 100 || hit.ShooterSubject != shooterSubject || hit.VictimSubject != victimSubject {
+		t.Fatalf("hit = %+v, want 100/%s/%s", hit, shooterSubject, victimSubject)
+	}
+}
+
+func TestIsGunHit(t *testing.T) {
+	const (
+		gun         = "/Game/Equippables/Guns/Rifles/AK/AssaultRifle_AK.AssaultRifle_AK_C"
+		bandit      = "/Game/Equippables/Guns/Sidearms/Compact/CompactPistol.CompactPistol_C"
+		headhunter  = "/Game/Characters/Deadeye/S0/Ability_Q/Gun/Gun_Deadeye_Q_Pistol.Gun_Deadeye_Q_Pistol_C"
+		molotov     = "/Game/Characters/Phoenix/S0/Ability_4/Production/Ability_Phoenix_4_Molotov_Production.Ability_Phoenix_4_Molotov_Production_C"
+		razeGrenade = "/Game/Characters/Clay/S0/Ability_4/Ability_Clay_4_ClusterGrenade.Ability_Clay_4_ClusterGrenade_C"
+		viperAcid   = "/Game/Characters/Pandemic/S0/Ability_Q/Ability_Pandemic_Q_AcidGrenade.Ability_Pandemic_Q_AcidGrenade_C"
+	)
+
+	tests := []struct {
+		name        string
+		equippable  string
+		damageClass string
+		want        bool
+	}{
+		{"gun and gun damage", gun, "DmgType_AK_C", true},
+		{"gun without damage class", gun, "", true},
+		{"unseen gun damage class", gun, "DmgType_HMG_C", true},
+		{"bandit class", bandit, "CompactDmgType_C", true},
+		{"gun and fire wall", gun, "DmgType_Phoenix_Q_Fire_Production_C", false},
+		{"gun and fall", gun, "DmgType_Fall_C", false},
+		{"no equippable and gun damage", "", "DmgType_AK_C", true},
+		{"no equippable and bandit class", "", "CompactDmgType_C", true},
+		{"no equippable and fire wall", "", "DmgType_Phoenix_Q_Fire_Production_C", false},
+		{"no equippable and molotov", "", "DmgType_Hunter_4_Molotov_C", false},
+		{"no equippable and knife", "", "DmgType_Knife_C", false},
+		{"no equippable and spike", "", "DmgType_ObjectiveBombPlantExplosion_C", false},
+		{"no equippable and core ability", "", "DmgType_Clay_X_Rocket_C", false},
+		{"raze paint shells equippable", razeGrenade, "DmgType_Clay_4_Projectile_Secondary_Explosion_C", false},
+		{"raze paint shells without equippable", "", "DmgType_Clay_4_Projectile_Secondary_Explosion_C", false},
+		{"viper snakebite equippable", viperAcid, "DmgType_Pandemic_Q_Acid_C", false},
+		{"viper snakebite without equippable", "", "DmgType_Pandemic_Q_Acid_C", false},
+		{"viper snakebite with stale gun", gun, "DmgType_Pandemic_Q_Acid_C", false},
+		{"no equippable and headhunter", "", "DmgType_Deadeye_Q_Pistol_C", true},
+		{"ability equippable and gun damage", molotov, "DmgType_AK_C", false},
+		{"headhunter equippable", headhunter, "DmgType_Deadeye_Q_Pistol_C", true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := isGunHit(test.equippable, test.damageClass); got != test.want {
+				t.Fatalf("isGunHit(%q, %q) = %v, want %v",
+					test.equippable, test.damageClass, got, test.want)
+			}
+		})
+	}
+}
+
+// damageHitRows builds the scalar params of one MulticastNotifyDamage_* call.
+func damageHitRows(
+	timeMS, packetID uint32,
+	function string,
+	actor, shooter, victim, damageType uint32,
+) []fieldRow {
+	row := func(member string, value *int64, float *float64) fieldRow {
+		return fieldRow{
+			TimeMS:       timeMS,
+			PacketID:     packetID,
+			ActorNetGUID: actor,
+			GroupPath:    "/Script/ShooterGame.DamageableComponent_ClassNetCache",
+			FieldName:    ptr(function + "." + member),
+			ValueI64:     value,
+			ValueF64:     float,
+		}
+	}
+	damage := 20.0
+	return []fieldRow{
+		row("DamageTaken", nil, &damage),
+		row("EventInstigatorPawn", ptr(int64(shooter)), nil),
+		row("Character", ptr(int64(victim)), nil),
+		row("DamageType", ptr(int64(damageType)), nil),
+	}
+}
+
 func TestScanStateArmourCarriesAndIgnoresHealthSectionResults(t *testing.T) {
 	const pawn = uint32(200)
 	const item = uint32(700)

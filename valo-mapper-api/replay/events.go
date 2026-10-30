@@ -159,6 +159,7 @@ func normaliseEventGroup(group string) string {
 // roundLog is the per-round event log plus the stats derived from it.
 type roundLog struct {
 	Events []Event
+	Hits   []Hit
 	Stats  map[string]*PlayerStats
 }
 
@@ -240,6 +241,23 @@ func buildRoundLogs(
 				stats.Kills++
 			}
 		}
+	}
+
+	for _, hit := range state.Hits {
+		windowIndex, ok := roundIndexAt(windows, hit.TimeMS)
+		if !ok {
+			continue
+		}
+		window := &windows[windowIndex]
+		log := logs[window.RoundNumber]
+		if log == nil {
+			continue
+		}
+		log.Hits = append(log.Hits, Hit{
+			TimeMS:       roundRelative(hit.TimeMS, window),
+			ShooterPuuid: pseudonymousID(hit.ShooterSubject),
+			VictimPuuid:  pseudonymousID(hit.VictimSubject),
+		})
 	}
 
 	for _, plant := range events.Plants {

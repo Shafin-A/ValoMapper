@@ -6,7 +6,7 @@ package replay
 // ParserVersion is part of the cache key, the X-Parser-Version response header
 // and the parse log. Bump the leading number whenever the normalised output can
 // change, even if VRFKit itself did not change.
-const ParserVersion = "11+vrfkit.0.3.0"
+const ParserVersion = "13+vrfkit.0.3.0"
 
 // Match mirrors ReplayMatch in the frontend. Field names and JSON tags are the
 // wire contract; do not rename them without a frontend change.
@@ -51,6 +51,7 @@ type Round struct {
 	AttackTeamID string  `json:"attackTeamId"`
 	DurationMS   int     `json:"durationMs"`
 	Frames       []Frame `json:"frames"`
+	Hits         []Hit   `json:"hits,omitempty"`
 
 	// BuyEndTimeMS is round-relative (the barrier drop). The player starts its
 	// clock here instead of at the round's phase-3 start.
@@ -99,6 +100,14 @@ type Event struct {
 type Position struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
+}
+
+// Hit is a gun damage event. The player draws a tracer from the shooter to the
+// victim just before TimeMS so the hit does not appear from nowhere.
+type Hit struct {
+	TimeMS       int    `json:"timeMs"`
+	ShooterPuuid string `json:"shooterPuuid"`
+	VictimPuuid  string `json:"victimPuuid"`
 }
 
 type Frame struct {

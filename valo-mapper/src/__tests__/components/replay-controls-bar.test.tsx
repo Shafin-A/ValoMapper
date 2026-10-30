@@ -50,6 +50,7 @@ const handlers = {
   onSpeedChange: jest.fn(),
   onHideDeadAgentsChange: jest.fn(),
   onHideAgentWeaponsChange: jest.fn(),
+  onHideWeaponHitsChange: jest.fn(),
   onShowVisionConesChange: jest.fn(),
   onStartAtBarrierDropChange: jest.fn(),
 };
@@ -76,6 +77,8 @@ const barElement = (
     onHideDeadAgentsChange={handlers.onHideDeadAgentsChange}
     hideAgentWeapons={false}
     onHideAgentWeaponsChange={handlers.onHideAgentWeaponsChange}
+    hideWeaponHits={false}
+    onHideWeaponHitsChange={handlers.onHideWeaponHitsChange}
     showVisionCones
     onShowVisionConesChange={handlers.onShowVisionConesChange}
     startAtBarrierDrop
