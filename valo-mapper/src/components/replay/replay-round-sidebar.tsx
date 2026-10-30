@@ -46,9 +46,6 @@ export const ReplayRoundSidebar = ({
           <div className="space-y-2 p-3 pb-2">
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold">Replay</span>
-              <span className="rounded-sm border border-slate-700/80 bg-slate-900/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/55">
-                Live
-              </span>
             </div>
             <ReplayScoreHeader round={round} currentTimeMs={currentTimeMs} />
           </div>
