@@ -95,7 +95,7 @@ const round: ReplayRound = {
 };
 
 describe("ReplayScoreboard", () => {
-  it("renders the player name, agent label, armor, health and credits", () => {
+  it("renders the agent name, armor, health and credits", () => {
     render(
       <ReplayScoreboard
         players={players}
@@ -105,8 +105,9 @@ describe("ReplayScoreboard", () => {
       />,
     );
 
-    expect(screen.getByText("BlueOne")).toBeInTheDocument();
-    expect(screen.getByText("/ Jett")).toBeInTheDocument();
+    expect(screen.queryByText("BlueOne")).not.toBeInTheDocument();
+    expect(screen.getByText("Jett")).toBeInTheDocument();
+    expect(screen.getByText("Omen")).toBeInTheDocument();
     expect(screen.getAllByText("74").length).toBeGreaterThan(0);
     expect(screen.getAllByText("/100").length).toBeGreaterThan(0);
     expect(screen.getByText("50")).toBeInTheDocument();

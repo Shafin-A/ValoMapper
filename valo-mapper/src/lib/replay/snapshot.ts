@@ -17,7 +17,6 @@ import type {
   ConnectingLine,
   MapOption,
   MapSide,
-  MatchPlayerSummary,
   PhaseState,
   ToolIconCanvas,
   UndoableState,
@@ -100,33 +99,6 @@ export const getReplayAgentId = (playerIndex: number) =>
 
 export const getReplayAgentRole = (agentName: string): AgentRole =>
   AGENTS.find((agent) => agent.name === agentName)?.role ?? "Duelist";
-
-/**
- * Agent-name labels for the scoreboard. Duplicate agents are numbered in
- * roster order: `Jett 1`, `Jett 2`, otherwise just `Jett`.
- */
-export const getReplayAgentLabels = (players: MatchPlayerSummary[]) => {
-  const counts = new Map<string, number>();
-  for (const player of players) {
-    counts.set(player.characterName, (counts.get(player.characterName) ?? 0) + 1);
-  }
-
-  const seen = new Map<string, number>();
-  const labels = new Map<string, string>();
-
-  for (const player of players) {
-    const total = counts.get(player.characterName) ?? 0;
-    const index = (seen.get(player.characterName) ?? 0) + 1;
-    seen.set(player.characterName, index);
-
-    labels.set(
-      player.puuid,
-      total > 1 ? `${player.characterName} ${index}` : player.characterName,
-    );
-  }
-
-  return labels;
-};
 
 export const toReplayCanvasPoint = ({
   mapId,

@@ -12,7 +12,6 @@ import {
 import {
   buildReplayInitialState,
   buildReplaySnapshotState,
-  getReplayAgentLabels,
 } from "@/lib/replay/snapshot";
 import type {
   ReplayFrame,
@@ -230,16 +229,6 @@ const buildCurrentState = (): UndoableState => ({
   mapSide: "defense",
   currentPhaseIndex: 0,
   editedPhases: [0],
-});
-
-describe("getReplayAgentLabels", () => {
-  it("numbers duplicate agents in roster order", () => {
-    const labels = getReplayAgentLabels(players);
-
-    expect(labels.get("blue-1")).toBe("Jett 1");
-    expect(labels.get("red-1")).toBe("Jett 2");
-    expect(labels.get("red-2")).toBe("Omen");
-  });
 });
 
 describe("getReplayArmor", () => {

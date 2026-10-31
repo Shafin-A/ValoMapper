@@ -14,7 +14,6 @@ import {
   type ReplayAbilityDisplay,
 } from "@/lib/replay/display";
 import { getReplayPlayerStateAtTime } from "@/lib/replay/frames";
-import { getReplayAgentLabels } from "@/lib/replay/snapshot";
 import type {
   ReplayFramePlayer,
   ReplayRound,
@@ -117,13 +116,11 @@ const AbilityCell = ({
 
 const PlayerRow = ({
   player,
-  label,
   stats,
   framePlayer,
   currentTimeMs,
 }: {
   player: MatchPlayerSummary;
-  label: string;
   stats?: ReplayRoundPlayer;
   framePlayer: ReplayFramePlayer | null;
   currentTimeMs: number;
@@ -168,10 +165,7 @@ const PlayerRow = ({
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline gap-1">
             <span className="truncate text-[12px] font-semibold leading-tight text-white">
-              {player.gameName}
-            </span>
-            <span className="truncate text-[10px] leading-tight text-white/45">
-              / {label}
+              {player.characterName}
             </span>
           </div>
 
@@ -252,7 +246,6 @@ const PlayerRow = ({
 const TeamBlock = ({
   title,
   players,
-  labels,
   round,
   states,
   currentTimeMs,
@@ -260,7 +253,6 @@ const TeamBlock = ({
 }: {
   title: string;
   players: MatchPlayerSummary[];
-  labels: Map<string, string>;
   round: ReplayRound;
   states: Map<string, ReplayFramePlayer | null>;
   currentTimeMs: number;
@@ -297,7 +289,6 @@ const TeamBlock = ({
           <PlayerRow
             key={player.puuid}
             player={player}
-            label={labels.get(player.puuid) ?? player.characterName}
             stats={round.playerStats.find(
               (candidate) => candidate.puuid === player.puuid,
             )}
@@ -321,7 +312,6 @@ export const ReplayScoreboard = ({
   currentTimeMs: number;
   viewerPuuid?: string;
 }) => {
-  const labels = getReplayAgentLabels(players);
   const states = useMemo(() => {
     const next = new Map<string, ReplayFramePlayer | null>();
     for (const player of players) {
@@ -345,7 +335,6 @@ export const ReplayScoreboard = ({
       <TeamBlock
         title={`${allyTeamId} Team`}
         players={allies}
-        labels={labels}
         round={round}
         states={states}
         currentTimeMs={currentTimeMs}
@@ -354,7 +343,6 @@ export const ReplayScoreboard = ({
       <TeamBlock
         title={`${enemyTeamId} Team`}
         players={enemies}
-        labels={labels}
         round={round}
         states={states}
         currentTimeMs={currentTimeMs}
