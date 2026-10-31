@@ -1,5 +1,11 @@
 "use client";
 
+import { RoundEventRow } from "@/components/matches/match-event-log";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 import { formatReplayTime } from "@/lib/replay/display";
 import type { ReplayRound } from "@/lib/replay/types";
@@ -26,7 +32,7 @@ const getMarkerClassName = (
   return killer?.teamId === "Blue" ? "bg-[#42EEC7]" : "bg-[#FF4655]";
 };
 
-const getMarkerLabel = (
+const getMarkerAriaLabel = (
   event: ReplayRound["eventLog"][number],
   players: MatchPlayers,
 ) => {
@@ -47,8 +53,8 @@ const getMarkerLabel = (
   const killer = players.find((player) => player.puuid === event.killerPuuid);
   const victim = players.find((player) => player.puuid === event.victimPuuid);
 
-  return `${time} — ${killer?.gameName ?? "Unknown"} killed ${
-    victim?.gameName ?? "Unknown"
+  return `${time} — ${killer?.characterName ?? "Unknown"} killed ${
+    victim?.characterName ?? "Unknown"
   }`;
 };
 
@@ -72,19 +78,30 @@ export const ReplayTimeline = ({
         {typeof barrierDropTimeMs === "number" &&
           barrierDropTimeMs > 0 &&
           barrierDropTimeMs <= round.durationMs && (
-            <button
-              type="button"
-              title={`${formatReplayTime(barrierDropTimeMs)} — Barrier drop`}
-              aria-label={`${formatReplayTime(barrierDropTimeMs)} — Barrier drop`}
-              onClick={() => onSeek(barrierDropTimeMs)}
-              className="absolute top-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white/70 transition-transform hover:scale-125"
-              style={{
-                left: `${Math.min(
-                  100,
-                  (barrierDropTimeMs / Math.max(1, round.durationMs)) * 100,
-                )}%`,
-              }}
-            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`${formatReplayTime(barrierDropTimeMs)} — Barrier drop`}
+                  onClick={() => onSeek(barrierDropTimeMs)}
+                  className="absolute top-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white/70 transition-transform hover:scale-125"
+                  style={{
+                    left: `${Math.min(
+                      100,
+                      (barrierDropTimeMs / Math.max(1, round.durationMs)) * 100,
+                    )}%`,
+                  }}
+                />
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                align="center"
+                sideOffset={8}
+                hideArrow
+              >
+                {formatReplayTime(barrierDropTimeMs)} — Barrier drop
+              </TooltipContent>
+            </Tooltip>
           )}
         {round.eventLog.map((event, index) => {
           const left = Math.max(
@@ -98,18 +115,31 @@ export const ReplayTimeline = ({
           );
 
           return (
-            <button
-              key={`${event.eventType}-${index}`}
-              type="button"
-              title={getMarkerLabel(event, players)}
-              aria-label={getMarkerLabel(event, players)}
-              onClick={() => onSeek(event.timeSinceRoundStartMillis)}
-              className={cn(
-                "absolute top-1/2 h-2.5 w-1 -translate-x-1/2 -translate-y-1/2 rounded-sm transition-transform hover:scale-125",
-                getMarkerClassName(event, players),
-              )}
-              style={{ left: `${left}%` }}
-            />
+            <Tooltip key={`${event.eventType}-${index}`}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={getMarkerAriaLabel(event, players)}
+                  onClick={() => onSeek(event.timeSinceRoundStartMillis)}
+                  className={cn(
+                    "absolute top-1/2 h-2.5 w-1 -translate-x-1/2 -translate-y-1/2 rounded-sm transition-transform hover:scale-125",
+                    getMarkerClassName(event, players),
+                  )}
+                  style={{ left: `${left}%` }}
+                />
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                align="center"
+                sideOffset={8}
+                hideArrow
+                className="w-64 overflow-hidden border border-slate-800/80 bg-slate-950 p-0 text-slate-100 shadow-xl"
+              >
+                <ol>
+                  <RoundEventRow event={event} players={players} />
+                </ol>
+              </TooltipContent>
+            </Tooltip>
           );
         })}
       </div>

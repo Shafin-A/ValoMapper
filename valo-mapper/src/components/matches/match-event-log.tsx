@@ -31,7 +31,7 @@ interface RoundEventRowProps {
   onSelect?: () => void;
 }
 
-const RoundEventRow = ({
+export const RoundEventRow = ({
   event,
   players,
   currentPlayerPuuid,
