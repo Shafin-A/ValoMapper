@@ -82,4 +82,21 @@ describe("useReplayPlayback start time", () => {
     act(() => result.current.seek(500));
     expect(result.current.currentTimeMs).toBe(500);
   });
+
+  it("keeps playing when seeking with pause disabled", () => {
+    const { result } = renderHook(() =>
+      useReplayPlayback({
+        durationMs: 10_000,
+        resetKey: "round-1",
+      }),
+    );
+
+    act(() => result.current.togglePlay());
+    expect(result.current.isPlaying).toBe(true);
+
+    act(() => result.current.seek(4_000, { pause: false }));
+
+    expect(result.current.currentTimeMs).toBe(4_000);
+    expect(result.current.isPlaying).toBe(true);
+  });
 });

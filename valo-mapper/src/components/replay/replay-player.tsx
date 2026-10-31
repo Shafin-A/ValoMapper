@@ -208,6 +208,13 @@ export const ReplayPlayer = ({
     setSelectedRoundNumber(roundNumber);
   }, []);
 
+  const handleTimelineSeek = useCallback(
+    (timeMs: number) => {
+      seek(timeMs, { pause: false });
+    },
+    [seek],
+  );
+
   const handleSelectEvent = useCallback(
     (eventIndex: number) => {
       const event = round?.eventLog[eventIndex];
@@ -338,7 +345,7 @@ export const ReplayPlayer = ({
               isPlaying={isPlaying}
               speed={speed}
               onTogglePlay={togglePlay}
-              onSeek={seek}
+              onSeek={handleTimelineSeek}
               onSpeedChange={setSpeed}
               hideDeadAgents={hideDeadAgents}
               onHideDeadAgentsChange={setHideDeadAgents}
