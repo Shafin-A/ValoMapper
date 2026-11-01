@@ -21,12 +21,14 @@ import {
   toReplayCanvasPoint,
   toReplayCanvasRotation,
 } from "@/lib/replay/snapshot";
+import { mToPixels } from "@/lib/utils";
 import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
 import { Circle, Group, Line } from "react-konva";
 import {
   getReplayUtilityPositionAtTime,
   getReplayUtilityPathAtTime,
   getReplayUtilityTrailAtTime,
+  getReplayUtilityVisionYawAtTime,
 } from "@/lib/replay/utilities";
 import {
   getReplayAbilityYawOffset,
@@ -326,6 +328,7 @@ export const ReplayCanvasLayer = ({
             mapSide={mapSide}
             currentTimeMs={currentTimeMs}
             abilitiesSettings={abilitiesSettings}
+            showVisionCones={showVisionCones}
           />
         ))}
 
@@ -487,12 +490,14 @@ const ReplayUtilityMarker = ({
   mapSide,
   currentTimeMs,
   abilitiesSettings,
+  showVisionCones,
 }: {
   match: ReplayMatch;
   utility: ReplayUtility;
   mapSide: MapSide;
   currentTimeMs: number;
   abilitiesSettings: IconSettings;
+  showVisionCones: boolean;
 }) => {
   const position = getReplayUtilityPositionAtTime(utility, currentTimeMs);
   if (!position) {
@@ -508,6 +513,19 @@ const ReplayUtilityMarker = ({
   }
 
   const abilityIcon = getReplayUtilityAbilityIcon(utility.abilityId);
+  const visionYaw =
+    showVisionCones && utility.abilityId === "spycam"
+      ? getReplayUtilityVisionYawAtTime(utility.vision, currentTimeMs)
+      : null;
+  const visionRotation =
+    visionYaw === null
+      ? undefined
+      : toReplayCanvasRotation({
+          mapId: match.mapId,
+          mapSide,
+          location: utility.position,
+          viewRadians: (visionYaw * Math.PI) / 180,
+        });
   const path = getReplayUtilityPathAtTime(utility, currentTimeMs)
     .map((sample) => ({
       point: toReplayCanvasPoint({
@@ -581,6 +599,31 @@ const ReplayUtilityMarker = ({
 
   return (
     <Group listening={false}>
+      {visionRotation !== undefined && abilityIcon && (
+        <AbilityIcon
+          id={`${utility.id}-vision`}
+          action="vision_cone_103"
+          mapPosition={getReplayMapPosition()}
+          x={point.x}
+          y={point.y}
+          rotation={visionRotation}
+          currentLength={VISION_CONE_MAX_LENGTH}
+          src={abilityIcon.src}
+          width={abilitiesSettings.scale}
+          height={abilitiesSettings.scale}
+          borderOpacity={abilitiesSettings.borderOpacity}
+          strokeWidth={abilitiesSettings.borderWidth}
+          radius={abilitiesSettings.radius}
+          allyColor={abilitiesSettings.allyColor}
+          enemyColor={abilitiesSettings.enemyColor}
+          isAlly={owner?.teamId === "Blue"}
+          draggable={false}
+          isListening={false}
+          showOuterCircle
+          showCenterIcon={false}
+          showRotationHandle={false}
+        />
+      )}
       {trailPoints.length >= 4 && (
         <Line
           points={trailPoints}
@@ -614,8 +657,15 @@ const ReplayUtilityMarker = ({
           x={iconPoint.x}
           y={iconPoint.y}
           rotation={rotation}
-          currentLength={lineGeometry?.currentLength}
+          currentLength={
+            utility.length !== undefined
+              ? mToPixels(
+                  utility.length + (utility.abilityId === "trapwire" ? 2 : 0),
+                )
+              : lineGeometry?.currentLength
+          }
           currentPath={currentPath}
+          iconOnly={utility.iconOnly}
           showHandle={abilityIcon.action !== "phoenix_wall"}
           src={abilityIcon.src}
           width={abilitiesSettings.scale}

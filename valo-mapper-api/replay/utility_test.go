@@ -25,6 +25,11 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.00", "GameObject_Rift_X_GlobalWall", true, "cosmic_divide"},
 		{"13.00", "GameObject_Rift_X_Markers", true, "astra_passive"},
 		{"13.00", "GameObject_Breach_X_Shockwave", true, "rolling_thunder"},
+		{"13.01", "GameObject_Gumshoe_4_TripWire", true, "trapwire"},
+		{"13.01", "GameObject_Gumshoe_4_TripWire_SecondWire", true, "trapwire"},
+		{"13.01", "GameObject_Gumshoe_Q_CageTrap", true, "cyber_cage"},
+		{"13.01", "Zone_Gumshoe_Q_Cage", true, "cyber_cage"},
+		{"13.01", "Pawn_Gumshoe_E_PossessableCamera", true, "spycam"},
 		{"13.00", "Zone_Wraith_4_Smoke", true, "dark_cover"},
 		{"13.00", "GameObject_Smonk_NewSmoke", false, ""},
 		{"13.01", "GameObject_Smonk_NewSmoke", true, "ruse"},
@@ -57,6 +62,243 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 			t.Errorf("utility class %q has no ValoMapper ability id", classPath)
 		}
 	}
+}
+
+func TestScanUtilitiesMapsCypherActorsAndPairsTrapwireEndpoints(t *testing.T) {
+	dir := t.TempDir()
+	wireClass := "GameObject_Gumshoe_4_TripWire"
+	farWireClass := "GameObject_Gumshoe_4_TripWire_SecondWire"
+	placedCageClass := "GameObject_Gumshoe_Q_CageTrap"
+	cageClass := "Zone_Gumshoe_Q_Cage"
+	cameraClass := "Pawn_Gumshoe_E_PossessableCamera"
+	dartClass := "GameObject_RemovableObject_GumshoeTrackingDart"
+	actors := []stateActorRow{
+		{TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open", ClassPath: &wireClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(100)},
+		{TimeMS: 2500, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+		{TimeMS: 1000, PacketID: 1, ActorNetGUID: 701, Event: "open", ClassPath: &farWireClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(700)},
+		{TimeMS: 2500, PacketID: 2, ActorNetGUID: 701, Event: "close"},
+		{TimeMS: 1100, PacketID: 3, ActorNetGUID: 702, Event: "open", ClassPath: &cageClass, SpawnX: float32Ptr(200), SpawnY: float32Ptr(300)},
+		{TimeMS: 2500, PacketID: 4, ActorNetGUID: 702, Event: "close"},
+		{TimeMS: 1050, PacketID: 9, ActorNetGUID: 705, Event: "open", ClassPath: &placedCageClass, SpawnX: float32Ptr(150), SpawnY: float32Ptr(250)},
+		{TimeMS: 2500, PacketID: 10, ActorNetGUID: 705, Event: "close"},
+		{TimeMS: 1200, PacketID: 5, ActorNetGUID: 703, Event: "open", ClassPath: &cameraClass, SpawnX: float32Ptr(300), SpawnY: float32Ptr(400)},
+		{TimeMS: 2500, PacketID: 6, ActorNetGUID: 703, Event: "close"},
+		{TimeMS: 1300, PacketID: 7, ActorNetGUID: 704, Event: "open", ClassPath: &dartClass, SpawnX: float32Ptr(400), SpawnY: float32Ptr(500)},
+		{TimeMS: 2500, PacketID: 8, ActorNetGUID: 704, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	ownerName := "Owner"
+	directOwner := int64(900)
+	fields := []fieldRow{
+		{TimeMS: 900, PacketID: 1, ActorNetGUID: 700, FieldName: &ownerName, ValueI64: &directOwner},
+		{TimeMS: 900, PacketID: 1, ActorNetGUID: 701, FieldName: &ownerName, ValueI64: &directOwner},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.01",
+		3000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 5 {
+		t.Fatalf("utilities = %#v, want five utilities with the far endpoint suppressed", utilities)
+	}
+
+	byAbility := make(map[string]Utility)
+	var cageUtilities []Utility
+	for _, utility := range utilities[0] {
+		if utility.AbilityID == "cyber_cage" {
+			cageUtilities = append(cageUtilities, utility)
+		} else {
+			byAbility[utility.AbilityID] = utility
+		}
+	}
+	wire, found := byAbility["trapwire"]
+	if !found || wire.Position != (Position{X: 100, Y: 100}) ||
+		math.Abs(wire.Yaw-90) > 1e-8 || math.Abs(wire.Length-6) > 1e-8 {
+		t.Errorf("paired Trapwire = %+v, want start (100, 100), yaw 90, length 6m", wire)
+	}
+	if len(cageUtilities) != 2 {
+		t.Fatalf("Cyber Cage utilities = %#v, want placed and activated states", cageUtilities)
+	}
+	var placedCage, activatedCage *Utility
+	for i := range cageUtilities {
+		switch cageUtilities[i].Kind {
+		case UtilityMarker:
+			placedCage = &cageUtilities[i]
+		case UtilitySmoke:
+			activatedCage = &cageUtilities[i]
+		}
+	}
+	if placedCage == nil || !placedCage.IconOnly ||
+		placedCage.Position != (Position{X: 150, Y: 250}) {
+		t.Errorf("placed Cyber Cage = %+v, want icon-only marker at (150, 250)", placedCage)
+	}
+	if activatedCage == nil || activatedCage.IconOnly ||
+		activatedCage.Position != (Position{X: 200, Y: 300}) {
+		t.Errorf("activated Cyber Cage = %+v, want smoke zone at (200, 300)", activatedCage)
+	}
+	if _, found := byAbility["spycam"]; !found {
+		t.Error("observed camera or tracking dart actor was not mapped")
+	}
+	spycamCount := 0
+	for _, utility := range utilities[0] {
+		if utility.AbilityID == "spycam" {
+			spycamCount++
+		}
+	}
+	if spycamCount != 2 {
+		t.Errorf("spycam utilities = %d, want camera and Tracking Dart", spycamCount)
+	}
+}
+
+func TestScanUtilitiesTracksSpycamVisionOnlyWhilePossessed(t *testing.T) {
+	dir := t.TempDir()
+	cameraClass := "Pawn_Gumshoe_E_PossessableCamera"
+	actors := []stateActorRow{
+		{TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open", ClassPath: &cameraClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200), SpawnYaw: float32Ptr(45)},
+		{TimeMS: 3500, PacketID: 5, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	controllerName := "Controller"
+	notPossessed, controller := int64(0), int64(900)
+	fields := []fieldRow{
+		{TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, FieldName: &controllerName, ValueI64: &notPossessed},
+		{TimeMS: 1500, PacketID: 2, ActorNetGUID: 700, FieldName: &controllerName, ValueI64: &controller},
+		{TimeMS: 2500, PacketID: 4, ActorNetGUID: 700, FieldName: &controllerName, ValueI64: &notPossessed},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	movement := []movementRow{
+		{TimeMS: 900, CharacterNetGUID: 700, PosX: 100, PosY: 200, Yaw: 80},
+		{TimeMS: 1500, CharacterNetGUID: 700, PosX: 100, PosY: 200, Yaw: 90},
+		{TimeMS: 1700, CharacterNetGUID: 700, PosX: 100, PosY: 200, Yaw: 130},
+		{TimeMS: 2600, CharacterNetGUID: 700, PosX: 100, PosY: 200, Yaw: 200},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "movement.parquet"), movement); err != nil {
+		t.Fatal(err)
+	}
+
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.01",
+		5000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 500, EndMS: 4000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Spycam", utilities)
+	}
+	vision := utilities[0][0].Vision
+	if len(vision) != 3 {
+		t.Fatalf("Spycam vision samples = %#v, want activation, turn, and deactivation", vision)
+	}
+	if vision[0] != (UtilityVisionSample{TimeMS: 1000, Yaw: 90, Active: true}) ||
+		vision[1] != (UtilityVisionSample{TimeMS: 1200, Yaw: 130, Active: true}) ||
+		vision[2] != (UtilityVisionSample{TimeMS: 2000, Yaw: 130, Active: false}) {
+		t.Errorf("Spycam vision timeline = %#v", vision)
+	}
+}
+
+func TestPairCypherTrapwireEndpointsRequiresUniqueDirectOwnerAndSpawn(t *testing.T) {
+	mainClass := utilityCatalog["GameObject_Gumshoe_4_TripWire"]
+	farClass := utilityCatalog["GameObject_Gumshoe_4_TripWire_SecondWire"]
+	owner := uint32(900)
+	makeLives := func(mainCount int) []*utilityActorLife {
+		lives := make([]*utilityActorLife, 0, mainCount+1)
+		for i := 0; i < mainCount; i++ {
+			lives = append(lives, &utilityActorLife{
+				guid: uint32(700 + i), class: mainClass, openMS: 1000,
+				position: Position{X: 100, Y: 100},
+			})
+		}
+		lives = append(lives, &utilityActorLife{
+			guid: 800, class: farClass, openMS: 1000,
+			position: Position{X: 100, Y: 700},
+		})
+		return lives
+	}
+	makeWrites := func(mainCount int) map[uint32][]utilityOwnerWrite {
+		writes := make(map[uint32][]utilityOwnerWrite)
+		for guid := uint32(700); guid < uint32(700+mainCount); guid++ {
+			writes[guid] = []utilityOwnerWrite{{TimeMS: 900, Owner: &owner}}
+		}
+		writes[800] = []utilityOwnerWrite{{TimeMS: 900, Owner: &owner}}
+		return writes
+	}
+
+	t.Run("unique match", func(t *testing.T) {
+		lives := makeLives(1)
+		pairCypherTrapwireEndpoints(lives, makeWrites(1))
+		if lives[0].lengthM != 6 || lives[0].yaw != 90 {
+			t.Errorf("paired endpoint length/yaw = %v/%v, want 6/90", lives[0].lengthM, lives[0].yaw)
+		}
+	})
+	t.Run("ambiguous main actor", func(t *testing.T) {
+		lives := makeLives(2)
+		pairCypherTrapwireEndpoints(lives, makeWrites(2))
+		if lives[0].lengthM != 0 || lives[1].lengthM != 0 {
+			t.Errorf("ambiguous endpoints assigned lengths: %v/%v", lives[0].lengthM, lives[1].lengthM)
+		}
+	})
+	t.Run("different spawn times", func(t *testing.T) {
+		lives := makeLives(1)
+		lives[1].openMS++
+		pairCypherTrapwireEndpoints(lives, makeWrites(1))
+		if lives[0].lengthM != 0 {
+			t.Errorf("different-spawn endpoint assigned length %v", lives[0].lengthM)
+		}
+	})
+	t.Run("different direct owners", func(t *testing.T) {
+		lives := makeLives(1)
+		otherOwner := owner + 1
+		writes := makeWrites(1)
+		writes[800][0].Owner = &otherOwner
+		pairCypherTrapwireEndpoints(lives, writes)
+		if lives[0].lengthM != 0 {
+			t.Errorf("different-owner endpoint assigned length %v", lives[0].lengthM)
+		}
+	})
+	t.Run("missing direct owner", func(t *testing.T) {
+		lives := makeLives(1)
+		pairCypherTrapwireEndpoints(lives, nil)
+		if lives[0].lengthM != 0 {
+			t.Errorf("unowned endpoints assigned length %v", lives[0].lengthM)
+		}
+	})
 }
 
 func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {

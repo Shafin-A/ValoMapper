@@ -23,6 +23,9 @@ type utilityCatalogEntry struct {
 	mobile             bool
 	replicatedMovement bool
 	wallPoints         bool
+	trapwireFarEnd     bool
+	iconOnly           bool
+	visionCone         bool
 	wallYawOffset      float64
 	curveballSide      int
 	minBuild           int
@@ -60,15 +63,20 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Deadeye_E_Trap":              {kind: UtilityTrap, minBuild: 1302, ability: "trademark"},
 
 	// Clove
-	"GameObject_Smonk_Q_DecayExplosion": {kind: UtilityArea, minBuild: 1301, ability: "meddle"},
+	"GameObject_Smonk_Q_DecayExplosion": {kind: UtilityArea, minBuild: 1301, maxLifetimeMS: 750, ability: "meddle"},
 	"GameObject_Smonk_NewSmoke":         {kind: UtilitySmoke, minBuild: 1301, ability: "ruse"},
 	"GameObject_Smonk_NewSmoke_PDS":     {kind: UtilitySmoke, minBuild: 1301, ability: "ruse"},
 	"Projectile_Smonk_DecayNade":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1301, ability: "meddle"},
 
 	// Cypher
 	"GameObject_Gumshoe_E_TripWire":                  {kind: UtilityWall, minBuild: 1300, ability: "trapwire"},
+	"GameObject_Gumshoe_4_TripWire":                  {kind: UtilityWall, minBuild: 1300, ability: "trapwire"},
+	"GameObject_Gumshoe_4_TripWire_SecondWire":       {kind: UtilityMarker, trapwireFarEnd: true, minBuild: 1300, ability: "trapwire"},
+	"GameObject_Gumshoe_Q_CageTrap":                  {kind: UtilityMarker, iconOnly: true, minBuild: 1300, ability: "cyber_cage"},
 	"Zone_Gumshoe_4_Cage":                            {kind: UtilitySmoke, minBuild: 1300, ability: "cyber_cage"},
-	"Pawn_Gumshoe_Q_PossessableCamera":               {kind: UtilityMarker, minBuild: 1300, ability: "spycam"},
+	"Zone_Gumshoe_Q_Cage":                            {kind: UtilitySmoke, minBuild: 1300, ability: "cyber_cage"},
+	"Pawn_Gumshoe_Q_PossessableCamera":               {kind: UtilityMarker, visionCone: true, minBuild: 1300, ability: "spycam"},
+	"Pawn_Gumshoe_E_PossessableCamera":               {kind: UtilityMarker, visionCone: true, minBuild: 1300, ability: "spycam"},
 	"GameObject_RemovableObject_GumshoeTrackingDart": {kind: UtilityMarker, minBuild: 1300, ability: "spycam"},
 
 	// Deadlock
@@ -223,6 +231,7 @@ type utilityActorLife struct {
 	closeMS  uint32
 	position Position
 	yaw      float64
+	lengthM  float64
 	hasYaw   bool
 	owner    string
 }
@@ -232,6 +241,7 @@ type utilityOwnerWrite struct {
 	PacketID   uint32
 	Owner      *uint32
 	Instigator *uint32
+	Controller *uint32
 }
 
 type utilityPathWrite struct {
@@ -251,6 +261,7 @@ type utilitySegment struct {
 	samples            []movementRow
 	replicatedMovement []utilityPathWrite
 	path               []utilityPathWrite
+	visionSamples      []UtilityVisionSample
 }
 
 func scanUtilities(
@@ -324,8 +335,13 @@ func scanUtilities(
 		}
 	}
 
+	pairCypherTrapwireEndpoints(lives, ownerWrites)
+
 	segments := make([]utilitySegment, 0)
 	for _, life := range lives {
+		if life.class.trapwireFarEnd {
+			continue
+		}
 		for roundIndex, window := range windows {
 			start := maxUint32(life.openMS, window.StartMS)
 			end := minUint32(life.closeMS, window.EndMS)
@@ -349,22 +365,26 @@ func scanUtilities(
 		segments = segments[:maxUtilityIntervals]
 	}
 
-	mobileGUIDs := make(map[uint32]struct{})
+	movementGUIDs := make(map[uint32]struct{})
 	replicatedMovementGUIDs := make(map[uint32]struct{})
 	for _, segment := range segments {
 		if segment.life.class.mobile {
-			mobileGUIDs[segment.life.guid] = struct{}{}
+			movementGUIDs[segment.life.guid] = struct{}{}
+		}
+		if segment.life.class.visionCone &&
+			hasActiveUtilityControllerWrite(ownerWrites[segment.life.guid]) {
+			movementGUIDs[segment.life.guid] = struct{}{}
 		}
 		if segment.life.class.replicatedMovement {
 			replicatedMovementGUIDs[segment.life.guid] = struct{}{}
 		}
 	}
-	movementByGUID := make(map[uint32][]movementRow, len(mobileGUIDs))
-	if len(mobileGUIDs) > 0 {
+	movementByGUID := make(map[uint32][]movementRow, len(movementGUIDs))
+	if len(movementGUIDs) > 0 {
 		_, err = readParquetRows[movementRow](exportDir+"/movement.parquet", func(rows []movementRow) error {
 			for i := range rows {
 				row := rows[i]
-				if _, wanted := mobileGUIDs[row.CharacterNetGUID]; !wanted ||
+				if _, wanted := movementGUIDs[row.CharacterNetGUID]; !wanted ||
 					!isFinite32(row.PosX) || !isFinite32(row.PosY) ||
 					math.Abs(float64(row.PosX)) > 1_000_000 ||
 					math.Abs(float64(row.PosY)) > 1_000_000 {
@@ -442,6 +462,21 @@ func scanUtilities(
 			}
 		}
 		if !segment.life.class.mobile {
+			if segment.life.class.visionCone {
+				var truncated bool
+				segment.visionSamples, truncated = sampleUtilityVision(
+					movementByGUID[segment.life.guid],
+					ownerWrites[segment.life.guid],
+					segment.startMS,
+					segment.endMS,
+					windows[segment.roundIndex].StartMS,
+					segment.life.yaw,
+					segment.life.hasYaw,
+				)
+				if truncated {
+					incrementUtilityWarning(&warnings.TruncatedSamples)
+				}
+			}
 			continue
 		}
 		for _, row := range movementByGUID[segment.life.guid] {
@@ -468,6 +503,11 @@ func scanUtilities(
 			Position:    segment.position,
 			Yaw:         segment.yaw,
 			OwnerPuuid:  segment.life.owner,
+			IconOnly:    segment.life.class.iconOnly,
+			Vision:      segment.visionSamples,
+		}
+		if segment.life.lengthM > 0 {
+			utility.Length = segment.life.lengthM
 		}
 		if segment.life.class.ability == "blaze" {
 			var truncated bool
@@ -871,6 +911,8 @@ func utilityOwnerField(name string) string {
 		return "owner"
 	case "instigator":
 		return "instigator"
+	case "controller":
+		return "controller"
 	default:
 		return ""
 	}
@@ -963,6 +1005,70 @@ func resolveUtilityOwner(
 	return "", hadLink, false
 }
 
+func pairCypherTrapwireEndpoints(
+	lives []*utilityActorLife,
+	writes map[uint32][]utilityOwnerWrite,
+) {
+	type ownerSpawn struct {
+		timeMS uint32
+		owner  uint32
+	}
+	mainBySpawn := make(map[ownerSpawn][]*utilityActorLife)
+	farBySpawn := make(map[ownerSpawn][]*utilityActorLife)
+	for _, life := range lives {
+		if life.class.ability != "trapwire" {
+			continue
+		}
+		owner, ok := utilityDirectOwnerAt(life.guid, life.openMS, writes)
+		if !ok {
+			continue
+		}
+		key := ownerSpawn{timeMS: life.openMS, owner: owner}
+		if life.class.trapwireFarEnd {
+			farBySpawn[key] = append(farBySpawn[key], life)
+		} else {
+			mainBySpawn[key] = append(mainBySpawn[key], life)
+		}
+	}
+
+	for key, mainLives := range mainBySpawn {
+		farLives := farBySpawn[key]
+		if len(mainLives) != 1 || len(farLives) != 1 {
+			continue
+		}
+		main, far := mainLives[0], farLives[0]
+		dx := far.position.X - main.position.X
+		dy := far.position.Y - main.position.Y
+		lengthM := math.Hypot(dx, dy) / 100
+		if lengthM <= 0 || !isFinite64(lengthM) {
+			continue
+		}
+		main.yaw = math.Atan2(dy, dx) * 180 / math.Pi
+		main.hasYaw = true
+		main.lengthM = lengthM
+	}
+}
+
+func utilityDirectOwnerAt(
+	actor uint32,
+	at uint32,
+	writes map[uint32][]utilityOwnerWrite,
+) (uint32, bool) {
+	var owner uint32
+	found := false
+	for _, write := range writes[actor] {
+		if write.TimeMS > at {
+			break
+		}
+		if write.Owner == nil {
+			continue
+		}
+		owner = *write.Owner
+		found = owner != 0
+	}
+	return owner, found
+}
+
 func filterUtilitySegments(segments []utilitySegment) []utilitySegment {
 	result := segments[:0]
 	for _, segment := range segments {
@@ -1024,6 +1130,148 @@ func sampleUtilityMovement(rows []movementRow, roundStart uint32) ([]UtilityPosi
 		})
 	}
 	return result, truncated
+}
+
+func sampleUtilityVision(
+	rows []movementRow,
+	writes []utilityOwnerWrite,
+	startMS, endMS, roundStart uint32,
+	initialYaw float64,
+	hasInitialYaw bool,
+) ([]UtilityVisionSample, bool) {
+	if startMS >= endMS {
+		return nil, false
+	}
+
+	rows = append([]movementRow(nil), rows...)
+	sort.SliceStable(rows, func(i, j int) bool { return rows[i].TimeMS < rows[j].TimeMS })
+
+	active, hasController := utilityControllerAt(writes, startMS)
+	yaw, hasYaw := initialYaw, hasInitialYaw && isFinite64(initialYaw)
+	rowIndex := 0
+	for rowIndex < len(rows) && rows[rowIndex].TimeMS <= startMS {
+		if isFinite32(rows[rowIndex].Yaw) {
+			yaw = float64(rows[rowIndex].Yaw)
+			hasYaw = true
+		}
+		rowIndex++
+	}
+	if !hasController {
+		active = false
+	}
+
+	samples := make([]UtilityVisionSample, 0)
+	appendSample := func(timeMS uint32, isActive bool) {
+		if !hasYaw || !isFinite64(yaw) {
+			return
+		}
+		sample := UtilityVisionSample{
+			TimeMS: int(timeMS - roundStart),
+			Yaw:    yaw,
+			Active: isActive,
+		}
+		if len(samples) > 0 && samples[len(samples)-1].TimeMS == sample.TimeMS {
+			samples[len(samples)-1] = sample
+			return
+		}
+		samples = append(samples, sample)
+	}
+	if active {
+		appendSample(startMS, true)
+	}
+
+	writeIndex := sort.Search(len(writes), func(i int) bool {
+		return writes[i].TimeMS > startMS
+	})
+	lastYawSampleMS := startMS
+	for rowIndex < len(rows) || writeIndex < len(writes) {
+		var nextTime uint32
+		switch {
+		case rowIndex >= len(rows):
+			nextTime = writes[writeIndex].TimeMS
+		case writeIndex >= len(writes):
+			nextTime = rows[rowIndex].TimeMS
+		case writes[writeIndex].TimeMS <= rows[rowIndex].TimeMS:
+			nextTime = writes[writeIndex].TimeMS
+		default:
+			nextTime = rows[rowIndex].TimeMS
+		}
+		if nextTime >= endMS {
+			break
+		}
+
+		for writeIndex < len(writes) && writes[writeIndex].TimeMS == nextTime {
+			write := writes[writeIndex]
+			if write.Controller != nil {
+				nextActive := *write.Controller != 0
+				if nextActive != active {
+					active = nextActive
+					appendSample(nextTime, active)
+					lastYawSampleMS = nextTime
+				}
+			}
+			writeIndex++
+		}
+		for rowIndex < len(rows) && rows[rowIndex].TimeMS == nextTime {
+			row := rows[rowIndex]
+			if isFinite32(row.Yaw) {
+				previousYaw := yaw
+				yaw = float64(row.Yaw)
+				hasYaw = true
+				if active && (nextTime-lastYawSampleMS >= 100 ||
+					utilityYawDelta(previousYaw, yaw) >= 2) {
+					appendSample(nextTime, true)
+					lastYawSampleMS = nextTime
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	truncated := len(samples) > maxUtilitySamples
+	if truncated {
+		reduced := make([]UtilityVisionSample, maxUtilitySamples)
+		for i := range reduced {
+			index := i * (len(samples) - 1) / (maxUtilitySamples - 1)
+			reduced[i] = samples[index]
+		}
+		samples = reduced
+	}
+	return samples, truncated
+}
+
+func utilityControllerAt(writes []utilityOwnerWrite, at uint32) (bool, bool) {
+	active, found := false, false
+	for _, write := range writes {
+		if write.TimeMS > at {
+			break
+		}
+		if write.Controller == nil {
+			continue
+		}
+		active = *write.Controller != 0
+		found = true
+	}
+	return active, found
+}
+
+func hasActiveUtilityControllerWrite(writes []utilityOwnerWrite) bool {
+	for _, write := range writes {
+		if write.Controller != nil && *write.Controller != 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func utilityYawDelta(a, b float64) float64 {
+	delta := math.Mod(b-a, 360)
+	if delta > 180 {
+		delta -= 360
+	} else if delta < -180 {
+		delta += 360
+	}
+	return math.Abs(delta)
 }
 
 func utilityBuildNumber(build string) (int, bool) {

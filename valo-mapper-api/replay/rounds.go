@@ -144,6 +144,11 @@ func scanFields(exportDir string) (*fieldScan, error) {
 						scan.UtilityOwners[row.ActorNetGUID],
 						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Instigator: &target},
 					)
+				case "controller":
+					scan.UtilityOwners[row.ActorNetGUID] = append(
+						scan.UtilityOwners[row.ActorNetGUID],
+						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Controller: &target},
+					)
 				}
 			}
 

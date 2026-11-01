@@ -78,6 +78,12 @@ export type ReplayUtilityPositionSample = {
   y: number;
 };
 
+export type ReplayUtilityVisionSample = {
+  timeMs: number;
+  yaw: number;
+  active: boolean;
+};
+
 export type ReplayUtility = {
   id: string;
   kind: ReplayUtilityKind;
@@ -87,9 +93,12 @@ export type ReplayUtility = {
   endTimeMs: number;
   position: { x: number; y: number };
   yaw?: number;
+  length?: number;
+  iconOnly?: boolean;
   ownerPuuid?: string;
   samples?: ReplayUtilityPositionSample[];
   path?: ReplayUtilityPositionSample[];
+  vision?: ReplayUtilityVisionSample[];
 };
 
 export type ReplayUtilityWarnings = {

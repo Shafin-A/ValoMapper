@@ -1,4 +1,5 @@
 import {
+  getReplayUtilityVisionYawAtTime,
   getReplayUtilityPositionAtTime,
   getReplayUtilityTrailAtTime,
   REPLAY_UTILITY_MAX_SAMPLE_AGE_MS,
@@ -127,5 +128,19 @@ describe("replay utility playback", () => {
     expect(getReplayUtilityTrailAtTime(mobileUtility, 150)).toEqual([
       { timeMs: 100, x: 10, y: 20 },
     ]);
+  });
+
+  it("interpolates Spycam yaw while possessed and hides the cone after unpossessing", () => {
+    const vision = [
+      { timeMs: 100, yaw: 350, active: true },
+      { timeMs: 300, yaw: 10, active: true },
+      { timeMs: 400, yaw: 10, active: false },
+    ];
+
+    expect(getReplayUtilityVisionYawAtTime(vision, 50)).toBeNull();
+    expect(getReplayUtilityVisionYawAtTime(vision, 100)).toBe(350);
+    expect(getReplayUtilityVisionYawAtTime(vision, 200)).toBe(0);
+    expect(getReplayUtilityVisionYawAtTime(vision, 300)).toBe(10);
+    expect(getReplayUtilityVisionYawAtTime(vision, 400)).toBeNull();
   });
 });

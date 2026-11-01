@@ -1,6 +1,7 @@
 import type {
   ReplayUtility,
   ReplayUtilityPositionSample,
+  ReplayUtilityVisionSample,
 } from "./types";
 
 export const REPLAY_UTILITY_MAX_SAMPLE_AGE_MS = 250;
@@ -53,3 +54,33 @@ export const getReplayUtilityPathAtTime = (
       sample.timeMs <= timeMs &&
       sample.timeMs < utility.endTimeMs,
   );
+
+export const getReplayUtilityVisionYawAtTime = (
+  samples: ReplayUtilityVisionSample[] | undefined,
+  timeMs: number,
+): number | null => {
+  if (!samples?.length) {
+    return null;
+  }
+
+  let previous: ReplayUtilityVisionSample | undefined;
+  let next: ReplayUtilityVisionSample | undefined;
+  for (const sample of samples) {
+    if (sample.timeMs <= timeMs) {
+      previous = sample;
+      continue;
+    }
+    next = sample;
+    break;
+  }
+  if (!previous?.active) {
+    return null;
+  }
+  if (!next?.active || next.timeMs <= previous.timeMs) {
+    return previous.yaw;
+  }
+
+  const delta = ((((next.yaw - previous.yaw) % 360) + 540) % 360) - 180;
+  const progress = (timeMs - previous.timeMs) / (next.timeMs - previous.timeMs);
+  return ((previous.yaw + delta * progress) % 360 + 360) % 360;
+};

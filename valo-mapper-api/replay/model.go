@@ -6,7 +6,7 @@ package replay
 // ParserVersion is part of the cache key, the X-Parser-Version response header
 // and the parse log. Bump the leading number whenever the normalised output can
 // change, even if VRFKit itself did not change.
-const ParserVersion = "27+vrfkit.0.3.0"
+const ParserVersion = "30+vrfkit.0.3.0"
 
 // Match mirrors ReplayMatch in the frontend. Field names and JSON tags are the
 // wire contract; do not rename them without a frontend change.
@@ -124,15 +124,24 @@ type Utility struct {
 	EndTimeMS   int                     `json:"endTimeMs"`
 	Position    Position                `json:"position"`
 	Yaw         float64                 `json:"yaw"`
+	Length      float64                 `json:"length,omitempty"`
+	IconOnly    bool                    `json:"iconOnly,omitempty"`
 	OwnerPuuid  string                  `json:"ownerPuuid,omitempty"`
 	Samples     []UtilityPositionSample `json:"samples,omitempty"`
 	Path        []UtilityPositionSample `json:"path,omitempty"`
+	Vision      []UtilityVisionSample   `json:"vision,omitempty"`
 }
 
 type UtilityPositionSample struct {
 	TimeMS int     `json:"timeMs"`
 	X      float64 `json:"x"`
 	Y      float64 `json:"y"`
+}
+
+type UtilityVisionSample struct {
+	TimeMS int     `json:"timeMs"`
+	Yaw    float64 `json:"yaw"`
+	Active bool    `json:"active"`
 }
 
 // UtilityWarnings are bounded per-replay counts; they never contain NetGUIDs

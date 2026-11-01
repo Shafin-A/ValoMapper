@@ -95,6 +95,7 @@ jest.mock("@/components/canvas-icons", () => ({
     currentLength,
     currentPath,
     showHandle,
+    iconOnly,
   }: {
     id?: string;
     action?: string;
@@ -110,6 +111,7 @@ jest.mock("@/components/canvas-icons", () => ({
     currentLength?: number;
     currentPath?: { x: number; y: number }[];
     showHandle?: boolean;
+    iconOnly?: boolean;
   }) => (
     <span
       data-testid="ability-icon"
@@ -128,6 +130,7 @@ jest.mock("@/components/canvas-icons", () => ({
       data-current-length={currentLength}
       data-current-path={JSON.stringify(currentPath ?? [])}
       data-show-handle={String(showHandle)}
+      data-icon-only={String(iconOnly)}
     />
   ),
   CanvasIcon: ({
@@ -593,6 +596,105 @@ describe("ReplayCanvasLayer utilities", () => {
       }
     },
   );
+
+  it("uses the measured Trapwire endpoint distance for its rendered line", () => {
+    const trapwire: ReplayUtility = {
+      id: "utility-trapwire",
+      kind: "wall",
+      abilityId: "trapwire",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: lotusSpawn,
+      yaw: 90,
+      length: 6,
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([trapwire])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+
+    expect(
+      Number(screen.getByTestId("ability-icon").getAttribute("data-current-length")),
+    ).toBeCloseTo(mToPixels(8));
+  });
+
+  it("renders a placed Cyber Cage as an icon without its activation circle", () => {
+    const placedCage: ReplayUtility = {
+      id: "utility-cyber-cage-placed",
+      kind: "marker",
+      abilityId: "cyber_cage",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: lotusSpawn,
+      iconOnly: true,
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([placedCage])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+
+    expect(screen.getByTestId("ability-icon")).toHaveAttribute(
+      "data-action",
+      "cypher_cage",
+    );
+    expect(screen.getByTestId("ability-icon")).toHaveAttribute(
+      "data-icon-only",
+      "true",
+    );
+  });
+
+  it("shows Spycam's vision cone only while the camera is possessed", () => {
+    const spycam: ReplayUtility = {
+      id: "utility-spycam",
+      kind: "marker",
+      abilityId: "spycam",
+      startTimeMs: 0,
+      endTimeMs: 600,
+      position: lotusSpawn,
+      vision: [
+        { timeMs: 100, yaw: 90, active: true },
+        { timeMs: 500, yaw: 180, active: false },
+      ],
+    };
+
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([spycam])}
+        frame={frame}
+        currentTimeMs={300}
+      />,
+    );
+    expect(
+      screen.getAllByTestId("ability-icon").some(
+        (icon) => icon.getAttribute("data-action") === "vision_cone_103",
+      ),
+    ).toBe(true);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([spycam])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+    expect(
+      screen.getAllByTestId("ability-icon").some(
+        (icon) => icon.getAttribute("data-action") === "vision_cone_103",
+      ),
+    ).toBe(false);
+  });
 
   it("renders stationary utility markers only during their round-relative lifetime", () => {
     const smoke: ReplayUtility = {
