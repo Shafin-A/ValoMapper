@@ -23,6 +23,7 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.01", "GameObject_Deadeye_E_Trap", false, ""},
 		{"13.02", "GameObject_Deadeye_E_Trap", true, "trademark"},
 		{"13.08", "Pawn_BountyHunter_4_WolfHound", true, "prowler"},
+		{"13.08", "Gameobject_Grenadier_E_SuppressionPulse", true, "zeropoint"},
 		{"13.08", "Projectile_Wushu_4_Smoke", false, ""},
 		{"13.08", "Ability_BountyHunter_4_WolfHoundBendable", false, ""},
 		{"13.09", "GameObject_Smonk_NewSmoke", false, ""},

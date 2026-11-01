@@ -37,6 +37,8 @@ describe("replay utility playback", () => {
     ["barrier_orb", "/agents/sage/barrier_orb.png"],
     ["prowler", "/agents/fade/prowler.png"],
     ["boom_bot", "/agents/raze/boom_bot.png"],
+    ["zeropoint", "/agents/kayo/zeropoint.png"],
+    ["mpulse_concuss", "/agents/miks/mpulse_heal.png"],
   ])("resolves %s to its ValoMapper ability artwork", (abilityId, src) => {
     expect(getReplayUtilityAbilityIcon(abilityId)).toMatchObject({
       id: abilityId,

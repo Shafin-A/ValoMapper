@@ -88,6 +88,8 @@ export const ReplaySettingsMenu = ({
               ["#fb923c", "Molly"],
               ["#facc15", "Trap"],
               ["#4ade80", "Mobile"],
+              ["#f472b6", "Area"],
+              ["#a3a3a3", "Marker"],
             ].map(([color, label]) => (
               <span key={label} className="flex items-center gap-1.5">
                 <span

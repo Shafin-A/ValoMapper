@@ -44,6 +44,8 @@ const REPLAY_UTILITY_COLORS: Record<ReplayUtilityKind, string> = {
   molly: "#fb923c",
   trap: "#facc15",
   mobile: "#4ade80",
+  area: "#f472b6",
+  marker: "#a3a3a3",
 };
 
 const REPLAY_SPIKE_TOOL_ICON: ToolIconCanvas = {

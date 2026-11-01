@@ -191,8 +191,8 @@ func TestServiceParseSyntheticReplay(t *testing.T) {
 		t.Errorf("round 2 events = %+v", second.EventLog)
 	}
 
-	if ParserVersion != "16+vrfkit.0.3.0" {
-		t.Errorf("parser version = %q, want the Blaze-path utility version", ParserVersion)
+	if ParserVersion != "17+vrfkit.0.3.0" {
+		t.Errorf("parser version = %q, want the expanded utility catalog version", ParserVersion)
 	}
 
 	puuid := func(index int) string { return pseudonymousID(fixture.subjects[index]) }

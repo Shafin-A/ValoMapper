@@ -63,7 +63,14 @@ export type ReplayHit = {
   victimPuuid: string;
 };
 
-export type ReplayUtilityKind = "smoke" | "wall" | "molly" | "trap" | "mobile";
+export type ReplayUtilityKind =
+  | "smoke"
+  | "wall"
+  | "molly"
+  | "trap"
+  | "mobile"
+  | "area"
+  | "marker";
 
 export type ReplayUtilityPositionSample = {
   timeMs: number;

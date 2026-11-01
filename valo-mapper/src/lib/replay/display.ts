@@ -34,8 +34,26 @@ export type ReplayUtilityAbilityIcon = {
 
 const REPLAY_UTILITY_ABILITY_ICONS = new Map<string, ReplayUtilityAbilityIcon>(
   Object.values(AGENT_ICON_CONFIGS)
-    .flat()
-    .map(({ id, name, src, action }) => [id, { id, name, src, action }]),
+    .flatMap((abilities) =>
+      abilities.flatMap(({ id, name, src, action, alternates = [] }) => [
+        { id, name, src, action },
+        ...alternates.map((alternate) => ({
+          id: alternate.id,
+          name: alternate.name,
+          src: alternate.src,
+          action: alternate.action,
+        })),
+      ]),
+    )
+    .map((ability) => [
+      ability.id,
+      {
+        id: ability.id,
+        name: ability.name,
+        src: ability.src,
+        action: ability.action,
+      },
+    ]),
 );
 
 /** Returns the existing ValoMapper ability artwork for a replay utility. */
