@@ -112,6 +112,145 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 	}
 }
 
+func TestCurveballCatalogRecordsFlareSide(t *testing.T) {
+	left, leftOK := utilityCatalog["Projectile_Phoenix_E_FlareCurve_Synced"]
+	right, rightOK := utilityCatalog["Projectile_Phoenix_E_FlareCurve_Synced_Right"]
+	if !leftOK || !rightOK || left.curveballSide != -1 || right.curveballSide != 1 {
+		t.Fatalf("Curveball sides = %d/%d (%v/%v), want synced -1 and synced-right +1",
+			left.curveballSide, right.curveballSide, leftOK, rightOK)
+	}
+	if left.maxLifetimeMS != curveballFlightMS || right.maxLifetimeMS != curveballFlightMS {
+		t.Errorf("Curveball max lifetimes = %d/%d, want %dms",
+			left.maxLifetimeMS, right.maxLifetimeMS, curveballFlightMS)
+	}
+}
+
+func TestApproximateCurveballMovementUsesForwardAndClassSide(t *testing.T) {
+	start := Position{X: 1000, Y: 2000}
+	left := approximateCurveballMovement(start, 0, 1, 1000, 1500)
+	right := approximateCurveballMovement(start, 0, -1, 1000, 1500)
+	if len(left) != 9 || len(right) != 9 {
+		t.Fatalf("generated path lengths = %d/%d, want 9 each", len(left), len(right))
+	}
+	for _, path := range [][]utilityPathWrite{left, right} {
+		if path[0].Position != start || path[0].TimeMS != 1000 ||
+			path[len(path)-1].TimeMS != 1499 {
+			t.Errorf("path endpoints/timing = %+v ... %+v", path[0], path[len(path)-1])
+		}
+	}
+	leftEnd := left[len(left)-1].Position
+	rightEnd := right[len(right)-1].Position
+	if math.Abs(leftEnd.X-(start.X+400)) > 1e-8 ||
+		math.Abs(leftEnd.Y-(start.Y+250)) > 1e-8 ||
+		math.Abs(rightEnd.X-(start.X+400)) > 1e-8 ||
+		math.Abs(rightEnd.Y-(start.Y-250)) > 1e-8 {
+		t.Errorf("forward/side endpoints = %+v/%+v", leftEnd, rightEnd)
+	}
+	if got := approximateCurveballMovement(start, 0, 1, 1000, 1001); len(got) != 0 {
+		t.Fatal("generated a trajectory that cannot have distinct sample times")
+	}
+	if got := approximateCurveballMovement(start, 0, 0, 1000, 1500); len(got) != 0 {
+		t.Fatalf("generated a path without a known side: %#v", got)
+	}
+}
+
+func TestScanUtilitiesApproximatesCurveballOnlyWithoutMeasuredTrajectory(t *testing.T) {
+	tests := []struct {
+		name        string
+		class       string
+		yaw         *float32
+		fields      []fieldRow
+		wantSamples int
+		wantEndY    float64
+	}{
+		{
+			name:        "single movement sample uses left-class approximation",
+			class:       "Projectile_Phoenix_E_FlareCurve_Synced",
+			yaw:         float32Ptr(0),
+			fields:      []fieldRow{{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: stringPtr("ReplicatedMovement"), ValueStr: stringPtr(`{"location":{"x":120,"y":220,"z":0}}`)}},
+			wantSamples: 9,
+			wantEndY:    -50,
+		},
+		{
+			name:        "single movement sample uses right-class approximation",
+			class:       "Projectile_Phoenix_E_FlareCurve_Synced_Right",
+			yaw:         float32Ptr(0),
+			fields:      []fieldRow{{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: stringPtr("ReplicatedMovement"), ValueStr: stringPtr(`{"location":{"x":120,"y":220,"z":0}}`)}},
+			wantSamples: 9,
+			wantEndY:    450,
+		},
+		{
+			name:        "missing yaw keeps observed sample",
+			class:       "Projectile_Phoenix_E_FlareCurve_Synced",
+			fields:      []fieldRow{{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: stringPtr("ReplicatedMovement"), ValueStr: stringPtr(`{"location":{"x":120,"y":220,"z":0}}`)}},
+			wantSamples: 1,
+		},
+		{
+			name:  "multiple distinct measured samples take precedence",
+			class: "Projectile_Phoenix_E_FlareCurve_Synced",
+			yaw:   float32Ptr(0),
+			fields: []fieldRow{
+				{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: stringPtr("ReplicatedMovement"), ValueStr: stringPtr(`{"location":{"x":120,"y":220,"z":0}}`)},
+				{TimeMS: 1200, PacketID: 3, ActorNetGUID: 700, FieldName: stringPtr("ReplicatedMovement"), ValueStr: stringPtr(`{"location":{"x":130,"y":230,"z":0}}`)},
+			},
+			wantSamples: 2,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			dir := t.TempDir()
+			class := test.class
+			actors := []stateActorRow{
+				{
+					TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+					ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+					SpawnYaw: test.yaw,
+				},
+				{TimeMS: 1800, PacketID: 4, ActorNetGUID: 700, Event: "close"},
+			}
+			if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+				t.Fatal(err)
+			}
+			if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), test.fields); err != nil {
+				t.Fatal(err)
+			}
+
+			utilities, _, err := scanUtilities(
+				dir,
+				"13.08",
+				2000,
+				[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 2000}},
+				newPlayerIndex(&Manifest{}),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(utilities) != 1 || len(utilities[0]) != 1 {
+				t.Fatalf("utilities = %#v, want one Curveball", utilities)
+			}
+			got := utilities[0][0]
+			if got.EndTimeMS != 1600 {
+				t.Errorf("utility end = %d, want spawn + 600ms (1600)", got.EndTimeMS)
+			}
+			if len(got.Samples) != test.wantSamples {
+				t.Fatalf("sample count = %d, want %d: %+v", len(got.Samples), test.wantSamples, got.Samples)
+			}
+			if test.wantEndY != 0 && got.Samples[len(got.Samples)-1].Y != test.wantEndY {
+				t.Errorf("final Y = %v, want %v", got.Samples[len(got.Samples)-1].Y, test.wantEndY)
+			}
+			if test.name == "multiple distinct measured samples take precedence" &&
+				(got.Samples[0].X != 120 || got.Samples[1].X != 130) {
+				t.Errorf("measured samples were replaced: %+v", got.Samples)
+			}
+		})
+	}
+}
+
 func TestBuildUtilityActorLivesHandlesDormancyAndSameTimeOrdering(t *testing.T) {
 	class := "GameObject_Smonk_NewSmoke"
 	position := &Position{X: 10, Y: 20}

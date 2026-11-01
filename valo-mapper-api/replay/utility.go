@@ -15,6 +15,7 @@ const (
 	maxUtilityIntervals  = 5000
 	maxUtilitySamples    = 256
 	maxUtilityPathPoints = 256
+	curveballFlightMS    = 600
 )
 
 type utilityCatalogEntry struct {
@@ -23,6 +24,7 @@ type utilityCatalogEntry struct {
 	replicatedMovement bool
 	wallPoints         bool
 	wallYawOffset      float64
+	curveballSide      int
 	minBuild           int
 	maxLifetimeMS      uint32
 	ability            string
@@ -129,8 +131,8 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Phoenix_Q_FlameWallManager_Production": {kind: UtilityWall, minBuild: 1300, ability: "blaze"},
 	"GameObject_Phoenix_X_ResTarget_Production":        {kind: UtilityMarker, minBuild: 1300, ability: "run_it_back"},
 	"Projectile_Phoenix_4_Molotov_Production":          {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "hot_hands"},
-	"Projectile_Phoenix_E_FlareCurve_Synced":           {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "curveball"},
-	"Projectile_Phoenix_E_FlareCurve_Synced_Right":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "curveball"},
+	"Projectile_Phoenix_E_FlareCurve_Synced":           {kind: UtilityMobile, replicatedMovement: true, curveballSide: -1, maxLifetimeMS: curveballFlightMS, minBuild: 1300, ability: "curveball"},
+	"Projectile_Phoenix_E_FlareCurve_Synced_Right":     {kind: UtilityMobile, replicatedMovement: true, curveballSide: 1, maxLifetimeMS: curveballFlightMS, minBuild: 1300, ability: "curveball"},
 	"Projectile_Phoenix_Q_FlameWall_ThroughWall":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "blaze"},
 
 	// Raze
@@ -212,6 +214,7 @@ type utilityActorLife struct {
 	closeMS  uint32
 	position Position
 	yaw      float64
+	hasYaw   bool
 	owner    string
 }
 
@@ -412,6 +415,18 @@ func scanUtilities(
 				}
 			}
 			sortUtilityPathWrites(segment.replicatedMovement)
+			if segment.life.class.ability == "curveball" &&
+				segment.life.class.curveballSide != 0 &&
+				segment.life.hasYaw &&
+				!hasDistinctUtilityMovement(segment.replicatedMovement) {
+				segment.replicatedMovement = approximateCurveballMovement(
+					segment.life.position,
+					segment.life.yaw,
+					segment.life.class.curveballSide,
+					segment.life.openMS,
+					segment.life.closeMS,
+				)
+			}
 			if len(segment.replicatedMovement) == 0 &&
 				len(replicatedMovementByGUID[segment.life.guid]) == 0 {
 				incrementUtilityWarning(&warnings.MissingMovement)
@@ -508,6 +523,75 @@ func sortUtilityPathWrites(writes []utilityPathWrite) {
 		}
 		return writes[i].PacketID < writes[j].PacketID
 	})
+}
+
+func hasDistinctUtilityMovement(writes []utilityPathWrite) bool {
+	if len(writes) < 2 {
+		return false
+	}
+	first := writes[0].Position
+	for _, write := range writes[1:] {
+		if write.Position != first {
+			return true
+		}
+	}
+	return false
+}
+
+func approximateCurveballMovement(
+	start Position,
+	yawDegrees float64,
+	side int,
+	startMS, endMS uint32,
+) []utilityPathWrite {
+	if side == 0 || !isFinite64(yawDegrees) || startMS >= endMS {
+		return nil
+	}
+	const (
+		sampleCount = 9
+		forwardCM   = 400.0
+		sideCM      = 250.0
+	)
+	duration := endMS - startMS
+	count := minInt(sampleCount, int(duration))
+	if count < 2 {
+		return nil
+	}
+
+	// Replay positions use centimeters; the cubic curve approximates the
+	// observed forward-then-outward flight when VRF exports only one position.
+	yaw := yawDegrees * math.Pi / 180
+	forwardX, forwardY := math.Cos(yaw), math.Sin(yaw)
+	sideX, sideY := -forwardY*float64(side), forwardX*float64(side)
+	p0 := start
+	p1 := Position{
+		X: start.X + forwardX*forwardCM*0.5,
+		Y: start.Y + forwardY*forwardCM*0.5,
+	}
+	p2 := Position{
+		X: start.X + forwardX*forwardCM + sideX*sideCM*0.3,
+		Y: start.Y + forwardY*forwardCM + sideY*sideCM*0.3,
+	}
+	p3 := Position{
+		X: start.X + forwardX*forwardCM + sideX*sideCM,
+		Y: start.Y + forwardY*forwardCM + sideY*sideCM,
+	}
+
+	writes := make([]utilityPathWrite, 0, count)
+	for i := 0; i < count; i++ {
+		t := float64(i) / float64(count-1)
+		u := 1 - t
+		position := Position{
+			X: u*u*u*p0.X + 3*u*u*t*p1.X + 3*u*t*t*p2.X + t*t*t*p3.X,
+			Y: u*u*u*p0.Y + 3*u*u*t*p1.Y + 3*u*t*t*p2.Y + t*t*t*p3.Y,
+		}
+		offset := uint32(uint64(duration-1) * uint64(i) / uint64(count-1))
+		writes = append(writes, utilityPathWrite{
+			TimeMS:   startMS + offset,
+			Position: position,
+		})
+	}
+	return writes
 }
 
 func utilityWallEndpoints(writes []utilityPathWrite) (Position, Position, bool) {
@@ -710,6 +794,7 @@ func buildUtilityActorLives(
 		}
 		if event.SpawnYaw != nil {
 			current.yaw = float64(*event.SpawnYaw)
+			current.hasYaw = true
 		}
 	}
 	closeLife := func(event utilityActorEvent) {
