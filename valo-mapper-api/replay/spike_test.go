@@ -177,3 +177,265 @@ func TestAppendSpikeSpanMergesIdenticalLooseSpans(t *testing.T) {
 		t.Fatalf("moved loose span = %+v, want a new span", spans)
 	}
 }
+
+func TestResolveSpikeOwner(t *testing.T) {
+	state := &stateScan{
+		Actors: &stateActorView{
+			ClassByActor: map[uint32]string{
+				11: "/Game/Equippables/Spike/EquippableGroundPickup_C",
+				12: "/Game/Equippables/Spike/EquippablePickupProjectile_C",
+				20: "/Game/Characters/Wingman/Wingman_C",
+			},
+			SpawnByActor: map[uint32]Position{
+				11: {X: 1175, Y: 800},
+				12: {X: 900, Y: 700},
+			},
+		},
+	}
+	index := &playerIndex{subjectByPawn: map[uint32]string{42: "s1"}}
+	instigatorByActor := map[uint32][]stateWrite{
+		20: {{TimeMS: 1000, Value: 42}},
+	}
+
+	tests := []struct {
+		name        string
+		guid        uint32
+		timeMS      uint32
+		wantSubject string
+		wantLoose   bool
+		wantPos     Position
+		wantHasPos  bool
+		wantOK      bool
+	}{
+		{
+			name: "owner pawn", guid: 42, timeMS: 1000,
+			wantSubject: "s1", wantOK: true,
+		},
+		{
+			name: "ground pickup", guid: 11, timeMS: 1000,
+			wantLoose: true, wantPos: Position{X: 1175, Y: 800}, wantHasPos: true, wantOK: true,
+		},
+		{
+			name: "pickup projectile", guid: 12, timeMS: 1000,
+			wantLoose: true, wantPos: Position{X: 900, Y: 700}, wantHasPos: true, wantOK: true,
+		},
+		{
+			name: "wingman instigator", guid: 20, timeMS: 1000,
+			wantSubject: "s1", wantOK: true,
+		},
+		{
+			name: "instigator write is later", guid: 20, timeMS: 500,
+		},
+		{
+			name: "unknown actor", guid: 99, timeMS: 1000,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			subject, loose, position, hasPosition, ok := resolveSpikeOwner(
+				test.guid, state, index, instigatorByActor, test.timeMS,
+			)
+			if subject != test.wantSubject || loose != test.wantLoose ||
+				position != test.wantPos || hasPosition != test.wantHasPos || ok != test.wantOK {
+				t.Fatalf("resolveSpikeOwner = %q/%v/%+v/%v/%v, want %q/%v/%+v/%v/%v",
+					subject, loose, position, hasPosition, ok,
+					test.wantSubject, test.wantLoose, test.wantPos, test.wantHasPos, test.wantOK)
+			}
+		})
+	}
+}
+
+func TestResolveSpikeOwnerInstigatorDepth(t *testing.T) {
+	state := &stateScan{Actors: &stateActorView{}}
+	index := &playerIndex{subjectByPawn: map[uint32]string{42: "s1"}}
+
+	chain := func(last uint32) map[uint32][]stateWrite {
+		writes := make(map[uint32][]stateWrite, last-100+1)
+		for actor := uint32(100); actor < last; actor++ {
+			writes[actor] = []stateWrite{{TimeMS: 1000, Value: int64(actor + 1)}}
+		}
+		writes[last] = []stateWrite{{TimeMS: 1000, Value: 42}}
+		return writes
+	}
+
+	// Seven intermediate actors stay inside the depth cap.
+	within := chain(106)
+	if subject, _, _, _, ok := resolveSpikeOwner(100, state, index, within, 1000); !ok || subject != "s1" {
+		t.Fatalf("seven-hop instigator chain = %q/%v, want s1/true", subject, ok)
+	}
+
+	// A chain deeper than the cap is unresolved rather than guessed.
+	deep := chain(109)
+	if subject, _, _, _, ok := resolveSpikeOwner(100, state, index, deep, 1000); ok || subject != "" {
+		t.Fatalf("ten-hop instigator chain = %q/%v, want unresolved", subject, ok)
+	}
+}
+
+func TestBuildCustodySpansHidesSameTimestampTie(t *testing.T) {
+	state := &stateScan{Actors: &stateActorView{}}
+	index := &playerIndex{subjectByPawn: map[uint32]string{42: "s1", 43: "s2"}}
+	timeline := &spikeTimeline{}
+	warnings := newWarnings()
+	writes := []stateWrite{
+		{TimeMS: 11000, PacketID: 1, Actor: 555, Value: 42},
+		{TimeMS: 11000, PacketID: 2, Actor: 555, Value: 43},
+	}
+
+	spans := buildCustodySpans(
+		writes, state, index, &roundWindow{StartMS: 10000}, nil, timeline, warnings,
+	)
+
+	if len(spans) != 1 || spans[0].Subject != "" || spans[0].Loose {
+		t.Fatalf("tie spans = %+v, want one unresolved span", spans)
+	}
+	if timeline.Ties != 1 {
+		t.Fatalf("ties = %d, want 1", timeline.Ties)
+	}
+	if len(warnings.all()) != 1 {
+		t.Fatalf("warnings = %v, want one tie warning", warnings.all())
+	}
+}
+
+func TestResolvePlantSite(t *testing.T) {
+	tests := []struct {
+		name     string
+		field    stateWrite
+		hasField bool
+		rpc      rpcWrite
+		hasRPC   bool
+		want     string
+		warn     bool
+	}{
+		{name: "field A", field: stateWrite{Value: 0}, hasField: true, want: "A"},
+		{name: "field B", field: stateWrite{Value: 1}, hasField: true, want: "B"},
+		{name: "field C", field: stateWrite{Value: 2}, hasField: true, want: "C"},
+		{name: "absent field means A", want: "A"},
+		{
+			name: "RPC fallback", rpc: rpcWrite{Value: "2"}, hasRPC: true, want: "C",
+		},
+		{
+			name:  "field wins and warns",
+			field: stateWrite{Value: 1}, hasField: true,
+			rpc: rpcWrite{Value: "0"}, hasRPC: true,
+			want: "B", warn: true,
+		},
+		{name: "unknown ordinal", field: stateWrite{Value: 9}, hasField: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, warned := resolvePlantSite(test.field, test.hasField, test.rpc, test.hasRPC)
+			if got != test.want || warned != test.warn {
+				t.Fatalf("resolvePlantSite = %q/%v, want %q/%v", got, warned, test.want, test.warn)
+			}
+		})
+	}
+}
+
+func TestBuildSpikePlantsUsesPlantLocationForPosition(t *testing.T) {
+	fields := &fieldScan{State: newFieldStateRows()}
+	fields.State.PlantedAtSites = []stateWrite{{TimeMS: 20000, Value: 1}}
+	fields.PlantSitesRPC = []rpcWrite{{TimeMS: 20000, Value: "2"}}
+	fields.PlantLocations = []rpcWrite{{TimeMS: 20000, Value: "(1200.5,2400.5,0.0)"}}
+	events := &eventScan{Plants: []rawSpike{{TimeMS: 20000}}}
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 10000, EndMS: 50000}}
+	timeline := &spikeTimeline{Rounds: make([]spikeRound, 1)}
+	warnings := newWarnings()
+
+	buildSpikePlants(fields, nil, windows, events, timeline, warnings)
+
+	round := timeline.Rounds[0]
+	if !round.HasPlant || round.PlantMS != 10000 {
+		t.Fatalf("plant = %+v, want at 10000", round)
+	}
+	if round.Site != "B" {
+		t.Errorf("site = %q, want the field value B", round.Site)
+	}
+	if !round.HasPosition || round.Position != (Position{X: 1200.5, Y: 2400.5}) {
+		t.Errorf("position = %+v, want the decoded plant location", round.Position)
+	}
+	if timeline.SiteWarnings != 1 || len(warnings.all()) == 0 {
+		t.Errorf("site warnings = %d/%v, want a disagreement warning", timeline.SiteWarnings, warnings.all())
+	}
+}
+
+func TestSpikeFrameAtTransitions(t *testing.T) {
+	timeline := &spikeTimeline{Rounds: []spikeRound{{
+		Custody: []spikeCustodySpan{
+			{StartMS: 0, Subject: "s1"},
+		},
+		PlantMS:       1000,
+		HasPlant:      true,
+		Site:          "C",
+		Position:      Position{X: 10, Y: 20},
+		HasPosition:   true,
+		DefusedMS:     2000,
+		HasDefuse:     true,
+		DetonatedMS:   3000,
+		HasDetonation: true,
+	}}}
+	poseAt := func(subject string, timeMS uint32) (Position, bool) {
+		return Position{X: 50, Y: 60}, subject == "s1"
+	}
+	puuidBySubject := map[string]string{"s1": "p1"}
+
+	tests := []struct {
+		timeMS uint32
+		state  string
+	}{
+		{timeMS: 0, state: "carried"},
+		{timeMS: 999, state: "carried"},
+		{timeMS: 1000, state: "planted"},
+		{timeMS: 1999, state: "planted"},
+		{timeMS: 2000, state: "defused"},
+		{timeMS: 2999, state: "defused"},
+		{timeMS: 3000, state: "detonated"},
+		{timeMS: 5000, state: "detonated"},
+	}
+
+	for _, test := range tests {
+		frame := timeline.frameAt(0, test.timeMS, poseAt, puuidBySubject)
+		if frame == nil {
+			t.Fatalf("frame at %d was nil, want %s", test.timeMS, test.state)
+		}
+		if frame.State != test.state {
+			t.Fatalf("frame at %d = %q, want %q", test.timeMS, frame.State, test.state)
+		}
+		if test.state != "carried" {
+			if frame.Site != "C" || frame.X != 10 || frame.Y != 20 {
+				t.Errorf("post-plant frame at %d = %+v, want site C at the plant position", test.timeMS, frame)
+			}
+		}
+	}
+}
+
+func TestSpikeFrameAtStartsAtFirstCustodyWrite(t *testing.T) {
+	timeline := &spikeTimeline{Rounds: []spikeRound{{
+		Custody: []spikeCustodySpan{{StartMS: 500, Subject: "s1"}},
+	}}}
+	poseAt := func(subject string, timeMS uint32) (Position, bool) {
+		return Position{X: 1, Y: 2}, true
+	}
+
+	if frame := timeline.frameAt(0, 0, poseAt, nil); frame != nil {
+		t.Fatalf("frame before the first owner write = %+v, want nil", frame)
+	}
+	if frame := timeline.frameAt(0, 500, poseAt, nil); frame == nil ||
+		frame.State != "carried" || frame.X != 1 || frame.Y != 2 {
+		t.Fatalf("frame at the first owner write = %+v, want the carrier pose", frame)
+	}
+}
+
+func TestSpikeFrameAtHidesCarriedWithoutAPose(t *testing.T) {
+	timeline := &spikeTimeline{Rounds: []spikeRound{{
+		Custody: []spikeCustodySpan{{StartMS: 0, Subject: "s1"}},
+	}}}
+	poseAt := func(subject string, timeMS uint32) (Position, bool) {
+		return Position{}, false
+	}
+
+	if frame := timeline.frameAt(0, 0, poseAt, map[string]string{"s1": "p1"}); frame != nil {
+		t.Fatalf("carried frame without a carrier pose = %+v, want nil", frame)
+	}
+}

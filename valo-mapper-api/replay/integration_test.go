@@ -104,6 +104,10 @@ func TestIntegrationRealReplay(t *testing.T) {
 	looseFrames := 0
 	knifeFrames := 0
 	totalHits := 0
+	plantRounds := 0
+	defuseRounds := 0
+	explodeRounds := 0
+	carriedAfterPlant := 0
 	killSources := make(map[string]int)
 	knownPlayers := make(map[string]struct{}, len(match.Players))
 	for _, player := range match.Players {
@@ -116,6 +120,11 @@ func TestIntegrationRealReplay(t *testing.T) {
 		previous := -1
 		roundHasState := false
 		planted := false
+		postPlantFrames := 0
+		hasDetonatedFrame := false
+		hasPlantEvent := false
+		hasDefuseEvent := false
+		hasExplodeEvent := false
 		for i, frame := range round.Frames {
 			if frame.TimeMS <= previous {
 				t.Fatalf("round %d frame %d time %d is not increasing", round.RoundNumber, i, frame.TimeMS)
@@ -142,8 +151,16 @@ func TestIntegrationRealReplay(t *testing.T) {
 					if frame.Spike.CarrierPuuid == "" {
 						t.Errorf("round %d frame %d carried spike has no carrier", round.RoundNumber, i)
 					}
+					if planted {
+						carriedAfterPlant++
+						t.Errorf("round %d frame %d carries the spike after the plant", round.RoundNumber, i)
+					}
 				case "planted", "defused", "detonated":
 					planted = true
+					postPlantFrames++
+					if frame.Spike.State == "detonated" {
+						hasDetonatedFrame = true
+					}
 					if frame.Spike.Site == "" {
 						t.Errorf("round %d frame %d %s spike has no site", round.RoundNumber, i, frame.Spike.State)
 					}
@@ -180,6 +197,14 @@ func TestIntegrationRealReplay(t *testing.T) {
 			t.Errorf("round %d has no event log", round.RoundNumber)
 		}
 		for _, event := range round.EventLog {
+			switch event.EventType {
+			case "spike_planted":
+				hasPlantEvent = true
+			case "spike_defused":
+				hasDefuseEvent = true
+			case "spike_exploded":
+				hasExplodeEvent = true
+			}
 			if event.EventType != "kill" {
 				continue
 			}
@@ -191,6 +216,24 @@ func TestIntegrationRealReplay(t *testing.T) {
 						round.RoundNumber, event.TimeSinceRoundStartMillis, event.DamageType)
 				}
 			}
+		}
+		if hasPlantEvent {
+			plantRounds++
+			if postPlantFrames == 0 {
+				t.Errorf("round %d logs a spike plant but has no planted frame", round.RoundNumber)
+			}
+		}
+		if hasDefuseEvent {
+			defuseRounds++
+		}
+		if hasExplodeEvent {
+			explodeRounds++
+			if !hasDetonatedFrame {
+				t.Errorf("round %d logs a spike explosion but has no detonated frame", round.RoundNumber)
+			}
+		}
+		if !hasExplodeEvent && hasDetonatedFrame {
+			t.Errorf("round %d has a detonated frame without an explosion event", round.RoundNumber)
 		}
 		for _, hit := range round.Hits {
 			totalHits++
@@ -238,6 +281,21 @@ func TestIntegrationRealReplay(t *testing.T) {
 	}
 	if totalHits == 0 {
 		t.Error("no gun hits; the player cannot draw a tracer")
+	}
+	// The 13.08 fixture is the M3 calibration export. One plant event falls
+	// outside every round window, so 19 of the 20 raw plants reach the log.
+	if match.Build == "13.08" {
+		if plantRounds != 19 || defuseRounds != 4 || explodeRounds != 1 {
+			t.Errorf("spike counts = plants %d / defuses %d / explosions %d, want 19/4/1",
+				plantRounds, defuseRounds, explodeRounds)
+		}
+	}
+	if carriedAfterPlant != 0 {
+		t.Errorf("carried spike frames after a plant = %d", carriedAfterPlant)
+	}
+	if len(match.Warnings) > 64 {
+		t.Errorf("warnings = %d; warnings must stay bounded instead of repeating per frame",
+			len(match.Warnings))
 	}
 
 	encoded, err := json.Marshal(envelope)

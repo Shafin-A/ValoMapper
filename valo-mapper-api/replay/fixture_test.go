@@ -10,6 +10,13 @@ import (
 	"github.com/parquet-go/parquet-go"
 )
 
+const (
+	syntheticBombRound1  = uint32(800)
+	syntheticBombRound2  = uint32(801)
+	syntheticPickupActor = uint32(810)
+	syntheticWingman     = uint32(820)
+)
+
 // syntheticExport is a tiny but complete VRFKit-shaped export: two rounds, ten
 // players, two teams, one plant, one defuse and movement data for every round.
 type syntheticExport struct {
@@ -219,20 +226,50 @@ func (e *syntheticExport) writeFields() error {
 		})
 	}
 
-	// Plant RPC: player 2 (pawn 201) at a known position.
+	// Plant RPC: player 2 (pawn 201) at a known position, site B.
 	planterName := "BombPlantedRPC.BombPlanter"
 	planter := int64(e.pawns[1])
 	locationName := "BombPlantedRPC.PlantLocation"
 	location := "(1200.5,2400.5,0.0)"
+	siteName := "TimedBomb.PlantedAtSite"
+	site := int64(1)
 	rows = append(rows,
 		fieldRow{TimeMS: 20000, PacketID: 500, FieldName: &planterName, ValueI64: &planter},
 		fieldRow{TimeMS: 20000, PacketID: 501, FieldName: &locationName, ValueStr: &location},
+		fieldRow{TimeMS: 20000, PacketID: 502, FieldName: &siteName, ValueI64: &site},
+	)
+
+	// Round 2 plant: player 3 (pawn 202) at site C, later defused.
+	planterSecond := int64(e.pawns[2])
+	locationSecond := "(1500.5,2500.5,0.0)"
+	siteSecond := int64(2)
+	rows = append(rows,
+		fieldRow{TimeMS: 60000, PacketID: 510, FieldName: &planterName, ValueI64: &planterSecond},
+		fieldRow{TimeMS: 60000, PacketID: 511, FieldName: &locationName, ValueStr: &locationSecond},
+		fieldRow{TimeMS: 60000, PacketID: 512, FieldName: &siteName, ValueI64: &siteSecond},
 	)
 
 	// Defuse RPC: player 6 (pawn 205).
 	defuserIdName := "BombDefusedRPC.DefusingCharacter"
 	defuser := int64(e.pawns[5])
 	rows = append(rows, fieldRow{TimeMS: 70000, PacketID: 600, FieldName: &defuserIdName, ValueI64: &defuser})
+
+	// Spike custody: pawn -> ground pickup -> Wingman instigator -> pawn, then
+	// a fresh bomb actor for the second round.
+	ownerName := "Owner"
+	instigatorName := "Instigator"
+	owner := int64(e.pawns[0])
+	pickup := int64(syntheticPickupActor)
+	wingman := int64(syntheticWingman)
+	wingmanInstigator := int64(e.pawns[1])
+	secondOwner := int64(e.pawns[5])
+	rows = append(rows,
+		fieldRow{TimeMS: 9500, PacketID: 700, ActorNetGUID: syntheticBombRound1, FieldName: &ownerName, ValueI64: &owner},
+		fieldRow{TimeMS: 11000, PacketID: 701, ActorNetGUID: syntheticBombRound1, FieldName: &ownerName, ValueI64: &pickup},
+		fieldRow{TimeMS: 14000, PacketID: 702, ActorNetGUID: syntheticWingman, FieldName: &instigatorName, ValueI64: &wingmanInstigator},
+		fieldRow{TimeMS: 15000, PacketID: 703, ActorNetGUID: syntheticBombRound1, FieldName: &ownerName, ValueI64: &wingman},
+		fieldRow{TimeMS: 56000, PacketID: 704, ActorNetGUID: syntheticBombRound2, FieldName: &ownerName, ValueI64: &secondOwner},
+	)
 
 	return parquet.WriteFile(filepath.Join(e.dir, "fields.parquet"), rows)
 }
@@ -249,8 +286,10 @@ func (e *syntheticExport) writeEvents() error {
 		{Group: "roundStarted", Time1: 10000, Word0: &round1},
 		{Group: "characterDeath", Time1: 15000, Word0: &killer1, Word1: &victim1},
 		{Group: "spikePlanted", Time1: 20000},
+		{Group: "spikeExploded", Time1: 40000},
 		{Group: "roundStarted", Time1: 55000, Word0: &round2},
 		{Group: "characterDeath", Time1: 60000, Word0: &killer2, Word1: &victim2},
+		{Group: "spikePlanted", Time1: 60000},
 		{Group: "spikeDefused", Time1: 70000},
 	}
 	return parquet.WriteFile(filepath.Join(e.dir, "events.parquet"), rows)
@@ -261,12 +300,12 @@ func (e *syntheticExport) writeMovement() error {
 	rows := make([]movementRow, 0, 100)
 	for _, start := range roundStarts {
 		for player := 0; player < 10; player++ {
-			for sample := 0; sample < 5; sample++ {
+			for _, offset := range []uint32{100, 200, 300, 400, 500, 1000, 5000, 10000} {
 				rows = append(rows, movementRow{
-					TimeMS:           start + uint32(100+sample*100),
+					TimeMS:           start + offset,
 					CharacterNetGUID: e.pawns[player],
-					PosX:             float32(1000 + player*100 + sample*10),
-					PosY:             float32(2000 + player*100 + sample*10),
+					PosX:             float32(1000 + player*100 + int(offset/10)),
+					PosY:             float32(2000 + player*100 + int(offset/10)),
 					PosZ:             0,
 					Yaw:              float32(player * 36),
 					Pitch:            0,
@@ -278,33 +317,48 @@ func (e *syntheticExport) writeMovement() error {
 }
 
 func (e *syntheticExport) writeActors() error {
-	rows := make([]actorRow, 0, 20)
+	rows := make([]stateActorRow, 0, 26)
 	for i := 0; i < 10; i++ {
 		spawnX := float32(500 + i*100)
 		spawnY := float32(600 + i*100)
 		spawnZ := float32(0)
-		yaw := float32(i * 36)
 		rows = append(rows,
-			actorRow{
+			stateActorRow{
 				TimeMS:       9000,
 				ActorNetGUID: e.actors[i],
 				Event:        "open",
 				SpawnX:       &spawnX,
 				SpawnY:       &spawnY,
 				SpawnZ:       &spawnZ,
-				SpawnYaw:     &yaw,
 			},
-			actorRow{
+			stateActorRow{
 				TimeMS:       54000,
 				ActorNetGUID: e.actors[i],
 				Event:        "open",
 				SpawnX:       &spawnX,
 				SpawnY:       &spawnY,
 				SpawnZ:       &spawnZ,
-				SpawnYaw:     &yaw,
 			},
 		)
 	}
+
+	bombClass := "/Game/Equippables/Spike/BombEquippable.BombEquippable_C"
+	pickupClass := "/Game/Equippables/Spike/EquippableGroundPickup_C"
+	wingmanClass := "/Game/Characters/Wingman/Wingman_C"
+	pickupX := float32(1150)
+	pickupY := float32(1150)
+	spawnZ := float32(0)
+	rows = append(rows,
+		stateActorRow{TimeMS: 9000, ActorNetGUID: syntheticBombRound1, Event: "open", ClassPath: &bombClass},
+		stateActorRow{TimeMS: 50000, ActorNetGUID: syntheticBombRound1, Event: "close", ClassPath: &bombClass},
+		stateActorRow{TimeMS: 54000, ActorNetGUID: syntheticBombRound2, Event: "open", ClassPath: &bombClass},
+		stateActorRow{TimeMS: 100000, ActorNetGUID: syntheticBombRound2, Event: "close", ClassPath: &bombClass},
+		stateActorRow{
+			TimeMS: 11000, ActorNetGUID: syntheticPickupActor, Event: "open",
+			ClassPath: &pickupClass, SpawnX: &pickupX, SpawnY: &pickupY, SpawnZ: &spawnZ,
+		},
+		stateActorRow{TimeMS: 14000, ActorNetGUID: syntheticWingman, Event: "open", ClassPath: &wingmanClass},
+	)
 	return parquet.WriteFile(filepath.Join(e.dir, "actors.parquet"), rows)
 }
 

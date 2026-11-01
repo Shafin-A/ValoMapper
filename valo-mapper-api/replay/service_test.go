@@ -57,10 +57,11 @@ func testFilePath(t *testing.T) string {
 }
 
 func TestServiceParseSyntheticReplay(t *testing.T) {
+	var fixture *syntheticExport
 	exporter := &fakeExporter{
 		build: "13.08",
 		export: func(dir string) error {
-			writeSyntheticExport(t, dir)
+			fixture = writeSyntheticExport(t, dir)
 			return nil
 		},
 	}
@@ -157,7 +158,7 @@ func TestServiceParseSyntheticReplay(t *testing.T) {
 	if first.Frames[0].Players[0].X == 0 && first.Frames[0].Players[0].Y == 0 {
 		t.Errorf("round 1 first frame is still at the origin: %+v", first.Frames[0].Players[0])
 	}
-	if len(first.EventLog) != 2 {
+	if len(first.EventLog) != 3 {
 		t.Fatalf("round 1 events = %+v", first.EventLog)
 	}
 	if first.EventLog[0].EventType != "kill" || first.EventLog[0].KillerPuuid == "" ||
@@ -172,6 +173,9 @@ func TestServiceParseSyntheticReplay(t *testing.T) {
 		first.EventLog[1].PlantLocation.Y != 2400.5 {
 		t.Errorf("round 1 plant location = %+v", first.EventLog[1].PlantLocation)
 	}
+	if first.EventLog[2].EventType != "spike_exploded" {
+		t.Errorf("round 1 explosion = %+v", first.EventLog[2])
+	}
 
 	second := match.Rounds[1]
 	if second.RoundNumber != 2 || second.WinningTeam != "Blue" || second.RoundResultCode != "Detonate" {
@@ -183,9 +187,55 @@ func TestServiceParseSyntheticReplay(t *testing.T) {
 	if second.AttackTeamID != "Red" {
 		t.Errorf("round 2 attack team = %q", second.AttackTeamID)
 	}
-	if len(second.EventLog) != 2 || second.EventLog[1].EventType != "spike_defused" {
+	if len(second.EventLog) != 3 || second.EventLog[2].EventType != "spike_defused" {
 		t.Errorf("round 2 events = %+v", second.EventLog)
 	}
+
+	if ParserVersion != "13+vrfkit.0.3.0" {
+		t.Errorf("parser version = %q, want the spike-capable version", ParserVersion)
+	}
+
+	puuid := func(index int) string { return pseudonymousID(fixture.subjects[index]) }
+	assertSpikeFrame := func(
+		round Round,
+		state string,
+		carrier string,
+		site string,
+		position *Position,
+	) {
+		t.Helper()
+		for _, frame := range round.Frames {
+			if frame.Spike == nil || frame.Spike.State != state {
+				continue
+			}
+			if carrier != "" && frame.Spike.CarrierPuuid != carrier {
+				continue
+			}
+			if site != "" && frame.Spike.Site != site {
+				continue
+			}
+			if position != nil {
+				if frame.Spike.X != position.X || frame.Spike.Y != position.Y {
+					continue
+				}
+			}
+			return
+		}
+		t.Errorf("round %d has no %s spike frame (carrier=%q site=%q position=%+v)",
+			round.RoundNumber, state, carrier, site, position)
+	}
+
+	firstPlant := &Position{X: 1200.5, Y: 2400.5}
+	assertSpikeFrame(first, "carried", puuid(0), "", nil)
+	assertSpikeFrame(first, "carried", puuid(1), "", nil)
+	assertSpikeFrame(first, "loose", "", "", &Position{X: 1150, Y: 1150})
+	assertSpikeFrame(first, "planted", "", "B", firstPlant)
+	assertSpikeFrame(first, "detonated", "", "B", firstPlant)
+
+	secondPlant := &Position{X: 1500.5, Y: 2500.5}
+	assertSpikeFrame(second, "carried", puuid(5), "", nil)
+	assertSpikeFrame(second, "planted", "", "C", secondPlant)
+	assertSpikeFrame(second, "defused", "", "C", secondPlant)
 
 	if log := first.EventLog; len(log) == 2 && log[0].EventType == "kill" {
 		var killerStats *PlayerStats

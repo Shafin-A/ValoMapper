@@ -47,3 +47,24 @@ func TestScanFieldsPairsParticipantsPerActor(t *testing.T) {
 		t.Errorf("unexpected team warnings: %v", scan.TeamWarnings)
 	}
 }
+
+func TestBuildRoundLogsEmitsSpikeExplodedWithoutAPlayer(t *testing.T) {
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 5000}}
+	events := &eventScan{Explodes: []rawSpike{{TimeMS: 4000}}}
+	fields := &fieldScan{State: newFieldStateRows()}
+	warnings := newWarnings()
+
+	logs := buildRoundLogs(windows, nil, &playerIndex{}, events, fields, &stateScan{}, warnings)
+
+	log := logs[1]
+	if log == nil || len(log.Events) != 1 {
+		t.Fatalf("events = %+v, want one spike_exploded", log)
+	}
+	event := log.Events[0]
+	if event.EventType != "spike_exploded" || event.TimeSinceRoundStartMillis != 3000 {
+		t.Errorf("event = %+v, want spike_exploded at 3000", event)
+	}
+	if event.KillerPuuid != "" || event.VictimPuuid != "" || event.PlanterPuuid != "" {
+		t.Errorf("spike_exploded carried a player field: %+v", event)
+	}
+}

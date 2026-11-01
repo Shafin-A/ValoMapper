@@ -603,6 +603,46 @@ func TestCollectStateFieldIgnoresZeroOwner(t *testing.T) {
 	}
 }
 
+func TestCollectStateFieldKeepsOwnerHistoryAndInstigatorAndSite(t *testing.T) {
+	scan := &fieldScan{State: newFieldStateRows()}
+
+	collect := func(actor uint32, name string, value int64) {
+		scan.collectStateField(&fieldRow{
+			TimeMS:       1000,
+			PacketID:     actor,
+			ActorNetGUID: actor,
+			FieldName:    ptr(name),
+			ValueI64:     &value,
+		}, name)
+	}
+
+	collect(700, "Owner", 200)
+	collect(700, "Owner", 201)
+	collect(701, "Instigator", 202)
+	collect(702, "TimedBomb.PlantedAtSite", 1)
+
+	if len(scan.State.OwnerWrites) != 2 {
+		t.Fatalf("owner writes = %+v, want both writes", scan.State.OwnerWrites)
+	}
+	if scan.State.Owners[700] != 201 {
+		t.Errorf("last owner = %d, want 201", scan.State.Owners[700])
+	}
+	if len(scan.State.InstigatorWrites) != 1 ||
+		scan.State.InstigatorWrites[0].Value != 202 {
+		t.Errorf("instigator writes = %+v", scan.State.InstigatorWrites)
+	}
+	if len(scan.State.PlantedAtSites) != 1 ||
+		scan.State.PlantedAtSites[0].Value != 1 {
+		t.Errorf("planted-at-site writes = %+v", scan.State.PlantedAtSites)
+	}
+	if _, ok := scan.State.Owners[701]; ok {
+		t.Error("an instigator write changed the last-wins owner map")
+	}
+	if _, ok := scan.State.Owners[702]; ok {
+		t.Error("a planted-at-site write changed the last-wins owner map")
+	}
+}
+
 func TestScanStateCreditsPersistAcrossRoundsAndSideSwitch(t *testing.T) {
 	const pawn = uint32(200)
 	state := scanStateFromRows(t, testPlayerIndex(pawn), []fieldRow{

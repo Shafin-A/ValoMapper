@@ -11,6 +11,7 @@ import { SIDEBAR_WIDTH } from "@/lib/consts";
 import type { ReplayRound } from "@/lib/replay/types";
 import type { MatchPlayers } from "@/lib/matches";
 import { ReplayScoreHeader, ReplayScoreboard } from "./replay-scoreboard";
+import { ReplayWarningsBanner } from "./replay-warnings-banner";
 
 export const ReplayRoundSidebar = ({
   sidebarOpen,
@@ -20,6 +21,8 @@ export const ReplayRoundSidebar = ({
   viewerPuuid,
   selectedEventIndex,
   onSelectEvent,
+  warnings,
+  replayId,
 }: {
   sidebarOpen: boolean;
   players: MatchPlayers;
@@ -28,6 +31,8 @@ export const ReplayRoundSidebar = ({
   viewerPuuid?: string;
   selectedEventIndex: number | null;
   onSelectEvent: (eventIndex: number) => void;
+  warnings?: string[];
+  replayId: string;
 }) => {
   return (
     <SidebarProvider
@@ -52,6 +57,12 @@ export const ReplayRoundSidebar = ({
         </SidebarHeader>
 
         <SidebarContent className="gap-0 px-3 pb-4">
+          <ReplayWarningsBanner
+            warnings={warnings}
+            replayId={replayId}
+            className="mb-2"
+          />
+
           <ReplayScoreboard
             players={players}
             round={round}

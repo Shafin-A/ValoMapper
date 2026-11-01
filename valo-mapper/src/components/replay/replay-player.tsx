@@ -376,6 +376,8 @@ export const ReplayPlayer = ({
         viewerPuuid={match.viewer?.puuid}
         selectedEventIndex={selectedEventIndex}
         onSelectEvent={handleSelectEvent}
+        warnings={match.warnings}
+        replayId={replayId}
       />
 
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>

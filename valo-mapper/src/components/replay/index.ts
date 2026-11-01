@@ -6,3 +6,4 @@ export * from "./replay-player";
 export * from "./replay-round-sidebar";
 export * from "./replay-scoreboard";
 export * from "./replay-timeline";
+export * from "./replay-warnings-banner";
