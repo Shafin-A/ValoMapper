@@ -23,79 +23,126 @@ type utilityCatalogEntry struct {
 }
 
 var utilityCatalog = map[string]utilityCatalogEntry{
-	"GameObject_Breach_4_FusionBlast":                       {kind: UtilityArea, minBuild: 1300, ability: "aftershock"},
-	"GameObject_Breach_E_SweetSpotFissure":                  {kind: UtilityArea, minBuild: 1300, ability: "fault_line"},
-	"GameObject_Sarge_E_SpeedStim":                          {kind: UtilityArea, minBuild: 1300, ability: "stim_beacon"},
-	"Patch_Sarge_Q_Molotov_Production":                      {kind: UtilityMolly, minBuild: 1300, ability: "incendiary"},
-	"GameObject_Sarge_4_Smoke_ProductionNEW":                {kind: UtilitySmoke, minBuild: 1300, ability: "sky_smoke"},
-	"GameObject_Sarge_X_OrbitalStrike_Production":           {kind: UtilityArea, minBuild: 1300, ability: "orbital_strike"},
-	"Patch_Deadeye_E_Slow_Large":                            {kind: UtilityArea, minBuild: 1308, ability: "trademark"},
-	"GameObject_Deadeye_E_Teleporter_Tether":                {kind: UtilityMarker, minBuild: 1300, ability: "rendezvous"},
-	"GameObject_Smonk_Q_DecayExplosion":                     {kind: UtilityArea, minBuild: 1301, ability: "meddle"},
-	"Zone_Wraith_4_Smoke":                                   {kind: UtilitySmoke, minBuild: 1300, ability: "dark_cover"},
-	"GameObject_Smonk_NewSmoke":                             {kind: UtilitySmoke, minBuild: 1301, ability: "ruse"},
-	"GameObject_Smonk_NewSmoke_PDS":                         {kind: UtilitySmoke, minBuild: 1301, ability: "ruse"},
-	"GameObject_Gumshoe_E_TripWire":                         {kind: UtilityWall, minBuild: 1300, ability: "trapwire"},
-	"Zone_Gumshoe_4_Cage":                                   {kind: UtilitySmoke, minBuild: 1300, ability: "cyber_cage"},
-	"Pawn_Gumshoe_Q_PossessableCamera":                      {kind: UtilityMarker, minBuild: 1300, ability: "spycam"},
-	"GameObject_RemovableObject_GumshoeTrackingDart":        {kind: UtilityMarker, minBuild: 1300, ability: "spycam"},
-	"Patch_NetToss":                                         {kind: UtilityArea, minBuild: 1300, ability: "gravnet"},
-	"GameObject_StealthingTrap_SoundSensor":                 {kind: UtilityTrap, minBuild: 1300, ability: "sonic_sensor"},
-	"GameObject_SoundSensor_SweetSpotFissure":               {kind: UtilityTrap, minBuild: 1300, ability: "sonic_sensor"},
-	"GameObject_CableJamRoot":                               {kind: UtilityWall, minBuild: 1300, ability: "barrier_mesh"},
-	"GameObject_FishingHook_CageSphere":                     {kind: UtilityArea, minBuild: 1300, ability: "annihilation"},
+	// Breach
+	"GameObject_Breach_4_FusionBlast":      {kind: UtilityArea, minBuild: 1300, ability: "aftershock"},
+	"GameObject_Breach_E_SweetSpotFissure": {kind: UtilityArea, minBuild: 1300, ability: "fault_line"},
+
+	// Brimstone
+	"GameObject_Sarge_E_SpeedStim":                {kind: UtilityArea, minBuild: 1300, ability: "stim_beacon"},
+	"Patch_Sarge_Q_Molotov_Production":            {kind: UtilityMolly, minBuild: 1300, ability: "incendiary"},
+	"GameObject_Sarge_4_Smoke_ProductionNEW":      {kind: UtilitySmoke, minBuild: 1300, ability: "sky_smoke"},
+	"GameObject_Sarge_X_OrbitalStrike_Production": {kind: UtilityArea, minBuild: 1300, ability: "orbital_strike"},
+
+	// Chamber
+	"Patch_Deadeye_E_Slow_Large":             {kind: UtilityArea, minBuild: 1308, ability: "trademark"},
+	"GameObject_Deadeye_E_Teleporter_Tether": {kind: UtilityMarker, minBuild: 1300, ability: "rendezvous"},
+	"GameObject_Deadeye_E_Trap":              {kind: UtilityTrap, minBuild: 1302, ability: "trademark"},
+
+	// Clove
+	"GameObject_Smonk_Q_DecayExplosion": {kind: UtilityArea, minBuild: 1301, ability: "meddle"},
+	"GameObject_Smonk_NewSmoke":         {kind: UtilitySmoke, minBuild: 1301, ability: "ruse"},
+	"GameObject_Smonk_NewSmoke_PDS":     {kind: UtilitySmoke, minBuild: 1301, ability: "ruse"},
+
+	// Cypher
+	"GameObject_Gumshoe_E_TripWire":                  {kind: UtilityWall, minBuild: 1300, ability: "trapwire"},
+	"Zone_Gumshoe_4_Cage":                            {kind: UtilitySmoke, minBuild: 1300, ability: "cyber_cage"},
+	"Pawn_Gumshoe_Q_PossessableCamera":               {kind: UtilityMarker, minBuild: 1300, ability: "spycam"},
+	"GameObject_RemovableObject_GumshoeTrackingDart": {kind: UtilityMarker, minBuild: 1300, ability: "spycam"},
+
+	// Deadlock
+	"Patch_NetToss":                           {kind: UtilityArea, minBuild: 1300, ability: "gravnet"},
+	"GameObject_StealthingTrap_SoundSensor":   {kind: UtilityTrap, minBuild: 1300, ability: "sonic_sensor"},
+	"GameObject_SoundSensor_SweetSpotFissure": {kind: UtilityTrap, minBuild: 1300, ability: "sonic_sensor"},
+	"GameObject_CableJamRoot":                 {kind: UtilityWall, minBuild: 1300, ability: "barrier_mesh"},
+
+	// Fade
 	"GameObject_BountyHunter_E_LoSReveal_Source_Reactivate": {kind: UtilityMarker, minBuild: 1300, ability: "haunt"},
 	"GameObject_BountyHunter_X_WaveForm":                    {kind: UtilityArea, minBuild: 1300, ability: "nightfall"},
-	"Patch_Aggrobot_C_ExplodeyPatch":                        {kind: UtilityMolly, minBuild: 1300, ability: "mosh_pit"},
-	"Pawn_Aggrobot_SeekerNade":                              {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "wingman"},
-	"Pawn_Aggrobot_RollyPolly":                              {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "thrash"},
-	"GameObject_Sequoia_4_MovingCover":                      {kind: UtilityWall, minBuild: 1300, ability: "contingency"},
-	"GameObject_Sequoia_E_Orb":                              {kind: UtilityMarker, minBuild: 1300, ability: "double_tap"},
-	"GameObject_Sequoia_X_LineCapture":                      {kind: UtilityArea, minBuild: 1300, ability: "kill_contract"},
-	"GameObject_Wushu_4_SmokeZone":                          {kind: UtilitySmoke, minBuild: 1302, ability: "cloudburst"},
-	"Patch_Phoenix_MolotovFire":                             {kind: UtilityMolly, minBuild: 1300, ability: "hot_hands"},
-	"GameObject_Phoenix_Q_FlameWallManager_Production":      {kind: UtilityWall, minBuild: 1300, ability: "blaze"},
-	"GameObject_Deadeye_E_Trap":                             {kind: UtilityTrap, minBuild: 1302, ability: "trademark"},
-	"GameObject_Killjoy_4_BeeSwarm_Damage":                  {kind: UtilityMolly, minBuild: 1300, ability: "nanoswarm"},
-	"Pawn_Killjoy_Q_StealthAlarmbot":                        {kind: UtilityTrap, minBuild: 1300, ability: "alarmbot"},
-	"Pawn_Killjoy_E_Turret":                                 {kind: UtilityTrap, minBuild: 1300, ability: "turret"},
-	"GameObject_Killjoy_X_Bomb":                             {kind: UtilityArea, minBuild: 1300, ability: "lockdown"},
-	"GameObject_Thumper_Concuss":                            {kind: UtilityArea, minBuild: 1300, ability: "mpulse"},
-	"GameObject_Thumper_Heal":                               {kind: UtilityArea, minBuild: 1300, ability: "mpulse_concuss"},
-	"GameObject_Iris_E_Smoke":                               {kind: UtilitySmoke, minBuild: 1300, ability: "waveform"},
-	"GameObject_Iris_X_SonicWave":                           {kind: UtilityArea, minBuild: 1300, ability: "bassquake"},
-	"GameObject_Sprinter_4_Tunnel":                          {kind: UtilityWall, minBuild: 1300, ability: "fast_lane"},
-	"GameObject_Sprinter_Q_ElectricSphere":                  {kind: UtilityArea, minBuild: 1300, ability: "relay_bolt"},
 	"Pawn_BountyHunter_4_WolfHound":                         {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "prowler"},
 	"GameObject_Q_BountyHunter_Tether_SphereExpansion":      {kind: UtilityArea, minBuild: 1300, ability: "seize"},
-	"Pawn_Cashew_4_Spider_LockOn":                           {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "stealth_drone"},
-	"GameObject_Cashew_4_SonarPing":                         {kind: UtilityArea, minBuild: 1300, ability: "stealth_drone"},
-	"GameObject_Cashew_E_MapMissileMarker":                  {kind: UtilityArea, minBuild: 1300, ability: "guided_salvo"},
-	"GameObject_Cashew_E_MapMissileMarker_SecondRocket":     {kind: UtilityArea, minBuild: 1300, ability: "guided_salvo"},
-	"GameObject_Cashew_X_SegmentManager":                    {kind: UtilityArea, minBuild: 1300, ability: "armageddon"},
-	"Pawn_Guide_Q_PossessableScout":                         {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "trailblazer"},
-	"GameObject_Guide_4_Heal_AOE":                           {kind: UtilityArea, minBuild: 1300, ability: "regrowth"},
-	"GameObject_Guide_E_HawkFlash_FlashSource":              {kind: UtilityMarker, minBuild: 1300, ability: "guiding_light"},
-	"Pawn_Guide_X_Pack":                                     {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "seekers"},
-	"GameObject_Hunter_4_ExplosiveBolt_Explosion":           {kind: UtilityArea, minBuild: 1300, ability: "shock_bolt"},
-	"Pawn_Hunter_E_Drone":                                   {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "owl_drone"},
-	"GameObject_Hunter_E_Drone_RevealDart":                  {kind: UtilityMarker, minBuild: 1300, ability: "owl_drone"},
-	"GameObject_Hunter_Q_SonarBolt":                         {kind: UtilityArea, minBuild: 1300, ability: "recon_bolt"},
-	"Gameobject_Grenadier_E_SuppressionPulse":               {kind: UtilityArea, minBuild: 1300, ability: "zeropoint"},
-	"Pawn_Stealth_4_Decoy_V2":                               {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "fakeout"},
-	"Pawn_Stealth_E_TeleporterMoving_FakeTP":                {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "gatecrash"},
-	"Pawn_Stealth_E_TeleporterStationary_FakeTP":            {kind: UtilityMarker, minBuild: 1300, ability: "gatecrash"},
-	"GameObject_Phoenix_X_ResTarget_Production":             {kind: UtilityMarker, minBuild: 1300, ability: "run_it_back"},
-	"GameObject_Vampire_4_NearsightAOE_Source":              {kind: UtilityMarker, minBuild: 1300, ability: "leer"},
-	"GameObject_Thorne_E_Wall_Fortifying":                   {kind: UtilityWall, minBuild: 1300, ability: "barrier_orb"},
-	"Patch_Thorne_4_SlowField_Production":                   {kind: UtilityArea, minBuild: 1300, ability: "slow_orb"},
-	"GameObject_Nox_Wall":                                   {kind: UtilityWall, minBuild: 1300, ability: "shear"},
-	"GameObject_Nox_WallTrap":                               {kind: UtilityWall, minBuild: 1300, ability: "shear"},
-	"GameObject_Nox_BarbedWire":                             {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
-	"Patch_Nox_BarbedWire":                                  {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
-	"GameObject_Nox_StealthingTrap_Flash_2":                 {kind: UtilityTrap, minBuild: 1300, ability: "arc_rose"},
-	"Gameobject_Nox_DisarmPulse":                            {kind: UtilityArea, minBuild: 1300, ability: "steel_garden"},
-	"Pawn_Clay_E_Boomba":                                    {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "boom_bot"},
+
+	// Gekko
+	"Patch_Aggrobot_C_ExplodeyPatch": {kind: UtilityMolly, minBuild: 1300, ability: "mosh_pit"},
+	"Pawn_Aggrobot_SeekerNade":       {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "wingman"},
+	"Pawn_Aggrobot_RollyPolly":       {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "thrash"},
+
+	// Iso
+	"GameObject_FishingHook_CageSphere": {kind: UtilityArea, minBuild: 1300, ability: "annihilation"},
+	"GameObject_Sequoia_4_MovingCover":  {kind: UtilityWall, minBuild: 1300, ability: "contingency"},
+	"GameObject_Sequoia_E_Orb":          {kind: UtilityMarker, minBuild: 1300, ability: "double_tap"},
+	"GameObject_Sequoia_X_LineCapture":  {kind: UtilityArea, minBuild: 1300, ability: "kill_contract"},
+
+	// Jett
+	"GameObject_Wushu_4_SmokeZone": {kind: UtilitySmoke, minBuild: 1302, ability: "cloudburst"},
+
+	// KAY/O
+	"Gameobject_Grenadier_E_SuppressionPulse": {kind: UtilityArea, minBuild: 1300, ability: "zeropoint"},
+
+	// Killjoy
+	"GameObject_Killjoy_4_BeeSwarm_Damage": {kind: UtilityMolly, minBuild: 1300, ability: "nanoswarm"},
+	"Pawn_Killjoy_Q_StealthAlarmbot":       {kind: UtilityTrap, minBuild: 1300, ability: "alarmbot"},
+	"Pawn_Killjoy_E_Turret":                {kind: UtilityTrap, minBuild: 1300, ability: "turret"},
+	"GameObject_Killjoy_X_Bomb":            {kind: UtilityArea, minBuild: 1300, ability: "lockdown"},
+
+	// Miks
+	"GameObject_Thumper_Concuss":  {kind: UtilityArea, minBuild: 1300, ability: "mpulse"},
+	"GameObject_Thumper_Heal":     {kind: UtilityArea, minBuild: 1300, ability: "mpulse_concuss"},
+	"GameObject_Iris_E_Smoke":     {kind: UtilitySmoke, minBuild: 1300, ability: "waveform"},
+	"GameObject_Iris_X_SonicWave": {kind: UtilityArea, minBuild: 1300, ability: "bassquake"},
+
+	// Neon
+	"GameObject_Sprinter_4_Tunnel":         {kind: UtilityWall, minBuild: 1300, ability: "fast_lane"},
+	"GameObject_Sprinter_Q_ElectricSphere": {kind: UtilityArea, minBuild: 1300, ability: "relay_bolt"},
+
+	// Omen
+	"Zone_Wraith_4_Smoke": {kind: UtilitySmoke, minBuild: 1300, ability: "dark_cover"},
+
+	// Phoenix
+	"Patch_Phoenix_MolotovFire":                        {kind: UtilityMolly, minBuild: 1300, ability: "hot_hands"},
+	"GameObject_Phoenix_Q_FlameWallManager_Production": {kind: UtilityWall, minBuild: 1300, ability: "blaze"},
+	"GameObject_Phoenix_X_ResTarget_Production":        {kind: UtilityMarker, minBuild: 1300, ability: "run_it_back"},
+
+	// Raze
+	"Pawn_Clay_E_Boomba": {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "boom_bot"},
+
+	// Reyna
+	"GameObject_Vampire_4_NearsightAOE_Source": {kind: UtilityMarker, minBuild: 1300, ability: "leer"},
+
+	// Sage
+	"GameObject_Thorne_E_Wall_Fortifying": {kind: UtilityWall, minBuild: 1300, ability: "barrier_orb"},
+	"Patch_Thorne_4_SlowField_Production": {kind: UtilityArea, minBuild: 1300, ability: "slow_orb"},
+
+	// Skye
+	"Pawn_Guide_Q_PossessableScout":            {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "trailblazer"},
+	"GameObject_Guide_4_Heal_AOE":              {kind: UtilityArea, minBuild: 1300, ability: "regrowth"},
+	"GameObject_Guide_E_HawkFlash_FlashSource": {kind: UtilityMarker, minBuild: 1300, ability: "guiding_light"},
+	"Pawn_Guide_X_Pack":                        {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "seekers"},
+
+	// Sova
+	"GameObject_Hunter_4_ExplosiveBolt_Explosion": {kind: UtilityArea, minBuild: 1300, ability: "shock_bolt"},
+	"Pawn_Hunter_E_Drone":                         {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "owl_drone"},
+	"GameObject_Hunter_E_Drone_RevealDart":        {kind: UtilityMarker, minBuild: 1300, ability: "owl_drone"},
+	"GameObject_Hunter_Q_SonarBolt":               {kind: UtilityArea, minBuild: 1300, ability: "recon_bolt"},
+
+	// Tejo
+	"Pawn_Cashew_4_Spider_LockOn":                       {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "stealth_drone"},
+	"GameObject_Cashew_4_SonarPing":                     {kind: UtilityArea, minBuild: 1300, ability: "stealth_drone"},
+	"GameObject_Cashew_E_MapMissileMarker":              {kind: UtilityArea, minBuild: 1300, ability: "guided_salvo"},
+	"GameObject_Cashew_E_MapMissileMarker_SecondRocket": {kind: UtilityArea, minBuild: 1300, ability: "guided_salvo"},
+	"GameObject_Cashew_X_SegmentManager":                {kind: UtilityArea, minBuild: 1300, ability: "armageddon"},
+
+	// Vyse
+	"GameObject_Nox_Wall":                   {kind: UtilityWall, minBuild: 1300, ability: "shear"},
+	"GameObject_Nox_WallTrap":               {kind: UtilityWall, minBuild: 1300, ability: "shear"},
+	"GameObject_Nox_BarbedWire":             {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
+	"Patch_Nox_BarbedWire":                  {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
+	"GameObject_Nox_StealthingTrap_Flash_2": {kind: UtilityTrap, minBuild: 1300, ability: "arc_rose"},
+	"Gameobject_Nox_DisarmPulse":            {kind: UtilityArea, minBuild: 1300, ability: "steel_garden"},
+
+	// Yoru
+	"Pawn_Stealth_4_Decoy_V2":                    {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "fakeout"},
+	"Pawn_Stealth_E_TeleporterMoving_FakeTP":     {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "gatecrash"},
+	"Pawn_Stealth_E_TeleporterStationary_FakeTP": {kind: UtilityMarker, minBuild: 1300, ability: "gatecrash"},
 }
 
 type utilityActorEvent struct {
