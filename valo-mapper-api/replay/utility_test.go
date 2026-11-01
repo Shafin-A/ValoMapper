@@ -18,6 +18,13 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		want    bool
 		ability string
 	}{
+		{"13.00", "GameObject_Rift_4_BlackHole", true, "gravity_well"},
+		{"13.00", "GameObject_Rift_Q_FlashBurst", true, "nova_pulse"},
+		{"13.00", "GameObject_Rift_E_SmokeZone", true, "nebula__dissipate"},
+		{"13.00", "GameObject_Rift_E_SmokeZone_Fake", true, "nebula__dissipate"},
+		{"13.00", "GameObject_Rift_X_GlobalWall", true, "cosmic_divide"},
+		{"13.00", "GameObject_Rift_X_Markers", true, "astra_passive"},
+		{"13.00", "GameObject_Breach_X_Shockwave", true, "rolling_thunder"},
 		{"13.00", "Zone_Wraith_4_Smoke", true, "dark_cover"},
 		{"13.00", "GameObject_Smonk_NewSmoke", false, ""},
 		{"13.01", "GameObject_Smonk_NewSmoke", true, "ruse"},

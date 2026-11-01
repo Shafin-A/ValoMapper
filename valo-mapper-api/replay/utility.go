@@ -31,9 +31,18 @@ type utilityCatalogEntry struct {
 }
 
 var utilityCatalog = map[string]utilityCatalogEntry{
+	// Astra
+	"GameObject_Rift_4_BlackHole":      {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 3200, ability: "gravity_well"},
+	"GameObject_Rift_Q_FlashBurst":     {kind: UtilityArea, minBuild: 1300, ability: "nova_pulse"},
+	"GameObject_Rift_E_SmokeZone":      {kind: UtilitySmoke, minBuild: 1300, ability: "nebula__dissipate"},
+	"GameObject_Rift_E_SmokeZone_Fake": {kind: UtilitySmoke, minBuild: 1300, ability: "nebula__dissipate"},
+	"GameObject_Rift_X_GlobalWall":     {kind: UtilityWall, minBuild: 1300, ability: "cosmic_divide"},
+	"GameObject_Rift_X_Markers":        {kind: UtilityMarker, minBuild: 1300, ability: "astra_passive"},
+
 	// Breach
 	"GameObject_Breach_4_FusionBlast":        {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 2200, ability: "aftershock"},
 	"GameObject_Breach_E_SweetSpotFissure":   {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1100, ability: "fault_line"},
+	"GameObject_Breach_X_Shockwave":          {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 2004, ability: "rolling_thunder"},
 	"Projectile_Breach_4_FusionBlast":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "aftershock"},
 	"Projectile_Breach_Q_ThroughWalls_Flash": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashpoint"},
 
