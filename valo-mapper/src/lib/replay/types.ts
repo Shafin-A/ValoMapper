@@ -63,6 +63,40 @@ export type ReplayHit = {
   victimPuuid: string;
 };
 
+export type ReplayUtilityKind = "smoke" | "wall" | "molly" | "trap" | "mobile";
+
+export type ReplayUtilityPositionSample = {
+  timeMs: number;
+  x: number;
+  y: number;
+};
+
+export type ReplayUtility = {
+  id: string;
+  kind: ReplayUtilityKind;
+  /** ValoMapper agent-ability catalog id, e.g. "cloudburst" or "prowler". */
+  abilityId?: string;
+  startTimeMs: number;
+  endTimeMs: number;
+  position: { x: number; y: number };
+  ownerPuuid?: string;
+  samples?: ReplayUtilityPositionSample[];
+  path?: ReplayUtilityPositionSample[];
+};
+
+export type ReplayUtilityWarnings = {
+  unknownActors?: number;
+  invalidActors?: number;
+  missingPositions?: number;
+  missingCloses?: number;
+  unresolvedOwners?: number;
+  missingMovement?: number;
+  truncatedUtilities?: number;
+  truncatedSamples?: number;
+  truncatedPaths?: number;
+  unsupportedBuild?: number;
+};
+
 export type ReplayRound = Omit<RoundSummaryLite, "playerStats"> & {
   /** Team attacking during this round ("Red" | "Blue"). */
   attackTeamId: string;
@@ -70,6 +104,7 @@ export type ReplayRound = Omit<RoundSummaryLite, "playerStats"> & {
   playerStats: ReplayRoundPlayer[];
   frames: ReplayFrame[];
   hits?: ReplayHit[];
+  utilities?: ReplayUtility[];
   buyEndTimeMs?: number;
 };
 
@@ -85,6 +120,7 @@ export type ReplayMatch = Omit<MatchSummaryResponse, "rounds"> & {
   build?: string;
   durationMs?: number;
   warnings?: string[];
+  utilityWarnings?: ReplayUtilityWarnings;
 };
 
 export type ReplaySeedPlayer = Pick<

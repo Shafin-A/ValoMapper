@@ -68,6 +68,8 @@ export const ReplayControlsBar = ({
   onHideWeaponHitsChange,
   showVisionCones,
   onShowVisionConesChange,
+  showUtilities,
+  onShowUtilitiesChange,
   startAtBarrierDrop,
   onStartAtBarrierDropChange,
 }: {
@@ -92,6 +94,8 @@ export const ReplayControlsBar = ({
   onHideWeaponHitsChange: (hideWeaponHits: boolean) => void;
   showVisionCones: boolean;
   onShowVisionConesChange: (showVisionCones: boolean) => void;
+  showUtilities: boolean;
+  onShowUtilitiesChange: (showUtilities: boolean) => void;
   startAtBarrierDrop: boolean;
   onStartAtBarrierDropChange: (startAtBarrierDrop: boolean) => void;
 }) => {
@@ -150,6 +154,8 @@ export const ReplayControlsBar = ({
           onHideWeaponHitsChange={onHideWeaponHitsChange}
           showVisionCones={showVisionCones}
           onShowVisionConesChange={onShowVisionConesChange}
+          showUtilities={showUtilities}
+          onShowUtilitiesChange={onShowUtilitiesChange}
           startAtBarrierDrop={startAtBarrierDrop}
           onStartAtBarrierDropChange={onStartAtBarrierDropChange}
         />

@@ -9,6 +9,7 @@ describe("ReplaySettingsMenu", () => {
     const onHideAgentWeaponsChange = jest.fn();
     const onHideWeaponHitsChange = jest.fn();
     const onShowVisionConesChange = jest.fn();
+    const onShowUtilitiesChange = jest.fn();
     const onStartAtBarrierDropChange = jest.fn();
 
     render(
@@ -21,6 +22,8 @@ describe("ReplaySettingsMenu", () => {
         onHideWeaponHitsChange={onHideWeaponHitsChange}
         showVisionCones
         onShowVisionConesChange={onShowVisionConesChange}
+        showUtilities
+        onShowUtilitiesChange={onShowUtilitiesChange}
         startAtBarrierDrop
         onStartAtBarrierDropChange={onStartAtBarrierDropChange}
       />,
@@ -37,6 +40,13 @@ describe("ReplaySettingsMenu", () => {
     });
     await user.click(visionToggle);
     expect(onShowVisionConesChange).toHaveBeenCalledWith(false);
+
+    const utilitiesToggle = screen.getByRole("switch", {
+      name: "Show utility",
+    });
+    await user.click(utilitiesToggle);
+    expect(onShowUtilitiesChange).toHaveBeenCalledWith(false);
+    expect(screen.getByLabelText("Utility legend")).toBeInTheDocument();
 
     const weaponsToggle = screen.getByRole("switch", {
       name: "Hide agent weapons",

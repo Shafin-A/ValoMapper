@@ -344,7 +344,7 @@ export const CanvasCurvableLineIcon = ({
         />
       )}
 
-      {showAbilityShape && (
+      {showAbilityShape && showHandle && (
         <Circle
           x={endPoint.x}
           y={mapSide === "defense" ? endPoint.y - 25 : endPoint.y + 25}

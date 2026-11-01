@@ -15,8 +15,10 @@ import type {
   ReplayFrame,
   ReplayMatch,
   ReplayRound,
+  ReplayUtility,
 } from "@/lib/replay/types";
 import type { ToolIconCanvas } from "@/lib/types";
+import type { ReactNode } from "react";
 
 const mockIconSettings = {
   scale: 40,
@@ -30,22 +32,97 @@ const mockIconSettings = {
 const CLASSIC_WEAPON_ID = "29A0CFAB-485B-F5D5-779A-B59F85E204A8";
 const KNIFE_WEAPON_ID = "2F59173C-4BED-B6C3-2191-DEA9B58BE9C7";
 
+jest.mock("react-konva", () => {
+  const React = jest.requireActual("react") as typeof import("react");
+  return {
+    Circle: ({ x, y, fill }: { x: number; y: number; fill: string }) =>
+      React.createElement("span", {
+        "data-testid": "utility-marker",
+        "data-x": x,
+        "data-y": y,
+        "data-fill": fill,
+      }),
+    Image: ({
+      image,
+      x,
+      y,
+    }: {
+      image?: { src?: string };
+      x: number;
+      y: number;
+    }) =>
+      React.createElement("span", {
+        "data-testid": "utility-ability-image",
+        "data-src": image?.src,
+        "data-x": x,
+        "data-y": y,
+      }),
+    Group: ({ children }: { children: ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
+    Line: ({
+      id,
+      points,
+      stroke,
+    }: {
+      id?: string;
+      points: number[];
+      stroke: string;
+    }) =>
+      React.createElement("span", {
+      "data-testid": "konva-line",
+        id,
+        points: points.join(","),
+        "data-stroke": stroke,
+      }),
+  };
+});
+
 jest.mock("@/components/canvas-icons", () => ({
   AbilityIcon: ({
+    id,
+    action,
+    x,
+    y,
+    src,
+    width,
+    height,
+    isAlly,
     mapPosition,
     showRotationHandle,
     currentLength,
+    currentPath,
+    showHandle,
   }: {
+    id?: string;
+    action?: string;
+    x?: number;
+    y?: number;
+    src?: string;
+    width?: number;
+    height?: number;
+    isAlly?: boolean;
     mapPosition?: { x: number; y: number };
     showRotationHandle?: boolean;
     currentLength?: number;
+    currentPath?: { x: number; y: number }[];
+    showHandle?: boolean;
   }) => (
     <span
       data-testid="ability-icon"
+      data-id={id}
+      data-action={action}
+      data-x={x}
+      data-y={y}
+      data-src={src}
+      data-width={width}
+      data-height={height}
+      data-is-ally={String(isAlly)}
       data-map-x={mapPosition?.x}
       data-map-y={mapPosition?.y}
       data-show-rotation-handle={String(showRotationHandle)}
       data-current-length={currentLength}
+      data-current-path={JSON.stringify(currentPath ?? [])}
+      data-show-handle={String(showHandle)}
     />
   ),
   CanvasIcon: ({
@@ -442,6 +519,202 @@ describe("ReplayCanvasLayer spike", () => {
       "data-contour-width",
       String(TOOL_ICON_CONTOUR_WIDTH),
     );
+  });
+});
+
+describe("ReplayCanvasLayer utilities", () => {
+  const lotusMatch = { ...match, mapId: "lotus" } as ReplayMatch;
+  const lotusSpawn = { x: 6431.3, y: -5267.8 };
+  const frame: ReplayFrame = { timeMs: 0, players: [], spike: null };
+  const utilityRound = (utilities: ReplayUtility[]): ReplayRound =>
+    ({ ...round, utilities }) as ReplayRound;
+
+  it("renders stationary utility markers only during their round-relative lifetime", () => {
+    const smoke: ReplayUtility = {
+      id: "utility-0001",
+      kind: "smoke",
+      abilityId: "cloudburst",
+      startTimeMs: 100,
+      endTimeMs: 500,
+      position: lotusSpawn,
+    };
+
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([smoke])}
+        frame={frame}
+        currentTimeMs={99}
+      />,
+    );
+    expect(screen.queryByTestId("utility-marker")).not.toBeInTheDocument();
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([smoke])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+    const abilityIcon = screen.getByTestId("ability-icon");
+    expect(abilityIcon).toHaveAttribute("data-id", "utility-0001");
+    expect(abilityIcon).toHaveAttribute("data-action", "jett_smoke");
+    expect(abilityIcon).toHaveAttribute(
+      "data-src",
+      "/agents/jett/cloudburst.png",
+    );
+    expect(abilityIcon).toHaveAttribute("data-width", "40");
+    expect(abilityIcon).toHaveAttribute("data-height", "40");
+    expect(abilityIcon).toHaveAttribute("data-is-ally", "false");
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([smoke])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+    expect(screen.queryByTestId("utility-marker")).not.toBeInTheDocument();
+  });
+
+  it("draws the observed mobile path and follows playback seeks", () => {
+    const mobile: ReplayUtility = {
+      id: "utility-0002",
+      kind: "mobile",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: lotusSpawn,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        { timeMs: 100, x: 6505.5, y: 4043 },
+      ],
+    };
+
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([mobile])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+    expect(screen.getByTestId("utility-marker")).toHaveAttribute(
+      "data-fill",
+      "#4ade80",
+    );
+    expect(
+      screen.getAllByTestId("konva-line").some(
+        (line) => line.getAttribute("data-stroke") === "#4ade80",
+      ),
+    ).toBe(true);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([mobile])}
+        frame={frame}
+        currentTimeMs={400}
+      />,
+    );
+    expect(screen.queryByTestId("utility-marker")).not.toBeInTheDocument();
+  });
+
+  it("draws only observed Blaze wall points using the ability icon path", () => {
+    const blaze: ReplayUtility = {
+      id: "utility-blaze",
+      kind: "wall",
+      abilityId: "blaze",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: lotusSpawn,
+      path: [
+        { timeMs: 0, ...lotusSpawn },
+        { timeMs: 100, x: 6505.5, y: -5267.8 },
+        { timeMs: 200, x: 6505.5, y: -5200 },
+      ],
+    };
+
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([blaze])}
+        frame={frame}
+        currentTimeMs={50}
+      />,
+    );
+
+    let abilityIcon = screen.getByTestId("ability-icon");
+    expect(abilityIcon).toHaveAttribute("data-action", "phoenix_wall");
+    expect(
+      JSON.parse(abilityIcon.getAttribute("data-current-path")!),
+    ).toHaveLength(1);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([blaze])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+
+    abilityIcon = screen.getByTestId("ability-icon");
+    expect(abilityIcon).toHaveAttribute("data-show-handle", "false");
+    const originPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    const secondPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: { x: 6505.5, y: -5267.8 },
+    })!;
+    const currentPath = JSON.parse(
+      abilityIcon.getAttribute("data-current-path")!,
+    ) as { x: number; y: number }[];
+    expect(currentPath).toHaveLength(2);
+    expect(currentPath[0]).toEqual({ x: 0, y: 0 });
+    expect(currentPath[1].x).toBeCloseTo(secondPoint.x - originPoint.x);
+    expect(currentPath[1].y).toBeCloseTo(secondPoint.y - originPoint.y);
+    expect(Number(abilityIcon.getAttribute("data-x"))).toBeCloseTo(
+      originPoint.x,
+    );
+    expect(Number(abilityIcon.getAttribute("data-y"))).toBeCloseTo(
+      originPoint.y,
+    );
+  });
+
+  it("hides off-map utility and honors the visibility toggle", () => {
+    const smoke: ReplayUtility = {
+      id: "utility-0003",
+      kind: "smoke",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: { x: 1_000_000_000, y: 1_000_000_000 },
+    };
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([smoke])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+    expect(screen.queryByTestId("utility-marker")).not.toBeInTheDocument();
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([{ ...smoke, position: lotusSpawn }])}
+        frame={frame}
+        currentTimeMs={100}
+        showUtilities={false}
+      />,
+    );
+    expect(screen.queryByTestId("utility-marker")).not.toBeInTheDocument();
   });
 });
 

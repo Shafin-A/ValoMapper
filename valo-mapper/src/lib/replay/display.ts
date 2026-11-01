@@ -25,6 +25,25 @@ export type ReplayAbilityDisplay = {
   charges?: number;
 };
 
+export type ReplayUtilityAbilityIcon = {
+  id: string;
+  name: string;
+  src: string;
+  action: AbilityAction;
+};
+
+const REPLAY_UTILITY_ABILITY_ICONS = new Map<string, ReplayUtilityAbilityIcon>(
+  Object.values(AGENT_ICON_CONFIGS)
+    .flat()
+    .map(({ id, name, src, action }) => [id, { id, name, src, action }]),
+);
+
+/** Returns the existing ValoMapper ability artwork for a replay utility. */
+export const getReplayUtilityAbilityIcon = (
+  abilityId?: string,
+): ReplayUtilityAbilityIcon | null =>
+  abilityId ? (REPLAY_UTILITY_ABILITY_ICONS.get(abilityId) ?? null) : null;
+
 export const getReplayAbilityDisplays = (
   agentName: string,
   casts: ReplayAbilityCasts = {},

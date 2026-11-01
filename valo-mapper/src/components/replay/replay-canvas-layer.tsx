@@ -22,7 +22,14 @@ import {
   toReplayCanvasRotation,
 } from "@/lib/replay/snapshot";
 import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
-import { Group, Line } from "react-konva";
+import { Circle, Group, Line } from "react-konva";
+import {
+  getReplayUtilityPositionAtTime,
+  getReplayUtilityPathAtTime,
+  getReplayUtilityTrailAtTime,
+} from "@/lib/replay/utilities";
+import { getReplayUtilityAbilityIcon } from "@/lib/replay/display";
+import type { ReplayUtility, ReplayUtilityKind } from "@/lib/replay/types";
 
 const REPLAY_SPIKE_SIZE = 32;
 
@@ -31,6 +38,13 @@ const REPLAY_TRACER_TRAVEL_MS = 120;
 const REPLAY_TRACER_TAIL_PX = 50;
 
 const REPLAY_TRACER_COLOR = "#ff6b6b";
+const REPLAY_UTILITY_COLORS: Record<ReplayUtilityKind, string> = {
+  smoke: "#67e8f9",
+  wall: "#c4b5fd",
+  molly: "#fb923c",
+  trap: "#facc15",
+  mobile: "#4ade80",
+};
 
 const REPLAY_SPIKE_TOOL_ICON: ToolIconCanvas = {
   id: "replay-spike",
@@ -178,6 +192,7 @@ export const ReplayCanvasLayer = ({
   hideAgentWeapons = false,
   hideWeaponHits = false,
   showVisionCones = true,
+  showUtilities = true,
 }: {
   match: ReplayMatch;
   round: ReplayRound;
@@ -188,6 +203,7 @@ export const ReplayCanvasLayer = ({
   hideAgentWeapons?: boolean;
   hideWeaponHits?: boolean;
   showVisionCones?: boolean;
+  showUtilities?: boolean;
 }) => {
   const { agentsSettings, abilitiesSettings } = useSettings();
 
@@ -294,6 +310,18 @@ export const ReplayCanvasLayer = ({
             />
           );
         })}
+
+      {showUtilities &&
+        (round.utilities ?? []).map((utility) => (
+          <ReplayUtilityMarker
+            key={utility.id}
+            match={match}
+            utility={utility}
+            mapSide={mapSide}
+            currentTimeMs={currentTimeMs}
+            abilitiesSettings={abilitiesSettings}
+          />
+        ))}
 
       {!hideWeaponHits &&
         (round.hits ?? []).map((hit, index) => {
@@ -443,6 +471,124 @@ export const ReplayCanvasLayer = ({
         carrierPoint={carrierPoint}
         agentsSettings={agentsSettings}
       />
+    </Group>
+  );
+};
+
+const ReplayUtilityMarker = ({
+  match,
+  utility,
+  mapSide,
+  currentTimeMs,
+  abilitiesSettings,
+}: {
+  match: ReplayMatch;
+  utility: ReplayUtility;
+  mapSide: MapSide;
+  currentTimeMs: number;
+  abilitiesSettings: IconSettings;
+}) => {
+  const position = getReplayUtilityPositionAtTime(utility, currentTimeMs);
+  if (!position) {
+    return null;
+  }
+  const point = toReplayCanvasPoint({
+    mapId: match.mapId,
+    mapSide,
+    position,
+  });
+  if (!point || !isReplayPointOnMap({ point })) {
+    return null;
+  }
+
+  const color = REPLAY_UTILITY_COLORS[utility.kind];
+  const abilityIcon = getReplayUtilityAbilityIcon(utility.abilityId);
+  const path = getReplayUtilityPathAtTime(utility, currentTimeMs)
+    .map((sample) => ({
+      point: toReplayCanvasPoint({
+        mapId: match.mapId,
+        mapSide,
+        position: sample,
+      }),
+    }))
+    .filter(
+      (sample): sample is { point: { x: number; y: number } } =>
+        sample.point !== null,
+    );
+  const currentPath = path.map(({ point: pathPoint }) => ({
+    x: pathPoint.x - point.x,
+    y: pathPoint.y - point.y,
+  }));
+  const owner = utility.ownerPuuid
+    ? match.players.find((player) => player.puuid === utility.ownerPuuid)
+    : undefined;
+  const trail =
+    utility.kind === "mobile"
+      ? getReplayUtilityTrailAtTime(utility, currentTimeMs)
+          .map((sample) =>
+            toReplayCanvasPoint({
+              mapId: match.mapId,
+              mapSide,
+              position: sample,
+            }),
+          )
+          .filter(
+            (sample): sample is { x: number; y: number } =>
+              !!sample && isReplayPointOnMap({ point: sample }),
+          )
+      : [];
+  const trailPoints = trail.flatMap((sample) => [sample.x, sample.y]);
+
+  return (
+    <Group listening={false}>
+      {trailPoints.length >= 4 && (
+        <Line
+          points={trailPoints}
+          stroke={color}
+          strokeWidth={3}
+          opacity={0.75}
+          lineCap="round"
+          lineJoin="round"
+          listening={false}
+        />
+      )}
+      {!abilityIcon && (
+        <Circle
+          x={point.x}
+          y={point.y}
+          radius={utility.kind === "mobile" ? 7 : 6}
+          fill={color}
+          stroke="#111827"
+          strokeWidth={2}
+          shadowColor={color}
+          shadowBlur={5}
+          listening={false}
+        />
+      )}
+      {abilityIcon && (
+        <AbilityIcon
+          id={utility.id}
+          isAlly={owner?.teamId === "Blue"}
+          action={abilityIcon.action}
+          mapPosition={getReplayMapPosition()}
+          x={point.x}
+          y={point.y}
+          currentPath={currentPath}
+          showHandle={abilityIcon.action !== "phoenix_wall"}
+          src={abilityIcon.src}
+          width={abilitiesSettings.scale}
+          height={abilitiesSettings.scale}
+          borderOpacity={abilitiesSettings.borderOpacity}
+          strokeWidth={abilitiesSettings.borderWidth}
+          radius={abilitiesSettings.radius}
+          allyColor={abilitiesSettings.allyColor}
+          enemyColor={abilitiesSettings.enemyColor}
+          draggable={false}
+          isListening={false}
+          showCenterIcon
+          showRotationHandle={false}
+        />
+      )}
     </Group>
   );
 };

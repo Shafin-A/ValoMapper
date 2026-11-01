@@ -20,6 +20,8 @@ export const ReplaySettingsMenu = ({
   onHideWeaponHitsChange,
   showVisionCones,
   onShowVisionConesChange,
+  showUtilities,
+  onShowUtilitiesChange,
   startAtBarrierDrop,
   onStartAtBarrierDropChange,
 }: {
@@ -31,6 +33,8 @@ export const ReplaySettingsMenu = ({
   onHideWeaponHitsChange: (hideWeaponHits: boolean) => void;
   showVisionCones: boolean;
   onShowVisionConesChange: (showVisionCones: boolean) => void;
+  showUtilities: boolean;
+  onShowUtilitiesChange: (showUtilities: boolean) => void;
   startAtBarrierDrop: boolean;
   onStartAtBarrierDropChange: (startAtBarrierDrop: boolean) => void;
 }) => {
@@ -63,6 +67,37 @@ export const ReplaySettingsMenu = ({
               checked={!showVisionCones}
               onCheckedChange={(hidden) => onShowVisionConesChange(!hidden)}
             />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="show-replay-utilities" className="text-sm">
+              Show utility
+            </Label>
+            <Switch
+              id="show-replay-utilities"
+              checked={showUtilities}
+              onCheckedChange={onShowUtilitiesChange}
+            />
+          </div>
+          <div
+            aria-label="Utility legend"
+            className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-muted-foreground"
+          >
+            {[
+              ["#67e8f9", "Smoke"],
+              ["#c4b5fd", "Wall"],
+              ["#fb923c", "Molly"],
+              ["#facc15", "Trap"],
+              ["#4ade80", "Mobile"],
+            ].map(([color, label]) => (
+              <span key={label} className="flex items-center gap-1.5">
+                <span
+                  aria-hidden="true"
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                {label}
+              </span>
+            ))}
           </div>
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="hide-agent-weapons" className="text-sm">

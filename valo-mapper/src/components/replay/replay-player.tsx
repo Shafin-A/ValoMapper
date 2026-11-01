@@ -78,6 +78,7 @@ export const ReplayPlayer = ({
   const [hideAgentWeapons, setHideAgentWeapons] = useState(false);
   const [hideWeaponHits, setHideWeaponHits] = useState(false);
   const [showVisionCones, setShowVisionCones] = useState(true);
+  const [showUtilities, setShowUtilities] = useState(true);
   const [startAtBarrierDrop, setStartAtBarrierDrop] = useState(true);
 
   const round =
@@ -329,6 +330,7 @@ export const ReplayPlayer = ({
                     hideAgentWeapons={hideAgentWeapons}
                     hideWeaponHits={hideWeaponHits}
                     showVisionCones={showVisionCones}
+                    showUtilities={showUtilities}
                   />
                 }
               />
@@ -361,6 +363,8 @@ export const ReplayPlayer = ({
               onHideWeaponHitsChange={setHideWeaponHits}
               showVisionCones={showVisionCones}
               onShowVisionConesChange={setShowVisionCones}
+              showUtilities={showUtilities}
+              onShowUtilitiesChange={setShowUtilities}
               startAtBarrierDrop={startAtBarrierDrop}
               onStartAtBarrierDropChange={setStartAtBarrierDrop}
             />
