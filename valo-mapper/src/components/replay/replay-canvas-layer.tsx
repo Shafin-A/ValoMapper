@@ -503,7 +503,6 @@ const ReplayUtilityMarker = ({
     return null;
   }
 
-  const color = REPLAY_UTILITY_COLORS[utility.kind];
   const abilityIcon = getReplayUtilityAbilityIcon(utility.abilityId);
   const path = getReplayUtilityPathAtTime(utility, currentTimeMs)
     .map((sample) => ({
@@ -524,6 +523,12 @@ const ReplayUtilityMarker = ({
   const owner = utility.ownerPuuid
     ? match.players.find((player) => player.puuid === utility.ownerPuuid)
     : undefined;
+  const color =
+    utility.kind === "mobile" && owner?.teamId === "Blue"
+      ? "#42EEC7"
+      : utility.kind === "mobile" && owner?.teamId === "Red"
+        ? "#FF4655"
+        : REPLAY_UTILITY_COLORS[utility.kind];
   const trail =
     utility.kind === "mobile"
       ? getReplayUtilityTrailAtTime(utility, currentTimeMs)

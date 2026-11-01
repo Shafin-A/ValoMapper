@@ -579,10 +579,16 @@ describe("ReplayCanvasLayer utilities", () => {
     expect(screen.queryByTestId("utility-marker")).not.toBeInTheDocument();
   });
 
-  it("draws the observed mobile path and follows playback seeks", () => {
+  it.each([
+    ["Blue", "#42EEC7"],
+    ["Red", "#FF4655"],
+  ] as const)(
+    "colors the mobile marker and path for the %s team and follows playback seeks",
+    (teamId, teamColor) => {
     const mobile: ReplayUtility = {
       id: "utility-0002",
       kind: "mobile",
+      ownerPuuid: "owner-1",
       startTimeMs: 0,
       endTimeMs: 500,
       position: lotusSpawn,
@@ -594,7 +600,12 @@ describe("ReplayCanvasLayer utilities", () => {
 
     const { rerender } = render(
       <ReplayCanvasLayer
-        match={lotusMatch}
+        match={
+          {
+            ...lotusMatch,
+            players: [{ puuid: "owner-1", teamId }],
+          } as ReplayMatch
+        }
         round={utilityRound([mobile])}
         frame={frame}
         currentTimeMs={100}
@@ -602,24 +613,30 @@ describe("ReplayCanvasLayer utilities", () => {
     );
     expect(screen.getByTestId("utility-marker")).toHaveAttribute(
       "data-fill",
-      "#4ade80",
+      teamColor,
     );
     expect(
       screen.getAllByTestId("konva-line").some(
-        (line) => line.getAttribute("data-stroke") === "#4ade80",
+        (line) => line.getAttribute("data-stroke") === teamColor,
       ),
     ).toBe(true);
 
     rerender(
       <ReplayCanvasLayer
-        match={lotusMatch}
+        match={
+          {
+            ...lotusMatch,
+            players: [{ puuid: "owner-1", teamId }],
+          } as ReplayMatch
+        }
         round={utilityRound([mobile])}
         frame={frame}
         currentTimeMs={400}
       />,
     );
     expect(screen.queryByTestId("utility-marker")).not.toBeInTheDocument();
-  });
+    },
+  );
 
   it("draws only observed Blaze wall points using the ability icon path", () => {
     const blaze: ReplayUtility = {
