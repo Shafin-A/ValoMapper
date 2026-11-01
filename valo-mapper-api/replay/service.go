@@ -344,6 +344,21 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 	logs := buildRoundLogs(windows, players, index, events, fields, state, warnings)
 	applyRoundStats(windows, players, index, puuidBySubject, state, &fields.State, logs, warnings)
 	spike := buildSpikeTimeline(fields, state, index, windows, events, warnings)
+	utilities, utilityWarnings, err := scanUtilities(
+		exportDir,
+		build,
+		manifest.DurationMS,
+		windows,
+		index,
+		puuidBySubject,
+		state.Outer,
+		fields.UtilityOwners,
+		fields.UtilityPaths,
+	)
+	if err != nil {
+		return nil, nil, NewError(CodeCorrupt,
+			"The replay's utility actor data could not be read.", err)
+	}
 	framesByRound, timeline := buildTimelineFrames(
 		players, puuidBySubject, windows, movement, state, logs, spike, warnings,
 	)
@@ -359,6 +374,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 			AttackTeamID:    window.AttackTeamID,
 			DurationMS:      int(window.EndMS - window.StartMS),
 			Frames:          framesByRound[i],
+			Utilities:       utilities[i],
 		}
 
 		if window.BuyEndMS != nil && *window.BuyEndMS >= window.StartMS {
@@ -403,6 +419,9 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		Build:       build,
 		DurationMS:  manifest.DurationMS,
 		Warnings:    warnings.all(),
+	}
+	if utilityWarnings != (UtilityWarnings{}) {
+		match.UtilityWarnings = &utilityWarnings
 	}
 
 	envelope := &Envelope{

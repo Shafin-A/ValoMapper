@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -104,6 +105,10 @@ func TestIntegrationRealReplay(t *testing.T) {
 	looseFrames := 0
 	knifeFrames := 0
 	totalHits := 0
+	totalUtilities := 0
+	blazeUtilitiesWithPath := 0
+	utilityKinds := make(map[UtilityKind]struct{})
+	utilityAbilityIDs := make(map[string]struct{})
 	plantRounds := 0
 	defuseRounds := 0
 	explodeRounds := 0
@@ -113,6 +118,7 @@ func TestIntegrationRealReplay(t *testing.T) {
 	for _, player := range match.Players {
 		knownPlayers[player.Puuid] = struct{}{}
 	}
+	utilityIDs := make(map[string]struct{})
 	for _, round := range match.Rounds {
 		if len(round.Frames) == 0 {
 			t.Fatalf("round %d has no frames", round.RoundNumber)
@@ -251,6 +257,56 @@ func TestIntegrationRealReplay(t *testing.T) {
 				t.Errorf("round %d hit victim %q is not in the match", round.RoundNumber, hit.VictimPuuid)
 			}
 		}
+		for _, utility := range round.Utilities {
+			totalUtilities++
+			utilityKinds[utility.Kind] = struct{}{}
+			if utility.AbilityID == "" {
+				t.Errorf("round %d utility %q has no corresponding ValoMapper ability id",
+					round.RoundNumber, utility.ID)
+			} else {
+				utilityAbilityIDs[utility.AbilityID] = struct{}{}
+			}
+			if utility.ID == "" {
+				t.Errorf("round %d utility has no replay-local id", round.RoundNumber)
+			}
+			if _, duplicate := utilityIDs[utility.ID]; duplicate {
+				t.Errorf("round %d has duplicate utility id %q", round.RoundNumber, utility.ID)
+			}
+			utilityIDs[utility.ID] = struct{}{}
+			if utility.StartTimeMS < 0 || utility.StartTimeMS >= utility.EndTimeMS ||
+				utility.EndTimeMS > round.DurationMS {
+				t.Errorf("round %d utility interval %q is outside the round: %d..%d/%d",
+					round.RoundNumber, utility.ID, utility.StartTimeMS, utility.EndTimeMS, round.DurationMS)
+			}
+			if !validUtilityPosition(utility.Position) {
+				t.Errorf("round %d utility %q has an invalid spawn position", round.RoundNumber, utility.ID)
+			}
+			if utility.AbilityID == "blaze" {
+				if len(utility.Path) > 1 {
+					blazeUtilitiesWithPath++
+				}
+				for _, point := range utility.Path {
+					if point.TimeMS < utility.StartTimeMS || point.TimeMS >= utility.EndTimeMS ||
+						!validUtilityPosition(Position{X: point.X, Y: point.Y}) {
+						t.Errorf("round %d Blaze utility %q has an invalid path point: %+v",
+							round.RoundNumber, utility.ID, point)
+					}
+				}
+			}
+			previousSampleMS := -1
+			for _, sample := range utility.Samples {
+				if sample.TimeMS < utility.StartTimeMS || sample.TimeMS >= utility.EndTimeMS ||
+					sample.TimeMS <= previousSampleMS || !validUtilityPosition(Position{X: sample.X, Y: sample.Y}) {
+					t.Errorf("round %d utility %q has an invalid movement sample at %d",
+						round.RoundNumber, utility.ID, sample.TimeMS)
+				}
+				previousSampleMS = sample.TimeMS
+			}
+			if utility.Kind == UtilityMobile && len(utility.Samples) == 0 {
+				t.Errorf("round %d mobile utility %q has no observed movement samples",
+					round.RoundNumber, utility.ID)
+			}
+		}
 
 		// The opening pose must never be the pre-respawn sample. A player that
 		// jumps more than the teleport threshold inside the start window means
@@ -282,12 +338,34 @@ func TestIntegrationRealReplay(t *testing.T) {
 	if totalHits == 0 {
 		t.Error("no gun hits; the player cannot draw a tracer")
 	}
+	if totalUtilities > maxUtilityIntervals {
+		t.Errorf("utility intervals = %d, above the %d interval payload cap",
+			totalUtilities, maxUtilityIntervals)
+	}
 	// The 13.08 fixture is the M3 calibration export. One plant event falls
 	// outside every round window, so 19 of the 20 raw plants reach the log.
 	if match.Build == "13.08" {
 		if plantRounds != 19 || defuseRounds != 4 || explodeRounds != 1 {
 			t.Errorf("spike counts = plants %d / defuses %d / explosions %d, want 19/4/1",
 				plantRounds, defuseRounds, explodeRounds)
+		}
+		for _, kind := range []UtilityKind{
+			UtilitySmoke, UtilityWall, UtilityMolly, UtilityTrap, UtilityMobile,
+		} {
+			if _, ok := utilityKinds[kind]; !ok {
+				t.Errorf("13.08 replay did not normalize calibrated utility kind %q", kind)
+			}
+		}
+		for _, abilityID := range []string{
+			"ruse", "cloudburst", "hot_hands", "blaze", "trademark", "prowler", "boom_bot",
+		} {
+			if _, ok := utilityAbilityIDs[abilityID]; !ok {
+				t.Errorf("13.08 replay did not map calibrated utility to ValoMapper ability %q",
+					abilityID)
+			}
+		}
+		if blazeUtilitiesWithPath == 0 {
+			t.Error("13.08 replay did not expose any observed Phoenix Blaze wall path points")
 		}
 	}
 	if carriedAfterPlant != 0 {
@@ -302,6 +380,10 @@ func TestIntegrationRealReplay(t *testing.T) {
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
 	}
+	if strings.Contains(string(encoded), "GameObject_Smonk") ||
+		strings.Contains(string(encoded), "actorNetGuid") {
+		t.Error("utility payload exposed raw actor identifiers or class paths")
+	}
 	_, gz, ok := service.GetCached(replayID)
 	if !ok {
 		t.Fatal("parsed replay was not cached")
@@ -310,6 +392,7 @@ func TestIntegrationRealReplay(t *testing.T) {
 	t.Logf("source=%s build=%s map=%s", source, match.Build, match.MapName)
 	t.Logf("elapsed=%s rounds=%d frames=%d samples=%d deaths=%d loose_frames=%d knife_frames=%d hits=%d",
 		elapsed, len(match.Rounds), totalFrames, totalSamples, deaths, looseFrames, knifeFrames, totalHits)
+	t.Logf("utilities=%d kinds=%v warnings=%+v", totalUtilities, utilityKinds, match.UtilityWarnings)
 	t.Logf("json_bytes=%d gzip_bytes=%d teleport_cuts_logged=see parse log", len(encoded), len(gz))
 	t.Logf("kill_sources=%v", killSources)
 

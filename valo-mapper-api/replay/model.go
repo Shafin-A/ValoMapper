@@ -6,7 +6,7 @@ package replay
 // ParserVersion is part of the cache key, the X-Parser-Version response header
 // and the parse log. Bump the leading number whenever the normalised output can
 // change, even if VRFKit itself did not change.
-const ParserVersion = "13+vrfkit.0.3.0"
+const ParserVersion = "16+vrfkit.0.3.0"
 
 // Match mirrors ReplayMatch in the frontend. Field names and JSON tags are the
 // wire contract; do not rename them without a frontend change.
@@ -21,9 +21,10 @@ type Match struct {
 	Players     []Player `json:"players"`
 	Rounds      []Round  `json:"rounds"`
 
-	Build      string   `json:"build,omitempty"`
-	DurationMS uint32   `json:"durationMs,omitempty"`
-	Warnings   []string `json:"warnings,omitempty"`
+	Build           string           `json:"build,omitempty"`
+	DurationMS      uint32           `json:"durationMs,omitempty"`
+	Warnings        []string         `json:"warnings,omitempty"`
+	UtilityWarnings *UtilityWarnings `json:"utilityWarnings,omitempty"`
 }
 
 type Viewer struct {
@@ -48,10 +49,11 @@ type Round struct {
 	PlayerStats     []PlayerStats `json:"playerStats"`
 	EventLog        []Event       `json:"eventLog"`
 
-	AttackTeamID string  `json:"attackTeamId"`
-	DurationMS   int     `json:"durationMs"`
-	Frames       []Frame `json:"frames"`
-	Hits         []Hit   `json:"hits,omitempty"`
+	AttackTeamID string    `json:"attackTeamId"`
+	DurationMS   int       `json:"durationMs"`
+	Frames       []Frame   `json:"frames"`
+	Hits         []Hit     `json:"hits,omitempty"`
+	Utilities    []Utility `json:"utilities,omitempty"`
 
 	// BuyEndTimeMS is round-relative (the barrier drop). The player starts its
 	// clock here instead of at the round's phase-3 start.
@@ -100,6 +102,49 @@ type Event struct {
 type Position struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
+}
+
+type UtilityKind string
+
+const (
+	UtilitySmoke  UtilityKind = "smoke"
+	UtilityWall   UtilityKind = "wall"
+	UtilityMolly  UtilityKind = "molly"
+	UtilityTrap   UtilityKind = "trap"
+	UtilityMobile UtilityKind = "mobile"
+)
+
+type Utility struct {
+	ID          string                  `json:"id"`
+	Kind        UtilityKind             `json:"kind"`
+	AbilityID   string                  `json:"abilityId,omitempty"`
+	StartTimeMS int                     `json:"startTimeMs"`
+	EndTimeMS   int                     `json:"endTimeMs"`
+	Position    Position                `json:"position"`
+	OwnerPuuid  string                  `json:"ownerPuuid,omitempty"`
+	Samples     []UtilityPositionSample `json:"samples,omitempty"`
+	Path        []UtilityPositionSample `json:"path,omitempty"`
+}
+
+type UtilityPositionSample struct {
+	TimeMS int     `json:"timeMs"`
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+}
+
+// UtilityWarnings are bounded per-replay counts; they never contain NetGUIDs
+// or raw actor class paths.
+type UtilityWarnings struct {
+	UnknownActors      int `json:"unknownActors,omitempty"`
+	InvalidActors      int `json:"invalidActors,omitempty"`
+	MissingPositions   int `json:"missingPositions,omitempty"`
+	MissingCloses      int `json:"missingCloses,omitempty"`
+	UnresolvedOwners   int `json:"unresolvedOwners,omitempty"`
+	MissingMovement    int `json:"missingMovement,omitempty"`
+	TruncatedUtilities int `json:"truncatedUtilities,omitempty"`
+	TruncatedSamples   int `json:"truncatedSamples,omitempty"`
+	TruncatedPaths     int `json:"truncatedPaths,omitempty"`
+	UnsupportedBuild   int `json:"unsupportedBuild,omitempty"`
 }
 
 // Hit is a gun damage event. The player draws a tracer from the shooter to the

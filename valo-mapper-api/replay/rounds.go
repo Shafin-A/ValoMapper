@@ -2,6 +2,7 @@ package replay
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -51,6 +52,8 @@ type fieldScan struct {
 	PlantSitesRPC  []rpcWrite
 	PlantLocations []rpcWrite
 	Defusers       []rpcWrite
+	UtilityOwners  map[uint32][]utilityOwnerWrite
+	UtilityPaths   map[uint32][]utilityPathWrite
 
 	// State holds the HP/credits/weapon/armour rows collected by the same pass.
 	// scanState turns them into timelines after this scan.
@@ -79,6 +82,8 @@ func scanFields(exportDir string) (*fieldScan, error) {
 		PlantLocations: nil,
 		Defusers:       nil,
 		State:          newFieldStateRows(),
+		UtilityOwners:  make(map[uint32][]utilityOwnerWrite),
+		UtilityPaths:   make(map[uint32][]utilityPathWrite),
 	}
 
 	// The combat report writes ParticipantSubject and ParticipantTeamName as
@@ -98,6 +103,33 @@ func scanFields(exportDir string) (*fieldScan, error) {
 			name := *row.FieldName
 			group := row.GroupPath
 			timeMS := row.TimeMS
+			if name == "MulticastAddSmokeScreenPoint.Translation" && row.ValueStr != nil {
+				if position, ok := parseWorldPosition(*row.ValueStr); ok &&
+					validUtilityPosition(position) {
+					scan.UtilityPaths[row.ActorNetGUID] = append(
+						scan.UtilityPaths[row.ActorNetGUID],
+						utilityPathWrite{
+							TimeMS: row.TimeMS, PacketID: row.PacketID, Position: position,
+						},
+					)
+				}
+			}
+			if row.ValueI64 != nil && *row.ValueI64 >= 0 &&
+				uint64(*row.ValueI64) <= math.MaxUint32 {
+				target := uint32(*row.ValueI64)
+				switch utilityOwnerField(name) {
+				case "owner":
+					scan.UtilityOwners[row.ActorNetGUID] = append(
+						scan.UtilityOwners[row.ActorNetGUID],
+						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Owner: &target},
+					)
+				case "instigator":
+					scan.UtilityOwners[row.ActorNetGUID] = append(
+						scan.UtilityOwners[row.ActorNetGUID],
+						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Instigator: &target},
+					)
+				}
+			}
 
 			switch {
 			case name == "MulticastSetPhase.NewPhase":
@@ -158,6 +190,7 @@ func scanFields(exportDir string) (*fieldScan, error) {
 	if err != nil {
 		return nil, err
 	}
+	sortUtilityOwnerWrites(scan.UtilityOwners)
 
 	return scan, nil
 }
