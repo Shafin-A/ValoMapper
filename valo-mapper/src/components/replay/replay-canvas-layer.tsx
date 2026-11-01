@@ -29,6 +29,7 @@ import {
   getReplayUtilityTrailAtTime,
 } from "@/lib/replay/utilities";
 import {
+  getReplayAbilityYawOffset,
   getReplayLineAbilityGeometry,
   getReplayUtilityAbilityIcon,
 } from "@/lib/replay/display";
@@ -535,8 +536,11 @@ const ReplayUtilityMarker = ({
   const lineGeometry = abilityIcon
     ? getReplayLineAbilityGeometry(abilityIcon.action)
     : null;
+  const yawOffset = abilityIcon
+    ? getReplayAbilityYawOffset(abilityIcon.action)
+    : null;
   const rotation =
-    lineGeometry &&
+    yawOffset !== null &&
     currentPath.length === 0 &&
     typeof utility.yaw === "number" &&
     Number.isFinite(utility.yaw)
@@ -545,7 +549,7 @@ const ReplayUtilityMarker = ({
           mapSide,
           location: utility.position,
           viewRadians: (utility.yaw * Math.PI) / 180,
-        })
+        }) + yawOffset
       : undefined;
   const iconPoint =
     lineGeometry && rotation !== undefined && lineGeometry.iconGap > 0

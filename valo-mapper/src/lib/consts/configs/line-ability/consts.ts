@@ -116,6 +116,7 @@ export const LINE_ABILITY_CONFIGS: Record<
     strokeWidth?: number;
     stroke: string;
     iconPosition?: "start" | "middle";
+    replayYawOffset?: number;
     rotationHandleDistance?: number;
     iconLineGap?: number;
     showThickEnd?: boolean;
@@ -188,6 +189,7 @@ export const LINE_ABILITY_CONFIGS: Record<
     strokeWidth: 1.5,
     stroke: "#27e8a2",
     iconPosition: "middle",
+    replayYawOffset: 90,
     rotationHandleDistance: 100,
   },
   sova_ult: {
@@ -209,6 +211,7 @@ export const LINE_ABILITY_CONFIGS: Record<
     strokeWidth: 1,
     stroke: "#353237",
     iconPosition: "middle",
+    replayYawOffset: 90,
     rotationHandleDistance: 100,
   },
   waylay_ult: {

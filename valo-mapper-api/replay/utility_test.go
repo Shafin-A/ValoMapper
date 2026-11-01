@@ -1,6 +1,7 @@
 package replay
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"math"
 	"path/filepath"
@@ -220,6 +221,139 @@ func TestScanUtilitiesCapsBreachUtilityLifetimes(t *testing.T) {
 	}
 }
 
+func TestScanUtilitiesUsesVyseWallAnchorVectors(t *testing.T) {
+	dir := t.TempDir()
+	wallClass := "GameObject_Nox_Wall"
+	trapClass := "GameObject_Nox_WallTrap"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &wallClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			SpawnYaw: float32Ptr(35),
+		},
+		{TimeMS: 3000, PacketID: 4, ActorNetGUID: 700, Event: "close"},
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 701, Event: "open",
+			ClassPath: &trapClass, SpawnX: float32Ptr(300), SpawnY: float32Ptr(400),
+			SpawnYaw: float32Ptr(90),
+		},
+		{TimeMS: 3000, PacketID: 4, ActorNetGUID: 701, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	rawVector := func(x, y, z float64) []byte {
+		raw := make([]byte, 24)
+		binary.LittleEndian.PutUint64(raw[0:8], math.Float64bits(x))
+		binary.LittleEndian.PutUint64(raw[8:16], math.Float64bits(y))
+		binary.LittleEndian.PutUint64(raw[16:24], math.Float64bits(z))
+		return raw
+	}
+	wallStartName := "MulticastInitializeWall.WallStartLocation"
+	wallEndName := "MulticastInitializeWall.WallEndLocation"
+	trapStartName := "MulticastInitializeTrapAnchors.WallStartPoint"
+	trapEndName := "MulticastInitializeTrapAnchors.WallEndPoint"
+	subobjectGUID := uint32(999)
+	fields := []fieldRow{
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: &wallStartName, BitCount: 192, RawBits: rawVector(1000, 2000, 10)},
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, ObjectNetGUID: &subobjectGUID, FieldName: &wallStartName, BitCount: 192, RawBits: rawVector(50000, 50000, 10)},
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: &wallEndName, BitCount: 192, RawBits: rawVector(10000, 2000, 10)},
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 701, FieldName: &trapStartName, BitCount: 192, RawBits: rawVector(2000, 1000, 10)},
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 701, FieldName: &trapEndName, BitCount: 192, RawBits: rawVector(2000, 10000, 10)},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		4000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 4000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		fieldData.UtilityPaths,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 2 {
+		t.Fatalf("utilities = %#v, want both Vyse wall actors", utilities)
+	}
+	wall, trap := utilities[0][0], utilities[0][1]
+	if wall.AbilityID != "shear" || wall.Position != (Position{X: 5500, Y: 2000}) || wall.Yaw != -90 {
+		t.Errorf("raised wall geometry = %+v, want midpoint (5500, 2000), yaw -90", wall)
+	}
+	if trap.AbilityID != "shear" || trap.Position != (Position{X: 2000, Y: 5500}) || trap.Yaw != 0 {
+		t.Errorf("trap geometry = %+v, want midpoint (2000, 5500), yaw 0", trap)
+	}
+}
+
+func TestParseUtilityRawVectorRejectsInvalidEncoding(t *testing.T) {
+	raw := make([]byte, 24)
+	binary.LittleEndian.PutUint64(raw[0:8], math.Float64bits(1))
+	binary.LittleEndian.PutUint64(raw[8:16], math.Float64bits(2))
+	binary.LittleEndian.PutUint64(raw[16:24], math.Float64bits(3))
+	if position, ok := parseUtilityRawVector(raw, 192); !ok ||
+		position != (Position{X: 1, Y: 2}) {
+		t.Fatalf("valid vector = %+v/%v, want (1, 2)/true", position, ok)
+	}
+	if _, ok := parseUtilityRawVector(raw, 191); ok {
+		t.Fatal("accepted a vector with a non-192-bit encoding")
+	}
+	if _, ok := parseUtilityRawVector(raw[:23], 192); ok {
+		t.Fatal("accepted a truncated vector")
+	}
+	binary.LittleEndian.PutUint64(raw[16:24], math.Float64bits(math.NaN()))
+	if _, ok := parseUtilityRawVector(raw, 192); ok {
+		t.Fatal("accepted a vector with a non-finite Z coordinate")
+	}
+}
+
+func TestScanUtilitiesUsesVyseTrapYawFallback(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Nox_WallTrap"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			SpawnYaw: float32Ptr(90),
+		},
+		{TimeMS: 2000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		3000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one trap utility", utilities)
+	}
+	if utilities[0][0].Yaw != 0 {
+		t.Errorf("trap yaw = %v, want 0 after compensating its along-wall actor yaw", utilities[0][0].Yaw)
+	}
+}
+
 func TestScanUtilitiesClipsRoundsResolvesOwnersAndSamplesMobileMovement(t *testing.T) {
 	dir := t.TempDir()
 	smokeClass := "GameObject_Smonk_NewSmoke"
@@ -335,6 +469,7 @@ func TestScanUtilitiesPreservesDirectionalAbilityYaw(t *testing.T) {
 	dir := t.TempDir()
 	aftershockClass := "GameObject_Breach_4_FusionBlast"
 	faultLineClass := "GameObject_Breach_E_SweetSpotFissure"
+	bassquakeClass := "GameObject_Iris_X_SonicWave"
 	actors := []stateActorRow{
 		{
 			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
@@ -348,6 +483,12 @@ func TestScanUtilitiesPreservesDirectionalAbilityYaw(t *testing.T) {
 			SpawnYaw: float32Ptr(180),
 		},
 		{TimeMS: 3500, PacketID: 4, ActorNetGUID: 701, Event: "close"},
+		{
+			TimeMS: 2000, PacketID: 5, ActorNetGUID: 702, Event: "open",
+			ClassPath: &bassquakeClass, SpawnX: float32Ptr(500), SpawnY: float32Ptr(600),
+			SpawnYaw: float32Ptr(0),
+		},
+		{TimeMS: 3500, PacketID: 6, ActorNetGUID: 702, Event: "close"},
 	}
 	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
 		t.Fatal(err)
@@ -367,14 +508,24 @@ func TestScanUtilitiesPreservesDirectionalAbilityYaw(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(utilities) != 1 || len(utilities[0]) != 2 {
-		t.Fatalf("utilities = %#v, want both directional Breach utilities", utilities)
+	if len(utilities) != 1 || len(utilities[0]) != 3 {
+		t.Fatalf("utilities = %#v, want two directional Breach utilities and Bassquake", utilities)
 	}
 	if utilities[0][0].AbilityID != "aftershock" || utilities[0][0].Yaw != 90 {
 		t.Errorf("Aftershock utility = %+v, want yaw 90", utilities[0][0])
 	}
 	if utilities[0][1].AbilityID != "fault_line" || utilities[0][1].Yaw != 180 {
 		t.Errorf("Fault Line utility = %+v, want yaw 180", utilities[0][1])
+	}
+	if utilities[0][2].AbilityID != "bassquake" || utilities[0][2].Yaw != 0 {
+		t.Errorf("Bassquake utility = %+v, want explicit yaw 0", utilities[0][2])
+	}
+	payload, err := json.Marshal(utilities[0][2])
+	if err != nil {
+		t.Fatalf("marshal Bassquake utility: %v", err)
+	}
+	if !strings.Contains(string(payload), `"yaw":0`) {
+		t.Errorf("zero yaw missing from utility JSON: %s", payload)
 	}
 }
 

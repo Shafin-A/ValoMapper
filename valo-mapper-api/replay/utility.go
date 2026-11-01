@@ -1,6 +1,7 @@
 package replay
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -20,6 +21,8 @@ type utilityCatalogEntry struct {
 	kind               UtilityKind
 	mobile             bool
 	replicatedMovement bool
+	wallPoints         bool
+	wallYawOffset      float64
 	minBuild           int
 	maxLifetimeMS      uint32
 	ability            string
@@ -110,7 +113,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Projectile_Thumper_Concuss":  {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mpulse"},
 	"Projectile_Thumper_Heal":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mpulse_concuss"},
 	"GameObject_Iris_E_Smoke":     {kind: UtilitySmoke, minBuild: 1300, ability: "waveform"},
-	"GameObject_Iris_X_SonicWave": {kind: UtilityArea, minBuild: 1300, ability: "bassquake"},
+	"GameObject_Iris_X_SonicWave": {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1600, ability: "bassquake"},
 
 	// Neon
 	"GameObject_Sprinter_4_Tunnel":         {kind: UtilityWall, minBuild: 1300, ability: "fast_lane"},
@@ -171,8 +174,8 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Cashew_X_SegmentManager":                {kind: UtilityArea, minBuild: 1300, ability: "armageddon"},
 
 	// Vyse
-	"GameObject_Nox_Wall":                   {kind: UtilityWall, minBuild: 1300, ability: "shear"},
-	"GameObject_Nox_WallTrap":               {kind: UtilityWall, minBuild: 1300, ability: "shear"},
+	"GameObject_Nox_Wall":                   {kind: UtilityWall, wallPoints: true, minBuild: 1300, ability: "shear"},
+	"GameObject_Nox_WallTrap":               {kind: UtilityWall, wallPoints: true, wallYawOffset: -90, minBuild: 1300, ability: "shear"},
 	"GameObject_Nox_BarbedWire":             {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
 	"Patch_Nox_BarbedWire":                  {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
 	"Projectile_Nox_BarbedWire":             {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "razorvine"},
@@ -220,9 +223,10 @@ type utilityOwnerWrite struct {
 }
 
 type utilityPathWrite struct {
-	TimeMS   uint32
-	PacketID uint32
-	Position Position
+	TimeMS    uint32
+	PacketID  uint32
+	FieldName string
+	Position  Position
 }
 
 type utilitySegment struct {
@@ -230,6 +234,8 @@ type utilitySegment struct {
 	roundIndex         int
 	startMS            uint32
 	endMS              uint32
+	position           Position
+	yaw                float64
 	samples            []movementRow
 	replicatedMovement []utilityPathWrite
 	path               []utilityPathWrite
@@ -319,6 +325,8 @@ func scanUtilities(
 				roundIndex: roundIndex,
 				startMS:    start,
 				endMS:      end,
+				position:   life.position,
+				yaw:        life.yaw + life.class.wallYawOffset,
 			})
 		}
 	}
@@ -370,6 +378,23 @@ func scanUtilities(
 
 	for i := range segments {
 		segment := &segments[i]
+		if segment.life.class.wallPoints {
+			wallPoints := make([]utilityPathWrite, 0)
+			for _, write := range pathWrites[segment.life.guid] {
+				if write.TimeMS >= segment.startMS && write.TimeMS < segment.endMS &&
+					write.TimeMS >= segment.life.openMS && write.TimeMS < segment.life.closeMS {
+					wallPoints = append(wallPoints, write)
+				}
+			}
+			if start, end, ok := utilityWallEndpoints(wallPoints); ok {
+				segment.position = Position{
+					X: (start.X + end.X) / 2,
+					Y: (start.Y + end.Y) / 2,
+				}
+				// The catalog offset converts the actor's wall-normal yaw to the wall axis.
+				segment.yaw = math.Atan2(end.Y-start.Y, end.X-start.X)*180/math.Pi - 90
+			}
+		}
 		if segment.life.class.ability == "blaze" {
 			for _, write := range pathWrites[segment.life.guid] {
 				if write.TimeMS >= segment.startMS && write.TimeMS < segment.endMS &&
@@ -416,8 +441,8 @@ func scanUtilities(
 			AbilityID:   segment.life.class.ability,
 			StartTimeMS: int(segment.startMS - window.StartMS),
 			EndTimeMS:   int(segment.endMS - window.StartMS),
-			Position:    segment.life.position,
-			Yaw:         segment.life.yaw,
+			Position:    segment.position,
+			Yaw:         segment.yaw,
 			OwnerPuuid:  segment.life.owner,
 		}
 		if segment.life.class.ability == "blaze" {
@@ -483,6 +508,73 @@ func sortUtilityPathWrites(writes []utilityPathWrite) {
 		}
 		return writes[i].PacketID < writes[j].PacketID
 	})
+}
+
+func utilityWallEndpoints(writes []utilityPathWrite) (Position, Position, bool) {
+	type endpointPair struct {
+		start *Position
+		end   *Position
+	}
+	sortUtilityPathWrites(writes)
+	pairIndexes := make(map[string]int)
+	pairs := make([]endpointPair, 0)
+	for i := range writes {
+		write := &writes[i]
+		var endpoint string
+		var rpc string
+		switch write.FieldName {
+		case "MulticastInitializeWall.WallStartLocation":
+			rpc, endpoint = "MulticastInitializeWall", "start"
+		case "MulticastInitializeWall.WallEndLocation":
+			rpc, endpoint = "MulticastInitializeWall", "end"
+		case "MulticastInitializeTrapAnchors.WallStartPoint":
+			rpc, endpoint = "MulticastInitializeTrapAnchors", "start"
+		case "MulticastInitializeTrapAnchors.WallEndPoint":
+			rpc, endpoint = "MulticastInitializeTrapAnchors", "end"
+		default:
+			continue
+		}
+		key := fmt.Sprintf("%d:%s", write.TimeMS, rpc)
+		pairIndex, found := pairIndexes[key]
+		if !found {
+			pairIndex = len(pairs)
+			pairIndexes[key] = pairIndex
+			pairs = append(pairs, endpointPair{})
+		}
+		position := write.Position
+		if endpoint == "start" {
+			pairs[pairIndex].start = &position
+		} else {
+			pairs[pairIndex].end = &position
+		}
+	}
+
+	for _, pair := range pairs {
+		if pair.start == nil || pair.end == nil ||
+			(pair.start.X == pair.end.X && pair.start.Y == pair.end.Y) {
+			continue
+		}
+		return *pair.start, *pair.end, true
+	}
+	return Position{}, Position{}, false
+}
+
+func parseUtilityRawVector(raw []byte, bitCount int32) (Position, bool) {
+	if bitCount != 192 || len(raw) != 24 {
+		return Position{}, false
+	}
+	x := math.Float64frombits(binary.LittleEndian.Uint64(raw[0:8]))
+	y := math.Float64frombits(binary.LittleEndian.Uint64(raw[8:16]))
+	z := math.Float64frombits(binary.LittleEndian.Uint64(raw[16:24]))
+	position := Position{X: x, Y: y}
+	if !isFinite64(z) || math.Abs(z) > 1_000_000 {
+		return Position{}, false
+	}
+	return position, validUtilityPosition(position)
+}
+
+func isFinite64(value float64) bool {
+	return !math.IsNaN(value) && !math.IsInf(value, 0)
 }
 
 func readUtilityReplicatedMovement(

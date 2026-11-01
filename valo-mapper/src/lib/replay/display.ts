@@ -9,6 +9,7 @@ import { WEAPONS } from "@/lib/consts";
 import { formatTimeSinceRoundStart } from "@/lib/matches";
 import {
   isAdjustableLineAbility,
+  isArcAbility,
   isCurvableLineAbility,
   isDoubleLineAbility,
   isLineAbility,
@@ -80,6 +81,7 @@ export const getReplayLineAbilityGeometry = (action: AbilityAction) => {
   if (isAdjustableLineAbility(action)) {
     const config = ADJUSTABLE_LINE_ABILITY_CONFIGS[action];
     return {
+      replayYawOffset: 0,
       iconGap:
         config.iconPosition === "middle"
           ? 0
@@ -92,6 +94,7 @@ export const getReplayLineAbilityGeometry = (action: AbilityAction) => {
   if (isLineAbility(action)) {
     const config = LINE_ABILITY_CONFIGS[action];
     return {
+      replayYawOffset: config.replayYawOffset ?? 0,
       iconGap:
         config.iconPosition === "middle"
           ? 0
@@ -101,6 +104,7 @@ export const getReplayLineAbilityGeometry = (action: AbilityAction) => {
   if (isDoubleLineAbility(action)) {
     const config = DOUBLE_LINE_ABILITY_CONFIGS[action];
     return {
+      replayYawOffset: 0,
       iconGap:
         config.iconPosition === "middle"
           ? 0
@@ -109,12 +113,22 @@ export const getReplayLineAbilityGeometry = (action: AbilityAction) => {
   }
   if (isXLineAbility(action)) {
     const config = X_LINE_ABILITY_CONFIGS[action];
-    return { iconGap: mToPixels(config.iconLineGap ?? 0) };
+    return { replayYawOffset: 0, iconGap: mToPixels(config.iconLineGap ?? 0) };
   }
   if (isCurvableLineAbility(action)) {
-    return { iconGap: 0 };
+    return { replayYawOffset: 0, iconGap: 0 };
   }
   return null;
+};
+
+export const getReplayAbilityYawOffset = (
+  action: AbilityAction,
+): number | null => {
+  const lineGeometry = getReplayLineAbilityGeometry(action);
+  if (lineGeometry) {
+    return lineGeometry.replayYawOffset ?? 0;
+  }
+  return isArcAbility(action) ? 0 : null;
 };
 
 export const getReplayAbilityDisplays = (

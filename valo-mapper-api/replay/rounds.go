@@ -109,7 +109,23 @@ func scanFields(exportDir string) (*fieldScan, error) {
 					scan.UtilityPaths[row.ActorNetGUID] = append(
 						scan.UtilityPaths[row.ActorNetGUID],
 						utilityPathWrite{
-							TimeMS: row.TimeMS, PacketID: row.PacketID, Position: position,
+							TimeMS: row.TimeMS, PacketID: row.PacketID,
+							FieldName: name, Position: position,
+						},
+					)
+				}
+			}
+			if row.ObjectNetGUID == nil &&
+				(name == "MulticastInitializeWall.WallStartLocation" ||
+					name == "MulticastInitializeWall.WallEndLocation" ||
+					name == "MulticastInitializeTrapAnchors.WallStartPoint" ||
+					name == "MulticastInitializeTrapAnchors.WallEndPoint") {
+				if position, ok := parseUtilityRawVector(row.RawBits, row.BitCount); ok {
+					scan.UtilityPaths[row.ActorNetGUID] = append(
+						scan.UtilityPaths[row.ActorNetGUID],
+						utilityPathWrite{
+							TimeMS: row.TimeMS, PacketID: row.PacketID,
+							FieldName: name, Position: position,
 						},
 					)
 				}

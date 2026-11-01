@@ -535,17 +535,20 @@ describe("ReplayCanvasLayer utilities", () => {
     ({ ...round, utilities }) as ReplayRound;
 
   it.each([
-    ["aftershock", 0, undefined],
-    ["fault_line", 8, mToPixels(56)],
-    ["fast_lane", 0, undefined],
+    ["aftershock", 0, undefined, 90, 0],
+    ["fault_line", 8, mToPixels(56), 90, 0],
+    ["fast_lane", 0, undefined, 90, 0],
+    ["bassquake", 0, undefined, 0, 0],
+    ["barrier_orb", 0, undefined, 90, 90],
+    ["shear", 0, undefined, 90, 90],
   ] as const)(
-    "orients the %s line ability using actor yaw and its configured geometry",
-    (abilityId, anchorGapMeters, currentLength) => {
+    "orients %s from actor yaw with its configured geometry",
+    (abilityId, anchorGapMeters, currentLength, yaw, yawOffset) => {
       const utility: ReplayUtility = {
         id: `utility-${abilityId}`,
         kind: "area",
         abilityId,
-        yaw: 90,
+        yaw,
         startTimeMs: 0,
         endTimeMs: 500,
         position: lotusSpawn,
@@ -569,10 +572,12 @@ describe("ReplayCanvasLayer utilities", () => {
         mapId: lotusMatch.mapId,
         mapSide: "defense",
         location: lotusSpawn,
-        viewRadians: Math.PI / 2,
+        viewRadians: (yaw * Math.PI) / 180,
       });
       const gap = mToPixels(anchorGapMeters);
-      expect(Number(icon.getAttribute("data-rotation"))).toBeCloseTo(rotation);
+      expect(Number(icon.getAttribute("data-rotation"))).toBeCloseTo(
+        rotation + yawOffset,
+      );
       expect(Number(icon.getAttribute("data-x"))).toBeCloseTo(
         point.x - Math.cos((rotation * Math.PI) / 180) * gap,
       );
