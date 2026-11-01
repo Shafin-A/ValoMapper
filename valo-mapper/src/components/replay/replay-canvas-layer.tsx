@@ -28,7 +28,10 @@ import {
   getReplayUtilityPathAtTime,
   getReplayUtilityTrailAtTime,
 } from "@/lib/replay/utilities";
-import { getReplayUtilityAbilityIcon } from "@/lib/replay/display";
+import {
+  getReplayLineAbilityGeometry,
+  getReplayUtilityAbilityIcon,
+} from "@/lib/replay/display";
 import type { ReplayUtility, ReplayUtilityKind } from "@/lib/replay/types";
 
 const REPLAY_SPIKE_SIZE = 32;
@@ -529,6 +532,32 @@ const ReplayUtilityMarker = ({
       : utility.kind === "mobile" && owner?.teamId === "Red"
         ? "#FF4655"
         : REPLAY_UTILITY_COLORS[utility.kind];
+  const lineGeometry = abilityIcon
+    ? getReplayLineAbilityGeometry(abilityIcon.action)
+    : null;
+  const rotation =
+    lineGeometry &&
+    currentPath.length === 0 &&
+    typeof utility.yaw === "number" &&
+    Number.isFinite(utility.yaw)
+      ? toReplayCanvasRotation({
+          mapId: match.mapId,
+          mapSide,
+          location: utility.position,
+          viewRadians: (utility.yaw * Math.PI) / 180,
+        })
+      : undefined;
+  const iconPoint =
+    lineGeometry && rotation !== undefined && lineGeometry.iconGap > 0
+      ? {
+          x:
+            point.x -
+            Math.cos((rotation * Math.PI) / 180) * lineGeometry.iconGap,
+          y:
+            point.y -
+            Math.sin((rotation * Math.PI) / 180) * lineGeometry.iconGap,
+        }
+      : point;
   const trail =
     utility.kind === "mobile"
       ? getReplayUtilityTrailAtTime(utility, currentTimeMs)
@@ -578,8 +607,10 @@ const ReplayUtilityMarker = ({
           isAlly={owner?.teamId === "Blue"}
           action={abilityIcon.action}
           mapPosition={getReplayMapPosition()}
-          x={point.x}
-          y={point.y}
+          x={iconPoint.x}
+          y={iconPoint.y}
+          rotation={rotation}
+          currentLength={lineGeometry?.currentLength}
           currentPath={currentPath}
           showHandle={abilityIcon.action !== "phoenix_wall"}
           src={abilityIcon.src}

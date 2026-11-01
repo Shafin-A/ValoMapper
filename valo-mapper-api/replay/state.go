@@ -469,6 +469,7 @@ type stateActorRow struct {
 	SpawnX       *float32 `parquet:"spawn_x,optional"`
 	SpawnY       *float32 `parquet:"spawn_y,optional"`
 	SpawnZ       *float32 `parquet:"spawn_z,optional"`
+	SpawnYaw     *float32 `parquet:"spawn_yaw,optional"`
 }
 
 type actorMoment struct {

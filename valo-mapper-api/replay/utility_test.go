@@ -199,6 +199,53 @@ func TestScanUtilitiesClipsRoundsResolvesOwnersAndSamplesMobileMovement(t *testi
 	}
 }
 
+func TestScanUtilitiesPreservesDirectionalAbilityYaw(t *testing.T) {
+	dir := t.TempDir()
+	aftershockClass := "GameObject_Breach_4_FusionBlast"
+	faultLineClass := "GameObject_Breach_E_SweetSpotFissure"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &aftershockClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			SpawnYaw: float32Ptr(90),
+		},
+		{TimeMS: 3000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+		{
+			TimeMS: 1500, PacketID: 3, ActorNetGUID: 701, Event: "open",
+			ClassPath: &faultLineClass, SpawnX: float32Ptr(300), SpawnY: float32Ptr(400),
+			SpawnYaw: float32Ptr(180),
+		},
+		{TimeMS: 3500, PacketID: 4, ActorNetGUID: 701, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		4000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 4000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 2 {
+		t.Fatalf("utilities = %#v, want both directional Breach utilities", utilities)
+	}
+	if utilities[0][0].AbilityID != "aftershock" || utilities[0][0].Yaw != 90 {
+		t.Errorf("Aftershock utility = %+v, want yaw 90", utilities[0][0])
+	}
+	if utilities[0][1].AbilityID != "fault_line" || utilities[0][1].Yaw != 180 {
+		t.Errorf("Fault Line utility = %+v, want yaw 180", utilities[0][1])
+	}
+}
+
 func TestResolveUtilityOwnerRejectsAmbiguousChains(t *testing.T) {
 	ownerName, instigatorName := uint32(2), uint32(3)
 	writes := map[uint32][]utilityOwnerWrite{

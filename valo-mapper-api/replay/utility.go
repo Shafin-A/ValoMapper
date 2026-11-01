@@ -151,6 +151,7 @@ type utilityActorEvent struct {
 	Event     string
 	ClassPath string
 	Spawn     *Position
+	SpawnYaw  *float32
 }
 
 type utilityActor struct {
@@ -166,6 +167,7 @@ type utilityActorLife struct {
 	openMS   uint32
 	closeMS  uint32
 	position Position
+	yaw      float64
 	owner    string
 }
 
@@ -350,6 +352,7 @@ func scanUtilities(
 			StartTimeMS: int(segment.startMS - window.StartMS),
 			EndTimeMS:   int(segment.endMS - window.StartMS),
 			Position:    segment.life.position,
+			Yaw:         segment.life.yaw,
 			OwnerPuuid:  segment.life.owner,
 		}
 		if segment.life.class.ability == "blaze" {
@@ -426,6 +429,10 @@ func readUtilityActors(exportDir string) (map[uint32]*utilityActor, error) {
 					Y: float64(*row.SpawnY),
 				}
 			}
+			if row.SpawnYaw != nil && isFinite32(*row.SpawnYaw) {
+				yaw := *row.SpawnYaw
+				event.SpawnYaw = &yaw
+			}
 			actor.Events = append(actor.Events, event)
 		}
 		return nil
@@ -478,6 +485,9 @@ func buildUtilityActorLives(
 		}
 		if event.Spawn != nil {
 			current.position = *event.Spawn
+		}
+		if event.SpawnYaw != nil {
+			current.yaw = float64(*event.SpawnYaw)
 		}
 	}
 	closeLife := func(event utilityActorEvent) {

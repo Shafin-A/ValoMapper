@@ -86,6 +86,7 @@ export type ReplayUtility = {
   startTimeMs: number;
   endTimeMs: number;
   position: { x: number; y: number };
+  yaw?: number;
   ownerPuuid?: string;
   samples?: ReplayUtilityPositionSample[];
   path?: ReplayUtilityPositionSample[];

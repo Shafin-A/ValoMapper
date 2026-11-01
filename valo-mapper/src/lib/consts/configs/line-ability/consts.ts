@@ -78,6 +78,7 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
     stroke: string;
     iconPosition?: "start" | "middle";
     lineLength: number;
+    replayLength?: number;
     strokeWidth: number;
     minLength?: number;
     maxLength: number;
@@ -95,6 +96,7 @@ export const ADJUSTABLE_LINE_ABILITY_CONFIGS: Record<
     strokeWidth: 8,
     minLength: 8,
     maxLength: 56,
+    replayLength: 56,
     iconLineGap: 8,
   },
   cypher_trip: {

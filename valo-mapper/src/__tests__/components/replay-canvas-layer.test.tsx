@@ -6,9 +6,11 @@ import {
 } from "@/lib/consts";
 import { getReplayWeaponIcon } from "@/lib/replay/display";
 import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
+import { mToPixels } from "@/lib/utils";
 import {
   getReplayMapPosition,
   toReplayCanvasPoint,
+  toReplayCanvasRotation,
 } from "@/lib/replay/snapshot";
 import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
 import type {
@@ -89,6 +91,7 @@ jest.mock("@/components/canvas-icons", () => ({
     isAlly,
     mapPosition,
     showRotationHandle,
+    rotation,
     currentLength,
     currentPath,
     showHandle,
@@ -103,6 +106,7 @@ jest.mock("@/components/canvas-icons", () => ({
     isAlly?: boolean;
     mapPosition?: { x: number; y: number };
     showRotationHandle?: boolean;
+    rotation?: number;
     currentLength?: number;
     currentPath?: { x: number; y: number }[];
     showHandle?: boolean;
@@ -120,6 +124,7 @@ jest.mock("@/components/canvas-icons", () => ({
       data-map-x={mapPosition?.x}
       data-map-y={mapPosition?.y}
       data-show-rotation-handle={String(showRotationHandle)}
+      data-rotation={rotation}
       data-current-length={currentLength}
       data-current-path={JSON.stringify(currentPath ?? [])}
       data-show-handle={String(showHandle)}
@@ -528,6 +533,61 @@ describe("ReplayCanvasLayer utilities", () => {
   const frame: ReplayFrame = { timeMs: 0, players: [], spike: null };
   const utilityRound = (utilities: ReplayUtility[]): ReplayRound =>
     ({ ...round, utilities }) as ReplayRound;
+
+  it.each([
+    ["aftershock", 0, undefined],
+    ["fault_line", 8, mToPixels(56)],
+    ["fast_lane", 0, undefined],
+  ] as const)(
+    "orients the %s line ability using actor yaw and its configured geometry",
+    (abilityId, anchorGapMeters, currentLength) => {
+      const utility: ReplayUtility = {
+        id: `utility-${abilityId}`,
+        kind: "area",
+        abilityId,
+        yaw: 90,
+        startTimeMs: 0,
+        endTimeMs: 500,
+        position: lotusSpawn,
+      };
+      render(
+        <ReplayCanvasLayer
+          match={lotusMatch}
+          round={utilityRound([utility])}
+          frame={frame}
+          currentTimeMs={100}
+        />,
+      );
+
+      const icon = screen.getByTestId("ability-icon");
+      const point = toReplayCanvasPoint({
+        mapId: lotusMatch.mapId,
+        mapSide: "defense",
+        position: lotusSpawn,
+      })!;
+      const rotation = toReplayCanvasRotation({
+        mapId: lotusMatch.mapId,
+        mapSide: "defense",
+        location: lotusSpawn,
+        viewRadians: Math.PI / 2,
+      });
+      const gap = mToPixels(anchorGapMeters);
+      expect(Number(icon.getAttribute("data-rotation"))).toBeCloseTo(rotation);
+      expect(Number(icon.getAttribute("data-x"))).toBeCloseTo(
+        point.x - Math.cos((rotation * Math.PI) / 180) * gap,
+      );
+      expect(Number(icon.getAttribute("data-y"))).toBeCloseTo(
+        point.y - Math.sin((rotation * Math.PI) / 180) * gap,
+      );
+      if (currentLength === undefined) {
+        expect(icon).not.toHaveAttribute("data-current-length");
+      } else {
+        expect(Number(icon.getAttribute("data-current-length"))).toBeCloseTo(
+          currentLength,
+        );
+      }
+    },
+  );
 
   it("renders stationary utility markers only during their round-relative lifetime", () => {
     const smoke: ReplayUtility = {

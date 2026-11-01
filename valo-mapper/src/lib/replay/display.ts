@@ -1,6 +1,20 @@
 import { AGENT_ICON_CONFIGS } from "@/lib/consts/configs/agent-icon/consts";
+import {
+  ADJUSTABLE_LINE_ABILITY_CONFIGS,
+  DOUBLE_LINE_ABILITY_CONFIGS,
+  LINE_ABILITY_CONFIGS,
+  X_LINE_ABILITY_CONFIGS,
+} from "@/lib/consts/configs/line-ability/consts";
 import { WEAPONS } from "@/lib/consts";
 import { formatTimeSinceRoundStart } from "@/lib/matches";
+import {
+  isAdjustableLineAbility,
+  isCurvableLineAbility,
+  isDoubleLineAbility,
+  isLineAbility,
+  isXLineAbility,
+  mToPixels,
+} from "@/lib/utils";
 import type { AbilityAction, ToolIconCanvas } from "@/lib/types";
 import type {
   ReplayAbilityCasts,
@@ -61,6 +75,47 @@ export const getReplayUtilityAbilityIcon = (
   abilityId?: string,
 ): ReplayUtilityAbilityIcon | null =>
   abilityId ? (REPLAY_UTILITY_ABILITY_ICONS.get(abilityId) ?? null) : null;
+
+export const getReplayLineAbilityGeometry = (action: AbilityAction) => {
+  if (isAdjustableLineAbility(action)) {
+    const config = ADJUSTABLE_LINE_ABILITY_CONFIGS[action];
+    return {
+      iconGap:
+        config.iconPosition === "middle"
+          ? 0
+          : mToPixels(config.iconLineGap ?? 0),
+      currentLength: config.replayLength
+        ? mToPixels(config.replayLength)
+        : undefined,
+    };
+  }
+  if (isLineAbility(action)) {
+    const config = LINE_ABILITY_CONFIGS[action];
+    return {
+      iconGap:
+        config.iconPosition === "middle"
+          ? 0
+          : mToPixels(config.iconLineGap ?? 0),
+    };
+  }
+  if (isDoubleLineAbility(action)) {
+    const config = DOUBLE_LINE_ABILITY_CONFIGS[action];
+    return {
+      iconGap:
+        config.iconPosition === "middle"
+          ? 0
+          : mToPixels(config.iconLineGap ?? 0),
+    };
+  }
+  if (isXLineAbility(action)) {
+    const config = X_LINE_ABILITY_CONFIGS[action];
+    return { iconGap: mToPixels(config.iconLineGap ?? 0) };
+  }
+  if (isCurvableLineAbility(action)) {
+    return { iconGap: 0 };
+  }
+  return null;
+};
 
 export const getReplayAbilityDisplays = (
   agentName: string,
