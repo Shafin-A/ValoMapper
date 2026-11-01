@@ -1,6 +1,7 @@
 package replay
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
@@ -16,22 +17,28 @@ const (
 )
 
 type utilityCatalogEntry struct {
-	kind     UtilityKind
-	mobile   bool
-	minBuild int
-	ability  string
+	kind               UtilityKind
+	mobile             bool
+	replicatedMovement bool
+	minBuild           int
+	maxLifetimeMS      uint32
+	ability            string
 }
 
 var utilityCatalog = map[string]utilityCatalogEntry{
 	// Breach
-	"GameObject_Breach_4_FusionBlast":      {kind: UtilityArea, minBuild: 1300, ability: "aftershock"},
-	"GameObject_Breach_E_SweetSpotFissure": {kind: UtilityArea, minBuild: 1300, ability: "fault_line"},
+	"GameObject_Breach_4_FusionBlast":        {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 2200, ability: "aftershock"},
+	"GameObject_Breach_E_SweetSpotFissure":   {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1100, ability: "fault_line"},
+	"Projectile_Breach_4_FusionBlast":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "aftershock"},
+	"Projectile_Breach_Q_ThroughWalls_Flash": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashpoint"},
 
 	// Brimstone
 	"GameObject_Sarge_E_SpeedStim":                {kind: UtilityArea, minBuild: 1300, ability: "stim_beacon"},
 	"Patch_Sarge_Q_Molotov_Production":            {kind: UtilityMolly, minBuild: 1300, ability: "incendiary"},
 	"GameObject_Sarge_4_Smoke_ProductionNEW":      {kind: UtilitySmoke, minBuild: 1300, ability: "sky_smoke"},
 	"GameObject_Sarge_X_OrbitalStrike_Production": {kind: UtilityArea, minBuild: 1300, ability: "orbital_strike"},
+	"Projectile_Sarge_E_SpeedStim":                {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "stim_beacon"},
+	"Projectile_Sarge_Q_Molotov_Production":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "incendiary"},
 
 	// Chamber
 	"Patch_Deadeye_E_Slow_Large":             {kind: UtilityArea, minBuild: 1308, ability: "trademark"},
@@ -42,6 +49,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Smonk_Q_DecayExplosion": {kind: UtilityArea, minBuild: 1301, ability: "meddle"},
 	"GameObject_Smonk_NewSmoke":         {kind: UtilitySmoke, minBuild: 1301, ability: "ruse"},
 	"GameObject_Smonk_NewSmoke_PDS":     {kind: UtilitySmoke, minBuild: 1301, ability: "ruse"},
+	"Projectile_Smonk_DecayNade":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1301, ability: "meddle"},
 
 	// Cypher
 	"GameObject_Gumshoe_E_TripWire":                  {kind: UtilityWall, minBuild: 1300, ability: "trapwire"},
@@ -51,42 +59,56 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Deadlock
 	"Patch_NetToss":                           {kind: UtilityArea, minBuild: 1300, ability: "gravnet"},
+	"Projectile_NetToss":                      {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "gravnet"},
+	"Projectile_CableJam_InAir":               {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "barrier_mesh"},
 	"GameObject_StealthingTrap_SoundSensor":   {kind: UtilityTrap, minBuild: 1300, ability: "sonic_sensor"},
 	"GameObject_SoundSensor_SweetSpotFissure": {kind: UtilityTrap, minBuild: 1300, ability: "sonic_sensor"},
 	"GameObject_CableJamRoot":                 {kind: UtilityWall, minBuild: 1300, ability: "barrier_mesh"},
 
 	// Fade
-	"GameObject_BountyHunter_E_LoSReveal_Source_Reactivate": {kind: UtilityMarker, minBuild: 1300, ability: "haunt"},
-	"GameObject_BountyHunter_X_WaveForm":                    {kind: UtilityArea, minBuild: 1300, ability: "nightfall"},
-	"Pawn_BountyHunter_4_WolfHound":                         {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "prowler"},
-	"GameObject_Q_BountyHunter_Tether_SphereExpansion":      {kind: UtilityArea, minBuild: 1300, ability: "seize"},
+	"GameObject_BountyHunter_E_LoSReveal_Source_Reactivate":   {kind: UtilityMarker, minBuild: 1300, ability: "haunt"},
+	"GameObject_BountyHunter_X_WaveForm":                      {kind: UtilityArea, minBuild: 1300, ability: "nightfall"},
+	"Pawn_BountyHunter_4_WolfHound":                           {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "prowler"},
+	"GameObject_Q_BountyHunter_Tether_SphereExpansion":        {kind: UtilityArea, minBuild: 1300, ability: "seize"},
+	"Projectile_E_BountyHunter_Divebomb":                      {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "haunt"},
+	"Projectile_Q_BountyHunter_TetherGrenade_SphereExpansion": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "seize"},
 
 	// Gekko
-	"Patch_Aggrobot_C_ExplodeyPatch": {kind: UtilityMolly, minBuild: 1300, ability: "mosh_pit"},
-	"Pawn_Aggrobot_SeekerNade":       {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "wingman"},
-	"Pawn_Aggrobot_RollyPolly":       {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "thrash"},
+	"Patch_Aggrobot_C_ExplodeyPatch":             {kind: UtilityMolly, minBuild: 1300, ability: "mosh_pit"},
+	"Projectile_Aggrobot_C_ExplodeyPatch":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mosh_pit"},
+	"Projectile_E_Aggrobot_DiscTurret_PowerWave": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "dizzy"},
+	"Pawn_Aggrobot_SeekerNade":                   {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "wingman"},
+	"Pawn_Aggrobot_RollyPolly":                   {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "thrash"},
 
 	// Iso
-	"GameObject_FishingHook_CageSphere": {kind: UtilityArea, minBuild: 1300, ability: "annihilation"},
-	"GameObject_Sequoia_4_MovingCover":  {kind: UtilityWall, minBuild: 1300, ability: "contingency"},
-	"GameObject_Sequoia_E_Orb":          {kind: UtilityMarker, minBuild: 1300, ability: "double_tap"},
-	"GameObject_Sequoia_X_LineCapture":  {kind: UtilityArea, minBuild: 1300, ability: "kill_contract"},
+	"GameObject_FishingHook_CageSphere":   {kind: UtilityArea, minBuild: 1300, ability: "annihilation"},
+	"GameObject_Sequoia_4_MovingCover":    {kind: UtilityWall, minBuild: 1300, ability: "contingency"},
+	"GameObject_Sequoia_E_Orb":            {kind: UtilityMarker, minBuild: 1300, ability: "double_tap"},
+	"GameObject_Sequoia_X_LineCapture":    {kind: UtilityArea, minBuild: 1300, ability: "kill_contract"},
+	"Projectile_Sequoia_Q_FragileMissile": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "undercut"},
 
 	// Jett
 	"GameObject_Wushu_4_SmokeZone": {kind: UtilitySmoke, minBuild: 1302, ability: "cloudburst"},
+	"Projectile_Wushu_4_Smoke":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "cloudburst"},
 
 	// KAY/O
 	"Gameobject_Grenadier_E_SuppressionPulse": {kind: UtilityArea, minBuild: 1300, ability: "zeropoint"},
+	"Projectile_C_Grenadier_Flash":            {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashdrive"},
+	"Projectile_C_Grenadier_Flash_Underhand":  {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashdrive"},
+	"Projectile_Grenadier_E_SuppressionBlade": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "zeropoint"},
 
 	// Killjoy
-	"GameObject_Killjoy_4_BeeSwarm_Damage": {kind: UtilityMolly, minBuild: 1300, ability: "nanoswarm"},
-	"Pawn_Killjoy_Q_StealthAlarmbot":       {kind: UtilityTrap, minBuild: 1300, ability: "alarmbot"},
-	"Pawn_Killjoy_E_Turret":                {kind: UtilityTrap, minBuild: 1300, ability: "turret"},
-	"GameObject_Killjoy_X_Bomb":            {kind: UtilityArea, minBuild: 1300, ability: "lockdown"},
+	"GameObject_Killjoy_4_BeeSwarm_Damage":          {kind: UtilityMolly, minBuild: 1300, ability: "nanoswarm"},
+	"Projectile_Killjoy_4_RemoteBees_MultiDetonate": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "nanoswarm"},
+	"Pawn_Killjoy_Q_StealthAlarmbot":                {kind: UtilityTrap, minBuild: 1300, ability: "alarmbot"},
+	"Pawn_Killjoy_E_Turret":                         {kind: UtilityTrap, minBuild: 1300, ability: "turret"},
+	"GameObject_Killjoy_X_Bomb":                     {kind: UtilityArea, minBuild: 1300, ability: "lockdown"},
 
 	// Miks
 	"GameObject_Thumper_Concuss":  {kind: UtilityArea, minBuild: 1300, ability: "mpulse"},
 	"GameObject_Thumper_Heal":     {kind: UtilityArea, minBuild: 1300, ability: "mpulse_concuss"},
+	"Projectile_Thumper_Concuss":  {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mpulse"},
+	"Projectile_Thumper_Heal":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mpulse_concuss"},
 	"GameObject_Iris_E_Smoke":     {kind: UtilitySmoke, minBuild: 1300, ability: "waveform"},
 	"GameObject_Iris_X_SonicWave": {kind: UtilityArea, minBuild: 1300, ability: "bassquake"},
 
@@ -95,36 +117,53 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Sprinter_Q_ElectricSphere": {kind: UtilityArea, minBuild: 1300, ability: "relay_bolt"},
 
 	// Omen
-	"Zone_Wraith_4_Smoke": {kind: UtilitySmoke, minBuild: 1300, ability: "dark_cover"},
+	"Zone_Wraith_4_Smoke":                  {kind: UtilitySmoke, minBuild: 1300, ability: "dark_cover"},
+	"Projectile_Wraith_Q_NearsightMissile": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "paranoia"},
+	"Projectile_Wraith_4_Smoke":            {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "dark_cover"},
 
 	// Phoenix
 	"Patch_Phoenix_MolotovFire":                        {kind: UtilityMolly, minBuild: 1300, ability: "hot_hands"},
 	"GameObject_Phoenix_Q_FlameWallManager_Production": {kind: UtilityWall, minBuild: 1300, ability: "blaze"},
 	"GameObject_Phoenix_X_ResTarget_Production":        {kind: UtilityMarker, minBuild: 1300, ability: "run_it_back"},
+	"Projectile_Phoenix_4_Molotov_Production":          {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "hot_hands"},
+	"Projectile_Phoenix_E_FlareCurve_Synced":           {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "curveball"},
+	"Projectile_Phoenix_E_FlareCurve_Synced_Right":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "curveball"},
+	"Projectile_Phoenix_Q_FlameWall_ThroughWall":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "blaze"},
 
 	// Raze
-	"Pawn_Clay_E_Boomba": {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "boom_bot"},
+	"Pawn_Clay_E_Boomba":                   {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "boom_bot"},
+	"Projectile_Clay_4_Projectile_Primary": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "paint_shells"},
+	"Projectile_Clay_Q_Satchel_Arming":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "blast_pack"},
+	"Projectile_Clay_X_Rocket":             {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "showstopper"},
 
 	// Reyna
 	"GameObject_Vampire_4_NearsightAOE_Source": {kind: UtilityMarker, minBuild: 1300, ability: "leer"},
+	"Projectile_Vampire_4_NearsightAoE":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "leer"},
 
 	// Sage
-	"GameObject_Thorne_E_Wall_Fortifying": {kind: UtilityWall, minBuild: 1300, ability: "barrier_orb"},
-	"Patch_Thorne_4_SlowField_Production": {kind: UtilityArea, minBuild: 1300, ability: "slow_orb"},
+	"GameObject_Thorne_E_Wall_Fortifying":      {kind: UtilityWall, minBuild: 1300, ability: "barrier_orb"},
+	"Patch_Thorne_4_SlowField_Production":      {kind: UtilityArea, minBuild: 1300, ability: "slow_orb"},
+	"Projectile_Thorne_4_SlowFIeld_Production": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "slow_orb"},
 
 	// Skye
 	"Pawn_Guide_Q_PossessableScout":            {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "trailblazer"},
 	"GameObject_Guide_4_Heal_AOE":              {kind: UtilityArea, minBuild: 1300, ability: "regrowth"},
 	"GameObject_Guide_E_HawkFlash_FlashSource": {kind: UtilityMarker, minBuild: 1300, ability: "guiding_light"},
+	"Projectile_Guide_E_HawkFlash":             {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "guiding_light"},
 	"Pawn_Guide_X_Pack":                        {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "seekers"},
 
 	// Sova
-	"GameObject_Hunter_4_ExplosiveBolt_Explosion": {kind: UtilityArea, minBuild: 1300, ability: "shock_bolt"},
+	"GameObject_Hunter_4_ExplosiveBolt_Explosion": {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 450, ability: "shock_bolt"},
+	"Projectile_Hunter_4_ExplosiveBolt":           {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "shock_bolt"},
 	"Pawn_Hunter_E_Drone":                         {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "owl_drone"},
 	"GameObject_Hunter_E_Drone_RevealDart":        {kind: UtilityMarker, minBuild: 1300, ability: "owl_drone"},
 	"GameObject_Hunter_Q_SonarBolt":               {kind: UtilityArea, minBuild: 1300, ability: "recon_bolt"},
+	"Projectile_Hunter_Q_RevealBolt":              {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "recon_bolt"},
 
 	// Tejo
+	"Projectile_Cashew_Q_ShellShockGrenade":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "special_delivery"},
+	"Projectile_Cashew_Q_ShellShockGrenade_Bounce": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "special_delivery"},
+
 	"Pawn_Cashew_4_Spider_LockOn":                       {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "stealth_drone"},
 	"GameObject_Cashew_4_SonarPing":                     {kind: UtilityArea, minBuild: 1300, ability: "stealth_drone"},
 	"GameObject_Cashew_E_MapMissileMarker":              {kind: UtilityArea, minBuild: 1300, ability: "guided_salvo"},
@@ -136,10 +175,12 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Nox_WallTrap":               {kind: UtilityWall, minBuild: 1300, ability: "shear"},
 	"GameObject_Nox_BarbedWire":             {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
 	"Patch_Nox_BarbedWire":                  {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
+	"Projectile_Nox_BarbedWire":             {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "razorvine"},
 	"GameObject_Nox_StealthingTrap_Flash_2": {kind: UtilityTrap, minBuild: 1300, ability: "arc_rose"},
 	"Gameobject_Nox_DisarmPulse":            {kind: UtilityArea, minBuild: 1300, ability: "steel_garden"},
 
 	// Yoru
+	"Projectile_Stealth_Q_BounceFlash":           {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "blindside"},
 	"Pawn_Stealth_4_Decoy_V2":                    {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "fakeout"},
 	"Pawn_Stealth_E_TeleporterMoving_FakeTP":     {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "gatecrash"},
 	"Pawn_Stealth_E_TeleporterStationary_FakeTP": {kind: UtilityMarker, minBuild: 1300, ability: "gatecrash"},
@@ -185,12 +226,13 @@ type utilityPathWrite struct {
 }
 
 type utilitySegment struct {
-	life       *utilityActorLife
-	roundIndex int
-	startMS    uint32
-	endMS      uint32
-	samples    []movementRow
-	path       []utilityPathWrite
+	life               *utilityActorLife
+	roundIndex         int
+	startMS            uint32
+	endMS              uint32
+	samples            []movementRow
+	replicatedMovement []utilityPathWrite
+	path               []utilityPathWrite
 }
 
 func scanUtilities(
@@ -240,6 +282,10 @@ func scanUtilities(
 				incrementUtilityWarning(&warnings.MissingPositions)
 				continue
 			}
+			if life.class.maxLifetimeMS > 0 &&
+				life.closeMS-life.openMS > life.class.maxLifetimeMS {
+				life.closeMS = life.openMS + life.class.maxLifetimeMS
+			}
 			lives = append(lives, life)
 		}
 	}
@@ -284,9 +330,13 @@ func scanUtilities(
 	}
 
 	mobileGUIDs := make(map[uint32]struct{})
+	replicatedMovementGUIDs := make(map[uint32]struct{})
 	for _, segment := range segments {
 		if segment.life.class.mobile {
 			mobileGUIDs[segment.life.guid] = struct{}{}
+		}
+		if segment.life.class.replicatedMovement {
+			replicatedMovementGUIDs[segment.life.guid] = struct{}{}
 		}
 	}
 	movementByGUID := make(map[uint32][]movementRow, len(mobileGUIDs))
@@ -310,6 +360,13 @@ func scanUtilities(
 			return nil, warnings, err
 		}
 	}
+	replicatedMovementByGUID, err := readUtilityReplicatedMovement(
+		exportDir,
+		replicatedMovementGUIDs,
+	)
+	if err != nil {
+		return nil, warnings, err
+	}
 
 	for i := range segments {
 		segment := &segments[i]
@@ -320,12 +377,20 @@ func scanUtilities(
 					segment.path = append(segment.path, write)
 				}
 			}
-			sort.SliceStable(segment.path, func(i, j int) bool {
-				if segment.path[i].TimeMS != segment.path[j].TimeMS {
-					return segment.path[i].TimeMS < segment.path[j].TimeMS
+			sortUtilityPathWrites(segment.path)
+		}
+		if segment.life.class.replicatedMovement {
+			for _, write := range replicatedMovementByGUID[segment.life.guid] {
+				if write.TimeMS >= segment.startMS && write.TimeMS < segment.endMS &&
+					write.TimeMS >= segment.life.openMS && write.TimeMS < segment.life.closeMS {
+					segment.replicatedMovement = append(segment.replicatedMovement, write)
 				}
-				return segment.path[i].PacketID < segment.path[j].PacketID
-			})
+			}
+			sortUtilityPathWrites(segment.replicatedMovement)
+			if len(segment.replicatedMovement) == 0 &&
+				len(replicatedMovementByGUID[segment.life.guid]) == 0 {
+				incrementUtilityWarning(&warnings.MissingMovement)
+			}
 		}
 		if !segment.life.class.mobile {
 			continue
@@ -371,6 +436,15 @@ func scanUtilities(
 			if len(utility.Samples) == 0 {
 				continue
 			}
+		} else if segment.life.class.replicatedMovement {
+			var truncated bool
+			utility.Samples, truncated = sampleUtilityPath(segment.replicatedMovement, window.StartMS)
+			if truncated {
+				incrementUtilityWarning(&warnings.TruncatedSamples)
+			}
+			if len(utility.Samples) == 0 {
+				continue
+			}
 		}
 		nextID++
 		result[segment.roundIndex] = append(result[segment.roundIndex], utility)
@@ -400,6 +474,62 @@ func sampleUtilityPath(writes []utilityPathWrite, roundStart uint32) ([]UtilityP
 		})
 	}
 	return samples, truncated
+}
+
+func sortUtilityPathWrites(writes []utilityPathWrite) {
+	sort.SliceStable(writes, func(i, j int) bool {
+		if writes[i].TimeMS != writes[j].TimeMS {
+			return writes[i].TimeMS < writes[j].TimeMS
+		}
+		return writes[i].PacketID < writes[j].PacketID
+	})
+}
+
+func readUtilityReplicatedMovement(
+	exportDir string,
+	actorGUIDs map[uint32]struct{},
+) (map[uint32][]utilityPathWrite, error) {
+	paths := make(map[uint32][]utilityPathWrite, len(actorGUIDs))
+	if len(actorGUIDs) == 0 {
+		return paths, nil
+	}
+	_, err := readParquetRows[fieldRow](exportDir+"/fields.parquet", func(rows []fieldRow) error {
+		for i := range rows {
+			row := &rows[i]
+			if _, wanted := actorGUIDs[row.ActorNetGUID]; !wanted ||
+				row.ObjectNetGUID != nil ||
+				row.FieldName == nil || *row.FieldName != "ReplicatedMovement" ||
+				row.ValueStr == nil {
+				continue
+			}
+			position, ok := parseReplicatedMovementPosition(*row.ValueStr)
+			if !ok {
+				continue
+			}
+			paths[row.ActorNetGUID] = append(paths[row.ActorNetGUID], utilityPathWrite{
+				TimeMS: row.TimeMS, PacketID: row.PacketID, Position: position,
+			})
+		}
+		return nil
+	})
+	return paths, err
+}
+
+func parseReplicatedMovementPosition(value string) (Position, bool) {
+	var movement struct {
+		Location *struct {
+			X *float64 `json:"x"`
+			Y *float64 `json:"y"`
+		} `json:"location"`
+	}
+	if err := json.Unmarshal([]byte(value), &movement); err != nil {
+		return Position{}, false
+	}
+	if movement.Location == nil || movement.Location.X == nil || movement.Location.Y == nil {
+		return Position{}, false
+	}
+	position := Position{X: *movement.Location.X, Y: *movement.Location.Y}
+	return position, validUtilityPosition(position)
 }
 
 func readUtilityActors(exportDir string) (map[uint32]*utilityActor, error) {

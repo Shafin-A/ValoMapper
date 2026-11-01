@@ -50,6 +50,45 @@ describe("replay utility playback", () => {
     expect(getReplayUtilityAbilityIcon("unknown-ability")).toBeNull();
   });
 
+  it.each([
+    "mosh_pit",
+    "dizzy",
+    "haunt",
+    "seize",
+    "aftershock",
+    "flashpoint",
+    "gravnet",
+    "barrier_mesh",
+    "special_delivery",
+    "paint_shells",
+    "blast_pack",
+    "showstopper",
+    "flashdrive",
+    "zeropoint",
+    "guiding_light",
+    "nanoswarm",
+    "undercut",
+    "shock_bolt",
+    "recon_bolt",
+    "mpulse",
+    "mpulse_concuss",
+    "razorvine",
+    "hot_hands",
+    "curveball",
+    "blaze",
+    "stim_beacon",
+    "incendiary",
+    "meddle",
+    "paranoia",
+    "slow_orb",
+    "leer",
+    "dark_cover",
+    "cloudburst",
+    "blindside",
+  ])("resolves projectile trail ability %s to ValoMapper artwork", (abilityId) => {
+    expect(getReplayUtilityAbilityIcon(abilityId)).not.toBeNull();
+  });
+
   it("shows stationary utilities for their half-open lifetime", () => {
     expect(getReplayUtilityPositionAtTime(stationaryUtility, 99)).toBeNull();
     expect(getReplayUtilityPositionAtTime(stationaryUtility, 100)).toEqual({

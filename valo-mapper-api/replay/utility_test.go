@@ -24,7 +24,8 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.02", "GameObject_Deadeye_E_Trap", true, "trademark"},
 		{"13.08", "Pawn_BountyHunter_4_WolfHound", true, "prowler"},
 		{"13.08", "Gameobject_Grenadier_E_SuppressionPulse", true, "zeropoint"},
-		{"13.08", "Projectile_Wushu_4_Smoke", false, ""},
+		{"13.08", "Projectile_Wushu_4_Smoke", true, "cloudburst"},
+		{"13.08", "Projectile_Hunter_4_ExplosiveBolt", true, "shock_bolt"},
 		{"13.08", "Ability_BountyHunter_4_WolfHoundBendable", false, ""},
 		{"13.09", "GameObject_Smonk_NewSmoke", false, ""},
 	}
@@ -47,6 +48,66 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		if entry.ability == "" {
 			t.Errorf("utility class %q has no ValoMapper ability id", classPath)
 		}
+	}
+}
+
+func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
+	tests := []struct {
+		class   string
+		ability string
+	}{
+		{"Projectile_Aggrobot_C_ExplodeyPatch", "mosh_pit"},
+		{"Projectile_E_Aggrobot_DiscTurret_PowerWave", "dizzy"},
+		{"Projectile_E_BountyHunter_Divebomb", "haunt"},
+		{"Projectile_Q_BountyHunter_TetherGrenade_SphereExpansion", "seize"},
+		{"Projectile_Breach_4_FusionBlast", "aftershock"},
+		{"Projectile_Breach_Q_ThroughWalls_Flash", "flashpoint"},
+		{"Projectile_NetToss", "gravnet"},
+		{"Projectile_CableJam_InAir", "barrier_mesh"},
+		{"Projectile_Cashew_Q_ShellShockGrenade", "special_delivery"},
+		{"Projectile_Cashew_Q_ShellShockGrenade_Bounce", "special_delivery"},
+		{"Projectile_Clay_4_Projectile_Primary", "paint_shells"},
+		{"Projectile_Clay_Q_Satchel_Arming", "blast_pack"},
+		{"Projectile_Clay_X_Rocket", "showstopper"},
+		{"Projectile_C_Grenadier_Flash", "flashdrive"},
+		{"Projectile_C_Grenadier_Flash_Underhand", "flashdrive"},
+		{"Projectile_Grenadier_E_SuppressionBlade", "zeropoint"},
+		{"Projectile_Guide_E_HawkFlash", "guiding_light"},
+		{"Projectile_Killjoy_4_RemoteBees_MultiDetonate", "nanoswarm"},
+		{"Projectile_Sequoia_Q_FragileMissile", "undercut"},
+		{"Projectile_Hunter_4_ExplosiveBolt", "shock_bolt"},
+		{"Projectile_Hunter_Q_RevealBolt", "recon_bolt"},
+		{"Projectile_Thumper_Concuss", "mpulse"},
+		{"Projectile_Thumper_Heal", "mpulse_concuss"},
+		{"Projectile_Nox_BarbedWire", "razorvine"},
+		{"Projectile_Phoenix_4_Molotov_Production", "hot_hands"},
+		{"Projectile_Phoenix_E_FlareCurve_Synced", "curveball"},
+		{"Projectile_Phoenix_E_FlareCurve_Synced_Right", "curveball"},
+		{"Projectile_Phoenix_Q_FlameWall_ThroughWall", "blaze"},
+		{"Projectile_Sarge_E_SpeedStim", "stim_beacon"},
+		{"Projectile_Sarge_Q_Molotov_Production", "incendiary"},
+		{"Projectile_Smonk_DecayNade", "meddle"},
+		{"Projectile_Thorne_4_SlowFIeld_Production", "slow_orb"},
+		{"Projectile_Vampire_4_NearsightAoE", "leer"},
+		{"Projectile_Wraith_Q_NearsightMissile", "paranoia"},
+		{"Projectile_Wraith_4_Smoke", "dark_cover"},
+		{"Projectile_Wushu_4_Smoke", "cloudburst"},
+		{"Projectile_Stealth_Q_BounceFlash", "blindside"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.class, func(t *testing.T) {
+			entry, found := utilityCatalog[test.class]
+			if !found {
+				t.Fatal("projectile class is not catalogued")
+			}
+			if entry.kind != UtilityMobile || !entry.replicatedMovement {
+				t.Fatalf("entry = %#v, want a replicated-movement mobile utility", entry)
+			}
+			if entry.ability != test.ability {
+				t.Fatalf("ability id = %q, want %q", entry.ability, test.ability)
+			}
+		})
 	}
 }
 
@@ -85,6 +146,77 @@ func TestBuildUtilityActorLivesHandlesDormancyAndSameTimeOrdering(t *testing.T) 
 	lives, invalid, missing = buildUtilityActorLives(zeroDuration, entry, 1000)
 	if len(lives) != 0 || invalid != 1 || missing != 0 {
 		t.Fatalf("zero-duration lifecycle = %d/%d/%d, want 0/1/0", len(lives), invalid, missing)
+	}
+}
+
+func TestScanUtilitiesCapsBreachUtilityLifetimes(t *testing.T) {
+	tests := []struct {
+		name        string
+		class       string
+		ability     string
+		maxLifetime uint32
+	}{
+		{
+			name:        "Aftershock",
+			class:       "GameObject_Breach_4_FusionBlast",
+			ability:     "aftershock",
+			maxLifetime: 2200,
+		},
+		{
+			name:        "Fault Line",
+			class:       "GameObject_Breach_E_SweetSpotFissure",
+			ability:     "fault_line",
+			maxLifetime: 1100,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			dir := t.TempDir()
+			class := test.class
+			actors := []stateActorRow{
+				{
+					TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+					ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+				},
+				{TimeMS: 9000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+			}
+			if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+				t.Fatal(err)
+			}
+
+			utilities, _, err := scanUtilities(
+				dir,
+				"13.08",
+				10000,
+				[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 10000}},
+				newPlayerIndex(&Manifest{}),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(utilities) != 1 || len(utilities[0]) != 1 {
+				t.Fatalf("utilities = %#v, want one %s utility", utilities, test.ability)
+			}
+			utility := utilities[0][0]
+			if utility.AbilityID != test.ability {
+				t.Fatalf("ability id = %q, want %q", utility.AbilityID, test.ability)
+			}
+			if utility.StartTimeMS != 1000 ||
+				utility.EndTimeMS != int(1000+test.maxLifetime) {
+				t.Errorf(
+					"utility interval = %d..%d, want %d..%d",
+					utility.StartTimeMS,
+					utility.EndTimeMS,
+					1000,
+					1000+test.maxLifetime,
+				)
+			}
+		})
 	}
 }
 
@@ -292,6 +424,94 @@ func TestSampleUtilityPathCapsPoints(t *testing.T) {
 	}
 }
 
+func TestScanUtilitiesSamplesShockBoltReplicatedMovement(t *testing.T) {
+	dir := t.TempDir()
+	class := "/Game/Characters/Hunter/S0/Ability_4/Projectile_Hunter_4_ExplosiveBolt.Projectile_Hunter_4_ExplosiveBolt_C"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 750, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 1800, PacketID: 8, ActorNetGUID: 750, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	fieldName := "ReplicatedMovement"
+	movementRows := []fieldRow{
+		{
+			TimeMS: 1200, PacketID: 3, ActorNetGUID: 750, FieldName: &fieldName,
+			ValueStr: stringPtr(`{"location":{"x":120.5,"y":220.5,"z":10}}`),
+		},
+		{
+			TimeMS: 1150, PacketID: 5, ActorNetGUID: 750, ObjectNetGUID: uint32Ptr(991), FieldName: &fieldName,
+			ValueStr: stringPtr(`{"location":{"x":115.5,"y":215.5,"z":10}}`),
+		},
+		{
+			TimeMS: 1050, PacketID: 2, ActorNetGUID: 750, FieldName: &fieldName,
+			ValueStr: stringPtr(`{"location":{"x":105.5,"y":205.5,"z":10}}`),
+		},
+		{
+			TimeMS: 1850, PacketID: 9, ActorNetGUID: 750, FieldName: &fieldName,
+			ValueStr: stringPtr(`{"location":{"x":185.5,"y":285.5,"z":10}}`),
+		},
+		{
+			TimeMS: 1100, PacketID: 4, ActorNetGUID: 751, FieldName: &fieldName,
+			ValueStr: stringPtr(`{"location":{"x":999,"y":999,"z":10}}`),
+		},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), movementRows); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		3000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 900, EndMS: 2000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Shock Bolt projectile", utilities)
+	}
+	projectile := utilities[0][0]
+	if projectile.Kind != UtilityMobile || projectile.AbilityID != "shock_bolt" {
+		t.Fatalf("projectile identity = %q/%q, want mobile shock_bolt", projectile.Kind, projectile.AbilityID)
+	}
+	if projectile.StartTimeMS != 100 || projectile.EndTimeMS != 900 {
+		t.Fatalf("projectile lifetime = %d..%d, want 100..900", projectile.StartTimeMS, projectile.EndTimeMS)
+	}
+	if len(projectile.Samples) != 2 ||
+		projectile.Samples[0] != (UtilityPositionSample{TimeMS: 150, X: 105.5, Y: 205.5}) ||
+		projectile.Samples[1] != (UtilityPositionSample{TimeMS: 300, X: 120.5, Y: 220.5}) {
+		t.Fatalf("projectile samples = %#v, want sorted, round-relative samples within actor lifetime", projectile.Samples)
+	}
+}
+
+func TestParseReplicatedMovementPosition(t *testing.T) {
+	position, ok := parseReplicatedMovementPosition(`{"location":{"x":12.5,"y":-34.25,"z":99}}`)
+	if !ok || position != (Position{X: 12.5, Y: -34.25}) {
+		t.Fatalf("parsed position = %#v/%v, want x=12.5 y=-34.25", position, ok)
+	}
+	for _, invalid := range []string{
+		`{}`,
+		`{"location":{"x":"bad","y":1}}`,
+		`{"location":{"x":1e999,"y":1}}`,
+	} {
+		if _, ok := parseReplicatedMovementPosition(invalid); ok {
+			t.Errorf("accepted invalid movement value %q", invalid)
+		}
+	}
+}
+
 func TestScanUtilitiesOmitsUnsupportedBuildsWithoutFailing(t *testing.T) {
 	utilities, warnings, err := scanUtilities(
 		t.TempDir(),
@@ -313,5 +533,7 @@ func TestScanUtilitiesOmitsUnsupportedBuildsWithoutFailing(t *testing.T) {
 }
 
 func float32Ptr(value float32) *float32 { return &value }
+
+func stringPtr(value string) *string { return &value }
 
 func uint32Ptr(value uint32) *uint32 { return &value }

@@ -676,7 +676,7 @@ describe("ReplayCanvasLayer utilities", () => {
       teamColor,
     );
     expect(
-      screen.getAllByTestId("konva-line").some(
+      screen.queryAllByTestId("konva-line").some(
         (line) => line.getAttribute("data-stroke") === teamColor,
       ),
     ).toBe(true);
@@ -697,6 +697,83 @@ describe("ReplayCanvasLayer utilities", () => {
     expect(screen.queryByTestId("utility-marker")).not.toBeInTheDocument();
     },
   );
+
+  it("renders the Sova Shock Bolt icon and playback-time projectile trail", () => {
+    const shockBolt: ReplayUtility = {
+      id: "utility-shock-bolt",
+      kind: "mobile",
+      abilityId: "shock_bolt",
+      ownerPuuid: "owner-1",
+      startTimeMs: 0,
+      endTimeMs: 200,
+      position: lotusSpawn,
+      samples: [
+        { timeMs: 50, ...lotusSpawn },
+        { timeMs: 100, x: 6505.5, y: 4043 },
+      ],
+    };
+
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={
+          {
+            ...lotusMatch,
+            players: [{ puuid: "owner-1", teamId: "Blue" }],
+          } as ReplayMatch
+        }
+        round={utilityRound([shockBolt])}
+        frame={frame}
+        currentTimeMs={50}
+      />,
+    );
+    expect(screen.getByTestId("ability-icon")).toHaveAttribute(
+      "data-src",
+      "/agents/sova/shock_bolt.png",
+    );
+    expect(
+      screen.queryAllByTestId("konva-line").some(
+        (line) =>
+          line.getAttribute("data-stroke") === "#42EEC7" &&
+          line.getAttribute("points")?.split(",").length === 4,
+      ),
+    ).toBe(false);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={
+          {
+            ...lotusMatch,
+            players: [{ puuid: "owner-1", teamId: "Blue" }],
+          } as ReplayMatch
+        }
+        round={utilityRound([shockBolt])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+    expect(
+      screen.getAllByTestId("konva-line").some(
+        (line) =>
+          line.getAttribute("data-stroke") === "#42EEC7" &&
+          line.getAttribute("points")?.split(",").length === 4,
+      ),
+    ).toBe(true);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={
+          {
+            ...lotusMatch,
+            players: [{ puuid: "owner-1", teamId: "Blue" }],
+          } as ReplayMatch
+        }
+        round={utilityRound([shockBolt])}
+        frame={frame}
+        currentTimeMs={200}
+      />,
+    );
+    expect(screen.queryByTestId("ability-icon")).not.toBeInTheDocument();
+  });
 
   it("draws only observed Blaze wall points using the ability icon path", () => {
     const blaze: ReplayUtility = {
