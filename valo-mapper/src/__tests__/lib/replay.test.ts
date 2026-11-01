@@ -13,6 +13,9 @@ import {
   buildReplayInitialState,
   buildReplaySnapshotState,
 } from "@/lib/replay/snapshot";
+import { defaultIconSettings } from "@/contexts/settings-context";
+import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
+import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
 import type {
   ReplayFrame,
   ReplayMatch,
@@ -346,6 +349,11 @@ describe("buildReplaySnapshotState", () => {
       "replay-agent-0-cone",
       "replay-agent-2-cone",
     ]);
+    expect(
+      phase.abilitiesOnCanvas.every(
+        (ability) => ability.currentLength === VISION_CONE_MAX_LENGTH,
+      ),
+    ).toBe(true);
     expect(phase.toolIconsOnCanvas.map((icon) => icon.id)).toEqual([
       "replay-spike-1",
     ]);
@@ -354,6 +362,157 @@ describe("buildReplaySnapshotState", () => {
     ]);
     expect(snapshot.selectedMap.id).toBe("pearl");
     expect(snapshot.mapSide).toBe("defense");
+  });
+
+  it("copies dead agents unless hide dead agents is enabled", () => {
+    const deathFrame = { ...frame, timeMs: 6_000 };
+    const laterFrame = {
+      ...frame,
+      timeMs: 7_000,
+      players: frame.players.filter((player) => player.puuid !== "red-1"),
+    };
+    const round = buildRound([deathFrame, laterFrame]);
+    const match = buildMatch(round);
+    const currentState = buildCurrentState();
+
+    const snapshot = buildReplaySnapshotState({
+      match,
+      round,
+      frame: laterFrame,
+      currentState,
+    });
+    expect(
+      snapshot.phases[0].agentsOnCanvas.find(
+        (agent) => agent.id === "replay-agent-1",
+      ),
+    ).toMatchObject({ isGray: true });
+
+    const hidden = buildReplaySnapshotState({
+      match,
+      round,
+      frame: laterFrame,
+      currentState,
+      hideDeadAgents: true,
+    });
+    expect(
+      hidden.phases[0].agentsOnCanvas.some(
+        (agent) => agent.id === "replay-agent-1",
+      ),
+    ).toBe(false);
+  });
+
+  it("attaches equipped weapons to copied agents unless weapons are hidden", () => {
+    const weaponFrame: ReplayFrame = {
+      ...frame,
+      players: frame.players.map((player) =>
+        player.puuid === "blue-1"
+          ? {
+              ...player,
+              weaponId: "9C82E19D-4575-0200-1A81-3EACF00CF872",
+            }
+          : player,
+      ),
+    };
+    const round = buildRound([weaponFrame]);
+    const match = buildMatch(round);
+    const currentState = buildCurrentState();
+
+    const snapshot = buildReplaySnapshotState({
+      match,
+      round,
+      frame: weaponFrame,
+      currentState,
+    });
+    const phase = snapshot.phases[0];
+    const weapon = phase.toolIconsOnCanvas.find(
+      (icon) => icon.id === "replay-weapon-0",
+    );
+    const agent = phase.agentsOnCanvas.find(
+      (item) => item.id === "replay-agent-0",
+    );
+
+    if (!weapon || !agent) {
+      throw new Error("Expected an attached weapon and its agent");
+    }
+
+    expect(weapon).toMatchObject({
+      name: "vandal",
+      attachedToId: "replay-agent-0",
+      ...getToolIconAttachmentPosition(
+        weapon,
+        agent.x,
+        agent.y,
+        defaultIconSettings,
+      ),
+    });
+
+    const hidden = buildReplaySnapshotState({
+      match,
+      round,
+      frame: weaponFrame,
+      currentState,
+      hideAgentWeapons: true,
+    });
+    expect(
+      hidden.phases[0].toolIconsOnCanvas.some((icon) =>
+        icon.id.startsWith("replay-weapon-"),
+      ),
+    ).toBe(false);
+  });
+
+  it("attaches a carried spike to its carrier in the copied lobby", () => {
+    const carrierFrame: ReplayFrame = {
+      ...frame,
+      spike: {
+        x: 1_050,
+        y: 1_050,
+        state: "carried",
+        carrierPuuid: "blue-1",
+      },
+    };
+    const round = buildRound([carrierFrame]);
+    const match = buildMatch(round);
+
+    const snapshot = buildReplaySnapshotState({
+      match,
+      round,
+      frame: carrierFrame,
+      currentState: buildCurrentState(),
+    });
+    const phase = snapshot.phases[0];
+    const spike = phase.toolIconsOnCanvas.find(
+      (icon) => icon.id === "replay-spike-1",
+    );
+    const agent = phase.agentsOnCanvas.find(
+      (item) => item.id === "replay-agent-0",
+    );
+
+    if (!spike || !agent) {
+      throw new Error("Expected an attached spike and its carrier");
+    }
+
+    expect(spike).toMatchObject({
+      attachedToId: "replay-agent-0",
+      ...getToolIconAttachmentPosition(
+        spike,
+        agent.x,
+        agent.y,
+        defaultIconSettings,
+      ),
+    });
+  });
+
+  it("omits vision cones when vision is hidden", () => {
+    const round = buildRound([frame]);
+    const snapshot = buildReplaySnapshotState({
+      match: buildMatch(round),
+      round,
+      frame,
+      currentState: buildCurrentState(),
+      showVisionCones: false,
+    });
+
+    expect(snapshot.phases[0].abilitiesOnCanvas).toHaveLength(0);
   });
 });
 

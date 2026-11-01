@@ -10,18 +10,29 @@ import {
   transformRiotWorldToCanvasPoint,
 } from "@/lib/map-positioning";
 import { resolveMatchMapOption } from "@/lib/match-review";
+import { defaultIconSettings } from "@/contexts/settings-context";
+import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
+import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
 import type {
   AbilityCanvas,
   AgentCanvas,
   AgentRole,
   ConnectingLine,
+  IconSettings,
   MapOption,
   MapSide,
   PhaseState,
   ToolIconCanvas,
   UndoableState,
 } from "@/lib/types";
-import type { ReplayFrame, ReplayMatch, ReplayRound } from "./types";
+import { getReplayPlayerStateAtTime } from "./frames";
+import { getReplayWeaponIcon } from "./display";
+import type {
+  ReplayFrame,
+  ReplayFramePlayer,
+  ReplayMatch,
+  ReplayRound,
+} from "./types";
 
 const REPLAY_SPIKE_SIZE = 32;
 const REPLAY_VIEW_VECTOR_LENGTH = 100;
@@ -180,18 +191,50 @@ export const toReplayCanvasRotation = ({
 const getFramePlayer = (frame: ReplayFrame, puuid: string) =>
   frame.players.find((player) => player.puuid === puuid);
 
+/**
+ * Alive players come from the interpolated frame. Dead players are absent from
+ * the movement samples after death, so fall back to their last round sample.
+ */
+const getReplayPlayerState = (
+  round: ReplayRound,
+  frame: ReplayFrame,
+  puuid: string,
+): ReplayFramePlayer | null => {
+  const current = getFramePlayer(frame, puuid);
+  if (current) {
+    return current;
+  }
+
+  const latest = getReplayPlayerStateAtTime(round, puuid, frame.timeMs);
+  return latest && !latest.alive ? latest : null;
+};
+
+const getRoundPlanterPuuid = (round: ReplayRound) => {
+  const plantEvent = round.eventLog.find(
+    (event) => event.eventType === "spike_planted",
+  );
+
+  return plantEvent?.eventType === "spike_planted"
+    ? plantEvent.planterPuuid
+    : null;
+};
+
 const buildReplayAgents = ({
   match,
+  round,
   frame,
   mapSide,
+  hideDeadAgents,
 }: {
   match: ReplayMatch;
+  round: ReplayRound;
   frame: ReplayFrame;
   mapSide: MapSide;
+  hideDeadAgents: boolean;
 }): AgentCanvas[] => {
   return match.players.flatMap((player, index) => {
-    const framePlayer = getFramePlayer(frame, player.puuid);
-    if (!framePlayer) {
+    const framePlayer = getReplayPlayerState(round, frame, player.puuid);
+    if (!framePlayer || (hideDeadAgents && !framePlayer.alive)) {
       return [];
     }
 
@@ -221,15 +264,23 @@ const buildReplayAgents = ({
 
 const buildReplayVisionCones = ({
   match,
+  round,
   frame,
   mapSide,
+  showVisionCones,
 }: {
   match: ReplayMatch;
+  round: ReplayRound;
   frame: ReplayFrame;
   mapSide: MapSide;
+  showVisionCones: boolean;
 }): AbilityCanvas[] => {
+  if (!showVisionCones) {
+    return [];
+  }
+
   return match.players.flatMap((player, index) => {
-    const framePlayer = getFramePlayer(frame, player.puuid);
+    const framePlayer = getReplayPlayerState(round, frame, player.puuid);
     if (!framePlayer || !framePlayer.alive) {
       return [];
     }
@@ -261,10 +312,69 @@ const buildReplayVisionCones = ({
           location: { x: framePlayer.x, y: framePlayer.y },
           viewRadians: framePlayer.viewRadians,
         }),
+        currentLength: VISION_CONE_MAX_LENGTH,
         iconOnly: false,
         showOuterCircle: true,
       },
     ];
+  });
+};
+
+const buildReplayWeapons = ({
+  match,
+  round,
+  frame,
+  mapSide,
+  agentsSettings,
+  hideAgentWeapons,
+}: {
+  match: ReplayMatch;
+  round: ReplayRound;
+  frame: ReplayFrame;
+  mapSide: MapSide;
+  agentsSettings: IconSettings;
+  hideAgentWeapons: boolean;
+}): ToolIconCanvas[] => {
+  if (hideAgentWeapons) {
+    return [];
+  }
+
+  return match.players.flatMap((player, index) => {
+    const framePlayer = getReplayPlayerState(round, frame, player.puuid);
+    if (!framePlayer?.alive) {
+      return [];
+    }
+
+    const point = toReplayCanvasPoint({
+      mapId: match.mapId,
+      mapSide,
+      position: { x: framePlayer.x, y: framePlayer.y },
+    });
+
+    if (!point || !isReplayPointOnMap({ point })) {
+      return [];
+    }
+
+    const weapon = getReplayWeaponIcon(framePlayer.weaponId);
+    if (!weapon) {
+      return [];
+    }
+
+    const toolIcon: ToolIconCanvas = {
+      id: `${REPLAY_PREFIX}weapon-${index}`,
+      x: point.x,
+      y: point.y,
+      ...weapon,
+      attachedToId: getReplayAgentId(index),
+    };
+    const position = getToolIconAttachmentPosition(
+      toolIcon,
+      point.x,
+      point.y,
+      agentsSettings,
+    );
+
+    return [{ ...toolIcon, ...position }];
   });
 };
 
@@ -273,20 +383,65 @@ const buildReplaySpike = ({
   round,
   frame,
   mapSide,
+  agentsSettings,
 }: {
   match: ReplayMatch;
   round: ReplayRound;
   frame: ReplayFrame;
   mapSide: MapSide;
+  agentsSettings: IconSettings;
 }): ToolIconCanvas | null => {
-  if (!frame.spike) {
+  const spike = frame.spike;
+  if (!spike) {
     return null;
+  }
+
+  const toolIcon: ToolIconCanvas = {
+    id: `${REPLAY_PREFIX}spike-${round.roundNumber}`,
+    name: "spike",
+    x: 0,
+    y: 0,
+    width: REPLAY_SPIKE_SIZE,
+    height: REPLAY_SPIKE_SIZE,
+  };
+
+  if (spike.state === "carried") {
+    const carrierPuuid = spike.carrierPuuid ?? getRoundPlanterPuuid(round);
+    const carrierIndex = carrierPuuid
+      ? match.players.findIndex((player) => player.puuid === carrierPuuid)
+      : -1;
+    const carrier = carrierPuuid
+      ? getReplayPlayerState(round, frame, carrierPuuid)
+      : null;
+
+    if (carrierIndex >= 0 && carrier?.alive) {
+      const carrierPoint = toReplayCanvasPoint({
+        mapId: match.mapId,
+        mapSide,
+        position: { x: carrier.x, y: carrier.y },
+      });
+
+      if (carrierPoint && isReplayPointOnMap({ point: carrierPoint })) {
+        const position = getToolIconAttachmentPosition(
+          toolIcon,
+          carrierPoint.x,
+          carrierPoint.y,
+          agentsSettings,
+        );
+
+        return {
+          ...toolIcon,
+          ...position,
+          attachedToId: getReplayAgentId(carrierIndex),
+        };
+      }
+    }
   }
 
   const point = toReplayCanvasPoint({
     mapId: match.mapId,
     mapSide,
-    position: frame.spike,
+    position: spike,
   });
 
   if (!point) {
@@ -300,12 +455,9 @@ const buildReplaySpike = ({
   }
 
   return {
-    id: `${REPLAY_PREFIX}spike-${round.roundNumber}`,
-    name: "spike",
+    ...toolIcon,
     x: point.x,
     y: point.y,
-    width: REPLAY_SPIKE_SIZE,
-    height: REPLAY_SPIKE_SIZE,
   };
 };
 
@@ -403,21 +555,54 @@ export const buildReplaySnapshotState = ({
   frame,
   currentState,
   mapSide = "defense",
+  hideDeadAgents = false,
+  hideAgentWeapons = false,
+  showVisionCones = true,
 }: {
   match: ReplayMatch;
   round: ReplayRound;
   frame: ReplayFrame;
   currentState: UndoableState;
   mapSide?: MapSide;
+  hideDeadAgents?: boolean;
+  hideAgentWeapons?: boolean;
+  showVisionCones?: boolean;
 }): UndoableState => {
   const currentPhase =
     currentState.phases[currentState.currentPhaseIndex] ??
     createEmptyPhaseState();
   const preservedPhase = withoutReplayEntities(currentPhase);
+  const agentsSettings = currentState.agentsSettings ?? defaultIconSettings;
 
-  const replayAgents = buildReplayAgents({ match, frame, mapSide });
-  const replayAbilities = buildReplayVisionCones({ match, frame, mapSide });
-  const replaySpike = buildReplaySpike({ match, round, frame, mapSide });
+  const replayAgents = buildReplayAgents({
+    match,
+    round,
+    frame,
+    mapSide,
+    hideDeadAgents,
+  });
+  const replayAbilities = buildReplayVisionCones({
+    match,
+    round,
+    frame,
+    mapSide,
+    showVisionCones,
+  });
+  const replayWeapons = buildReplayWeapons({
+    match,
+    round,
+    frame,
+    mapSide,
+    agentsSettings,
+    hideAgentWeapons,
+  });
+  const replaySpike = buildReplaySpike({
+    match,
+    round,
+    frame,
+    mapSide,
+    agentsSettings,
+  });
   const latestKillLine = buildLatestKillLine({
     match,
     round,
@@ -429,9 +614,11 @@ export const buildReplaySnapshotState = ({
     ...preservedPhase,
     agentsOnCanvas: [...preservedPhase.agentsOnCanvas, ...replayAgents],
     abilitiesOnCanvas: [...preservedPhase.abilitiesOnCanvas, ...replayAbilities],
-    toolIconsOnCanvas: replaySpike
-      ? [...preservedPhase.toolIconsOnCanvas, replaySpike]
-      : preservedPhase.toolIconsOnCanvas,
+    toolIconsOnCanvas: [
+      ...preservedPhase.toolIconsOnCanvas,
+      ...replayWeapons,
+      ...(replaySpike ? [replaySpike] : []),
+    ],
     connectingLines: latestKillLine
       ? [...preservedPhase.connectingLines, latestKillLine]
       : preservedPhase.connectingLines,
