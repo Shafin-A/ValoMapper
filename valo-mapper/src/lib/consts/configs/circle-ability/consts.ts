@@ -10,75 +10,75 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
 > = {
   astra_stun: {
     radius: 4.75,
-    colors: { stroke: "#ffe17a", fill: "#4f007680" },
+    colors: { stroke: "#ffe17a", fill: "#4f007626" },
   },
   astra_suck: {
     radius: 4.75,
-    colors: { stroke: "#ffe17a", fill: "#4f007680" },
+    colors: { stroke: "#ffe17a", fill: "#4f007626" },
   },
   astra_smoke: {
     radius: 4.75,
-    colors: { stroke: "#ffe17a", fill: "#4f007680" },
+    colors: { stroke: "#ffe17a", fill: "#4f007626" },
   },
   brim_smoke: {
     radius: 4.15,
-    colors: { stroke: "#fffe1a", fill: "#eb953f80" },
+    colors: { stroke: "#fffe1a", fill: "#eb953f26" },
   },
   brim_stim: {
     radius: 6,
-    colors: { stroke: "#7bddc3", fill: "#eb953f80" },
+    colors: { stroke: "#7bddc3", fill: "#eb953f26" },
   },
   brim_molly: {
     radius: 4.5,
-    colors: { stroke: "#e0392d", fill: "#57205780" },
+    colors: { stroke: "#e0392d", fill: "#57205726" },
   },
   brim_ult: {
     radius: 9,
-    colors: { stroke: "#e0392d", fill: "#eb953f80" },
+    colors: { stroke: "#e0392d", fill: "#eb953f26" },
   },
   chamber_trip: {
     radius: 10,
-    colors: { stroke: "#d37c48", fill: "#d37c4880" },
+    colors: { stroke: "#d37c48", fill: "#d37c4826" },
   },
   chamber_tp: {
     radius: 20,
-    colors: { stroke: "#fcbf07", fill: "#fcbf0780" },
+    colors: { stroke: "#fcbf07", fill: "#fcbf0726" },
   },
   clove_meddle: {
     radius: 6,
-    colors: { stroke: "#f674ff", fill: "#fbd7ff80" },
+    colors: { stroke: "#f674ff", fill: "#fbd7ff26" },
   },
   clove_smoke: {
     radius: 4,
-    colors: { stroke: "#c9d3eb", fill: "#f674ff80" },
+    colors: { stroke: "#c9d3eb", fill: "#f674ff26" },
   },
   cypher_cage: {
     radius: 3.72,
-    colors: { stroke: "#def4ff", fill: "#9a9da580" },
+    colors: { stroke: "#def4ff", fill: "#9a9da526" },
   },
   deadlock_net: {
     radius: 6.5,
-    colors: { stroke: "#0f53b0", fill: "#60c8ff80" },
+    colors: { stroke: "#0f53b0", fill: "#60c8ff26" },
   },
   fade_eye: {
     radius: 30,
-    colors: { stroke: "#280720", fill: "#75175e80" },
+    colors: { stroke: "#280720", fill: "#75175e26" },
   },
   fade_seize: {
     radius: 6.58,
-    colors: { stroke: "#121416", fill: "#12141680" },
+    colors: { stroke: "#121416", fill: "#12141626" },
   },
   gekko_molly: {
     radius: 6.2,
-    colors: { stroke: "#02462d", fill: "#6ee63280" },
+    colors: { stroke: "#02462d", fill: "#6ee63226" },
   },
   harbor_cove: {
     radius: 4.5,
-    colors: { stroke: "#f2d6a3", fill: "#136c6b80" },
+    colors: { stroke: "#f2d6a3", fill: "#136c6b26" },
   },
   harbor_blind: {
     radius: 6,
-    colors: { stroke: "#f2d6a3", fill: "#1e3c4c80" },
+    colors: { stroke: "#f2d6a3", fill: "#1e3c4c26" },
   },
   hush_suck: {
     radius: 5.75,
@@ -90,111 +90,111 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
   },
   jett_smoke: {
     radius: 3.35,
-    colors: { stroke: "#bbd3e6", fill: "#658ea780" },
+    colors: { stroke: "#bbd3e6", fill: "#658ea726" },
   },
   kayo_molly: {
     radius: 4,
-    colors: { stroke: "#ffc8ff", fill: "#20297c80" },
+    colors: { stroke: "#ffc8ff", fill: "#20297c26" },
   },
   kayo_knife: {
     radius: 15,
-    colors: { stroke: "#fe53ff", fill: "#8935af80" },
+    colors: { stroke: "#fe53ff", fill: "#8935af26" },
   },
   kayo_ult: {
     radius: 45,
-    colors: { stroke: "#9001f0", fill: "#7cffff80" },
+    colors: { stroke: "#9001f0", fill: "#7cffff26" },
   },
   kj_alarmbot: {
     radius: 5.5,
-    colors: { stroke: "#5bffff", fill: "#925ab880" },
+    colors: { stroke: "#5bffff", fill: "#925ab826" },
     activeRadius: 42.5,
   },
   kj_molly: {
     radius: 4.5,
-    colors: { stroke: "#5bffff", fill: "#925ab880" },
+    colors: { stroke: "#5bffff", fill: "#925ab826" },
   },
   kj_ult: {
     radius: 34.5,
-    colors: { stroke: "#3e8174", fill: "#2d519380" },
+    colors: { stroke: "#3e8174", fill: "#2d519326" },
   },
   miks_heal: {
     radius: 5.5,
-    colors: { stroke: "#92c58e", fill: "#755da580" },
+    colors: { stroke: "#92c58e", fill: "#755da526" },
   },
   miks_stun: {
     radius: 5.5,
-    colors: { stroke: "#d39c54", fill: "#541a3a80" },
+    colors: { stroke: "#d39c54", fill: "#541a3a26" },
   },
   miks_smoke: {
     radius: 3.72,
-    colors: { stroke: "#755da5", fill: "#92c58e80" },
+    colors: { stroke: "#755da5", fill: "#92c58e26" },
   },
   neon_stun: {
     radius: 5,
-    colors: { stroke: "#4eacee", fill: "#fdfea380" },
+    colors: { stroke: "#4eacee", fill: "#fdfea326" },
   },
   omen_smoke: {
     radius: 4.1,
-    colors: { stroke: "#201936", fill: "#20193680" },
+    colors: { stroke: "#201936", fill: "#20193626" },
   },
   phoenix_molly: {
     radius: 4.75,
-    colors: { stroke: "#e25457", fill: "#ff9c7b80" },
+    colors: { stroke: "#e25457", fill: "#ff9c7b26" },
   },
   skye_heal: {
     radius: 20,
-    colors: { stroke: "#669835", fill: "#bfd93a80" },
+    colors: { stroke: "#669835", fill: "#bfd93a26" },
   },
   sova_shock_dart: {
     radius: 4,
-    colors: { stroke: "#4f9ef5", fill: "#63edff80" },
+    colors: { stroke: "#4f9ef5", fill: "#63edff26" },
   },
   sova_dart: {
     radius: 30,
-    colors: { stroke: "#4f9ef5", fill: "#63edff80" },
+    colors: { stroke: "#4f9ef5", fill: "#63edff26" },
   },
   tejo_drone: {
     radius: 30,
-    colors: { stroke: "#9d6836", fill: "#f6b14180" },
+    colors: { stroke: "#9d6836", fill: "#f6b14126" },
   },
   tejo_stun: {
     radius: 5.25,
-    colors: { stroke: "#eed381", fill: "#b8864980" },
+    colors: { stroke: "#eed381", fill: "#b8864926" },
   },
   tejo_missile: {
     radius: 4.5,
-    colors: { stroke: "#3b1d49", fill: "#b8864980" },
+    colors: { stroke: "#3b1d49", fill: "#b8864926" },
   },
   veto_teleport: {
     radius: 34.5,
-    colors: { stroke: "#2ab7ed", fill: "#2ab7ed80" },
+    colors: { stroke: "#2ab7ed", fill: "#2ab7ed26" },
   },
   veto_molly: {
     radius: 8,
-    colors: { stroke: "#2ab7ed", fill: "#2ab7ed80" },
+    colors: { stroke: "#2ab7ed", fill: "#2ab7ed26" },
   },
   veto_interceptor: {
     radius: 20,
-    colors: { stroke: "#2ab7ed", fill: "#2ab7ed80" },
+    colors: { stroke: "#2ab7ed", fill: "#2ab7ed26" },
   },
   viper_molly: {
     radius: 4.5,
-    colors: { stroke: "#67e72a", fill: "#48a85380" },
+    colors: { stroke: "#67e72a", fill: "#48a85326" },
   },
   viper_smoke: {
     radius: 4.5,
-    colors: { stroke: "#206c57", fill: "#a1e94a80" },
+    colors: { stroke: "#206c57", fill: "#a1e94a26" },
   },
   vyse_slow: {
     radius: 6.25,
-    colors: { stroke: "#2c2e58", fill: "#ea8a7d80" },
+    colors: { stroke: "#2c2e58", fill: "#ea8a7d26" },
   },
   vyse_ult: {
     radius: 30,
-    colors: { stroke: "#2c2e58", fill: "#bfc0d780" },
+    colors: { stroke: "#2c2e58", fill: "#bfc0d726" },
   },
   waylay_slow: {
     radius: 6,
-    colors: { stroke: "#a8a8ce", fill: "#feffb380" },
+    colors: { stroke: "#a8a8ce", fill: "#feffb326 " },
   },
 };
