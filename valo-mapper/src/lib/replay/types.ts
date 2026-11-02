@@ -169,10 +169,8 @@ export type ReplaySeed = {
 };
 
 export type ReplayLoadProgress = {
-  /** 0 - 100. Ignored by the UI when `indeterminate` is set. */
   percent: number;
   label: string;
-  /** The phase has no measurable total, so render an animated bar. */
   indeterminate?: boolean;
 };
 

@@ -187,16 +187,21 @@ export class VrfReplayDataSource implements ReplayDataSource {
       xhr.setRequestHeader("Accept", "application/json");
 
       xhr.upload.onprogress = (event) => {
-        if (!event.lengthComputable || event.total <= 0) {
+        // Some browsers omit the upload total; the file size is still a
+        // reliable denominator, so keep showing a real percentage.
+        const total =
+          event.lengthComputable && event.total > 0 ? event.total : file.size;
+        if (total <= 0) {
           report(options, 0, "Uploading replay…", true);
           return;
         }
-        const percent = Math.round((event.loaded / event.total) * 70);
+        const loaded = Math.min(event.loaded, total);
+        const percent = Math.round((loaded / total) * 70);
         report(options, percent, "Uploading replay…");
       };
 
       xhr.upload.onload = () => {
-        report(options, 0, "Decoding replay…", true);
+        report(options, 70, "Decoding replay…", true);
       };
 
       xhr.onload = () => {

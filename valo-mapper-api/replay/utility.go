@@ -207,7 +207,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Pawn_Pine_E_RadEater":                     {kind: UtilityTrap, minBuild: 1300, ability: "interceptor"},
 
 	// Viper
-	"Patch_Pandemic_AcidMolotov_NewMolotov":    {kind: UtilityMolly, minBuild: 1300, ability: "snake_bite"},
+	"Patch_Pandemic_AcidMolotov_NewMolotov":    {kind: UtilityMolly, minBuild: 1300, maxLifetimeMS: 6500, ability: "snake_bite"},
 	"GameObject_Pandemic_4_SmokeZone":          {kind: UtilitySmoke, minBuild: 1300, ability: "poison_cloud"},
 	"GameObject_Pandemic_E_SmokeScreenManager": {kind: UtilityWall, wallPoints: true, minBuild: 1300, ability: "toxic_screen"},
 	"Patch_Pandemic_X_Circular":                {kind: UtilityArea, minBuild: 1300, ability: "vipers_pit"},

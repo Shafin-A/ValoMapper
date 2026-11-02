@@ -68,8 +68,8 @@ const matchPayload = {
   },
 };
 
-const makeFile = () =>
-  new File([new Uint8Array([0xdd, 0xef, 0xf4, 0x43])], "match.vrf", {
+const makeFile = (size = 4) =>
+  new File([new Uint8Array(size)], "match.vrf", {
     type: "application/octet-stream",
   });
 
@@ -116,9 +116,10 @@ describe("VrfReplayDataSource", () => {
     expect(match.source).toBe("vrf");
     expect(match.replayId).toBe(matchPayload.replayId);
     expect(progress.map((update) => update.percent)).toEqual([
-      0, 35, 0, 100,
+      0, 35, 70, 100,
     ]);
     expect(progress[2]).toMatchObject({
+      percent: 70,
       label: "Decoding replay…",
       indeterminate: true,
     });
@@ -126,24 +127,25 @@ describe("VrfReplayDataSource", () => {
     expect(progress.at(-1)?.indeterminate).toBeUndefined();
   });
 
-  it("reports indeterminate upload progress when the total is unknown", async () => {
+  it("falls back to the file size when the upload total is unknown", async () => {
     const progress: ReplayLoadProgress[] = [];
     const source = new VrfReplayDataSource();
-    const promise = source.load(makeFile(), {
+    const promise = source.load(makeFile(1024), {
       onProgress: (update) => progress.push(update),
     });
     const xhr = FakeXMLHttpRequest.instances[0];
 
     xhr.upload.onprogress?.({
       lengthComputable: false,
-      loaded: 1024,
+      loaded: 512,
       total: 0,
     });
 
     expect(progress.at(-1)).toMatchObject({
+      percent: 35,
       label: "Uploading replay…",
-      indeterminate: true,
     });
+    expect(progress.at(-1)?.indeterminate).toBeUndefined();
 
     xhr.status = 200;
     xhr.responseText = JSON.stringify(matchPayload);

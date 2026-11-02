@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { ReplayLoadingOverlay } from "@/components/replay/replay-loading-overlay";
 
 describe("ReplayLoadingOverlay progress", () => {
@@ -16,21 +16,48 @@ describe("ReplayLoadingOverlay progress", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("hides the percentage when progress is indeterminate", () => {
+  it("shows a percentage when progress is indeterminate", () => {
     render(
       <ReplayLoadingOverlay
         progress={{
-          percent: 42,
+          percent: 0,
+          label: "Uploading replay…",
+          indeterminate: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Uploading replay…")).toBeInTheDocument();
+    expect(screen.getByText("0%")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("replay-progress-indeterminate"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows and advances the estimate during decoding", () => {
+    jest.useFakeTimers();
+    const { unmount } = render(
+      <ReplayLoadingOverlay
+        progress={{
+          percent: 70,
           label: "Decoding replay…",
           indeterminate: true,
         }}
       />,
     );
 
-    expect(screen.getByText("Decoding replay…")).toBeInTheDocument();
-    expect(screen.queryByText("42%")).not.toBeInTheDocument();
-    expect(
-      screen.getByTestId("replay-progress-indeterminate"),
-    ).toBeInTheDocument();
+    const bar = screen.getByTestId("replay-progress-estimated");
+    expect(bar).toHaveStyle({ width: "70%" });
+    expect(screen.getByText("70%")).toBeInTheDocument();
+
+    act(() => {
+      jest.advanceTimersByTime(5000);
+    });
+
+    expect(bar).toHaveStyle({ width: "75%" });
+    expect(screen.getByText("75%")).toBeInTheDocument();
+
+    unmount();
+    jest.useRealTimers();
   });
 });

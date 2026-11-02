@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { ReplayLoadProgress } from "@/lib/replay/types";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const ReplayLoadingOverlay = ({
   progress,
@@ -18,6 +19,22 @@ export const ReplayLoadingOverlay = ({
 }) => {
   const isIndeterminate = progress?.indeterminate === true;
   const percent = Math.round(progress?.percent ?? 0);
+  const [estimatedPercent, setEstimatedPercent] = useState(percent);
+  const isEstimating = isIndeterminate && percent > 0;
+  const displayedPercent = isEstimating ? estimatedPercent : percent;
+
+  useEffect(() => {
+    setEstimatedPercent(percent);
+    if (!isEstimating) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setEstimatedPercent((current) => Math.min(95, current + 1));
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [isEstimating, percent]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/80 px-4 backdrop-blur-sm">
@@ -54,7 +71,13 @@ export const ReplayLoadingOverlay = ({
 
             <div className="space-y-2">
               <div className="h-2 overflow-hidden rounded-full bg-neutral-800">
-                {isIndeterminate ? (
+                {isEstimating ? (
+                  <div
+                    data-testid="replay-progress-estimated"
+                    className="h-full rounded-full bg-primary transition-[width] duration-700"
+                    style={{ width: `${estimatedPercent}%` }}
+                  />
+                ) : isIndeterminate ? (
                   <div
                     data-testid="replay-progress-indeterminate"
                     className="h-full w-1/3 animate-[replay-progress_1.2s_ease-in-out_infinite] rounded-full bg-primary"
@@ -68,7 +91,7 @@ export const ReplayLoadingOverlay = ({
               </div>
               <div className="flex justify-between text-[11px] text-white/40">
                 <span>Loading replay</span>
-                {!isIndeterminate && <span>{percent}%</span>}
+                <span>{displayedPercent}%</span>
               </div>
             </div>
           </div>
