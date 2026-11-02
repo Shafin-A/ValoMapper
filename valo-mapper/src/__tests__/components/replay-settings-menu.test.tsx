@@ -41,12 +41,12 @@ describe("ReplaySettingsMenu", () => {
     await user.click(visionToggle);
     expect(onShowVisionConesChange).toHaveBeenCalledWith(false);
 
-    const utilitiesToggle = screen.getByRole("switch", {
-      name: "Show utility",
+    const abilitiesToggle = screen.getByRole("switch", {
+      name: "Hide abilities",
     });
-    await user.click(utilitiesToggle);
+    await user.click(abilitiesToggle);
     expect(onShowUtilitiesChange).toHaveBeenCalledWith(false);
-    expect(screen.getByLabelText("Utility legend")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Utility legend")).not.toBeInTheDocument();
 
     const weaponsToggle = screen.getByRole("switch", {
       name: "Hide agent weapons",

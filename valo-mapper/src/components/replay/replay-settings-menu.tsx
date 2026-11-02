@@ -69,37 +69,14 @@ export const ReplaySettingsMenu = ({
             />
           </div>
           <div className="flex items-center justify-between gap-3">
-            <Label htmlFor="show-replay-utilities" className="text-sm">
-              Show utility
+            <Label htmlFor="hide-replay-abilities" className="text-sm">
+              Hide abilities
             </Label>
             <Switch
-              id="show-replay-utilities"
-              checked={showUtilities}
-              onCheckedChange={onShowUtilitiesChange}
+              id="hide-replay-abilities"
+              checked={!showUtilities}
+              onCheckedChange={(hidden) => onShowUtilitiesChange(!hidden)}
             />
-          </div>
-          <div
-            aria-label="Utility legend"
-            className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-muted-foreground"
-          >
-            {[
-              ["#67e8f9", "Smoke"],
-              ["#c4b5fd", "Wall"],
-              ["#fb923c", "Molly"],
-              ["#facc15", "Trap"],
-              ["#4ade80", "Mobile"],
-              ["#f472b6", "Area"],
-              ["#a3a3a3", "Marker"],
-            ].map(([color, label]) => (
-              <span key={label} className="flex items-center gap-1.5">
-                <span
-                  aria-hidden="true"
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-                {label}
-              </span>
-            ))}
           </div>
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="hide-agent-weapons" className="text-sm">
