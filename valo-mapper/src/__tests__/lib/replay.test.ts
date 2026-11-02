@@ -236,9 +236,18 @@ const buildCurrentState = (): UndoableState => ({
 
 describe("getReplayArmor", () => {
   it("maps armor ids to their shield values", () => {
-    expect(getReplayArmor("822BCAB2-40A2-324E-C137-E09195AD7692")?.value).toBe(50);
-    expect(getReplayArmor("4dec83d5-4902-9ab3-bed6-a7a390761157")?.value).toBe(25);
-    expect(getReplayArmor("B1B9086D-41BD-A516-5D29-E3B34A6F1644")?.value).toBe(25);
+    expect(getReplayArmor("822BCAB2-40A2-324E-C137-E09195AD7692")).toMatchObject({
+      value: 50,
+      src: "/tools/heavy_shield.webp",
+    });
+    expect(getReplayArmor("4dec83d5-4902-9ab3-bed6-a7a390761157")).toMatchObject({
+      value: 25,
+      src: "/tools/light_shield.webp",
+    });
+    expect(getReplayArmor("B1B9086D-41BD-A516-5D29-E3B34A6F1644")).toMatchObject({
+      value: 25,
+      src: "/tools/regen_shield.webp",
+    });
   });
 
   it("returns null for unknown or missing armor", () => {

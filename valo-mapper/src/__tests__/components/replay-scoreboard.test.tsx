@@ -111,6 +111,14 @@ describe("ReplayScoreboard", () => {
     expect(screen.getAllByText("74").length).toBeGreaterThan(0);
     expect(screen.getAllByText("/100").length).toBeGreaterThan(0);
     expect(screen.getByText("50")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Heavy Shield" })).toHaveAttribute(
+      "data-src",
+      "/tools/heavy_shield.webp",
+    );
+    expect(screen.getByRole("img", { name: "Light Shield" })).toHaveAttribute(
+      "data-src",
+      "/tools/light_shield.webp",
+    );
     expect(screen.getByText("¢1400")).toBeInTheDocument();
     expect(screen.getByText("¢0")).toBeInTheDocument();
   });

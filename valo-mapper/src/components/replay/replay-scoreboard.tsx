@@ -139,9 +139,7 @@ const PlayerRow = ({
   const ultimate = abilities.find((ability) => ability.slot === "Ultimate");
   const basics = abilities.filter((ability) => ability.slot !== "Ultimate");
   const armor = getReplayArmor(state.armorId);
-  const armorValue = state.alive
-    ? (state.armorPoints ?? armor?.value ?? 0)
-    : 0;
+  const armorValue = state.alive ? (state.armorPoints ?? armor?.value ?? 0) : 0;
   const weaponSrc = getWeaponImageSrc(state.weaponId);
   const hpPercent = Math.max(0, Math.min(100, state.hp));
   const hpValue = state.alive ? state.hp : 0;
@@ -202,9 +200,21 @@ const PlayerRow = ({
           className="flex shrink-0 items-center gap-1 text-xs font-semibold tabular-nums"
           title={armor ? `${armor.label} + health` : "Health"}
         >
-          <Shield className="h-3.5 w-3.5 text-sky-300/80" />
+          {armor ? (
+            <Image
+              src={armor.src}
+              alt={armor.label}
+              width={14}
+              height={14}
+              className="h-3.5 w-3.5 object-contain"
+            />
+          ) : (
+            <Shield aria-hidden="true" className="h-3.5 w-3.5" />
+          )}
           <span className="text-sky-200/90">{armorValue}</span>
-          <span className={cn("ml-0.5", getPlayerHpTone(state.hp, state.alive))}>
+          <span
+            className={cn("ml-0.5", getPlayerHpTone(state.hp, state.alive))}
+          >
             {hpValue}
           </span>
         </div>

@@ -298,13 +298,28 @@ export const getReplayPlayerState = (
   };
 };
 
-const REPLAY_ARMOR_BY_ID: Record<string, { label: string; value: number }> = {
+const REPLAY_ARMOR_BY_ID: Record<
+  string,
+  { label: string; value: number; src: string }
+> = {
   // Heavy Armor
-  "822bcab2-40a2-324e-c137-e09195ad7692": { label: "Heavy Shield", value: 50 },
+  "822bcab2-40a2-324e-c137-e09195ad7692": {
+    label: "Heavy Shield",
+    value: 50,
+    src: "/tools/heavy_shield.webp",
+  },
   // Light Armor
-  "4dec83d5-4902-9ab3-bed6-a7a390761157": { label: "Light Shield", value: 25 },
+  "4dec83d5-4902-9ab3-bed6-a7a390761157": {
+    label: "Light Shield",
+    value: 25,
+    src: "/tools/light_shield.webp",
+  },
   // Regen Shield
-  "b1b9086d-41bd-a516-5d29-e3b34a6f1644": { label: "Regen Shield", value: 25 },
+  "b1b9086d-41bd-a516-5d29-e3b34a6f1644": {
+    label: "Regen Shield",
+    value: 25,
+    src: "/tools/regen_shield.webp",
+  },
 };
 
 export const getReplayArmor = (armorId?: string) => {
