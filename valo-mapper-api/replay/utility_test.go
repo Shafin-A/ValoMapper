@@ -357,7 +357,220 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 			if entry.ability != test.ability {
 				t.Fatalf("ability id = %q, want %q", entry.ability, test.ability)
 			}
+			if test.class == "Projectile_Killjoy_4_RemoteBees_MultiDetonate" &&
+				!entry.iconOnly {
+				t.Fatalf("nanoswarm projectile entry = %#v, want icon-only flight", entry)
+			}
 		})
+	}
+}
+
+func TestAddNanoswarmPlacedMarkersBridgesFlightAndActivation(t *testing.T) {
+	utilities := [][]Utility{{
+		{
+			ID: "utility-flight", Kind: UtilityMobile, AbilityID: "nanoswarm",
+			StartTimeMS: 100, EndTimeMS: 500, OwnerPuuid: "owner-1", IconOnly: true,
+			Samples: []UtilityPositionSample{
+				{TimeMS: 100, X: 1000, Y: 2000},
+				{TimeMS: 400, X: 1500, Y: 2000},
+			},
+		},
+		{
+			ID: "utility-activation", Kind: UtilityMolly, AbilityID: "nanoswarm",
+			StartTimeMS: 1800, EndTimeMS: 2600, OwnerPuuid: "owner-1",
+			Position: Position{X: 1520, Y: 2000},
+		},
+	}}
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}}
+
+	addNanoswarmPlacedMarkers(utilities, windows)
+
+	if len(utilities[0]) != 3 {
+		t.Fatalf("utilities = %#v, want flight, placed marker, and activated zone", utilities[0])
+	}
+	var placed *Utility
+	for i := range utilities[0] {
+		if utilities[0][i].Kind == UtilityMarker {
+			placed = &utilities[0][i]
+		}
+	}
+	if placed == nil ||
+		placed.StartTimeMS != 500 || placed.EndTimeMS != 1800 ||
+		placed.Position != (Position{X: 1500, Y: 2000}) || !placed.IconOnly {
+		t.Errorf("placed Nanoswarm = %+v, want icon marker from landing to activation", placed)
+	}
+	for _, utility := range utilities[0] {
+		if utility.ID == "utility-activation" &&
+			(utility.Kind != UtilityMolly || utility.IconOnly) {
+			t.Errorf("activated Nanoswarm = %+v, want its circle shape", utility)
+		}
+	}
+}
+
+func TestAddNanoswarmPlacedMarkersRemainUntilRoundEndWithoutActivation(t *testing.T) {
+	utilities := [][]Utility{{
+		{
+			ID: "utility-flight", Kind: UtilityMobile, AbilityID: "nanoswarm",
+			StartTimeMS: 100, EndTimeMS: 500, IconOnly: true,
+			Samples: []UtilityPositionSample{{TimeMS: 400, X: 1500, Y: 2000}},
+		},
+	}}
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 3000}}
+
+	addNanoswarmPlacedMarkers(utilities, windows)
+
+	if len(utilities[0]) != 2 {
+		t.Fatalf("utilities = %#v, want flight and placed marker", utilities[0])
+	}
+	placed := utilities[0][1]
+	if placed.StartTimeMS != 500 || placed.EndTimeMS != 2000 || !placed.IconOnly {
+		t.Errorf("unactivated placed Nanoswarm = %+v, want icon marker until round end", placed)
+	}
+}
+
+func TestAddNanoswarmPlacedMarkerEndsWhenActorClosesAfterSettling(t *testing.T) {
+	utilities := [][]Utility{{
+		{
+			ID: "utility-flight-1", Kind: UtilityMobile, AbilityID: "nanoswarm",
+			StartTimeMS: 100, EndTimeMS: 5000, OwnerPuuid: "owner-1",
+			Samples: []UtilityPositionSample{{TimeMS: 400, X: 1000, Y: 2000}},
+		},
+		{
+			ID: "utility-flight-2", Kind: UtilityMobile, AbilityID: "nanoswarm",
+			StartTimeMS: 700, EndTimeMS: 1800, OwnerPuuid: "owner-1",
+			Samples: []UtilityPositionSample{{TimeMS: 1000, X: 2000, Y: 2000}},
+		},
+		{
+			ID: "utility-flight-3", Kind: UtilityMobile, AbilityID: "nanoswarm",
+			StartTimeMS: 1300, EndTimeMS: 5000, OwnerPuuid: "owner-1",
+			Samples: []UtilityPositionSample{{TimeMS: 1600, X: 3000, Y: 2000}},
+		},
+	}}
+	buyEndMS := uint32(2500)
+	windows := []roundWindow{{
+		RoundNumber: 1, StartMS: 0, EndMS: 5000, BuyEndMS: &buyEndMS,
+	}}
+
+	addNanoswarmPlacedMarkers(utilities, windows)
+
+	var placed []Utility
+	for _, utility := range utilities[0] {
+		if utility.Kind == UtilityMarker {
+			placed = append(placed, utility)
+		}
+	}
+	if len(placed) != 3 {
+		t.Fatalf("placed markers = %d, want one for each throw", len(placed))
+	}
+	for _, utility := range placed {
+		switch utility.ID {
+		case "utility-flight-1-placed":
+			if utility.EndTimeMS != 5000 {
+				t.Errorf("marker end = %d, want round end 5000", utility.EndTimeMS)
+			}
+		case "utility-flight-2-placed":
+			if utility.StartTimeMS != 1251 || utility.EndTimeMS != 1800 {
+				t.Errorf("picked-up marker interval = %d..%d, want 1251..1800",
+					utility.StartTimeMS, utility.EndTimeMS)
+			}
+		case "utility-flight-3-placed":
+			if utility.EndTimeMS != 5000 {
+				t.Errorf("marker %q end = %d, want round end 5000", utility.ID, utility.EndTimeMS)
+			}
+		default:
+			t.Errorf("unexpected placed marker %q", utility.ID)
+		}
+	}
+}
+
+func TestAddNanoswarmPlacedMarkerEndsWhenActorClosesAfterBuyPhase(t *testing.T) {
+	utilities := [][]Utility{{
+		{
+			ID: "utility-flight", Kind: UtilityMobile, AbilityID: "nanoswarm",
+			StartTimeMS: 100, EndTimeMS: 2500, OwnerPuuid: "owner-1",
+			Samples: []UtilityPositionSample{{TimeMS: 1000, X: 2000, Y: 2000}},
+		},
+	}}
+	buyEndMS := uint32(2000)
+	windows := []roundWindow{{
+		RoundNumber: 1, StartMS: 0, EndMS: 3000, BuyEndMS: &buyEndMS,
+	}}
+
+	addNanoswarmPlacedMarkers(utilities, windows)
+
+	if got := utilities[0][1].EndTimeMS; got != 2500 {
+		t.Errorf("marker end = %d, want actor close time 2500", got)
+	}
+}
+
+func TestAddNanoswarmPlacedMarkerWhenFlightActorLastsThroughRoundEnd(t *testing.T) {
+	utilities := [][]Utility{{
+		{
+			ID: "utility-flight", Kind: UtilityMobile, AbilityID: "nanoswarm",
+			StartTimeMS: 100, EndTimeMS: 2000, IconOnly: true,
+			Samples: []UtilityPositionSample{
+				{TimeMS: 100, X: 1400, Y: 2000},
+				{TimeMS: 1500, X: 1500, Y: 2000},
+			},
+		},
+	}}
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 3000}}
+
+	addNanoswarmPlacedMarkers(utilities, windows)
+
+	if len(utilities[0]) != 2 {
+		t.Fatalf("utilities = %#v, want flight and placed marker", utilities[0])
+	}
+	placed := utilities[0][1]
+	if placed.StartTimeMS != 1751 || placed.EndTimeMS != 2000 || !placed.IconOnly {
+		t.Errorf("round-clipped Nanoswarm marker = %+v, want icon marker after flight sample expires", placed)
+	}
+}
+
+func TestAddNanoswarmPlacedMarkerEndsWhenActivatedBeforeFlightActorCloses(t *testing.T) {
+	utilities := [][]Utility{{
+		{
+			ID: "utility-flight", Kind: UtilityMobile, AbilityID: "nanoswarm",
+			StartTimeMS: 100, EndTimeMS: 2500, OwnerPuuid: "owner-1", IconOnly: true,
+			Samples: []UtilityPositionSample{
+				{TimeMS: 100, X: 1400, Y: 2000},
+				{TimeMS: 1500, X: 1500, Y: 2000},
+			},
+		},
+		{
+			ID: "utility-activation", Kind: UtilityMolly, AbilityID: "nanoswarm",
+			StartTimeMS: 1800, EndTimeMS: 3000, OwnerPuuid: "owner-1",
+			Position: Position{X: 1520, Y: 2000},
+		},
+	}}
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 4000}}
+
+	addNanoswarmPlacedMarkers(utilities, windows)
+
+	var placed *Utility
+	placedCount, activationCount := 0, 0
+	for i := range utilities[0] {
+		switch utilities[0][i].Kind {
+		case UtilityMarker:
+			placed = &utilities[0][i]
+			placedCount++
+		case UtilityMolly:
+			activationCount++
+		}
+	}
+	if placedCount != 1 || activationCount != 1 {
+		t.Fatalf("placed/activated counts = %d/%d, want one each", placedCount, activationCount)
+	}
+	if placed.StartTimeMS != 1751 || placed.EndTimeMS != 1800 {
+		t.Errorf("placed Nanoswarm interval = %d..%d, want 1751..1800",
+			placed.StartTimeMS, placed.EndTimeMS)
+	}
+}
+
+func TestNanoswarmActivatedUtilityLifetimeIsCappedAtFourSeconds(t *testing.T) {
+	entry := utilityCatalog["GameObject_Killjoy_4_BeeSwarm_Damage"]
+	if entry.maxLifetimeMS != 4000 {
+		t.Fatalf("Nanoswarm activation max lifetime = %dms, want 4000ms", entry.maxLifetimeMS)
 	}
 }
 
@@ -556,6 +769,12 @@ func TestScanUtilitiesCapsBreachUtilityLifetimes(t *testing.T) {
 			class:       "GameObject_Breach_E_SweetSpotFissure",
 			ability:     "fault_line",
 			maxLifetime: 1100,
+		},
+		{
+			name:        "Nanoswarm",
+			class:       "GameObject_Killjoy_4_BeeSwarm_Damage",
+			ability:     "nanoswarm",
+			maxLifetime: 4000,
 		},
 	}
 

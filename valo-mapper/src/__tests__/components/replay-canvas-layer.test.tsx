@@ -696,6 +696,45 @@ describe("ReplayCanvasLayer utilities", () => {
     ).toBe(false);
   });
 
+  it("shows Nanoswarm as an icon with its throw trajectory", () => {
+    const nanoswarm: ReplayUtility = {
+      id: "utility-nanoswarm-flight",
+      kind: "mobile",
+      abilityId: "nanoswarm",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: lotusSpawn,
+      iconOnly: true,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        { timeMs: 100, x: 6505.5, y: 4043 },
+      ],
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([nanoswarm])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+
+    expect(screen.getByTestId("ability-icon")).toHaveAttribute(
+      "data-action",
+      "kj_molly",
+    );
+    expect(screen.getByTestId("ability-icon")).toHaveAttribute(
+      "data-icon-only",
+      "true",
+    );
+    expect(
+      screen.getAllByTestId("konva-line").some(
+        (line) => line.getAttribute("data-stroke") === "#4ade80",
+      ),
+    ).toBe(true);
+  });
+
   it("renders stationary utility markers only during their round-relative lifetime", () => {
     const smoke: ReplayUtility = {
       id: "utility-0001",
