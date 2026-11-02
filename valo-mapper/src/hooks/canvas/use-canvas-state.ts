@@ -7,6 +7,10 @@ import {
   usePhaseTransitions,
 } from "@/hooks/canvas";
 import { useCanvasPatch } from "@/hooks/canvas/use-canvas-patch";
+import {
+  normalizeEditedPhases,
+  phaseHasContent,
+} from "@/hooks/canvas/use-phase-manager";
 import { useSettings } from "@/contexts/settings-context";
 import { defaultIconSettings } from "@/contexts/settings-context";
 import { MapOption, MapSide, PhaseState, UndoableState } from "@/lib/types";
@@ -207,6 +211,9 @@ export const useCanvasState = ({
   const normalizeHistoryState = useCallback(
     (state: UndoableState): UndoableState => ({
       ...state,
+      editedPhases: Array.from(
+        normalizeEditedPhases(state.phases, state.editedPhases),
+      ),
       agentsSettings:
         state.agentsSettings ??
         agentsSettingsRef.current ??
@@ -235,7 +242,9 @@ export const useCanvasState = ({
         phaseManager.setCurrentPhaseIndex(state.currentPhaseIndex);
       }
 
-      phaseManager.setEditedPhases(new Set(state.editedPhases));
+      phaseManager.setEditedPhases(
+        normalizeEditedPhases(state.phases, state.editedPhases),
+      );
 
       canvasUI.setSelectedMap(state.selectedMap);
       canvasUI.setMapSide(state.mapSide);
@@ -452,16 +461,7 @@ export const useCanvasState = ({
       const phase = phaseManager.getLatestPhases()[currentPhaseIndex];
       if (!phase) return;
 
-      const hasContent =
-        phase.agentsOnCanvas.length > 0 ||
-        phase.abilitiesOnCanvas.length > 0 ||
-        phase.drawLines.length > 0 ||
-        phase.connectingLines.length > 0 ||
-        phase.textsOnCanvas.length > 0 ||
-        phase.imagesOnCanvas.length > 0 ||
-        phase.toolIconsOnCanvas.length > 0;
-
-      if (!hasContent) return;
+      if (!phaseHasContent(phase)) return;
 
       phase.agentsOnCanvas.forEach((agent) =>
         enqueueCanvasPatchEntry({

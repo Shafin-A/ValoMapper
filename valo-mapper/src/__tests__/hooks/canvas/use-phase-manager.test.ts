@@ -134,6 +134,63 @@ describe("usePhaseManager", () => {
     expect(result.current.currentPhase.agentsOnCanvas[0].name).toBe("Jett");
   });
 
+  it("keeps persisted phase content when switching away and back", () => {
+    const initialPhases: PhaseState[] = Array.from(
+      { length: 10 },
+      () => ({
+        agentsOnCanvas: [],
+        abilitiesOnCanvas: [],
+        drawLines: [],
+        textsOnCanvas: [],
+        imagesOnCanvas: [],
+        toolIconsOnCanvas: [],
+        connectingLines: [],
+      }),
+    );
+    initialPhases[6].agentsOnCanvas = [
+      {
+        id: "agent-6",
+        name: "Sage",
+        x: 200,
+        y: 200,
+        isAlly: true,
+        role: "Sentinel",
+      },
+    ];
+    initialPhases[7].agentsOnCanvas = [
+      {
+        id: "agent-7",
+        name: "Jett",
+        x: 100,
+        y: 100,
+        isAlly: true,
+        role: "Duelist",
+      },
+    ];
+
+    const { result } = renderHook(() =>
+      usePhaseManager({
+        initialCurrentPhaseIndex: 7,
+        initialEditedPhases: [6],
+        initialPhases,
+      }),
+    );
+
+    expect(result.current.editedPhases).toEqual(new Set([6, 7]));
+
+    act(() => {
+      result.current.switchToPhase(6);
+    });
+
+    expect(result.current.currentPhase.agentsOnCanvas[0].name).toBe("Sage");
+
+    act(() => {
+      result.current.switchToPhase(7);
+    });
+
+    expect(result.current.currentPhase.agentsOnCanvas[0].name).toBe("Jett");
+  });
+
   it("should delete a phase", () => {
     const { result } = renderHook(() => usePhaseManager());
 

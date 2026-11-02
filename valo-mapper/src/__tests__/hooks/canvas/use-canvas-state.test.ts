@@ -241,6 +241,59 @@ describe("useCanvasState", () => {
     expect(canvasUI.setMapSide).toHaveBeenCalledWith("defense");
   });
 
+  it("marks phases with persisted content as edited when hydrating a lobby", async () => {
+    const phases: UndoableState["phases"] = createEmptyPhases();
+    phases[7].agentsOnCanvas = [
+      {
+        id: "agent-7",
+        name: "Jett",
+        x: 100,
+        y: 100,
+        isAlly: true,
+        role: "Duelist",
+      },
+    ];
+
+    const lobbyState: UndoableState = {
+      phases,
+      selectedMap: baseMap,
+      mapSide: "defense",
+      currentPhaseIndex: 7,
+      editedPhases: [6],
+      agentsSettings: baseSettings,
+      abilitiesSettings: baseSettings,
+    };
+
+    mockUseLobby.mockReturnValue({
+      data: {
+        lobbyCode: "ABCD",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-02T00:00:00Z"),
+        canvasState: lobbyState,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useCanvasState());
+
+    await waitFor(() => {
+      expect(result.current.resetHistory).toHaveBeenCalledTimes(2);
+    });
+
+    const phaseManager = mockUsePhaseManager.mock.results[0]?.value as {
+      setEditedPhases: jest.Mock;
+    };
+
+    expect(phaseManager.setEditedPhases).toHaveBeenCalledWith(
+      new Set([6, 7]),
+    );
+    expect(result.current.resetHistory).toHaveBeenLastCalledWith(
+      expect.objectContaining({ editedPhases: [6, 7] }),
+    );
+  });
+
   it("normalizes missing settings before seeding lobby history", async () => {
     const lobbyState: UndoableState = {
       phases: createEmptyPhases(),

@@ -17,6 +17,35 @@ const createEmptyPhaseState = (): PhaseState => ({
   toolIconsOnCanvas: [],
 });
 
+export const phaseHasContent = (phase: PhaseState | undefined): boolean => {
+  if (!phase) return false;
+
+  return (
+    phase.agentsOnCanvas.length > 0 ||
+    phase.abilitiesOnCanvas.length > 0 ||
+    phase.drawLines.length > 0 ||
+    phase.connectingLines.length > 0 ||
+    phase.textsOnCanvas.length > 0 ||
+    phase.imagesOnCanvas.length > 0 ||
+    phase.toolIconsOnCanvas.length > 0
+  );
+};
+
+export const normalizeEditedPhases = (
+  phases: PhaseState[],
+  editedPhases: Iterable<number>,
+): Set<number> => {
+  const normalized = new Set(editedPhases);
+
+  phases.forEach((phase, index) => {
+    if (phaseHasContent(phase)) {
+      normalized.add(index);
+    }
+  });
+
+  return normalized;
+};
+
 interface UsePhaseManagerOptions {
   initialCurrentPhaseIndex?: number;
   initialEditedPhases?: Iterable<number>;
@@ -56,8 +85,11 @@ export const usePhaseManager = ({
     clampedInitialPhaseIndex,
   );
   const [phases, setPhases] = useState<PhaseState[]>(initialPhasesRef.current);
-  const [editedPhases, setEditedPhases] = useState<Set<number>>(
-    new Set(initialEditedPhases ?? [clampedInitialPhaseIndex]),
+  const [editedPhases, setEditedPhases] = useState<Set<number>>(() =>
+    normalizeEditedPhases(
+      initialPhasesRef.current,
+      initialEditedPhases ?? [clampedInitialPhaseIndex],
+    ),
   );
 
   const phasesRef = useRef(phases);
