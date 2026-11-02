@@ -43,7 +43,10 @@ const REPLAY_TRACER_TRAVEL_MS = 120;
 
 const REPLAY_TRACER_TAIL_PX = 50;
 
-const REPLAY_TRACER_COLOR = "#ff6b6b";
+const REPLAY_TRACER_COLORS = {
+  Blue: "#42EEC7",
+  Red: "#FF4655",
+} as const;
 const REPLAY_UTILITY_COLORS: Record<ReplayUtilityKind, string> = {
   smoke: "#67e8f9",
   wall: "#c4b5fd",
@@ -364,16 +367,24 @@ export const ReplayCanvasLayer = ({
             return null;
           }
 
+          const shooter = match.players.find(
+            (player) => player.puuid === hit.shooterPuuid,
+          );
+          const tracerColor =
+            shooter?.teamId === "Blue"
+              ? REPLAY_TRACER_COLORS.Blue
+              : REPLAY_TRACER_COLORS.Red;
+
           return (
             <Line
               key={`replay-tracer-${index}-${hit.timeMs}`}
               id={`replay-tracer-${index}`}
               points={points}
-              stroke={REPLAY_TRACER_COLOR}
+              stroke={tracerColor}
               strokeWidth={2.5}
               opacity={0.9}
               lineCap="round"
-              shadowColor={REPLAY_TRACER_COLOR}
+              shadowColor={tracerColor}
               shadowBlur={8}
               shadowOpacity={0.7}
               listening={false}

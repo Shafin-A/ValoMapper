@@ -1193,6 +1193,31 @@ describe("ReplayCanvasLayer weapon hits", () => {
     expect(points[3]).toBeCloseTo(victimPoint.y);
   });
 
+  it.each([
+    ["Blue", "blue-1", "#42EEC7"],
+    ["Red", "red-1", "#FF4655"],
+  ] as const)("colors the %s team's weapon tracer", (teamId, shooterPuuid, color) => {
+    render(
+      <ReplayCanvasLayer
+        match={hitMatch}
+        round={{
+          ...hitRound,
+          hits: [
+            {
+              timeMs: 1_000,
+              shooterPuuid,
+              victimPuuid: shooterPuuid === "blue-1" ? "red-1" : "blue-1",
+            },
+          ],
+        }}
+        frame={hitFrame}
+        currentTimeMs={1_000}
+      />,
+    );
+
+    expect(tracer()).toHaveAttribute("data-stroke", color);
+  });
+
   it("hides weapon hits when requested", () => {
     render(
       <ReplayCanvasLayer
