@@ -190,6 +190,24 @@ describe("ReplayScoreboard", () => {
     expect(screen.queryByText("Enemies")).not.toBeInTheDocument();
   });
 
+  it("colors each agent image border to match their team", () => {
+    render(
+      <ReplayScoreboard
+        players={players}
+        round={round}
+        currentTimeMs={4000}
+        viewerPuuid="blue-1"
+      />,
+    );
+
+    expect(screen.getByRole("img", { name: "Jett" }).parentElement).toHaveClass(
+      "border-[#42EEC7]",
+    );
+    expect(screen.getByRole("img", { name: "Omen" }).parentElement).toHaveClass(
+      "border-[#FF4655]",
+    );
+  });
+
   it("keeps team labels tied to team color for an enemy-side viewer", () => {
     render(
       <ReplayScoreboard

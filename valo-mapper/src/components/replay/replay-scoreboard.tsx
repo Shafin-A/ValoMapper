@@ -119,11 +119,13 @@ const PlayerRow = ({
   stats,
   framePlayer,
   currentTimeMs,
+  tone,
 }: {
   player: MatchPlayerSummary;
   stats?: ReplayRoundPlayer;
   framePlayer: ReplayFramePlayer | null;
   currentTimeMs: number;
+  tone: "blue" | "red";
 }) => {
   const state = getReplayPlayerState(framePlayer, {
     credits: stats?.economy.remaining ?? 0,
@@ -152,7 +154,12 @@ const PlayerRow = ({
       )}
     >
       <div className="flex items-start gap-2">
-        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-sm border border-slate-700/80 bg-slate-900">
+        <div
+          className={cn(
+            "relative h-8 w-8 shrink-0 overflow-hidden rounded-sm border bg-slate-900",
+            MATCH_TONE_CLASSES[tone].accentBorder,
+          )}
+        >
           <Image
             src={getAgentImageSrc(player.characterName)}
             alt={player.characterName}
@@ -294,6 +301,7 @@ const TeamBlock = ({
             )}
             framePlayer={states.get(player.puuid) ?? null}
             currentTimeMs={currentTimeMs}
+            tone={tone}
           />
         ))}
       </div>
