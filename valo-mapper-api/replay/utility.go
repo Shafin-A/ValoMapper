@@ -209,6 +209,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	// Viper
 	"Patch_Pandemic_AcidMolotov_NewMolotov":    {kind: UtilityMolly, minBuild: 1300, maxLifetimeMS: 6500, ability: "snake_bite"},
 	"GameObject_Pandemic_4_SmokeZone":          {kind: UtilitySmoke, minBuild: 1300, ability: "poison_cloud"},
+	"Projectile_Pandemic_4_SmokeGrenade":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "poison_cloud"},
 	"GameObject_Pandemic_E_SmokeScreenManager": {kind: UtilityWall, wallPoints: true, minBuild: 1300, ability: "toxic_screen"},
 	"Patch_Pandemic_X_Circular":                {kind: UtilityArea, minBuild: 1300, ability: "vipers_pit"},
 
@@ -223,6 +224,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Waylay
 	"GameObject_Terra_C_TimeSlowGrenade_Explosion": {kind: UtilityArea, minBuild: 1300, ability: "saturate"},
+	"Projectile_Terra_C_TimeSlowGrenade":           {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "saturate"},
 	"GameObject_Terra_E_RewindTime_RewindTarget":   {kind: UtilityMarker, minBuild: 1300, ability: "refract"},
 	"GameObject_Terra_X_DelayedBeam_Beam":          {kind: UtilityArea, minBuild: 1300, ability: "convergent_paths"},
 
