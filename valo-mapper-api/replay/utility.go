@@ -103,6 +103,13 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Pawn_Aggrobot_SeekerNade":                   {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "wingman"},
 	"Pawn_Aggrobot_RollyPolly":                   {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "thrash"},
 
+	// Harbor
+	"GameObject_Mage_4_SplashGrenade": {kind: UtilityArea, minBuild: 1300, ability: "storm_surge"},
+	"Projectile_Mage_Q_Wall":          {kind: UtilityMarker, minBuild: 1300, ability: "high_tide"},
+	"GameObject_Mage_Q_WallManager":   {kind: UtilityWall, wallPoints: true, minBuild: 1300, ability: "high_tide"},
+	"GameObject_Mage_E_WorldSmoke":    {kind: UtilitySmoke, minBuild: 1300, ability: "cove"},
+	"GameObject_Mage_X_TidalWave":     {kind: UtilityArea, minBuild: 1300, ability: "reckoning"},
+
 	// Iso
 	"GameObject_FishingHook_CageSphere":   {kind: UtilityArea, minBuild: 1300, ability: "annihilation"},
 	"GameObject_Sequoia_4_MovingCover":    {kind: UtilityWall, minBuild: 1300, ability: "contingency"},
@@ -193,6 +200,18 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Cashew_E_MapMissileMarker_SecondRocket": {kind: UtilityArea, minBuild: 1300, ability: "guided_salvo"},
 	"GameObject_Cashew_X_SegmentManager":                {kind: UtilityArea, minBuild: 1300, ability: "armageddon"},
 
+	// Veto
+	"GameObject_Pine_4_UsableTeleport":         {kind: UtilityMarker, minBuild: 1300, ability: "crosscut"},
+	"GameObject_Pine_Q_SeizeTrap":              {kind: UtilityTrap, iconOnly: true, minBuild: 1300, ability: "chokehold"},
+	"GameObject_Pine_Q_Tether_SphereExpansion": {kind: UtilityArea, minBuild: 1300, ability: "chokehold"},
+	"Pawn_Pine_E_RadEater":                     {kind: UtilityTrap, minBuild: 1300, ability: "interceptor"},
+
+	// Viper
+	"Patch_Pandemic_AcidMolotov_NewMolotov":    {kind: UtilityMolly, minBuild: 1300, ability: "snake_bite"},
+	"GameObject_Pandemic_4_SmokeZone":          {kind: UtilitySmoke, minBuild: 1300, ability: "poison_cloud"},
+	"GameObject_Pandemic_E_SmokeScreenManager": {kind: UtilityWall, wallPoints: true, minBuild: 1300, ability: "toxic_screen"},
+	"Patch_Pandemic_X_Circular":                {kind: UtilityArea, minBuild: 1300, ability: "vipers_pit"},
+
 	// Vyse
 	"GameObject_Nox_Wall":                   {kind: UtilityWall, wallPoints: true, minBuild: 1300, ability: "shear"},
 	"GameObject_Nox_WallTrap":               {kind: UtilityWall, wallPoints: true, wallYawOffset: -90, minBuild: 1300, ability: "shear"},
@@ -201,6 +220,11 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Projectile_Nox_BarbedWire":             {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "razorvine"},
 	"GameObject_Nox_StealthingTrap_Flash_2": {kind: UtilityTrap, minBuild: 1300, ability: "arc_rose"},
 	"Gameobject_Nox_DisarmPulse":            {kind: UtilityArea, minBuild: 1300, ability: "steel_garden"},
+
+	// Waylay
+	"GameObject_Terra_C_TimeSlowGrenade_Explosion": {kind: UtilityArea, minBuild: 1300, ability: "saturate"},
+	"GameObject_Terra_E_RewindTime_RewindTarget":   {kind: UtilityMarker, minBuild: 1300, ability: "refract"},
+	"GameObject_Terra_X_DelayedBeam_Beam":          {kind: UtilityArea, minBuild: 1300, ability: "convergent_paths"},
 
 	// Yoru
 	"Projectile_Stealth_Q_BounceFlash":           {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "blindside"},

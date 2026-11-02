@@ -191,8 +191,8 @@ func TestServiceParseSyntheticReplay(t *testing.T) {
 		t.Errorf("round 2 events = %+v", second.EventLog)
 	}
 
-	if ParserVersion != "35+vrfkit.0.3.0" {
-		t.Errorf("parser version = %q, want the Nanoswarm playback version", ParserVersion)
+	if ParserVersion != "36+vrfkit.0.3.0" {
+		t.Errorf("parser version = %q, want the utility catalog version", ParserVersion)
 	}
 
 	puuid := func(index int) string { return pseudonymousID(fixture.subjects[index]) }
