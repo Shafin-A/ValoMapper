@@ -99,4 +99,45 @@ describe("useReplayPlayback start time", () => {
     expect(result.current.currentTimeMs).toBe(4_000);
     expect(result.current.isPlaying).toBe(true);
   });
+
+  it("keeps playing when seeking with the keyboard", () => {
+    const { result } = renderHook(() =>
+      useReplayPlayback({
+        durationMs: 10_000,
+        resetKey: "round-1",
+        startTimeMs: 2_000,
+      }),
+    );
+
+    act(() => result.current.togglePlay());
+    expect(result.current.isPlaying).toBe(true);
+
+    act(() => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowRight" }),
+      );
+    });
+
+    expect(result.current.currentTimeMs).toBe(7_000);
+    expect(result.current.isPlaying).toBe(true);
+  });
+
+  it("stays paused when seeking with the keyboard", () => {
+    const { result } = renderHook(() =>
+      useReplayPlayback({
+        durationMs: 10_000,
+        resetKey: "round-1",
+        startTimeMs: 2_000,
+      }),
+    );
+
+    expect(result.current.isPlaying).toBe(false);
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
+    });
+
+    expect(result.current.currentTimeMs).toBe(0);
+    expect(result.current.isPlaying).toBe(false);
+  });
 });

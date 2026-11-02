@@ -63,7 +63,7 @@ export const useReplayPlayback = ({
 
   const seekRelative = useCallback(
     (deltaMs: number) => {
-      seek(timeRef.current + deltaMs);
+      seek(timeRef.current + deltaMs, { pause: false });
     },
     [seek],
   );
@@ -83,11 +83,7 @@ export const useReplayPlayback = ({
   const cycleSpeed = useCallback((direction: -1 | 1) => {
     setSpeed((previous) => {
       const index = REPLAY_SPEEDS.indexOf(previous);
-      const nextIndex = clamp(
-        index + direction,
-        0,
-        REPLAY_SPEEDS.length - 1,
-      );
+      const nextIndex = clamp(index + direction, 0, REPLAY_SPEEDS.length - 1);
       return REPLAY_SPEEDS[nextIndex];
     });
   }, []);
