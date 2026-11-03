@@ -12,8 +12,6 @@ import (
 // an exact timestamp match is never possible.
 const rpcMatchWindowMS = 50
 
-const eventGroupPrefix = "EReplayEventGroup::"
-
 type rawKill struct {
 	TimeMS uint32
 	Killer *uint32
@@ -45,7 +43,7 @@ func scanEvents(exportDir string) (*eventScan, error) {
 	scan := &eventScan{}
 	order := 0
 
-	_, err := readParquetRows[eventRow](exportDir+"/events.parquet", func(rows []eventRow) error {
+	_, err := readParquetRows(exportDir+"/events.parquet", func(rows []eventRow) error {
 		for i := range rows {
 			row := &rows[i]
 			scan.Rows++

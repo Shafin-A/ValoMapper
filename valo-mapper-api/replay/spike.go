@@ -123,7 +123,7 @@ func buildSpikeTimeline(
 		)
 	}
 
-	buildSpikePlants(fields, state, windows, events, timeline, warnings)
+	buildSpikePlants(fields, windows, events, timeline, warnings)
 	return timeline
 }
 
@@ -349,14 +349,7 @@ func isSpikePickupClass(class string) bool {
 }
 
 // buildSpikePlants resolves the site and position for every plant event.
-func buildSpikePlants(
-	fields *fieldScan,
-	state *stateScan,
-	windows []roundWindow,
-	events *eventScan,
-	timeline *spikeTimeline,
-	warnings *warningList,
-) {
+func buildSpikePlants(fields *fieldScan, windows []roundWindow, events *eventScan, timeline *spikeTimeline, warnings *warningList) {
 	for _, plant := range events.Plants {
 		roundIndex, ok := roundIndexAt(windows, plant.TimeMS)
 		if !ok {

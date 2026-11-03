@@ -343,7 +343,7 @@ func TestBuildSpikePlantsUsesPlantLocationForPosition(t *testing.T) {
 	timeline := &spikeTimeline{Rounds: make([]spikeRound, 1)}
 	warnings := newWarnings()
 
-	buildSpikePlants(fields, nil, windows, events, timeline, warnings)
+	buildSpikePlants(fields, windows, events, timeline, warnings)
 
 	round := timeline.Rounds[0]
 	if !round.HasPlant || round.PlantMS != 10000 {

@@ -107,16 +107,6 @@ type timelineSample struct {
 	ArmorPoints int
 }
 
-type actorRow struct {
-	TimeMS       uint32   `parquet:"time_ms"`
-	ActorNetGUID uint32   `parquet:"actor_net_guid"`
-	Event        string   `parquet:"event"`
-	SpawnX       *float32 `parquet:"spawn_x,optional"`
-	SpawnY       *float32 `parquet:"spawn_y,optional"`
-	SpawnZ       *float32 `parquet:"spawn_z,optional"`
-	SpawnYaw     *float32 `parquet:"spawn_yaw,optional"`
-}
-
 // scanMovement reads movement.parquet once, bins every usable pose to the
 // configured frame rate and keeps the latest row per (round, subject, bin).
 // It also feeds the transform plausibility gate.
@@ -153,7 +143,7 @@ func scanMovement(
 	positionsSaturated := false
 	timesSaturated := false
 
-	_, err := readParquetRows[movementRow](exportDir+"/movement.parquet", func(rows []movementRow) error {
+	_, err := readParquetRows(exportDir+"/movement.parquet", func(rows []movementRow) error {
 		for i := range rows {
 			row := &rows[i]
 			scan.Rows++

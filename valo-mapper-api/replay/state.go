@@ -861,7 +861,7 @@ func armourItemForSection(
 func readNetGuids(exportDir string) (map[uint32]string, map[uint32]uint32, error) {
 	paths := make(map[uint32]string)
 	outer := make(map[uint32]uint32)
-	_, err := readParquetRows[netGuidRow](exportDir+"/net_guids.parquet", func(rows []netGuidRow) error {
+	_, err := readParquetRows(exportDir+"/net_guids.parquet", func(rows []netGuidRow) error {
 		for i := range rows {
 			row := &rows[i]
 			paths[row.NetGUID] = row.Path
@@ -885,7 +885,7 @@ func readStateActors(exportDir string, index *playerIndex) (*stateActorView, err
 		SpawnByActor:  make(map[uint32]Position),
 		PawnIntervals: make(map[uint32]pawnInterval),
 	}
-	_, err := readParquetRows[stateActorRow](exportDir+"/actors.parquet", func(rows []stateActorRow) error {
+	_, err := readParquetRows(exportDir+"/actors.parquet", func(rows []stateActorRow) error {
 		for i := range rows {
 			row := &rows[i]
 			if row.ClassPath != nil && *row.ClassPath != "" {

@@ -100,7 +100,7 @@ func scanFields(exportDir string) (*fieldScan, error) {
 	// different player's team. Never assume the two rows are adjacent.
 	pairs := make(map[teamPairKey]*teamPair)
 
-	_, err := readParquetRows[fieldRow](exportDir+"/fields.parquet", func(rows []fieldRow) error {
+	_, err := readParquetRows(exportDir+"/fields.parquet", func(rows []fieldRow) error {
 		for i := range rows {
 			row := &rows[i]
 			if row.FieldName == nil {
