@@ -49,6 +49,8 @@ interface AbilityIconProps extends CanvasIconProps {
   showCenterIcon?: boolean;
   showRotationHandle?: boolean;
   showHandle?: boolean;
+  /** Opacity applied to the rendered ability shape only, not the center icon. */
+  abilityShapeOpacity?: number;
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
   onInteractionEnd?: (data: InteractionData) => void;
 }

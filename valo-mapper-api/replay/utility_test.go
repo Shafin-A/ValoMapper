@@ -49,6 +49,7 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.08", "GameObject_Pine_Q_Tether_SphereExpansion", true, "chokehold"},
 		{"13.08", "Pawn_Pine_E_RadEater", true, "interceptor"},
 		{"13.08", "Patch_Pandemic_AcidMolotov_NewMolotov", true, "snake_bite"},
+		{"13.08", "Projectile_Pandemic_Q_AcidGrenade", true, "snake_bite"},
 		{"13.08", "GameObject_Pandemic_4_SmokeZone", true, "poison_cloud"},
 		{"13.08", "Projectile_Pandemic_4_SmokeGrenade", true, "poison_cloud"},
 		{"13.08", "GameObject_Pandemic_E_SmokeScreenManager", true, "toxic_screen"},
@@ -79,6 +80,22 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		if entry.ability == "" {
 			t.Errorf("utility class %q has no ValoMapper ability id", classPath)
 		}
+	}
+}
+
+func TestPoisonCloudProjectileRendersIconOnly(t *testing.T) {
+	entry, ok := utilityCatalog["Projectile_Pandemic_4_SmokeGrenade"]
+	if !ok {
+		t.Fatal("Viper Poison Cloud projectile is missing from the catalog")
+	}
+	if entry.kind != UtilityMobile || entry.ability != "poison_cloud" {
+		t.Errorf("projectile entry = %+v, want a Poison Cloud mobile projectile", entry)
+	}
+	if !entry.iconOnly {
+		t.Error("Poison Cloud projectile must render as an icon without the smoke circle")
+	}
+	if zone, ok := utilityCatalog["GameObject_Pandemic_4_SmokeZone"]; ok && zone.iconOnly {
+		t.Error("the activated Poison Cloud must keep its smoke circle")
 	}
 }
 
@@ -132,6 +149,9 @@ func TestScanUtilitiesMapsCypherActorsAndPairsTrapwireEndpoints(t *testing.T) {
 		nil,
 		fieldData.UtilityOwners,
 		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -233,6 +253,9 @@ func TestScanUtilitiesTracksSpycamVisionOnlyWhilePossessed(t *testing.T) {
 		nil,
 		fieldData.UtilityOwners,
 		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -342,6 +365,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		{"Projectile_Grenadier_E_SuppressionBlade", "zeropoint"},
 		{"Projectile_Guide_E_HawkFlash", "guiding_light"},
 		{"Projectile_Killjoy_4_RemoteBees_MultiDetonate", "nanoswarm"},
+		{"Projectile_Pandemic_Q_AcidGrenade", "snake_bite"},
 		{"Projectile_Pandemic_4_SmokeGrenade", "poison_cloud"},
 		{"Projectile_Sequoia_Q_FragileMissile", "undercut"},
 		{"Projectile_Hunter_4_ExplosiveBolt", "shock_bolt"},
@@ -594,6 +618,377 @@ func TestNanoswarmActivatedUtilityLifetimeIsCappedAtFourSeconds(t *testing.T) {
 	}
 }
 
+func TestAddPoisonCloudPlacedMarkersSplitsAroundEveryActivation(t *testing.T) {
+	position := Position{X: 1500, Y: 2000}
+	utilities := [][]Utility{{
+		{
+			ID: "utility-flight", Kind: UtilityMobile, AbilityID: "poison_cloud",
+			StartTimeMS: 100, EndTimeMS: 500, OwnerPuuid: "owner-1",
+			Samples: []UtilityPositionSample{
+				{TimeMS: 100, X: 1000, Y: 2000},
+				{TimeMS: 400, X: position.X, Y: position.Y},
+			},
+		},
+		{
+			ID: "utility-cloud-1", Kind: UtilitySmoke, AbilityID: "poison_cloud",
+			StartTimeMS: 600, EndTimeMS: 1600, Position: position, OwnerPuuid: "owner-1",
+		},
+		{
+			ID: "utility-cloud-2", Kind: UtilitySmoke, AbilityID: "poison_cloud",
+			StartTimeMS: 2000, EndTimeMS: 3000, Position: position, OwnerPuuid: "owner-1",
+		},
+	}}
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 4000}}
+
+	addPoisonCloudPlacedMarkers(utilities, windows)
+
+	markers := make(map[string]Utility)
+	for _, utility := range utilities[0] {
+		if utility.Kind == UtilityMarker {
+			markers[utility.ID] = utility
+		}
+	}
+	want := map[string][2]int{
+		"utility-flight-placed-1": {500, 600},
+		"utility-flight-placed-2": {1600, 2000},
+		"utility-flight-placed-3": {3000, 4000},
+	}
+	if len(markers) != len(want) {
+		t.Fatalf("placed markers = %#v, want three inactive intervals", markers)
+	}
+	for id, interval := range want {
+		marker, found := markers[id]
+		if !found {
+			t.Errorf("missing placed marker %q", id)
+			continue
+		}
+		if marker.StartTimeMS != interval[0] || marker.EndTimeMS != interval[1] {
+			t.Errorf("marker %q interval = %d..%d, want %d..%d",
+				id, marker.StartTimeMS, marker.EndTimeMS, interval[0], interval[1])
+		}
+		if marker.AbilityID != "poison_cloud" || !marker.IconOnly ||
+			marker.Position != position || marker.OwnerPuuid != "owner-1" {
+			t.Errorf("marker %q = %+v, want an owned icon-only Poison Cloud marker", id, marker)
+		}
+	}
+}
+
+func TestAddPoisonCloudPlacedMarkerStaysUntilRoundEndWithoutActivation(t *testing.T) {
+	utilities := [][]Utility{{
+		{
+			ID: "utility-flight", Kind: UtilityMobile, AbilityID: "poison_cloud",
+			StartTimeMS: 100, EndTimeMS: 500,
+			Samples: []UtilityPositionSample{{TimeMS: 400, X: 1500, Y: 2000}},
+		},
+	}}
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 3000}}
+
+	addPoisonCloudPlacedMarkers(utilities, windows)
+
+	if len(utilities[0]) != 2 {
+		t.Fatalf("utilities = %#v, want flight and placed marker", utilities[0])
+	}
+	placed := utilities[0][1]
+	if placed.Kind != UtilityMarker || !placed.IconOnly ||
+		placed.StartTimeMS != 500 || placed.EndTimeMS != 2000 {
+		t.Errorf("unactivated Poison Cloud marker = %+v, want icon 500..2000", placed)
+	}
+}
+
+func TestAddPoisonCloudPlacedMarkersIgnoreUnmatchedActivations(t *testing.T) {
+	tests := []struct {
+		name       string
+		flight     Utility
+		activation Utility
+	}{
+		{
+			name: "different owner",
+			flight: Utility{
+				ID: "utility-flight", Kind: UtilityMobile, AbilityID: "poison_cloud",
+				StartTimeMS: 100, EndTimeMS: 500, OwnerPuuid: "owner-1",
+				Samples: []UtilityPositionSample{{TimeMS: 400, X: 1500, Y: 2000}},
+			},
+			activation: Utility{
+				ID: "utility-cloud", Kind: UtilitySmoke, AbilityID: "poison_cloud",
+				StartTimeMS: 600, EndTimeMS: 1600, Position: Position{X: 1500, Y: 2000},
+				OwnerPuuid: "owner-2",
+			},
+		},
+		{
+			name: "too far away",
+			flight: Utility{
+				ID: "utility-flight", Kind: UtilityMobile, AbilityID: "poison_cloud",
+				StartTimeMS: 100, EndTimeMS: 500, OwnerPuuid: "owner-1",
+				Samples: []UtilityPositionSample{{TimeMS: 400, X: 1500, Y: 2000}},
+			},
+			activation: Utility{
+				ID: "utility-cloud", Kind: UtilitySmoke, AbilityID: "poison_cloud",
+				StartTimeMS: 600, EndTimeMS: 1600, Position: Position{X: 2001, Y: 2000},
+				OwnerPuuid: "owner-1",
+			},
+		},
+		{
+			name: "activation before landing",
+			flight: Utility{
+				ID: "utility-flight", Kind: UtilityMobile, AbilityID: "poison_cloud",
+				StartTimeMS: 100, EndTimeMS: 500, OwnerPuuid: "owner-1",
+				Samples: []UtilityPositionSample{{TimeMS: 400, X: 1500, Y: 2000}},
+			},
+			activation: Utility{
+				ID: "utility-cloud", Kind: UtilitySmoke, AbilityID: "poison_cloud",
+				StartTimeMS: 300, EndTimeMS: 1600, Position: Position{X: 1500, Y: 2000},
+				OwnerPuuid: "owner-1",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			utilities := [][]Utility{{test.flight, test.activation}}
+			windows := []roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}}
+
+			addPoisonCloudPlacedMarkers(utilities, windows)
+
+			markers := 0
+			for _, utility := range utilities[0] {
+				if utility.Kind != UtilityMarker {
+					continue
+				}
+				markers++
+				if utility.StartTimeMS != 500 || utility.EndTimeMS != 3000 {
+					t.Errorf("unmatched marker interval = %d..%d, want 500..3000",
+						utility.StartTimeMS, utility.EndTimeMS)
+				}
+			}
+			if markers != 1 {
+				t.Errorf("placed markers = %d, want the full inactive interval", markers)
+			}
+		})
+	}
+}
+
+func TestAddPoisonCloudPlacedMarkersRequireObservedFlightSamples(t *testing.T) {
+	utilities := [][]Utility{{
+		{
+			ID: "utility-flight", Kind: UtilityMobile, AbilityID: "poison_cloud",
+			StartTimeMS: 100, EndTimeMS: 500,
+		},
+	}}
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}}
+
+	addPoisonCloudPlacedMarkers(utilities, windows)
+
+	if len(utilities[0]) != 1 || utilities[0][0].Kind != UtilityMobile {
+		t.Errorf("utilities = %#v, want no marker without a landing sample", utilities[0])
+	}
+}
+
+func TestScanUtilitiesTrimsPoisonCloudToDestroySignal(t *testing.T) {
+	tests := []struct {
+		name      string
+		destroyMS uint32
+		wantEnd   int
+	}{
+		{name: "deactivation before actor close", destroyMS: 2000, wantEnd: 2000},
+		{name: "destroy outside lifecycle is ignored", destroyMS: 3500, wantEnd: 3000},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			dir := t.TempDir()
+			class := "GameObject_Pandemic_4_SmokeZone"
+			actors := []stateActorRow{
+				{
+					TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+					ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+				},
+				{TimeMS: 3000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+			}
+			if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+				t.Fatal(err)
+			}
+			destroyName := "Multicast Destroy Smoke"
+			fields := []fieldRow{
+				{TimeMS: test.destroyMS, PacketID: 2, ActorNetGUID: 700, FieldName: &destroyName},
+			}
+			if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+				t.Fatal(err)
+			}
+			fieldData, err := scanFields(dir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			utilities, _, err := scanUtilities(
+				dir,
+				"13.08",
+				4000,
+				[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 4000}},
+				newPlayerIndex(&Manifest{}),
+				nil,
+				nil,
+				fieldData.UtilityOwners,
+				fieldData.UtilityPaths,
+				fieldData.UtilityFuel,
+				fieldData.UtilityDestroy,
+				fieldData.UtilityActivation,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(utilities) != 1 || len(utilities[0]) != 1 {
+				t.Fatalf("utilities = %#v, want one Poison Cloud", utilities)
+			}
+			utility := utilities[0][0]
+			if utility.AbilityID != "poison_cloud" ||
+				utility.StartTimeMS != 1000 || utility.EndTimeMS != test.wantEnd {
+				t.Errorf("Poison Cloud interval = %d..%d, want 1000..%d",
+					utility.StartTimeMS, utility.EndTimeMS, test.wantEnd)
+			}
+		})
+	}
+}
+
+func TestScanUtilitiesTrimsPoisonCloudToFuelDrainFallback(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Pandemic_4_SmokeZone"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 3000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	ownerName := "Instigator"
+	fuelGroup := "/Game/Characters/Components/Comp_AbilityFuelSystem.Comp_AbilityFuelSystem_C"
+	fuelName := "CurrentFuel"
+	drainingName := "IsFuelDraining"
+	ownerActor := int64(800)
+	fuel := 0.8
+	draining, stopped := true, false
+	fields := []fieldRow{
+		{TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, FieldName: &ownerName, ValueI64: &ownerActor},
+		{TimeMS: 1000, PacketID: 1, ActorNetGUID: 800, GroupPath: fuelGroup, FieldName: &fuelName, ValueF64: &fuel},
+		{TimeMS: 1500, PacketID: 2, ActorNetGUID: 800, GroupPath: fuelGroup, FieldName: &drainingName, ValueBool: &draining},
+		{TimeMS: 2000, PacketID: 3, ActorNetGUID: 800, GroupPath: fuelGroup, FieldName: &drainingName, ValueBool: &stopped},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+
+	pawn := uint32(800)
+	subject := normaliseUUID("00000000-0000-0000-0000-000000000001")
+	index := newPlayerIndex(&Manifest{Players: []ManifestPlayer{{
+		ActorNetGUID: 900, Subject: subject,
+		CharacterNetGUID: &pawn, CharacterNetGUIDs: []uint32{pawn},
+	}}})
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := len(fieldData.UtilityFuel[800]); got != 3 {
+		t.Fatalf("fuel writes = %d, want CurrentFuel plus both drain transitions", got)
+	}
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		4000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 4000}},
+		index,
+		map[string]string{subject: pseudonymousID(subject)},
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Poison Cloud", utilities)
+	}
+	utility := utilities[0][0]
+	if utility.AbilityID != "poison_cloud" ||
+		utility.StartTimeMS != 1000 || utility.EndTimeMS != 2000 {
+		t.Errorf("Poison Cloud interval = %d..%d, want 1000..2000",
+			utility.StartTimeMS, utility.EndTimeMS)
+	}
+}
+
+func TestPoisonCloudActivationEndPrefersDestroySignal(t *testing.T) {
+	drain := func(timeMS uint32, value bool) utilityFuelWrite {
+		return utilityFuelWrite{TimeMS: timeMS, Draining: &value}
+	}
+	endMS, ok := poisonCloudActivationEndMS(
+		1000,
+		3000,
+		[]utilityDestroyWrite{{TimeMS: 2500}, {TimeMS: 2000}},
+		[]utilityFuelWrite{drain(1500, true), drain(2200, false)},
+	)
+	if !ok || endMS != 2000 {
+		t.Fatalf("activation end = %d/%v, want earliest destroy at 2000", endMS, ok)
+	}
+}
+
+func TestPoisonCloudActivationEndFallsBackToObservedFuelDrain(t *testing.T) {
+	drain := func(timeMS uint32, value bool) utilityFuelWrite {
+		return utilityFuelWrite{TimeMS: timeMS, Draining: &value}
+	}
+	tests := []struct {
+		name   string
+		fuel   []utilityFuelWrite
+		open   uint32
+		close  uint32
+		wantMS uint32
+		wantOK bool
+	}{
+		{
+			name:   "manual deactivation",
+			fuel:   []utilityFuelWrite{drain(900, false), drain(1500, true), drain(2000, false)},
+			open:   1000,
+			close:  3000,
+			wantMS: 2000,
+			wantOK: true,
+		},
+		{
+			name:   "pre-existing drain is not attributed",
+			fuel:   []utilityFuelWrite{drain(500, true), drain(2000, false)},
+			open:   1000,
+			close:  3000,
+			wantOK: false,
+		},
+		{
+			name:   "stop after actor close is rejected",
+			fuel:   []utilityFuelWrite{drain(1500, true), drain(3500, false)},
+			open:   1000,
+			close:  3000,
+			wantOK: false,
+		},
+		{
+			name:   "drain start after actor close is ignored",
+			fuel:   []utilityFuelWrite{drain(3500, true), drain(3600, false)},
+			open:   1000,
+			close:  3000,
+			wantOK: false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			gotMS, gotOK := poisonCloudFuelStopMS(test.open, test.close, test.fuel)
+			if gotMS != test.wantMS || gotOK != test.wantOK {
+				t.Errorf("fuel drain stop = %d/%v, want %d/%v",
+					gotMS, gotOK, test.wantMS, test.wantOK)
+			}
+		})
+	}
+}
+
 func TestCurveballCatalogRecordsFlareSide(t *testing.T) {
 	left, leftOK := utilityCatalog["Projectile_Phoenix_E_FlareCurve_Synced"]
 	right, rightOK := utilityCatalog["Projectile_Phoenix_E_FlareCurve_Synced_Right"]
@@ -704,6 +1099,9 @@ func TestScanUtilitiesApproximatesCurveballOnlyWithoutMeasuredTrajectory(t *test
 				2000,
 				[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 2000}},
 				newPlayerIndex(&Manifest{}),
+				nil,
+				nil,
+				nil,
 				nil,
 				nil,
 				nil,
@@ -823,6 +1221,9 @@ func TestScanUtilitiesCapsBreachUtilityLifetimes(t *testing.T) {
 				nil,
 				nil,
 				nil,
+				nil,
+				nil,
+				nil,
 			)
 			if err != nil {
 				t.Fatal(err)
@@ -907,6 +1308,9 @@ func TestScanUtilitiesUsesVyseWallAnchorVectors(t *testing.T) {
 		nil,
 		nil,
 		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -965,6 +1369,9 @@ func TestScanUtilitiesUsesVyseTrapYawFallback(t *testing.T) {
 		3000,
 		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}},
 		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -1046,7 +1453,8 @@ func TestScanUtilitiesClipsRoundsResolvesOwnersAndSamplesMobileMovement(t *testi
 		t.Fatal(err)
 	}
 	utilities, warnings, err := scanUtilities(dir, "13.08", 8000, windows, index,
-		map[string]string{subject: puuid}, nil, fields.UtilityOwners, fields.UtilityPaths)
+		map[string]string{subject: puuid}, nil, fields.UtilityOwners, fields.UtilityPaths,
+		fields.UtilityFuel, fields.UtilityDestroy, fields.UtilityActivation)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1127,6 +1535,9 @@ func TestScanUtilitiesPreservesDirectionalAbilityYaw(t *testing.T) {
 		4000,
 		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 4000}},
 		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
 		nil,
 		nil,
 		nil,
@@ -1253,6 +1664,9 @@ func TestScanUtilitiesSamplesShockBoltReplicatedMovement(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1301,6 +1715,9 @@ func TestScanUtilitiesOmitsUnsupportedBuildsWithoutFailing(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
+		nil,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1310,8 +1727,184 @@ func TestScanUtilitiesOmitsUnsupportedBuildsWithoutFailing(t *testing.T) {
 	}
 }
 
+func TestScanUtilitiesSplitsToxicScreenIntoActiveIntervals(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Pandemic_E_SmokeScreenManager"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			SpawnYaw: float32Ptr(35),
+		},
+		{TimeMS: 12000, PacketID: 20, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	pointName := "MulticastAddSmokeScreenPoint.Translation"
+	activationName := "WallActivated"
+	fields := []fieldRow{
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: &pointName, ValueStr: stringPtr("(1000,2000,0)")},
+		{TimeMS: 1200, PacketID: 3, ActorNetGUID: 700, FieldName: &pointName, ValueStr: stringPtr("(10000,2000,0)")},
+		{TimeMS: 3000, PacketID: 4, ActorNetGUID: 700, FieldName: &activationName, ValueBool: boolPtr(true)},
+		{TimeMS: 5000, PacketID: 5, ActorNetGUID: 700, FieldName: &activationName, ValueBool: boolPtr(false)},
+		{TimeMS: 7000, PacketID: 6, ActorNetGUID: 700, FieldName: &activationName, ValueBool: boolPtr(true)},
+		{TimeMS: 9000, PacketID: 7, ActorNetGUID: 700, FieldName: &activationName, ValueBool: boolPtr(false)},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		12000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 12000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 5 {
+		t.Fatalf("utilities = %#v, want two walls and three inactive markers", utilities)
+	}
+
+	want := []struct {
+		startMS, endMS int
+		inactive       bool
+	}{
+		{1200, 3000, true},
+		{3000, 5000, false},
+		{5000, 7000, true},
+		{7000, 9000, false},
+		{9000, 12000, true},
+	}
+	for i, expected := range want {
+		utility := utilities[0][i]
+		if utility.StartTimeMS != expected.startMS || utility.EndTimeMS != expected.endMS {
+			t.Errorf("utility[%d] = %d..%d, want %d..%d",
+				i, utility.StartTimeMS, utility.EndTimeMS, expected.startMS, expected.endMS)
+		}
+		if utility.AbilityID != "toxic_screen" {
+			t.Errorf("utility[%d] ability = %q, want toxic_screen", i, utility.AbilityID)
+		}
+		if utility.Kind != UtilityWall || utility.IconOnly {
+			t.Errorf("utility[%d] = %+v, want a wall line", i, utility)
+		}
+		if utility.Inactive != expected.inactive {
+			t.Errorf("utility[%d] inactive = %v, want %v", i, utility.Inactive, expected.inactive)
+		}
+		if utility.Position != (Position{X: 1000, Y: 2000}) ||
+			utility.Yaw != 0 || utility.Length != 90 {
+			t.Errorf("wall geometry = pos %+v yaw %v length %v, want (1000,2000)/0/90",
+				utility.Position, utility.Yaw, utility.Length)
+		}
+	}
+}
+
+func TestToxicScreenActivationFallsBackToFuelDrainStop(t *testing.T) {
+	interval := wallActivationIntervals(
+		1000,
+		12000,
+		[]utilityActivationWrite{{TimeMS: 3000, Active: boolPtr(true)}},
+		[]utilityFuelWrite{
+			{TimeMS: 3500, Draining: boolPtr(true)},
+			{TimeMS: 6000, Draining: boolPtr(false)},
+		},
+	)
+	if len(interval) != 1 || interval[0].startMS != 3000 || interval[0].endMS != 6000 {
+		t.Fatalf("activation intervals = %#v, want 3000..6000", interval)
+	}
+}
+
+func TestToxicScreenIgnoresUnrelatedFuelDrain(t *testing.T) {
+	interval := wallActivationIntervals(
+		1000,
+		12000,
+		[]utilityActivationWrite{{TimeMS: 3000, Active: boolPtr(true)}},
+		[]utilityFuelWrite{
+			{TimeMS: 7000, Draining: boolPtr(true)},
+			{TimeMS: 9000, Draining: boolPtr(false)},
+		},
+	)
+	if len(interval) != 1 || interval[0].startMS != 3000 || interval[0].endMS != 12000 {
+		t.Fatalf("activation intervals = %#v, want the wall to stay open until actor close", interval)
+	}
+}
+
+func TestToxicScreenWithoutActivationShowsInactiveWall(t *testing.T) {
+	interval := wallActivationIntervals(1000, 12000, nil, nil)
+	if interval == nil || len(interval) != 0 {
+		t.Fatalf("activation intervals = %#v, want an empty non-nil slice without WallActivated", interval)
+	}
+
+	dir := t.TempDir()
+	class := "GameObject_Pandemic_E_SmokeScreenManager"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 12000, PacketID: 20, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+	pointName := "MulticastAddSmokeScreenPoint.Translation"
+	fields := []fieldRow{
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: &pointName, ValueStr: stringPtr("(1000,2000,0)")},
+		{TimeMS: 1200, PacketID: 3, ActorNetGUID: 700, FieldName: &pointName, ValueStr: stringPtr("(10000,2000,0)")},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		12000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 12000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one inactive wall", utilities)
+	}
+	wall := utilities[0][0]
+	if wall.Kind != UtilityWall || wall.IconOnly || !wall.Inactive ||
+		wall.StartTimeMS != 1200 || wall.EndTimeMS != 12000 {
+		t.Errorf("wall = %+v, want an inactive wall from 1200 to 12000", wall)
+	}
+}
+
 func float32Ptr(value float32) *float32 { return &value }
 
 func stringPtr(value string) *string { return &value }
 
 func uint32Ptr(value uint32) *uint32 { return &value }
+
+func boolPtr(value bool) *bool { return &value }

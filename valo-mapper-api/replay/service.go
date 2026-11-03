@@ -354,6 +354,9 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		state.Outer,
 		fields.UtilityOwners,
 		fields.UtilityPaths,
+		fields.UtilityFuel,
+		fields.UtilityDestroy,
+		fields.UtilityActivation,
 	)
 	if err != nil {
 		return nil, nil, NewError(CodeCorrupt,

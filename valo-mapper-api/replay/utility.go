@@ -16,7 +16,9 @@ const (
 	maxUtilitySamples    = 256
 	maxUtilityPathPoints = 256
 	nanoswarmSettledMS   = 251
+	poisonCloudSettledMS = 251
 	curveballFlightMS    = 600
+	wallArmingMS         = 1500
 )
 
 type utilityCatalogEntry struct {
@@ -24,6 +26,8 @@ type utilityCatalogEntry struct {
 	mobile             bool
 	replicatedMovement bool
 	wallPoints         bool
+	wallActivated      bool
+	wallStart          bool
 	trapwireFarEnd     bool
 	iconOnly           bool
 	visionCone         bool
@@ -208,9 +212,10 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Viper
 	"Patch_Pandemic_AcidMolotov_NewMolotov":    {kind: UtilityMolly, minBuild: 1300, maxLifetimeMS: 6500, ability: "snake_bite"},
+	"Projectile_Pandemic_Q_AcidGrenade":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "snake_bite"},
 	"GameObject_Pandemic_4_SmokeZone":          {kind: UtilitySmoke, minBuild: 1300, ability: "poison_cloud"},
-	"Projectile_Pandemic_4_SmokeGrenade":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "poison_cloud"},
-	"GameObject_Pandemic_E_SmokeScreenManager": {kind: UtilityWall, wallPoints: true, minBuild: 1300, ability: "toxic_screen"},
+	"Projectile_Pandemic_4_SmokeGrenade":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "poison_cloud", iconOnly: true},
+	"GameObject_Pandemic_E_SmokeScreenManager": {kind: UtilityWall, wallPoints: true, wallActivated: true, wallStart: true, minBuild: 1300, ability: "toxic_screen"},
 	"Patch_Pandemic_X_Circular":                {kind: UtilityArea, minBuild: 1300, ability: "vipers_pit"},
 
 	// Vyse
@@ -251,16 +256,23 @@ type utilityActor struct {
 }
 
 type utilityActorLife struct {
-	guid     uint32
-	ordinal  int
-	class    utilityCatalogEntry
-	openMS   uint32
-	closeMS  uint32
-	position Position
-	yaw      float64
-	lengthM  float64
-	hasYaw   bool
-	owner    string
+	guid            uint32
+	ordinal         int
+	class           utilityCatalogEntry
+	openMS          uint32
+	closeMS         uint32
+	position        Position
+	yaw             float64
+	lengthM         float64
+	hasYaw          bool
+	owner           string
+	activeIntervals []utilityInterval
+	placedMS        uint32
+}
+
+type utilityInterval struct {
+	startMS uint32
+	endMS   uint32
 }
 
 type utilityOwnerWrite struct {
@@ -277,6 +289,23 @@ type utilityPathWrite struct {
 	FieldName string
 	Position  Position
 }
+type utilityFuelWrite struct {
+	TimeMS   uint32
+	PacketID uint32
+	Fuel     *float64
+	Draining *bool
+}
+
+type utilityDestroyWrite struct {
+	TimeMS   uint32
+	PacketID uint32
+}
+
+type utilityActivationWrite struct {
+	TimeMS   uint32
+	PacketID uint32
+	Active   *bool
+}
 
 type utilitySegment struct {
 	life               *utilityActorLife
@@ -285,6 +314,8 @@ type utilitySegment struct {
 	endMS              uint32
 	position           Position
 	yaw                float64
+	lengthM            float64
+	inactive           bool
 	samples            []movementRow
 	replicatedMovement []utilityPathWrite
 	path               []utilityPathWrite
@@ -301,6 +332,9 @@ func scanUtilities(
 	outer map[uint32]uint32,
 	ownerWrites map[uint32][]utilityOwnerWrite,
 	pathWrites map[uint32][]utilityPathWrite,
+	fuelWrites map[uint32][]utilityFuelWrite,
+	destroyWrites map[uint32][]utilityDestroyWrite,
+	activationWrites map[uint32][]utilityActivationWrite,
 ) ([][]Utility, UtilityWarnings, error) {
 	result := make([][]Utility, len(windows))
 	warnings := UtilityWarnings{}
@@ -362,6 +396,40 @@ func scanUtilities(
 		}
 	}
 
+	fuelByOwner := utilityFuelByOwner(fuelWrites, index, puuidBySubject)
+	for _, life := range lives {
+		if life.class.ability != "poison_cloud" {
+			continue
+		}
+		if endMS, ok := poisonCloudActivationEndMS(
+			life.openMS,
+			life.closeMS,
+			destroyWrites[life.guid],
+			fuelByOwner[life.owner],
+		); ok {
+			life.closeMS = endMS
+		}
+	}
+
+	for _, life := range lives {
+		if !life.class.wallActivated {
+			continue
+		}
+		life.activeIntervals = wallActivationIntervals(
+			life.openMS,
+			life.closeMS,
+			activationWrites[life.guid],
+			fuelByOwner[life.owner],
+		)
+		life.placedMS = life.openMS
+		for _, write := range pathWrites[life.guid] {
+			if write.TimeMS >= life.openMS && write.TimeMS < life.closeMS &&
+				write.TimeMS > life.placedMS {
+				life.placedMS = write.TimeMS
+			}
+		}
+	}
+
 	pairCypherTrapwireEndpoints(lives, ownerWrites)
 
 	segments := make([]utilitySegment, 0)
@@ -369,20 +437,45 @@ func scanUtilities(
 		if life.class.trapwireFarEnd {
 			continue
 		}
+		intervals := life.activeIntervals
+		if intervals == nil {
+			intervals = []utilityInterval{{startMS: life.openMS, endMS: life.closeMS}}
+		}
 		for roundIndex, window := range windows {
-			start := maxUint32(life.openMS, window.StartMS)
-			end := minUint32(life.closeMS, window.EndMS)
-			if start >= end {
+			for _, interval := range intervals {
+				start := maxUint32(interval.startMS, window.StartMS)
+				end := minUint32(interval.endMS, window.EndMS)
+				if start >= end {
+					continue
+				}
+				segments = append(segments, utilitySegment{
+					life:       life,
+					roundIndex: roundIndex,
+					startMS:    start,
+					endMS:      end,
+					position:   life.position,
+					yaw:        life.yaw + life.class.wallYawOffset,
+				})
+			}
+			if !life.class.wallActivated {
 				continue
 			}
-			segments = append(segments, utilitySegment{
-				life:       life,
-				roundIndex: roundIndex,
-				startMS:    start,
-				endMS:      end,
-				position:   life.position,
-				yaw:        life.yaw + life.class.wallYawOffset,
-			})
+
+			cursor := maxUint32(life.placedMS, window.StartMS)
+			roundEnd := window.EndMS
+			for _, interval := range intervals {
+				if interval.startMS > cursor {
+					if inactive := wallInactiveSegment(life, roundIndex, cursor, minUint32(interval.startMS, roundEnd)); inactive != nil {
+						segments = append(segments, *inactive)
+					}
+				}
+				if interval.endMS > cursor {
+					cursor = interval.endMS
+				}
+			}
+			if inactive := wallInactiveSegment(life, roundIndex, cursor, roundEnd); inactive != nil {
+				segments = append(segments, *inactive)
+			}
 		}
 	}
 
@@ -438,19 +531,29 @@ func scanUtilities(
 	for i := range segments {
 		segment := &segments[i]
 		if segment.life.class.wallPoints {
+
+			fromMS, toMS := segment.startMS, segment.endMS
+			if segment.life.class.wallActivated {
+				fromMS, toMS = segment.life.openMS, segment.life.closeMS
+			}
 			wallPoints := make([]utilityPathWrite, 0)
 			for _, write := range pathWrites[segment.life.guid] {
-				if write.TimeMS >= segment.startMS && write.TimeMS < segment.endMS &&
+				if write.TimeMS >= fromMS && write.TimeMS < toMS &&
 					write.TimeMS >= segment.life.openMS && write.TimeMS < segment.life.closeMS {
 					wallPoints = append(wallPoints, write)
 				}
 			}
-			if start, end, ok := utilityWallEndpoints(wallPoints); ok {
+			if segment.life.class.wallStart {
+				if start, end, ok := utilityWallSpan(wallPoints); ok {
+					segment.position = start
+					segment.yaw = math.Atan2(end.Y-start.Y, end.X-start.X) * 180 / math.Pi
+					segment.lengthM = math.Hypot(end.X-start.X, end.Y-start.Y) / 100
+				}
+			} else if start, end, ok := utilityWallEndpoints(wallPoints); ok {
 				segment.position = Position{
 					X: (start.X + end.X) / 2,
 					Y: (start.Y + end.Y) / 2,
 				}
-				// The catalog offset converts the actor's wall-normal yaw to the wall axis.
 				segment.yaw = math.Atan2(end.Y-start.Y, end.X-start.X)*180/math.Pi - 90
 			}
 		}
@@ -521,8 +624,12 @@ func scanUtilities(
 	nextID := 0
 	for _, segment := range segments {
 		window := windows[segment.roundIndex]
+		id := fmt.Sprintf("utility-%04d", nextID+1)
+		if segment.inactive {
+			id += "-inactive"
+		}
 		utility := Utility{
-			ID:          fmt.Sprintf("utility-%04d", nextID+1),
+			ID:          id,
 			Kind:        segment.life.class.kind,
 			AbilityID:   segment.life.class.ability,
 			StartTimeMS: int(segment.startMS - window.StartMS),
@@ -531,9 +638,12 @@ func scanUtilities(
 			Yaw:         segment.yaw,
 			OwnerPuuid:  segment.life.owner,
 			IconOnly:    segment.life.class.iconOnly,
+			Inactive:    segment.inactive,
 			Vision:      segment.visionSamples,
 		}
-		if segment.life.lengthM > 0 {
+		if segment.lengthM > 0 {
+			utility.Length = segment.lengthM
+		} else if segment.life.lengthM > 0 {
 			utility.Length = segment.life.lengthM
 		}
 		if segment.life.class.ability == "blaze" {
@@ -567,6 +677,7 @@ func scanUtilities(
 	}
 
 	addNanoswarmPlacedMarkers(result, windows)
+	addPoisonCloudPlacedMarkers(result, windows)
 	return result, warnings, nil
 }
 
@@ -654,6 +765,128 @@ func addNanoswarmPlacedMarkers(utilities [][]Utility, windows []roundWindow) {
 	}
 }
 
+func addPoisonCloudPlacedMarkers(utilities [][]Utility, windows []roundWindow) {
+	type poisonCloudEmitter struct {
+		flight       Utility
+		landing      Position
+		landingMS    int
+		lastSampleMS int
+		activations  []Utility
+	}
+
+	for roundIndex := range utilities {
+		if roundIndex >= len(windows) {
+			break
+		}
+		roundEndMS := int(windows[roundIndex].EndMS - windows[roundIndex].StartMS)
+		emitters := make([]*poisonCloudEmitter, 0)
+		activationIndexes := make([]int, 0)
+		for i := range utilities[roundIndex] {
+			utility := utilities[roundIndex][i]
+			if utility.AbilityID != "poison_cloud" {
+				continue
+			}
+			switch utility.Kind {
+			case UtilityMobile:
+				if len(utility.Samples) == 0 {
+					continue
+				}
+				sample := utility.Samples[len(utility.Samples)-1]
+				landingMS := utility.EndTimeMS
+				settledMS := sample.TimeMS + poisonCloudSettledMS
+				if landingMS > settledMS {
+					landingMS = settledMS
+				}
+				if landingMS >= roundEndMS {
+					continue
+				}
+				emitters = append(emitters, &poisonCloudEmitter{
+					flight:       utility,
+					landing:      Position{X: sample.X, Y: sample.Y},
+					landingMS:    landingMS,
+					lastSampleMS: sample.TimeMS,
+				})
+			case UtilitySmoke:
+				activationIndexes = append(activationIndexes, i)
+			}
+		}
+
+		for _, activationIndex := range activationIndexes {
+			activation := utilities[roundIndex][activationIndex]
+			bestDistance := math.Inf(1)
+			var best *poisonCloudEmitter
+			for _, emitter := range emitters {
+				if activation.StartTimeMS < emitter.lastSampleMS ||
+					(emitter.flight.OwnerPuuid != "" && activation.OwnerPuuid != "" &&
+						emitter.flight.OwnerPuuid != activation.OwnerPuuid) {
+					continue
+				}
+				distance := math.Hypot(
+					activation.Position.X-emitter.landing.X,
+					activation.Position.Y-emitter.landing.Y,
+				)
+				if distance < bestDistance {
+					bestDistance = distance
+					best = emitter
+				}
+			}
+			if best != nil && bestDistance <= 500 {
+				best.activations = append(best.activations, activation)
+			}
+		}
+
+		var placed []Utility
+		for _, emitter := range emitters {
+			sort.SliceStable(emitter.activations, func(i, j int) bool {
+				return emitter.activations[i].StartTimeMS < emitter.activations[j].StartTimeMS
+			})
+			cursor := emitter.landingMS
+			ordinal := 0
+			appendMarker := func(startMS, endMS int) {
+				if startMS < 0 {
+					startMS = 0
+				}
+				if endMS > roundEndMS {
+					endMS = roundEndMS
+				}
+				if startMS >= endMS {
+					return
+				}
+				ordinal++
+				placed = append(placed, Utility{
+					ID:          fmt.Sprintf("%s-placed-%d", emitter.flight.ID, ordinal),
+					Kind:        UtilityMarker,
+					AbilityID:   "poison_cloud",
+					StartTimeMS: startMS,
+					EndTimeMS:   endMS,
+					Position:    emitter.landing,
+					OwnerPuuid:  emitter.flight.OwnerPuuid,
+					IconOnly:    true,
+				})
+			}
+			for _, activation := range emitter.activations {
+				if activation.StartTimeMS > cursor {
+					appendMarker(cursor, activation.StartTimeMS)
+				}
+				if activation.EndTimeMS > cursor {
+					cursor = activation.EndTimeMS
+				}
+			}
+			appendMarker(cursor, roundEndMS)
+		}
+
+		for _, marker := range placed {
+			utilities[roundIndex] = append(utilities[roundIndex], marker)
+		}
+		sort.SliceStable(utilities[roundIndex], func(i, j int) bool {
+			if utilities[roundIndex][i].StartTimeMS != utilities[roundIndex][j].StartTimeMS {
+				return utilities[roundIndex][i].StartTimeMS < utilities[roundIndex][j].StartTimeMS
+			}
+			return utilities[roundIndex][i].ID < utilities[roundIndex][j].ID
+		})
+	}
+}
+
 func sampleUtilityPath(writes []utilityPathWrite, roundStart uint32) ([]UtilityPositionSample, bool) {
 	samples := make([]UtilityPositionSample, 0, minInt(len(writes), maxUtilityPathPoints))
 	truncated := false
@@ -719,8 +952,6 @@ func approximateCurveballMovement(
 		return nil
 	}
 
-	// Replay positions use centimeters; the cubic curve approximates the
-	// observed forward-then-outward flight when VRF exports only one position.
 	yaw := yawDegrees * math.Pi / 180
 	forwardX, forwardY := math.Cos(yaw), math.Sin(yaw)
 	sideX, sideY := -forwardY*float64(side), forwardX*float64(side)
@@ -802,6 +1033,121 @@ func utilityWallEndpoints(writes []utilityPathWrite) (Position, Position, bool) 
 		return *pair.start, *pair.end, true
 	}
 	return Position{}, Position{}, false
+}
+
+func utilityWallSpan(writes []utilityPathWrite) (Position, Position, bool) {
+	if len(writes) < 2 {
+		return Position{}, Position{}, false
+	}
+	sortUtilityPathWrites(writes)
+	start := writes[0].Position
+	end := writes[len(writes)-1].Position
+	if !validUtilityPosition(start) || !validUtilityPosition(end) ||
+		(start.X == end.X && start.Y == end.Y) {
+		return Position{}, Position{}, false
+	}
+	return start, end, true
+}
+func wallActivationIntervals(
+	openMS, closeMS uint32,
+	writes []utilityActivationWrite,
+	fuel []utilityFuelWrite,
+) []utilityInterval {
+	sort.SliceStable(writes, func(i, j int) bool {
+		if writes[i].TimeMS != writes[j].TimeMS {
+			return writes[i].TimeMS < writes[j].TimeMS
+		}
+		return writes[i].PacketID < writes[j].PacketID
+	})
+
+	intervals := make([]utilityInterval, 0, 2)
+	var startMS uint32
+	active := false
+	for _, write := range writes {
+		if write.Active == nil {
+			continue
+		}
+		if *write.Active {
+			if !active {
+				startMS = write.TimeMS
+				active = true
+			}
+			continue
+		}
+		if !active {
+			continue
+		}
+		active = false
+		if write.TimeMS > startMS {
+			intervals = append(intervals, utilityInterval{startMS: startMS, endMS: write.TimeMS})
+		}
+	}
+	if active {
+		endMS := closeMS
+		if fuelStopMS, ok := wallFuelStopMS(startMS, closeMS, fuel); ok {
+			endMS = fuelStopMS
+		}
+		if endMS > startMS {
+			intervals = append(intervals, utilityInterval{startMS: startMS, endMS: endMS})
+		}
+	}
+
+	filtered := make([]utilityInterval, 0, len(intervals))
+	for _, interval := range intervals {
+		start := maxUint32(interval.startMS, openMS)
+		end := minUint32(interval.endMS, closeMS)
+		if start < end {
+			filtered = append(filtered, utilityInterval{startMS: start, endMS: end})
+		}
+	}
+	return filtered
+}
+
+func wallFuelStopMS(activationMS, closeMS uint32, writes []utilityFuelWrite) (uint32, bool) {
+	var drainStart uint32
+	draining := false
+	for _, write := range writes {
+		if write.Draining == nil {
+			continue
+		}
+		if *write.Draining {
+			if !draining {
+				drainStart = write.TimeMS
+				draining = true
+			}
+			continue
+		}
+		if !draining {
+			continue
+		}
+		draining = false
+		if drainStart < activationMS ||
+			drainStart-activationMS > wallArmingMS ||
+			write.TimeMS <= drainStart || write.TimeMS > closeMS {
+			continue
+		}
+		return write.TimeMS, true
+	}
+	return 0, false
+}
+
+func wallInactiveSegment(
+	life *utilityActorLife,
+	roundIndex int,
+	startMS, endMS uint32,
+) *utilitySegment {
+	if startMS >= endMS {
+		return nil
+	}
+	return &utilitySegment{
+		life:       life,
+		roundIndex: roundIndex,
+		startMS:    startMS,
+		endMS:      endMS,
+		position:   life.position,
+		yaw:        life.yaw + life.class.wallYawOffset,
+		inactive:   true,
+	}
 }
 
 func parseUtilityRawVector(raw []byte, bitCount int32) (Position, bool) {
@@ -1039,6 +1385,128 @@ func sortUtilityOwnerWrites(writes map[uint32][]utilityOwnerWrite) {
 			return writes[guid][i].PacketID < writes[guid][j].PacketID
 		})
 	}
+}
+
+func sortUtilityFuelWrites(writes map[uint32][]utilityFuelWrite) {
+	for guid := range writes {
+		sort.SliceStable(writes[guid], func(i, j int) bool {
+			if writes[guid][i].TimeMS != writes[guid][j].TimeMS {
+				return writes[guid][i].TimeMS < writes[guid][j].TimeMS
+			}
+			return writes[guid][i].PacketID < writes[guid][j].PacketID
+		})
+	}
+}
+
+func sortUtilityDestroyWrites(writes map[uint32][]utilityDestroyWrite) {
+	for guid := range writes {
+		sort.SliceStable(writes[guid], func(i, j int) bool {
+			if writes[guid][i].TimeMS != writes[guid][j].TimeMS {
+				return writes[guid][i].TimeMS < writes[guid][j].TimeMS
+			}
+			return writes[guid][i].PacketID < writes[guid][j].PacketID
+		})
+	}
+}
+
+func sortUtilityActivationWrites(writes map[uint32][]utilityActivationWrite) {
+	for guid := range writes {
+		sort.SliceStable(writes[guid], func(i, j int) bool {
+			if writes[guid][i].TimeMS != writes[guid][j].TimeMS {
+				return writes[guid][i].TimeMS < writes[guid][j].TimeMS
+			}
+			return writes[guid][i].PacketID < writes[guid][j].PacketID
+		})
+	}
+}
+
+func utilityFuelByOwner(
+	writes map[uint32][]utilityFuelWrite,
+	index *playerIndex,
+	puuidBySubject map[string]string,
+) map[string][]utilityFuelWrite {
+	if index == nil || len(writes) == 0 {
+		return nil
+	}
+	byOwner := make(map[string][]utilityFuelWrite)
+	for actor, actorWrites := range writes {
+		subject, ok := index.subjectForCharacter(actor)
+		if !ok {
+			continue
+		}
+		owner := puuidBySubject[subject]
+		if owner == "" {
+			continue
+		}
+		byOwner[owner] = append(byOwner[owner], actorWrites...)
+	}
+	for owner := range byOwner {
+		sort.SliceStable(byOwner[owner], func(i, j int) bool {
+			if byOwner[owner][i].TimeMS != byOwner[owner][j].TimeMS {
+				return byOwner[owner][i].TimeMS < byOwner[owner][j].TimeMS
+			}
+			return byOwner[owner][i].PacketID < byOwner[owner][j].PacketID
+		})
+	}
+	return byOwner
+}
+
+func poisonCloudActivationEndMS(
+	openMS, closeMS uint32,
+	destroys []utilityDestroyWrite,
+	fuel []utilityFuelWrite,
+) (uint32, bool) {
+	if endMS, ok := poisonCloudDestroyMS(openMS, closeMS, destroys); ok {
+		return endMS, true
+	}
+	return poisonCloudFuelStopMS(openMS, closeMS, fuel)
+}
+
+func poisonCloudDestroyMS(
+	openMS, closeMS uint32,
+	writes []utilityDestroyWrite,
+) (uint32, bool) {
+	var earliest uint32
+	found := false
+	for _, write := range writes {
+		if write.TimeMS <= openMS || write.TimeMS > closeMS {
+			continue
+		}
+		if !found || write.TimeMS < earliest {
+			earliest = write.TimeMS
+			found = true
+		}
+	}
+	return earliest, found
+}
+
+func poisonCloudFuelStopMS(
+	openMS, closeMS uint32,
+	writes []utilityFuelWrite,
+) (uint32, bool) {
+	draining := false
+	sawStart := false
+	for _, write := range writes {
+		if write.Draining == nil {
+			continue
+		}
+		if write.TimeMS < openMS {
+			draining = *write.Draining
+			continue
+		}
+		if write.TimeMS > closeMS {
+			break
+		}
+		next := *write.Draining
+		if next && !draining {
+			sawStart = true
+		}
+		if sawStart && draining && !next {
+			return write.TimeMS, true
+		}
+		draining = next
+	}
+	return 0, false
 }
 
 func resolveUtilityOwner(

@@ -40,6 +40,8 @@ interface CanvasLineIconProps extends CanvasIconProps {
   thickEndLength?: number;
   thickEndWidth?: number;
   thickEndStroke?: string;
+  /** Opacity applied to the wall line only, leaving the center icon opaque. */
+  abilityShapeOpacity?: number;
 }
 
 export const CanvasLineIcon = ({
@@ -82,6 +84,7 @@ export const CanvasLineIcon = ({
   thickEndWidth = 0,
   thickEndStroke = "#ffffff",
   showAbilityShape = true,
+  abilityShapeOpacity = 1,
   registerNode,
   unregisterNode,
 }: CanvasLineIconProps) => {
@@ -348,6 +351,7 @@ export const CanvasLineIcon = ({
             points={[startX, startY, endX, endY]}
             strokeWidth={lineStrokeWidth}
             stroke={stroke}
+            opacity={abilityShapeOpacity}
           />
 
           {showThickEnd && (
@@ -361,7 +365,7 @@ export const CanvasLineIcon = ({
               ]}
               strokeWidth={lineStrokeWidth + thickEndWidth}
               stroke={thickEndStroke}
-              opacity={1}
+              opacity={abilityShapeOpacity}
             />
           )}
 

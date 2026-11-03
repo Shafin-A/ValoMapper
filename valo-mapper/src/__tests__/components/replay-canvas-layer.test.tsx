@@ -96,6 +96,7 @@ jest.mock("@/components/canvas-icons", () => ({
     currentPath,
     showHandle,
     iconOnly,
+    abilityShapeOpacity,
   }: {
     id?: string;
     action?: string;
@@ -112,6 +113,7 @@ jest.mock("@/components/canvas-icons", () => ({
     currentPath?: { x: number; y: number }[];
     showHandle?: boolean;
     iconOnly?: boolean;
+    abilityShapeOpacity?: number;
   }) => (
     <span
       data-testid="ability-icon"
@@ -131,6 +133,7 @@ jest.mock("@/components/canvas-icons", () => ({
       data-current-path={JSON.stringify(currentPath ?? [])}
       data-show-handle={String(showHandle)}
       data-icon-only={String(iconOnly)}
+      data-shape-opacity={abilityShapeOpacity}
     />
   ),
   CanvasIcon: ({
@@ -652,6 +655,39 @@ describe("ReplayCanvasLayer utilities", () => {
       "true",
     );
   });
+
+  it.each([
+    ["inactive", true, 0.3],
+    ["active", false, 1],
+  ])(
+    "renders a %s Toxic Screen wall at the expected opacity",
+    (_name, inactive, opacity) => {
+      const wall: ReplayUtility = {
+        id: `utility-toxic-screen-${_name}`,
+        kind: "wall",
+        abilityId: "toxic_screen",
+        startTimeMs: 0,
+        endTimeMs: 500,
+        position: lotusSpawn,
+        yaw: 0,
+        length: 44,
+        inactive,
+      };
+
+      render(
+        <ReplayCanvasLayer
+          match={lotusMatch}
+          round={utilityRound([wall])}
+          frame={frame}
+          currentTimeMs={100}
+        />,
+      );
+
+      const icon = screen.getByTestId("ability-icon");
+      expect(icon).toHaveAttribute("data-action", "viper_wall");
+      expect(icon).toHaveAttribute("data-shape-opacity", String(opacity));
+    },
+  );
 
   it("shows Spycam's vision cone only while the camera is possessed", () => {
     const spycam: ReplayUtility = {

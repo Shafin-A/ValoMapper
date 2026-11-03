@@ -95,6 +95,8 @@ export type ReplayUtility = {
   yaw?: number;
   length?: number;
   iconOnly?: boolean;
+  /** Placed but not currently active; rendered at reduced opacity. */
+  inactive?: boolean;
   ownerPuuid?: string;
   samples?: ReplayUtilityPositionSample[];
   path?: ReplayUtilityPositionSample[];

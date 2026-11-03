@@ -117,19 +117,22 @@ const (
 )
 
 type Utility struct {
-	ID          string                  `json:"id"`
-	Kind        UtilityKind             `json:"kind"`
-	AbilityID   string                  `json:"abilityId,omitempty"`
-	StartTimeMS int                     `json:"startTimeMs"`
-	EndTimeMS   int                     `json:"endTimeMs"`
-	Position    Position                `json:"position"`
-	Yaw         float64                 `json:"yaw"`
-	Length      float64                 `json:"length,omitempty"`
-	IconOnly    bool                    `json:"iconOnly,omitempty"`
-	OwnerPuuid  string                  `json:"ownerPuuid,omitempty"`
-	Samples     []UtilityPositionSample `json:"samples,omitempty"`
-	Path        []UtilityPositionSample `json:"path,omitempty"`
-	Vision      []UtilityVisionSample   `json:"vision,omitempty"`
+	ID          string      `json:"id"`
+	Kind        UtilityKind `json:"kind"`
+	AbilityID   string      `json:"abilityId,omitempty"`
+	StartTimeMS int         `json:"startTimeMs"`
+	EndTimeMS   int         `json:"endTimeMs"`
+	Position    Position    `json:"position"`
+	Yaw         float64     `json:"yaw"`
+	Length      float64     `json:"length,omitempty"`
+	IconOnly    bool        `json:"iconOnly,omitempty"`
+	// Inactive marks a reusable utility that is placed but not switched on.
+	// The client renders it at reduced opacity.
+	Inactive   bool                    `json:"inactive,omitempty"`
+	OwnerPuuid string                  `json:"ownerPuuid,omitempty"`
+	Samples    []UtilityPositionSample `json:"samples,omitempty"`
+	Path       []UtilityPositionSample `json:"path,omitempty"`
+	Vision     []UtilityVisionSample   `json:"vision,omitempty"`
 }
 
 type UtilityPositionSample struct {

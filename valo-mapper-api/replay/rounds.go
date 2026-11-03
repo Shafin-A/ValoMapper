@@ -44,16 +44,19 @@ type rpcWrite struct {
 }
 
 type fieldScan struct {
-	Phases         []phaseWrite
-	Results        map[int]*resultWrite
-	Teams          map[string]string
-	TeamWarnings   []string
-	Planters       []rpcWrite
-	PlantSitesRPC  []rpcWrite
-	PlantLocations []rpcWrite
-	Defusers       []rpcWrite
-	UtilityOwners  map[uint32][]utilityOwnerWrite
-	UtilityPaths   map[uint32][]utilityPathWrite
+	Phases            []phaseWrite
+	Results           map[int]*resultWrite
+	Teams             map[string]string
+	TeamWarnings      []string
+	Planters          []rpcWrite
+	PlantSitesRPC     []rpcWrite
+	PlantLocations    []rpcWrite
+	Defusers          []rpcWrite
+	UtilityOwners     map[uint32][]utilityOwnerWrite
+	UtilityPaths      map[uint32][]utilityPathWrite
+	UtilityFuel       map[uint32][]utilityFuelWrite
+	UtilityDestroy    map[uint32][]utilityDestroyWrite
+	UtilityActivation map[uint32][]utilityActivationWrite
 
 	// State holds the HP/credits/weapon/armour rows collected by the same pass.
 	// scanState turns them into timelines after this scan.
@@ -75,15 +78,18 @@ type teamPair struct {
 // plant/defuse RPC details.
 func scanFields(exportDir string) (*fieldScan, error) {
 	scan := &fieldScan{
-		Results:        make(map[int]*resultWrite),
-		Teams:          make(map[string]string),
-		Planters:       nil,
-		PlantSitesRPC:  nil,
-		PlantLocations: nil,
-		Defusers:       nil,
-		State:          newFieldStateRows(),
-		UtilityOwners:  make(map[uint32][]utilityOwnerWrite),
-		UtilityPaths:   make(map[uint32][]utilityPathWrite),
+		Results:           make(map[int]*resultWrite),
+		Teams:             make(map[string]string),
+		Planters:          nil,
+		PlantSitesRPC:     nil,
+		PlantLocations:    nil,
+		Defusers:          nil,
+		State:             newFieldStateRows(),
+		UtilityOwners:     make(map[uint32][]utilityOwnerWrite),
+		UtilityPaths:      make(map[uint32][]utilityPathWrite),
+		UtilityFuel:       make(map[uint32][]utilityFuelWrite),
+		UtilityDestroy:    make(map[uint32][]utilityDestroyWrite),
+		UtilityActivation: make(map[uint32][]utilityActivationWrite),
 	}
 
 	// The combat report writes ParticipantSubject and ParticipantTeamName as
@@ -202,6 +208,33 @@ func scanFields(exportDir string) (*fieldScan, error) {
 				if row.ValueI64 != nil {
 					scan.Defusers = append(scan.Defusers, rpcWrite{timeMS, strconv.FormatInt(*row.ValueI64, 10)})
 				}
+			case name == "Multicast Destroy Smoke":
+				scan.UtilityDestroy[row.ActorNetGUID] = append(
+					scan.UtilityDestroy[row.ActorNetGUID],
+					utilityDestroyWrite{TimeMS: timeMS, PacketID: row.PacketID},
+				)
+			case name == "WallActivated" && row.ValueBool != nil:
+				value := *row.ValueBool
+				scan.UtilityActivation[row.ActorNetGUID] = append(
+					scan.UtilityActivation[row.ActorNetGUID],
+					utilityActivationWrite{TimeMS: timeMS, PacketID: row.PacketID, Active: &value},
+				)
+			case strings.Contains(group, "Comp_AbilityFuelSystem") &&
+				(name == "CurrentFuel" || name == "IsFuelDraining"):
+				write := utilityFuelWrite{TimeMS: timeMS, PacketID: row.PacketID}
+				if name == "CurrentFuel" && row.ValueF64 != nil {
+					value := *row.ValueF64
+					write.Fuel = &value
+				}
+				if name == "IsFuelDraining" && row.ValueBool != nil {
+					value := *row.ValueBool
+					write.Draining = &value
+				}
+				if write.Fuel != nil || write.Draining != nil {
+					scan.UtilityFuel[row.ActorNetGUID] = append(
+						scan.UtilityFuel[row.ActorNetGUID], write,
+					)
+				}
 			case stateFieldCandidate(name):
 				scan.collectStateField(row, name)
 			}
@@ -212,6 +245,9 @@ func scanFields(exportDir string) (*fieldScan, error) {
 		return nil, err
 	}
 	sortUtilityOwnerWrites(scan.UtilityOwners)
+	sortUtilityFuelWrites(scan.UtilityFuel)
+	sortUtilityDestroyWrites(scan.UtilityDestroy)
+	sortUtilityActivationWrites(scan.UtilityActivation)
 
 	return scan, nil
 }

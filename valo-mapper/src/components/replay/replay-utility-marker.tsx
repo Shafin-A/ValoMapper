@@ -25,6 +25,8 @@ import {
 import { mToPixels } from "@/lib/utils";
 import type { ReplayUtilityKind } from "@/lib/replay/types";
 
+const REPLAY_INACTIVE_UTILITY_OPACITY = 0.3;
+
 const REPLAY_UTILITY_COLORS: Record<ReplayUtilityKind, string> = {
   smoke: "#67e8f9",
   wall: "#c4b5fd",
@@ -217,6 +219,9 @@ export const ReplayUtilityMarker = ({
           }
           currentPath={currentPath}
           iconOnly={utility.iconOnly}
+          abilityShapeOpacity={
+            utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1
+          }
           showHandle={abilityIcon.action !== "phoenix_wall"}
           src={abilityIcon.src}
           width={abilitiesSettings.scale}
