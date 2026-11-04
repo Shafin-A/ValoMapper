@@ -81,8 +81,8 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_BountyHunter_X_WaveForm":                      {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1000, ability: "nightfall"},
 	"Pawn_BountyHunter_4_WolfHound":                           {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "prowler"},
 	"GameObject_Q_BountyHunter_Tether_SphereExpansion":        {kind: UtilityArea, minBuild: 1300, ability: "seize"},
-	"Projectile_E_BountyHunter_Divebomb":                      {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "haunt"},
-	"Projectile_Q_BountyHunter_TetherGrenade_SphereExpansion": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "seize"},
+	"Projectile_E_BountyHunter_Divebomb":                      {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "haunt"},
+	"Projectile_Q_BountyHunter_TetherGrenade_SphereExpansion": {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "seize"},
 
 	// Gekko
 	"Patch_Aggrobot_C_ExplodeyPatch":             {kind: UtilityMolly, minBuild: 1300, ability: "mosh_pit"},
@@ -113,7 +113,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Gameobject_Grenadier_E_SuppressionPulse": {kind: UtilityArea, minBuild: 1300, ability: "zeropoint"},
 	"Projectile_C_Grenadier_Flash":            {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashdrive"},
 	"Projectile_C_Grenadier_Flash_Underhand":  {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashdrive"},
-	"Projectile_Grenadier_E_SuppressionBlade": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "zeropoint"},
+	"Projectile_Grenadier_E_SuppressionBlade": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "zeropoint", iconOnly: true},
 
 	// Killjoy
 	"GameObject_Killjoy_4_BeeSwarm_Damage":          {kind: UtilityMolly, maxLifetimeMS: 4000, minBuild: 1300, ability: "nanoswarm"},
@@ -125,8 +125,8 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	// Miks
 	"GameObject_Thumper_Concuss":  {kind: UtilityArea, minBuild: 1300, ability: "mpulse"},
 	"GameObject_Thumper_Heal":     {kind: UtilityArea, minBuild: 1300, ability: "mpulse_concuss"},
-	"Projectile_Thumper_Concuss":  {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mpulse"},
-	"Projectile_Thumper_Heal":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mpulse_concuss"},
+	"Projectile_Thumper_Concuss":  {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mpulse", iconOnly: true},
+	"Projectile_Thumper_Heal":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mpulse_concuss", iconOnly: true},
 	"GameObject_Iris_E_Smoke":     {kind: UtilitySmoke, minBuild: 1300, ability: "waveform"},
 	"GameObject_Iris_X_SonicWave": {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1600, ability: "bassquake"},
 
@@ -173,11 +173,11 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Sova
 	"GameObject_Hunter_4_ExplosiveBolt_Explosion": {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 450, ability: "shock_bolt"},
-	"Projectile_Hunter_4_ExplosiveBolt":           {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "shock_bolt"},
+	"Projectile_Hunter_4_ExplosiveBolt":           {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "shock_bolt", iconOnly: true},
 	"Pawn_Hunter_E_Drone":                         {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "owl_drone"},
 	"GameObject_Hunter_E_Drone_RevealDart":        {kind: UtilityMarker, minBuild: 1300, ability: "owl_drone"},
 	"GameObject_Hunter_Q_SonarBolt":               {kind: UtilityArea, minBuild: 1300, ability: "recon_bolt"},
-	"Projectile_Hunter_Q_RevealBolt":              {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "recon_bolt"},
+	"Projectile_Hunter_Q_RevealBolt":              {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "recon_bolt"},
 
 	// Tejo
 	"Projectile_Cashew_Q_ShellShockGrenade":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "special_delivery"},
@@ -214,7 +214,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Waylay
 	"GameObject_Terra_C_TimeSlowGrenade_Explosion": {kind: UtilityArea, minBuild: 1300, ability: "saturate"},
-	"Projectile_Terra_C_TimeSlowGrenade":           {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "saturate"},
+	"Projectile_Terra_C_TimeSlowGrenade":           {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "saturate"},
 	"GameObject_Terra_E_RewindTime_RewindTarget":   {kind: UtilityMarker, minBuild: 1300, ability: "refract"},
 	"GameObject_Terra_X_DelayedBeam_Beam":          {kind: UtilityArea, minBuild: 1300, ability: "convergent_paths"},
 

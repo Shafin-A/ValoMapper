@@ -391,6 +391,23 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		{"Projectile_Stealth_Q_BounceFlash", "blindside"},
 	}
 
+	// These projectiles should fly as their ability icon plus a trail, without
+	// drawing the placed ability's area or circle while still in flight.
+	iconOnlyProjectiles := map[string]bool{
+		"Projectile_E_BountyHunter_Divebomb":                      true,
+		"Projectile_Q_BountyHunter_TetherGrenade_SphereExpansion": true,
+		"Projectile_Grenadier_E_SuppressionBlade":                 true,
+		"Projectile_Killjoy_4_RemoteBees_MultiDetonate":           true,
+		"Projectile_Pandemic_4_SmokeGrenade":                      true,
+		"Projectile_Sprinter_4_GroundStrike":                      true,
+		"Projectile_Hunter_4_ExplosiveBolt":                       true,
+		"Projectile_Hunter_Q_RevealBolt":                          true,
+		"Projectile_Thumper_Concuss":                              true,
+		"Projectile_Thumper_Heal":                                 true,
+		"Projectile_Nox_BarbedWire":                               true,
+		"Projectile_Terra_C_TimeSlowGrenade":                      true,
+	}
+
 	for _, test := range tests {
 		t.Run(test.class, func(t *testing.T) {
 			entry, found := utilityCatalog[test.class]
@@ -403,9 +420,8 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 			if entry.ability != test.ability {
 				t.Fatalf("ability id = %q, want %q", entry.ability, test.ability)
 			}
-			if test.class == "Projectile_Killjoy_4_RemoteBees_MultiDetonate" &&
-				!entry.iconOnly {
-				t.Fatalf("nanoswarm projectile entry = %#v, want icon-only flight", entry)
+			if want := iconOnlyProjectiles[test.class]; entry.iconOnly != want {
+				t.Fatalf("iconOnly = %v, want %v", entry.iconOnly, want)
 			}
 		})
 	}
