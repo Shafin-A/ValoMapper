@@ -618,6 +618,124 @@ func TestNanoswarmActivatedUtilityLifetimeIsCappedAtFourSeconds(t *testing.T) {
 	}
 }
 
+func TestRazorvineRendersIconOnlyUntilActivated(t *testing.T) {
+	projectile, ok := utilityCatalog["Projectile_Nox_BarbedWire"]
+	if !ok {
+		t.Fatal("Razorvine projectile is missing from the catalog")
+	}
+	if projectile.kind != UtilityMobile || !projectile.replicatedMovement {
+		t.Errorf("Razorvine projectile entry = %+v, want a replicated-movement mobile utility", projectile)
+	}
+	if !projectile.iconOnly {
+		t.Error("Razorvine projectile must render as an icon without a circle")
+	}
+
+	placed, ok := utilityCatalog["GameObject_Nox_BarbedWire"]
+	if !ok {
+		t.Fatal("Razorvine placed wire is missing from the catalog")
+	}
+	if placed.kind != UtilityMarker || !placed.iconOnly {
+		t.Errorf("Razorvine placed wire entry = %+v, want an icon-only marker", placed)
+	}
+
+	activated, ok := utilityCatalog["Patch_Nox_BarbedWire"]
+	if !ok {
+		t.Fatal("Razorvine activation patch is missing from the catalog")
+	}
+	if activated.kind != UtilityMolly || activated.iconOnly {
+		t.Errorf("Razorvine activation entry = %+v, want a molly circle", activated)
+	}
+	if activated.maxLifetimeMS != 6000 {
+		t.Errorf("Razorvine activation max lifetime = %dms, want 6000ms", activated.maxLifetimeMS)
+	}
+}
+
+func TestScanUtilitiesRendersRazorvinePlacedAndActivatedStates(t *testing.T) {
+	placedClass := "GameObject_Nox_BarbedWire"
+	patchClass := "Patch_Nox_BarbedWire"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &placedClass, SpawnX: float32Ptr(150), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 3000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+		{
+			TimeMS: 3000, PacketID: 2, ActorNetGUID: 701, Event: "open",
+			ClassPath: &patchClass, SpawnX: float32Ptr(150), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 9500, PacketID: 3, ActorNetGUID: 701, Event: "close"},
+	}
+
+	utilities := scanRazorvineFixture(t, actors, 12000)
+
+	if len(utilities) != 2 {
+		t.Fatalf("utilities = %#v, want one placed marker and one activation", utilities)
+	}
+	marker, activation := utilities[0], utilities[1]
+	if marker.Kind != UtilityMarker || !marker.IconOnly ||
+		marker.AbilityID != "razorvine" ||
+		marker.StartTimeMS != 1000 || marker.EndTimeMS != 3000 {
+		t.Errorf("Razorvine placed state = %+v, want icon-only marker 1000..3000", marker)
+	}
+	if activation.Kind != UtilityMolly || activation.IconOnly ||
+		activation.AbilityID != "razorvine" ||
+		activation.StartTimeMS != 3000 || activation.EndTimeMS != 9000 {
+		t.Errorf("Razorvine activated state = %+v, want circle 3000..9000", activation)
+	}
+}
+
+func TestScanUtilitiesClosesRazorvineMarkerOnPickup(t *testing.T) {
+	placedClass := "GameObject_Nox_BarbedWire"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &placedClass, SpawnX: float32Ptr(150), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 2500, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+	}
+
+	utilities := scanRazorvineFixture(t, actors, 4000)
+
+	if len(utilities) != 1 {
+		t.Fatalf("utilities = %#v, want only the placed marker", utilities)
+	}
+	marker := utilities[0]
+	if marker.Kind != UtilityMarker || !marker.IconOnly ||
+		marker.AbilityID != "razorvine" ||
+		marker.StartTimeMS != 1000 || marker.EndTimeMS != 2500 {
+		t.Errorf("picked-up Razorvine = %+v, want icon-only marker 1000..2500", marker)
+	}
+}
+
+func scanRazorvineFixture(t *testing.T, actors []stateActorRow, durationMS uint32) []Utility {
+	t.Helper()
+	dir := t.TempDir()
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		durationMS,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: durationMS}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 {
+		t.Fatalf("round count = %d, want 1", len(utilities))
+	}
+	return utilities[0]
+}
+
 func TestAddPoisonCloudPlacedMarkersSplitsAroundEveryActivation(t *testing.T) {
 	position := Position{X: 1500, Y: 2000}
 	utilities := [][]Utility{{

@@ -205,9 +205,9 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	// Vyse
 	"GameObject_Nox_Wall":                   {kind: UtilityWall, wallPoints: true, minBuild: 1300, ability: "shear"},
 	"GameObject_Nox_WallTrap":               {kind: UtilityWall, wallPoints: true, wallYawOffset: -90, minBuild: 1300, ability: "shear"},
-	"GameObject_Nox_BarbedWire":             {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
-	"Patch_Nox_BarbedWire":                  {kind: UtilityMolly, minBuild: 1300, ability: "razorvine"},
-	"Projectile_Nox_BarbedWire":             {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "razorvine"},
+	"GameObject_Nox_BarbedWire":             {kind: UtilityMarker, iconOnly: true, minBuild: 1300, ability: "razorvine"},
+	"Patch_Nox_BarbedWire":                  {kind: UtilityMolly, maxLifetimeMS: 6000, minBuild: 1300, ability: "razorvine"},
+	"Projectile_Nox_BarbedWire":             {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "razorvine"},
 	"GameObject_Nox_StealthingTrap_Flash_2": {kind: UtilityTrap, minBuild: 1300, ability: "arc_rose"},
 	"Gameobject_Nox_DisarmPulse":            {kind: UtilityArea, minBuild: 1300, ability: "steel_garden"},
 
