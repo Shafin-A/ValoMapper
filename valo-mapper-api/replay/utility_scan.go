@@ -232,6 +232,12 @@ func scanUtilities(
 					segment.position = start
 					segment.yaw = math.Atan2(end.Y-start.Y, end.X-start.X) * 180 / math.Pi
 					segment.lengthM = math.Hypot(end.X-start.X, end.Y-start.Y) / 100
+					if segment.life.class.ability == "fast_lane" {
+						segment.lengthSamples = utilityWallLengthSamples(
+							wallPoints,
+							windows[segment.roundIndex].StartMS,
+						)
+					}
 				}
 			} else if start, end, ok := utilityWallEndpoints(wallPoints); ok {
 				segment.position = Position{
@@ -313,17 +319,18 @@ func scanUtilities(
 			id += "-inactive"
 		}
 		utility := Utility{
-			ID:          id,
-			Kind:        segment.life.class.kind,
-			AbilityID:   segment.life.class.ability,
-			StartTimeMS: int(segment.startMS - window.StartMS),
-			EndTimeMS:   int(segment.endMS - window.StartMS),
-			Position:    segment.position,
-			Yaw:         segment.yaw,
-			OwnerPuuid:  segment.life.owner,
-			IconOnly:    segment.life.class.iconOnly,
-			Inactive:    segment.inactive,
-			Vision:      segment.visionSamples,
+			ID:            id,
+			Kind:          segment.life.class.kind,
+			AbilityID:     segment.life.class.ability,
+			StartTimeMS:   int(segment.startMS - window.StartMS),
+			EndTimeMS:     int(segment.endMS - window.StartMS),
+			Position:      segment.position,
+			Yaw:           segment.yaw,
+			OwnerPuuid:    segment.life.owner,
+			IconOnly:      segment.life.class.iconOnly,
+			Inactive:      segment.inactive,
+			Vision:        segment.visionSamples,
+			LengthSamples: segment.lengthSamples,
 		}
 		if segment.lengthM > 0 {
 			utility.Length = segment.lengthM

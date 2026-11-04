@@ -369,6 +369,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		{"Projectile_Pandemic_Q_AcidGrenade", "snake_bite"},
 		{"Projectile_Pandemic_4_SmokeGrenade", "poison_cloud"},
 		{"Projectile_Sequoia_Q_FragileMissile", "undercut"},
+		{"Projectile_Sprinter_4_GroundStrike", "relay_bolt"},
 		{"Projectile_Hunter_4_ExplosiveBolt", "shock_bolt"},
 		{"Projectile_Hunter_Q_RevealBolt", "recon_bolt"},
 		{"Projectile_Thumper_Concuss", "mpulse"},
@@ -1443,6 +1444,86 @@ func TestScanUtilitiesUsesVyseWallAnchorVectors(t *testing.T) {
 	}
 	if trap.AbilityID != "shear" || trap.Position != (Position{X: 2000, Y: 5500}) || trap.Yaw != 0 {
 		t.Errorf("trap geometry = %+v, want midpoint (2000, 5500), yaw 0", trap)
+	}
+}
+
+func TestScanUtilitiesUsesNeonTunnelPoints(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Sprinter_4_Tunnel"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			SpawnYaw: float32Ptr(35),
+		},
+		{TimeMS: 3000, PacketID: 4, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	rawVector := func(x, y, z float64) []byte {
+		raw := make([]byte, 24)
+		binary.LittleEndian.PutUint64(raw[0:8], math.Float64bits(x))
+		binary.LittleEndian.PutUint64(raw[8:16], math.Float64bits(y))
+		binary.LittleEndian.PutUint64(raw[16:24], math.Float64bits(z))
+		return raw
+	}
+	tunnelPointName := "MulticastAddTunnelPoint.Translation"
+	fields := []fieldRow{
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: &tunnelPointName, BitCount: 192, RawBits: rawVector(1000, 2000, 10)},
+		{TimeMS: 1200, PacketID: 3, ActorNetGUID: 700, FieldName: &tunnelPointName, BitCount: 192, RawBits: rawVector(1000, 3000, 10)},
+		{TimeMS: 1300, PacketID: 5, ActorNetGUID: 700, FieldName: &tunnelPointName, BitCount: 192, RawBits: rawVector(1000, 4000, 10)},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		4000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 4000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Fast Lane wall", utilities)
+	}
+	wall := utilities[0][0]
+	if wall.AbilityID != "fast_lane" || wall.Kind != UtilityWall {
+		t.Fatalf("wall identity = %q/%q, want wall fast_lane", wall.Kind, wall.AbilityID)
+	}
+	if wall.Position != (Position{X: 1000, Y: 2000}) ||
+		wall.Yaw != 90 || wall.Length != 20 {
+		t.Errorf("wall geometry = pos %+v yaw %v length %v, want (1000,2000)/90/20",
+			wall.Position, wall.Yaw, wall.Length)
+	}
+	wantLengths := []UtilityLengthSample{
+		{TimeMS: 1100, Length: 0},
+		{TimeMS: 1200, Length: 10},
+		{TimeMS: 1300, Length: 20},
+	}
+	if len(wall.LengthSamples) != len(wantLengths) {
+		t.Fatalf("length samples = %#v, want %#v", wall.LengthSamples, wantLengths)
+	}
+	for i, want := range wantLengths {
+		if wall.LengthSamples[i] != want {
+			t.Errorf("length sample %d = %#v, want %#v", i, wall.LengthSamples[i], want)
+		}
 	}
 }
 

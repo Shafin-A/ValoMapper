@@ -84,6 +84,11 @@ export type ReplayUtilityVisionSample = {
   active: boolean;
 };
 
+export type ReplayUtilityLengthSample = {
+  timeMs: number;
+  length: number;
+};
+
 export type ReplayUtility = {
   id: string;
   kind: ReplayUtilityKind;
@@ -101,6 +106,7 @@ export type ReplayUtility = {
   samples?: ReplayUtilityPositionSample[];
   path?: ReplayUtilityPositionSample[];
   vision?: ReplayUtilityVisionSample[];
+  lengthSamples?: ReplayUtilityLengthSample[];
 };
 
 export type ReplayUtilityWarnings = {

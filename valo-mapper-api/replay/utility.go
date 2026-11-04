@@ -92,4 +92,5 @@ type utilitySegment struct {
 	replicatedMovement []utilityPathWrite
 	path               []utilityPathWrite
 	visionSamples      []UtilityVisionSample
+	lengthSamples      []UtilityLengthSample
 }

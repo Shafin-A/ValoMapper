@@ -173,7 +173,7 @@ const renderDoubleLineAbility = (props: AbilityIconProps): ReactNode => {
     <CanvasDoubleLineIcon
       showAbilityShape={!props.iconOnly}
       handleMode="length"
-      lineLength={props.currentLength || mToPixels(config.lineLength)}
+      lineLength={props.currentLength ?? mToPixels(config.lineLength)}
       stroke={config.stroke}
       iconPosition={config.iconPosition}
       lineStrokeWidth={

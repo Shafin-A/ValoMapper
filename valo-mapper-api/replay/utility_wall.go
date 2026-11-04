@@ -2,6 +2,7 @@ package replay
 
 import (
 	"fmt"
+	"math"
 	"sort"
 )
 
@@ -66,6 +67,52 @@ func utilityWallSpan(writes []utilityPathWrite) (Position, Position, bool) {
 		return Position{}, Position{}, false
 	}
 	return start, end, true
+}
+func utilityWallLengthSamples(writes []utilityPathWrite, roundStart uint32) []UtilityLengthSample {
+	if len(writes) < 2 {
+		return nil
+	}
+	sortUtilityPathWrites(writes)
+	start := writes[0].Position
+	if !validUtilityPosition(start) {
+		return nil
+	}
+
+	samples := make([]UtilityLengthSample, 0, minInt(len(writes), maxUtilitySamples))
+	samples = append(samples, UtilityLengthSample{
+		TimeMS: int(writes[0].TimeMS - roundStart),
+		Length: 0,
+	})
+	for _, write := range writes[1:] {
+		if !validUtilityPosition(write.Position) {
+			continue
+		}
+		timeMS := int(write.TimeMS - roundStart)
+		if timeMS < 0 || timeMS < samples[len(samples)-1].TimeMS {
+			continue
+		}
+		lengthM := math.Hypot(
+			write.Position.X-start.X,
+			write.Position.Y-start.Y,
+		) / 100
+		if timeMS == samples[len(samples)-1].TimeMS {
+			samples[len(samples)-1].Length = lengthM
+			continue
+		}
+		samples = append(samples, UtilityLengthSample{
+			TimeMS: timeMS,
+			Length: lengthM,
+		})
+	}
+	if len(samples) > maxUtilitySamples {
+		reduced := make([]UtilityLengthSample, maxUtilitySamples)
+		for i := range reduced {
+			index := i * (len(samples) - 1) / (maxUtilitySamples - 1)
+			reduced[i] = samples[index]
+		}
+		return reduced
+	}
+	return samples
 }
 
 func wallActivationIntervals(

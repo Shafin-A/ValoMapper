@@ -1,4 +1,5 @@
 import {
+  getReplayUtilityLengthAtTime,
   getReplayUtilityVisionYawAtTime,
   getReplayUtilityPositionAtTime,
   getReplayUtilityTrailAtTime,
@@ -13,6 +14,20 @@ const stationaryUtility: ReplayUtility = {
   startTimeMs: 100,
   endTimeMs: 500,
   position: { x: 10, y: 20 },
+};
+
+const growingWallUtility: ReplayUtility = {
+  id: "utility-0003",
+  kind: "wall",
+  startTimeMs: 100,
+  endTimeMs: 1100,
+  position: { x: 0, y: 0 },
+  length: 20,
+  lengthSamples: [
+    { timeMs: 200, length: 0 },
+    { timeMs: 600, length: 10 },
+    { timeMs: 1000, length: 20 },
+  ],
 };
 
 const mobileUtility: ReplayUtility = {
@@ -128,6 +143,23 @@ describe("replay utility playback", () => {
     expect(getReplayUtilityTrailAtTime(mobileUtility, 150)).toEqual([
       { timeMs: 100, x: 10, y: 20 },
     ]);
+  });
+
+  it("grows a wall from its length samples and holds the final length", () => {
+    expect(getReplayUtilityLengthAtTime(growingWallUtility, 100)).toBe(0);
+    expect(getReplayUtilityLengthAtTime(growingWallUtility, 200)).toBe(0);
+    expect(getReplayUtilityLengthAtTime(growingWallUtility, 400)).toBe(5);
+    expect(getReplayUtilityLengthAtTime(growingWallUtility, 600)).toBe(10);
+    expect(getReplayUtilityLengthAtTime(growingWallUtility, 800)).toBe(15);
+    expect(getReplayUtilityLengthAtTime(growingWallUtility, 1000)).toBe(20);
+    expect(getReplayUtilityLengthAtTime(growingWallUtility, 1500)).toBe(20);
+  });
+
+  it("falls back to the static wall length without length samples", () => {
+    const staticWall = { ...growingWallUtility, lengthSamples: undefined };
+
+    expect(getReplayUtilityLengthAtTime(staticWall, 400)).toBe(20);
+    expect(getReplayUtilityLengthAtTime(stationaryUtility, 200)).toBeUndefined();
   });
 
   it("interpolates Spycam yaw while possessed and hides the cone after unpossessing", () => {

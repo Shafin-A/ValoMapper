@@ -626,6 +626,60 @@ describe("ReplayCanvasLayer utilities", () => {
     ).toBeCloseTo(mToPixels(8));
   });
 
+  it("grows a Fast Lane wall from its length samples during playback", () => {
+    const fastLane: ReplayUtility = {
+      id: "utility-fast-lane",
+      kind: "wall",
+      abilityId: "fast_lane",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: lotusSpawn,
+      yaw: 0,
+      length: 20,
+      lengthSamples: [
+        { timeMs: 0, length: 0 },
+        { timeMs: 1000, length: 20 },
+      ],
+    };
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([fastLane])}
+        frame={frame}
+        currentTimeMs={0}
+      />,
+    );
+
+    const currentLength = () =>
+      Number(
+        screen
+          .getByTestId("ability-icon")
+          .getAttribute("data-current-length"),
+      );
+
+    expect(currentLength()).toBe(0);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([fastLane])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+    expect(currentLength()).toBeCloseTo(mToPixels(10));
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([fastLane])}
+        frame={frame}
+        currentTimeMs={999}
+      />,
+    );
+    expect(currentLength()).toBeCloseTo(mToPixels(19.98));
+  });
+
   it("renders a placed Cyber Cage as an icon without its activation circle", () => {
     const placedCage: ReplayUtility = {
       id: "utility-cyber-cage-placed",

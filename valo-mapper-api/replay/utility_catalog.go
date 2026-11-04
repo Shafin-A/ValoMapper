@@ -131,8 +131,9 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Iris_X_SonicWave": {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1600, ability: "bassquake"},
 
 	// Neon
-	"GameObject_Sprinter_4_Tunnel":         {kind: UtilityWall, minBuild: 1300, ability: "fast_lane"},
+	"GameObject_Sprinter_4_Tunnel":         {kind: UtilityWall, wallPoints: true, wallStart: true, minBuild: 1300, ability: "fast_lane"},
 	"GameObject_Sprinter_Q_ElectricSphere": {kind: UtilityArea, minBuild: 1300, ability: "relay_bolt"},
+	"Projectile_Sprinter_4_GroundStrike":   {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "relay_bolt"},
 
 	// Omen
 	"Zone_Wraith_4_Smoke":                  {kind: UtilitySmoke, minBuild: 1300, ability: "dark_cover"},

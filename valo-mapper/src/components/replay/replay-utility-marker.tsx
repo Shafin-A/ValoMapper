@@ -12,6 +12,7 @@ import {
 import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
 import { Circle, Group, Line } from "react-konva";
 import {
+  getReplayUtilityLengthAtTime,
   getReplayUtilityPositionAtTime,
   getReplayUtilityPathAtTime,
   getReplayUtilityTrailAtTime,
@@ -107,6 +108,7 @@ export const ReplayUtilityMarker = ({
   const lineGeometry = abilityIcon
     ? getReplayLineAbilityGeometry(abilityIcon.action)
     : null;
+  const utilityLength = getReplayUtilityLengthAtTime(utility, currentTimeMs);
   const yawOffset = abilityIcon
     ? getReplayAbilityYawOffset(abilityIcon.action)
     : null;
@@ -211,9 +213,9 @@ export const ReplayUtilityMarker = ({
           y={iconPoint.y}
           rotation={rotation}
           currentLength={
-            utility.length !== undefined
+            utilityLength !== undefined
               ? mToPixels(
-                  utility.length + (utility.abilityId === "trapwire" ? 2 : 0),
+                  utilityLength + (utility.abilityId === "trapwire" ? 2 : 0),
                 )
               : lineGeometry?.currentLength
           }

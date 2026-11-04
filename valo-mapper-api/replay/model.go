@@ -6,7 +6,7 @@ package replay
 // ParserVersion is part of the cache key, the X-Parser-Version response header
 // and the parse log. Bump the leading number whenever the normalised output can
 // change, even if VRFKit itself did not change.
-const ParserVersion = "37+vrfkit.0.4.0"
+const ParserVersion = "38+vrfkit.0.4.0"
 
 // Match mirrors ReplayMatch in the frontend. Field names and JSON tags are the
 // wire contract; do not rename them without a frontend change.
@@ -128,17 +128,23 @@ type Utility struct {
 	IconOnly    bool        `json:"iconOnly,omitempty"`
 	// Inactive marks a reusable utility that is placed but not switched on.
 	// The client renders it at reduced opacity.
-	Inactive   bool                    `json:"inactive,omitempty"`
-	OwnerPuuid string                  `json:"ownerPuuid,omitempty"`
-	Samples    []UtilityPositionSample `json:"samples,omitempty"`
-	Path       []UtilityPositionSample `json:"path,omitempty"`
-	Vision     []UtilityVisionSample   `json:"vision,omitempty"`
+	Inactive      bool                    `json:"inactive,omitempty"`
+	OwnerPuuid    string                  `json:"ownerPuuid,omitempty"`
+	Samples       []UtilityPositionSample `json:"samples,omitempty"`
+	Path          []UtilityPositionSample `json:"path,omitempty"`
+	Vision        []UtilityVisionSample   `json:"vision,omitempty"`
+	LengthSamples []UtilityLengthSample   `json:"lengthSamples,omitempty"`
 }
 
 type UtilityPositionSample struct {
 	TimeMS int     `json:"timeMs"`
 	X      float64 `json:"x"`
 	Y      float64 `json:"y"`
+}
+
+type UtilityLengthSample struct {
+	TimeMS int     `json:"timeMs"`
+	Length float64 `json:"length"`
 }
 
 type UtilityVisionSample struct {
