@@ -23,7 +23,7 @@ func scanUtilities(
 	result := make([][]Utility, len(windows))
 	warnings := UtilityWarnings{}
 	buildNumber, ok := utilityBuildNumber(build)
-	if !ok || buildNumber < 1300 || buildNumber > 1308 {
+	if !ok || buildNumber < 1300 || buildNumber > 1309 {
 		warnings.UnsupportedBuild = 1
 		return result, warnings, nil
 	}

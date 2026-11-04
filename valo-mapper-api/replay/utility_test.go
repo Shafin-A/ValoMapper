@@ -59,14 +59,15 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.08", "GameObject_Terra_E_RewindTime_RewindTarget", true, "refract"},
 		{"13.08", "GameObject_Terra_X_DelayedBeam_Beam", true, "convergent_paths"},
 		{"13.08", "Ability_BountyHunter_4_WolfHoundBendable", false, ""},
-		{"13.09", "GameObject_Smonk_NewSmoke", false, ""},
+		{"13.09", "GameObject_Smonk_NewSmoke", true, "ruse"},
+		{"13.10", "GameObject_Smonk_NewSmoke", false, ""},
 	}
 
 	for _, test := range tests {
 		t.Run(test.build+"/"+test.class, func(t *testing.T) {
 			build, ok := utilityBuildNumber(test.build)
 			entry, found := utilityCatalog[test.class]
-			got := ok && build >= entry.minBuild && build <= 1308 && found
+			got := ok && build >= entry.minBuild && build <= 1309 && found
 			if got != test.want {
 				t.Fatalf("catalog inclusion = %v, want %v", got, test.want)
 			}
@@ -1731,6 +1732,28 @@ func TestSampleUtilityPathCapsPoints(t *testing.T) {
 	}
 }
 
+func TestSampleUtilityPathKeepsOneSamplePerTick(t *testing.T) {
+	writes := []utilityPathWrite{
+		{TimeMS: 100, PacketID: 1, Position: Position{X: 1, Y: 2}},
+		{TimeMS: 100, PacketID: 2, Position: Position{X: 3, Y: 4}},
+		{TimeMS: 200, PacketID: 3, Position: Position{X: 5, Y: 6}},
+	}
+
+	samples, truncated := sampleUtilityPath(writes, 0)
+	if truncated {
+		t.Fatal("unexpected truncation")
+	}
+	if len(samples) != 2 {
+		t.Fatalf("samples = %+v, want one per tick", samples)
+	}
+	if samples[0].TimeMS != 100 || samples[0].X != 3 || samples[0].Y != 4 {
+		t.Errorf("tick 100 = %+v, want the latest write", samples[0])
+	}
+	if samples[1].TimeMS != 200 || samples[1].X != 5 || samples[1].Y != 6 {
+		t.Errorf("tick 200 = %+v", samples[1])
+	}
+}
+
 func TestScanUtilitiesSamplesShockBoltReplicatedMovement(t *testing.T) {
 	dir := t.TempDir()
 	class := "/Game/Characters/Hunter/S0/Ability_4/Projectile_Hunter_4_ExplosiveBolt.Projectile_Hunter_4_ExplosiveBolt_C"
@@ -1825,7 +1848,7 @@ func TestParseReplicatedMovementPosition(t *testing.T) {
 func TestScanUtilitiesOmitsUnsupportedBuildsWithoutFailing(t *testing.T) {
 	utilities, warnings, err := scanUtilities(
 		t.TempDir(),
-		"13.09",
+		"13.10",
 		1000,
 		[]roundWindow{{StartMS: 0, EndMS: 1000}},
 		nil,
@@ -1842,6 +1865,33 @@ func TestScanUtilitiesOmitsUnsupportedBuildsWithoutFailing(t *testing.T) {
 	}
 	if len(utilities) != 1 || len(utilities[0]) != 0 || warnings.UnsupportedBuild != 1 {
 		t.Fatalf("unsupported build result = %#v/%#v", utilities, warnings)
+	}
+}
+
+func TestScanUtilitiesAcceptsLatestSupportedBuild(t *testing.T) {
+	dir := t.TempDir()
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), []stateActorRow{}); err != nil {
+		t.Fatal(err)
+	}
+	utilities, warnings, err := scanUtilities(
+		dir,
+		"13.09",
+		1000,
+		[]roundWindow{{StartMS: 0, EndMS: 1000}},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || warnings.UnsupportedBuild != 0 {
+		t.Fatalf("supported build result = %#v/%#v", utilities, warnings)
 	}
 }
 

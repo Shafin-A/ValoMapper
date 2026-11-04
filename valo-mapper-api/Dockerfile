@@ -5,8 +5,8 @@
 #   docker build --target vrfkit -t vrfkit-pinned .
 FROM rust:1.86-bookworm AS vrfkit
 
-ARG VRFKIT_VERSION=v0.3.0
-ARG VRFKIT_SHA256=9b9fababaefc1094f6fbed1b9632b19c91d596d7bbea6b4e641ba4b0d9b61378
+ARG VRFKIT_VERSION=v0.4.0
+ARG VRFKIT_SHA256=b40bc900f2721066b575376ee580a7fe8e763177abfb7cfd67eb818d0da55317
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git patch \

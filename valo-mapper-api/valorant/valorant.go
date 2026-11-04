@@ -71,7 +71,7 @@ var AgentNames = map[string]string{
 	"7f94d92c-4234-0a36-9646-3a87eb8b5c89": "Yoru",
 }
 
-// SupportedBuilds is VRFKit v0.3.0's verified build set. A replay whose
+// SupportedBuilds is VRFKit v0.4.0's verified build set. A replay whose
 // release is not here is rejected with unsupported_build rather than guessed.
 var SupportedBuilds = map[string]struct{}{
 	"11.06": {},
@@ -99,6 +99,7 @@ var SupportedBuilds = map[string]struct{}{
 	"13.05": {},
 	"13.06": {},
 	"13.08": {},
+	"13.09": {},
 }
 
 var releasePattern = regexp.MustCompile(`release-(\d+\.\d+)`)

@@ -11,8 +11,19 @@ func sampleUtilityPath(writes []utilityPathWrite, roundStart uint32) ([]UtilityP
 	samples := make([]UtilityPositionSample, 0, minInt(len(writes), maxUtilityPathPoints))
 	truncated := false
 	for _, write := range writes {
+		timeMS := int(write.TimeMS - roundStart)
 		if len(samples) > 0 {
-			last := samples[len(samples)-1]
+			last := &samples[len(samples)-1]
+			if timeMS == last.TimeMS {
+				// Several writes can land on one tick. Keep the latest one so
+				// sample times stay strictly increasing for the player.
+				last.X = write.Position.X
+				last.Y = write.Position.Y
+				continue
+			}
+			if timeMS < last.TimeMS {
+				continue
+			}
 			if last.X == write.Position.X && last.Y == write.Position.Y {
 				continue
 			}
@@ -22,7 +33,7 @@ func sampleUtilityPath(writes []utilityPathWrite, roundStart uint32) ([]UtilityP
 			break
 		}
 		samples = append(samples, UtilityPositionSample{
-			TimeMS: int(write.TimeMS - roundStart),
+			TimeMS: timeMS,
 			X:      write.Position.X,
 			Y:      write.Position.Y,
 		})
