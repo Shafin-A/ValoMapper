@@ -372,6 +372,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		{"Projectile_C_Grenadier_Flash", "flashdrive"},
 		{"Projectile_C_Grenadier_Flash_Underhand", "flashdrive"},
 		{"Projectile_Grenadier_E_SuppressionBlade", "zeropoint"},
+		{"Projectile_Mage_Q_Wall", "high_tide"},
 		{"Projectile_Guide_E_HawkFlash", "guiding_light"},
 		{"Projectile_Killjoy_4_RemoteBees_MultiDetonate", "nanoswarm"},
 		{"Projectile_Pandemic_Q_AcidGrenade", "snake_bite"},
@@ -1583,6 +1584,81 @@ func TestScanUtilitiesUsesNeonTunnelPoints(t *testing.T) {
 	for i, want := range wantLengths {
 		if wall.LengthSamples[i] != want {
 			t.Errorf("length sample %d = %#v, want %#v", i, wall.LengthSamples[i], want)
+		}
+	}
+}
+
+func TestScanUtilitiesUsesHarborAnchorPoints(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Mage_Q_WallManager"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(1000), SpawnY: float32Ptr(2000),
+			SpawnYaw: float32Ptr(0),
+		},
+		{TimeMS: 3000, PacketID: 4, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	rawVector := func(x, y, z float64) []byte {
+		raw := make([]byte, 24)
+		binary.LittleEndian.PutUint64(raw[0:8], math.Float64bits(x))
+		binary.LittleEndian.PutUint64(raw[8:16], math.Float64bits(y))
+		binary.LittleEndian.PutUint64(raw[16:24], math.Float64bits(z))
+		return raw
+	}
+	anchorName := "MulticastAddAnchor.Translation"
+	fields := []fieldRow{
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: &anchorName, BitCount: 192, RawBits: rawVector(1000, 2000, 10)},
+		{TimeMS: 1200, PacketID: 3, ActorNetGUID: 700, FieldName: &anchorName, BitCount: 192, RawBits: rawVector(1100, 3000, 10)},
+		{TimeMS: 1300, PacketID: 5, ActorNetGUID: 700, FieldName: &anchorName, BitCount: 192, RawBits: rawVector(1300, 3500, 10)},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		4000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 4000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one High Tide wall", utilities)
+	}
+	wall := utilities[0][0]
+	if wall.AbilityID != "high_tide" || wall.Kind != UtilityWall {
+		t.Fatalf("wall identity = %q/%q, want wall high_tide", wall.Kind, wall.AbilityID)
+	}
+	wantPath := []UtilityPositionSample{
+		{TimeMS: 1100, X: 1000, Y: 2000},
+		{TimeMS: 1200, X: 1100, Y: 3000},
+		{TimeMS: 1300, X: 1300, Y: 3500},
+	}
+	if len(wall.Path) != len(wantPath) {
+		t.Fatalf("wall path = %#v, want %#v", wall.Path, wantPath)
+	}
+	for i, want := range wantPath {
+		if wall.Path[i] != want {
+			t.Errorf("wall path point %d = %#v, want %#v", i, wall.Path[i], want)
 		}
 	}
 }

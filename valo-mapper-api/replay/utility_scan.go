@@ -252,7 +252,7 @@ func scanUtilities(
 				segment.yaw = math.Atan2(end.Y-start.Y, end.X-start.X)*180/math.Pi - 90
 			}
 		}
-		if segment.life.class.ability == "blaze" {
+		if segment.life.class.wallPath {
 			for _, write := range pathWrites[segment.life.guid] {
 				if write.TimeMS >= segment.startMS && write.TimeMS < segment.endMS &&
 					write.TimeMS >= segment.life.openMS && write.TimeMS < segment.life.closeMS {
@@ -350,7 +350,7 @@ func scanUtilities(
 		} else if segment.life.lengthM > 0 {
 			utility.Length = segment.life.lengthM
 		}
-		if segment.life.class.ability == "blaze" {
+		if segment.life.class.wallPath {
 			var truncated bool
 			utility.Path, truncated = sampleUtilityPath(segment.path, window.StartMS)
 			if truncated {

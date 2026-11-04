@@ -12,6 +12,7 @@ type utilityCatalogEntry struct {
 	wallPoints         bool
 	wallActivated      bool
 	wallStart          bool
+	wallPath           bool
 	splineMovement     bool
 	trapwireFarEnd     bool
 	iconOnly           bool
@@ -94,8 +95,8 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Harbor
 	"GameObject_Mage_4_SplashGrenade": {kind: UtilityArea, minBuild: 1300, ability: "storm_surge"},
-	"Projectile_Mage_Q_Wall":          {kind: UtilityMarker, minBuild: 1300, ability: "high_tide"},
-	"GameObject_Mage_Q_WallManager":   {kind: UtilityWall, wallPoints: true, minBuild: 1300, ability: "high_tide"},
+	"Projectile_Mage_Q_Wall":          {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "high_tide"},
+	"GameObject_Mage_Q_WallManager":   {kind: UtilityWall, wallPath: true, minBuild: 1300, ability: "high_tide"},
 	"GameObject_Mage_E_WorldSmoke":    {kind: UtilitySmoke, minBuild: 1300, ability: "cove"},
 	"GameObject_Mage_X_TidalWave":     {kind: UtilityArea, minBuild: 1300, ability: "reckoning"},
 
@@ -152,7 +153,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Phoenix
 	"Patch_Phoenix_MolotovFire":                        {kind: UtilityMolly, minBuild: 1300, ability: "hot_hands"},
-	"GameObject_Phoenix_Q_FlameWallManager_Production": {kind: UtilityWall, minBuild: 1300, ability: "blaze"},
+	"GameObject_Phoenix_Q_FlameWallManager_Production": {kind: UtilityWall, wallPath: true, minBuild: 1300, ability: "blaze"},
 	"GameObject_Phoenix_X_ResTarget_Production":        {kind: UtilityMarker, minBuild: 1300, ability: "run_it_back"},
 	"Projectile_Phoenix_4_Molotov_Production":          {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "hot_hands"},
 	"Projectile_Phoenix_E_FlareCurve_Synced":           {kind: UtilityMobile, replicatedMovement: true, curveballSide: -1, maxLifetimeMS: curveballFlightMS, minBuild: 1300, ability: "curveball"},

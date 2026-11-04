@@ -268,11 +268,15 @@ export const ReplayUtilityMarker = ({
               : lineGeometry?.currentLength
           }
           currentPath={currentPath}
+          pathTension={currentPath.length > 1 ? 0.4 : undefined}
           iconOnly={utility.iconOnly || isMovingWall}
           abilityShapeOpacity={
             utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1
           }
-          showHandle={abilityIcon.action !== "phoenix_wall"}
+          showHandle={
+            abilityIcon.action !== "phoenix_wall" &&
+            abilityIcon.action !== "harbor_wall"
+          }
           src={abilityIcon.src}
           width={abilitiesSettings.scale}
           height={abilitiesSettings.scale}

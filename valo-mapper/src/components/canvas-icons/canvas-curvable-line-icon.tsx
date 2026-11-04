@@ -19,6 +19,7 @@ interface CanvasCurvableLineIconProps extends CanvasIconProps {
   handleStrokeColor?: string;
   initialPath?: Vector2d[];
   rotation?: number;
+  pathTension?: number;
   onInteractionEnd?: (data: { currentPath: Vector2d[] }) => void;
 }
 
@@ -47,6 +48,7 @@ export const CanvasCurvableLineIcon = ({
   strokeWidth,
   initialPath = [],
   rotation = 0,
+  pathTension = 0,
   onInteractionEnd,
   showAbilityShape = true,
   registerNode,
@@ -323,6 +325,7 @@ export const CanvasCurvableLineIcon = ({
           points={getLinePoints()}
           strokeWidth={lineStrokeWidth}
           stroke={stroke}
+          tension={pathTension}
         />
       )}
 

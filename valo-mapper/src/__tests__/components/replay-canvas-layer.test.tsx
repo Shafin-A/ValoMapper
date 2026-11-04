@@ -1070,6 +1070,38 @@ describe("ReplayCanvasLayer utilities", () => {
     expect(screen.queryByTestId("ability-icon")).not.toBeInTheDocument();
   });
 
+  it("draws High Tide anchors using the harbor wall path", () => {
+    const highTide: ReplayUtility = {
+      id: "utility-high-tide",
+      kind: "wall",
+      abilityId: "high_tide",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: lotusSpawn,
+      path: [
+        { timeMs: 0, ...lotusSpawn },
+        { timeMs: 100, x: 6505.5, y: -5267.8 },
+        { timeMs: 200, x: 6505.5, y: -5200 },
+      ],
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([highTide])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+
+    const abilityIcon = screen.getByTestId("ability-icon");
+    expect(abilityIcon).toHaveAttribute("data-action", "harbor_wall");
+    expect(abilityIcon).toHaveAttribute("data-show-handle", "false");
+    expect(
+      JSON.parse(abilityIcon.getAttribute("data-current-path")!),
+    ).toHaveLength(2);
+  });
+
   it("draws only observed Blaze wall points using the ability icon path", () => {
     const blaze: ReplayUtility = {
       id: "utility-blaze",

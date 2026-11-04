@@ -49,7 +49,7 @@ interface AbilityIconProps extends CanvasIconProps {
   showCenterIcon?: boolean;
   showRotationHandle?: boolean;
   showHandle?: boolean;
-  /** Opacity applied to the rendered ability shape only, not the center icon. */
+  pathTension?: number;
   abilityShapeOpacity?: number;
   onDragMove?: (e: KonvaEventObject<DragEvent>) => void;
   onInteractionEnd?: (data: InteractionData) => void;
@@ -240,6 +240,7 @@ const renderCurvableLineAbility = (props: AbilityIconProps): ReactNode => {
       maxDistance={mToPixels(config.maxDistance)}
       stroke={config.stroke}
       initialPath={props.currentPath}
+      pathTension={props.pathTension}
       {...props}
     />
   );

@@ -126,7 +126,8 @@ func scanFields(exportDir string) (*fieldScan, error) {
 					name == "MulticastInitializeWall.WallEndLocation" ||
 					name == "MulticastInitializeTrapAnchors.WallStartPoint" ||
 					name == "MulticastInitializeTrapAnchors.WallEndPoint" ||
-					name == "MulticastAddTunnelPoint.Translation") {
+					name == "MulticastAddTunnelPoint.Translation" ||
+					name == "MulticastAddAnchor.Translation") {
 				if position, ok := parseUtilityRawVector(row.RawBits, row.BitCount); ok {
 					scan.UtilityPaths[row.ActorNetGUID] = append(
 						scan.UtilityPaths[row.ActorNetGUID],
