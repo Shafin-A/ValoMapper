@@ -2,6 +2,7 @@ package replay
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"math"
 	"path/filepath"
@@ -44,6 +45,13 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.08", "GameObject_Mage_Q_WallManager", true, "high_tide"},
 		{"13.08", "GameObject_Mage_E_WorldSmoke", true, "cove"},
 		{"13.08", "GameObject_Mage_X_TidalWave", true, "reckoning"},
+		{"13.09", "GameObject_Paprika_4_PullBlast", true, "flow"},
+		{"13.09", "Projectile_Paprika_Q_RedirectFlash", true, "flashbulb"},
+		{"13.09", "Projectile_Paprika_Q_RedirectFlash_Underhand", true, "flashbulb"},
+		{"13.09", "Projectile_Paprika_E_RedirectPull", true, "displacement"},
+		{"13.09", "GameObject_Paprika_E_RedirectPullArea", true, "displacement"},
+		{"13.09", "Projectile_Paprika_X_FullBendPop", true, "suspension"},
+		{"13.09", "GameObject_Paprika_X_LevitateZone", true, "suspension"},
 		{"13.08", "GameObject_Pine_4_UsableTeleport", true, "crosscut"},
 		{"13.08", "GameObject_Pine_Q_SeizeTrap", true, "chokehold"},
 		{"13.08", "GameObject_Pine_Q_Tether_SphereExpansion", true, "chokehold"},
@@ -368,6 +376,10 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		{"Projectile_Killjoy_4_RemoteBees_MultiDetonate", "nanoswarm"},
 		{"Projectile_Pandemic_Q_AcidGrenade", "snake_bite"},
 		{"Projectile_Pandemic_4_SmokeGrenade", "poison_cloud"},
+		{"Projectile_Paprika_Q_RedirectFlash", "flashbulb"},
+		{"Projectile_Paprika_Q_RedirectFlash_Underhand", "flashbulb"},
+		{"Projectile_Paprika_E_RedirectPull", "displacement"},
+		{"Projectile_Paprika_X_FullBendPop", "suspension"},
 		{"Projectile_Sequoia_Q_FragileMissile", "undercut"},
 		{"Projectile_Sprinter_4_GroundStrike", "relay_bolt"},
 		{"Projectile_Hunter_4_ExplosiveBolt", "shock_bolt"},
@@ -399,6 +411,10 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		"Projectile_Grenadier_E_SuppressionBlade":                 true,
 		"Projectile_Killjoy_4_RemoteBees_MultiDetonate":           true,
 		"Projectile_Pandemic_4_SmokeGrenade":                      true,
+		"Projectile_Paprika_Q_RedirectFlash":                      true,
+		"Projectile_Paprika_Q_RedirectFlash_Underhand":            true,
+		"Projectile_Paprika_E_RedirectPull":                       true,
+		"Projectile_Paprika_X_FullBendPop":                        true,
 		"Projectile_Sprinter_4_GroundStrike":                      true,
 		"Projectile_Hunter_4_ExplosiveBolt":                       true,
 		"Projectile_Hunter_Q_RevealBolt":                          true,
@@ -422,6 +438,34 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 			}
 			if want := iconOnlyProjectiles[test.class]; entry.iconOnly != want {
 				t.Fatalf("iconOnly = %v, want %v", entry.iconOnly, want)
+			}
+		})
+	}
+}
+
+func TestUtilityCatalogAddsHushAreas(t *testing.T) {
+	tests := []struct {
+		class   string
+		kind    UtilityKind
+		ability string
+	}{
+		{"GameObject_Paprika_4_PullBlast", UtilityMarker, "flow"},
+		{"GameObject_Paprika_E_RedirectPullArea", UtilityArea, "displacement"},
+		{"GameObject_Paprika_X_LevitateZone", UtilityArea, "suspension"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.class, func(t *testing.T) {
+			entry, found := utilityCatalog[test.class]
+			if !found {
+				t.Fatal("Hush utility class is not catalogued")
+			}
+			if entry.kind != test.kind || entry.ability != test.ability {
+				t.Fatalf("entry = %#v, want kind %q ability %q",
+					entry, test.kind, test.ability)
+			}
+			if entry.iconOnly {
+				t.Fatal("placed Hush utility must keep its marker or area rendering")
 			}
 		})
 	}
@@ -1939,6 +1983,26 @@ func TestParseReplicatedMovementPosition(t *testing.T) {
 		if _, ok := parseReplicatedMovementPosition(invalid); ok {
 			t.Errorf("accepted invalid movement value %q", invalid)
 		}
+	}
+}
+
+func TestParseRawReplicatedMovementPosition(t *testing.T) {
+	// A Hush Flashbulb ReplicatedMovement row: four flag bits followed by a
+	// quantized FRepMovement location. vrfkit leaves the class untyped, so the
+	// replay normaliser has to read the location from the raw payload.
+	raw, err := hex.DecodeString("d0348d1ddcb5bcd8a8595685b8f101")
+	if err != nil {
+		t.Fatal(err)
+	}
+	position, ok := parseRawReplicatedMovementPosition(raw, 115)
+	if !ok || position != (Position{X: -3674, Y: -995}) {
+		t.Fatalf("parsed position = %#v/%v, want x=-3674 y=-995", position, ok)
+	}
+	if _, ok := parseRawReplicatedMovementPosition(raw[:4], 115); ok {
+		t.Fatal("accepted a truncated raw movement payload")
+	}
+	if _, ok := parseRawReplicatedMovementPosition(raw, 0); ok {
+		t.Fatal("accepted a zero-bit raw movement payload")
 	}
 }
 

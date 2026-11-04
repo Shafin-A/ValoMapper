@@ -1042,6 +1042,7 @@ func TestToAgentName_KnownAgentUUIDMappings(t *testing.T) {
 		{"add6443a-41bd-e414-f6ad-e58d267f4e95", "Jett"},
 		{"9f0d8ba9-4140-b941-57d3-a7ad57c6b417", "Brimstone"},
 		{"601dbbe7-43ce-be57-2a40-4abd24953621", "KAY/O"},
+		{"ddd5a15c-4fbe-42fa-3789-11a55ca5ee04", "Hush"},
 	}
 
 	for _, test := range tests {

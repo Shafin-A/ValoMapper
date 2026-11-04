@@ -53,6 +53,10 @@ func TestAgentName(t *testing.T) {
 	if !ok || name != "Jett" {
 		t.Fatalf("AgentName = %q/%v", name, ok)
 	}
+	name, ok = AgentName("DDD5A15C-4FBE-42FA-3789-11A55CA5EE04")
+	if !ok || name != "Hush" {
+		t.Fatalf("AgentName = %q/%v, want Hush", name, ok)
+	}
 	if _, ok := AgentName("not-a-uuid"); ok {
 		t.Fatal("AgentName accepted an unknown UUID")
 	}

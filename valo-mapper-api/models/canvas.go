@@ -56,6 +56,7 @@ var agentRoleByName = map[string]string{
 	"Fade":      "Initiator",
 	"Gekko":     "Initiator",
 	"Harbor":    "Controller",
+	"Hush":      "Duelist",
 	"Iso":       "Duelist",
 	"Jett":      "Duelist",
 	"KAY/O":     "Initiator",

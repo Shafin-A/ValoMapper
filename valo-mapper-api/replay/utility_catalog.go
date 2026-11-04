@@ -98,6 +98,15 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Mage_E_WorldSmoke":    {kind: UtilitySmoke, minBuild: 1300, ability: "cove"},
 	"GameObject_Mage_X_TidalWave":     {kind: UtilityArea, minBuild: 1300, ability: "reckoning"},
 
+	// Hush
+	"GameObject_Paprika_4_PullBlast":               {kind: UtilityMarker, minBuild: 1300, ability: "flow"},
+	"Projectile_Paprika_Q_RedirectFlash":           {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "flashbulb"},
+	"Projectile_Paprika_Q_RedirectFlash_Underhand": {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "flashbulb"},
+	"Projectile_Paprika_E_RedirectPull":            {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "displacement"},
+	"GameObject_Paprika_E_RedirectPullArea":        {kind: UtilityArea, minBuild: 1300, ability: "displacement"},
+	"Projectile_Paprika_X_FullBendPop":             {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "suspension"},
+	"GameObject_Paprika_X_LevitateZone":            {kind: UtilityArea, minBuild: 1300, ability: "suspension"},
+
 	// Iso
 	"GameObject_FishingHook_CageSphere":   {kind: UtilityArea, minBuild: 1300, ability: "annihilation"},
 	"GameObject_Sequoia_4_MovingCover":    {kind: UtilityWall, minBuild: 1300, ability: "contingency"},

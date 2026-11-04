@@ -950,6 +950,7 @@ var valorantAgentIDToDisplayName = map[string]string{
 	"7c8a4701-4de6-9355-b254-e09bc2a34b72": "Miks",
 	"1e58de9c-4950-5125-93e9-a0aee9f98746": "Killjoy",
 	"95b78ed7-4637-86d9-7e41-71ba8c293152": "Harbor",
+	"ddd5a15c-4fbe-42fa-3789-11a55ca5ee04": "Hush",
 	"efba5359-4016-a1e5-7626-b1ae76895940": "Vyse",
 	"707eab51-4836-f488-046a-cda6bf494859": "Viper",
 	"eb93336a-449b-9c1b-0a54-a891f7921d69": "Phoenix",

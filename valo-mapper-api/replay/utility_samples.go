@@ -148,11 +148,19 @@ func readUtilityReplicatedMovement(
 			row := &rows[i]
 			if _, wanted := actorGUIDs[row.ActorNetGUID]; !wanted ||
 				row.ObjectNetGUID != nil ||
-				row.FieldName == nil || *row.FieldName != "ReplicatedMovement" ||
-				row.ValueStr == nil {
+				row.FieldName == nil || *row.FieldName != "ReplicatedMovement" {
 				continue
 			}
-			position, ok := parseReplicatedMovementPosition(*row.ValueStr)
+			var position Position
+			var ok bool
+			if row.ValueStr != nil {
+				position, ok = parseReplicatedMovementPosition(*row.ValueStr)
+			}
+			if !ok {
+				// A class vrfkit has no type overlay for leaves the payload as
+				// raw bits. New abilities hit this before the overlay catches up.
+				position, ok = parseRawReplicatedMovementPosition(row.RawBits, row.BitCount)
+			}
 			if !ok {
 				continue
 			}
@@ -179,6 +187,107 @@ func parseReplicatedMovementPosition(value string) (Position, bool) {
 		return Position{}, false
 	}
 	position := Position{X: *movement.Location.X, Y: *movement.Location.Y}
+	return position, validUtilityPosition(position)
+}
+
+type rawBitReader struct {
+	data []byte
+	bits int
+	pos  int
+}
+
+func (r *rawBitReader) readBit() (bool, bool) {
+	if r.pos >= r.bits {
+		return false, false
+	}
+	value := r.data[r.pos/8]>>(r.pos%8)&1 == 1
+	r.pos++
+	return value, true
+}
+
+func (r *rawBitReader) readBits(count int) (uint64, bool) {
+	if count < 0 || count > 64 || r.pos+count > r.bits {
+		return 0, false
+	}
+	var value uint64
+	for i := 0; i < count; i++ {
+		if r.data[r.pos/8]>>(r.pos%8)&1 == 1 {
+			value |= 1 << i
+		}
+		r.pos++
+	}
+	return value, true
+}
+
+// readSerializedInt mirrors Unreal's FBitReader::SerializeInt: floor(log2(max))
+// bits, plus one more only when the value can still reach max.
+func (r *rawBitReader) readSerializedInt(max uint64) (uint64, bool) {
+	if max == 0 {
+		return 0, false
+	}
+	valueBits := 0
+	for uint64(1)<<(valueBits+1) <= max {
+		valueBits++
+	}
+	value, ok := r.readBits(valueBits)
+	if !ok {
+		return 0, false
+	}
+	bitMask := uint64(1) << valueBits
+	if value+bitMask >= max {
+		return value, true
+	}
+	extra, ok := r.readBit()
+	if !ok {
+		return 0, false
+	}
+	if extra {
+		value |= bitMask
+	}
+	return value, true
+}
+
+// parseRawReplicatedMovementPosition decodes the location prefix of Unreal's
+// FRepMovement when vrfkit does not have a type overlay for the class. Utility
+// movement classes use whole-unit locations, so the raw components are the
+// world position.
+func parseRawReplicatedMovementPosition(raw []byte, bitCount int32) (Position, bool) {
+	if len(raw) == 0 || bitCount <= 0 || int(bitCount) > len(raw)*8 {
+		return Position{}, false
+	}
+	reader := rawBitReader{data: raw, bits: int(bitCount)}
+	// simulated_physics_sleep, rep_physics, rep_server_frame, rep_server_handle
+	if _, ok := reader.readBits(4); !ok {
+		return Position{}, false
+	}
+	header, ok := reader.readSerializedInt(128)
+	if !ok {
+		return Position{}, false
+	}
+	componentBits := int(header & 63)
+	if componentBits == 0 || componentBits > 63 {
+		return Position{}, false
+	}
+	signBit := uint64(1) << (componentBits - 1)
+	readComponent := func() (float64, bool) {
+		value, ok := reader.readBits(componentBits)
+		if !ok {
+			return 0, false
+		}
+		return float64(int64((value ^ signBit) - signBit)), true
+	}
+	x, ok := readComponent()
+	if !ok {
+		return Position{}, false
+	}
+	y, ok := readComponent()
+	if !ok {
+		return Position{}, false
+	}
+	if _, ok := readComponent(); !ok {
+		return Position{}, false
+	}
+	position := Position{X: x, Y: y}
 	return position, validUtilityPosition(position)
 }
 
