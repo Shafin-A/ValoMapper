@@ -21,6 +21,7 @@ import {
 import {
   getReplayAbilityYawOffset,
   getReplayLineAbilityGeometry,
+  getReplayLineAbilityStyle,
   getReplayUtilityAbilityIcon,
 } from "@/lib/replay/display";
 import { mToPixels } from "@/lib/utils";
@@ -108,6 +109,27 @@ export const ReplayUtilityMarker = ({
   const lineGeometry = abilityIcon
     ? getReplayLineAbilityGeometry(abilityIcon.action)
     : null;
+  const lineStyle = abilityIcon
+    ? getReplayLineAbilityStyle(abilityIcon.action)
+    : null;
+  const isMovingWall =
+    utility.abilityId === "contingency" && (utility.samples?.length ?? 0) > 1;
+  const movementPath = isMovingWall
+    ? (utility.samples ?? [])
+        .map((sample) =>
+          toReplayCanvasPoint({
+            mapId: match.mapId,
+            mapSide,
+            position: sample,
+          }),
+        )
+        .filter(
+          (sample): sample is { x: number; y: number } =>
+            !!sample && isReplayPointOnMap({ point: sample }),
+        )
+    : [];
+  const movementPathStart = movementPath[0];
+  const movementPathEnd = movementPath[movementPath.length - 1];
   const utilityLength = getReplayUtilityLengthAtTime(utility, currentTimeMs);
   const yawOffset = abilityIcon
     ? getReplayAbilityYawOffset(abilityIcon.action)
@@ -125,7 +147,10 @@ export const ReplayUtilityMarker = ({
         }) + yawOffset
       : undefined;
   const iconPoint =
-    lineGeometry && rotation !== undefined && lineGeometry.iconGap > 0
+    !isMovingWall &&
+    lineGeometry &&
+    rotation !== undefined &&
+    lineGeometry.iconGap > 0
       ? {
           x:
             point.x -
@@ -190,6 +215,29 @@ export const ReplayUtilityMarker = ({
           listening={false}
         />
       )}
+      {isMovingWall &&
+        movementPath.length > 1 &&
+        lineStyle &&
+        movementPathStart &&
+        movementPathEnd && (
+          <Line
+            points={[
+              movementPathStart.x,
+              movementPathStart.y,
+              movementPathEnd.x,
+              movementPathEnd.y,
+            ]}
+            stroke={lineStyle.stroke}
+            strokeWidth={
+              lineStyle.strokeWidth
+                ? mToPixels(lineStyle.strokeWidth)
+                : undefined
+            }
+            opacity={utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1}
+            lineCap="round"
+            listening={false}
+          />
+        )}
       {!abilityIcon && (
         <Circle
           x={point.x}
@@ -220,7 +268,7 @@ export const ReplayUtilityMarker = ({
               : lineGeometry?.currentLength
           }
           currentPath={currentPath}
-          iconOnly={utility.iconOnly}
+          iconOnly={utility.iconOnly || isMovingWall}
           abilityShapeOpacity={
             utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1
           }

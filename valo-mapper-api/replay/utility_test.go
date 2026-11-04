@@ -1587,6 +1587,82 @@ func TestScanUtilitiesUsesNeonTunnelPoints(t *testing.T) {
 	}
 }
 
+func TestScanUtilitiesSamplesIsoMovingCoverSpline(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Sequoia_4_MovingCover"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(1000), SpawnY: float32Ptr(2000),
+			SpawnYaw: float32Ptr(0),
+		},
+		{TimeMS: 6000, PacketID: 4, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	rawFloat32 := func(value float32) []byte {
+		raw := make([]byte, 4)
+		binary.LittleEndian.PutUint32(raw, math.Float32bits(value))
+		return raw
+	}
+	fieldName := "ServerPosition"
+	fields := []fieldRow{
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: &fieldName, BitCount: 32, RawBits: rawFloat32(1)},
+		{TimeMS: 1600, PacketID: 3, ActorNetGUID: 700, FieldName: &fieldName, BitCount: 32, RawBits: rawFloat32(3.6)},
+		{TimeMS: 2100, PacketID: 5, ActorNetGUID: 700, FieldName: &fieldName, BitCount: 32, RawBits: rawFloat32(6.2)},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		7000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 7000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Contingency wall", utilities)
+	}
+	wall := utilities[0][0]
+	if wall.AbilityID != "contingency" || wall.Kind != UtilityWall {
+		t.Fatalf("wall identity = %q/%q, want wall contingency", wall.Kind, wall.AbilityID)
+	}
+	wantSamples := []UtilityPositionSample{
+		{TimeMS: 1000, X: 1000, Y: 2000},
+		{TimeMS: 1100, X: 1100, Y: 2000},
+		{TimeMS: 1600, X: 1360, Y: 2000},
+		{TimeMS: 2100, X: 1620, Y: 2000},
+	}
+	if len(wall.Samples) != len(wantSamples) {
+		t.Fatalf("movement samples = %#v, want %#v", wall.Samples, wantSamples)
+	}
+	for i, want := range wantSamples {
+		got := wall.Samples[i]
+		if got.TimeMS != want.TimeMS ||
+			math.Abs(got.X-want.X) > 0.01 || math.Abs(got.Y-want.Y) > 0.01 {
+			t.Errorf("movement sample %d = %#v, want %#v", i, got, want)
+		}
+	}
+}
+
 func TestParseUtilityRawVectorRejectsInvalidEncoding(t *testing.T) {
 	raw := make([]byte, 24)
 	binary.LittleEndian.PutUint64(raw[0:8], math.Float64bits(1))

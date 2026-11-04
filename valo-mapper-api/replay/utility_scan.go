@@ -171,6 +171,7 @@ func scanUtilities(
 
 	movementGUIDs := make(map[uint32]struct{})
 	replicatedMovementGUIDs := make(map[uint32]struct{})
+	splineMovementGUIDs := make(map[uint32]struct{})
 	for _, segment := range segments {
 		if segment.life.class.mobile {
 			movementGUIDs[segment.life.guid] = struct{}{}
@@ -181,6 +182,9 @@ func scanUtilities(
 		}
 		if segment.life.class.replicatedMovement {
 			replicatedMovementGUIDs[segment.life.guid] = struct{}{}
+		}
+		if segment.life.class.splineMovement {
+			splineMovementGUIDs[segment.life.guid] = struct{}{}
 		}
 	}
 	movementByGUID := make(map[uint32][]movementRow, len(movementGUIDs))
@@ -204,9 +208,10 @@ func scanUtilities(
 			return nil, warnings, err
 		}
 	}
-	replicatedMovementByGUID, err := readUtilityReplicatedMovement(
+	replicatedMovementByGUID, splineMovementByGUID, err := readUtilityReplicatedMovement(
 		exportDir,
 		replicatedMovementGUIDs,
+		splineMovementGUIDs,
 	)
 	if err != nil {
 		return nil, warnings, err
@@ -281,6 +286,14 @@ func scanUtilities(
 				incrementUtilityWarning(&warnings.MissingMovement)
 			}
 		}
+		if segment.life.class.splineMovement {
+			for _, write := range splineMovementByGUID[segment.life.guid] {
+				if write.TimeMS >= segment.life.openMS &&
+					write.TimeMS < segment.life.closeMS {
+					segment.splineWrites = append(segment.splineWrites, write)
+				}
+			}
+		}
 		if !segment.life.class.mobile {
 			if segment.life.class.visionCone {
 				var truncated bool
@@ -342,6 +355,19 @@ func scanUtilities(
 			utility.Path, truncated = sampleUtilityPath(segment.path, window.StartMS)
 			if truncated {
 				incrementUtilityWarning(&warnings.TruncatedPaths)
+			}
+		}
+		if segment.life.class.splineMovement {
+			var truncated bool
+			utility.Samples, truncated = sampleUtilitySplineMovement(
+				segment.position,
+				segment.life.yaw,
+				segment.life.openMS,
+				segment.splineWrites,
+				window.StartMS,
+			)
+			if truncated {
+				incrementUtilityWarning(&warnings.TruncatedSamples)
 			}
 		}
 		if segment.life.class.mobile {

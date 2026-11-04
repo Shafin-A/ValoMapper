@@ -15,7 +15,29 @@ export const getReplayUtilityPositionAtTime = (
     return null;
   }
   if (utility.kind !== "mobile") {
-    return utility.position;
+    const samples = utility.samples;
+    if (!samples?.length) {
+      return utility.position;
+    }
+    if (timeMs <= samples[0].timeMs) {
+      return samples[0];
+    }
+    for (let index = 1; index < samples.length; index += 1) {
+      const next = samples[index];
+      if (timeMs <= next.timeMs) {
+        const previous = samples[index - 1];
+        const span = next.timeMs - previous.timeMs;
+        if (span <= 0) {
+          return next;
+        }
+        const progress = (timeMs - previous.timeMs) / span;
+        return {
+          x: previous.x + (next.x - previous.x) * progress,
+          y: previous.y + (next.y - previous.y) * progress,
+        };
+      }
+    }
+    return samples[samples.length - 1];
   }
 
   let latest: ReplayUtilityPositionSample | undefined;

@@ -138,39 +138,58 @@ func isFinite64(value float64) bool {
 func readUtilityReplicatedMovement(
 	exportDir string,
 	actorGUIDs map[uint32]struct{},
-) (map[uint32][]utilityPathWrite, error) {
+	splineGUIDs map[uint32]struct{},
+) (map[uint32][]utilityPathWrite, map[uint32][]utilitySplineWrite, error) {
 	paths := make(map[uint32][]utilityPathWrite, len(actorGUIDs))
-	if len(actorGUIDs) == 0 {
-		return paths, nil
+	splines := make(map[uint32][]utilitySplineWrite, len(splineGUIDs))
+	if len(actorGUIDs) == 0 && len(splineGUIDs) == 0 {
+		return paths, splines, nil
 	}
 	_, err := readParquetRows(exportDir+"/fields.parquet", func(rows []fieldRow) error {
 		for i := range rows {
 			row := &rows[i]
-			if _, wanted := actorGUIDs[row.ActorNetGUID]; !wanted ||
-				row.ObjectNetGUID != nil ||
-				row.FieldName == nil || *row.FieldName != "ReplicatedMovement" {
+			if row.FieldName == nil {
 				continue
 			}
-			var position Position
-			var ok bool
-			if row.ValueStr != nil {
-				position, ok = parseReplicatedMovementPosition(*row.ValueStr)
-			}
-			if !ok {
-				// A class vrfkit has no type overlay for leaves the payload as
-				// raw bits. New abilities hit this before the overlay catches up.
-				position, ok = parseRawReplicatedMovementPosition(row.RawBits, row.BitCount)
-			}
-			if !ok {
+			if _, wanted := actorGUIDs[row.ActorNetGUID]; wanted &&
+				row.ObjectNetGUID == nil &&
+				*row.FieldName == "ReplicatedMovement" {
+				var position Position
+				var ok bool
+				if row.ValueStr != nil {
+					position, ok = parseReplicatedMovementPosition(*row.ValueStr)
+				}
+				if !ok {
+					// A class vrfkit has no type overlay for leaves the payload
+					// as raw bits. New abilities hit this before it catches up.
+					position, ok = parseRawReplicatedMovementPosition(row.RawBits, row.BitCount)
+				}
+				if ok {
+					paths[row.ActorNetGUID] = append(paths[row.ActorNetGUID], utilityPathWrite{
+						TimeMS: row.TimeMS, PacketID: row.PacketID, Position: position,
+					})
+				}
 				continue
 			}
-			paths[row.ActorNetGUID] = append(paths[row.ActorNetGUID], utilityPathWrite{
-				TimeMS: row.TimeMS, PacketID: row.PacketID, Position: position,
-			})
+			if _, wanted := splineGUIDs[row.ActorNetGUID]; wanted &&
+				*row.FieldName == "ServerPosition" &&
+				row.BitCount == 32 && len(row.RawBits) >= 4 {
+				distanceM := float64(math.Float32frombits(
+					binary.LittleEndian.Uint32(row.RawBits[:4]),
+				))
+				if isFinite64(distanceM) && distanceM >= 0 && distanceM < 1_000_000 {
+					splines[row.ActorNetGUID] = append(
+						splines[row.ActorNetGUID],
+						utilitySplineWrite{
+							TimeMS: row.TimeMS, PacketID: row.PacketID, DistanceM: distanceM,
+						},
+					)
+				}
+			}
 		}
 		return nil
 	})
-	return paths, err
+	return paths, splines, err
 }
 
 func parseReplicatedMovementPosition(value string) (Position, bool) {
@@ -326,6 +345,74 @@ func sampleUtilityMovement(rows []movementRow, roundStart uint32) ([]UtilityPosi
 		})
 	}
 	return result, truncated
+}
+
+// sampleUtilitySplineMovement turns distance-along-spline updates into world
+// positions. SplineMovementComponent reports metres, while map coordinates are
+// centimetres, so the distance is scaled by 100 along the actor's yaw.
+func sampleUtilitySplineMovement(
+	start Position,
+	yawDegrees float64,
+	startMS uint32,
+	writes []utilitySplineWrite,
+	roundStart uint32,
+) ([]UtilityPositionSample, bool) {
+	if len(writes) == 0 || !isFinite64(yawDegrees) {
+		return nil, false
+	}
+	sort.SliceStable(writes, func(i, j int) bool {
+		if writes[i].TimeMS != writes[j].TimeMS {
+			return writes[i].TimeMS < writes[j].TimeMS
+		}
+		return writes[i].PacketID < writes[j].PacketID
+	})
+
+	yaw := yawDegrees * math.Pi / 180
+	dirX, dirY := math.Cos(yaw), math.Sin(yaw)
+	samples := make([]UtilityPositionSample, 0, minInt(len(writes)+1, maxUtilitySamples))
+	samples = append(samples, UtilityPositionSample{
+		TimeMS: int(startMS - roundStart),
+		X:      start.X,
+		Y:      start.Y,
+	})
+	for _, write := range writes {
+		if !isFinite64(write.DistanceM) || write.DistanceM < 0 {
+			continue
+		}
+		timeMS := int(write.TimeMS - roundStart)
+		x := start.X + dirX*write.DistanceM*100
+		y := start.Y + dirY*write.DistanceM*100
+		if !validUtilityPosition(Position{X: x, Y: y}) {
+			continue
+		}
+		if len(samples) > 0 {
+			last := &samples[len(samples)-1]
+			if timeMS == last.TimeMS {
+				last.X = x
+				last.Y = y
+				continue
+			}
+			if timeMS < last.TimeMS {
+				continue
+			}
+		}
+		samples = append(samples, UtilityPositionSample{
+			TimeMS: timeMS,
+			X:      x,
+			Y:      y,
+		})
+	}
+
+	truncated := len(samples) > maxUtilitySamples
+	if truncated {
+		reduced := make([]UtilityPositionSample, maxUtilitySamples)
+		for i := range reduced {
+			index := i * (len(samples) - 1) / (maxUtilitySamples - 1)
+			reduced[i] = samples[index]
+		}
+		samples = reduced
+	}
+	return samples, truncated
 }
 
 func sampleUtilityVision(

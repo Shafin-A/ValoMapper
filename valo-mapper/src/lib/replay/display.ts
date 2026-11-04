@@ -121,6 +121,17 @@ export const getReplayLineAbilityGeometry = (action: AbilityAction) => {
   return null;
 };
 
+export const getReplayLineAbilityStyle = (action: AbilityAction) => {
+  if (!isLineAbility(action)) {
+    return null;
+  }
+  const config = LINE_ABILITY_CONFIGS[action];
+  return {
+    stroke: config.stroke,
+    strokeWidth: config.strokeWidth,
+  };
+};
+
 export const getReplayAbilityYawOffset = (
   action: AbilityAction,
 ): number | null => {

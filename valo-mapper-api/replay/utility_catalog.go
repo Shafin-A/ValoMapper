@@ -12,6 +12,7 @@ type utilityCatalogEntry struct {
 	wallPoints         bool
 	wallActivated      bool
 	wallStart          bool
+	splineMovement     bool
 	trapwireFarEnd     bool
 	iconOnly           bool
 	visionCone         bool
@@ -109,9 +110,9 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Iso
 	"GameObject_FishingHook_CageSphere":   {kind: UtilityArea, minBuild: 1300, ability: "annihilation"},
-	"GameObject_Sequoia_4_MovingCover":    {kind: UtilityWall, minBuild: 1300, ability: "contingency"},
+	"GameObject_Sequoia_4_MovingCover":    {kind: UtilityWall, splineMovement: true, minBuild: 1300, ability: "contingency"},
 	"GameObject_Sequoia_E_Orb":            {kind: UtilityMarker, minBuild: 1300, ability: "double_tap"},
-	"GameObject_Sequoia_X_LineCapture":    {kind: UtilityArea, minBuild: 1300, ability: "kill_contract"},
+	"GameObject_Sequoia_X_LineCapture":    {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1000, ability: "kill_contract"},
 	"Projectile_Sequoia_Q_FragileMissile": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "undercut"},
 
 	// Jett

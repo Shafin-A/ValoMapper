@@ -680,6 +680,65 @@ describe("ReplayCanvasLayer utilities", () => {
     expect(currentLength()).toBeCloseTo(mToPixels(19.98));
   });
 
+  it("moves a Contingency wall along its painted path", () => {
+    const contingency: ReplayUtility = {
+      id: "utility-contingency",
+      kind: "wall",
+      abilityId: "contingency",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: lotusSpawn,
+      yaw: 0,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        { timeMs: 1000, x: 6505.5, y: 4043 },
+      ],
+    };
+    const startPoint = toReplayCanvasPoint({
+      mapId: lotusMatch.mapId,
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    const endPoint = toReplayCanvasPoint({
+      mapId: lotusMatch.mapId,
+      mapSide: "defense",
+      position: { x: 6505.5, y: 4043 },
+    })!;
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([contingency])}
+        frame={frame}
+        currentTimeMs={0}
+      />,
+    );
+
+    const icon = () => screen.getByTestId("ability-icon");
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(startPoint.x);
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(startPoint.y);
+    expect(icon()).toHaveAttribute("data-icon-only", "true");
+    expect(
+      screen
+        .getAllByTestId("konva-line")
+        .some((line) => line.getAttribute("data-stroke") === "#4d43aa80"),
+    ).toBe(true);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([contingency])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(
+      (startPoint.x + endPoint.x) / 2,
+    );
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(
+      (startPoint.y + endPoint.y) / 2,
+    );
+  });
+
   it("renders a placed Cyber Cage as an icon without its activation circle", () => {
     const placedCage: ReplayUtility = {
       id: "utility-cyber-cage-placed",

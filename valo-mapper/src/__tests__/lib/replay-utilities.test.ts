@@ -139,6 +139,38 @@ describe("replay utility playback", () => {
     ).toBeNull();
   });
 
+  it("interpolates a moving wall between its movement samples", () => {
+    const movingWall: ReplayUtility = {
+      id: "utility-moving-wall",
+      kind: "wall",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: { x: 0, y: 0 },
+      yaw: 0,
+      samples: [
+        { timeMs: 100, x: 0, y: 0 },
+        { timeMs: 300, x: 40, y: 20 },
+      ],
+    };
+
+    expect(getReplayUtilityPositionAtTime(movingWall, 50)).toMatchObject({
+      x: 0,
+      y: 0,
+    });
+    expect(getReplayUtilityPositionAtTime(movingWall, 200)).toMatchObject({
+      x: 20,
+      y: 10,
+    });
+    expect(getReplayUtilityPositionAtTime(movingWall, 300)).toMatchObject({
+      x: 40,
+      y: 20,
+    });
+    expect(getReplayUtilityPositionAtTime(movingWall, 500)).toMatchObject({
+      x: 40,
+      y: 20,
+    });
+  });
+
   it("limits the mobile trail to samples observed by the playback time", () => {
     expect(getReplayUtilityTrailAtTime(mobileUtility, 150)).toEqual([
       { timeMs: 100, x: 10, y: 20 },

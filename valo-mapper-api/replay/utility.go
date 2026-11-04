@@ -61,6 +61,12 @@ type utilityPathWrite struct {
 	Position  Position
 }
 
+type utilitySplineWrite struct {
+	TimeMS    uint32
+	PacketID  uint32
+	DistanceM float64
+}
+
 type utilityFuelWrite struct {
 	TimeMS   uint32
 	PacketID uint32
@@ -90,6 +96,7 @@ type utilitySegment struct {
 	inactive           bool
 	samples            []movementRow
 	replicatedMovement []utilityPathWrite
+	splineWrites       []utilitySplineWrite
 	path               []utilityPathWrite
 	visionSamples      []UtilityVisionSample
 	lengthSamples      []UtilityLengthSample
