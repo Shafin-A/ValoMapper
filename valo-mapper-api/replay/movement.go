@@ -296,6 +296,24 @@ func (s *movementScan) samplesFor(roundIndex int, subject string) []timelineSamp
 	return s.timelines[roundIndex][subject]
 }
 
+func (s *movementScan) sampleAt(
+	roundIndex int,
+	subject string,
+	timeMS uint32,
+) (timelineSample, bool) {
+	samples := s.samplesFor(roundIndex, subject)
+	if len(samples) == 0 {
+		return timelineSample{}, false
+	}
+	index := sort.Search(len(samples), func(i int) bool {
+		return samples[i].TimeMS > timeMS
+	})
+	if index == 0 {
+		return samples[0], true
+	}
+	return samples[index-1], true
+}
+
 func isFinite32(value float32) bool {
 	return !float32IsNaN(value) && !float32IsInf(value)
 }

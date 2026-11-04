@@ -362,6 +362,16 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		return nil, nil, NewError(CodeCorrupt,
 			"The replay's utility actor data could not be read.", err)
 	}
+	addSyntheticSovaUltimates(
+		utilities,
+		windows,
+		index,
+		puuidBySubject,
+		agents,
+		movement,
+		fields,
+		state.Paths,
+	)
 	framesByRound, timeline := buildTimelineFrames(
 		players, puuidBySubject, windows, movement, state, logs, spike, warnings,
 	)

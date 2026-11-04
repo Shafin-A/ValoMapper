@@ -54,6 +54,7 @@ type stateSample struct {
 // reports.
 type stateScan struct {
 	Timelines map[string][]stateSample
+	Paths     map[uint32]string
 
 	// Incoming records every damage write that landed on a manifest pawn. The
 	// per-round total is summed once the round windows exist.
@@ -204,6 +205,24 @@ type killDataSample struct {
 	VictimSubject string
 	DamageType    string
 	DamageItem    string
+}
+
+type abilityStateWrite struct {
+	TimeMS        uint32
+	PacketID      uint32
+	ObjectNetGUID *uint32
+	StateGUID     uint32
+}
+
+func sortAbilityStateWrites(writes map[uint32][]abilityStateWrite) {
+	for guid := range writes {
+		sort.SliceStable(writes[guid], func(i, j int) bool {
+			if writes[guid][i].TimeMS != writes[guid][j].TimeMS {
+				return writes[guid][i].TimeMS < writes[guid][j].TimeMS
+			}
+			return writes[guid][i].PacketID < writes[guid][j].PacketID
+		})
+	}
 }
 
 func newFieldStateRows() fieldStateRows {
@@ -562,6 +581,7 @@ func scanState(exportDir string, index *playerIndex, raw *fieldStateRows) (*stat
 	}
 	scan.Actors = actors
 	scan.Outer = outer
+	scan.Paths = paths
 
 	builders := make(map[string]*timelineBuilder, len(index.bySubject))
 	for subject := range index.bySubject {

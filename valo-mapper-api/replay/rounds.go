@@ -57,6 +57,7 @@ type fieldScan struct {
 	UtilityFuel       map[uint32][]utilityFuelWrite
 	UtilityDestroy    map[uint32][]utilityDestroyWrite
 	UtilityActivation map[uint32][]utilityActivationWrite
+	AbilityStates     map[uint32][]abilityStateWrite
 
 	// State holds the HP/credits/weapon/armour rows collected by the same pass.
 	// scanState turns them into timelines after this scan.
@@ -90,6 +91,7 @@ func scanFields(exportDir string) (*fieldScan, error) {
 		UtilityFuel:       make(map[uint32][]utilityFuelWrite),
 		UtilityDestroy:    make(map[uint32][]utilityDestroyWrite),
 		UtilityActivation: make(map[uint32][]utilityActivationWrite),
+		AbilityStates:     make(map[uint32][]abilityStateWrite),
 	}
 
 	// The combat report writes ParticipantSubject and ParticipantTeamName as
@@ -237,6 +239,19 @@ func scanFields(exportDir string) (*fieldScan, error) {
 						scan.UtilityFuel[row.ActorNetGUID], write,
 					)
 				}
+			case name == "CurrentState" && row.ValueI64 != nil &&
+				row.ObjectNetGUID != nil && *row.ValueI64 >= 0 &&
+				uint64(*row.ValueI64) <= math.MaxUint32:
+				object := *row.ObjectNetGUID
+				scan.AbilityStates[row.ActorNetGUID] = append(
+					scan.AbilityStates[row.ActorNetGUID],
+					abilityStateWrite{
+						TimeMS:        row.TimeMS,
+						PacketID:      row.PacketID,
+						ObjectNetGUID: &object,
+						StateGUID:     uint32(*row.ValueI64),
+					},
+				)
 			case stateFieldCandidate(name):
 				scan.collectStateField(row, name)
 			}
@@ -250,6 +265,7 @@ func scanFields(exportDir string) (*fieldScan, error) {
 	sortUtilityFuelWrites(scan.UtilityFuel)
 	sortUtilityDestroyWrites(scan.UtilityDestroy)
 	sortUtilityActivationWrites(scan.UtilityActivation)
+	sortAbilityStateWrites(scan.AbilityStates)
 
 	return scan, nil
 }

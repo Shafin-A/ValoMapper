@@ -92,6 +92,11 @@ func TestCollectStateFieldParsesSuffixedCastMembers(t *testing.T) {
 		},
 		{
 			TimeMS: 1000, PacketID: 7, ActorNetGUID: actor, GroupPath: group,
+			FieldName: ptr("AbilityCastsThisRound[0].CastLocation_21_ABC"),
+			ValueStr:  ptr("(123.5, -456.25, 99)"),
+		},
+		{
+			TimeMS: 1000, PacketID: 7, ActorNetGUID: actor, GroupPath: group,
 			FieldName: ptr("AbilityCastsThisRound[0].Effects[0].AffectedTargetsArray[0].Value_5_ABC"),
 			ValueF64:  ptr(float64(12)),
 		},
@@ -128,6 +133,10 @@ func TestCollectStateFieldParsesSuffixedCastMembers(t *testing.T) {
 	}
 	if element.Player != "34b9a457-ef16-5856-bd2e-158be2dbce3a" {
 		t.Errorf("player = %q", element.Player)
+	}
+	if !element.HasCastLocation ||
+		element.CastLocation != (Position{X: 123.5, Y: -456.25}) {
+		t.Errorf("cast location = %#v/%v", element.CastLocation, element.HasCastLocation)
 	}
 }
 

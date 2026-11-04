@@ -196,6 +196,7 @@ export const LINE_ABILITY_CONFIGS: Record<
     lineLength: 66,
     stroke: "#63edff80",
     strokeWidth: 3.52,
+    iconPosition: "start",
   },
   tejo_ult: {
     lineLength: 32,

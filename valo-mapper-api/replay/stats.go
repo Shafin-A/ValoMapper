@@ -36,13 +36,16 @@ type castKey struct {
 // castElement is one accumulated cast entry. The booleans separate a real zero
 // from a member that never arrived.
 type castElement struct {
-	Slot        int64
-	HasSlot     bool
-	Round       int64
-	HasRound    bool
-	CastTime    float64
-	HasCastTime bool
-	Player      string
+	Slot            int64
+	HasSlot         bool
+	Round           int64
+	HasRound        bool
+	CastTime        float64
+	HasCastTime     bool
+	Player          string
+	CastLocation    Position
+	HasCastLocation bool
+	EffectTimes     []float64
 }
 
 // castIdentity is the dedupe key: one ability, cast once, at one offset into
@@ -63,6 +66,8 @@ type castSlotKey struct {
 
 type castResolution struct {
 	Casts         map[castIdentity]uint32
+	Locations     map[castIdentity]Position
+	EffectTimes   map[castIdentity][]float64
 	Skipped       int
 	UnknownSlot   int
 	Unresolved    int
@@ -98,6 +103,15 @@ func parseCastChild(fieldName string) (index int, member string, ok bool) {
 	return index, member, true
 }
 
+func appendUniqueCastTime(times []float64, value float64) []float64 {
+	for _, existing := range times {
+		if math.Abs(existing-value) < 0.001 {
+			return times
+		}
+	}
+	return append(times, value)
+}
+
 // collectCastField folds one cast member row into the element it belongs to.
 func (s *fieldScan) collectCastField(row *fieldRow, name string) {
 	if !strings.Contains(row.GroupPath, "Comp_AbilityStatisticsReplicator") {
@@ -107,10 +121,14 @@ func (s *fieldScan) collectCastField(row *fieldRow, name string) {
 	if !ok {
 		return
 	}
-	switch member {
-	case "Slot", "Round", "CastTime", "Player":
-	default:
-		return
+	isEffectTime := strings.HasPrefix(member, "Effects[") &&
+		strings.HasSuffix(member, ".Time")
+	if !isEffectTime {
+		switch member {
+		case "Slot", "Round", "CastTime", "Player", "CastLocation":
+		default:
+			return
+		}
 	}
 
 	key := castKey{
@@ -123,6 +141,13 @@ func (s *fieldScan) collectCastField(row *fieldRow, name string) {
 	if element == nil {
 		element = &castElement{}
 		s.State.Casts[key] = element
+	}
+
+	if isEffectTime {
+		if row.ValueF64 != nil {
+			element.EffectTimes = appendUniqueCastTime(element.EffectTimes, *row.ValueF64)
+		}
+		return
 	}
 
 	switch member {
@@ -145,6 +170,13 @@ func (s *fieldScan) collectCastField(row *fieldRow, name string) {
 		if row.ValueStr != nil {
 			element.Player = normaliseUUID(*row.ValueStr)
 		}
+	case "CastLocation":
+		if row.ValueStr != nil {
+			if position, ok := parseWorldPosition(*row.ValueStr); ok {
+				element.CastLocation = position
+				element.HasCastLocation = true
+			}
+		}
 	}
 }
 
@@ -153,7 +185,11 @@ func (s *fieldScan) collectCastField(row *fieldRow, name string) {
 // elements without one are matched to the round whose buy end best explains the
 // replication time, within maxCastResidualMS.
 func resolveCasts(windows []roundWindow, index *playerIndex, raw *fieldStateRows) castResolution {
-	resolution := castResolution{Casts: make(map[castIdentity]uint32)}
+	resolution := castResolution{
+		Casts:       make(map[castIdentity]uint32),
+		Locations:   make(map[castIdentity]Position),
+		EffectTimes: make(map[castIdentity][]float64),
+	}
 	if raw == nil || len(raw.Casts) == 0 {
 		return resolution
 	}
@@ -249,8 +285,16 @@ func resolveCasts(windows []roundWindow, index *playerIndex, raw *fieldStateRows
 			Slot:    element.Slot,
 			CastMS:  castMS,
 		}
+		for _, effectTime := range element.EffectTimes {
+			resolution.EffectTimes[identity] = appendUniqueCastTime(
+				resolution.EffectTimes[identity], effectTime,
+			)
+		}
 		if previous, exists := resolution.Casts[identity]; !exists || abs < previous {
 			resolution.Casts[identity] = abs
+			if element.HasCastLocation {
+				resolution.Locations[identity] = element.CastLocation
+			}
 		}
 	}
 
