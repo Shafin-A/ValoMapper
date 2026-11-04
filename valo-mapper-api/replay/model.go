@@ -6,7 +6,7 @@ package replay
 // ParserVersion is part of the cache key, the X-Parser-Version response header
 // and the parse log. Bump the leading number whenever the normalised output can
 // change, even if VRFKit itself did not change.
-const ParserVersion = "42+vrfkit.0.4.0"
+const ParserVersion = "45+vrfkit.0.4.0"
 
 // Match mirrors ReplayMatch in the frontend. Field names and JSON tags are the
 // wire contract; do not rename them without a frontend change.
@@ -134,6 +134,9 @@ type Utility struct {
 	Path          []UtilityPositionSample `json:"path,omitempty"`
 	Vision        []UtilityVisionSample   `json:"vision,omitempty"`
 	LengthSamples []UtilityLengthSample   `json:"lengthSamples,omitempty"`
+	// StopFraction limits a moving utility to part of its full path, for
+	// example when Harbor's Reckoning is stopped before its final endpoint.
+	StopFraction *float64 `json:"stopFraction,omitempty"`
 }
 
 type UtilityPositionSample struct {

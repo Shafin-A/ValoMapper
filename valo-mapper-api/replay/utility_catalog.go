@@ -14,6 +14,9 @@ type utilityCatalogEntry struct {
 	wallStart          bool
 	wallPath           bool
 	splineMovement     bool
+	splineChild        bool
+	splineFromChildren bool
+	splineFullDistance float64
 	trapwireFarEnd     bool
 	iconOnly           bool
 	visionCone         bool
@@ -94,11 +97,13 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Pawn_Aggrobot_RollyPolly":                   {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "thrash"},
 
 	// Harbor
-	"GameObject_Mage_4_SplashGrenade": {kind: UtilityArea, minBuild: 1300, ability: "storm_surge"},
-	"Projectile_Mage_Q_Wall":          {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "high_tide"},
-	"GameObject_Mage_Q_WallManager":   {kind: UtilityWall, wallPath: true, minBuild: 1300, ability: "high_tide"},
-	"GameObject_Mage_E_WorldSmoke":    {kind: UtilitySmoke, minBuild: 1300, ability: "cove"},
-	"GameObject_Mage_X_TidalWave":     {kind: UtilityArea, minBuild: 1300, ability: "reckoning"},
+	"GameObject_Mage_4_SplashGrenade":   {kind: UtilityArea, minBuild: 1300, ability: "storm_surge"},
+	"Projectile_Mage_4_SplashGrenade":   {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "storm_surge"},
+	"Projectile_Mage_Q_Wall":            {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "high_tide"},
+	"GameObject_Mage_Q_WallManager":     {kind: UtilityWall, wallPath: true, minBuild: 1300, ability: "high_tide"},
+	"GameObject_Mage_E_WorldSmoke":      {kind: UtilitySmoke, minBuild: 1300, ability: "cove"},
+	"GameObject_Mage_X_TidalWave":       {kind: UtilityArea, splineMovement: true, splineFromChildren: true, splineFullDistance: 21, minBuild: 1300, ability: "reckoning"},
+	"GameObject_Mage_X_TidalWave_Chunk": {kind: UtilityArea, splineMovement: true, splineChild: true, minBuild: 1300, ability: "reckoning"},
 
 	// Hush
 	"GameObject_Paprika_4_PullBlast":               {kind: UtilityMarker, minBuild: 1300, ability: "flow"},

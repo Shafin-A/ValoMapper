@@ -4,6 +4,7 @@ import {
   TOOL_ICON_CONTOUR_COLOR,
   TOOL_ICON_CONTOUR_WIDTH,
 } from "@/lib/consts";
+import { LINE_ABILITY_CONFIGS } from "@/lib/consts/configs/line-ability/consts";
 import { getReplayWeaponIcon } from "@/lib/replay/display";
 import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
 import { mToPixels } from "@/lib/utils";
@@ -1068,6 +1069,86 @@ describe("ReplayCanvasLayer utilities", () => {
       />,
     );
     expect(screen.queryByTestId("ability-icon")).not.toBeInTheDocument();
+  });
+
+  it("keeps Reckoning's area static while the wave moves through it", () => {
+    const reckoning: ReplayUtility = {
+      id: "utility-reckoning",
+      kind: "area",
+      abilityId: "reckoning",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: lotusSpawn,
+      yaw: 0,
+      stopFraction: 0.5,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        { timeMs: 1000, x: 6505.5, y: 4043 },
+      ],
+    };
+    const startPoint = toReplayCanvasPoint({
+      mapId: lotusMatch.mapId,
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    const lineRotation = toReplayCanvasRotation({
+      mapId: lotusMatch.mapId,
+      mapSide: "defense",
+      location: lotusSpawn,
+      viewRadians: 0,
+    });
+    const lineRadians = (lineRotation * Math.PI) / 180;
+    const lineLength =
+      mToPixels(LINE_ABILITY_CONFIGS.harbor_ult.lineLength) * 0.5;
+    const expectedLineEnd = {
+      x: startPoint.x + Math.cos(lineRadians) * lineLength,
+      y: startPoint.y + Math.sin(lineRadians) * lineLength,
+    };
+    const expectedMidpoint = {
+      x: startPoint.x + Math.cos(lineRadians) * lineLength * 0.5,
+      y: startPoint.y + Math.sin(lineRadians) * lineLength * 0.5,
+    };
+    const areaLine = () =>
+      screen
+        .getAllByTestId("konva-line")
+        .find(
+          (line) => line.getAttribute("data-stroke") === "#1e3c4c80",
+        );
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([reckoning])}
+        frame={frame}
+        currentTimeMs={0}
+      />,
+    );
+
+    const icon = () => screen.getByTestId("ability-icon");
+    expect(icon()).toHaveAttribute("data-icon-only", "true");
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(startPoint.x);
+    const areaPoints = areaLine()!.getAttribute("points")!;
+    const [startX, startY, endX, endY] = areaPoints.split(",").map(Number);
+    expect(startX).toBeCloseTo(startPoint.x);
+    expect(startY).toBeCloseTo(startPoint.y);
+    expect(endX).toBeCloseTo(expectedLineEnd.x);
+    expect(endY).toBeCloseTo(expectedLineEnd.y);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([reckoning])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+
+    expect(areaLine()!.getAttribute("points")).toBe(areaPoints);
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(
+      expectedMidpoint.x,
+    );
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(
+      expectedMidpoint.y,
+    );
   });
 
   it("draws High Tide anchors using the harbor wall path", () => {

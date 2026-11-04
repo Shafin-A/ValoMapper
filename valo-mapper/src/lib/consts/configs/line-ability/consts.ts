@@ -156,7 +156,7 @@ export const LINE_ABILITY_CONFIGS: Record<
     strokeWidth: 20,
   },
   harbor_ult: {
-    lineLength: 40,
+    lineLength: 52,
     strokeWidth: 20,
     stroke: "#1e3c4c80",
   },

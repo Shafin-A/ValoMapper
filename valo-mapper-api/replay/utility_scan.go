@@ -80,6 +80,19 @@ func scanUtilities(
 		}
 	}
 
+	splineChildrenByParent := make(map[uint32][]uint32)
+	for _, life := range lives {
+		if !life.class.splineChild {
+			continue
+		}
+		if owner, ok := utilityOwnerGUIDAt(life.guid, life.openMS, ownerWrites); ok &&
+			owner != 0 {
+			splineChildrenByParent[owner] = append(
+				splineChildrenByParent[owner], life.guid,
+			)
+		}
+	}
+
 	fuelByOwner := utilityFuelByOwner(fuelWrites, index, puuidBySubject)
 	for _, life := range lives {
 		if life.class.ability != "poison_cloud" {
@@ -183,8 +196,14 @@ func scanUtilities(
 		if segment.life.class.replicatedMovement {
 			replicatedMovementGUIDs[segment.life.guid] = struct{}{}
 		}
-		if segment.life.class.splineMovement {
-			splineMovementGUIDs[segment.life.guid] = struct{}{}
+		if segment.life.class.splineMovement && !segment.life.class.splineChild {
+			if segment.life.class.splineFromChildren {
+				for _, childGUID := range splineChildrenByParent[segment.life.guid] {
+					splineMovementGUIDs[childGUID] = struct{}{}
+				}
+			} else {
+				splineMovementGUIDs[segment.life.guid] = struct{}{}
+			}
 		}
 	}
 	movementByGUID := make(map[uint32][]movementRow, len(movementGUIDs))
@@ -287,11 +306,46 @@ func scanUtilities(
 			}
 		}
 		if segment.life.class.splineMovement {
-			for _, write := range splineMovementByGUID[segment.life.guid] {
-				if write.TimeMS >= segment.life.openMS &&
-					write.TimeMS < segment.life.closeMS {
-					segment.splineWrites = append(segment.splineWrites, write)
+			writes := append([]utilitySplineWrite(nil), splineMovementByGUID[segment.life.guid]...)
+			if segment.life.class.splineFromChildren {
+				writes = writes[:0]
+				for _, childGUID := range splineChildrenByParent[segment.life.guid] {
+					writes = append(writes, splineMovementByGUID[childGUID]...)
 				}
+			}
+			sort.SliceStable(writes, func(i, j int) bool {
+				if writes[i].TimeMS != writes[j].TimeMS {
+					return writes[i].TimeMS < writes[j].TimeMS
+				}
+				return writes[i].PacketID < writes[j].PacketID
+			})
+			maxDistance := 0.0
+			for _, write := range writes {
+				if write.TimeMS < segment.life.openMS ||
+					write.TimeMS >= segment.life.closeMS {
+					continue
+				}
+				if write.DistanceM > maxDistance {
+					maxDistance = write.DistanceM
+				}
+				if len(segment.splineWrites) > 0 {
+					last := &segment.splineWrites[len(segment.splineWrites)-1]
+					if write.TimeMS == last.TimeMS {
+						last.DistanceM = maxDistance
+						continue
+					}
+				}
+				segment.splineWrites = append(segment.splineWrites, utilitySplineWrite{
+					TimeMS:    write.TimeMS,
+					PacketID:  write.PacketID,
+					DistanceM: maxDistance,
+				})
+			}
+			if segment.life.class.splineFullDistance > 0 &&
+				len(segment.splineWrites) > 0 {
+				fraction := maxDistance / segment.life.class.splineFullDistance
+				fraction = math.Min(1, math.Max(0, fraction))
+				segment.stopFraction = &fraction
 			}
 		}
 		if !segment.life.class.mobile {
@@ -344,6 +398,7 @@ func scanUtilities(
 			Inactive:      segment.inactive,
 			Vision:        segment.visionSamples,
 			LengthSamples: segment.lengthSamples,
+			StopFraction:  segment.stopFraction,
 		}
 		if segment.lengthM > 0 {
 			utility.Length = segment.lengthM
@@ -401,6 +456,9 @@ func scanUtilities(
 func filterUtilitySegments(segments []utilitySegment) []utilitySegment {
 	result := segments[:0]
 	for _, segment := range segments {
+		if segment.life.class.splineChild {
+			continue
+		}
 		if segment.life.class.mobile && len(segment.samples) == 0 {
 			continue
 		}

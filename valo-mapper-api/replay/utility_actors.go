@@ -178,6 +178,25 @@ func sortUtilityOwnerWrites(writes map[uint32][]utilityOwnerWrite) {
 	}
 }
 
+func utilityOwnerGUIDAt(
+	actor uint32,
+	at uint32,
+	writes map[uint32][]utilityOwnerWrite,
+) (uint32, bool) {
+	var owner uint32
+	found := false
+	for _, write := range writes[actor] {
+		if write.TimeMS > at {
+			break
+		}
+		if write.Owner != nil {
+			owner = *write.Owner
+			found = true
+		}
+	}
+	return owner, found
+}
+
 func resolveUtilityOwner(
 	actor uint32,
 	at uint32,

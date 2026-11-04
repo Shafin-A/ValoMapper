@@ -63,6 +63,11 @@ export const ReplayUtilityMarker = ({
     mapSide,
     position,
   });
+  const initialPoint = toReplayCanvasPoint({
+    mapId: match.mapId,
+    mapSide,
+    position: utility.position,
+  });
   if (!point || !isReplayPointOnMap({ point })) {
     return null;
   }
@@ -114,6 +119,8 @@ export const ReplayUtilityMarker = ({
     : null;
   const isMovingWall =
     utility.abilityId === "contingency" && (utility.samples?.length ?? 0) > 1;
+  const isMovingReckoning =
+    utility.abilityId === "reckoning" && (utility.samples?.length ?? 0) > 1;
   const movementPath = isMovingWall
     ? (utility.samples ?? [])
         .map((sample) =>
@@ -146,20 +153,75 @@ export const ReplayUtilityMarker = ({
           viewRadians: (utility.yaw * Math.PI) / 180,
         }) + yawOffset
       : undefined;
-  const iconPoint =
-    !isMovingWall &&
-    lineGeometry &&
-    rotation !== undefined &&
-    lineGeometry.iconGap > 0
+  const reckoningLineLength =
+    lineStyle?.lineLength !== undefined
+      ? mToPixels(lineStyle.lineLength)
+      : 0;
+  const reckoningStopFraction =
+    utility.stopFraction !== undefined
+      ? Math.min(1, Math.max(0, utility.stopFraction))
+      : 1;
+  const reckoningVisualLength = reckoningLineLength * reckoningStopFraction;
+  const reckoningLineAngle = ((rotation ?? 0) * Math.PI) / 180;
+  const reckoningLineStart =
+    isMovingReckoning && initialPoint && reckoningVisualLength > 0
+      ? initialPoint
+      : null;
+  const reckoningLineEnd =
+    isMovingReckoning && initialPoint && reckoningVisualLength > 0
+      ? {
+          x: initialPoint.x + Math.cos(reckoningLineAngle) * reckoningVisualLength,
+          y: initialPoint.y + Math.sin(reckoningLineAngle) * reckoningVisualLength,
+        }
+      : null;
+  const reckoningSamples = utility.samples ?? [];
+  const reckoningFirstSample = reckoningSamples[0];
+  const reckoningLastSample = reckoningSamples[reckoningSamples.length - 1];
+  const reckoningProgress =
+    isMovingReckoning &&
+    reckoningFirstSample &&
+    reckoningLastSample &&
+    reckoningLastSample.timeMs > reckoningFirstSample.timeMs
+      ? Math.min(
+          1,
+          Math.max(
+            0,
+            (currentTimeMs - reckoningFirstSample.timeMs) /
+              (reckoningLastSample.timeMs - reckoningFirstSample.timeMs),
+          ),
+        )
+      : 0;
+  const reckoningIconPoint =
+    isMovingReckoning && initialPoint && reckoningVisualLength > 0
       ? {
           x:
-            point.x -
-            Math.cos((rotation * Math.PI) / 180) * lineGeometry.iconGap,
+            initialPoint.x +
+            Math.cos(reckoningLineAngle) *
+              reckoningVisualLength *
+              reckoningProgress,
           y:
-            point.y -
-            Math.sin((rotation * Math.PI) / 180) * lineGeometry.iconGap,
+            initialPoint.y +
+            Math.sin(reckoningLineAngle) *
+              reckoningVisualLength *
+              reckoningProgress,
         }
-      : point;
+      : null;
+  const iconPoint =
+    isMovingReckoning && reckoningIconPoint
+      ? reckoningIconPoint
+      : !isMovingWall &&
+          lineGeometry &&
+          rotation !== undefined &&
+          lineGeometry.iconGap > 0
+        ? {
+            x:
+              point.x -
+              Math.cos((rotation * Math.PI) / 180) * lineGeometry.iconGap,
+            y:
+              point.y -
+              Math.sin((rotation * Math.PI) / 180) * lineGeometry.iconGap,
+          }
+        : point;
   const trail =
     utility.kind === "mobile"
       ? getReplayUtilityTrailAtTime(utility, currentTimeMs)
@@ -238,6 +300,27 @@ export const ReplayUtilityMarker = ({
             listening={false}
           />
         )}
+      {isMovingReckoning &&
+        lineStyle &&
+        reckoningLineStart &&
+        reckoningLineEnd && (
+          <Line
+            points={[
+              reckoningLineStart.x,
+              reckoningLineStart.y,
+              reckoningLineEnd.x,
+              reckoningLineEnd.y,
+            ]}
+            stroke={lineStyle.stroke}
+            strokeWidth={
+              lineStyle.strokeWidth
+                ? mToPixels(lineStyle.strokeWidth)
+                : undefined
+            }
+            opacity={utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1}
+            listening={false}
+          />
+        )}
       {!abilityIcon && (
         <Circle
           x={point.x}
@@ -269,7 +352,7 @@ export const ReplayUtilityMarker = ({
           }
           currentPath={currentPath}
           pathTension={currentPath.length > 1 ? 0.4 : undefined}
-          iconOnly={utility.iconOnly || isMovingWall}
+          iconOnly={utility.iconOnly || isMovingWall || isMovingReckoning}
           abilityShapeOpacity={
             utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1
           }

@@ -107,6 +107,8 @@ export type ReplayUtility = {
   path?: ReplayUtilityPositionSample[];
   vision?: ReplayUtilityVisionSample[];
   lengthSamples?: ReplayUtilityLengthSample[];
+  /** Fraction of a moving utility's full path that actually runs. */
+  stopFraction?: number;
 };
 
 export type ReplayUtilityWarnings = {

@@ -97,6 +97,7 @@ type utilitySegment struct {
 	samples            []movementRow
 	replicatedMovement []utilityPathWrite
 	splineWrites       []utilitySplineWrite
+	stopFraction       *float64
 	path               []utilityPathWrite
 	visionSamples      []UtilityVisionSample
 	lengthSamples      []UtilityLengthSample

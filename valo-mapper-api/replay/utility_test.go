@@ -41,10 +41,12 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.08", "Projectile_Wushu_4_Smoke", true, "cloudburst"},
 		{"13.08", "Projectile_Hunter_4_ExplosiveBolt", true, "shock_bolt"},
 		{"13.08", "GameObject_Mage_4_SplashGrenade", true, "storm_surge"},
+		{"13.09", "Projectile_Mage_4_SplashGrenade", true, "storm_surge"},
 		{"13.08", "Projectile_Mage_Q_Wall", true, "high_tide"},
 		{"13.08", "GameObject_Mage_Q_WallManager", true, "high_tide"},
 		{"13.08", "GameObject_Mage_E_WorldSmoke", true, "cove"},
 		{"13.08", "GameObject_Mage_X_TidalWave", true, "reckoning"},
+		{"13.09", "GameObject_Mage_X_TidalWave_Chunk", true, "reckoning"},
 		{"13.09", "GameObject_Paprika_4_PullBlast", true, "flow"},
 		{"13.09", "Projectile_Paprika_Q_RedirectFlash", true, "flashbulb"},
 		{"13.09", "Projectile_Paprika_Q_RedirectFlash_Underhand", true, "flashbulb"},
@@ -372,6 +374,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		{"Projectile_C_Grenadier_Flash", "flashdrive"},
 		{"Projectile_C_Grenadier_Flash_Underhand", "flashdrive"},
 		{"Projectile_Grenadier_E_SuppressionBlade", "zeropoint"},
+		{"Projectile_Mage_4_SplashGrenade", "storm_surge"},
 		{"Projectile_Mage_Q_Wall", "high_tide"},
 		{"Projectile_Guide_E_HawkFlash", "guiding_light"},
 		{"Projectile_Killjoy_4_RemoteBees_MultiDetonate", "nanoswarm"},
@@ -411,6 +414,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		"Projectile_Q_BountyHunter_TetherGrenade_SphereExpansion": true,
 		"Projectile_Grenadier_E_SuppressionBlade":                 true,
 		"Projectile_Killjoy_4_RemoteBees_MultiDetonate":           true,
+		"Projectile_Mage_4_SplashGrenade":                         true,
 		"Projectile_Pandemic_4_SmokeGrenade":                      true,
 		"Projectile_Paprika_Q_RedirectFlash":                      true,
 		"Projectile_Paprika_Q_RedirectFlash_Underhand":            true,
@@ -1660,6 +1664,92 @@ func TestScanUtilitiesUsesHarborAnchorPoints(t *testing.T) {
 		if wall.Path[i] != want {
 			t.Errorf("wall path point %d = %#v, want %#v", i, wall.Path[i], want)
 		}
+	}
+}
+
+func TestScanUtilitiesSamplesReckoningFromChunks(t *testing.T) {
+	dir := t.TempDir()
+	managerClass := "GameObject_Mage_X_TidalWave"
+	chunkClass := "GameObject_Mage_X_TidalWave_Chunk"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &managerClass, SpawnX: float32Ptr(1000), SpawnY: float32Ptr(2000),
+			SpawnYaw: float32Ptr(0),
+		},
+		{TimeMS: 6000, PacketID: 4, ActorNetGUID: 700, Event: "close"},
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 701, Event: "open",
+			ClassPath: &chunkClass, SpawnX: float32Ptr(900), SpawnY: float32Ptr(2000),
+			SpawnYaw: float32Ptr(0),
+		},
+		{TimeMS: 6000, PacketID: 4, ActorNetGUID: 701, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	rawFloat32 := func(value float32) []byte {
+		raw := make([]byte, 4)
+		binary.LittleEndian.PutUint32(raw, math.Float32bits(value))
+		return raw
+	}
+	ownerName := "Owner"
+	positionName := "ServerPosition"
+	fields := []fieldRow{
+		{TimeMS: 1000, PacketID: 1, ActorNetGUID: 701, FieldName: &ownerName, ValueI64: ptr(int64(700))},
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 701, FieldName: &positionName, BitCount: 32, RawBits: rawFloat32(1)},
+		{TimeMS: 1600, PacketID: 3, ActorNetGUID: 701, FieldName: &positionName, BitCount: 32, RawBits: rawFloat32(10.5)},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		7000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 7000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Reckoning wave", utilities)
+	}
+	wave := utilities[0][0]
+	if wave.AbilityID != "reckoning" || wave.Kind != UtilityArea {
+		t.Fatalf("wave identity = %q/%q, want area reckoning", wave.Kind, wave.AbilityID)
+	}
+	wantSamples := []UtilityPositionSample{
+		{TimeMS: 1000, X: 1000, Y: 2000},
+		{TimeMS: 1100, X: 1100, Y: 2000},
+		{TimeMS: 1600, X: 2050, Y: 2000},
+	}
+	if len(wave.Samples) != len(wantSamples) {
+		t.Fatalf("movement samples = %#v, want %#v", wave.Samples, wantSamples)
+	}
+	for i, want := range wantSamples {
+		got := wave.Samples[i]
+		if got.TimeMS != want.TimeMS ||
+			math.Abs(got.X-want.X) > 0.01 || math.Abs(got.Y-want.Y) > 0.01 {
+			t.Errorf("movement sample %d = %#v, want %#v", i, got, want)
+		}
+	}
+	if wave.StopFraction == nil || math.Abs(*wave.StopFraction-0.5) > 0.001 {
+		t.Fatalf("stop fraction = %v, want 0.5", wave.StopFraction)
 	}
 }
 

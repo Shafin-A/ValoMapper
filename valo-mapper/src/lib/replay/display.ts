@@ -129,6 +129,7 @@ export const getReplayLineAbilityStyle = (action: AbilityAction) => {
   return {
     stroke: config.stroke,
     strokeWidth: config.strokeWidth,
+    lineLength: config.lineLength,
   };
 };
 
