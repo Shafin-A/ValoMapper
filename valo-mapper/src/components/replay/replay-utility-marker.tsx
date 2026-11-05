@@ -120,7 +120,12 @@ export const ReplayUtilityMarker = ({
   const isMovingWall =
     utility.abilityId === "contingency" && (utility.samples?.length ?? 0) > 1;
   const isMovingReckoning =
-    utility.abilityId === "reckoning" && (utility.samples?.length ?? 0) > 1;
+    (utility.abilityId === "reckoning" ||
+      utility.abilityId === "nightfall" ||
+      utility.abilityId === "rolling_thunder" ||
+      utility.abilityId === "paranoia" ||
+      utility.abilityId === "undercut") &&
+    (utility.samples?.length ?? 0) > 1;
   const movementPath = isMovingWall
     ? (utility.samples ?? [])
         .map((sample) =>

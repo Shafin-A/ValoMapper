@@ -49,6 +49,7 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.09", "Projectile_CableJam_InAir", true, "barrier_mesh"},
 		{"13.09", "Actor_FishingHook", true, "annihilation"},
 		{"13.09", "GameObject_FishingHook_CageSphere", true, "annihilation"},
+		{"13.08", "GameObject_BountyHunter_X_WaveForm", true, "nightfall"},
 		{"13.08", "GameObject_Mage_Q_WallManager", true, "high_tide"},
 		{"13.08", "GameObject_Mage_E_WorldSmoke", true, "cove"},
 		{"13.08", "GameObject_Mage_X_TidalWave", true, "reckoning"},
@@ -1784,6 +1785,128 @@ func TestScanUtilitiesFollowsAnnihilationCageAndRelease(t *testing.T) {
 	}
 	if cage.Samples[2].X != 200 || cage.Samples[2].Y != 0 {
 		t.Errorf("last cage sample = %v, want parent position (200, 0)", cage.Samples[2])
+	}
+}
+
+func TestScanUtilitiesMovesNightfallWaveForward(t *testing.T) {
+	dir := t.TempDir()
+	waveClass := "GameObject_BountyHunter_X_WaveForm"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 900, Event: "open",
+			ClassPath: &waveClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			SpawnYaw: float32Ptr(0),
+		},
+		{TimeMS: 6000, PacketID: 20, ActorNetGUID: 900, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		3000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Nightfall wave", utilities)
+	}
+	wave := utilities[0][0]
+	if wave.AbilityID != "nightfall" || wave.Kind != UtilityArea {
+		t.Fatalf("wave identity = %q/%q, want area nightfall",
+			wave.Kind, wave.AbilityID)
+	}
+	if wave.StartTimeMS != 1000 || wave.EndTimeMS != 2000 {
+		t.Errorf("wave interval = %d..%d, want the one-second display window",
+			wave.StartTimeMS, wave.EndTimeMS)
+	}
+	if wave.Position != (Position{X: 100, Y: 200}) || wave.Yaw != 0 {
+		t.Errorf("wave origin = %v yaw %v, want (100, 200) yaw 0",
+			wave.Position, wave.Yaw)
+	}
+	if len(wave.Samples) < 2 {
+		t.Fatalf("wave samples = %#v, want forward movement", wave.Samples)
+	}
+	first := wave.Samples[0]
+	last := wave.Samples[len(wave.Samples)-1]
+	if first.X != 100 || first.Y != 200 {
+		t.Errorf("first wave sample = %v, want the cast point", first)
+	}
+	if math.Abs(last.X-4100) > 1 || math.Abs(last.Y-200) > 1 {
+		t.Errorf("last wave sample = %v, want the 40 m forward endpoint", last)
+	}
+}
+
+func TestScanUtilitiesMovesRollingThunderForward(t *testing.T) {
+	dir := t.TempDir()
+	waveClass := "GameObject_Breach_X_Shockwave"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 900, Event: "open",
+			ClassPath: &waveClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			SpawnYaw: float32Ptr(90),
+		},
+		{TimeMS: 6000, PacketID: 20, ActorNetGUID: 900, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		4000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 4000}},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Rolling Thunder wave", utilities)
+	}
+	wave := utilities[0][0]
+	if wave.AbilityID != "rolling_thunder" || wave.Kind != UtilityArea {
+		t.Fatalf("wave identity = %q/%q, want area rolling_thunder",
+			wave.Kind, wave.AbilityID)
+	}
+	if wave.StartTimeMS != 1000 || wave.EndTimeMS != 3004 {
+		t.Errorf("wave interval = %d..%d, want the existing 2004 ms window",
+			wave.StartTimeMS, wave.EndTimeMS)
+	}
+	if wave.Position != (Position{X: 100, Y: 200}) || wave.Yaw != 90 {
+		t.Errorf("wave origin = %v yaw %v, want (100, 200) yaw 90",
+			wave.Position, wave.Yaw)
+	}
+	if len(wave.Samples) < 2 {
+		t.Fatalf("wave samples = %#v, want forward movement", wave.Samples)
+	}
+	first := wave.Samples[0]
+	last := wave.Samples[len(wave.Samples)-1]
+	if first.X != 100 || first.Y != 200 {
+		t.Errorf("first wave sample = %v, want the cast point", first)
+	}
+	if math.Abs(last.X-100) > 1 || math.Abs(last.Y-3400) > 1 {
+		t.Errorf("last wave sample = %v, want the 32 m forward endpoint", last)
 	}
 }
 

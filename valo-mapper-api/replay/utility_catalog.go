@@ -24,6 +24,7 @@ type utilityCatalogEntry struct {
 	followsParent      bool
 	releaseOnEvent     bool
 	trajectoryWarnings bool
+	forwardMovement    float64
 	wallYawOffset      float64
 	curveballSide      int
 	minBuild           int
@@ -43,7 +44,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	// Breach
 	"GameObject_Breach_4_FusionBlast":        {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 2200, ability: "aftershock"},
 	"GameObject_Breach_E_SweetSpotFissure":   {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1100, ability: "fault_line"},
-	"GameObject_Breach_X_Shockwave":          {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 2004, ability: "rolling_thunder"},
+	"GameObject_Breach_X_Shockwave":          {kind: UtilityArea, forwardMovement: 32, minBuild: 1300, maxLifetimeMS: 2004, ability: "rolling_thunder"},
 	"Projectile_Breach_4_FusionBlast":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "aftershock"},
 	"Projectile_Breach_Q_ThroughWalls_Flash": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashpoint"},
 
@@ -91,7 +92,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Fade
 	"GameObject_BountyHunter_E_LoSReveal_Source_Reactivate":   {kind: UtilityMarker, minBuild: 1300, ability: "haunt"},
-	"GameObject_BountyHunter_X_WaveForm":                      {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1000, ability: "nightfall"},
+	"GameObject_BountyHunter_X_WaveForm":                      {kind: UtilityArea, forwardMovement: 40, minBuild: 1300, maxLifetimeMS: 1000, ability: "nightfall"},
 	"Pawn_BountyHunter_4_WolfHound":                           {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "prowler"},
 	"GameObject_Q_BountyHunter_Tether_SphereExpansion":        {kind: UtilityArea, minBuild: 1300, ability: "seize"},
 	"Projectile_E_BountyHunter_Divebomb":                      {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "haunt"},
@@ -99,7 +100,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Gekko
 	"Patch_Aggrobot_C_ExplodeyPatch":             {kind: UtilityMolly, minBuild: 1300, ability: "mosh_pit"},
-	"Projectile_Aggrobot_C_ExplodeyPatch":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mosh_pit"},
+	"Projectile_Aggrobot_C_ExplodeyPatch":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "mosh_pit", iconOnly: true},
 	"Projectile_E_Aggrobot_DiscTurret_PowerWave": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "dizzy"},
 	"Pawn_Aggrobot_SeekerNade":                   {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "wingman"},
 	"Pawn_Aggrobot_RollyPolly":                   {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "thrash"},

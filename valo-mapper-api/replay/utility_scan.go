@@ -203,6 +203,19 @@ func scanUtilities(
 						points, segment.startMS, segment.endMS, window.StartMS,
 					)
 				}
+				if life.class.forwardMovement > 0 && life.hasYaw {
+					yaw := life.yaw * math.Pi / 180
+					end := Position{
+						X: life.position.X + math.Cos(yaw)*life.class.forwardMovement*100,
+						Y: life.position.Y + math.Sin(yaw)*life.class.forwardMovement*100,
+					}
+					segment.trajectorySamples = utilityTrajectorySamples(
+						[]Position{life.position, end},
+						segment.startMS,
+						segment.endMS,
+						window.StartMS,
+					)
+				}
 				segments = append(segments, segment)
 			}
 			if !life.class.wallActivated {
@@ -346,13 +359,28 @@ func scanUtilities(
 				segment.life.class.curveballSide != 0 &&
 				segment.life.hasYaw &&
 				!hasDistinctUtilityMovement(segment.replicatedMovement) {
-				segment.replicatedMovement = approximateCurveballMovement(
-					segment.life.position,
-					segment.life.yaw,
-					segment.life.class.curveballSide,
-					segment.life.openMS,
-					segment.life.closeMS,
-				)
+				endMS := minUint32(segment.life.closeMS, segment.endMS)
+				if endMS > segment.life.openMS {
+					approximated := approximateCurveballMovement(
+						segment.life.position,
+						segment.life.yaw,
+						segment.life.class.curveballSide,
+						segment.life.openMS,
+						endMS,
+					)
+					segment.replicatedMovement = make(
+						[]utilityPathWrite, 0, len(approximated),
+					)
+					for _, write := range approximated {
+						if write.TimeMS >= segment.startMS &&
+							write.TimeMS < segment.endMS {
+							segment.replicatedMovement = append(
+								segment.replicatedMovement,
+								write,
+							)
+						}
+					}
+				}
 			}
 			if len(segment.replicatedMovement) == 0 &&
 				len(replicatedMovementByGUID[segment.life.guid]) == 0 {
@@ -480,9 +508,11 @@ func scanUtilities(
 				})
 			}
 		}
-		if segment.life.class.trajectoryWarnings {
+		if segment.life.class.trajectoryWarnings ||
+			segment.life.class.forwardMovement > 0 {
 			utility.Samples = segment.trajectorySamples
-			if len(utility.Samples) == 0 {
+			if len(utility.Samples) == 0 &&
+				segment.life.class.trajectoryWarnings {
 				continue
 			}
 		}

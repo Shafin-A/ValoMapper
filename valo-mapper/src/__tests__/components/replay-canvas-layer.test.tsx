@@ -1298,6 +1298,321 @@ describe("ReplayCanvasLayer utilities", () => {
     });
   });
 
+  it("keeps Nightfall's rectangle static while the wave moves forward", () => {
+    const nightfall: ReplayUtility = {
+      id: "utility-nightfall",
+      kind: "area",
+      abilityId: "nightfall",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: lotusSpawn,
+      yaw: 0,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        {
+          timeMs: 1000,
+          x: lotusSpawn.x + 4000,
+          y: lotusSpawn.y,
+        },
+      ],
+    };
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([nightfall])}
+        frame={frame}
+        currentTimeMs={0}
+      />,
+    );
+
+    const icon = () => screen.getByTestId("ability-icon");
+    expect(icon()).toHaveAttribute("data-action", "fade_ult");
+    expect(icon()).toHaveAttribute("data-icon-only", "true");
+    const startPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    const lineRotation = toReplayCanvasRotation({
+      mapId: "lotus",
+      mapSide: "defense",
+      location: lotusSpawn,
+      viewRadians: 0,
+    });
+    const lineRadians = (lineRotation * Math.PI) / 180;
+    const lineLength = mToPixels(LINE_ABILITY_CONFIGS.fade_ult.lineLength);
+    const lineEnd = {
+      x: startPoint.x + Math.cos(lineRadians) * lineLength,
+      y: startPoint.y + Math.sin(lineRadians) * lineLength,
+    };
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(startPoint.x);
+
+    const areaLine = screen
+      .getAllByTestId("konva-line")
+      .find((line) => line.getAttribute("data-stroke") === "#00000080");
+    expect(areaLine).toBeDefined();
+    const points = areaLine!.getAttribute("points")!.split(",").map(Number);
+    expect(points).toHaveLength(4);
+    expect(points[0]).toBeCloseTo(startPoint.x);
+    expect(points[1]).toBeCloseTo(startPoint.y);
+    expect(points[2]).toBeCloseTo(lineEnd.x);
+    expect(points[3]).toBeCloseTo(lineEnd.y);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([nightfall])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(
+      (startPoint.x + lineEnd.x) / 2,
+    );
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(
+      (startPoint.y + lineEnd.y) / 2,
+    );
+  });
+
+  it("moves Rolling Thunder's icon forward along its line", () => {
+    const rollingThunder: ReplayUtility = {
+      id: "utility-rolling-thunder",
+      kind: "area",
+      abilityId: "rolling_thunder",
+      startTimeMs: 0,
+      endTimeMs: 2004,
+      position: lotusSpawn,
+      yaw: 0,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        {
+          timeMs: 2004,
+          x: lotusSpawn.x + 3200,
+          y: lotusSpawn.y,
+        },
+      ],
+    };
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([rollingThunder])}
+        frame={frame}
+        currentTimeMs={0}
+      />,
+    );
+
+    const icon = () => screen.getByTestId("ability-icon");
+    expect(icon()).toHaveAttribute("data-action", "breach_ult");
+    expect(icon()).toHaveAttribute("data-icon-only", "true");
+    const startPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    const lineRotation = toReplayCanvasRotation({
+      mapId: "lotus",
+      mapSide: "defense",
+      location: lotusSpawn,
+      viewRadians: 0,
+    });
+    const lineRadians = (lineRotation * Math.PI) / 180;
+    const lineLength = mToPixels(LINE_ABILITY_CONFIGS.breach_ult.lineLength);
+    const lineEnd = {
+      x: startPoint.x + Math.cos(lineRadians) * lineLength,
+      y: startPoint.y + Math.sin(lineRadians) * lineLength,
+    };
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(startPoint.x);
+
+    const areaLine = screen
+      .getAllByTestId("konva-line")
+      .find((line) => line.getAttribute("data-stroke") === "#ffde2180");
+    expect(areaLine).toBeDefined();
+    const points = areaLine!.getAttribute("points")!.split(",").map(Number);
+    expect(points[0]).toBeCloseTo(startPoint.x);
+    expect(points[1]).toBeCloseTo(startPoint.y);
+    expect(points[2]).toBeCloseTo(lineEnd.x);
+    expect(points[3]).toBeCloseTo(lineEnd.y);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([rollingThunder])}
+        frame={frame}
+        currentTimeMs={1002}
+      />,
+    );
+
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(
+      (startPoint.x + lineEnd.x) / 2,
+    );
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(
+      (startPoint.y + lineEnd.y) / 2,
+    );
+  });
+
+  it("moves Paranoia's icon along its line", () => {
+    const paranoia: ReplayUtility = {
+      id: "utility-paranoia",
+      kind: "mobile",
+      abilityId: "paranoia",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: lotusSpawn,
+      yaw: 0,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        {
+          timeMs: 500,
+          x: lotusSpawn.x + 1250,
+          y: lotusSpawn.y,
+        },
+        {
+          timeMs: 1000,
+          x: lotusSpawn.x + 2500,
+          y: lotusSpawn.y,
+        },
+      ],
+    };
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([paranoia])}
+        frame={frame}
+        currentTimeMs={0}
+      />,
+    );
+
+    const icon = () => screen.getByTestId("ability-icon");
+    expect(icon()).toHaveAttribute("data-action", "omen_blind");
+    expect(icon()).toHaveAttribute("data-icon-only", "true");
+    const startPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    const lineRotation = toReplayCanvasRotation({
+      mapId: "lotus",
+      mapSide: "defense",
+      location: lotusSpawn,
+      viewRadians: 0,
+    });
+    const lineRadians = (lineRotation * Math.PI) / 180;
+    const lineLength = mToPixels(LINE_ABILITY_CONFIGS.omen_blind.lineLength);
+    const lineEnd = {
+      x: startPoint.x + Math.cos(lineRadians) * lineLength,
+      y: startPoint.y + Math.sin(lineRadians) * lineLength,
+    };
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(startPoint.x);
+
+    const areaLine = screen
+      .getAllByTestId("konva-line")
+      .find((line) => line.getAttribute("data-stroke") === "#261c4a80");
+    expect(areaLine).toBeDefined();
+    const points = areaLine!.getAttribute("points")!.split(",").map(Number);
+    expect(points[0]).toBeCloseTo(startPoint.x);
+    expect(points[1]).toBeCloseTo(startPoint.y);
+    expect(points[2]).toBeCloseTo(lineEnd.x);
+    expect(points[3]).toBeCloseTo(lineEnd.y);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([paranoia])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(
+      (startPoint.x + lineEnd.x) / 2,
+    );
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(
+      (startPoint.y + lineEnd.y) / 2,
+    );
+  });
+
+  it("moves UnderCut's icon along its line", () => {
+    const undercut: ReplayUtility = {
+      id: "utility-undercut",
+      kind: "mobile",
+      abilityId: "undercut",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: lotusSpawn,
+      yaw: 0,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        {
+          timeMs: 500,
+          x: lotusSpawn.x + 1000,
+          y: lotusSpawn.y,
+        },
+        {
+          timeMs: 1000,
+          x: lotusSpawn.x + 2000,
+          y: lotusSpawn.y,
+        },
+      ],
+    };
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([undercut])}
+        frame={frame}
+        currentTimeMs={0}
+      />,
+    );
+
+    const icon = () => screen.getByTestId("ability-icon");
+    expect(icon()).toHaveAttribute("data-action", "iso_vuln");
+    expect(icon()).toHaveAttribute("data-icon-only", "true");
+    const startPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    const lineRotation = toReplayCanvasRotation({
+      mapId: "lotus",
+      mapSide: "defense",
+      location: lotusSpawn,
+      viewRadians: 0,
+    });
+    const lineRadians = (lineRotation * Math.PI) / 180;
+    const lineLength = mToPixels(LINE_ABILITY_CONFIGS.iso_vuln.lineLength);
+    const lineEnd = {
+      x: startPoint.x + Math.cos(lineRadians) * lineLength,
+      y: startPoint.y + Math.sin(lineRadians) * lineLength,
+    };
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(startPoint.x);
+
+    const areaLine = screen
+      .getAllByTestId("konva-line")
+      .find((line) => line.getAttribute("data-stroke") === "#4d43aa80");
+    expect(areaLine).toBeDefined();
+    const points = areaLine!.getAttribute("points")!.split(",").map(Number);
+    expect(points[0]).toBeCloseTo(startPoint.x);
+    expect(points[1]).toBeCloseTo(startPoint.y);
+    expect(points[2]).toBeCloseTo(lineEnd.x);
+    expect(points[3]).toBeCloseTo(lineEnd.y);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([undercut])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(
+      (startPoint.x + lineEnd.x) / 2,
+    );
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(
+      (startPoint.y + lineEnd.y) / 2,
+    );
+  });
+
   it("hides off-map utility and honors the visibility toggle", () => {
     const smoke: ReplayUtility = {
       id: "utility-0003",
