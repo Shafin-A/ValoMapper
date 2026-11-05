@@ -1393,6 +1393,12 @@ func TestScanUtilitiesCapsBreachUtilityLifetimes(t *testing.T) {
 			ability:     "nanoswarm",
 			maxLifetime: 4000,
 		},
+		{
+			name:        "Zero Point",
+			class:       "Gameobject_Grenadier_E_SuppressionPulse",
+			ability:     "zeropoint",
+			maxLifetime: 1000,
+		},
 	}
 
 	for _, test := range tests {

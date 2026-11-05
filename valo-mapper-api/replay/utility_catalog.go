@@ -136,7 +136,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Projectile_Wushu_4_Smoke":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "cloudburst"},
 
 	// KAY/O
-	"Gameobject_Grenadier_E_SuppressionPulse": {kind: UtilityArea, minBuild: 1300, ability: "zeropoint"},
+	"Gameobject_Grenadier_E_SuppressionPulse": {kind: UtilityArea, maxLifetimeMS: 1000, minBuild: 1300, ability: "zeropoint"},
 	"Gameobject_Grenadier_X_UltPulseManager":  {kind: UtilityArea, samplesFromPulses: true, minBuild: 1300, ability: "nullcmd"},
 	"Gameobject_Grenadier_X_UltPulse":         {kind: UtilityArea, pulseChild: true, minBuild: 1300, ability: "nullcmd"},
 	"Projectile_C_Grenadier_Flash":            {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashdrive"},
