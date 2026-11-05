@@ -25,6 +25,8 @@ type utilityCatalogEntry struct {
 	releaseOnEvent     bool
 	trajectoryWarnings bool
 	forwardMovement    float64
+	pulseChild         bool
+	samplesFromPulses  bool
 	wallYawOffset      float64
 	curveballSide      int
 	minBuild           int
@@ -135,6 +137,8 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// KAY/O
 	"Gameobject_Grenadier_E_SuppressionPulse": {kind: UtilityArea, minBuild: 1300, ability: "zeropoint"},
+	"Gameobject_Grenadier_X_UltPulseManager":  {kind: UtilityArea, samplesFromPulses: true, minBuild: 1300, ability: "nullcmd"},
+	"Gameobject_Grenadier_X_UltPulse":         {kind: UtilityArea, pulseChild: true, minBuild: 1300, ability: "nullcmd"},
 	"Projectile_C_Grenadier_Flash":            {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashdrive"},
 	"Projectile_C_Grenadier_Flash_Underhand":  {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "flashdrive"},
 	"Projectile_Grenadier_E_SuppressionBlade": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "zeropoint", iconOnly: true},

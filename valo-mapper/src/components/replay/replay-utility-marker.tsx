@@ -25,9 +25,11 @@ import {
   getReplayUtilityAbilityIcon,
 } from "@/lib/replay/display";
 import { mToPixels } from "@/lib/utils";
+import { CIRCLE_ABILITY_CONFIGS } from "@/lib/consts";
 import type { ReplayUtilityKind } from "@/lib/replay/types";
 
 const REPLAY_INACTIVE_UTILITY_OPACITY = 0.3;
+const NULLCMD_PULSE_MS = 1000;
 
 const REPLAY_UTILITY_COLORS: Record<ReplayUtilityKind, string> = {
   smoke: "#67e8f9",
@@ -126,6 +128,36 @@ export const ReplayUtilityMarker = ({
       utility.abilityId === "paranoia" ||
       utility.abilityId === "undercut") &&
     (utility.samples?.length ?? 0) > 1;
+  const nullcmdPulseRadius = mToPixels(
+    CIRCLE_ABILITY_CONFIGS.kayo_ult.radius,
+  );
+  const nullcmdPulses =
+    utility.abilityId === "nullcmd"
+      ? (utility.samples ?? []).flatMap((sample) => {
+          if (sample.timeMs <= utility.startTimeMs) {
+            return [];
+          }
+          const age = currentTimeMs - sample.timeMs;
+          if (age < 0 || age >= NULLCMD_PULSE_MS) {
+            return [];
+          }
+          const pulsePoint = toReplayCanvasPoint({
+            mapId: match.mapId,
+            mapSide,
+            position: sample,
+          });
+          if (!pulsePoint || !isReplayPointOnMap({ point: pulsePoint })) {
+            return [];
+          }
+          return [
+            {
+              key: `${utility.id}-pulse-${sample.timeMs}`,
+              point: pulsePoint,
+              progress: age / NULLCMD_PULSE_MS,
+            },
+          ];
+        })
+      : [];
   const movementPath = isMovingWall
     ? (utility.samples ?? [])
         .map((sample) =>
@@ -379,6 +411,19 @@ export const ReplayUtilityMarker = ({
           showRotationHandle={false}
         />
       )}
+      {nullcmdPulses.map((pulse) => (
+        <Circle
+          key={pulse.key}
+          name="nullcmd-pulse"
+          x={pulse.point.x}
+          y={pulse.point.y}
+          radius={nullcmdPulseRadius * pulse.progress}
+          stroke={CIRCLE_ABILITY_CONFIGS.kayo_ult.colors.stroke}
+          strokeWidth={Math.max(2, 6 * (1 - pulse.progress))}
+          opacity={1 - pulse.progress}
+          listening={false}
+        />
+      ))}
     </Group>
   );
 };

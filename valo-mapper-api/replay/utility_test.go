@@ -38,6 +38,8 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.02", "GameObject_Deadeye_E_Trap", true, "trademark"},
 		{"13.08", "Pawn_BountyHunter_4_WolfHound", true, "prowler"},
 		{"13.08", "Gameobject_Grenadier_E_SuppressionPulse", true, "zeropoint"},
+		{"13.09", "Gameobject_Grenadier_X_UltPulseManager", true, "nullcmd"},
+		{"13.09", "Gameobject_Grenadier_X_UltPulse", true, "nullcmd"},
 		{"13.08", "Projectile_Wushu_4_Smoke", true, "cloudburst"},
 		{"13.08", "Projectile_Hunter_4_ExplosiveBolt", true, "shock_bolt"},
 		{"13.08", "GameObject_Mage_4_SplashGrenade", true, "storm_surge"},
@@ -418,6 +420,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 	// These projectiles should fly as their ability icon plus a trail, without
 	// drawing the placed ability's area or circle while still in flight.
 	iconOnlyProjectiles := map[string]bool{
+		"Projectile_Aggrobot_C_ExplodeyPatch":                     true,
 		"Projectile_E_BountyHunter_Divebomb":                      true,
 		"Projectile_Q_BountyHunter_TetherGrenade_SphereExpansion": true,
 		"Projectile_Grenadier_E_SuppressionBlade":                 true,
@@ -1907,6 +1910,83 @@ func TestScanUtilitiesMovesRollingThunderForward(t *testing.T) {
 	}
 	if math.Abs(last.X-100) > 1 || math.Abs(last.Y-3400) > 1 {
 		t.Errorf("last wave sample = %v, want the 32 m forward endpoint", last)
+	}
+}
+
+func TestScanUtilitiesBuildsKayONullCmdFromPulses(t *testing.T) {
+	dir := t.TempDir()
+	managerClass := "Gameobject_Grenadier_X_UltPulseManager"
+	pulseClass := "Gameobject_Grenadier_X_UltPulse"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 900, Event: "open",
+			ClassPath: &managerClass, SpawnX: float32Ptr(0), SpawnY: float32Ptr(0),
+		},
+		{TimeMS: 5000, PacketID: 10, ActorNetGUID: 900, Event: "close"},
+		{
+			TimeMS: 2000, PacketID: 2, ActorNetGUID: 901, Event: "open",
+			ClassPath: &pulseClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(0),
+		},
+		{TimeMS: 3000, PacketID: 11, ActorNetGUID: 901, Event: "close"},
+		{
+			TimeMS: 3000, PacketID: 3, ActorNetGUID: 902, Event: "open",
+			ClassPath: &pulseClass, SpawnX: float32Ptr(200), SpawnY: float32Ptr(0),
+		},
+		{TimeMS: 4000, PacketID: 12, ActorNetGUID: 902, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+	ownerName := "Owner"
+	managerGUID := int64(900)
+	fields := []fieldRow{
+		{TimeMS: 2000, PacketID: 2, ActorNetGUID: 901, FieldName: &ownerName, ValueI64: &managerGUID},
+		{TimeMS: 3000, PacketID: 3, ActorNetGUID: 902, FieldName: &ownerName, ValueI64: &managerGUID},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		6000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 6000}},
+		nil,
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want only the NULL/cmd manager", utilities)
+	}
+	ult := utilities[0][0]
+	if ult.AbilityID != "nullcmd" || ult.Kind != UtilityArea {
+		t.Fatalf("ult identity = %q/%q, want area nullcmd", ult.Kind, ult.AbilityID)
+	}
+	if ult.StartTimeMS != 1000 || ult.EndTimeMS != 5000 {
+		t.Errorf("ult interval = %d..%d, want 1000..5000",
+			ult.StartTimeMS, ult.EndTimeMS)
+	}
+	if len(ult.Samples) != 3 {
+		t.Fatalf("samples = %#v, want manager start plus two pulses", ult.Samples)
+	}
+	expected := []Position{{X: 0, Y: 0}, {X: 100, Y: 0}, {X: 200, Y: 0}}
+	for i, position := range expected {
+		if ult.Samples[i].X != position.X || ult.Samples[i].Y != position.Y {
+			t.Errorf("sample %d = %v, want %v", i, ult.Samples[i], position)
+		}
 	}
 }
 

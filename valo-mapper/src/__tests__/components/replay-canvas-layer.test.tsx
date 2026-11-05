@@ -38,12 +38,31 @@ const KNIFE_WEAPON_ID = "2F59173C-4BED-B6C3-2191-DEA9B58BE9C7";
 jest.mock("react-konva", () => {
   const React = jest.requireActual("react") as typeof import("react");
   return {
-    Circle: ({ x, y, fill }: { x: number; y: number; fill: string }) =>
+    Circle: ({
+      x,
+      y,
+      fill,
+      name,
+      radius,
+      stroke,
+      opacity,
+    }: {
+      x: number;
+      y: number;
+      fill?: string;
+      name?: string;
+      radius?: number;
+      stroke?: string;
+      opacity?: number;
+    }) =>
       React.createElement("span", {
-        "data-testid": "utility-marker",
+        "data-testid": name ?? "utility-marker",
         "data-x": x,
         "data-y": y,
         "data-fill": fill,
+        "data-radius": radius,
+        "data-stroke": stroke,
+        "data-opacity": opacity,
       }),
     Image: ({
       image,
@@ -1610,6 +1629,109 @@ describe("ReplayCanvasLayer utilities", () => {
     );
     expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(
       (startPoint.y + lineEnd.y) / 2,
+    );
+  });
+
+  it("moves KAY/O's NULL/cmd circle with its pulse samples", () => {
+    const nullcmd: ReplayUtility = {
+      id: "utility-nullcmd",
+      kind: "area",
+      abilityId: "nullcmd",
+      startTimeMs: 0,
+      endTimeMs: 2000,
+      position: lotusSpawn,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        {
+          timeMs: 500,
+          x: lotusSpawn.x + 500,
+          y: lotusSpawn.y,
+        },
+        {
+          timeMs: 1500,
+          x: lotusSpawn.x + 1500,
+          y: lotusSpawn.y,
+        },
+      ],
+    };
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([nullcmd])}
+        frame={frame}
+        currentTimeMs={0}
+      />,
+    );
+
+    const icon = () => screen.getByTestId("ability-icon");
+    expect(icon()).toHaveAttribute("data-action", "kayo_ult");
+    const startPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(startPoint.x);
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(startPoint.y);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([nullcmd])}
+        frame={frame}
+        currentTimeMs={250}
+      />,
+    );
+
+    const quarterPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: { x: lotusSpawn.x + 250, y: lotusSpawn.y },
+    })!;
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(quarterPoint.x);
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(quarterPoint.y);
+    expect(screen.queryAllByTestId("nullcmd-pulse")).toHaveLength(0);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([nullcmd])}
+        frame={frame}
+        currentTimeMs={750}
+      />,
+    );
+
+    const firstPulses = screen.getAllByTestId("nullcmd-pulse");
+    expect(firstPulses).toHaveLength(1);
+    const firstPulsePoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: { x: lotusSpawn.x + 500, y: lotusSpawn.y },
+    })!;
+    expect(Number(firstPulses[0].getAttribute("data-x"))).toBeCloseTo(
+      firstPulsePoint.x,
+    );
+    expect(Number(firstPulses[0].getAttribute("data-radius"))).toBeGreaterThan(
+      0,
+    );
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([nullcmd])}
+        frame={frame}
+        currentTimeMs={1600}
+      />,
+    );
+
+    const secondPulses = screen.getAllByTestId("nullcmd-pulse");
+    expect(secondPulses).toHaveLength(1);
+    const secondPulsePoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: { x: lotusSpawn.x + 1500, y: lotusSpawn.y },
+    })!;
+    expect(Number(secondPulses[0].getAttribute("data-x"))).toBeCloseTo(
+      secondPulsePoint.x,
     );
   });
 

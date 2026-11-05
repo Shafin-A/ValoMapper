@@ -111,6 +111,40 @@ func scanUtilities(
 		}
 	}
 	trajectoryByOwner := utilityTrajectoryPoints(pathWrites, ownerWrites)
+	const nullcmdPulseWindowMS = 1500
+	pulseSamplesByManager := make(map[uint32][]utilityPathWrite)
+	for _, manager := range lives {
+		if !manager.class.samplesFromPulses {
+			continue
+		}
+		for _, pulse := range lives {
+			if !pulse.class.pulseChild ||
+				pulse.openMS < manager.openMS ||
+				pulse.openMS > manager.closeMS+nullcmdPulseWindowMS {
+				continue
+			}
+			matches := false
+			if owner, ok := utilityDirectOwnerAt(
+				pulse.guid, pulse.openMS, ownerWrites,
+			); ok && owner == manager.guid {
+				matches = true
+			}
+			if !matches && manager.owner != "" && pulse.owner == manager.owner {
+				matches = true
+			}
+			if !matches {
+				continue
+			}
+			pulseSamplesByManager[manager.guid] = append(
+				pulseSamplesByManager[manager.guid],
+				utilityPathWrite{TimeMS: pulse.openMS, Position: pulse.position},
+			)
+			if pulse.closeMS > manager.closeMS {
+				manager.closeMS = pulse.closeMS
+			}
+		}
+		sortUtilityPathWrites(pulseSamplesByManager[manager.guid])
+	}
 
 	splineChildrenByParent := make(map[uint32][]uint32)
 	for _, life := range lives {
@@ -164,7 +198,7 @@ func scanUtilities(
 
 	segments := make([]utilitySegment, 0)
 	for _, life := range lives {
-		if life.class.trapwireFarEnd {
+		if life.class.trapwireFarEnd || life.class.pulseChild {
 			continue
 		}
 		intervals := life.activeIntervals
@@ -215,6 +249,27 @@ func scanUtilities(
 						segment.endMS,
 						window.StartMS,
 					)
+				}
+				if life.class.samplesFromPulses {
+					if life.openMS >= start && life.openMS < end {
+						segment.path = append(segment.path, utilityPathWrite{
+							TimeMS:   life.openMS,
+							Position: life.position,
+						})
+					}
+					for _, write := range pulseSamplesByManager[life.guid] {
+						if write.TimeMS < start {
+							continue
+						}
+						if write.TimeMS >= end {
+							if write.TimeMS != end || end <= start {
+								continue
+							}
+							write.TimeMS = end - 1
+						}
+						segment.path = append(segment.path, write)
+					}
+					sortUtilityPathWrites(segment.path)
 				}
 				segments = append(segments, segment)
 			}
@@ -513,6 +568,18 @@ func scanUtilities(
 			utility.Samples = segment.trajectorySamples
 			if len(utility.Samples) == 0 &&
 				segment.life.class.trajectoryWarnings {
+				continue
+			}
+		}
+		if segment.life.class.samplesFromPulses {
+			var truncated bool
+			utility.Samples, truncated = sampleUtilityPath(
+				segment.path, window.StartMS,
+			)
+			if truncated {
+				incrementUtilityWarning(&warnings.TruncatedSamples)
+			}
+			if len(utility.Samples) == 0 {
 				continue
 			}
 		}
