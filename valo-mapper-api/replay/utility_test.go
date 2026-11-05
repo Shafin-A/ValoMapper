@@ -43,6 +43,12 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.08", "GameObject_Mage_4_SplashGrenade", true, "storm_surge"},
 		{"13.09", "Projectile_Mage_4_SplashGrenade", true, "storm_surge"},
 		{"13.08", "Projectile_Mage_Q_Wall", true, "high_tide"},
+		{"13.09", "Patch_Cable_4_NetToss", true, "gravnet"},
+		{"13.09", "Projectile_Cable_4_NetToss", true, "gravnet"},
+		{"13.09", "GameObject_CableJamRoot", true, "barrier_mesh"},
+		{"13.09", "Projectile_CableJam_InAir", true, "barrier_mesh"},
+		{"13.09", "Actor_FishingHook", true, "annihilation"},
+		{"13.09", "GameObject_FishingHook_CageSphere", true, "annihilation"},
 		{"13.08", "GameObject_Mage_Q_WallManager", true, "high_tide"},
 		{"13.08", "GameObject_Mage_E_WorldSmoke", true, "cove"},
 		{"13.08", "GameObject_Mage_X_TidalWave", true, "reckoning"},
@@ -365,6 +371,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		{"Projectile_Breach_4_FusionBlast", "aftershock"},
 		{"Projectile_Breach_Q_ThroughWalls_Flash", "flashpoint"},
 		{"Projectile_NetToss", "gravnet"},
+		{"Projectile_Cable_4_NetToss", "gravnet"},
 		{"Projectile_CableJam_InAir", "barrier_mesh"},
 		{"Projectile_Cashew_Q_ShellShockGrenade", "special_delivery"},
 		{"Projectile_Cashew_Q_ShellShockGrenade_Bounce", "special_delivery"},
@@ -427,6 +434,9 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		"Projectile_Thumper_Heal":                                 true,
 		"Projectile_Nox_BarbedWire":                               true,
 		"Projectile_Terra_C_TimeSlowGrenade":                      true,
+		"Projectile_Cable_4_NetToss":                              true,
+		"Projectile_NetToss":                                      true,
+		"Projectile_CableJam_InAir":                               true,
 	}
 
 	for _, test := range tests {
@@ -1509,6 +1519,271 @@ func TestScanUtilitiesUsesVyseWallAnchorVectors(t *testing.T) {
 	}
 	if trap.AbilityID != "shear" || trap.Position != (Position{X: 2000, Y: 5500}) || trap.Yaw != 0 {
 		t.Errorf("trap geometry = %+v, want midpoint (2000, 5500), yaw 0", trap)
+	}
+}
+
+func TestDeadlockBarrierMeshUsesRootWithDeployerArms(t *testing.T) {
+	entry, found := utilityCatalog["GameObject_CableJamRoot"]
+	if !found {
+		t.Fatal("Deadlock Barrier Mesh root is not catalogued")
+	}
+	if entry.kind != UtilityWall || entry.ability != "barrier_mesh" || !entry.wallArms {
+		t.Fatalf("root entry = %#v, want a Barrier Mesh wall with arms", entry)
+	}
+	if _, found := utilityCatalog["GameObject_CableJam_CableDeployer_Precomputed"]; found {
+		t.Fatal("Barrier Mesh deployers must not be emitted as independent walls")
+	}
+}
+
+func TestScanUtilitiesBuildsBarrierMeshArmsFromDeployers(t *testing.T) {
+	dir := t.TempDir()
+	rootClass := "GameObject_CableJamRoot"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &rootClass, SpawnX: float32Ptr(9609.5), SpawnY: float32Ptr(-5623),
+		},
+		{TimeMS: 4000, PacketID: 20, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	rawVector := func(x, y, z float64) []byte {
+		raw := make([]byte, 24)
+		binary.LittleEndian.PutUint64(raw[0:8], math.Float64bits(x))
+		binary.LittleEndian.PutUint64(raw[8:16], math.Float64bits(y))
+		binary.LittleEndian.PutUint64(raw[16:24], math.Float64bits(z))
+		return raw
+	}
+	ownerName := "Owner"
+	destinationName := "MulticastInitialize.Destination"
+	destinations := []Position{
+		{X: 9809.4, Y: -5423.2},
+		{X: 9165.0, Y: -5178.4},
+		{X: 9023.2, Y: -6209.3},
+		{X: 10178.7, Y: -6192.1},
+	}
+	fields := make([]fieldRow, 0, len(destinations)*2)
+	rootGUID := int64(700)
+	for i, destination := range destinations {
+		guid := uint32(701 + i)
+		fields = append(fields,
+			fieldRow{
+				TimeMS: 1000, PacketID: uint32(2 + i*2), ActorNetGUID: guid,
+				FieldName: &ownerName, ValueI64: &rootGUID,
+			},
+			fieldRow{
+				TimeMS: 1000, PacketID: uint32(3 + i*2), ActorNetGUID: guid,
+				FieldName: &destinationName, BitCount: 192,
+				RawBits: rawVector(destination.X, destination.Y, 0),
+			},
+		)
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		5000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 5000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Barrier Mesh wall", utilities)
+	}
+	wall := utilities[0][0]
+	if wall.AbilityID != "barrier_mesh" || wall.Kind != UtilityWall {
+		t.Fatalf("wall identity = %q/%q, want wall barrier_mesh", wall.Kind, wall.AbilityID)
+	}
+	if wall.Position != (Position{X: 9609.5, Y: -5623}) {
+		t.Errorf("wall position = %v, want the central deployer", wall.Position)
+	}
+	if len(wall.Path) != len(destinations) {
+		t.Fatalf("wall path = %#v, want %d arm endpoints", wall.Path, len(destinations))
+	}
+	for i, destination := range destinations {
+		point := wall.Path[i]
+		if point.TimeMS != wall.StartTimeMS || point.X != destination.X || point.Y != destination.Y {
+			t.Errorf("arm %d = %#v, want %v at t=%d", i, point, destination, wall.StartTimeMS)
+		}
+	}
+}
+
+func TestScanUtilitiesBuildsAnnihilationHookTrajectory(t *testing.T) {
+	dir := t.TempDir()
+	hookClass := "Actor_FishingHook"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 900, Event: "open",
+			ClassPath: &hookClass, SpawnX: float32Ptr(0), SpawnY: float32Ptr(0),
+		},
+		{TimeMS: 3000, PacketID: 10, ActorNetGUID: 900, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	rawVector := func(x, y, z float64) []byte {
+		raw := make([]byte, 24)
+		binary.LittleEndian.PutUint64(raw[0:8], math.Float64bits(x))
+		binary.LittleEndian.PutUint64(raw[8:16], math.Float64bits(y))
+		binary.LittleEndian.PutUint64(raw[16:24], math.Float64bits(z))
+		return raw
+	}
+	ownerName := "Owner"
+	startName := "Multicast Initialize Segment.SegmentLocation_5_ABC"
+	endName := "Multicast Initialize Segment.SegmentEndLocation_27_DEF"
+	stopName := "Multicast Stop Collider"
+	ownerGUID := int64(900)
+	fields := []fieldRow{
+		{TimeMS: 1000, PacketID: 2, ActorNetGUID: 901, FieldName: &ownerName, ValueI64: &ownerGUID},
+		{TimeMS: 1000, PacketID: 2, ActorNetGUID: 901, FieldName: &startName, BitCount: 192, RawBits: rawVector(0, 0, 0)},
+		{TimeMS: 1000, PacketID: 2, ActorNetGUID: 901, FieldName: &endName, BitCount: 192, RawBits: rawVector(100, 100, 0)},
+		{TimeMS: 1000, PacketID: 3, ActorNetGUID: 902, FieldName: &ownerName, ValueI64: &ownerGUID},
+		{TimeMS: 1000, PacketID: 3, ActorNetGUID: 902, FieldName: &startName, BitCount: 192, RawBits: rawVector(100, 100, 0)},
+		{TimeMS: 1000, PacketID: 3, ActorNetGUID: 902, FieldName: &endName, BitCount: 192, RawBits: rawVector(200, 0, 0)},
+		{TimeMS: 1800, PacketID: 4, ActorNetGUID: 900, FieldName: &stopName},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		5000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 5000}},
+		nil,
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Annihilation hook", utilities)
+	}
+	hook := utilities[0][0]
+	if hook.AbilityID != "annihilation" || hook.Kind != UtilityMobile {
+		t.Fatalf("hook identity = %q/%q, want mobile annihilation", hook.Kind, hook.AbilityID)
+	}
+	if hook.StartTimeMS != 1000 || hook.EndTimeMS != 1800 {
+		t.Errorf("hook interval = %d..%d, want 1000..1800",
+			hook.StartTimeMS, hook.EndTimeMS)
+	}
+	if len(hook.Samples) < 2 {
+		t.Fatalf("hook samples = %#v, want a sampled trajectory", hook.Samples)
+	}
+	first := hook.Samples[0]
+	last := hook.Samples[len(hook.Samples)-1]
+	if first.X != 0 || first.Y != 0 {
+		t.Errorf("first hook sample = %v, want the cast point", first)
+	}
+	if math.Abs(last.X-200) > 1 || math.Abs(last.Y) > 1 {
+		t.Errorf("last hook sample = %v, want the trajectory end (200, 0)", last)
+	}
+}
+
+func TestScanUtilitiesFollowsAnnihilationCageAndRelease(t *testing.T) {
+	dir := t.TempDir()
+	cageClass := "GameObject_FishingHook_CageSphere"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 910, Event: "open",
+			ClassPath: &cageClass, SpawnX: float32Ptr(50), SpawnY: float32Ptr(50),
+		},
+		{TimeMS: 4000, PacketID: 10, ActorNetGUID: 910, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	attachName := "AttachParent"
+	releaseName := "Multicast Try Release Cage"
+	parentGUID := int64(800)
+	fields := []fieldRow{
+		{TimeMS: 1000, PacketID: 2, ActorNetGUID: 910, FieldName: &attachName, ValueI64: &parentGUID},
+		{TimeMS: 2500, PacketID: 5, ActorNetGUID: 910, FieldName: &releaseName},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	movement := []movementRow{
+		{TimeMS: 1000, CharacterNetGUID: 800, PosX: 0, PosY: 0},
+		{TimeMS: 1500, CharacterNetGUID: 800, PosX: 100, PosY: 0},
+		{TimeMS: 2000, CharacterNetGUID: 800, PosX: 200, PosY: 0},
+		{TimeMS: 2500, CharacterNetGUID: 800, PosX: 300, PosY: 0},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "movement.parquet"), movement); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		5000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 5000}},
+		nil,
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Annihilation cage", utilities)
+	}
+	cage := utilities[0][0]
+	if cage.AbilityID != "annihilation" || cage.Kind != UtilityMobile {
+		t.Fatalf("cage identity = %q/%q, want mobile annihilation", cage.Kind, cage.AbilityID)
+	}
+	if cage.StartTimeMS != 1000 || cage.EndTimeMS != 2500 {
+		t.Errorf("cage interval = %d..%d, want release at 2500",
+			cage.StartTimeMS, cage.EndTimeMS)
+	}
+	if len(cage.Samples) != 3 {
+		t.Fatalf("cage samples = %#v, want the parent's three samples", cage.Samples)
+	}
+	if cage.Samples[0].X != 0 || cage.Samples[0].Y != 0 {
+		t.Errorf("first cage sample = %v, want parent position (0, 0)", cage.Samples[0])
+	}
+	if cage.Samples[2].X != 200 || cage.Samples[2].Y != 0 {
+		t.Errorf("last cage sample = %v, want parent position (200, 0)", cage.Samples[2])
 	}
 }
 

@@ -26,6 +26,7 @@ interface CanvasXIconProps extends CanvasIconProps {
   showInactiveRotationHandleRing?: boolean;
   endCircleRadius?: number;
   endCircleColor?: string;
+  currentPath?: { x: number; y: number }[];
 }
 
 export const CanvasXIcon = ({
@@ -60,6 +61,7 @@ export const CanvasXIcon = ({
   endCircleRadius = 8,
   endCircleColor = "#ffffff",
   showAbilityShape = true,
+  currentPath,
   registerNode,
   unregisterNode,
 }: CanvasXIconProps) => {
@@ -227,6 +229,13 @@ export const CanvasXIcon = ({
 
   const halfLength = lineLength / 2;
   const radians = (currentRotation * Math.PI) / 180;
+  const arms = (currentPath ?? []).filter(
+    (point) =>
+      Number.isFinite(point.x) &&
+      Number.isFinite(point.y) &&
+      (point.x !== 0 || point.y !== 0),
+  );
+  const useArms = arms.length > 0;
 
   const line1StartX = -halfLength * Math.cos(radians);
   const line1StartY = -halfLength * Math.sin(radians);
@@ -267,49 +276,75 @@ export const CanvasXIcon = ({
     >
       {showAbilityShape && (
         <>
-          <Line
-            listening={false}
-            points={[line1StartX, line1StartY, line1EndX, line1EndY]}
-            strokeWidth={lineStrokeWidth}
-            stroke={stroke}
-          />
+          {useArms ? (
+            <>
+              {arms.map((arm, index) => (
+                <Line
+                  key={`arm-${index}`}
+                  listening={false}
+                  points={[0, 0, arm.x, arm.y]}
+                  strokeWidth={lineStrokeWidth}
+                  stroke={stroke}
+                />
+              ))}
+              {arms.map((arm, index) => (
+                <Circle
+                  key={`arm-end-${index}`}
+                  listening={false}
+                  x={arm.x}
+                  y={arm.y}
+                  radius={endCircleRadius}
+                  fill={endCircleColor}
+                />
+              ))}
+            </>
+          ) : (
+            <>
+              <Line
+                listening={false}
+                points={[line1StartX, line1StartY, line1EndX, line1EndY]}
+                strokeWidth={lineStrokeWidth}
+                stroke={stroke}
+              />
 
-          <Line
-            listening={false}
-            points={[line2StartX, line2StartY, line2EndX, line2EndY]}
-            strokeWidth={lineStrokeWidth}
-            stroke={stroke}
-          />
+              <Line
+                listening={false}
+                points={[line2StartX, line2StartY, line2EndX, line2EndY]}
+                strokeWidth={lineStrokeWidth}
+                stroke={stroke}
+              />
 
-          <Circle
-            listening={false}
-            x={line1StartX}
-            y={line1StartY}
-            radius={endCircleRadius}
-            fill={endCircleColor}
-          />
-          <Circle
-            listening={false}
-            x={line1EndX}
-            y={line1EndY}
-            radius={endCircleRadius}
-            fill={endCircleColor}
-          />
+              <Circle
+                listening={false}
+                x={line1StartX}
+                y={line1StartY}
+                radius={endCircleRadius}
+                fill={endCircleColor}
+              />
+              <Circle
+                listening={false}
+                x={line1EndX}
+                y={line1EndY}
+                radius={endCircleRadius}
+                fill={endCircleColor}
+              />
 
-          <Circle
-            listening={false}
-            x={line2StartX}
-            y={line2StartY}
-            radius={endCircleRadius}
-            fill={endCircleColor}
-          />
-          <Circle
-            listening={false}
-            x={line2EndX}
-            y={line2EndY}
-            radius={endCircleRadius}
-            fill={endCircleColor}
-          />
+              <Circle
+                listening={false}
+                x={line2StartX}
+                y={line2StartY}
+                radius={endCircleRadius}
+                fill={endCircleColor}
+              />
+              <Circle
+                listening={false}
+                x={line2EndX}
+                y={line2EndY}
+                radius={endCircleRadius}
+                fill={endCircleColor}
+              />
+            </>
+          )}
 
           {showRotationHandle && (
             <Circle

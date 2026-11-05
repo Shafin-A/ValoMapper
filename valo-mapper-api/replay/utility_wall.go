@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 )
 
 func utilityWallEndpoints(writes []utilityPathWrite) (Position, Position, bool) {
@@ -53,6 +54,175 @@ func utilityWallEndpoints(writes []utilityPathWrite) (Position, Position, bool) 
 		return *pair.start, *pair.end, true
 	}
 	return Position{}, Position{}, false
+}
+
+func utilityWallArmDestinations(
+	pathWrites map[uint32][]utilityPathWrite,
+	ownerWrites map[uint32][]utilityOwnerWrite,
+) map[uint32][]utilityPathWrite {
+	result := make(map[uint32][]utilityPathWrite)
+	for actorGUID, writes := range pathWrites {
+		for _, write := range writes {
+			if write.FieldName != "MulticastInitialize.Destination" {
+				continue
+			}
+			owner, ok := utilityDirectOwnerAt(actorGUID, write.TimeMS, ownerWrites)
+			if !ok {
+				continue
+			}
+			result[owner] = append(result[owner], write)
+		}
+	}
+	for owner := range result {
+		sortUtilityPathWrites(result[owner])
+	}
+	return result
+}
+
+type utilityTrajectorySegment struct {
+	start    Position
+	end      Position
+	hasStart bool
+	hasEnd   bool
+	packetID uint32
+	timeMS   uint32
+}
+
+func utilityTrajectoryPoints(
+	pathWrites map[uint32][]utilityPathWrite,
+	ownerWrites map[uint32][]utilityOwnerWrite,
+) map[uint32][]Position {
+	segments := make(map[uint32]*utilityTrajectorySegment)
+	endWarnings := make(map[uint32]utilityPathWrite)
+	for actorGUID, writes := range pathWrites {
+		for _, write := range writes {
+			segment := segments[actorGUID]
+			if segment == nil {
+				segment = &utilityTrajectorySegment{}
+				segments[actorGUID] = segment
+			}
+			switch {
+			case strings.HasPrefix(write.FieldName, "Multicast Initialize Segment.SegmentLocation_"):
+				segment.start = write.Position
+				segment.hasStart = validUtilityPosition(write.Position)
+				segment.packetID = write.PacketID
+				segment.timeMS = write.TimeMS
+			case strings.HasPrefix(write.FieldName, "Multicast Initialize Segment.SegmentEndLocation_"):
+				segment.end = write.Position
+				segment.hasEnd = validUtilityPosition(write.Position)
+				if segment.packetID == 0 {
+					segment.packetID = write.PacketID
+				}
+				if segment.timeMS == 0 {
+					segment.timeMS = write.TimeMS
+				}
+			case write.FieldName == "Multicast Initialize End Segment.248":
+				endWarnings[actorGUID] = write
+			}
+		}
+	}
+
+	byOwner := make(map[uint32][]*utilityTrajectorySegment)
+	for actorGUID, segment := range segments {
+		if !segment.hasStart || !segment.hasEnd {
+			continue
+		}
+		owner, ok := utilityDirectOwnerAt(actorGUID, segment.timeMS, ownerWrites)
+		if !ok {
+			continue
+		}
+		byOwner[owner] = append(byOwner[owner], segment)
+	}
+
+	result := make(map[uint32][]Position, len(byOwner))
+	for owner, ownerSegments := range byOwner {
+		sort.SliceStable(ownerSegments, func(i, j int) bool {
+			return ownerSegments[i].packetID < ownerSegments[j].packetID
+		})
+		points := make([]Position, 0, len(ownerSegments)*2)
+		appendUnique := func(position Position) {
+			if !validUtilityPosition(position) {
+				return
+			}
+			if len(points) > 0 && points[len(points)-1] == position {
+				return
+			}
+			points = append(points, position)
+		}
+		for _, segment := range ownerSegments {
+			appendUnique(segment.start)
+			appendUnique(segment.end)
+		}
+		result[owner] = points
+	}
+
+	for actorGUID, write := range endWarnings {
+		owner, ok := utilityDirectOwnerAt(actorGUID, write.TimeMS, ownerWrites)
+		if !ok || len(result[owner]) >= 2 {
+			continue
+		}
+		result[owner] = []Position{write.Position}
+	}
+	return result
+}
+
+func utilityTrajectorySamples(
+	points []Position,
+	startMS, endMS, roundStart uint32,
+) []UtilityPositionSample {
+	if len(points) < 2 || startMS >= endMS {
+		return nil
+	}
+	distances := make([]float64, len(points))
+	total := 0.0
+	for i := 1; i < len(points); i++ {
+		total += math.Hypot(
+			points[i].X-points[i-1].X,
+			points[i].Y-points[i-1].Y,
+		)
+		distances[i] = total
+	}
+	if total <= 0 || !isFinite64(total) {
+		return nil
+	}
+
+	const sampleStepMS = 50
+	duration := int(endMS - startMS)
+	count := duration/sampleStepMS + 1
+	if count < 2 {
+		count = 2
+	}
+	if count > maxUtilitySamples {
+		count = maxUtilitySamples
+	}
+	samples := make([]UtilityPositionSample, 0, count)
+	for i := 0; i < count; i++ {
+		progress := float64(i) / float64(count-1)
+		target := total * progress
+		segment := 1
+		for segment < len(points) && distances[segment] < target {
+			segment++
+		}
+		if segment >= len(points) {
+			segment = len(points) - 1
+		}
+		previousDistance := distances[segment-1]
+		span := distances[segment] - previousDistance
+		fraction := 0.0
+		if span > 0 {
+			fraction = (target - previousDistance) / span
+		}
+		position := Position{
+			X: points[segment-1].X + (points[segment].X-points[segment-1].X)*fraction,
+			Y: points[segment-1].Y + (points[segment].Y-points[segment-1].Y)*fraction,
+		}
+		samples = append(samples, UtilityPositionSample{
+			TimeMS: int(startMS+uint32(duration-1)*uint32(i)/uint32(count-1)) - int(roundStart),
+			X:      position.X,
+			Y:      position.Y,
+		})
+	}
+	return samples
 }
 
 func utilityWallSpan(writes []utilityPathWrite) (Position, Position, bool) {

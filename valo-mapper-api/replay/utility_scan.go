@@ -80,6 +80,38 @@ func scanUtilities(
 		}
 	}
 
+	for _, life := range lives {
+		if life.class.trajectoryWarnings {
+			if endMS, ok := utilityEventTime(
+				destroyWrites[life.guid],
+				life.openMS,
+				life.closeMS,
+				"Multicast Stop Collider",
+				"Multicast Stop Collider.Is Pulling",
+			); ok {
+				life.closeMS = endMS
+			}
+		}
+		if life.class.releaseOnEvent {
+			if endMS, ok := utilityEventTime(
+				destroyWrites[life.guid],
+				life.openMS,
+				life.closeMS,
+				"Multicast Try Release Cage",
+			); ok {
+				life.closeMS = endMS
+			}
+		}
+		if life.class.followsParent {
+			if parent, ok := utilityAttachParentAt(
+				life.guid, life.openMS, ownerWrites,
+			); ok {
+				life.attachParent = parent
+			}
+		}
+	}
+	trajectoryByOwner := utilityTrajectoryPoints(pathWrites, ownerWrites)
+
 	splineChildrenByParent := make(map[uint32][]uint32)
 	for _, life := range lives {
 		if !life.class.splineChild {
@@ -128,6 +160,7 @@ func scanUtilities(
 	}
 
 	pairCypherTrapwireEndpoints(lives, ownerWrites)
+	wallArmsByOwner := utilityWallArmDestinations(pathWrites, ownerWrites)
 
 	segments := make([]utilitySegment, 0)
 	for _, life := range lives {
@@ -145,14 +178,32 @@ func scanUtilities(
 				if start >= end {
 					continue
 				}
-				segments = append(segments, utilitySegment{
+				segment := utilitySegment{
 					life:       life,
 					roundIndex: roundIndex,
 					startMS:    start,
 					endMS:      end,
 					position:   life.position,
 					yaw:        life.yaw + life.class.wallYawOffset,
-				})
+				}
+				if life.class.wallArms {
+					for _, write := range wallArmsByOwner[life.guid] {
+						if write.TimeMS < life.openMS || write.TimeMS >= life.closeMS {
+							continue
+						}
+						segment.path = append(segment.path, write)
+					}
+				}
+				if life.class.trajectoryWarnings {
+					points := append([]Position(nil), trajectoryByOwner[life.guid]...)
+					if len(points) > 0 && points[0] != life.position {
+						points = append([]Position{life.position}, points...)
+					}
+					segment.trajectorySamples = utilityTrajectorySamples(
+						points, segment.startMS, segment.endMS, window.StartMS,
+					)
+				}
+				segments = append(segments, segment)
 			}
 			if !life.class.wallActivated {
 				continue
@@ -188,6 +239,9 @@ func scanUtilities(
 	for _, segment := range segments {
 		if segment.life.class.mobile {
 			movementGUIDs[segment.life.guid] = struct{}{}
+		}
+		if segment.life.class.followsParent && segment.life.attachParent != 0 {
+			movementGUIDs[segment.life.attachParent] = struct{}{}
 		}
 		if segment.life.class.visionCone &&
 			hasActiveUtilityControllerWrite(ownerWrites[segment.life.guid]) {
@@ -348,7 +402,7 @@ func scanUtilities(
 				segment.stopFraction = &fraction
 			}
 		}
-		if !segment.life.class.mobile {
+		if !segment.life.class.mobile && !segment.life.class.followsParent {
 			if segment.life.class.visionCone {
 				var truncated bool
 				segment.visionSamples, truncated = sampleUtilityVision(
@@ -366,13 +420,17 @@ func scanUtilities(
 			}
 			continue
 		}
-		for _, row := range movementByGUID[segment.life.guid] {
+		movementGUID := segment.life.guid
+		if segment.life.class.followsParent {
+			movementGUID = segment.life.attachParent
+		}
+		for _, row := range movementByGUID[movementGUID] {
 			if row.TimeMS >= segment.startMS && row.TimeMS < segment.endMS &&
 				row.TimeMS >= segment.life.openMS && row.TimeMS < segment.life.closeMS {
 				segment.samples = append(segment.samples, row)
 			}
 		}
-		if len(segment.samples) == 0 && len(movementByGUID[segment.life.guid]) == 0 {
+		if len(segment.samples) == 0 && len(movementByGUID[movementGUID]) == 0 {
 			incrementUtilityWarning(&warnings.MissingMovement)
 		}
 	}
@@ -412,6 +470,22 @@ func scanUtilities(
 				incrementUtilityWarning(&warnings.TruncatedPaths)
 			}
 		}
+		if segment.life.class.wallArms {
+			armTimeMS := int(segment.startMS - window.StartMS)
+			for _, write := range segment.path {
+				utility.Path = append(utility.Path, UtilityPositionSample{
+					TimeMS: armTimeMS,
+					X:      write.Position.X,
+					Y:      write.Position.Y,
+				})
+			}
+		}
+		if segment.life.class.trajectoryWarnings {
+			utility.Samples = segment.trajectorySamples
+			if len(utility.Samples) == 0 {
+				continue
+			}
+		}
 		if segment.life.class.splineMovement {
 			var truncated bool
 			utility.Samples, truncated = sampleUtilitySplineMovement(
@@ -425,7 +499,7 @@ func scanUtilities(
 				incrementUtilityWarning(&warnings.TruncatedSamples)
 			}
 		}
-		if segment.life.class.mobile {
+		if segment.life.class.mobile || segment.life.class.followsParent {
 			var truncated bool
 			utility.Samples, truncated = sampleUtilityMovement(segment.samples, window.StartMS)
 			if truncated {
@@ -459,7 +533,12 @@ func filterUtilitySegments(segments []utilitySegment) []utilitySegment {
 		if segment.life.class.splineChild {
 			continue
 		}
-		if segment.life.class.mobile && len(segment.samples) == 0 {
+		if (segment.life.class.mobile || segment.life.class.followsParent) &&
+			len(segment.samples) == 0 {
+			continue
+		}
+		if segment.life.class.trajectoryWarnings &&
+			len(segment.trajectorySamples) == 0 {
 			continue
 		}
 		result = append(result, segment)

@@ -20,6 +20,10 @@ type utilityCatalogEntry struct {
 	trapwireFarEnd     bool
 	iconOnly           bool
 	visionCone         bool
+	wallArms           bool
+	followsParent      bool
+	releaseOnEvent     bool
+	trajectoryWarnings bool
 	wallYawOffset      float64
 	curveballSide      int
 	minBuild           int
@@ -74,12 +78,16 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_RemovableObject_GumshoeTrackingDart": {kind: UtilityMarker, minBuild: 1300, ability: "spycam"},
 
 	// Deadlock
+	"Actor_FishingHook":                       {kind: UtilityMobile, trajectoryWarnings: true, iconOnly: true, minBuild: 1300, ability: "annihilation"},
+	"GameObject_FishingHook_CageSphere":       {kind: UtilityMobile, followsParent: true, releaseOnEvent: true, minBuild: 1300, ability: "annihilation"},
 	"Patch_NetToss":                           {kind: UtilityArea, minBuild: 1300, ability: "gravnet"},
-	"Projectile_NetToss":                      {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "gravnet"},
-	"Projectile_CableJam_InAir":               {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "barrier_mesh"},
+	"Patch_Cable_4_NetToss":                   {kind: UtilityArea, minBuild: 1300, ability: "gravnet"},
+	"Projectile_NetToss":                      {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "gravnet", iconOnly: true},
+	"Projectile_Cable_4_NetToss":              {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "gravnet", iconOnly: true},
+	"Projectile_CableJam_InAir":               {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "barrier_mesh", iconOnly: true},
 	"GameObject_StealthingTrap_SoundSensor":   {kind: UtilityTrap, minBuild: 1300, ability: "sonic_sensor"},
 	"GameObject_SoundSensor_SweetSpotFissure": {kind: UtilityTrap, minBuild: 1300, ability: "sonic_sensor"},
-	"GameObject_CableJamRoot":                 {kind: UtilityWall, minBuild: 1300, ability: "barrier_mesh"},
+	"GameObject_CableJamRoot":                 {kind: UtilityWall, wallArms: true, minBuild: 1300, ability: "barrier_mesh"},
 
 	// Fade
 	"GameObject_BountyHunter_E_LoSReveal_Source_Reactivate":   {kind: UtilityMarker, minBuild: 1300, ability: "haunt"},
@@ -115,7 +123,6 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Paprika_X_LevitateZone":            {kind: UtilityArea, minBuild: 1300, ability: "suspension"},
 
 	// Iso
-	"GameObject_FishingHook_CageSphere":   {kind: UtilityArea, minBuild: 1300, ability: "annihilation"},
 	"GameObject_Sequoia_4_MovingCover":    {kind: UtilityWall, splineMovement: true, minBuild: 1300, ability: "contingency"},
 	"GameObject_Sequoia_E_Orb":            {kind: UtilityMarker, minBuild: 1300, ability: "double_tap"},
 	"GameObject_Sequoia_X_LineCapture":    {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 1000, ability: "kill_contract"},

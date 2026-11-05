@@ -18,6 +18,9 @@ func poisonCloudDestroyMS(
 	var earliest uint32
 	found := false
 	for _, write := range writes {
+		if write.Name != "" && write.Name != "Multicast Destroy Smoke" {
+			continue
+		}
 		if write.TimeMS <= openMS || write.TimeMS > closeMS {
 			continue
 		}

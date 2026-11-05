@@ -128,9 +128,21 @@ func scanFields(exportDir string) (*fieldScan, error) {
 					name == "MulticastInitializeWall.WallEndLocation" ||
 					name == "MulticastInitializeTrapAnchors.WallStartPoint" ||
 					name == "MulticastInitializeTrapAnchors.WallEndPoint" ||
+					name == "MulticastInitialize.RootLocation" ||
+					name == "MulticastInitialize.Destination" ||
 					name == "MulticastAddTunnelPoint.Translation" ||
-					name == "MulticastAddAnchor.Translation") {
-				if position, ok := parseUtilityRawVector(row.RawBits, row.BitCount); ok {
+					name == "MulticastAddAnchor.Translation" ||
+					strings.HasPrefix(name, "Multicast Initialize Segment.SegmentLocation_") ||
+					strings.HasPrefix(name, "Multicast Initialize Segment.SegmentEndLocation_") ||
+					name == "Multicast Initialize End Segment.248") {
+				var position Position
+				var ok bool
+				if name == "Multicast Initialize End Segment.248" && row.ValueStr != nil {
+					position, ok = parseWorldPosition(*row.ValueStr)
+				} else {
+					position, ok = parseUtilityRawVector(row.RawBits, row.BitCount)
+				}
+				if ok {
 					scan.UtilityPaths[row.ActorNetGUID] = append(
 						scan.UtilityPaths[row.ActorNetGUID],
 						utilityPathWrite{
@@ -158,6 +170,11 @@ func scanFields(exportDir string) (*fieldScan, error) {
 					scan.UtilityOwners[row.ActorNetGUID] = append(
 						scan.UtilityOwners[row.ActorNetGUID],
 						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Controller: &target},
+					)
+				case "attachparent":
+					scan.UtilityOwners[row.ActorNetGUID] = append(
+						scan.UtilityOwners[row.ActorNetGUID],
+						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, AttachParent: &target},
 					)
 				}
 			}
@@ -212,10 +229,13 @@ func scanFields(exportDir string) (*fieldScan, error) {
 				if row.ValueI64 != nil {
 					scan.Defusers = append(scan.Defusers, rpcWrite{timeMS, strconv.FormatInt(*row.ValueI64, 10)})
 				}
-			case name == "Multicast Destroy Smoke":
+			case name == "Multicast Destroy Smoke" ||
+				name == "Multicast Try Release Cage" ||
+				name == "Multicast Stop Collider" ||
+				name == "Multicast Stop Collider.Is Pulling":
 				scan.UtilityDestroy[row.ActorNetGUID] = append(
 					scan.UtilityDestroy[row.ActorNetGUID],
-					utilityDestroyWrite{TimeMS: timeMS, PacketID: row.PacketID},
+					utilityDestroyWrite{TimeMS: timeMS, PacketID: row.PacketID, Name: name},
 				)
 			case name == "WallActivated" && row.ValueBool != nil:
 				value := *row.ValueBool

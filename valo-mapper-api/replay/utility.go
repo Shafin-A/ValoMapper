@@ -37,6 +37,7 @@ type utilityActorLife struct {
 	lengthM         float64
 	hasYaw          bool
 	owner           string
+	attachParent    uint32
 	activeIntervals []utilityInterval
 	placedMS        uint32
 }
@@ -47,11 +48,12 @@ type utilityInterval struct {
 }
 
 type utilityOwnerWrite struct {
-	TimeMS     uint32
-	PacketID   uint32
-	Owner      *uint32
-	Instigator *uint32
-	Controller *uint32
+	TimeMS       uint32
+	PacketID     uint32
+	Owner        *uint32
+	Instigator   *uint32
+	Controller   *uint32
+	AttachParent *uint32
 }
 
 type utilityPathWrite struct {
@@ -77,6 +79,7 @@ type utilityFuelWrite struct {
 type utilityDestroyWrite struct {
 	TimeMS   uint32
 	PacketID uint32
+	Name     string
 }
 
 type utilityActivationWrite struct {
@@ -100,5 +103,6 @@ type utilitySegment struct {
 	stopFraction       *float64
 	path               []utilityPathWrite
 	visionSamples      []UtilityVisionSample
+	trajectorySamples  []UtilityPositionSample
 	lengthSamples      []UtilityLengthSample
 }

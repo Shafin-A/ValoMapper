@@ -1249,6 +1249,55 @@ describe("ReplayCanvasLayer utilities", () => {
     );
   });
 
+  it("draws Barrier Mesh arms from its deployer endpoints", () => {
+    const armEndpoints = [
+      { x: lotusSpawn.x + 200, y: lotusSpawn.y + 200 },
+      { x: lotusSpawn.x - 300, y: lotusSpawn.y + 300 },
+      { x: lotusSpawn.x - 400, y: lotusSpawn.y - 400 },
+      { x: lotusSpawn.x + 500, y: lotusSpawn.y - 500 },
+    ];
+    const barrierMesh: ReplayUtility = {
+      id: "utility-barrier-mesh",
+      kind: "wall",
+      abilityId: "barrier_mesh",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: lotusSpawn,
+      path: armEndpoints.map((endpoint) => ({ timeMs: 0, ...endpoint })),
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([barrierMesh])}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+
+    const abilityIcon = screen.getByTestId("ability-icon");
+    expect(abilityIcon).toHaveAttribute("data-action", "deadlock_wall");
+    expect(abilityIcon).toHaveAttribute("data-show-rotation-handle", "false");
+    const originPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    const currentPath = JSON.parse(
+      abilityIcon.getAttribute("data-current-path")!,
+    ) as { x: number; y: number }[];
+    expect(currentPath).toHaveLength(armEndpoints.length);
+    armEndpoints.forEach((endpoint, index) => {
+      const expected = toReplayCanvasPoint({
+        mapId: "lotus",
+        mapSide: "defense",
+        position: endpoint,
+      })!;
+      expect(currentPath[index].x).toBeCloseTo(expected.x - originPoint.x);
+      expect(currentPath[index].y).toBeCloseTo(expected.y - originPoint.y);
+    });
+  });
+
   it("hides off-map utility and honors the visibility toggle", () => {
     const smoke: ReplayUtility = {
       id: "utility-0003",

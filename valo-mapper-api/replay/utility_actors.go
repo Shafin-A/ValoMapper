@@ -162,6 +162,8 @@ func utilityOwnerField(name string) string {
 		return "instigator"
 	case "controller":
 		return "controller"
+	case "attachparent":
+		return "attachparent"
 	default:
 		return ""
 	}
@@ -335,6 +337,46 @@ func utilityDirectOwnerAt(
 		found = owner != 0
 	}
 	return owner, found
+}
+
+func utilityAttachParentAt(
+	actor uint32,
+	at uint32,
+	writes map[uint32][]utilityOwnerWrite,
+) (uint32, bool) {
+	var parent uint32
+	found := false
+	for _, write := range writes[actor] {
+		if write.TimeMS > at {
+			break
+		}
+		if write.AttachParent == nil {
+			continue
+		}
+		parent = *write.AttachParent
+		found = parent != 0
+	}
+	return parent, found
+}
+
+func utilityEventTime(
+	writes []utilityDestroyWrite,
+	startMS, endMS uint32,
+	names ...string,
+) (uint32, bool) {
+	wanted := make(map[string]struct{}, len(names))
+	for _, name := range names {
+		wanted[name] = struct{}{}
+	}
+	for _, write := range writes {
+		if _, ok := wanted[write.Name]; !ok {
+			continue
+		}
+		if write.TimeMS >= startMS && write.TimeMS < endMS {
+			return write.TimeMS, true
+		}
+	}
+	return 0, false
 }
 
 func utilityControllerAt(writes []utilityOwnerWrite, at uint32) (bool, bool) {
