@@ -171,6 +171,36 @@ describe("VrfReplayDataSource", () => {
     );
   });
 
+  it("uses the parser's JSON error when the browser reports an upload error", async () => {
+    const source = new VrfReplayDataSource();
+    const promise = source.load(makeFile());
+    const xhr = FakeXMLHttpRequest.instances[0];
+
+    xhr.status = 429;
+    xhr.responseText = JSON.stringify({
+      error: "Too many replays are being parsed. Try again later.",
+      code: "rate_limited",
+    });
+    xhr.onerror?.();
+
+    await expect(promise).rejects.toThrow(
+      "Too many replays are being parsed. Try again later.",
+    );
+  });
+
+  it("keeps the network message when no parser response arrived", async () => {
+    const source = new VrfReplayDataSource();
+    const promise = source.load(makeFile());
+    const xhr = FakeXMLHttpRequest.instances[0];
+
+    xhr.status = 0;
+    xhr.onerror?.();
+
+    await expect(promise).rejects.toThrow(
+      "Could not reach the replay parser. Check your connection and try again.",
+    );
+  });
+
   it("rejects malformed 200 responses", async () => {
     const source = new VrfReplayDataSource();
     const promise = source.load(makeFile());

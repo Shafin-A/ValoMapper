@@ -223,6 +223,13 @@ export class VrfReplayDataSource implements ReplayDataSource {
 
       xhr.onerror = () => {
         finish(() => {
+          // Some browsers report a reset upload as onerror even though the
+          // parser already sent a JSON error. Prefer that response when it is
+          // available so rate-limit/busy messages are not lost.
+          if (xhr.status >= 400) {
+            reject(new Error(friendlyError(xhr.status, parseJSON(xhr.responseText))));
+            return;
+          }
           reject(
             new Error(
               "Could not reach the replay parser. Check your connection and try again.",

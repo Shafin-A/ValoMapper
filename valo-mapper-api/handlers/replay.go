@@ -80,6 +80,21 @@ func NewReplayHandler(parser ReplayParser, options ...ReplayHandlerOption) *Repl
 func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
+	maxBytes := int64(250 << 20)
+	if h.parser != nil {
+		if configured := h.parser.MaxUploadBytes(); configured > 0 {
+			maxBytes = configured
+		}
+	}
+
+	controller := http.NewResponseController(w)
+	_ = controller.SetReadDeadline(time.Now().Add(replayUploadReadDeadline))
+	_ = controller.SetWriteDeadline(time.Now().Add(replayUploadWriteDeadline))
+	// Early failures (parser unavailable, rate limited, bad multipart) still
+	// have a body in flight. Drain it before returning so the browser can read
+	// the JSON error instead of seeing a reset upload as a network failure.
+	defer drainReplayBody(r, maxBytes)
+
 	if h.parser == nil || !h.parser.Available() {
 		h.sendError(w, requestID, replay.NewError(replay.CodeParserUnavailable, "", nil))
 		return
@@ -92,15 +107,6 @@ func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 			RetryAfter: 60 * time.Second,
 		})
 		return
-	}
-
-	controller := http.NewResponseController(w)
-	_ = controller.SetReadDeadline(time.Now().Add(replayUploadReadDeadline))
-	_ = controller.SetWriteDeadline(time.Now().Add(replayUploadWriteDeadline))
-
-	maxBytes := h.parser.MaxUploadBytes()
-	if maxBytes <= 0 {
-		maxBytes = 250 << 20
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, maxBytes+replayMultipartSlack)
@@ -194,6 +200,14 @@ func (h *ReplayHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeReplayEnvelope(w, r, requestID, envelope, gz, -1)
+}
+
+func drainReplayBody(r *http.Request, maxBytes int64) {
+	if r == nil || r.Body == nil || r.Body == http.NoBody || r.Context().Err() != nil {
+		return
+	}
+	_, _ = io.Copy(io.Discard, io.LimitReader(r.Body, maxBytes+replayMultipartSlack))
+	_ = r.Body.Close()
 }
 
 func saveReplayUpload(part *multipart.Part, dir string, maxBytes int64) (string, string, error) {

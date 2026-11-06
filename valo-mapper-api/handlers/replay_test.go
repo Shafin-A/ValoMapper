@@ -355,6 +355,45 @@ func TestReplayHandlerRateLimited(t *testing.T) {
 	}
 }
 
+func TestReplayHandlerRateLimitedDrainsUpload(t *testing.T) {
+	handler := NewReplayHandler(&fakeReplayParser{available: true, envelope: testEnvelope()}, WithParseRate(0, 0))
+	handler.limiter = middleware.NewIPRateLimiter(rate.Limit(0), 0)
+
+	body, contentType := multipartReplay(t, multipartField{
+		name: "file", filename: "match.vrf",
+		content: magicContent(strings.Repeat("x", 128<<10)),
+	})
+	reader := &countingReadCloser{reader: bytes.NewReader(body.Bytes())}
+	request := httptest.NewRequest(http.MethodPost, "/api/replays", nil)
+	request.Body = reader
+	request.ContentLength = int64(body.Len())
+	request.Header.Set("Content-Type", contentType)
+	recorder := httptest.NewRecorder()
+
+	handler.Post(recorder, request)
+
+	if recorder.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, want 429", recorder.Code)
+	}
+	if reader.read != body.Len() {
+		t.Fatalf("drained %d of %d body bytes; the client may see a network error",
+			reader.read, body.Len())
+	}
+}
+
+type countingReadCloser struct {
+	reader io.Reader
+	read   int
+}
+
+func (c *countingReadCloser) Read(p []byte) (int, error) {
+	n, err := c.reader.Read(p)
+	c.read += n
+	return n, err
+}
+
+func (c *countingReadCloser) Close() error { return nil }
+
 func TestReplayHandlerGet(t *testing.T) {
 	envelope := testEnvelope()
 	gz, err := gzipBytes([]byte(`{"replayId":"` + envelope.ReplayID + `","match":null}`))
