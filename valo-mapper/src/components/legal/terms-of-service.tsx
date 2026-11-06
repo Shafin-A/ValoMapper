@@ -2,7 +2,7 @@ export const TermsOfService = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Mar 18th, 2026
+        <strong>Last Updated:</strong> Nov 6th, 2026
       </div>
 
       <p>
@@ -33,7 +33,9 @@ export const TermsOfService = () => {
           ValoMapper is an online tool that allows users to create, save, and
           share strategic maps and plans for the game VALORANT. The Service
           includes free and paid features for drawing, annotating, and
-          organizing game strategies through shareable lobbies.
+          organizing game strategies through shareable lobbies. The Service also
+          lets users upload VALORANT replay files to generate and view a replay
+          in the browser.
         </p>
         <p className="font-semibold">
           ValoMapper is an independent fan-made tool and is not endorsed by,
@@ -46,9 +48,12 @@ export const TermsOfService = () => {
           <p className="font-semibold mb-2">Riot Sign-On Opt-In</p>
           <p>
             By signing in with your Riot account, you agree to make your
-            gameplay data visible through ValoMapper. Players who have not opted
-            in will not have their data displayed. We will never show other
-            players&apos; information without their explicit consent.
+            RSO-linked gameplay data visible through ValoMapper. We will not
+            display Riot account identifiers or RSO-linked match-history data
+            for players who have not opted in. Replay playback is separate: it
+            is generated from a replay file you upload, uses pseudonymous
+            match-local labels, and does not display Riot IDs, PUUIDs, or
+            subject UUIDs.
           </p>
         </div>
       </section>
@@ -103,7 +108,8 @@ export const TermsOfService = () => {
           <p className="font-semibold mb-1">5.1 Your Content</p>
           <p className="mb-3">
             You may create, upload, and share content through ValoMapper,
-            including but not limited to text, images, drawings, and annotations
+            including but not limited to text, images, drawings, annotations,
+            replay files, and playback data generated from those files
             (&quot;User Content&quot;). You retain all ownership rights to your
             User Content.
           </p>
@@ -111,10 +117,13 @@ export const TermsOfService = () => {
           <p className="font-semibold mb-1">5.2 License to ValoMapper</p>
           <p className="mb-3">
             By submitting User Content to ValoMapper, you grant us a
-            non-exclusive, worldwide, royalty-free license to host, store,
-            display, and transmit your User Content solely for the purpose of
-            operating and providing the Service. This license exists only for as
-            long as you choose to keep your content on ValoMapper.
+            non-exclusive, worldwide, royalty-free license to process, host,
+            store, display, transmit, and create derivative playback data from
+            your User Content solely for the purpose of operating and providing
+            the Service. Raw replay files are deleted after parsing, and replay
+            playback data is handled as described in our Privacy Policy. This
+            license exists only for as long as you choose to keep your content
+            on ValoMapper.
           </p>
 
           <p className="font-semibold mb-1">
@@ -148,6 +157,10 @@ export const TermsOfService = () => {
             </li>
             <li>Uses bots, scrapers, or automated tools without permission</li>
             <li>Spams or floods lobbies with content</li>
+            <li>
+              Uploads a replay file that you are not authorized to share, or
+              uses replay data to identify, harass, or expose another player
+            </li>
             <li>Violates any applicable laws or regulations</li>
           </ul>
 
@@ -159,11 +172,23 @@ export const TermsOfService = () => {
           </p>
 
           <p className="font-semibold mb-1">5.5 Reporting Violations</p>
-          <p>
+          <p className="mb-3">
             If you encounter content that violates these Terms or is otherwise
             inappropriate, please report it to us at
             valomappercontact@gmail.com. We will review reports and take
             appropriate action as necessary.
+          </p>
+
+          <p className="font-semibold mb-1">5.6 Replay Files</p>
+          <p>
+            You represent that you have the right to upload each replay file,
+            that you have obtained any consents required by law, and that the
+            upload does not violate Riot Games&apos; terms or another
+            person&apos;s rights. A replay contains an opaque per-player subject
+            UUID (not the public Riot PUUID or Riot ID), agent and cosmetic
+            selections, movement, combat and round events, and other game
+            state. We process it only to generate playback data and handle it as
+            described in our Privacy Policy.
           </p>
         </div>
       </section>
@@ -238,6 +263,9 @@ export const TermsOfService = () => {
               User Content or strategies created will be accurate, effective, or
               suitable for any purpose
             </li>
+            <li>
+              Replay reconstruction will be complete, accurate, or available
+            </li>
           </ul>
 
           <p className="font-semibold mb-1">8.3 Limitation of Liability</p>
@@ -308,6 +336,12 @@ export const TermsOfService = () => {
           Unclaimed lobbies (those without an associated active account) may be
           automatically deleted during routine maintenance. You are responsible
           for saving any lobbies you wish to preserve.
+        </p>
+        <p>
+          Parsed replay data may expire from the server cache or be lost when
+          the service restarts. It is not backed up. The browser copy can be
+          cleared by the browser or by you, so open the original replay file
+          again if you need to regenerate it.
         </p>
       </section>
 

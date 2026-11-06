@@ -2,7 +2,7 @@ export const PrivacyPolicy = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Mar 18th, 2026
+        <strong>Last Updated:</strong> Nov 6th, 2026
       </div>
 
       <p>
@@ -20,10 +20,13 @@ export const PrivacyPolicy = () => {
       <div className="bg-muted p-4 rounded-md border border-muted-foreground/20">
         <p className="font-semibold mb-2">Riot Sign-On Opt-In</p>
         <p>
-          By signing in with your Riot account, you agree to make your gameplay
-          data visible through ValoMapper. Players who have not opted in will
-          not have their data displayed. We will never show other players&apos;
-          information without their explicit consent.
+          By signing in with your Riot account, you agree to make your
+          RSO-linked gameplay data visible through ValoMapper. We will not
+          display Riot account identifiers or RSO-linked match-history data for
+          players who have not opted in. Replay playback is separate: it is
+          generated from a replay file you upload, uses pseudonymous
+          match-local labels, and does not display Riot IDs, PUUIDs, or subject
+          UUIDs.
         </p>
       </div>
 
@@ -56,6 +59,33 @@ export const PrivacyPolicy = () => {
             refresh, and identity tokens are stored server-side and are used
             strictly for authentication and optional future features. These
             tokens are not exposed in browser-facing API responses.
+          </p>
+
+          <p className="font-semibold mb-1">Replay Files</p>
+          <p className="mb-2">
+            When you use the replay player, you upload a VALORANT replay file
+            (<code>.vrf</code>). A replay contains an opaque per-player subject
+            UUID for each player in the match, along with agent, loadout and
+            cosmetic selections, movement, combat and round events, and other
+            game state. The subject UUID is not the public Riot ID or PUUID.
+          </p>
+          <p className="mb-2">
+            We use the file only to generate the playback data you request. We
+            do not publish the raw file, do not display the subject UUID or any
+            Riot ID or account name, and delete the file and its temporary
+            export after parsing. The parsed playback data is held in server
+            memory for up to 30 minutes and in your browser&apos;s IndexedDB
+            until you clear site data. It is not written to our database.
+          </p>
+          <p className="mb-2">
+            The short-lived server cache is keyed by a hash of the file. Anyone
+            who possesses the same file could retrieve the parsed result while
+            it remains cached.
+          </p>
+          <p className="mb-3">
+            You do not need an account to use the replay player. You are
+            responsible for ensuring you have the right to upload the replay
+            file.
           </p>
 
           <p className="font-semibold mb-1">Billing Information</p>
@@ -157,6 +187,7 @@ export const PrivacyPolicy = () => {
           <li>Provide, maintain, and improve ValoMapper</li>
           <li>Manage user accounts and authentication</li>
           <li>Save and load user-created strategies and lobbies</li>
+          <li>Parse uploaded replay files and generate replay playback data</li>
           <li>Diagnose errors and monitor site performance</li>
           <li>
             Send account-related communications (such as email verification via
@@ -225,6 +256,14 @@ export const PrivacyPolicy = () => {
           <p className="mb-3">
             These providers have access only to information necessary to perform
             their services and are obligated to protect your data.
+          </p>
+
+          <p className="font-semibold mb-1">Replay Processing</p>
+          <p className="mb-3">
+            Replay parsing runs on our API infrastructure. We do not send the
+            replay file to Firebase, Stripe, Tigris, or any analytics provider.
+            The file is processed on Fly.io infrastructure and deleted after
+            parsing.
           </p>
           <p className="mb-3">
             When you start checkout, billing information is submitted directly
@@ -314,10 +353,21 @@ export const PrivacyPolicy = () => {
           </ul>
 
           <p className="font-semibold mb-1">Lobby Cleanup</p>
-          <p>
+          <p className="mb-3">
             Unclaimed lobbies (those without an associated active account) are
             subject to periodic cleanup and may be automatically deleted during
             maintenance sweeps.
+          </p>
+
+          <p className="font-semibold mb-1">Replay Files</p>
+          <p>
+            Uploaded replay files and temporary exports are deleted immediately
+            after parsing. Crash leftovers are removed during routine cleanup
+            after about an hour. Parsed replay data is held in server memory for
+            up to 30 minutes and is lost when the cache expires or the service
+            restarts. The browser copy remains in IndexedDB until you clear site
+            data or the browser evicts it. Replay data is not stored in our
+            database and is not backed up.
           </p>
         </div>
       </section>
@@ -366,6 +416,10 @@ export const PrivacyPolicy = () => {
           <li>Encrypted connections (HTTPS) for all data transmission</li>
           <li>Secure database storage practices</li>
           <li>Rate limiting and monitoring for suspicious activity</li>
+          <li>
+            Processing replay uploads in a separate process with size, timeout
+            and concurrency limits
+          </li>
         </ul>
         <p className="mb-3">
           However, no method of transmission over the internet or electronic
