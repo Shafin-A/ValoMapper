@@ -35,6 +35,34 @@ func sortUtilityActivationWrites(writes map[uint32][]utilityActivationWrite) {
 	}
 }
 
+func placedActivatedIntervals(
+	openMS, closeMS uint32,
+	writes []utilityActivationWrite,
+) []utilityInterval {
+	if openMS >= closeMS {
+		return nil
+	}
+	for _, write := range writes {
+		if write.Active == nil || !*write.Active {
+			continue
+		}
+		if write.TimeMS < openMS {
+			continue
+		}
+		if write.TimeMS >= closeMS {
+			break
+		}
+		if write.TimeMS == openMS {
+			return []utilityInterval{{startMS: openMS, endMS: closeMS, activated: true}}
+		}
+		return []utilityInterval{
+			{startMS: openMS, endMS: write.TimeMS},
+			{startMS: write.TimeMS, endMS: closeMS, activated: true},
+		}
+	}
+	return []utilityInterval{{startMS: openMS, endMS: closeMS}}
+}
+
 func utilityFuelByOwner(
 	writes map[uint32][]utilityFuelWrite,
 	index *playerIndex,

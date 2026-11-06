@@ -43,8 +43,9 @@ type utilityActorLife struct {
 }
 
 type utilityInterval struct {
-	startMS uint32
-	endMS   uint32
+	startMS   uint32
+	endMS     uint32
+	activated bool
 }
 
 type utilityOwnerWrite struct {
@@ -105,4 +106,6 @@ type utilitySegment struct {
 	visionSamples      []UtilityVisionSample
 	trajectorySamples  []UtilityPositionSample
 	lengthSamples      []UtilityLengthSample
+	iconOnly           *bool
+	kind               *UtilityKind
 }

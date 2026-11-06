@@ -191,7 +191,7 @@ func TestServiceParseSyntheticReplay(t *testing.T) {
 		t.Errorf("round 2 events = %+v", second.EventLog)
 	}
 
-	if ParserVersion != "51+vrfkit.0.4.0" {
+	if ParserVersion != "52+vrfkit.0.4.0" {
 		t.Errorf("parser version = %q, want the utility catalog version", ParserVersion)
 	}
 

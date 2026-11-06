@@ -64,8 +64,10 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.09", "Projectile_Paprika_X_FullBendPop", true, "suspension"},
 		{"13.09", "GameObject_Paprika_X_LevitateZone", true, "suspension"},
 		{"13.08", "GameObject_Pine_4_UsableTeleport", true, "crosscut"},
+		{"13.09", "Projectile_Pine_Q_TrapGrenade", true, "chokehold"},
 		{"13.08", "GameObject_Pine_Q_SeizeTrap", true, "chokehold"},
 		{"13.08", "GameObject_Pine_Q_Tether_SphereExpansion", true, "chokehold"},
+		{"13.09", "Projectile_Pine_E_RadEaterSpawner", true, "interceptor"},
 		{"13.08", "Pawn_Pine_E_RadEater", true, "interceptor"},
 		{"13.08", "Patch_Pandemic_AcidMolotov_NewMolotov", true, "snake_bite"},
 		{"13.08", "Projectile_Pandemic_Q_AcidGrenade", true, "snake_bite"},
@@ -415,6 +417,8 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		{"Projectile_Phoenix_E_FlareCurve_Synced", "curveball"},
 		{"Projectile_Phoenix_E_FlareCurve_Synced_Right", "curveball"},
 		{"Projectile_Phoenix_Q_FlameWall_ThroughWall", "blaze"},
+		{"Projectile_Pine_Q_TrapGrenade", "chokehold"},
+		{"Projectile_Pine_E_RadEaterSpawner", "interceptor"},
 		{"Projectile_Sarge_E_SpeedStim", "stim_beacon"},
 		{"Projectile_Sarge_Q_Molotov_Production", "incendiary"},
 		{"Projectile_Smonk_DecayNade", "meddle"},
@@ -443,6 +447,8 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		"Projectile_Paprika_Q_RedirectFlash_Underhand":            true,
 		"Projectile_Paprika_E_RedirectPull":                       true,
 		"Projectile_Paprika_X_FullBendPop":                        true,
+		"Projectile_Pine_Q_TrapGrenade":                           true,
+		"Projectile_Pine_E_RadEaterSpawner":                       true,
 		"Projectile_Sprinter_4_GroundStrike":                      true,
 		"Projectile_Sarge_E_SpeedStim":                            true,
 		"Projectile_Sarge_Q_Molotov_Production":                   true,
@@ -541,6 +547,104 @@ func TestUtilityCatalogAddsTejoLandingAreas(t *testing.T) {
 	if armageddon.forwardMovement != 32 || armageddon.maxLifetimeMS != 5000 {
 		t.Fatalf("Armageddon movement = %#v, want 32 m over 5000 ms", armageddon)
 	}
+}
+
+func TestScanUtilitiesSplitsInterceptorPlacedAndActivatedStates(t *testing.T) {
+	class := "Pawn_Pine_E_RadEater"
+	newDir := func(t *testing.T, activation *uint32) string {
+		t.Helper()
+		dir := t.TempDir()
+		actors := []stateActorRow{
+			{
+				TimeMS: 1000, PacketID: 1, ActorNetGUID: 780, Event: "open",
+				ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			},
+			{TimeMS: 7000, PacketID: 9, ActorNetGUID: 780, Event: "close"},
+		}
+		if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+			t.Fatal(err)
+		}
+		fieldName := "IsActivated"
+		fields := []fieldRow{
+			{TimeMS: 1500, PacketID: 2, ActorNetGUID: 780, FieldName: &fieldName, ValueBool: boolPtr(false)},
+		}
+		if activation != nil {
+			fields = append(fields, fieldRow{
+				TimeMS: *activation, PacketID: 3, ActorNetGUID: 780,
+				FieldName: &fieldName, ValueBool: boolPtr(true),
+			})
+		}
+		if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+			t.Fatal(err)
+		}
+		return dir
+	}
+	scan := func(t *testing.T, dir string) []Utility {
+		t.Helper()
+		fieldData, err := scanFields(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		utilities, _, err := scanUtilities(
+			dir,
+			"13.09",
+			8000,
+			[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 8000}},
+			nil,
+			nil,
+			nil,
+			fieldData.UtilityOwners,
+			fieldData.UtilityPaths,
+			fieldData.UtilityFuel,
+			fieldData.UtilityDestroy,
+			fieldData.UtilityActivation,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(utilities) != 1 {
+			t.Fatalf("rounds = %d, want 1", len(utilities))
+		}
+		return utilities[0]
+	}
+
+	t.Run("placed then activated", func(t *testing.T) {
+		activation := uint32(3000)
+		result := scan(t, newDir(t, &activation))
+		if len(result) != 2 {
+			t.Fatalf("utilities = %#v, want placed and activated states", result)
+		}
+		placed, activated := result[0], result[1]
+		if placed.Kind != UtilityTrap || !placed.IconOnly {
+			t.Errorf("placed = %+v, want an icon-only trap", placed)
+		}
+		if placed.StartTimeMS != 1000 || placed.EndTimeMS != 3000 {
+			t.Errorf("placed interval = %d..%d, want 1000..3000",
+				placed.StartTimeMS, placed.EndTimeMS)
+		}
+		if activated.Kind != UtilityArea || activated.IconOnly {
+			t.Errorf("activated = %+v, want a visible area", activated)
+		}
+		if activated.StartTimeMS != 3000 || activated.EndTimeMS != 7000 {
+			t.Errorf("activated interval = %d..%d, want 3000..7000",
+				activated.StartTimeMS, activated.EndTimeMS)
+		}
+	})
+
+	t.Run("destroyed before activation stays icon-only", func(t *testing.T) {
+		result := scan(t, newDir(t, nil))
+		if len(result) != 1 {
+			t.Fatalf("utilities = %#v, want only the placed state", result)
+		}
+		placed := result[0]
+		if placed.Kind != UtilityTrap || !placed.IconOnly {
+			t.Errorf("placed = %+v, want an icon-only trap", placed)
+		}
+		if placed.StartTimeMS != 1000 || placed.EndTimeMS != 7000 {
+			t.Errorf("placed interval = %d..%d, want 1000..7000",
+				placed.StartTimeMS, placed.EndTimeMS)
+		}
+	})
 }
 
 func TestAddNanoswarmPlacedMarkersBridgesFlightAndActivation(t *testing.T) {

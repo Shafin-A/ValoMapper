@@ -202,7 +202,13 @@ func scanUtilities(
 			continue
 		}
 		intervals := life.activeIntervals
-		if intervals == nil {
+		if life.class.placedUntilActivated {
+			intervals = placedActivatedIntervals(
+				life.openMS,
+				life.closeMS,
+				activationWrites[life.guid],
+			)
+		} else if intervals == nil {
 			intervals = []utilityInterval{{startMS: life.openMS, endMS: life.closeMS}}
 		}
 		for roundIndex, window := range windows {
@@ -219,6 +225,14 @@ func scanUtilities(
 					endMS:      end,
 					position:   life.position,
 					yaw:        life.yaw + life.class.wallYawOffset,
+				}
+				if life.class.placedUntilActivated {
+					iconOnly := !interval.activated
+					segment.iconOnly = &iconOnly
+					if interval.activated {
+						kind := UtilityArea
+						segment.kind = &kind
+					}
 				}
 				if life.class.wallArms {
 					for _, write := range wallArmsByOwner[life.guid] {
@@ -526,16 +540,24 @@ func scanUtilities(
 		if segment.inactive {
 			id += "-inactive"
 		}
+		kind := segment.life.class.kind
+		if segment.kind != nil {
+			kind = *segment.kind
+		}
+		iconOnly := segment.life.class.iconOnly
+		if segment.iconOnly != nil {
+			iconOnly = *segment.iconOnly
+		}
 		utility := Utility{
 			ID:            id,
-			Kind:          segment.life.class.kind,
+			Kind:          kind,
 			AbilityID:     segment.life.class.ability,
 			StartTimeMS:   int(segment.startMS - window.StartMS),
 			EndTimeMS:     int(segment.endMS - window.StartMS),
 			Position:      segment.position,
 			Yaw:           segment.yaw,
 			OwnerPuuid:    segment.life.owner,
-			IconOnly:      segment.life.class.iconOnly,
+			IconOnly:      iconOnly,
 			Inactive:      segment.inactive,
 			Vision:        segment.visionSamples,
 			LengthSamples: segment.lengthSamples,

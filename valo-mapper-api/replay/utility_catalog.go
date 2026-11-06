@@ -6,32 +6,33 @@ import (
 )
 
 type utilityCatalogEntry struct {
-	kind               UtilityKind
-	mobile             bool
-	replicatedMovement bool
-	wallPoints         bool
-	wallActivated      bool
-	wallStart          bool
-	wallPath           bool
-	splineMovement     bool
-	splineChild        bool
-	splineFromChildren bool
-	splineFullDistance float64
-	trapwireFarEnd     bool
-	iconOnly           bool
-	visionCone         bool
-	wallArms           bool
-	followsParent      bool
-	releaseOnEvent     bool
-	trajectoryWarnings bool
-	forwardMovement    float64
-	pulseChild         bool
-	samplesFromPulses  bool
-	wallYawOffset      float64
-	curveballSide      int
-	minBuild           int
-	maxLifetimeMS      uint32
-	ability            string
+	kind                 UtilityKind
+	mobile               bool
+	replicatedMovement   bool
+	wallPoints           bool
+	wallActivated        bool
+	wallStart            bool
+	wallPath             bool
+	splineMovement       bool
+	splineChild          bool
+	splineFromChildren   bool
+	splineFullDistance   float64
+	trapwireFarEnd       bool
+	iconOnly             bool
+	placedUntilActivated bool
+	visionCone           bool
+	wallArms             bool
+	followsParent        bool
+	releaseOnEvent       bool
+	trajectoryWarnings   bool
+	forwardMovement      float64
+	pulseChild           bool
+	samplesFromPulses    bool
+	wallYawOffset        float64
+	curveballSide        int
+	minBuild             int
+	maxLifetimeMS        uint32
+	ability              string
 }
 
 var utilityCatalog = map[string]utilityCatalogEntry{
@@ -221,9 +222,11 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Veto
 	"GameObject_Pine_4_UsableTeleport":         {kind: UtilityMarker, minBuild: 1300, ability: "crosscut"},
+	"Projectile_Pine_Q_TrapGrenade":            {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "chokehold"},
 	"GameObject_Pine_Q_SeizeTrap":              {kind: UtilityTrap, iconOnly: true, minBuild: 1300, ability: "chokehold"},
 	"GameObject_Pine_Q_Tether_SphereExpansion": {kind: UtilityArea, minBuild: 1300, ability: "chokehold"},
-	"Pawn_Pine_E_RadEater":                     {kind: UtilityTrap, minBuild: 1300, ability: "interceptor"},
+	"Projectile_Pine_E_RadEaterSpawner":        {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "interceptor"},
+	"Pawn_Pine_E_RadEater":                     {kind: UtilityTrap, iconOnly: true, placedUntilActivated: true, minBuild: 1300, ability: "interceptor"},
 
 	// Viper
 	"Patch_Pandemic_AcidMolotov_NewMolotov":    {kind: UtilityMolly, minBuild: 1300, maxLifetimeMS: 6500, ability: "snake_bite"},
@@ -243,7 +246,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Gameobject_Nox_DisarmPulse":            {kind: UtilityArea, minBuild: 1300, ability: "steel_garden"},
 
 	// Waylay
-	"GameObject_Terra_C_TimeSlowGrenade_Explosion": {kind: UtilityArea, minBuild: 1300, ability: "saturate"},
+	"GameObject_Terra_C_TimeSlowGrenade_Explosion": {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 600, ability: "saturate"},
 	"Projectile_Terra_C_TimeSlowGrenade":           {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "saturate"},
 	"GameObject_Terra_E_RewindTime_RewindTarget":   {kind: UtilityMarker, minBuild: 1300, ability: "refract"},
 	"GameObject_Terra_X_DelayedBeam_Beam":          {kind: UtilityArea, minBuild: 1300, ability: "convergent_paths"},

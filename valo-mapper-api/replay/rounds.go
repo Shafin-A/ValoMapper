@@ -237,7 +237,7 @@ func scanFields(exportDir string) (*fieldScan, error) {
 					scan.UtilityDestroy[row.ActorNetGUID],
 					utilityDestroyWrite{TimeMS: timeMS, PacketID: row.PacketID, Name: name},
 				)
-			case name == "WallActivated" && row.ValueBool != nil:
+			case (name == "WallActivated" || name == "IsActivated") && row.ValueBool != nil:
 				value := *row.ValueBool
 				scan.UtilityActivation[row.ActorNetGUID] = append(
 					scan.UtilityActivation[row.ActorNetGUID],
