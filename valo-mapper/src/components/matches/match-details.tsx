@@ -104,6 +104,7 @@ export const MatchDetails = ({
           selectedRoundNumber={selectedRound.roundNumber}
           currentPlayerTeamId={currentPlayerTeamId}
           currentPlayerBestRoundNumber={currentPlayerBestRoundNumber}
+          queueLabel={matchSummary.queueLabel}
           onSelectRound={onSelectRound}
         />
 

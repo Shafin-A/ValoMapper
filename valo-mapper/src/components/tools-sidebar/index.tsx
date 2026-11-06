@@ -49,6 +49,7 @@ import { Button } from "@/components/ui/button";
 
 interface MatchReviewControls {
   mapName: string;
+  queueLabel?: string;
   rounds: MatchRound[];
   selectedRoundNumber: number;
   currentPlayerTeamId?: string;
@@ -371,6 +372,7 @@ export const ToolsSidebar = ({
                             currentPlayerBestRoundNumber={
                               reviewControls.currentPlayerBestRoundNumber
                             }
+                            queueLabel={reviewControls.queueLabel}
                             onSelectRound={reviewControls.onSelectRound}
                           />
 

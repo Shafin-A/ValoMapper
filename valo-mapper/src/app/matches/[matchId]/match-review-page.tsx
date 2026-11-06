@@ -532,6 +532,7 @@ const MatchReviewPage = () => {
         }}
         reviewControls={{
           mapName: matchSummary.mapName,
+          queueLabel: matchSummary.queueLabel,
           rounds: matchSummary.rounds,
           selectedRoundNumber: selectedRound.roundNumber,
           currentPlayerTeamId: currentPlayer?.teamId,

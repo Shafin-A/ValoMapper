@@ -9,20 +9,66 @@ interface MatchRoundSelectorProps {
   selectedRoundNumber: number;
   currentPlayerTeamId?: string;
   currentPlayerBestRoundNumber?: number;
+  queueLabel?: string;
   onSelectRound: (roundNumber: number) => void;
 }
+
+const STANDARD_ROUNDS_PER_HALF = 12;
+const SWIFTPLAY_ROUNDS_PER_HALF = 4;
+
+type RoundWithAttackSide = MatchRound & { attackTeamId?: string };
+
+const normalizeQueueLabel = (queueLabel?: string) =>
+  (queueLabel ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+
+export const getRoundsPerHalf = (
+  rounds: MatchRound[],
+  queueLabel?: string,
+): number => {
+  const queue = normalizeQueueLabel(queueLabel);
+  if (queue.includes("swiftplay")) {
+    return SWIFTPLAY_ROUNDS_PER_HALF;
+  }
+  if (queue === "competitive" || queue === "unrated" || queue === "custom") {
+    return STANDARD_ROUNDS_PER_HALF;
+  }
+
+  const firstAttackTeamId = (rounds[0] as RoundWithAttackSide | undefined)
+    ?.attackTeamId;
+  if (firstAttackTeamId) {
+    const switched = rounds.find(
+      (round, index) =>
+        index > 0 &&
+        (round as RoundWithAttackSide).attackTeamId &&
+        (round as RoundWithAttackSide).attackTeamId !== firstAttackTeamId,
+    );
+    if (switched) {
+      return switched.roundNumber - 1;
+    }
+  }
+
+  return rounds.length > 0 && rounds.length <= 9
+    ? SWIFTPLAY_ROUNDS_PER_HALF
+    : STANDARD_ROUNDS_PER_HALF;
+};
 
 export const MatchRoundSelector = ({
   rounds,
   selectedRoundNumber,
   currentPlayerTeamId,
   currentPlayerBestRoundNumber,
+  queueLabel,
   onSelectRound,
 }: MatchRoundSelectorProps) => {
+  const roundsPerHalf = getRoundsPerHalf(rounds, queueLabel);
+
   return (
     <ScrollArea className="w-full pb-3">
       <div className="inline-flex min-w-full gap-2">
-        {rounds.map((round) => {
+        {rounds.map((round, index) => {
           const isSelected = round.roundNumber === selectedRoundNumber;
           const roundButton = (
             <button
@@ -55,7 +101,10 @@ export const MatchRoundSelector = ({
             </button>
           );
 
-          if (round.roundNumber !== 12) {
+          const showHalfSeparator =
+            round.roundNumber === roundsPerHalf && index < rounds.length - 1;
+
+          if (!showHalfSeparator) {
             return roundButton;
           }
 
@@ -63,6 +112,8 @@ export const MatchRoundSelector = ({
             roundButton,
             <span
               key={`round-half-separator-${round.roundNumber}`}
+              data-testid="round-half-separator"
+              data-round={round.roundNumber}
               aria-hidden="true"
               className="inline-flex h-16 min-w-8 shrink-0 items-center justify-center text-white"
             >
