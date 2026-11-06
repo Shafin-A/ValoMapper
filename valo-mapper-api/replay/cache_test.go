@@ -64,6 +64,29 @@ func TestReplayCacheEvictsLeastRecentlyUsed(t *testing.T) {
 	}
 }
 
+func TestReplayCacheTracksStats(t *testing.T) {
+	cache := newReplayCache(time.Hour, 1, 1<<20)
+	cache.put("a", []byte("one"))
+	if _, ok := cache.get("a"); !ok {
+		t.Fatal("expected a cache hit")
+	}
+	if _, ok := cache.get("missing"); ok {
+		t.Fatal("expected a cache miss")
+	}
+	cache.put("b", []byte("two"))
+
+	stats := cache.stats()
+	if stats.hits != 1 || stats.misses != 1 {
+		t.Fatalf("hits/misses = %d/%d, want 1/1", stats.hits, stats.misses)
+	}
+	if stats.evictions != 1 {
+		t.Fatalf("evictions = %d, want 1", stats.evictions)
+	}
+	if stats.entries != 1 || stats.bytes != 3 {
+		t.Fatalf("entries/bytes = %d/%d, want 1/3", stats.entries, stats.bytes)
+	}
+}
+
 func TestReplayCacheCapsBytes(t *testing.T) {
 	cache := newReplayCache(time.Hour, 8, 5)
 	cache.put("a", []byte("123"))

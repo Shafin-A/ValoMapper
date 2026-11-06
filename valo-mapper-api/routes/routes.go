@@ -10,7 +10,7 @@ import (
 
 func SetupRoutes(r *mux.Router, firebaseAuth *auth.Client, hub *websocket.Hub, replayParser handlers.ReplayParser) {
 	RegisterHealthRoutes(r)
-	RegisterMetricsRoutes(r, hub)
+	RegisterMetricsRoutes(r, hub, replayParser)
 	RegisterAdminRoutes(r)
 	RegisterAuthRoutes(r, firebaseAuth)
 	RegisterMatchRoutes(r, firebaseAuth)

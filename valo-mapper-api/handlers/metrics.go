@@ -10,6 +10,7 @@ import (
 	"valo-mapper-api/db"
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
+	"valo-mapper-api/replay"
 	"valo-mapper-api/utils"
 	"valo-mapper-api/websocket"
 )
@@ -26,6 +27,7 @@ type metricsResponse struct {
 	Lobbies       lobbyMetrics         `json:"lobbies"`
 	StripeWebhook stripeWebhookMetrics `json:"stripe_webhook"`
 	RateLimiter   rateLimiterMetrics   `json:"rate_limiter"`
+	Replay        replay.Metrics       `json:"replay"`
 }
 
 type memoryMetrics struct {
@@ -69,7 +71,7 @@ type rateLimiterMetrics struct {
 // @Failure 403 {object} ErrorResponse
 // @Security InternalAPIKey
 // @Router /metrics [get]
-func HandleMetrics(hub *websocket.Hub) http.HandlerFunc {
+func HandleMetrics(hub *websocket.Hub, parser ReplayParser) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		configuredKey := os.Getenv("INTERNAL_API_KEY")
 		if configuredKey == "" {
@@ -98,6 +100,11 @@ func HandleMetrics(hub *websocket.Hub) http.HandlerFunc {
 
 		lobbyActiveCount, _ := models.CountLobbies()
 
+		var replayStats replay.Metrics
+		if provider, ok := parser.(interface{ Metrics() replay.Metrics }); ok {
+			replayStats = provider.Metrics()
+		}
+
 		resp := metricsResponse{
 			UptimeSeconds: time.Since(metricsStartTime).Seconds(),
 			Goroutines:    runtime.NumGoroutine(),
@@ -124,6 +131,7 @@ func HandleMetrics(hub *websocket.Hub) http.HandlerFunc {
 			RateLimiter: rateLimiterMetrics{
 				Rejections: middleware.RateLimitRejections(),
 			},
+			Replay: replayStats,
 		}
 
 		w.Header().Set("Content-Type", "application/json")

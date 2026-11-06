@@ -23,7 +23,18 @@ type replayCache struct {
 	maxEntries int
 	maxBytes   int64
 	bytes      int64
+	hits       uint64
+	misses     uint64
+	evictions  uint64
 	now        func() time.Time
+}
+
+type replayCacheStats struct {
+	entries   int
+	bytes     int64
+	hits      uint64
+	misses    uint64
+	evictions uint64
 }
 
 func newReplayCache(ttl time.Duration, maxEntries int, maxBytes int64) *replayCache {
@@ -56,13 +67,16 @@ func (c *replayCache) get(key string) ([]byte, bool) {
 
 	element, ok := c.entries[key]
 	if !ok {
+		c.misses++
 		return nil, false
 	}
 	entry := element.Value.(*cacheEntry)
 	if c.expiredLocked(entry) {
 		c.removeLocked(element)
+		c.misses++
 		return nil, false
 	}
+	c.hits++
 	c.order.MoveToFront(element)
 	return entry.gz, true
 }
@@ -96,6 +110,7 @@ func (c *replayCache) put(key string, gz []byte) {
 			break
 		}
 		c.removeLocked(oldest)
+		c.evictions++
 	}
 }
 
@@ -112,6 +127,19 @@ func (c *replayCache) len() int {
 	defer c.mu.Unlock()
 	c.pruneLocked()
 	return c.order.Len()
+}
+
+func (c *replayCache) stats() replayCacheStats {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.pruneLocked()
+	return replayCacheStats{
+		entries:   c.order.Len(),
+		bytes:     c.bytes,
+		hits:      c.hits,
+		misses:    c.misses,
+		evictions: c.evictions,
+	}
 }
 
 func (c *replayCache) pruneLocked() {

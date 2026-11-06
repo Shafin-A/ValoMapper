@@ -2387,6 +2387,9 @@ const docTemplate = `{
                 "rate_limiter": {
                     "$ref": "#/definitions/handlers.rateLimiterMetrics"
                 },
+                "replay": {
+                    "$ref": "#/definitions/replay.Metrics"
+                },
                 "stripe_webhook": {
                     "$ref": "#/definitions/handlers.stripeWebhookMetrics"
                 },
@@ -2938,6 +2941,54 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "replay.Metrics": {
+            "type": "object",
+            "properties": {
+                "cache_bytes": {
+                    "type": "integer"
+                },
+                "cache_entries": {
+                    "type": "integer"
+                },
+                "cache_evictions": {
+                    "type": "integer"
+                },
+                "cache_hits": {
+                    "type": "integer"
+                },
+                "cache_misses": {
+                    "type": "integer"
+                },
+                "last_gzip_bytes": {
+                    "type": "integer"
+                },
+                "last_json_bytes": {
+                    "type": "integer"
+                },
+                "parser_busy": {
+                    "type": "integer"
+                },
+                "parses_failed": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "parses_started": {
+                    "type": "integer"
+                },
+                "parses_succeeded": {
+                    "type": "integer"
+                },
+                "rate_limited": {
+                    "type": "integer"
+                },
+                "total_parse_ms": {
+                    "type": "integer"
                 }
             }
         },

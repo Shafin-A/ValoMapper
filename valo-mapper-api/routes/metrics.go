@@ -8,6 +8,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func RegisterMetricsRoutes(r *mux.Router, hub *websocket.Hub) {
-	r.HandleFunc("/metrics", handlers.HandleMetrics(hub)).Methods(http.MethodGet)
+func RegisterMetricsRoutes(r *mux.Router, hub *websocket.Hub, parser handlers.ReplayParser) {
+	r.HandleFunc("/metrics", handlers.HandleMetrics(hub, parser)).Methods(http.MethodGet)
 }

@@ -48,6 +48,7 @@ type Service struct {
 	group    singleflight.Group
 	sem      chan struct{}
 	config   Config
+	metrics  *serviceMetrics
 }
 
 func NewService(config Config) *Service {
@@ -82,6 +83,7 @@ func NewService(config Config) *Service {
 		cache:    newReplayCache(config.CacheTTL, config.CacheMaxEntries, config.CacheMaxBytes),
 		sem:      make(chan struct{}, config.MaxConcurrent),
 		config:   config,
+		metrics:  newServiceMetrics(),
 	}
 
 	if !service.Available() {
@@ -169,7 +171,7 @@ func (s *Service) Parse(ctx context.Context, filePath, hash string) (*Envelope, 
 		parseCtx, cancel := context.WithTimeout(ctx, s.config.ParseTimeout)
 		defer cancel()
 
-		envelope, gz, err := s.parseOnce(parseCtx, filePath, hash)
+		envelope, gz, _, err := s.parseOnce(parseCtx, filePath, hash)
 		if err != nil {
 			return nil, err
 		}
@@ -194,6 +196,7 @@ func (s *Service) acquire(ctx context.Context) error {
 	case s.sem <- struct{}{}:
 		return nil
 	case <-timer.C:
+		s.metrics.recordParserBusy()
 		return &Error{
 			Code:       CodeParserBusy,
 			Message:    DefaultMessage(CodeParserBusy),
@@ -204,8 +207,14 @@ func (s *Service) acquire(ctx context.Context) error {
 	}
 }
 
-func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelope, []byte, *Error) {
+func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelope *Envelope, gz []byte, jsonBytes int, parseErr *Error) {
 	started := time.Now()
+	s.metrics.startParse()
+	defer func() {
+		if parseErr != nil {
+			s.metrics.failParse(parseErr.Code)
+		}
+	}()
 
 	var inputBytes int64
 	if fileInfo, statErr := os.Stat(filePath); statErr == nil {
@@ -214,36 +223,36 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 
 	exportDir, err := os.MkdirTemp(filepath.Dir(filePath), "export-*")
 	if err != nil {
-		return nil, nil, NewError(CodeInternal, "", err)
+		return nil, nil, 0, NewError(CodeInternal, "", err)
 	}
 	defer os.RemoveAll(exportDir)
 
 	inspectStarted := time.Now()
 	inspect, err := s.exporter.Inspect(ctx, filePath)
 	if err != nil {
-		return nil, nil, asReplayError(err, CodeParseFailed)
+		return nil, nil, 0, asReplayError(err, CodeParseFailed)
 	}
 	inspectMS := time.Since(inspectStarted)
 
 	build := inspect.Build
 	if build == "" {
-		return nil, nil, NewError(CodeParseFailed,
+		return nil, nil, 0, NewError(CodeParseFailed,
 			"The replay's game build could not be determined.", nil)
 	}
 	if !valorant.IsSupportedBuild(build) {
-		return nil, nil, NewError(CodeUnsupportedBuild,
+		return nil, nil, 0, NewError(CodeUnsupportedBuild,
 			fmt.Sprintf("This replay was recorded on game build %s, which is not supported yet.", build), nil)
 	}
 
 	exportStarted := time.Now()
 	if err := s.exporter.Export(ctx, filePath, exportDir); err != nil {
-		return nil, nil, asReplayError(err, CodeParseFailed)
+		return nil, nil, 0, asReplayError(err, CodeParseFailed)
 	}
 	exportMS := time.Since(exportStarted)
 
 	manifest, err := readManifest(exportDir)
 	if err != nil {
-		return nil, nil, NewError(CodeCorrupt,
+		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's manifest could not be read.", err)
 	}
 
@@ -251,17 +260,17 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 	quality := manifest.Quality
 
 	if quality.ContentBlocksLost > 0 {
-		return nil, nil, NewError(CodeCorrupt,
+		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay is missing decoded content blocks and cannot be trusted.", nil)
 	}
 	if len(manifest.Players) == 0 {
-		return nil, nil, NewError(CodeTransformCheck,
+		return nil, nil, 0, NewError(CodeTransformCheck,
 			"The replay did not identify any players.", nil)
 	}
 
 	mapInfo, ok := valorant.ResolveMap(manifest.levelPath())
 	if !ok {
-		return nil, nil, NewError(CodeUnsupportedMap, "", nil)
+		return nil, nil, 0, NewError(CodeUnsupportedMap, "", nil)
 	}
 
 	if quality.EventLayoutMismatches > 0 {
@@ -276,48 +285,54 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 
 	index := newPlayerIndex(manifest)
 
+	fieldsStarted := time.Now()
 	fields, err := scanFields(exportDir)
 	if err != nil {
-		return nil, nil, NewError(CodeCorrupt,
+		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's field data could not be read.", err)
 	}
+	fieldsMS := time.Since(fieldsStarted)
 	warnings.addAll(fields.TeamWarnings)
 
+	eventsStarted := time.Now()
 	events, err := scanEvents(exportDir)
 	if err != nil {
-		return nil, nil, NewError(CodeCorrupt,
+		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's event timeline could not be read.", err)
 	}
+	eventsMS := time.Since(eventsStarted)
 	if events.Rows == 0 {
-		return nil, nil, NewError(CodeTransformCheck,
+		return nil, nil, 0, NewError(CodeTransformCheck,
 			"The replay contained no game events.", nil)
 	}
 	if len(events.Starts) == 0 {
-		return nil, nil, NewError(CodeTransformCheck,
+		return nil, nil, 0, NewError(CodeTransformCheck,
 			"The replay contained no round starts.", nil)
 	}
 	if events.KnownGroups == 0 {
-		return nil, nil, NewError(CodeTransformCheck,
+		return nil, nil, 0, NewError(CodeTransformCheck,
 			"The replay contained no events ValoMapper understands.", nil)
 	}
 
 	players, puuidBySubject, playerWarnings, playerErr := resolvePlayers(index, fields.Teams, agents)
 	if playerErr != nil {
-		return nil, nil, playerErr
+		return nil, nil, 0, playerErr
 	}
 	warnings.addAll(playerWarnings)
 
+	stateStarted := time.Now()
 	state, err := scanState(exportDir, index, &fields.State)
 	if err != nil {
-		return nil, nil, NewError(CodeCorrupt,
+		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's player state could not be read.", err)
 	}
+	stateMS := time.Since(stateStarted)
 	warnings.addAll(state.Warnings)
 
 	windows, windowWarnings := buildRoundWindows(fields, events.Starts, manifest.DurationMS)
 	warnings.addAll(windowWarnings)
 	if len(windows) == 0 {
-		return nil, nil, NewError(CodeTransformCheck,
+		return nil, nil, 0, NewError(CodeTransformCheck,
 			"The replay contained no played rounds.", nil)
 	}
 	hasResult := false
@@ -328,22 +343,25 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		}
 	}
 	if !hasResult {
-		return nil, nil, NewError(CodeTransformCheck,
+		return nil, nil, 0, NewError(CodeTransformCheck,
 			"The replay's round results could not be decoded.", nil)
 	}
 
+	movementStarted := time.Now()
 	movement, err := scanMovement(exportDir, windows, index, s.config.FrameHz, state.Actors)
 	if err != nil {
-		return nil, nil, NewError(CodeCorrupt,
+		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's movement data could not be read.", err)
 	}
+	movementMS := time.Since(movementStarted)
 	if transformErr := movement.transformCheckError(); transformErr != nil {
-		return nil, nil, transformErr
+		return nil, nil, 0, transformErr
 	}
 
 	logs := buildRoundLogs(windows, players, index, events, fields, state, warnings)
 	applyRoundStats(windows, players, index, puuidBySubject, state, &fields.State, logs, warnings)
 	spike := buildSpikeTimeline(fields, state, index, windows, events, warnings)
+	utilitiesStarted := time.Now()
 	utilities, utilityWarnings, err := scanUtilities(
 		exportDir,
 		build,
@@ -359,7 +377,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		fields.UtilityActivation,
 	)
 	if err != nil {
-		return nil, nil, NewError(CodeCorrupt,
+		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's utility actor data could not be read.", err)
 	}
 	addSyntheticSovaUltimates(
@@ -372,6 +390,10 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		fields,
 		state.Paths,
 	)
+	utilitiesMS := time.Since(utilitiesStarted)
+	utilityCount := countUtilityIntervals(utilities)
+
+	framesStarted := time.Now()
 	framesByRound, timeline := buildTimelineFrames(
 		players, puuidBySubject, windows, movement, state, logs, spike, warnings,
 	)
@@ -418,6 +440,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 
 		rounds = append(rounds, round)
 	}
+	framesMS := time.Since(framesStarted)
 
 	match := &Match{
 		MatchID:     matchID(manifest.GUID),
@@ -437,20 +460,22 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		match.UtilityWarnings = &utilityWarnings
 	}
 
-	envelope := &Envelope{
+	envelope = &Envelope{
 		ReplayID: hash,
 		Match:    match,
 		Warnings: match.Warnings,
 	}
 
+	gzipStarted := time.Now()
 	encoded, err := json.Marshal(envelope)
 	if err != nil {
-		return nil, nil, NewError(CodeInternal, "", err)
+		return nil, nil, 0, NewError(CodeInternal, "", err)
 	}
-	gz, err := gzipBytes(encoded)
+	gz, err = gzipBytes(encoded)
 	if err != nil {
-		return nil, nil, NewError(CodeInternal, "", err)
+		return nil, nil, 0, NewError(CodeInternal, "", err)
 	}
+	gzipMS := time.Since(gzipStarted)
 
 	slog.Info("replay parsed",
 		"replay_hash_prefix", hashPrefix(hash),
@@ -461,6 +486,13 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		"cache_hit", false,
 		"inspect_ms", inspectMS.Milliseconds(),
 		"export_ms", exportMS.Milliseconds(),
+		"fields_ms", fieldsMS.Milliseconds(),
+		"events_ms", eventsMS.Milliseconds(),
+		"state_ms", stateMS.Milliseconds(),
+		"movement_ms", movementMS.Milliseconds(),
+		"utilities_ms", utilitiesMS.Milliseconds(),
+		"frames_ms", framesMS.Milliseconds(),
+		"gzip_ms", gzipMS.Milliseconds(),
 		"total_ms", time.Since(started).Milliseconds(),
 		"rounds", len(rounds),
 		"frames", timeline.Frames,
@@ -500,6 +532,17 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		"spike_site_warnings", spike.SiteWarnings,
 		"spike_missing_positions", spike.MissingSpots,
 		"spike_out_of_round", spike.OutOfRound,
+		"utility_intervals", utilityCount,
+		"utility_unknown_actors", utilityWarnings.UnknownActors,
+		"utility_invalid_actors", utilityWarnings.InvalidActors,
+		"utility_missing_positions", utilityWarnings.MissingPositions,
+		"utility_missing_closes", utilityWarnings.MissingCloses,
+		"utility_unresolved_owners", utilityWarnings.UnresolvedOwners,
+		"utility_missing_movement", utilityWarnings.MissingMovement,
+		"utility_truncated_utilities", utilityWarnings.TruncatedUtilities,
+		"utility_truncated_samples", utilityWarnings.TruncatedSamples,
+		"utility_truncated_paths", utilityWarnings.TruncatedPaths,
+		"utility_unsupported_build", utilityWarnings.UnsupportedBuild,
 		"response_bytes", len(encoded),
 		"gzip_bytes", len(gz),
 		"content_blocks_lost", quality.ContentBlocksLost,
@@ -507,7 +550,8 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (*Envelo
 		"event_payload_unknown_groups", quality.EventPayloadUnknown,
 	)
 
-	return envelope, gz, nil
+	s.metrics.finishParse(len(encoded), len(gz), time.Since(started))
+	return envelope, gz, len(encoded), nil
 }
 
 func asReplayError(err error, fallback Code) *Error {

@@ -31,6 +31,7 @@ type fakeReplayParser struct {
 	lastHash   string
 	cached     map[string]*replay.Envelope
 	cachedGz   map[string][]byte
+	metrics    replay.Metrics
 }
 
 func (f *fakeReplayParser) Available() bool { return f.available }
@@ -57,6 +58,10 @@ func (f *fakeReplayParser) GetCached(id string) (*replay.Envelope, []byte, bool)
 		return nil, nil, false
 	}
 	return envelope, f.cachedGz[id], true
+}
+
+func (f *fakeReplayParser) Metrics() replay.Metrics {
+	return f.metrics
 }
 
 func testEnvelope() *replay.Envelope {
@@ -393,6 +398,19 @@ func (c *countingReadCloser) Read(p []byte) (int, error) {
 }
 
 func (c *countingReadCloser) Close() error { return nil }
+
+func TestReplayTooLargeMessageUsesConfiguredLimit(t *testing.T) {
+	message := replayTooLargeMessage(120 << 20)
+	if !strings.Contains(message, "120 MB") {
+		t.Fatalf("message = %q, want the configured 120 MB limit", message)
+	}
+	if message == replay.DefaultMessage(replay.CodeTooLarge) {
+		t.Fatal("message used the default limit instead of the configured one")
+	}
+	if fallback := replayTooLargeMessage(0); fallback != replay.DefaultMessage(replay.CodeTooLarge) {
+		t.Fatalf("fallback message = %q", fallback)
+	}
+}
 
 func TestReplayHandlerGet(t *testing.T) {
 	envelope := testEnvelope()

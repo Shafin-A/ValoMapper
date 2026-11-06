@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"mime/multipart"
@@ -43,6 +44,10 @@ type ReplayParser interface {
 	MaxUploadBytes() int64
 	Parse(ctx context.Context, filePath, hash string) (*replay.Envelope, error)
 	GetCached(id string) (*replay.Envelope, []byte, bool)
+}
+
+type replayRateLimitRecorder interface {
+	RecordRateLimited()
 }
 
 type ReplayHandler struct {
@@ -101,6 +106,9 @@ func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.limiter != nil && !h.limiter.GetLimiter(middleware.GetIP(r)).Allow() {
+		if recorder, ok := h.parser.(replayRateLimitRecorder); ok {
+			recorder.RecordRateLimited()
+		}
 		h.sendError(w, requestID, &replay.Error{
 			Code:       replay.CodeRateLimited,
 			Message:    replay.DefaultMessage(replay.CodeRateLimited),
@@ -132,7 +140,7 @@ func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if err != nil {
-			h.sendError(w, requestID, mapMultipartReadError(err))
+			h.sendError(w, requestID, mapMultipartReadError(err, maxBytes))
 			return
 		}
 
@@ -242,12 +250,14 @@ func saveReplayUpload(part *multipart.Part, dir string, maxBytes int64) (string,
 	if err != nil {
 		var maxErr *http.MaxBytesError
 		if errors.As(err, &maxErr) {
-			return "", "", replay.NewError(replay.CodeTooLarge, "", err)
+			return "", "", replay.NewError(replay.CodeTooLarge,
+				replayTooLargeMessage(maxBytes), err)
 		}
 		return "", "", replay.NewError(replay.CodeInvalidRequest, "", err)
 	}
 	if int64(written) > maxBytes {
-		return "", "", replay.NewError(replay.CodeTooLarge, "", nil)
+		return "", "", replay.NewError(replay.CodeTooLarge,
+			replayTooLargeMessage(maxBytes), nil)
 	}
 
 	if err := file.Close(); err != nil {
@@ -257,15 +267,24 @@ func saveReplayUpload(part *multipart.Part, dir string, maxBytes int64) (string,
 	return path, hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
-func mapMultipartReadError(err error) *replay.Error {
+func mapMultipartReadError(err error, maxBytes int64) *replay.Error {
 	var maxErr *http.MaxBytesError
 	if errors.As(err, &maxErr) {
-		return replay.NewError(replay.CodeTooLarge, "", err)
+		return replay.NewError(replay.CodeTooLarge,
+			replayTooLargeMessage(maxBytes), err)
 	}
 	if errors.Is(err, multipart.ErrMessageTooLarge) {
-		return replay.NewError(replay.CodeTooLarge, "", err)
+		return replay.NewError(replay.CodeTooLarge,
+			replayTooLargeMessage(maxBytes), err)
 	}
 	return replay.NewError(replay.CodeInvalidRequest, "", err)
+}
+
+func replayTooLargeMessage(maxBytes int64) string {
+	if maxBytes <= 0 {
+		return replay.DefaultMessage(replay.CodeTooLarge)
+	}
+	return fmt.Sprintf("That replay is larger than the %d MB limit.", maxBytes>>20)
 }
 
 func (h *ReplayHandler) sendError(w http.ResponseWriter, requestID string, err error) {
