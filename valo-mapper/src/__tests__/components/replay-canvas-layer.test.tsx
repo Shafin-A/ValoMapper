@@ -834,11 +834,11 @@ describe("ReplayCanvasLayer utilities", () => {
       .getAllByTestId("konva-line")
       .filter((line) => line.getAttribute("data-closed") === "true");
     expect(cellLines).toHaveLength(2);
-    expect(cellLines[0]).toHaveAttribute("data-fill", "#48a85340");
+    expect(cellLines[0]).toHaveAttribute("data-fill", "#a1e94a26");
 
     const boundaryLines = screen
       .getAllByTestId("konva-line")
-      .filter((line) => line.getAttribute("data-stroke") === "#67e72a");
+      .filter((line) => line.getAttribute("data-stroke") === "#206c57");
     expect(boundaryLines).toHaveLength(1);
   });
 
@@ -878,7 +878,7 @@ describe("ReplayCanvasLayer utilities", () => {
       .getAllByTestId("konva-line")
       .filter((line) => line.getAttribute("data-closed") === "true");
     expect(cellLines).toHaveLength(1);
-    expect(cellLines[0]).toHaveAttribute("data-fill", "#7dd3fc40");
+    expect(cellLines[0]).toHaveAttribute("data-fill", "#7dd3fc26");
 
     const boundaryLines = screen
       .getAllByTestId("konva-line")

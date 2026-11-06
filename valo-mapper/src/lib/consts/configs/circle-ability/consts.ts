@@ -183,7 +183,7 @@ export const CIRCLE_ABILITY_CONFIGS: Record<
   },
   viper_pit: {
     radius: 9,
-    colors: { stroke: "#67e72a", fill: "#48a85326" },
+    colors: { stroke: "#206c57", fill: "#a1e94a26" },
   },
   viper_smoke: {
     radius: 4.5,

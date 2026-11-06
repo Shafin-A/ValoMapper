@@ -35,8 +35,8 @@ const REPLAY_UTILITY_POLYGON_STYLES: Record<
   string,
   { fill: string; stroke: string }
 > = {
-  vipers_pit: { fill: "#48a85340", stroke: "#67e72a" },
-  slow_orb: { fill: "#7dd3fc40", stroke: "#7dd3fc" },
+  vipers_pit: { fill: "#a1e94a26", stroke: "#206c57" },
+  slow_orb: { fill: "#7dd3fc26", stroke: "#7dd3fc" },
 };
 
 const REPLAY_UTILITY_COLORS: Record<ReplayUtilityKind, string> = {
