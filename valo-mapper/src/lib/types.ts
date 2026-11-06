@@ -119,6 +119,8 @@ export type AbilityIconItem = {
   src: string;
   name: string;
   action: AbilityAction;
+  /** Replay-only shape override; the lobby keeps `action`. */
+  replayAction?: AbilityAction;
   slot: string;
   /** Max charges available at the start of a round, when the ability uses charges. */
   charges?: number;
@@ -129,6 +131,7 @@ export type AbilityAlternate = {
   src: string;
   name: string;
   action: AbilityAction;
+  replayAction?: AbilityAction;
   slot: string;
 };
 
@@ -204,6 +207,7 @@ export type AbilityAction =
   | "veto_molly"
   | "veto_teleport"
   | "viper_molly"
+  | "viper_pit"
   | "viper_smoke"
   | "viper_wall"
   | "vyse_slow"
@@ -304,6 +308,7 @@ export type CircleAbility = Extract<
   | "veto_molly"
   | "veto_teleport"
   | "viper_molly"
+  | "viper_pit"
   | "viper_smoke"
   | "vyse_slow"
   | "vyse_ult"

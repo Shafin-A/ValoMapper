@@ -89,6 +89,11 @@ export type ReplayUtilityLengthSample = {
   length: number;
 };
 
+export type ReplayUtilityPoint = {
+  x: number;
+  y: number;
+};
+
 export type ReplayUtility = {
   id: string;
   kind: ReplayUtilityKind;
@@ -107,6 +112,10 @@ export type ReplayUtility = {
   path?: ReplayUtilityPositionSample[];
   vision?: ReplayUtilityVisionSample[];
   lengthSamples?: ReplayUtilityLengthSample[];
+  /** Decoded ground-volume cells for abilities with a real cell footprint. */
+  polygons?: ReplayUtilityPoint[][];
+  /** Exterior edges of those cells. */
+  boundary?: ReplayUtilityPoint[][];
   /** Fraction of a moving utility's full path that actually runs. */
   stopFraction?: number;
 };

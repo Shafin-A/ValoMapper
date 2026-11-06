@@ -40,6 +40,7 @@ type utilityActorLife struct {
 	attachParent    uint32
 	activeIntervals []utilityInterval
 	placedMS        uint32
+	groundVolume    *utilityGroundVolume
 }
 
 type utilityInterval struct {

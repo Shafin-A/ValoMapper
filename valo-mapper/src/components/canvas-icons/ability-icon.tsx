@@ -413,6 +413,7 @@ const ABILITY_RENDERERS: Record<
 
   // Viper
   viper_molly: renderCircleAbility,
+  viper_pit: renderCircleAbility,
   viper_smoke: renderCircleAbility,
   viper_wall: renderLineAbility,
 

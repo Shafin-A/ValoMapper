@@ -32,6 +32,7 @@ func scanUtilities(
 	if err != nil {
 		return nil, warnings, err
 	}
+	pitShapes := readVipersPitShapes(exportDir, build, actors)
 
 	var lives []*utilityActorLife
 	for _, actor := range actors {
@@ -69,6 +70,12 @@ func scanUtilities(
 		}
 		return lives[i].ordinal < lives[j].ordinal
 	})
+
+	for _, life := range lives {
+		if shape := pitShapes[life.guid]; shape != nil {
+			life.groundVolume = shape
+		}
+	}
 
 	for _, life := range lives {
 		if owner, hadLink, resolved := resolveUtilityOwner(
@@ -567,6 +574,10 @@ func scanUtilities(
 			utility.Length = segment.lengthM
 		} else if segment.life.lengthM > 0 {
 			utility.Length = segment.life.lengthM
+		}
+		if segment.life.groundVolume != nil {
+			utility.Polygons = segment.life.groundVolume.polygons
+			utility.Boundary = segment.life.groundVolume.boundary
 		}
 		if segment.life.class.wallPath {
 			var truncated bool

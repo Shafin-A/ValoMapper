@@ -15,16 +15,18 @@ const parquetBatchSize = 8192
 // tags must match vrfkit's fields schema exactly; nullable columns are pointers
 // so a missing value is distinguishable from zero.
 type fieldRow struct {
-	TimeMS        uint32   `parquet:"time_ms"`
-	PacketID      uint32   `parquet:"packet_id"`
-	ActorNetGUID  uint32   `parquet:"actor_net_guid"`
-	ObjectNetGUID *uint32  `parquet:"object_net_guid,optional"`
-	GroupPath     string   `parquet:"group_path"`
-	FieldName     *string  `parquet:"field_name,optional"`
-	ValueI64      *int64   `parquet:"value_i64,optional"`
-	ValueF64      *float64 `parquet:"value_f64,optional"`
-	ValueBool     *bool    `parquet:"value_bool,optional"`
-	ValueStr      *string  `parquet:"value_str,optional"`
+	TimeMS             uint32   `parquet:"time_ms"`
+	PacketID           uint32   `parquet:"packet_id"`
+	ActorNetGUID       uint32   `parquet:"actor_net_guid"`
+	ObjectNetGUID      *uint32  `parquet:"object_net_guid,optional"`
+	GroupPath          string   `parquet:"group_path"`
+	Handle             uint32   `parquet:"handle"`
+	FieldName          *string  `parquet:"field_name,optional"`
+	CompatibleChecksum *uint32  `parquet:"compatible_checksum,optional"`
+	ValueI64           *int64   `parquet:"value_i64,optional"`
+	ValueF64           *float64 `parquet:"value_f64,optional"`
+	ValueBool          *bool    `parquet:"value_bool,optional"`
+	ValueStr           *string  `parquet:"value_str,optional"`
 	// RawBits keeps a replicated array's undecoded members. Only KillData rows
 	// are inspected; every other row leaves it nil.
 	BitCount int32  `parquet:"bit_count"`

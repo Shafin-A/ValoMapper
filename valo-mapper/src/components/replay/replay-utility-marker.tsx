@@ -31,6 +31,13 @@ import type { ReplayUtilityKind } from "@/lib/replay/types";
 const REPLAY_INACTIVE_UTILITY_OPACITY = 0.3;
 const NULLCMD_PULSE_MS = 1000;
 
+const REPLAY_UTILITY_POLYGON_STYLES: Record<
+  string,
+  { fill: string; stroke: string }
+> = {
+  vipers_pit: { fill: "#48a85340", stroke: "#67e72a" },
+};
+
 const REPLAY_UTILITY_COLORS: Record<ReplayUtilityKind, string> = {
   smoke: "#67e8f9",
   wall: "#c4b5fd",
@@ -276,9 +283,68 @@ export const ReplayUtilityMarker = ({
           )
       : [];
   const trailPoints = trail.flatMap((sample) => [sample.x, sample.y]);
+  const polygonStyle = REPLAY_UTILITY_POLYGON_STYLES[utility.abilityId ?? ""];
+  const polygons = (utility.polygons ?? []).flatMap((polygon) => {
+    const converted = polygon
+      .map((sample) =>
+        toReplayCanvasPoint({
+          mapId: match.mapId,
+          mapSide,
+          position: sample,
+        }),
+      )
+      .filter(
+        (sample): sample is { x: number; y: number } => sample !== null,
+      );
+    return converted.length >= 3 && converted.length === polygon.length
+      ? [converted]
+      : [];
+  });
+  const boundary = (utility.boundary ?? []).flatMap((segment) => {
+    const converted = segment
+      .map((sample) =>
+        toReplayCanvasPoint({
+          mapId: match.mapId,
+          mapSide,
+          position: sample,
+        }),
+      )
+      .filter(
+        (sample): sample is { x: number; y: number } => sample !== null,
+      );
+    return converted.length === 2 && converted.length === segment.length
+      ? [converted]
+      : [];
+  });
+  const usesPolygons = polygons.length > 0;
 
   return (
     <Group listening={false}>
+      {usesPolygons &&
+        polygons.map((points, index) => (
+          <Line
+            key={`${utility.id}-polygon-${index}`}
+            points={points.flatMap((sample) => [sample.x, sample.y])}
+            closed
+            fill={polygonStyle?.fill ?? `${REPLAY_UTILITY_COLORS[utility.kind]}33`}
+            stroke={polygonStyle?.fill ?? `${REPLAY_UTILITY_COLORS[utility.kind]}33`}
+            strokeWidth={0.5}
+            opacity={utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1}
+            listening={false}
+          />
+        ))}
+      {usesPolygons &&
+        boundary.map((points, index) => (
+          <Line
+            key={`${utility.id}-boundary-${index}`}
+            points={points.flatMap((sample) => [sample.x, sample.y])}
+            stroke={polygonStyle?.stroke ?? REPLAY_UTILITY_COLORS[utility.kind]}
+            strokeWidth={2}
+            lineCap="round"
+            opacity={utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1}
+            listening={false}
+          />
+        ))}
       {visionRotation !== undefined && abilityIcon && (
         <AbilityIcon
           id={`${utility.id}-vision`}
@@ -390,7 +456,9 @@ export const ReplayUtilityMarker = ({
           }
           currentPath={currentPath}
           pathTension={currentPath.length > 1 ? 0.4 : undefined}
-          iconOnly={utility.iconOnly || isMovingWall || isMovingReckoning}
+          iconOnly={
+            utility.iconOnly || isMovingWall || isMovingReckoning || usesPolygons
+          }
           abilityShapeOpacity={
             utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1
           }

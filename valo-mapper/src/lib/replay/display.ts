@@ -50,15 +50,17 @@ export type ReplayUtilityAbilityIcon = {
 const REPLAY_UTILITY_ABILITY_ICONS = new Map<string, ReplayUtilityAbilityIcon>(
   Object.values(AGENT_ICON_CONFIGS)
     .flatMap((abilities) =>
-      abilities.flatMap(({ id, name, src, action, alternates = [] }) => [
-        { id, name, src, action },
-        ...alternates.map((alternate) => ({
-          id: alternate.id,
-          name: alternate.name,
-          src: alternate.src,
-          action: alternate.action,
-        })),
-      ]),
+      abilities.flatMap(
+        ({ id, name, src, action, replayAction, alternates = [] }) => [
+          { id, name, src, action: replayAction ?? action },
+          ...alternates.map((alternate) => ({
+            id: alternate.id,
+            name: alternate.name,
+            src: alternate.src,
+            action: alternate.replayAction ?? alternate.action,
+          })),
+        ],
+      ),
     )
     .map((ability) => [
       ability.id,

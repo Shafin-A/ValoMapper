@@ -85,16 +85,22 @@ jest.mock("react-konva", () => {
       id,
       points,
       stroke,
+      fill,
+      closed,
     }: {
       id?: string;
       points: number[];
       stroke: string;
+      fill?: string;
+      closed?: boolean;
     }) =>
       React.createElement("span", {
-      "data-testid": "konva-line",
+        "data-testid": "konva-line",
         id,
         points: points.join(","),
         "data-stroke": stroke,
+        "data-fill": fill,
+        "data-closed": String(closed ?? false),
       }),
   };
 });
@@ -757,6 +763,83 @@ describe("ReplayCanvasLayer utilities", () => {
     expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(
       (startPoint.y + endPoint.y) / 2,
     );
+  });
+
+  it("renders Viper's Pit with a replay circle instead of a bare icon", () => {
+    const vipersPit: ReplayUtility = {
+      id: "utility-vipers-pit",
+      kind: "area",
+      abilityId: "vipers_pit",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: lotusSpawn,
+      yaw: 0,
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([vipersPit])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+
+    const icon = screen.getByTestId("ability-icon");
+    expect(icon).toHaveAttribute("data-action", "viper_pit");
+    expect(icon).toHaveAttribute("data-icon-only", "false");
+    expect(icon).toHaveAttribute(
+      "data-src",
+      "/agents/viper/viper's_pit.png",
+    );
+  });
+
+  it("draws Viper's Pit cells and boundary when ground-volume polygons are present", () => {
+    const polygonA = [
+      { x: lotusSpawn.x, y: lotusSpawn.y },
+      { x: lotusSpawn.x + 200, y: lotusSpawn.y },
+      { x: lotusSpawn.x + 200, y: lotusSpawn.y + 200 },
+    ];
+    const polygonB = [
+      { x: lotusSpawn.x + 200, y: lotusSpawn.y },
+      { x: lotusSpawn.x + 400, y: lotusSpawn.y },
+      { x: lotusSpawn.x + 400, y: lotusSpawn.y + 200 },
+    ];
+    const vipersPit: ReplayUtility = {
+      id: "utility-vipers-pit-cells",
+      kind: "area",
+      abilityId: "vipers_pit",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: lotusSpawn,
+      yaw: 0,
+      polygons: [polygonA, polygonB],
+      boundary: [[polygonA[1], polygonA[2]]],
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([vipersPit])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+
+    const icon = screen.getByTestId("ability-icon");
+    expect(icon).toHaveAttribute("data-action", "viper_pit");
+    expect(icon).toHaveAttribute("data-icon-only", "true");
+
+    const cellLines = screen
+      .getAllByTestId("konva-line")
+      .filter((line) => line.getAttribute("data-closed") === "true");
+    expect(cellLines).toHaveLength(2);
+    expect(cellLines[0]).toHaveAttribute("data-fill", "#48a85340");
+
+    const boundaryLines = screen
+      .getAllByTestId("konva-line")
+      .filter((line) => line.getAttribute("data-stroke") === "#67e72a");
+    expect(boundaryLines).toHaveLength(1);
   });
 
   it("renders a placed Cyber Cage as an icon without its activation circle", () => {

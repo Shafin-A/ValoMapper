@@ -907,6 +907,7 @@ export const AGENT_ICON_CONFIGS: Record<string, AbilityIconConfig> = {
       src: "/agents/viper/viper's_pit.png",
       name: "Viper's Pit",
       action: "icon",
+      replayAction: "viper_pit",
       slot: "Ultimate",
     },
   ],

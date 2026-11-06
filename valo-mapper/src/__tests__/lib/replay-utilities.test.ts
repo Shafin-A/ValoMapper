@@ -6,6 +6,7 @@ import {
   REPLAY_UTILITY_MAX_SAMPLE_AGE_MS,
 } from "@/lib/replay/utilities";
 import { getReplayUtilityAbilityIcon } from "@/lib/replay/display";
+import { AGENT_ICON_CONFIGS } from "@/lib/consts/configs/agent-icon/consts";
 import type { ReplayUtility } from "@/lib/replay/types";
 
 const stationaryUtility: ReplayUtility = {
@@ -64,6 +65,18 @@ describe("replay utility playback", () => {
 
   it("does not invent artwork for an unknown ability id", () => {
     expect(getReplayUtilityAbilityIcon("unknown-ability")).toBeNull();
+  });
+
+  it("uses a replay-only circle action for Viper's Pit", () => {
+    expect(getReplayUtilityAbilityIcon("vipers_pit")).toMatchObject({
+      id: "vipers_pit",
+      src: "/agents/viper/viper's_pit.png",
+      action: "viper_pit",
+    });
+    expect(
+      AGENT_ICON_CONFIGS.Viper.find((ability) => ability.id === "vipers_pit")
+        ?.action,
+    ).toBe("icon");
   });
 
   it.each([

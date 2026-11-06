@@ -230,7 +230,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 
 	// Viper
 	"Patch_Pandemic_AcidMolotov_NewMolotov":    {kind: UtilityMolly, minBuild: 1300, maxLifetimeMS: 6500, ability: "snake_bite"},
-	"Projectile_Pandemic_Q_AcidGrenade":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "snake_bite"},
+	"Projectile_Pandemic_Q_AcidGrenade":        {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "snake_bite"},
 	"GameObject_Pandemic_4_SmokeZone":          {kind: UtilitySmoke, minBuild: 1300, ability: "poison_cloud"},
 	"Projectile_Pandemic_4_SmokeGrenade":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "poison_cloud", iconOnly: true},
 	"GameObject_Pandemic_E_SmokeScreenManager": {kind: UtilityWall, wallPoints: true, wallActivated: true, wallStart: true, minBuild: 1300, ability: "toxic_screen"},
