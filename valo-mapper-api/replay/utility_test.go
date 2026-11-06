@@ -444,6 +444,8 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		"Projectile_Paprika_E_RedirectPull":                       true,
 		"Projectile_Paprika_X_FullBendPop":                        true,
 		"Projectile_Sprinter_4_GroundStrike":                      true,
+		"Projectile_Sarge_E_SpeedStim":                            true,
+		"Projectile_Sarge_Q_Molotov_Production":                   true,
 		"Projectile_Hunter_4_ExplosiveBolt":                       true,
 		"Projectile_Hunter_Q_RevealBolt":                          true,
 		"Projectile_Thumper_Concuss":                              true,
@@ -1449,6 +1451,12 @@ func TestScanUtilitiesCapsBreachUtilityLifetimes(t *testing.T) {
 			class:       "Gameobject_Grenadier_E_SuppressionPulse",
 			ability:     "zeropoint",
 			maxLifetime: 1000,
+		},
+		{
+			name:        "Orbital Strike",
+			class:       "GameObject_Sarge_X_OrbitalStrike_Production",
+			ability:     "orbital_strike",
+			maxLifetime: 4000,
 		},
 	}
 

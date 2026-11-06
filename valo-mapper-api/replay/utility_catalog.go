@@ -54,9 +54,9 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"GameObject_Sarge_E_SpeedStim":                {kind: UtilityArea, minBuild: 1300, ability: "stim_beacon"},
 	"Patch_Sarge_Q_Molotov_Production":            {kind: UtilityMolly, minBuild: 1300, ability: "incendiary"},
 	"GameObject_Sarge_4_Smoke_ProductionNEW":      {kind: UtilitySmoke, minBuild: 1300, ability: "sky_smoke"},
-	"GameObject_Sarge_X_OrbitalStrike_Production": {kind: UtilityArea, minBuild: 1300, ability: "orbital_strike"},
-	"Projectile_Sarge_E_SpeedStim":                {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "stim_beacon"},
-	"Projectile_Sarge_Q_Molotov_Production":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "incendiary"},
+	"GameObject_Sarge_X_OrbitalStrike_Production": {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 4000, ability: "orbital_strike"},
+	"Projectile_Sarge_E_SpeedStim":                {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, iconOnly: true, ability: "stim_beacon"},
+	"Projectile_Sarge_Q_Molotov_Production":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, iconOnly: true, ability: "incendiary"},
 
 	// Chamber
 	"Patch_Deadeye_E_Slow_Large":             {kind: UtilityArea, minBuild: 1308, ability: "trademark"},
