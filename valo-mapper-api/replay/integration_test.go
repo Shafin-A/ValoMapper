@@ -37,6 +37,10 @@ func integrationFrameHz() int {
 //
 //	go test ./replay -run TestIntegrationRealReplay -v -timeout 15m
 func TestIntegrationRealReplay(t *testing.T) {
+	if testing.Short() {
+		t.Skip("real-replay integration test is an opt-in acceptance step")
+	}
+
 	file := os.Getenv("VRF_TEST_FILE")
 	bin := os.Getenv("VRFKIT_BIN")
 	exportDir := os.Getenv("VRF_TEST_EXPORT")
