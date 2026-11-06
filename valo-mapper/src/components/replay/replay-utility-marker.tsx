@@ -125,6 +125,7 @@ export const ReplayUtilityMarker = ({
     (utility.abilityId === "reckoning" ||
       utility.abilityId === "nightfall" ||
       utility.abilityId === "rolling_thunder" ||
+      utility.abilityId === "armageddon" ||
       utility.abilityId === "paranoia" ||
       utility.abilityId === "undercut") &&
     (utility.samples?.length ?? 0) > 1;

@@ -77,6 +77,16 @@ func TestUtilityCatalogIsExactAndBuildAware(t *testing.T) {
 		{"13.08", "Projectile_Terra_C_TimeSlowGrenade", true, "saturate"},
 		{"13.08", "GameObject_Terra_E_RewindTime_RewindTarget", true, "refract"},
 		{"13.08", "GameObject_Terra_X_DelayedBeam_Beam", true, "convergent_paths"},
+		{"13.09", "Projectile_Cashew_Q_ShellShockGrenade", true, "special_delivery"},
+		{"13.09", "Projectile_Cashew_Q_ShellShockGrenade_Bounce", true, "special_delivery"},
+		{"13.09", "GameObject_Cashew_Q_ShellShockGrenade", true, "special_delivery"},
+		{"13.09", "Pawn_Cashew_4_Spider_LockOn", true, "stealth_drone"},
+		{"13.09", "GameObject_Cashew_4_SonarPing", true, "stealth_drone"},
+		{"13.09", "GameObject_Cashew_E_MapMissileMarker", true, "guided_salvo"},
+		{"13.09", "GameObject_Cashew_E_MapMissileMarker_SecondRocket", true, "guided_salvo"},
+		{"13.09", "AIPawn_Cashew_E_SeekingTargetMissile", true, "guided_salvo"},
+		{"13.09", "GameObject_Cashew_E_AirStrikeMortar", true, "guided_salvo"},
+		{"13.09", "GameObject_Cashew_X_SegmentManager", true, "armageddon"},
 		{"13.08", "Ability_BountyHunter_4_WolfHoundBendable", false, ""},
 		{"13.09", "GameObject_Smonk_NewSmoke", true, "ruse"},
 		{"13.10", "GameObject_Smonk_NewSmoke", false, ""},
@@ -421,6 +431,8 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 	// drawing the placed ability's area or circle while still in flight.
 	iconOnlyProjectiles := map[string]bool{
 		"Projectile_Aggrobot_C_ExplodeyPatch":                     true,
+		"Projectile_Cashew_Q_ShellShockGrenade":                   true,
+		"Projectile_Cashew_Q_ShellShockGrenade_Bounce":            true,
 		"Projectile_E_BountyHunter_Divebomb":                      true,
 		"Projectile_Q_BountyHunter_TetherGrenade_SphereExpansion": true,
 		"Projectile_Grenadier_E_SuppressionBlade":                 true,
@@ -487,6 +499,45 @@ func TestUtilityCatalogAddsHushAreas(t *testing.T) {
 				t.Fatal("placed Hush utility must keep its marker or area rendering")
 			}
 		})
+	}
+}
+
+func TestUtilityCatalogAddsTejoLandingAreas(t *testing.T) {
+	tests := []struct {
+		class      string
+		kind       UtilityKind
+		ability    string
+		iconOnly   bool
+		mobile     bool
+		replicated bool
+	}{
+		{"GameObject_Cashew_Q_ShellShockGrenade", UtilityArea, "special_delivery", false, false, false},
+		{"GameObject_Cashew_E_AirStrikeMortar", UtilityArea, "guided_salvo", false, false, false},
+		{"AIPawn_Cashew_E_SeekingTargetMissile", UtilityMobile, "guided_salvo", true, true, false},
+		{"GameObject_Cashew_X_SegmentManager", UtilityArea, "armageddon", false, false, false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.class, func(t *testing.T) {
+			entry, found := utilityCatalog[test.class]
+			if !found {
+				t.Fatal("Tejo utility class is not catalogued")
+			}
+			if entry.kind != test.kind || entry.ability != test.ability {
+				t.Fatalf("entry = %#v, want kind %q ability %q",
+					entry, test.kind, test.ability)
+			}
+			if entry.iconOnly != test.iconOnly || entry.mobile != test.mobile ||
+				entry.replicatedMovement != test.replicated {
+				t.Fatalf("entry flags = %#v, want iconOnly=%v mobile=%v replicated=%v",
+					entry, test.iconOnly, test.mobile, test.replicated)
+			}
+		})
+	}
+
+	armageddon := utilityCatalog["GameObject_Cashew_X_SegmentManager"]
+	if armageddon.forwardMovement != 32 || armageddon.maxLifetimeMS != 5000 {
+		t.Fatalf("Armageddon movement = %#v, want 32 m over 5000 ms", armageddon)
 	}
 }
 
@@ -1916,6 +1967,138 @@ func TestScanUtilitiesMovesRollingThunderForward(t *testing.T) {
 	}
 	if math.Abs(last.X-100) > 1 || math.Abs(last.Y-3400) > 1 {
 		t.Errorf("last wave sample = %v, want the 32 m forward endpoint", last)
+	}
+}
+
+func TestScanUtilitiesMovesArmageddonForward(t *testing.T) {
+	dir := t.TempDir()
+	waveClass := "GameObject_Cashew_X_SegmentManager"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 900, Event: "open",
+			ClassPath: &waveClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			SpawnYaw: float32Ptr(90),
+		},
+		{TimeMS: 9000, PacketID: 20, ActorNetGUID: 900, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		10000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 10000}},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one Armageddon wave", utilities)
+	}
+	wave := utilities[0][0]
+	if wave.AbilityID != "armageddon" || wave.Kind != UtilityArea {
+		t.Fatalf("wave identity = %q/%q, want area armageddon",
+			wave.Kind, wave.AbilityID)
+	}
+	if wave.StartTimeMS != 1000 || wave.EndTimeMS != 6000 {
+		t.Errorf("wave interval = %d..%d, want the five-second display window",
+			wave.StartTimeMS, wave.EndTimeMS)
+	}
+	if wave.Position != (Position{X: 100, Y: 200}) || wave.Yaw != 90 {
+		t.Errorf("wave origin = %v yaw %v, want (100, 200) yaw 90",
+			wave.Position, wave.Yaw)
+	}
+	if len(wave.Samples) < 2 {
+		t.Fatalf("wave samples = %#v, want forward movement", wave.Samples)
+	}
+	first := wave.Samples[0]
+	last := wave.Samples[len(wave.Samples)-1]
+	if first.X != 100 || first.Y != 200 {
+		t.Errorf("first wave sample = %v, want the cast point", first)
+	}
+	if math.Abs(last.X-100) > 1 || math.Abs(last.Y-3400) > 1 {
+		t.Errorf("last wave sample = %v, want the 32 m forward endpoint", last)
+	}
+}
+
+func TestScanUtilitiesKeepsSpecialDeliveryIconOnlyUntilLanding(t *testing.T) {
+	dir := t.TempDir()
+	projectileClass := "Projectile_Cashew_Q_ShellShockGrenade"
+	landingClass := "GameObject_Cashew_Q_ShellShockGrenade"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 760, Event: "open",
+			ClassPath: &projectileClass, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 1800, PacketID: 8, ActorNetGUID: 760, Event: "close"},
+		{
+			TimeMS: 1750, PacketID: 2, ActorNetGUID: 761, Event: "open",
+			ClassPath: &landingClass, SpawnX: float32Ptr(150), SpawnY: float32Ptr(250),
+		},
+		{TimeMS: 2500, PacketID: 9, ActorNetGUID: 761, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	fieldName := "ReplicatedMovement"
+	movementRows := []fieldRow{
+		{
+			TimeMS: 1100, PacketID: 3, ActorNetGUID: 760, FieldName: &fieldName,
+			ValueStr: stringPtr(`{"location":{"x":110,"y":210,"z":10}}`),
+		},
+		{
+			TimeMS: 1600, PacketID: 4, ActorNetGUID: 760, FieldName: &fieldName,
+			ValueStr: stringPtr(`{"location":{"x":160,"y":260,"z":10}}`),
+		},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), movementRows); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.09",
+		3000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 2 {
+		t.Fatalf("utilities = %#v, want a throw and a landing", utilities)
+	}
+	projectile, landing := utilities[0][0], utilities[0][1]
+	if projectile.Kind != UtilityMobile || projectile.AbilityID != "special_delivery" || !projectile.IconOnly {
+		t.Fatalf("projectile = %+v, want an icon-only special_delivery throw", projectile)
+	}
+	if landing.Kind != UtilityArea || landing.AbilityID != "special_delivery" || landing.IconOnly {
+		t.Fatalf("landing = %+v, want a visible special_delivery area", landing)
+	}
+	if landing.StartTimeMS != 1750 || landing.EndTimeMS != 2500 {
+		t.Errorf("landing interval = %d..%d, want 1750..2500",
+			landing.StartTimeMS, landing.EndTimeMS)
+	}
+	if landing.Position != (Position{X: 150, Y: 250}) {
+		t.Errorf("landing position = %v, want (150, 250)", landing.Position)
 	}
 }
 

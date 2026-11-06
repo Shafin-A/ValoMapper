@@ -1394,6 +1394,82 @@ describe("ReplayCanvasLayer utilities", () => {
     );
   });
 
+  it("keeps Armageddon's line static while the wave moves forward", () => {
+    const armageddon: ReplayUtility = {
+      id: "utility-armageddon",
+      kind: "area",
+      abilityId: "armageddon",
+      startTimeMs: 0,
+      endTimeMs: 5000,
+      position: lotusSpawn,
+      yaw: 0,
+      samples: [
+        { timeMs: 0, ...lotusSpawn },
+        {
+          timeMs: 5000,
+          x: lotusSpawn.x + 3200,
+          y: lotusSpawn.y,
+        },
+      ],
+    };
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([armageddon])}
+        frame={frame}
+        currentTimeMs={0}
+      />,
+    );
+
+    const icon = () => screen.getByTestId("ability-icon");
+    expect(icon()).toHaveAttribute("data-action", "tejo_ult");
+    expect(icon()).toHaveAttribute("data-icon-only", "true");
+    const startPoint = toReplayCanvasPoint({
+      mapId: "lotus",
+      mapSide: "defense",
+      position: lotusSpawn,
+    })!;
+    const lineRotation = toReplayCanvasRotation({
+      mapId: "lotus",
+      mapSide: "defense",
+      location: lotusSpawn,
+      viewRadians: 0,
+    });
+    const lineRadians = (lineRotation * Math.PI) / 180;
+    const lineLength = mToPixels(LINE_ABILITY_CONFIGS.tejo_ult.lineLength);
+    const lineEnd = {
+      x: startPoint.x + Math.cos(lineRadians) * lineLength,
+      y: startPoint.y + Math.sin(lineRadians) * lineLength,
+    };
+
+    const areaLine = screen
+      .getAllByTestId("konva-line")
+      .find((line) => line.getAttribute("data-stroke") === "#b8864980");
+    expect(areaLine).toBeDefined();
+    const points = areaLine!.getAttribute("points")!.split(",").map(Number);
+    expect(points).toHaveLength(4);
+    expect(points[0]).toBeCloseTo(startPoint.x);
+    expect(points[1]).toBeCloseTo(startPoint.y);
+    expect(points[2]).toBeCloseTo(lineEnd.x);
+    expect(points[3]).toBeCloseTo(lineEnd.y);
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([armageddon])}
+        frame={frame}
+        currentTimeMs={2500}
+      />,
+    );
+
+    expect(Number(icon().getAttribute("data-x"))).toBeCloseTo(
+      (startPoint.x + lineEnd.x) / 2,
+    );
+    expect(Number(icon().getAttribute("data-y"))).toBeCloseTo(
+      (startPoint.y + lineEnd.y) / 2,
+    );
+  });
+
   it("moves Rolling Thunder's icon forward along its line", () => {
     const rollingThunder: ReplayUtility = {
       id: "utility-rolling-thunder",

@@ -208,14 +208,16 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Projectile_Hunter_Q_RevealBolt":              {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "recon_bolt"},
 
 	// Tejo
-	"Projectile_Cashew_Q_ShellShockGrenade":        {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "special_delivery"},
-	"Projectile_Cashew_Q_ShellShockGrenade_Bounce": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "special_delivery"},
-
-	"Pawn_Cashew_4_Spider_LockOn":                       {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "stealth_drone"},
-	"GameObject_Cashew_4_SonarPing":                     {kind: UtilityArea, minBuild: 1300, ability: "stealth_drone"},
+	"Projectile_Cashew_Q_ShellShockGrenade":             {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "special_delivery"},
+	"Projectile_Cashew_Q_ShellShockGrenade_Bounce":      {kind: UtilityMobile, replicatedMovement: true, iconOnly: true, minBuild: 1300, ability: "special_delivery"},
+	"GameObject_Cashew_Q_ShellShockGrenade":             {kind: UtilityArea, minBuild: 1300, ability: "special_delivery"},
+	"Pawn_Cashew_4_Spider_LockOn":                       {kind: UtilityMobile, mobile: true, minBuild: 1300, ability: "stealth_drone", iconOnly: true},
+	"GameObject_Cashew_4_SonarPing":                     {kind: UtilityArea, minBuild: 1300, ability: "stealth_drone", maxLifetimeMS: 700},
 	"GameObject_Cashew_E_MapMissileMarker":              {kind: UtilityArea, minBuild: 1300, ability: "guided_salvo"},
 	"GameObject_Cashew_E_MapMissileMarker_SecondRocket": {kind: UtilityArea, minBuild: 1300, ability: "guided_salvo"},
-	"GameObject_Cashew_X_SegmentManager":                {kind: UtilityArea, minBuild: 1300, ability: "armageddon"},
+	"AIPawn_Cashew_E_SeekingTargetMissile":              {kind: UtilityMobile, mobile: true, iconOnly: true, minBuild: 1300, ability: "guided_salvo"},
+	"GameObject_Cashew_E_AirStrikeMortar":               {kind: UtilityArea, minBuild: 1300, ability: "guided_salvo"},
+	"GameObject_Cashew_X_SegmentManager":                {kind: UtilityArea, forwardMovement: 32, maxLifetimeMS: 5000, minBuild: 1300, ability: "armageddon"},
 
 	// Veto
 	"GameObject_Pine_4_UsableTeleport":         {kind: UtilityMarker, minBuild: 1300, ability: "crosscut"},
