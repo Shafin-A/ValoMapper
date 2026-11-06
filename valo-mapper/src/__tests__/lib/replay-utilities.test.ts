@@ -1,6 +1,7 @@
 import {
   getReplayUtilityLengthAtTime,
   getReplayUtilityVisionYawAtTime,
+  getReplayUtilityPathAtTime,
   getReplayUtilityPositionAtTime,
   getReplayUtilityTrailAtTime,
   REPLAY_UTILITY_MAX_SAMPLE_AGE_MS,
@@ -188,6 +189,51 @@ describe("replay utility playback", () => {
     expect(getReplayUtilityTrailAtTime(mobileUtility, 150)).toEqual([
       { timeMs: 100, x: 10, y: 20 },
     ]);
+  });
+
+  it("returns the same utility state after seeking forwards and backwards", () => {
+    const blazePath: ReplayUtility = {
+      id: "utility-blaze-path",
+      kind: "wall",
+      abilityId: "blaze",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: { x: 0, y: 0 },
+      path: [
+        { timeMs: 100, x: 1, y: 2 },
+        { timeMs: 300, x: 3, y: 4 },
+      ],
+    };
+
+    expect(getReplayUtilityPositionAtTime(mobileUtility, 250)).toEqual({
+      timeMs: 200,
+      x: 30,
+      y: 40,
+    });
+    expect(getReplayUtilityPositionAtTime(mobileUtility, 150)).toEqual({
+      timeMs: 100,
+      x: 10,
+      y: 20,
+    });
+    expect(getReplayUtilityPositionAtTime(mobileUtility, 250)).toEqual({
+      timeMs: 200,
+      x: 30,
+      y: 40,
+    });
+
+    expect(getReplayUtilityTrailAtTime(mobileUtility, 250)).toEqual([
+      { timeMs: 100, x: 10, y: 20 },
+      { timeMs: 200, x: 30, y: 40 },
+    ]);
+    expect(getReplayUtilityTrailAtTime(mobileUtility, 150)).toEqual([
+      { timeMs: 100, x: 10, y: 20 },
+    ]);
+
+    expect(getReplayUtilityPathAtTime(blazePath, 500)).toHaveLength(2);
+    expect(getReplayUtilityPathAtTime(blazePath, 200)).toEqual([
+      { timeMs: 100, x: 1, y: 2 },
+    ]);
+    expect(getReplayUtilityPathAtTime(blazePath, 500)).toHaveLength(2);
   });
 
   it("grows a wall from its length samples and holds the final length", () => {

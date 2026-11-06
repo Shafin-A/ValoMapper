@@ -2869,10 +2869,207 @@ func TestResolveUtilityOwnerRejectsAmbiguousChains(t *testing.T) {
 }
 
 func TestUtilityWarningsAreBounded(t *testing.T) {
-	counter := 0
-	incrementUtilityWarning(&counter, maxUtilityWarnings+10)
-	if counter != maxUtilityWarnings {
-		t.Fatalf("warning count = %d, want cap %d", counter, maxUtilityWarnings)
+	warnings := UtilityWarnings{}
+	counters := []*int{
+		&warnings.UnknownActors,
+		&warnings.InvalidActors,
+		&warnings.MissingPositions,
+		&warnings.MissingCloses,
+		&warnings.UnresolvedOwners,
+		&warnings.MissingMovement,
+		&warnings.TruncatedUtilities,
+		&warnings.TruncatedSamples,
+		&warnings.TruncatedPaths,
+		&warnings.UnsupportedBuild,
+	}
+	for _, counter := range counters {
+		incrementUtilityWarning(counter, maxUtilityWarnings+10)
+		if *counter != maxUtilityWarnings {
+			t.Fatalf("warning count = %d, want cap %d", *counter, maxUtilityWarnings)
+		}
+	}
+}
+
+func TestScanUtilitiesOmitsUnknownActorAndCountsWarning(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_UnknownFuture_Smoke"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 2000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, warnings, err := scanUtilities(
+		dir,
+		"13.08",
+		3000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 0 {
+		t.Fatalf("utilities = %#v, want no normalized utility", utilities)
+	}
+	if warnings.UnknownActors != 1 {
+		t.Fatalf("unknown actors = %d, want 1", warnings.UnknownActors)
+	}
+}
+
+func TestScanUtilitiesOmitsNonFiniteSpawnAndCountsWarning(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Smonk_NewSmoke"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class,
+			SpawnX:    float32Ptr(float32(math.NaN())),
+			SpawnY:    float32Ptr(200),
+		},
+		{TimeMS: 2000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, warnings, err := scanUtilities(
+		dir,
+		"13.08",
+		3000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 0 {
+		t.Fatalf("utilities = %#v, want no normalized utility", utilities)
+	}
+	if warnings.MissingPositions != 1 {
+		t.Fatalf("missing positions = %d, want 1", warnings.MissingPositions)
+	}
+}
+
+func TestScanUtilitiesCountsInvalidLifetimeWithoutEmittingUtility(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Smonk_NewSmoke"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 1000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, warnings, err := scanUtilities(
+		dir,
+		"13.08",
+		3000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 0 {
+		t.Fatalf("utilities = %#v, want no normalized utility", utilities)
+	}
+	if warnings.InvalidActors != 1 {
+		t.Fatalf("invalid actors = %d, want 1", warnings.InvalidActors)
+	}
+}
+
+func TestScanUtilitiesRejectsAmbiguousOwnerAndCountsWarning(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Smonk_NewSmoke"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+		},
+		{TimeMS: 3000, PacketID: 2, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+
+	firstPawn, secondPawn := uint32(901), uint32(902)
+	ownerWrites := map[uint32][]utilityOwnerWrite{
+		700: {{TimeMS: 900, PacketID: 1, Owner: &firstPawn}},
+		901: {{TimeMS: 900, PacketID: 2, Owner: &secondPawn}},
+	}
+	firstSubject := "00000000-0000-0000-0000-000000000001"
+	secondSubject := "00000000-0000-0000-0000-000000000002"
+	index := newPlayerIndex(&Manifest{Players: []ManifestPlayer{
+		{
+			ActorNetGUID: 911, Subject: firstSubject,
+			CharacterNetGUID: &firstPawn, CharacterNetGUIDs: []uint32{firstPawn},
+		},
+		{
+			ActorNetGUID: 912, Subject: secondSubject,
+			CharacterNetGUID: &secondPawn, CharacterNetGUIDs: []uint32{secondPawn},
+		},
+	}})
+	puuidBySubject := map[string]string{
+		firstSubject:  pseudonymousID(normaliseUUID(firstSubject)),
+		secondSubject: pseudonymousID(normaliseUUID(secondSubject)),
+	}
+
+	utilities, warnings, err := scanUtilities(
+		dir,
+		"13.08",
+		3000,
+		[]roundWindow{{RoundNumber: 1, StartMS: 0, EndMS: 3000}},
+		index,
+		puuidBySubject,
+		nil,
+		ownerWrites,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 1 || len(utilities[0]) != 1 {
+		t.Fatalf("utilities = %#v, want one unattributed utility", utilities)
+	}
+	if utilities[0][0].OwnerPuuid != "" {
+		t.Fatalf("owner = %q, want an unresolved owner to stay empty", utilities[0][0].OwnerPuuid)
+	}
+	if warnings.UnresolvedOwners != 1 {
+		t.Fatalf("unresolved owners = %d, want 1", warnings.UnresolvedOwners)
 	}
 }
 

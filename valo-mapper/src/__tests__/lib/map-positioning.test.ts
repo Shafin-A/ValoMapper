@@ -69,22 +69,47 @@ describe("transformRiotWorldToCanvasPoint", () => {
     }
 
     const mapPosition = getReplayMapPosition();
+    // One observed spawn for every in-scope utility kind on the 13.08 fixture.
     const samples = [
       {
+        kind: "smoke",
         position: { x: 6431.3, y: -5267.8 },
         expected: { x: 1030.62, y: 556.63 },
       },
       {
+        kind: "smoke",
         position: { x: 6505.5, y: 4043 },
         expected: { x: 192.64, y: 563.31 },
       },
       {
+        kind: "trap",
         position: { x: 5684.7, y: -66.3 },
         expected: { x: 562.48, y: 489.43 },
       },
       {
+        kind: "mobile",
         position: { x: 6788.1, y: -4616.4 },
         expected: { x: 971.99, y: 588.74 },
+      },
+      {
+        kind: "marker",
+        position: { x: 4548.5, y: -4196.2 },
+        expected: { x: 934.17, y: 387.17 },
+      },
+      {
+        kind: "area",
+        position: { x: 5973.0, y: 3627.0 },
+        expected: { x: 230.08, y: 515.38 },
+      },
+      {
+        kind: "molly",
+        position: { x: 6400.5, y: -3046.6 },
+        expected: { x: 830.71, y: 553.86 },
+      },
+      {
+        kind: "wall",
+        position: { x: 6604.2, y: -3144.7 },
+        expected: { x: 839.54, y: 572.19 },
       },
     ];
 

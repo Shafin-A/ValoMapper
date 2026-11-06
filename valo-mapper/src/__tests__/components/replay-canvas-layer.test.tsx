@@ -1081,6 +1081,56 @@ describe("ReplayCanvasLayer utilities", () => {
     expect(screen.queryByTestId("utility-marker")).not.toBeInTheDocument();
   });
 
+  it("drops the previous round's utilities when the round changes", () => {
+    const roundOneUtility: ReplayUtility = {
+      id: "utility-round-1",
+      kind: "smoke",
+      abilityId: "cloudburst",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: lotusSpawn,
+    };
+    const roundTwoUtility: ReplayUtility = {
+      id: "utility-round-2",
+      kind: "smoke",
+      abilityId: "ruse",
+      startTimeMs: 0,
+      endTimeMs: 500,
+      position: { x: 6505.5, y: 4043 },
+    };
+
+    const { rerender } = render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={{ ...utilityRound([roundOneUtility]), roundNumber: 1 }}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+    expect(screen.getByTestId("ability-icon")).toHaveAttribute(
+      "data-id",
+      "utility-round-1",
+    );
+
+    rerender(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={{ ...utilityRound([roundTwoUtility]), roundNumber: 2 }}
+        frame={frame}
+        currentTimeMs={100}
+      />,
+    );
+    expect(screen.getByTestId("ability-icon")).toHaveAttribute(
+      "data-id",
+      "utility-round-2",
+    );
+    expect(
+      screen
+        .queryAllByTestId("ability-icon")
+        .some((icon) => icon.getAttribute("data-id") === "utility-round-1"),
+    ).toBe(false);
+  });
+
   it.each([
     ["Blue", "#42EEC7"],
     ["Red", "#FF4655"],

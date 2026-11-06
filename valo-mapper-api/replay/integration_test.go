@@ -285,6 +285,18 @@ func TestIntegrationRealReplay(t *testing.T) {
 			if !validUtilityPosition(utility.Position) {
 				t.Errorf("round %d utility %q has an invalid spawn position", round.RoundNumber, utility.ID)
 			}
+			if len(utility.Path) > maxUtilityPathPoints {
+				t.Errorf("round %d utility %q has %d path points, above the %d cap",
+					round.RoundNumber, utility.ID, len(utility.Path), maxUtilityPathPoints)
+			}
+			if len(utility.Samples) > maxUtilitySamples {
+				t.Errorf("round %d utility %q has %d samples, above the %d cap",
+					round.RoundNumber, utility.ID, len(utility.Samples), maxUtilitySamples)
+			}
+			if len(utility.Vision) > maxUtilitySamples {
+				t.Errorf("round %d utility %q has %d vision samples, above the %d cap",
+					round.RoundNumber, utility.ID, len(utility.Vision), maxUtilitySamples)
+			}
 			if utility.AbilityID == "blaze" {
 				if len(utility.Path) > 1 {
 					blazeUtilitiesWithPath++
@@ -355,21 +367,23 @@ func TestIntegrationRealReplay(t *testing.T) {
 		}
 		for _, kind := range []UtilityKind{
 			UtilitySmoke, UtilityWall, UtilityMolly, UtilityTrap, UtilityMobile,
+			UtilityArea, UtilityMarker,
 		} {
 			if _, ok := utilityKinds[kind]; !ok {
 				t.Errorf("13.08 replay did not normalize calibrated utility kind %q", kind)
 			}
 		}
-		for _, abilityID := range []string{
-			"ruse", "cloudburst", "hot_hands", "blaze", "trademark", "prowler", "boom_bot",
-		} {
-			if _, ok := utilityAbilityIDs[abilityID]; !ok {
-				t.Errorf("13.08 replay did not map calibrated utility to ValoMapper ability %q",
-					abilityID)
-			}
-		}
 		if blazeUtilitiesWithPath == 0 {
 			t.Error("13.08 replay did not expose any observed Phoenix Blaze wall path points")
+		}
+	}
+	if totalUtilities == 0 {
+		t.Error("no utility intervals were normalized")
+	}
+	for abilityID := range utilityAbilityIDs {
+		if !utilityAbilitySupportedByBuild(match.Build, abilityID) {
+			t.Errorf("normalized ability %q is not catalogued for build %s",
+				abilityID, match.Build)
 		}
 	}
 	if carriedAfterPlant != 0 {
@@ -407,6 +421,21 @@ func TestIntegrationRealReplay(t *testing.T) {
 	if len(gz) > 6<<20 {
 		t.Errorf("gzip payload = %d bytes, above the 6 MB payload target", len(gz))
 	}
+}
+
+// utilityAbilitySupportedByBuild reports whether an emitted ability id maps to
+// at least one catalogued class for the replay build.
+func utilityAbilitySupportedByBuild(build, ability string) bool {
+	buildNumber, ok := utilityBuildNumber(build)
+	if !ok || buildNumber < 1300 || buildNumber > 1309 {
+		return false
+	}
+	for _, entry := range utilityCatalog {
+		if entry.ability == ability && buildNumber >= entry.minBuild {
+			return true
+		}
+	}
+	return false
 }
 
 // placeholderFramePlayer reports the M1 sample shape: a default bar with no
