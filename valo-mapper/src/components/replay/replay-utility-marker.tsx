@@ -36,6 +36,7 @@ const REPLAY_UTILITY_POLYGON_STYLES: Record<
   { fill: string; stroke: string }
 > = {
   vipers_pit: { fill: "#48a85340", stroke: "#67e72a" },
+  slow_orb: { fill: "#7dd3fc40", stroke: "#7dd3fc" },
 };
 
 const REPLAY_UTILITY_COLORS: Record<ReplayUtilityKind, string> = {
@@ -136,9 +137,7 @@ export const ReplayUtilityMarker = ({
       utility.abilityId === "paranoia" ||
       utility.abilityId === "undercut") &&
     (utility.samples?.length ?? 0) > 1;
-  const nullcmdPulseRadius = mToPixels(
-    CIRCLE_ABILITY_CONFIGS.kayo_ult.radius,
-  );
+  const nullcmdPulseRadius = mToPixels(CIRCLE_ABILITY_CONFIGS.kayo_ult.radius);
   const nullcmdPulses =
     utility.abilityId === "nullcmd"
       ? (utility.samples ?? []).flatMap((sample) => {
@@ -199,9 +198,7 @@ export const ReplayUtilityMarker = ({
         }) + yawOffset
       : undefined;
   const reckoningLineLength =
-    lineStyle?.lineLength !== undefined
-      ? mToPixels(lineStyle.lineLength)
-      : 0;
+    lineStyle?.lineLength !== undefined ? mToPixels(lineStyle.lineLength) : 0;
   const reckoningStopFraction =
     utility.stopFraction !== undefined
       ? Math.min(1, Math.max(0, utility.stopFraction))
@@ -215,8 +212,12 @@ export const ReplayUtilityMarker = ({
   const reckoningLineEnd =
     isMovingReckoning && initialPoint && reckoningVisualLength > 0
       ? {
-          x: initialPoint.x + Math.cos(reckoningLineAngle) * reckoningVisualLength,
-          y: initialPoint.y + Math.sin(reckoningLineAngle) * reckoningVisualLength,
+          x:
+            initialPoint.x +
+            Math.cos(reckoningLineAngle) * reckoningVisualLength,
+          y:
+            initialPoint.y +
+            Math.sin(reckoningLineAngle) * reckoningVisualLength,
         }
       : null;
   const reckoningSamples = utility.samples ?? [];
@@ -293,9 +294,7 @@ export const ReplayUtilityMarker = ({
           position: sample,
         }),
       )
-      .filter(
-        (sample): sample is { x: number; y: number } => sample !== null,
-      );
+      .filter((sample): sample is { x: number; y: number } => sample !== null);
     return converted.length >= 3 && converted.length === polygon.length
       ? [converted]
       : [];
@@ -309,9 +308,7 @@ export const ReplayUtilityMarker = ({
           position: sample,
         }),
       )
-      .filter(
-        (sample): sample is { x: number; y: number } => sample !== null,
-      );
+      .filter((sample): sample is { x: number; y: number } => sample !== null);
     return converted.length === 2 && converted.length === segment.length
       ? [converted]
       : [];
@@ -326,8 +323,12 @@ export const ReplayUtilityMarker = ({
             key={`${utility.id}-polygon-${index}`}
             points={points.flatMap((sample) => [sample.x, sample.y])}
             closed
-            fill={polygonStyle?.fill ?? `${REPLAY_UTILITY_COLORS[utility.kind]}33`}
-            stroke={polygonStyle?.fill ?? `${REPLAY_UTILITY_COLORS[utility.kind]}33`}
+            fill={
+              polygonStyle?.fill ?? `${REPLAY_UTILITY_COLORS[utility.kind]}33`
+            }
+            stroke={
+              polygonStyle?.fill ?? `${REPLAY_UTILITY_COLORS[utility.kind]}33`
+            }
             strokeWidth={0.5}
             opacity={utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1}
             listening={false}
@@ -457,7 +458,10 @@ export const ReplayUtilityMarker = ({
           currentPath={currentPath}
           pathTension={currentPath.length > 1 ? 0.4 : undefined}
           iconOnly={
-            utility.iconOnly || isMovingWall || isMovingReckoning || usesPolygons
+            utility.iconOnly ||
+            isMovingWall ||
+            isMovingReckoning ||
+            usesPolygons
           }
           abilityShapeOpacity={
             utility.inactive ? REPLAY_INACTIVE_UTILITY_OPACITY : 1

@@ -46,10 +46,12 @@ func (w *groundVolumeTestWriter) serializeInt(value, max uint32) {
 	if max < 2 {
 		panic("max too small")
 	}
-	var mask uint32 = 1
-	for value+mask < max {
-		if value&mask != 0 {
+	var written, mask uint32 = 0, 1
+	for written+mask < max {
+		bit := value&mask != 0
+		if bit {
 			w.write(1, 1)
+			written |= mask
 		} else {
 			w.write(0, 1)
 		}
@@ -63,6 +65,10 @@ func (w *groundVolumeTestWriter) i32(value int32) {
 
 func (w *groundVolumeTestWriter) f64(value float64) {
 	w.write(math.Float64bits(value), 64)
+}
+
+func (w *groundVolumeTestWriter) f32(value float32) {
+	w.write(uint64(math.Float32bits(value)), 32)
 }
 
 func (w *groundVolumeTestWriter) copyFrom(other *groundVolumeTestWriter) {
@@ -184,7 +190,7 @@ func TestDecodeGroundVolumeWindowRejectsTruncatedPayload(t *testing.T) {
 	}
 }
 
-func TestReadVipersPitShapes(t *testing.T) {
+func TestReadGroundVolumeShapes(t *testing.T) {
 	dir := t.TempDir()
 	manifest := map[string]any{
 		"net_field_export_groups": []any{
@@ -235,7 +241,7 @@ func TestReadVipersPitShapes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	shapes := readVipersPitShapes(dir, "13.02", map[uint32]*utilityActor{
+	shapes := readGroundVolumeShapes(dir, "13.02", map[uint32]*utilityActor{
 		900: {GUID: 900, Class: class},
 	})
 	shape := shapes[900]

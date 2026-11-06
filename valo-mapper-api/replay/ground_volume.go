@@ -6,7 +6,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"sort"
 )
 
 const (
@@ -19,12 +18,16 @@ const (
 	groundVolumeFragmentCNC = 2225407835
 )
 
-var groundVolumeAcceptedBuilds = map[string]bool{
+var groundVolumeDeclaredBuilds = map[string]bool{
 	"12.09": true,
 	"13.01": true,
 	"13.02": true,
 	"13.04": true,
 	"13.05": true,
+}
+
+var groundVolumeTargetClasses = map[string]bool{
+	"Patch_Pandemic_X_Circular": true,
 }
 
 type groundVolumeIdentity struct {
@@ -543,96 +546,10 @@ func readGroundVolumeMembers(exportDir string) (map[uint32]groundVolumeIdentity,
 	return members, true
 }
 
-func readVipersPitShapes(
+func readGroundVolumeShapes(
 	exportDir, build string,
 	actors map[uint32]*utilityActor,
 ) map[uint32]*utilityGroundVolume {
-	if !groundVolumeAcceptedBuilds[build] {
-		return nil
-	}
-	targets := make(map[uint32]struct{})
-	for guid, actor := range actors {
-		if classBasename(actor.Class) == "Patch_Pandemic_X_Circular" {
-			targets[guid] = struct{}{}
-		}
-	}
-	if len(targets) == 0 {
-		return nil
-	}
-	members, ok := readGroundVolumeMembers(exportDir)
-	if !ok {
-		return nil
-	}
-
-	cellsByActor := make(map[uint32]map[int32]groundVolumeCell)
-	_, err := readParquetRows(exportDir+"/fields.parquet", func(rows []fieldRow) error {
-		for i := range rows {
-			row := &rows[i]
-			if row.FieldName == nil || *row.FieldName != groundVolumeTailField ||
-				row.GroupPath != groundVolumeClassGroup || row.Handle != 0 {
-				continue
-			}
-			if _, target := targets[row.ActorNetGUID]; !target {
-				continue
-			}
-			cells, err := decodeGroundVolumeWindow(row.RawBits, row.BitCount, members)
-			if err != nil {
-				continue
-			}
-			actorCells := cellsByActor[row.ActorNetGUID]
-			if actorCells == nil {
-				actorCells = make(map[int32]groundVolumeCell)
-				cellsByActor[row.ActorNetGUID] = actorCells
-			}
-			for _, cell := range cells {
-				actorCells[cell.itemID] = cell
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return nil
-	}
-
-	result := make(map[uint32]*utilityGroundVolume, len(cellsByActor))
-	for actor, cells := range cellsByActor {
-		ids := make([]int, 0, len(cells))
-		for id := range cells {
-			ids = append(ids, int(id))
-		}
-		sort.Ints(ids)
-		shape := &utilityGroundVolume{}
-		for _, rawID := range ids {
-			cell := cells[int32(rawID)]
-			if !cell.active || cell.status == 3 || len(cell.points) < 3 {
-				continue
-			}
-			polygon := make([]Position, 0, len(cell.points))
-			for _, point := range cell.points {
-				position := Position{X: point.x, Y: point.y}
-				if !validUtilityPosition(position) {
-					polygon = nil
-					break
-				}
-				polygon = append(polygon, position)
-			}
-			if len(polygon) < 3 {
-				continue
-			}
-			shape.polygons = append(shape.polygons, polygon)
-			for _, segment := range cell.exterior {
-				if int(segment.begin) >= len(polygon) || int(segment.end) >= len(polygon) {
-					continue
-				}
-				shape.boundary = append(shape.boundary, []Position{
-					polygon[segment.begin],
-					polygon[segment.end],
-				})
-			}
-		}
-		if len(shape.polygons) > 0 {
-			result[actor] = shape
-		}
-	}
-	return result
+	shapes, _ := readUtilityShapes(exportDir, build, actors)
+	return shapes
 }

@@ -32,7 +32,7 @@ func scanUtilities(
 	if err != nil {
 		return nil, warnings, err
 	}
-	pitShapes := readVipersPitShapes(exportDir, build, actors)
+	pitShapes, slowOrbShapes := readUtilityShapes(exportDir, build, actors)
 
 	var lives []*utilityActorLife
 	for _, actor := range actors {
@@ -73,6 +73,8 @@ func scanUtilities(
 
 	for _, life := range lives {
 		if shape := pitShapes[life.guid]; shape != nil {
+			life.groundVolume = shape
+		} else if shape := slowOrbShapes[life.guid]; shape != nil {
 			life.groundVolume = shape
 		}
 	}

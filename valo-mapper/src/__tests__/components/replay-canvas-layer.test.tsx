@@ -842,6 +842,50 @@ describe("ReplayCanvasLayer utilities", () => {
     expect(boundaryLines).toHaveLength(1);
   });
 
+  it("draws Sage's Slow Orb cells with its own polygon style", () => {
+    const polygon = [
+      { x: lotusSpawn.x, y: lotusSpawn.y },
+      { x: lotusSpawn.x + 200, y: lotusSpawn.y },
+      { x: lotusSpawn.x + 200, y: lotusSpawn.y + 200 },
+      { x: lotusSpawn.x, y: lotusSpawn.y + 200 },
+    ];
+    const slowOrb: ReplayUtility = {
+      id: "utility-slow-orb-cells",
+      kind: "area",
+      abilityId: "slow_orb",
+      startTimeMs: 0,
+      endTimeMs: 1000,
+      position: lotusSpawn,
+      yaw: 0,
+      polygons: [polygon],
+      boundary: [[polygon[0], polygon[1]]],
+    };
+
+    render(
+      <ReplayCanvasLayer
+        match={lotusMatch}
+        round={utilityRound([slowOrb])}
+        frame={frame}
+        currentTimeMs={500}
+      />,
+    );
+
+    const icon = screen.getByTestId("ability-icon");
+    expect(icon).toHaveAttribute("data-action", "icon");
+    expect(icon).toHaveAttribute("data-icon-only", "true");
+
+    const cellLines = screen
+      .getAllByTestId("konva-line")
+      .filter((line) => line.getAttribute("data-closed") === "true");
+    expect(cellLines).toHaveLength(1);
+    expect(cellLines[0]).toHaveAttribute("data-fill", "#7dd3fc40");
+
+    const boundaryLines = screen
+      .getAllByTestId("konva-line")
+      .filter((line) => line.getAttribute("data-stroke") === "#7dd3fc");
+    expect(boundaryLines).toHaveLength(1);
+  });
+
   it("renders a placed Cyber Cage as an icon without its activation circle", () => {
     const placedCage: ReplayUtility = {
       id: "utility-cyber-cage-placed",
