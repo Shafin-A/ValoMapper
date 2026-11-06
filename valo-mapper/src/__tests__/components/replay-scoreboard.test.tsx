@@ -119,8 +119,8 @@ describe("ReplayScoreboard", () => {
       "data-src",
       "/tools/light_shield.webp",
     );
-    expect(screen.getByText("¢1400")).toBeInTheDocument();
-    expect(screen.getByText("¢0")).toBeInTheDocument();
+    expect(screen.getByLabelText("1400 credits")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("0 credits").length).toBeGreaterThan(0);
   });
 
   it("renders the ult plus C/Q/E abilities with their remaining charges", () => {
@@ -242,7 +242,7 @@ describe("ReplayScoreboard", () => {
     );
 
     expect(screen.getAllByText("/100").length).toBeGreaterThan(0);
-    expect(screen.getByText("¢900")).toBeInTheDocument();
-    expect(screen.getByText("¢0")).toBeInTheDocument();
+    expect(screen.getByLabelText("900 credits")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("0 credits").length).toBeGreaterThan(0);
   });
 });

@@ -251,8 +251,18 @@ const PlayerRow = ({
               <span className="text-[9px] text-white/30">—</span>
             )}
           </div>
-          <span className="shrink-0 text-xs font-semibold tabular-nums text-amber-200/90">
-            ¢{state.credits}
+          <span
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold tabular-nums text-amber-200/90"
+            aria-label={`${state.credits} credits`}
+          >
+            <Image
+              src="/credits.webp"
+              alt=""
+              width={12}
+              height={12}
+              className="h-3 w-3 object-contain"
+            />
+            {state.credits}
           </span>
         </div>
       </div>
