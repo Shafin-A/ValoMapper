@@ -36,20 +36,20 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 	testDBName := os.Getenv("DB_NAME")
 	if testDBName == "" {
 		testDBName = "valomapper_test"
-		os.Setenv("DB_NAME", testDBName)
+		_ = os.Setenv("DB_NAME", testDBName)
 	}
 
 	if os.Getenv("DB_HOST") == "" {
-		os.Setenv("DB_HOST", "localhost")
+		_ = os.Setenv("DB_HOST", "localhost")
 	}
 	if os.Getenv("DB_PORT") == "" {
-		os.Setenv("DB_PORT", "5432")
+		_ = os.Setenv("DB_PORT", "5432")
 	}
 	if os.Getenv("DB_USER") == "" {
-		os.Setenv("DB_USER", "postgres")
+		_ = os.Setenv("DB_USER", "postgres")
 	}
 	if os.Getenv("DB_PASSWORD") == "" {
-		os.Setenv("DB_PASSWORD", "postgres")
+		_ = os.Setenv("DB_PASSWORD", "postgres")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

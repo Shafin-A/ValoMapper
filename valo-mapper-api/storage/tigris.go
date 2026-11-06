@@ -51,7 +51,7 @@ func InitTigris() error {
 	bucketName := os.Getenv("BUCKET_NAME")
 
 	if accessKeyID == "" || secretAccessKey == "" || bucketName == "" {
-		return fmt.Errorf("Tigris env vars not set (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, BUCKET_NAME)")
+		return fmt.Errorf("tigris env vars not set (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, BUCKET_NAME)")
 	}
 
 	endpoint := os.Getenv("AWS_ENDPOINT_URL_S3")

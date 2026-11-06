@@ -61,7 +61,7 @@ func readParquetRows[T any](path string, handle func([]T) error) (int64, error) 
 	if err != nil {
 		return 0, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	info, err := file.Stat()
 	if err != nil {
@@ -77,7 +77,7 @@ func readParquetRows[T any](path string, handle func([]T) error) (int64, error) 
 	if err != nil {
 		return 0, err
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	buffer := make([]T, parquetBatchSize)
 	var total int64

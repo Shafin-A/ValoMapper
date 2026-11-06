@@ -111,7 +111,7 @@ func TestUploadImage_MissingImageField(t *testing.T) {
 	// Valid multipart form but without any "image" field.
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
-	mw.Close()
+	_ = mw.Close()
 
 	req := httptest.NewRequest(http.MethodPost, "/api/images/upload", &buf)
 	req.Header.Set("Content-Type", mw.FormDataContentType())

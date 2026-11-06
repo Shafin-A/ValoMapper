@@ -35,7 +35,7 @@ func ApplyCanvasPatch(w http.ResponseWriter, r *http.Request) {
 		utils.SendJSONError(w, utils.NewBadRequest("Unable to read request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	var patch models.CanvasPatch
 	if err := json.Unmarshal(body, &patch); err != nil {

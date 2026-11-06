@@ -49,7 +49,7 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	folder, err := folderService.CreateFolder(user, services.CreateFolderRequest{
@@ -133,7 +133,7 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	folder, err := folderService.UpdateFolder(user, id, services.UpdateFolderRequest{

@@ -226,7 +226,7 @@ func exchangeCodeForTokens(code string) (*RSOTokenResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var tokenResp RSOTokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
@@ -257,7 +257,7 @@ func getUserInfoFromRSO(accessToken string) (*RSOUserInfoResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var userInfo RSOUserInfoResponse
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
@@ -292,7 +292,7 @@ func getAccountInfoFromRSO(accessToken string) (*RSOAccountResponse, error) {
 
 		var accountResp RSOAccountResponse
 		decodeErr := json.NewDecoder(resp.Body).Decode(&accountResp)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			lastErr = fmt.Errorf("failed to get account info from RSO at %s: %v", accountURL, resp.Status)
@@ -332,7 +332,7 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	if req.Code == "" {
 		utils.SendJSONError(w, utils.NewBadRequest("Missing authorization code"), middleware.GetRequestID(r))

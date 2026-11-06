@@ -129,7 +129,7 @@ func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 		h.sendError(w, requestID, replay.NewError(replay.CodeInternal, "", err))
 		return
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	var filePath, hash string
 	fileSeen := false
@@ -224,7 +224,7 @@ func saveReplayUpload(part *multipart.Part, dir string, maxBytes int64) (string,
 	if err != nil {
 		return "", "", replay.NewError(replay.CodeInternal, "", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	header := make([]byte, len(replayMagic))
 	read, err := io.ReadFull(part, header)
@@ -389,7 +389,7 @@ func gunzipBytes(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 	return io.ReadAll(reader)
 }
 

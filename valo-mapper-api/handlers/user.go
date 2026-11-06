@@ -60,7 +60,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	if token.UID != req.FirebaseUID {
 		utils.SendJSONError(w, utils.NewForbidden("User ID mismatch"), middleware.GetRequestID(r))
@@ -143,7 +143,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	userService := services.NewUserService(services.UserServiceDependencies{})
 	if err := userService.UpdateUser(user, services.UpdateUserRequest{
@@ -224,7 +224,7 @@ func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAu
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	if req.IsSubscribed == nil {
 		utils.SendJSONError(w, utils.NewBadRequest("isSubscribed is required"), middleware.GetRequestID(r))

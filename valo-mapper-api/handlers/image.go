@@ -64,7 +64,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		utils.SendJSONError(w, utils.NewBadRequest("Missing 'image' field in form"), middleware.GetRequestID(r))
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Validate by actual bytes to avoid relying only on client-supplied headers.
 	sniffBuf := make([]byte, 512)
@@ -132,7 +132,7 @@ func GetImage(w http.ResponseWriter, r *http.Request) {
 		utils.SendJSONError(w, utils.NewNotFound("Image not found"), middleware.GetRequestID(r))
 		return
 	}
-	defer body.Close()
+	defer func() { _ = body.Close() }()
 
 	if contentType == "" {
 		contentType = "application/octet-stream"

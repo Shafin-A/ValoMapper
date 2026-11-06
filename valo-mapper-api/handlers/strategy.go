@@ -76,7 +76,7 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	strategyService := services.NewStrategyService(services.StrategyServiceDependencies{})
 	response, err := strategyService.CreateStrategy(user, services.CreateStrategyRequest{
@@ -189,7 +189,7 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	req := UpdateStrategyRequest{}
 

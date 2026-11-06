@@ -225,14 +225,14 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 	if err != nil {
 		return nil, nil, 0, NewError(CodeInternal, "", err)
 	}
-	defer os.RemoveAll(exportDir)
+	defer func() { _ = os.RemoveAll(exportDir) }()
 
 	inspectStarted := time.Now()
 	inspect, err := s.exporter.Inspect(ctx, filePath)
 	if err != nil {
 		return nil, nil, 0, asReplayError(err, CodeParseFailed)
 	}
-	inspectMS := time.Since(inspectStarted)
+	inspectDuration := time.Since(inspectStarted)
 
 	build := inspect.Build
 	if build == "" {
@@ -248,7 +248,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 	if err := s.exporter.Export(ctx, filePath, exportDir); err != nil {
 		return nil, nil, 0, asReplayError(err, CodeParseFailed)
 	}
-	exportMS := time.Since(exportStarted)
+	exportDuration := time.Since(exportStarted)
 
 	manifest, err := readManifest(exportDir)
 	if err != nil {
@@ -291,7 +291,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's field data could not be read.", err)
 	}
-	fieldsMS := time.Since(fieldsStarted)
+	fieldsDuration := time.Since(fieldsStarted)
 	warnings.addAll(fields.TeamWarnings)
 
 	eventsStarted := time.Now()
@@ -300,7 +300,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's event timeline could not be read.", err)
 	}
-	eventsMS := time.Since(eventsStarted)
+	eventsDuration := time.Since(eventsStarted)
 	if events.Rows == 0 {
 		return nil, nil, 0, NewError(CodeTransformCheck,
 			"The replay contained no game events.", nil)
@@ -326,7 +326,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's player state could not be read.", err)
 	}
-	stateMS := time.Since(stateStarted)
+	stateDuration := time.Since(stateStarted)
 	warnings.addAll(state.Warnings)
 
 	windows, windowWarnings := buildRoundWindows(fields, events.Starts, manifest.DurationMS)
@@ -353,7 +353,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 		return nil, nil, 0, NewError(CodeCorrupt,
 			"The replay's movement data could not be read.", err)
 	}
-	movementMS := time.Since(movementStarted)
+	movementDuration := time.Since(movementStarted)
 	if transformErr := movement.transformCheckError(); transformErr != nil {
 		return nil, nil, 0, transformErr
 	}
@@ -390,7 +390,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 		fields,
 		state.Paths,
 	)
-	utilitiesMS := time.Since(utilitiesStarted)
+	utilitiesDuration := time.Since(utilitiesStarted)
 	utilityCount := countUtilityIntervals(utilities)
 
 	framesStarted := time.Now()
@@ -440,7 +440,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 
 		rounds = append(rounds, round)
 	}
-	framesMS := time.Since(framesStarted)
+	framesDuration := time.Since(framesStarted)
 
 	match := &Match{
 		MatchID:     matchID(manifest.GUID),
@@ -475,7 +475,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 	if err != nil {
 		return nil, nil, 0, NewError(CodeInternal, "", err)
 	}
-	gzipMS := time.Since(gzipStarted)
+	gzipDuration := time.Since(gzipStarted)
 
 	slog.Info("replay parsed",
 		"replay_hash_prefix", hashPrefix(hash),
@@ -484,15 +484,15 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 		"parser_version", ParserVersion,
 		"frame_hz", s.config.FrameHz,
 		"cache_hit", false,
-		"inspect_ms", inspectMS.Milliseconds(),
-		"export_ms", exportMS.Milliseconds(),
-		"fields_ms", fieldsMS.Milliseconds(),
-		"events_ms", eventsMS.Milliseconds(),
-		"state_ms", stateMS.Milliseconds(),
-		"movement_ms", movementMS.Milliseconds(),
-		"utilities_ms", utilitiesMS.Milliseconds(),
-		"frames_ms", framesMS.Milliseconds(),
-		"gzip_ms", gzipMS.Milliseconds(),
+		"inspect_ms", inspectDuration.Milliseconds(),
+		"export_ms", exportDuration.Milliseconds(),
+		"fields_ms", fieldsDuration.Milliseconds(),
+		"events_ms", eventsDuration.Milliseconds(),
+		"state_ms", stateDuration.Milliseconds(),
+		"movement_ms", movementDuration.Milliseconds(),
+		"utilities_ms", utilitiesDuration.Milliseconds(),
+		"frames_ms", framesDuration.Milliseconds(),
+		"gzip_ms", gzipDuration.Milliseconds(),
 		"total_ms", time.Since(started).Milliseconds(),
 		"rounds", len(rounds),
 		"frames", timeline.Frames,
@@ -566,7 +566,7 @@ func decodeEnvelope(gz []byte) (*Envelope, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	var envelope Envelope
 	if err := json.NewDecoder(reader).Decode(&envelope); err != nil {

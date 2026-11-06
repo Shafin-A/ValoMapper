@@ -42,7 +42,7 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), requestID)
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	signature := r.Header.Get("Stripe-Signature")
 	if err := webhook.ValidatePayload(payload, signature, webhookSecret); err != nil {

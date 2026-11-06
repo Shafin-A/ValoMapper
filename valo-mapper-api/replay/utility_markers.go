@@ -78,9 +78,7 @@ func addNanoswarmPlacedMarkers(utilities [][]Utility, windows []roundWindow) {
 				IconOnly:    true,
 			})
 		}
-		for _, marker := range placed {
-			utilities[roundIndex] = append(utilities[roundIndex], marker)
-		}
+		utilities[roundIndex] = append(utilities[roundIndex], placed...)
 		sort.SliceStable(utilities[roundIndex], func(i, j int) bool {
 			if utilities[roundIndex][i].StartTimeMS != utilities[roundIndex][j].StartTimeMS {
 				return utilities[roundIndex][i].StartTimeMS < utilities[roundIndex][j].StartTimeMS
@@ -200,9 +198,7 @@ func addPoisonCloudPlacedMarkers(utilities [][]Utility, windows []roundWindow) {
 			appendMarker(cursor, roundEndMS)
 		}
 
-		for _, marker := range placed {
-			utilities[roundIndex] = append(utilities[roundIndex], marker)
-		}
+		utilities[roundIndex] = append(utilities[roundIndex], placed...)
 		sort.SliceStable(utilities[roundIndex], func(i, j int) bool {
 			if utilities[roundIndex][i].StartTimeMS != utilities[roundIndex][j].StartTimeMS {
 				return utilities[roundIndex][i].StartTimeMS < utilities[roundIndex][j].StartTimeMS

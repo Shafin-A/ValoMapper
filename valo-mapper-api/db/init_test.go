@@ -48,9 +48,9 @@ func TestInitDB(t *testing.T) {
 	defer func() {
 		for key, value := range originalVars {
 			if value != "" {
-				os.Setenv(key, value)
+				_ = os.Setenv(key, value)
 			} else {
-				os.Unsetenv(key)
+				_ = os.Unsetenv(key)
 			}
 		}
 		if DB != nil {
@@ -62,19 +62,19 @@ func TestInitDB(t *testing.T) {
 	t.Run("successfully initializes database with valid config", func(t *testing.T) {
 		// Set test environment variables - use values from .env.test if loaded, otherwise defaults
 		if os.Getenv("DB_HOST") == "" {
-			os.Setenv("DB_HOST", "localhost")
+			_ = os.Setenv("DB_HOST", "localhost")
 		}
 		if os.Getenv("DB_PORT") == "" {
-			os.Setenv("DB_PORT", "5432")
+			_ = os.Setenv("DB_PORT", "5432")
 		}
 		if os.Getenv("DB_USER") == "" {
-			os.Setenv("DB_USER", "postgres")
+			_ = os.Setenv("DB_USER", "postgres")
 		}
 		if os.Getenv("DB_PASSWORD") == "" {
-			os.Setenv("DB_PASSWORD", "postgres")
+			_ = os.Setenv("DB_PASSWORD", "postgres")
 		}
 		if os.Getenv("DB_NAME") == "" {
-			os.Setenv("DB_NAME", "valomapper_test")
+			_ = os.Setenv("DB_NAME", "valomapper_test")
 		}
 
 		err := InitDB()
@@ -92,11 +92,11 @@ func TestInitDB(t *testing.T) {
 	})
 
 	t.Run("fails with missing required env var", func(t *testing.T) {
-		os.Unsetenv("DB_HOST")
-		os.Unsetenv("DB_PORT")
-		os.Unsetenv("DB_USER")
-		os.Unsetenv("DB_PASSWORD")
-		os.Unsetenv("DB_NAME")
+		_ = os.Unsetenv("DB_HOST")
+		_ = os.Unsetenv("DB_PORT")
+		_ = os.Unsetenv("DB_USER")
+		_ = os.Unsetenv("DB_PASSWORD")
+		_ = os.Unsetenv("DB_NAME")
 
 		err := InitDB()
 		assert.Error(t, err)
@@ -104,11 +104,11 @@ func TestInitDB(t *testing.T) {
 	})
 
 	t.Run("fails with invalid connection string", func(t *testing.T) {
-		os.Setenv("DB_HOST", "invalid-host-that-does-not-exist")
-		os.Setenv("DB_PORT", "5432")
-		os.Setenv("DB_USER", "postgres")
-		os.Setenv("DB_PASSWORD", "postgres")
-		os.Setenv("DB_NAME", "valomapper_test")
+		_ = os.Setenv("DB_HOST", "invalid-host-that-does-not-exist")
+		_ = os.Setenv("DB_PORT", "5432")
+		_ = os.Setenv("DB_USER", "postgres")
+		_ = os.Setenv("DB_PASSWORD", "postgres")
+		_ = os.Setenv("DB_NAME", "valomapper_test")
 
 		err := InitDB()
 		assert.Error(t, err)
@@ -143,19 +143,19 @@ func TestGetDB(t *testing.T) {
 
 	t.Run("returns DB connection when initialized", func(t *testing.T) {
 		if os.Getenv("DB_HOST") == "" {
-			os.Setenv("DB_HOST", "localhost")
+			_ = os.Setenv("DB_HOST", "localhost")
 		}
 		if os.Getenv("DB_PORT") == "" {
-			os.Setenv("DB_PORT", "5432")
+			_ = os.Setenv("DB_PORT", "5432")
 		}
 		if os.Getenv("DB_USER") == "" {
-			os.Setenv("DB_USER", "postgres")
+			_ = os.Setenv("DB_USER", "postgres")
 		}
 		if os.Getenv("DB_PASSWORD") == "" {
-			os.Setenv("DB_PASSWORD", "postgres")
+			_ = os.Setenv("DB_PASSWORD", "postgres")
 		}
 		if os.Getenv("DB_NAME") == "" {
-			os.Setenv("DB_NAME", "valomapper_test")
+			_ = os.Setenv("DB_NAME", "valomapper_test")
 		}
 
 		err := InitDB()
@@ -205,19 +205,19 @@ func TestClose(t *testing.T) {
 	require.NoError(t, err)
 
 	if os.Getenv("DB_HOST") == "" {
-		os.Setenv("DB_HOST", "localhost")
+		_ = os.Setenv("DB_HOST", "localhost")
 	}
 	if os.Getenv("DB_PORT") == "" {
-		os.Setenv("DB_PORT", "5432")
+		_ = os.Setenv("DB_PORT", "5432")
 	}
 	if os.Getenv("DB_USER") == "" {
-		os.Setenv("DB_USER", "postgres")
+		_ = os.Setenv("DB_USER", "postgres")
 	}
 	if os.Getenv("DB_PASSWORD") == "" {
-		os.Setenv("DB_PASSWORD", "postgres")
+		_ = os.Setenv("DB_PASSWORD", "postgres")
 	}
 	if os.Getenv("DB_NAME") == "" {
-		os.Setenv("DB_NAME", "valomapper_test")
+		_ = os.Setenv("DB_NAME", "valomapper_test")
 	}
 
 	err = InitDB()
@@ -252,19 +252,19 @@ func TestDatabaseConnectionPool(t *testing.T) {
 	}()
 
 	if os.Getenv("DB_HOST") == "" {
-		os.Setenv("DB_HOST", "localhost")
+		_ = os.Setenv("DB_HOST", "localhost")
 	}
 	if os.Getenv("DB_PORT") == "" {
-		os.Setenv("DB_PORT", "5432")
+		_ = os.Setenv("DB_PORT", "5432")
 	}
 	if os.Getenv("DB_USER") == "" {
-		os.Setenv("DB_USER", "postgres")
+		_ = os.Setenv("DB_USER", "postgres")
 	}
 	if os.Getenv("DB_PASSWORD") == "" {
-		os.Setenv("DB_PASSWORD", "postgres")
+		_ = os.Setenv("DB_PASSWORD", "postgres")
 	}
 	if os.Getenv("DB_NAME") == "" {
-		os.Setenv("DB_NAME", "valomapper_test")
+		_ = os.Setenv("DB_NAME", "valomapper_test")
 	}
 
 	err = InitDB()

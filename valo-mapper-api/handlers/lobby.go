@@ -141,7 +141,7 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 		utils.SendJSONError(w, utils.NewBadRequest("Unable to read request body"), middleware.GetRequestID(r))
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	var req UpdateLobbyRequest
 	if err := json.Unmarshal(body, &req); err != nil {
