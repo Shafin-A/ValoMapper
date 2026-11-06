@@ -219,6 +219,9 @@ func scanUtilities(
 			intervals = []utilityInterval{{startMS: life.openMS, endMS: life.closeMS}}
 		}
 		for roundIndex, window := range windows {
+			if life.openMS >= window.EndMS || life.closeMS <= window.StartMS {
+				continue
+			}
 			for _, interval := range intervals {
 				start := maxUint32(interval.startMS, window.StartMS)
 				end := minUint32(interval.endMS, window.EndMS)
@@ -299,7 +302,7 @@ func scanUtilities(
 			}
 
 			cursor := maxUint32(life.placedMS, window.StartMS)
-			roundEnd := window.EndMS
+			roundEnd := minUint32(window.EndMS, life.closeMS)
 			for _, interval := range intervals {
 				if interval.startMS > cursor {
 					if inactive := wallInactiveSegment(life, roundIndex, cursor, minUint32(interval.startMS, roundEnd)); inactive != nil {

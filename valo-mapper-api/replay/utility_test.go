@@ -443,6 +443,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		"Projectile_Killjoy_4_RemoteBees_MultiDetonate":           true,
 		"Projectile_Mage_4_SplashGrenade":                         true,
 		"Projectile_Pandemic_4_SmokeGrenade":                      true,
+		"Projectile_Pandemic_Q_AcidGrenade":                       true,
 		"Projectile_Paprika_Q_RedirectFlash":                      true,
 		"Projectile_Paprika_Q_RedirectFlash_Underhand":            true,
 		"Projectile_Paprika_E_RedirectPull":                       true,
@@ -3161,6 +3162,72 @@ func TestScanUtilitiesSplitsToxicScreenIntoActiveIntervals(t *testing.T) {
 			t.Errorf("wall geometry = pos %+v yaw %v length %v, want (1000,2000)/0/90",
 				utility.Position, utility.Yaw, utility.Length)
 		}
+	}
+}
+
+func TestScanUtilitiesDoesNotCarryToxicScreenIntoLaterRounds(t *testing.T) {
+	dir := t.TempDir()
+	class := "GameObject_Pandemic_E_SmokeScreenManager"
+	actors := []stateActorRow{
+		{
+			TimeMS: 1000, PacketID: 1, ActorNetGUID: 700, Event: "open",
+			ClassPath: &class, SpawnX: float32Ptr(100), SpawnY: float32Ptr(200),
+			SpawnYaw: float32Ptr(35),
+		},
+		{TimeMS: 5000, PacketID: 20, ActorNetGUID: 700, Event: "close"},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "actors.parquet"), actors); err != nil {
+		t.Fatal(err)
+	}
+	pointName := "MulticastAddSmokeScreenPoint.Translation"
+	fields := []fieldRow{
+		{TimeMS: 1100, PacketID: 2, ActorNetGUID: 700, FieldName: &pointName, ValueStr: stringPtr("(1000,2000,0)")},
+		{TimeMS: 1200, PacketID: 3, ActorNetGUID: 700, FieldName: &pointName, ValueStr: stringPtr("(10000,2000,0)")},
+	}
+	if err := parquet.WriteFile(filepath.Join(dir, "fields.parquet"), fields); err != nil {
+		t.Fatal(err)
+	}
+	fieldData, err := scanFields(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utilities, _, err := scanUtilities(
+		dir,
+		"13.08",
+		12000,
+		[]roundWindow{
+			{RoundNumber: 1, StartMS: 0, EndMS: 6000},
+			{RoundNumber: 2, StartMS: 6000, EndMS: 12000},
+		},
+		newPlayerIndex(&Manifest{}),
+		nil,
+		nil,
+		fieldData.UtilityOwners,
+		fieldData.UtilityPaths,
+		fieldData.UtilityFuel,
+		fieldData.UtilityDestroy,
+		fieldData.UtilityActivation,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(utilities) != 2 {
+		t.Fatalf("rounds = %d, want 2", len(utilities))
+	}
+	if len(utilities[0]) != 1 {
+		t.Fatalf("round 1 utilities = %#v, want one inactive wall", utilities[0])
+	}
+	wall := utilities[0][0]
+	if wall.AbilityID != "toxic_screen" || !wall.Inactive {
+		t.Fatalf("round 1 wall = %#v", wall)
+	}
+	if wall.StartTimeMS != 1200 || wall.EndTimeMS != 5000 {
+		t.Errorf("round 1 wall interval = %d..%d, want 1200..5000",
+			wall.StartTimeMS, wall.EndTimeMS)
+	}
+	if len(utilities[1]) != 0 {
+		t.Fatalf("round 2 utilities = %#v, want none from the previous round", utilities[1])
 	}
 }
 
