@@ -4,6 +4,7 @@ import {
   VrfReplayDataSource,
 } from "@/lib/replay/vrf-source";
 import type { ReplayLoadProgress } from "@/lib/replay/types";
+import { gzipSync } from "node:zlib";
 
 type ProgressEventLike = {
   lengthComputable: boolean;
@@ -66,6 +67,46 @@ const matchPayload = {
     players: [],
     rounds: [],
   },
+};
+
+const demoMatch = {
+  ...matchPayload.match,
+  source: "demo",
+  rounds: [
+    {
+      roundNumber: 1,
+      winningTeam: "Red",
+      roundResultCode: "Elimination",
+      attackTeamId: "Red",
+      scoreAfterRound: { red: 1, blue: 0 },
+      durationMs: 1000,
+      playerStats: [],
+      eventLog: [],
+      frames: [],
+    },
+  ],
+};
+
+const makeDemoResponse = () => {
+  const compressed = gzipSync(JSON.stringify(demoMatch));
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(compressed);
+      controller.close();
+    },
+  });
+
+  return {
+    ok: true,
+    status: 200,
+    headers: {
+      get: (name: string) =>
+        name.toLowerCase() === "content-length"
+          ? String(compressed.byteLength)
+          : null,
+    },
+    body,
+  } as unknown as Response;
 };
 
 const makeFile = (size = 4) =>
@@ -227,17 +268,30 @@ describe("VrfReplayDataSource", () => {
     expect(xhr.aborted).toBe(true);
   });
 
-  it("keeps the demo path working without an API URL", async () => {
+  it("loads the baked demo without an API URL", async () => {
     delete process.env.NEXT_PUBLIC_API_URL;
     expect(getReplayApiBase()).toBe("");
 
-    const source = new VrfReplayDataSource();
-    await expect(source.load(makeFile())).rejects.toThrow(
-      "Replay parsing is not configured.",
-    );
+    const originalFetch = global.fetch;
+    const fetchMock = jest.fn().mockResolvedValue(makeDemoResponse());
+    global.fetch = fetchMock as unknown as typeof fetch;
 
-    const demo = await source.loadDemo();
-    expect(demo.rounds.length).toBeGreaterThan(0);
+    try {
+      const source = new VrfReplayDataSource();
+      await expect(source.load(makeFile())).rejects.toThrow(
+        "Replay parsing is not configured.",
+      );
+
+      const demo = await source.loadDemo();
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/replays/demo.json.gz",
+        expect.any(Object),
+      );
+      expect(demo.source).toBe("demo");
+      expect(demo.rounds.length).toBeGreaterThan(0);
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 });
 

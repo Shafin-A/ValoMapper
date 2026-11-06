@@ -36,3 +36,15 @@ Next.js frontend for ValoMapper.
    ```sh
    npm run dev
    ```
+
+## Demo replay
+
+The "Try the demo replay" button loads a real parsed match from
+`public/replays/demo.json.gz`. It ships with the frontend, so the demo works
+without the replay API.
+
+Rebuild it from a local `.vrf` (requires Go and `VRFKIT_BIN`):
+
+```sh
+npm run build:demo-replay -- "C:\path\to\replay.vrf"
+```

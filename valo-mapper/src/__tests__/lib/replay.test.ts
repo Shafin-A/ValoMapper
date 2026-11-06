@@ -1,9 +1,4 @@
-import {
-  buildReplayFrames,
-  getActiveEventIndex,
-  restoreReplayFrames,
-  stripReplayFrames,
-} from "@/lib/replay/frames";
+import { getActiveEventIndex } from "@/lib/replay/frames";
 import {
   getReplayAbilityDisplays,
   getReplayArmor,
@@ -20,7 +15,6 @@ import type {
   ReplayFrame,
   ReplayMatch,
   ReplayRound,
-  ReplaySeedRound,
 } from "@/lib/replay/types";
 import type {
   MatchPlayerSummary,
@@ -54,13 +48,14 @@ const players: MatchPlayerSummary[] = [
   },
 ];
 
-const seedRound: ReplaySeedRound = {
+const sampleRound: ReplayRound = {
   roundNumber: 1,
   winningTeam: "Blue",
   roundResultCode: "Elimination",
   attackTeamId: "Red",
   scoreAfterRound: { red: 0, blue: 1 },
   durationMs: 10_000,
+  frames: [],
   playerStats: [
     {
       puuid: "blue-1",
@@ -170,7 +165,7 @@ const frame: ReplayFrame = {
 };
 
 const buildRound = (frames: ReplayFrame[]): ReplayRound => ({
-  ...seedRound,
+  ...sampleRound,
   frames,
 });
 
@@ -527,24 +522,10 @@ describe("buildReplaySnapshotState", () => {
 
 describe("getActiveEventIndex", () => {
   it("returns the latest event at or before the current time", () => {
-    expect(getActiveEventIndex(seedRound, 0)).toBeNull();
-    expect(getActiveEventIndex(seedRound, 4_000)).toBe(0);
-    expect(getActiveEventIndex(seedRound, 5_000)).toBe(1);
+    expect(getActiveEventIndex(sampleRound, 0)).toBeNull();
+    expect(getActiveEventIndex(sampleRound, 4_000)).toBe(0);
+    expect(getActiveEventIndex(sampleRound, 5_000)).toBe(1);
   });
 });
 
-describe("replay frames", () => {
-  it("generates frames and can round-trip them through storage", () => {
-    const frames = buildReplayFrames(seedRound, players);
-    const match = buildMatch(buildRound(frames));
 
-    expect(frames.length).toBeGreaterThan(0);
-    expect(frames[frames.length - 1].timeMs).toBe(seedRound.durationMs);
-
-    const stripped = stripReplayFrames(match);
-    expect(stripped.rounds[0].frames).toHaveLength(0);
-
-    const restored = restoreReplayFrames(stripped);
-    expect(restored.rounds[0].frames).toHaveLength(frames.length);
-  });
-});

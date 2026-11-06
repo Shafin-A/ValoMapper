@@ -1,6 +1,23 @@
 import "@testing-library/jest-dom";
 import "jest-canvas-mock";
 import React from "react";
+import {
+  DecompressionStream,
+  ReadableStream,
+  TransformStream,
+} from "node:stream/web";
+import { TextDecoder, TextEncoder } from "node:util";
+
+// jsdom lacks the stream/encoding globals the demo loader uses.
+if (typeof globalThis.ReadableStream === "undefined") {
+  Object.assign(globalThis, {
+    ReadableStream,
+    TransformStream,
+    DecompressionStream,
+    TextDecoder,
+    TextEncoder,
+  });
+}
 
 // fake-indexeddb clones values with structuredClone, which jsdom does not
 // expose. Tests only store JSON-shaped matches, so a JSON round trip is exact.

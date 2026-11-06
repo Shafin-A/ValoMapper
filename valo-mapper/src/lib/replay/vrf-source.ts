@@ -1,4 +1,4 @@
-import { MockReplayDataSource, validateReplayFile } from "./mock-source";
+import { DemoReplayDataSource, validateReplayFile } from "./demo-source";
 import type {
   ReplayDataSource,
   ReplayLoadOptions,
@@ -145,7 +145,7 @@ export const parseReplayEnvelope = (payload: unknown): ReplayMatch => {
 };
 
 export class VrfReplayDataSource implements ReplayDataSource {
-  private readonly fallback = new MockReplayDataSource();
+  private readonly fallback = new DemoReplayDataSource();
 
   load(file: File, options?: ReplayLoadOptions): Promise<ReplayMatch> {
     validateReplayFile(file);

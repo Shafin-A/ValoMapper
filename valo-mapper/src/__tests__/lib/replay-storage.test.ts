@@ -8,6 +8,7 @@ import {
   putReplay,
 } from "@/lib/replay/idb";
 import {
+  DEMO_REPLAY_ID,
   getReplaySession,
   saveReplaySession,
 } from "@/lib/replay/session-store";
@@ -59,7 +60,7 @@ const buildRound = (): ReplayRound =>
 
 const buildMatch = (
   replayId: string,
-  source?: "vrf",
+  source: "vrf" | "demo",
 ): ReplayMatch =>
   ({
     matchId: replayId,
@@ -114,11 +115,21 @@ describe("replay session store", () => {
     expect(restored?.rounds[0].frames).toHaveLength(2);
   });
 
-  it("keeps frames for real replays but strips the demo seed", async () => {
+  it("keeps frames for VRF and baked-demo sessions", async () => {
     await saveReplaySession(buildMatch("real-session", "vrf"), "real-session");
     expect((await getReplay("real-session"))?.rounds[0].frames).toHaveLength(2);
 
-    await saveReplaySession(buildMatch("demo-session"), "demo-session");
-    expect((await getReplay("demo-session"))?.rounds[0].frames).toEqual([]);
+    await saveReplaySession(buildMatch("demo-session", "demo"), "demo-session");
+    expect((await getReplay("demo-session"))?.rounds[0].frames).toHaveLength(2);
+  });
+
+  it("keeps the baked demo in memory but out of IndexedDB", async () => {
+    await saveReplaySession(
+      buildMatch(DEMO_REPLAY_ID, "demo"),
+      DEMO_REPLAY_ID,
+    );
+
+    expect(await getReplay(DEMO_REPLAY_ID)).toBeNull();
+    expect((await getReplaySession(DEMO_REPLAY_ID))?.source).toBe("demo");
   });
 });

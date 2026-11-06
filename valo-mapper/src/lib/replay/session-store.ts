@@ -1,6 +1,5 @@
-import { restoreReplayFrames, stripReplayFrames } from "./frames";
 import { deleteReplay, getReplay, putReplay } from "./idb";
-import { MockReplayDataSource } from "./mock-source";
+import { DemoReplayDataSource } from "./demo-source";
 import type { ReplayLoadOptions, ReplayMatch } from "./types";
 import { fetchReplayById } from "./vrf-source";
 
@@ -16,28 +15,21 @@ const createReplayId = () => {
   return `replay-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 };
 
-const isRealReplay = (match: ReplayMatch) => match.source === "vrf";
-
-/**
- * A demo match is cheap to rebuild from its seed, so its frames are stripped
- * before storage. A real VRF match has no seed: its frames are the parse result
- * and must survive the round trip.
- */
-const toStoredMatch = (match: ReplayMatch) =>
-  isRealReplay(match) ? match : stripReplayFrames(match);
-
-const fromStoredMatch = (match: ReplayMatch) =>
-  isRealReplay(match) ? match : restoreReplayFrames(match);
-
 export const saveReplaySession = async (
   match: ReplayMatch,
   replayId = match.replayId ?? createReplayId(),
 ) => {
   memoryStore.set(replayId, match);
 
+  // Drop older demos and re-fetch the asset instead of storing ~20 MB.
+  if (replayId === DEMO_REPLAY_ID && match.source === "demo") {
+    await deleteReplay(replayId);
+    return replayId;
+  }
+
   // IndexedDB is best-effort: the memory copy keeps the current tab working
   // when storage is unavailable or over quota.
-  await putReplay(replayId, toStoredMatch(match));
+  await putReplay(replayId, match);
 
   return replayId;
 };
@@ -53,13 +45,17 @@ export const getReplaySession = async (
 
   const storedMatch = await getReplay(replayId);
   if (storedMatch) {
-    const restored = fromStoredMatch(storedMatch);
-    memoryStore.set(replayId, restored);
-    return restored;
+    if (replayId !== DEMO_REPLAY_ID || storedMatch.source === "demo") {
+      memoryStore.set(replayId, storedMatch);
+      return storedMatch;
+    }
+
+    // Drop the old generated demo so the baked asset replaces it.
+    await deleteReplay(replayId);
   }
 
   if (replayId === DEMO_REPLAY_ID) {
-    const demo = await new MockReplayDataSource().loadDemo(options);
+    const demo = await new DemoReplayDataSource().loadDemo(options);
     await saveReplaySession(demo, DEMO_REPLAY_ID);
     return demo;
   }
@@ -68,7 +64,7 @@ export const getReplaySession = async (
   const remoteMatch = await fetchReplayById(replayId, options);
   if (remoteMatch) {
     memoryStore.set(replayId, remoteMatch);
-    await putReplay(replayId, toStoredMatch(remoteMatch));
+    await putReplay(replayId, remoteMatch);
     return remoteMatch;
   }
 

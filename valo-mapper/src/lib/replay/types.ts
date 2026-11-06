@@ -1,8 +1,6 @@
 import type {
-  MatchPlayerSummary,
   MatchSummaryResponse,
   MatchWorldPosition,
-  RoundEventLogEntry,
   RoundPlayerStatsLite,
   RoundSummaryLite,
 } from "@/lib/types";
@@ -146,45 +144,14 @@ export type ReplayRound = Omit<RoundSummaryLite, "playerStats"> & {
 
 export type ReplayMatch = Omit<MatchSummaryResponse, "rounds"> & {
   rounds: ReplayRound[];
-  /**
-   * Local-only marker set by the VRF upload source. It is not part of the Go
-   * wire payload and must never be sent back to the API.
-   */
-  source?: "vrf";
+  /** Local-only marker: "vrf" and "demo" matches own their decoded frames. */
+  source?: "vrf" | "demo";
   /** Content-addressed server replay id, set for real VRF matches. */
   replayId?: string;
   build?: string;
   durationMs?: number;
   warnings?: string[];
   utilityWarnings?: ReplayUtilityWarnings;
-};
-
-export type ReplaySeedPlayer = Pick<
-  MatchPlayerSummary,
-  "puuid" | "gameName" | "tagLine" | "teamId" | "characterName"
->;
-
-export type ReplaySeedRound = {
-  roundNumber: number;
-  winningTeam: string;
-  roundResultCode: string;
-  attackTeamId: string;
-  scoreAfterRound: { red: number; blue: number };
-  durationMs: number;
-  playerStats: ReplayRoundPlayer[];
-  eventLog: RoundEventLogEntry[];
-};
-
-export type ReplaySeed = {
-  matchId: string;
-  mapId: string;
-  mapName: string;
-  queueLabel: string;
-  gameStartAt: string;
-  totalRounds: number;
-  players: ReplaySeedPlayer[];
-  viewer: ReplayMatch["viewer"];
-  rounds: ReplaySeedRound[];
 };
 
 export type ReplayLoadProgress = {
@@ -199,12 +166,8 @@ export type ReplayLoadOptions = {
 };
 
 /**
- * The seam between the replay UI and whatever produces replay telemetry.
- *
- * `MockReplayDataSource` generates the demo replay; `VrfReplayDataSource`
- * uploads a `.vrf` to the Go API (XHR, so upload progress is visible) and
- * resolves with the normalised `ReplayMatch` from that response. Reloads fall
- * back to the API's short-TTL cache.
+ * Seam between the replay UI and replay telemetry producers. The demo source
+ * reads a baked asset; the VRF source uploads to the Go API.
  */
 export interface ReplayDataSource {
   load(file: File, options?: ReplayLoadOptions): Promise<ReplayMatch>;
