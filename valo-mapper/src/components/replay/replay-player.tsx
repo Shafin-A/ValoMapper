@@ -241,6 +241,7 @@ export const ReplayPlayer = ({
         hideDeadAgents,
         hideAgentWeapons,
         showVisionCones,
+        showUtilities,
       }),
       pendingToast: {
         type: "replay-save",
@@ -261,6 +262,7 @@ export const ReplayPlayer = ({
     replayId,
     round,
     showVisionCones,
+    showUtilities,
   ]);
 
   if (!round) {

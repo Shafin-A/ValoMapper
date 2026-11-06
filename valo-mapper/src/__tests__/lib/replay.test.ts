@@ -7,6 +7,7 @@ import {
 import {
   buildReplayInitialState,
   buildReplaySnapshotState,
+  toReplayCanvasPoint,
 } from "@/lib/replay/snapshot";
 import { defaultIconSettings } from "@/contexts/settings-context";
 import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
@@ -15,6 +16,7 @@ import type {
   ReplayFrame,
   ReplayMatch,
   ReplayRound,
+  ReplayUtility,
 } from "@/lib/replay/types";
 import type {
   MatchPlayerSummary,
@@ -517,6 +519,141 @@ describe("buildReplaySnapshotState", () => {
     });
 
     expect(snapshot.phases[0].abilitiesOnCanvas).toHaveLength(0);
+  });
+
+  it("copies active replay utilities as editable lobby abilities", () => {
+    const utilities: ReplayUtility[] = [
+      {
+        id: "utility-smoke",
+        kind: "smoke",
+        abilityId: "ruse",
+        startTimeMs: 0,
+        endTimeMs: 10_000,
+        position: { x: 1_000, y: 1_000 },
+        ownerPuuid: "blue-1",
+      },
+      {
+        id: "utility-wall",
+        kind: "wall",
+        abilityId: "blaze",
+        startTimeMs: 0,
+        endTimeMs: 10_000,
+        position: { x: 1_000, y: 1_000 },
+        yaw: 90,
+        path: [
+          { timeMs: 1_000, x: 1_000, y: 1_000 },
+          { timeMs: 2_000, x: 1_200, y: 1_000 },
+        ],
+        ownerPuuid: "red-1",
+      },
+      {
+        id: "utility-prowler",
+        kind: "mobile",
+        abilityId: "prowler",
+        startTimeMs: 0,
+        endTimeMs: 10_000,
+        position: { x: 900, y: 900 },
+        iconOnly: true,
+        samples: [
+          { timeMs: 1_000, x: 900, y: 900 },
+          { timeMs: 5_900, x: 1_100, y: 1_100 },
+        ],
+        ownerPuuid: "red-2",
+      },
+      {
+        id: "utility-pit",
+        kind: "area",
+        abilityId: "vipers_pit",
+        startTimeMs: 0,
+        endTimeMs: 10_000,
+        position: { x: 1_000, y: 1_000 },
+      },
+      {
+        id: "utility-slow",
+        kind: "area",
+        abilityId: "slow_orb",
+        startTimeMs: 0,
+        endTimeMs: 10_000,
+        position: { x: 1_000, y: 1_000 },
+      },
+      {
+        id: "utility-future",
+        kind: "smoke",
+        abilityId: "cloudburst",
+        startTimeMs: 7_000,
+        endTimeMs: 10_000,
+        position: { x: 1_000, y: 1_000 },
+      },
+    ];
+    const round: ReplayRound = { ...buildRound([frame]), utilities };
+    const snapshot = buildReplaySnapshotState({
+      match: buildMatch(round),
+      round,
+      frame,
+      currentState: buildCurrentState(),
+    });
+    const abilities = snapshot.phases[0].abilitiesOnCanvas.filter((ability) =>
+      ability.id.startsWith("replay-ability-"),
+    );
+    const byName = new Map(abilities.map((ability) => [ability.name, ability]));
+
+    expect(byName.get("Ruse")).toMatchObject({
+      action: "clove_smoke",
+      isAlly: true,
+      ...toReplayCanvasPoint({
+        mapId: "pearl",
+        mapSide: "defense",
+        position: { x: 1_000, y: 1_000 },
+      }),
+    });
+    expect(byName.get("Blaze")).toMatchObject({
+      action: "phoenix_wall",
+      isAlly: false,
+    });
+    expect(byName.get("Blaze")?.currentPath).toHaveLength(2);
+    expect(byName.get("Blaze")?.currentPath?.[0]).toEqual({ x: 0, y: 0 });
+    expect(byName.get("Prowler")).toMatchObject({
+      action: "icon",
+      iconOnly: true,
+      isAlly: false,
+      ...toReplayCanvasPoint({
+        mapId: "pearl",
+        mapSide: "defense",
+        position: { x: 1_100, y: 1_100 },
+      }),
+    });
+    expect(byName.get("Viper's Pit")?.action).toBe("icon");
+    expect(byName.get("Slow Orb")?.action).toBe("icon");
+    expect(byName.has("Cloudburst")).toBe(false);
+  });
+
+  it("copies no replay abilities when abilities are hidden", () => {
+    const round: ReplayRound = {
+      ...buildRound([frame]),
+      utilities: [
+        {
+          id: "utility-smoke",
+          kind: "smoke",
+          abilityId: "ruse",
+          startTimeMs: 0,
+          endTimeMs: 10_000,
+          position: { x: 1_000, y: 1_000 },
+        },
+      ],
+    };
+    const snapshot = buildReplaySnapshotState({
+      match: buildMatch(round),
+      round,
+      frame,
+      currentState: buildCurrentState(),
+      showUtilities: false,
+    });
+
+    expect(
+      snapshot.phases[0].abilitiesOnCanvas.filter((ability) =>
+        ability.id.startsWith("replay-ability-"),
+      ),
+    ).toHaveLength(0);
   });
 });
 

@@ -45,6 +45,7 @@ export type ReplayUtilityAbilityIcon = {
   name: string;
   src: string;
   action: AbilityAction;
+  lobbyAction: AbilityAction;
 };
 
 const REPLAY_UTILITY_ABILITY_ICONS = new Map<string, ReplayUtilityAbilityIcon>(
@@ -52,12 +53,19 @@ const REPLAY_UTILITY_ABILITY_ICONS = new Map<string, ReplayUtilityAbilityIcon>(
     .flatMap((abilities) =>
       abilities.flatMap(
         ({ id, name, src, action, replayAction, alternates = [] }) => [
-          { id, name, src, action: replayAction ?? action },
+          {
+            id,
+            name,
+            src,
+            action: replayAction ?? action,
+            lobbyAction: action,
+          },
           ...alternates.map((alternate) => ({
             id: alternate.id,
             name: alternate.name,
             src: alternate.src,
             action: alternate.replayAction ?? alternate.action,
+            lobbyAction: alternate.action,
           })),
         ],
       ),
@@ -69,6 +77,7 @@ const REPLAY_UTILITY_ABILITY_ICONS = new Map<string, ReplayUtilityAbilityIcon>(
         name: ability.name,
         src: ability.src,
         action: ability.action,
+        lobbyAction: ability.lobbyAction,
       },
     ]),
 );
