@@ -12,6 +12,7 @@ import {
   toReplayCanvasPoint,
 } from "@/lib/replay/snapshot";
 import { getReplaySmokeLifetimeProgress } from "@/lib/replay/utilities";
+import { getReplaySpikeTimerProgress } from "@/lib/replay/spike";
 import { defaultIconSettings } from "@/contexts/settings-context";
 import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
 import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
@@ -363,6 +364,56 @@ describe("getReplaySmokeLifetimeProgress", () => {
         { ...smoke, startTimeMs: 1000, endTimeMs: 1000 },
         1000,
       ),
+    ).toBeUndefined();
+  });
+});
+
+describe("getReplaySpikeTimerProgress", () => {
+  const spikeRound: ReplayRound = {
+    ...sampleRound,
+    eventLog: [
+      {
+        eventType: "spike_planted",
+        timeSinceRoundStartMillis: 10000,
+        planterPuuid: "blue-1",
+      },
+      {
+        eventType: "spike_exploded",
+        timeSinceRoundStartMillis: 55000,
+      },
+    ],
+  };
+
+  it("runs from 0 to 1 between plant and explosion", () => {
+    expect(getReplaySpikeTimerProgress(spikeRound, 5000, true)).toBe(0);
+    expect(getReplaySpikeTimerProgress(spikeRound, 10000, true)).toBe(0);
+    expect(getReplaySpikeTimerProgress(spikeRound, 32500, true)).toBe(0.5);
+    expect(getReplaySpikeTimerProgress(spikeRound, 55000, true)).toBe(1);
+  });
+
+  it("uses the nominal 45 seconds when no explosion event exists", () => {
+    const defusedRound: ReplayRound = {
+      ...sampleRound,
+      eventLog: [
+        {
+          eventType: "spike_planted",
+          timeSinceRoundStartMillis: 10000,
+          planterPuuid: "blue-1",
+        },
+        {
+          eventType: "spike_defused",
+          timeSinceRoundStartMillis: 40000,
+          defuserPuuid: "red-1",
+        },
+      ],
+    };
+    expect(getReplaySpikeTimerProgress(defusedRound, 32500, true)).toBe(0.5);
+  });
+
+  it("has no timer when the spike is not planted", () => {
+    expect(getReplaySpikeTimerProgress(spikeRound, 32500, false)).toBeUndefined();
+    expect(
+      getReplaySpikeTimerProgress({ ...sampleRound, eventLog: [] }, 32500, true),
     ).toBeUndefined();
   });
 });

@@ -1,4 +1,5 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
+import { drawLifetimeRing } from "@/components/canvas-icons/lifetime-ring";
 import { useCanvas } from "@/contexts/canvas-context";
 import {
   handleMouseOutDefaultCursor,
@@ -151,53 +152,12 @@ export const CanvasCircleIcon = ({
               listening={false}
               perfectDrawEnabled={false}
               sceneFunc={(context) => {
-                // Clockwise wipe: the elapsed fraction is transparent, with a
-                // short smoothstep band so the leading edge fades softly.
-                const progress = Math.max(
-                  0,
-                  Math.min(1, lifetimeProgress ?? 0),
-                );
-                context.save();
-                context.setAttr("lineWidth", circleStrokeWidth);
-                context.setAttr("strokeStyle", stroke);
-                context.setAttr("lineCap", "butt");
-                if (progress <= 0) {
-                  context.beginPath();
-                  context.arc(0, 0, circleRadius, 0, Math.PI * 2);
-                  context.stroke();
-                  context.restore();
-                  return;
-                }
-                if (progress >= 1) {
-                  context.restore();
-                  return;
-                }
-                const segments = 180;
-                const step = (Math.PI * 2) / segments;
-                const fade = 0.055;
-                const start = -Math.PI / 2;
-                for (let index = 0; index < segments; index += 1) {
-                  const elapsed = index / segments;
-                  if (elapsed < progress) {
-                    continue;
-                  }
-                  const edge = Math.min(1, (elapsed - progress) / fade);
-                  const alpha = edge * edge * (3 - 2 * edge);
-                  if (alpha <= 0) {
-                    continue;
-                  }
-                  context.setAttr("globalAlpha", alpha);
-                  context.beginPath();
-                  context.arc(
-                    0,
-                    0,
-                    circleRadius,
-                    start + index * step,
-                    start + (index + 1) * step + 0.002,
-                  );
-                  context.stroke();
-                }
-                context.restore();
+                drawLifetimeRing(context, {
+                  radius: circleRadius,
+                  strokeWidth: circleStrokeWidth,
+                  color: stroke,
+                  progress: lifetimeProgress ?? 0,
+                });
               }}
             />
           )}

@@ -271,10 +271,12 @@ export const ReplayCanvasLayer = ({
 
       <ReplaySpike
         match={match}
+        round={round}
         frame={frame}
         mapSide={mapSide}
         carrierPoint={carrierPoint}
         agentsSettings={agentsSettings}
+        currentTimeMs={currentTimeMs}
       />
     </Group>
   );
