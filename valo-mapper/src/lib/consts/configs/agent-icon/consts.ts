@@ -1101,3 +1101,43 @@ export const findAbilityDefinitionByAction = (
   }
   return null;
 };
+
+/**
+ * Ultimate points required to cast. The replay reports the current point count
+ * but not the cost, so the agent's cost is needed to draw the remaining pips.
+ */
+export const AGENT_ULTIMATE_COSTS: Record<string, number> = {
+  Astra: 7,
+  Breach: 8,
+  Brimstone: 8,
+  Chamber: 8,
+  Clove: 8,
+  Cypher: 7,
+  Deadlock: 7,
+  Fade: 8,
+  Gekko: 8,
+  Harbor: 7,
+  Hush: 8,
+  Iso: 7,
+  Jett: 8,
+  "KAY/O": 8,
+  Killjoy: 9,
+  Miks: 8,
+  Neon: 8,
+  Omen: 7,
+  Phoenix: 7,
+  Raze: 8,
+  Reyna: 7,
+  Sage: 7,
+  Skye: 8,
+  Sova: 8,
+  Tejo: 9,
+  Veto: 7,
+  Viper: 9,
+  Vyse: 8,
+  Waylay: 8,
+  Yoru: 8,
+};
+
+export const getAgentUltimateCost = (agentName: string): number | undefined =>
+  AGENT_ULTIMATE_COSTS[agentName];

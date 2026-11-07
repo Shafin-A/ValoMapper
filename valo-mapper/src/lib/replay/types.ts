@@ -16,11 +16,44 @@ export type ReplayAbilitySlot = (typeof REPLAY_ABILITY_SLOTS)[number];
 
 export type ReplayAbilityCasts = Partial<Record<ReplayAbilitySlot, number>>;
 
+export type ReplayAbilityCastTimes = Partial<
+  Record<ReplayAbilitySlot, number[]>
+>;
+
+export type ReplayAbilityChargePoint = {
+  timeMs: number;
+  charges: number;
+};
+
+export type ReplayAbilityChargeTimelines = Partial<
+  Record<ReplayAbilitySlot, ReplayAbilityChargePoint[]>
+>;
+
+export type ReplayUltimatePoint = {
+  timeMs: number;
+  points: number;
+  active?: boolean;
+};
+
+export type ReplayCooldownWindow = {
+  startTimeMs: number;
+  endTimeMs: number;
+  recharge?: boolean;
+};
+
+export type ReplayCooldowns = Partial<
+  Record<ReplayAbilitySlot, ReplayCooldownWindow[]>
+>;
+
 export type ReplayRoundPlayer = RoundPlayerStatsLite & {
   weaponId?: string;
   armorId?: string;
   incomingDamage: number;
   abilityCasts: ReplayAbilityCasts;
+  abilityCastTimes?: ReplayAbilityCastTimes;
+  abilityCharges?: ReplayAbilityChargeTimelines;
+  ultimatePoints?: ReplayUltimatePoint[];
+  cooldowns?: ReplayCooldowns;
 };
 
 export type ReplayFramePlayer = {

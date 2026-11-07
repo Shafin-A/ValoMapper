@@ -2,7 +2,9 @@ import { getActiveEventIndex } from "@/lib/replay/frames";
 import {
   getReplayAbilityDisplays,
   getReplayArmor,
+  getReplayBuyPhaseUtilityCastTimes,
   getReplayPlayerState,
+  mergeReplayAbilityCastTimes,
 } from "@/lib/replay/display";
 import {
   buildReplayInitialState,
@@ -268,10 +270,121 @@ describe("getReplayAbilityDisplays", () => {
     expect(bySlot.get("Grenade")?.charges).toBe(1);
     expect(bySlot.get("Ability1")?.charges).toBe(8);
     expect(bySlot.get("Ability2")?.charges).toBe(1);
-    expect(bySlot.get("Ultimate")?.charges).toBeUndefined();
+    expect(bySlot.get("Ultimate")?.charges).toBe(8);
+    expect(bySlot.get("Ultimate")?.ultimateCost).toBe(8);
     expect(bySlot.get("Grenade")?.castTimeMs).toBe(5000);
     expect(bySlot.get("Ability2")?.castTimeMs).toBe(9000);
     expect(bySlot.get("Ability1")?.castTimeMs).toBeUndefined();
+  });
+
+  it("exposes every cast time when the replay provides them", () => {
+    const abilities = getReplayAbilityDisplays(
+      "Chamber",
+      { Grenade: 5000 },
+      { Grenade: [1000, 3000, 5000] },
+    );
+    const grenade = abilities.find((ability) => ability.slot === "Grenade");
+
+    expect(grenade?.castTimeMs).toBe(1000);
+    expect(grenade?.castTimesMs).toEqual([1000, 3000, 5000]);
+  });
+
+  it("attaches the server charge timeline to the matching slot", () => {
+    const abilities = getReplayAbilityDisplays("Killjoy", {}, {}, {
+      Ability2: [
+        { timeMs: 0, charges: 1 },
+        { timeMs: 2000, charges: 0 },
+      ],
+    });
+    const turret = abilities.find((ability) => ability.slot === "Ability2");
+
+    expect(turret?.chargeTimeline).toEqual([
+      { timeMs: 0, charges: 1 },
+      { timeMs: 2000, charges: 0 },
+    ]);
+  });
+
+  it("attaches ultimate points, cost and cooldown windows", () => {
+    const abilities = getReplayAbilityDisplays(
+      "Killjoy",
+      {},
+      {},
+      {},
+      [
+        { timeMs: 0, points: 4 },
+        { timeMs: 2000, points: 9 },
+      ],
+      {
+        Ability2: [{ startTimeMs: 1000, endTimeMs: 61000 }],
+      },
+    );
+    const ultimate = abilities.find((ability) => ability.slot === "Ultimate");
+    const turret = abilities.find((ability) => ability.slot === "Ability2");
+
+    expect(ultimate?.ultimateCost).toBe(9);
+    expect(ultimate?.charges).toBe(9);
+    expect(ultimate?.ultimateTimeline).toEqual([
+      { timeMs: 0, points: 4 },
+      { timeMs: 2000, points: 9 },
+    ]);
+    expect(turret?.cooldowns).toEqual([
+      { startTimeMs: 1000, endTimeMs: 61000 },
+    ]);
+  });
+});
+
+describe("buy-phase utility casts", () => {
+  const utilities: ReplayUtility[] = [
+    {
+      id: "turret-1",
+      kind: "trap",
+      abilityId: "turret",
+      startTimeMs: 2000,
+      endTimeMs: 50000,
+      position: { x: 1000, y: 1000 },
+      ownerPuuid: "blue-1",
+    },
+    {
+      id: "turret-2",
+      kind: "trap",
+      abilityId: "turret",
+      startTimeMs: 6000,
+      endTimeMs: 50000,
+      position: { x: 1000, y: 1000 },
+      ownerPuuid: "blue-1",
+    },
+    {
+      id: "crosscut-1",
+      kind: "marker",
+      abilityId: "crosscut",
+      startTimeMs: 1000,
+      endTimeMs: 50000,
+      position: { x: 1000, y: 1000 },
+      ownerPuuid: "red-1",
+    },
+  ];
+
+  it("maps only the owner's buy-phase utilities to their ability slots", () => {
+    expect(
+      getReplayBuyPhaseUtilityCastTimes({
+        agentName: "Killjoy",
+        utilities,
+        ownerPuuid: "blue-1",
+        buyEndTimeMs: 5000,
+      }),
+    ).toEqual({ Ability2: [2000] });
+  });
+
+  it("merges utility cast times with server cast times", () => {
+    expect(
+      mergeReplayAbilityCastTimes({ Ability2: [7000] }, { Ability2: [2000] }, 5000),
+    ).toEqual({ Ability2: [2000, 7000] });
+  });
+
+  it("does not double count a server-recorded pre-buy cast", () => {
+    expect(
+      mergeReplayAbilityCastTimes({ Ability2: [0] }, { Ability2: [2000] }, 5000),
+    ).toEqual({ Ability2: [0] });
   });
 });
 

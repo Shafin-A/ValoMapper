@@ -1,4 +1,7 @@
-import { AGENT_ICON_CONFIGS } from "@/lib/consts/configs/agent-icon/consts";
+import {
+  AGENT_ICON_CONFIGS,
+  getAgentUltimateCost,
+} from "@/lib/consts/configs/agent-icon/consts";
 import {
   ADJUSTABLE_LINE_ABILITY_CONFIGS,
   DOUBLE_LINE_ABILITY_CONFIGS,
@@ -17,10 +20,18 @@ import {
   mToPixels,
 } from "@/lib/utils";
 import type { AbilityAction, ToolIconCanvas } from "@/lib/types";
-import type {
-  ReplayAbilityCasts,
-  ReplayAbilitySlot,
-  ReplayFramePlayer,
+import {
+  REPLAY_ABILITY_SLOTS,
+  type ReplayAbilityCasts,
+  type ReplayAbilityCastTimes,
+  type ReplayAbilityChargePoint,
+  type ReplayAbilityChargeTimelines,
+  type ReplayAbilitySlot,
+  type ReplayCooldownWindow,
+  type ReplayCooldowns,
+  type ReplayFramePlayer,
+  type ReplayUltimatePoint,
+  type ReplayUtility,
 } from "./types";
 
 export const REPLAY_ABILITY_KEY_BY_SLOT: Record<ReplayAbilitySlot, string> = {
@@ -37,7 +48,12 @@ export type ReplayAbilityDisplay = {
   src: string;
   action: AbilityAction;
   castTimeMs?: number;
+  castTimesMs?: number[];
+  chargeTimeline?: ReplayAbilityChargePoint[];
   charges?: number;
+  ultimateTimeline?: ReplayUltimatePoint[];
+  ultimateCost?: number;
+  cooldowns?: ReplayCooldownWindow[];
 };
 
 export type ReplayUtilityAbilityIcon = {
@@ -157,8 +173,13 @@ export const getReplayAbilityYawOffset = (
 export const getReplayAbilityDisplays = (
   agentName: string,
   casts: ReplayAbilityCasts = {},
+  castTimes: ReplayAbilityCastTimes = {},
+  chargeTimelines: ReplayAbilityChargeTimelines = {},
+  ultimatePoints?: ReplayUltimatePoint[],
+  cooldowns: ReplayCooldowns = {},
 ): ReplayAbilityDisplay[] => {
   const configs = AGENT_ICON_CONFIGS[agentName] ?? [];
+  const ultimateCost = getAgentUltimateCost(agentName);
 
   return configs
     .filter(
@@ -170,6 +191,10 @@ export const getReplayAbilityDisplays = (
     )
     .map((ability) => {
       const slot = ability.slot as ReplayAbilitySlot;
+      const times =
+        castTimes[slot] ??
+        (casts[slot] !== undefined ? [casts[slot]] : undefined);
+      const isUltimate = slot === "Ultimate";
 
       return {
         slot,
@@ -177,10 +202,93 @@ export const getReplayAbilityDisplays = (
         name: ability.name,
         src: ability.src,
         action: ability.action,
-        castTimeMs: casts[slot],
-        charges: ability.charges,
+        castTimeMs: times?.[0],
+        castTimesMs: times,
+        chargeTimeline: chargeTimelines[slot],
+        charges: isUltimate ? ultimateCost : ability.charges,
+        ultimateTimeline: isUltimate ? ultimatePoints : undefined,
+        ultimateCost: isUltimate ? ultimateCost : undefined,
+        cooldowns: cooldowns[slot],
       };
     });
+};
+
+/**
+ * Buy-phase utility placements are recorded as utility actors, not as ability
+ * casts. Use their round-relative start times to mark the owning ability used.
+ */
+export const getReplayBuyPhaseUtilityCastTimes = ({
+  agentName,
+  utilities,
+  ownerPuuid,
+  buyEndTimeMs,
+}: {
+  agentName: string;
+  utilities?: ReplayUtility[];
+  ownerPuuid?: string;
+  buyEndTimeMs?: number;
+}): ReplayAbilityCastTimes => {
+  if (!ownerPuuid || buyEndTimeMs === undefined) {
+    return {};
+  }
+
+  const configs = AGENT_ICON_CONFIGS[agentName] ?? [];
+  const result: ReplayAbilityCastTimes = {};
+
+  for (const utility of utilities ?? []) {
+    if (
+      utility.ownerPuuid !== ownerPuuid ||
+      utility.startTimeMs >= buyEndTimeMs
+    ) {
+      continue;
+    }
+    const abilityId = utility.abilityId;
+    const config = abilityId
+      ? configs.find((candidate) => candidate.id === abilityId)
+      : undefined;
+    if (!config) {
+      continue;
+    }
+    const slot = config.slot as ReplayAbilitySlot;
+    if (!REPLAY_ABILITY_SLOTS.includes(slot)) {
+      continue;
+    }
+    result[slot] = [...(result[slot] ?? []), utility.startTimeMs];
+  }
+
+  for (const slot of REPLAY_ABILITY_SLOTS) {
+    const times = result[slot];
+    if (times) {
+      result[slot] = [...new Set(times)].sort((a, b) => a - b);
+    }
+  }
+  return result;
+};
+
+export const mergeReplayAbilityCastTimes = (
+  serverTimes: ReplayAbilityCastTimes = {},
+  utilityTimes: ReplayAbilityCastTimes = {},
+  buyEndTimeMs?: number,
+): ReplayAbilityCastTimes => {
+  const merged: ReplayAbilityCastTimes = {};
+
+  for (const slot of REPLAY_ABILITY_SLOTS) {
+    const existing = serverTimes[slot] ?? [];
+    const fromUtilities = utilityTimes[slot] ?? [];
+    // A pre-buy cast record wins; utility actors are the fallback when the
+    // replay does not record buy-phase casts.
+    const hasPreBuyCast =
+      buyEndTimeMs !== undefined &&
+      existing.some((timeMs) => timeMs <= buyEndTimeMs);
+    const times = hasPreBuyCast
+      ? existing
+      : [...existing, ...fromUtilities];
+    if (times.length > 0) {
+      merged[slot] = [...new Set(times)].sort((a, b) => a - b);
+    }
+  }
+
+  return merged;
 };
 
 export const getWeaponImageSrc = (weaponId?: string) => {

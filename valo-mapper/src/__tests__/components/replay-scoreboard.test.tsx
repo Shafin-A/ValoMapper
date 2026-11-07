@@ -123,6 +123,355 @@ describe("ReplayScoreboard", () => {
     expect(screen.getAllByLabelText("0 credits").length).toBeGreaterThan(0);
   });
 
+  it("uses the server charge timeline instead of cast-count simulation", () => {
+    const killjoyPlayers = players.map((player) =>
+      player.puuid === "blue-1"
+        ? { ...player, characterName: "Killjoy" }
+        : player,
+    );
+    const chargeRound: ReplayRound = {
+      ...round,
+      buyEndTimeMs: 5000,
+      playerStats: playerStats.map((stats) =>
+        stats.puuid === "blue-1"
+          ? {
+              ...stats,
+              abilityCasts: {},
+              abilityCastTimes: undefined,
+              abilityCharges: {
+                Ability2: [
+                  { timeMs: 0, charges: 1 },
+                  { timeMs: 2000, charges: 0 },
+                ],
+              },
+            }
+          : stats,
+      ),
+    };
+
+    const { rerender } = render(
+      <ReplayScoreboard
+        players={killjoyPlayers}
+        round={chargeRound}
+        currentTimeMs={1500}
+        viewerPuuid="blue-1"
+      />,
+    );
+    expect(
+      screen.getByTitle("Turret (E) — 1/1 charges"),
+    ).toBeInTheDocument();
+
+    rerender(
+      <ReplayScoreboard
+        players={killjoyPlayers}
+        round={chargeRound}
+        currentTimeMs={2500}
+        viewerPuuid="blue-1"
+      />,
+    );
+    expect(
+      screen.getByTitle("Turret (E) — 0/1 charges"),
+    ).toBeInTheDocument();
+  });
+
+  it("uses the server ultimate points and cost for the ultimate cell", () => {
+    const buildRound = (points: number, active = false): ReplayRound => ({
+      ...round,
+      playerStats: playerStats.map((stats) =>
+        stats.puuid === "blue-1"
+          ? {
+              ...stats,
+              abilityCasts: {},
+              abilityCastTimes: undefined,
+              ultimatePoints: [{ timeMs: 0, points, active }],
+            }
+          : stats,
+      ),
+    });
+
+    const { rerender } = render(
+      <ReplayScoreboard
+        players={players}
+        round={buildRound(3)}
+        currentTimeMs={4000}
+        viewerPuuid="blue-1"
+      />,
+    );
+    expect(
+      screen.getByTitle("Blade Storm (X) — 3/8 points"),
+    ).toBeInTheDocument();
+
+    rerender(
+      <ReplayScoreboard
+        players={players}
+        round={buildRound(8)}
+        currentTimeMs={4000}
+        viewerPuuid="blue-1"
+      />,
+    );
+    expect(
+      screen.getByTitle("Blade Storm (X) — 8/8 points · ready"),
+    ).toBeInTheDocument();
+
+    rerender(
+      <ReplayScoreboard
+        players={players}
+        round={buildRound(0, true)}
+        currentTimeMs={4000}
+        viewerPuuid="blue-1"
+      />,
+    );
+    expect(
+      screen.getByTitle("Blade Storm (X) — active"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the remaining signature cooldown", () => {
+    const cooldownRound: ReplayRound = {
+      ...round,
+      playerStats: playerStats.map((stats) =>
+        stats.puuid === "blue-1"
+          ? {
+              ...stats,
+              abilityCasts: {},
+              abilityCastTimes: undefined,
+              cooldowns: {
+                Ability2: [{ startTimeMs: 2000, endTimeMs: 62000 }],
+              },
+            }
+          : stats,
+      ),
+    };
+
+    const { rerender } = render(
+      <ReplayScoreboard
+        players={players.map((player) =>
+          player.puuid === "blue-1"
+            ? { ...player, characterName: "Killjoy" }
+            : player,
+        )}
+        round={cooldownRound}
+        currentTimeMs={12000}
+        viewerPuuid="blue-1"
+      />,
+    );
+    expect(
+      screen.getByTitle("Turret (E) — 1/1 charges · 50s cooldown"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("50s")).toBeInTheDocument();
+
+    rerender(
+      <ReplayScoreboard
+        players={players.map((player) =>
+          player.puuid === "blue-1"
+            ? { ...player, characterName: "Killjoy" }
+            : player,
+        )}
+        round={cooldownRound}
+        currentTimeMs={62000}
+        viewerPuuid="blue-1"
+      />,
+    );
+    expect(
+      screen.getByTitle("Turret (E) — 1/1 charges"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a recharge countdown for a single-charge signature", () => {
+    const sovaPlayers = players.map((player) =>
+      player.puuid === "blue-1"
+        ? { ...player, characterName: "Sova" }
+        : player,
+    );
+    const rechargeRound: ReplayRound = {
+      ...round,
+      playerStats: playerStats.map((stats) =>
+        stats.puuid === "blue-1"
+          ? {
+              ...stats,
+              abilityCasts: {},
+              abilityCastTimes: undefined,
+              abilityCharges: {
+                Ability2: [
+                  { timeMs: 0, charges: 1 },
+                  { timeMs: 2000, charges: 0 },
+                  { timeMs: 52000, charges: 1 },
+                ],
+              },
+              cooldowns: {
+                Ability2: [
+                  { startTimeMs: 2000, endTimeMs: 52000, recharge: true },
+                ],
+              },
+            }
+          : stats,
+      ),
+    };
+
+    render(
+      <ReplayScoreboard
+        players={sovaPlayers}
+        round={rechargeRound}
+        currentTimeMs={12000}
+        viewerPuuid="blue-1"
+      />,
+    );
+
+    expect(
+      screen.getByTitle("Recon Bolt (E) — 0/1 charges · 40s cooldown"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("40s")).toBeInTheDocument();
+  });
+
+  it("keeps a recharge ability bright while another charge remains", () => {
+    const omenPlayers = players.map((player) =>
+      player.puuid === "blue-1"
+        ? { ...player, characterName: "Omen" }
+        : player,
+    );
+    const rechargeRound: ReplayRound = {
+      ...round,
+      playerStats: playerStats.map((stats) =>
+        stats.puuid === "blue-1"
+          ? {
+              ...stats,
+              abilityCasts: {},
+              abilityCastTimes: undefined,
+              abilityCharges: {
+                Ability2: [
+                  { timeMs: 0, charges: 2 },
+                  { timeMs: 2000, charges: 1 },
+                  { timeMs: 22000, charges: 0 },
+                  { timeMs: 42000, charges: 1 },
+                ],
+              },
+              cooldowns: {
+                Ability2: [
+                  { startTimeMs: 2000, endTimeMs: 42000, recharge: true },
+                ],
+              },
+            }
+          : stats,
+      ),
+    };
+
+    const { rerender } = render(
+      <ReplayScoreboard
+        players={omenPlayers}
+        round={rechargeRound}
+        currentTimeMs={12000}
+        viewerPuuid="blue-1"
+      />,
+    );
+    expect(
+      screen.getByTitle("Dark Cover (E) — 1/2 charges · 30s cooldown"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("30s")).not.toBeInTheDocument();
+
+    rerender(
+      <ReplayScoreboard
+        players={omenPlayers}
+        round={rechargeRound}
+        currentTimeMs={22000}
+        viewerPuuid="blue-1"
+      />,
+    );
+    expect(
+      screen.getByTitle("Dark Cover (E) — 0/2 charges · 20s cooldown"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("20s")).toBeInTheDocument();
+  });
+
+  it("marks buy-phase utility placements as used abilities", () => {
+    render(
+      <ReplayScoreboard
+        players={players.map((player) =>
+          player.puuid === "blue-1"
+            ? { ...player, characterName: "Killjoy" }
+            : player,
+        )}
+        round={{
+          ...round,
+          buyEndTimeMs: 5000,
+          utilities: [
+            {
+              id: "turret-1",
+              kind: "trap",
+              abilityId: "turret",
+              startTimeMs: 2000,
+              endTimeMs: 50000,
+              position: { x: 1000, y: 1000 },
+              ownerPuuid: "blue-1",
+            },
+          ],
+          playerStats: playerStats.map((stats) =>
+            stats.puuid === "blue-1"
+              ? { ...stats, abilityCasts: {}, abilityCastTimes: undefined }
+              : stats,
+          ),
+        }}
+        currentTimeMs={6000}
+        viewerPuuid="blue-1"
+      />,
+    );
+
+    expect(
+      screen.getByTitle("Turret (E) — 0/1 charges"),
+    ).toBeInTheDocument();
+  });
+
+  it("tracks every cast time when counting remaining charges", () => {
+    render(
+      <ReplayScoreboard
+        players={players}
+        round={{
+          ...round,
+          playerStats: playerStats.map((stats) =>
+            stats.puuid === "blue-1"
+              ? {
+                  ...stats,
+                  abilityCasts: { Grenade: 1000 },
+                  abilityCastTimes: { Grenade: [1000, 3000] },
+                }
+              : stats,
+          ),
+        }}
+        currentTimeMs={4000}
+        viewerPuuid="blue-1"
+      />,
+    );
+
+    expect(
+      screen.getByTitle("Cloudburst (C) — 0/2 charges"),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps charges available before their cast time", () => {
+    render(
+      <ReplayScoreboard
+        players={players}
+        round={{
+          ...round,
+          playerStats: playerStats.map((stats) =>
+            stats.puuid === "blue-1"
+              ? {
+                  ...stats,
+                  abilityCasts: { Grenade: 3000 },
+                  abilityCastTimes: { Grenade: [3000] },
+                }
+              : stats,
+          ),
+        }}
+        currentTimeMs={2000}
+        viewerPuuid="blue-1"
+      />,
+    );
+
+    expect(
+      screen.getByTitle("Cloudburst (C) — 2/2 charges"),
+    ).toBeInTheDocument();
+  });
+
   it("renders the ult plus C/Q/E abilities with their remaining charges", () => {
     render(
       <ReplayScoreboard
