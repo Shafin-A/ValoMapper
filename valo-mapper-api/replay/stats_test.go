@@ -177,15 +177,20 @@ func TestResolveCastsUsesBuyEndAndDedupes(t *testing.T) {
 	raw.Casts[castKey{Actor: 999, TimeMS: 5000, PacketID: 6, Index: 0}] = &castElement{
 		Slot: 3, HasSlot: true, CastTime: 1, HasCastTime: true, Round: 0, HasRound: true,
 	}
+	// A cast before the barrier drop is kept and resolved against the buy end.
+	add(3000, 7, castElement{Slot: 4, HasSlot: true, CastTime: -0.5, HasCastTime: true, Round: 0, HasRound: true})
 	// A round with no buy phase keeps the replication time.
-	add(250000, 7, castElement{Slot: 9, HasSlot: true, CastTime: 30, HasCastTime: true, Round: 2, HasRound: true})
+	add(250000, 8, castElement{Slot: 9, HasSlot: true, CastTime: 30, HasCastTime: true, Round: 2, HasRound: true})
 	// A round number outside the played rounds is not kept.
-	add(5000, 8, castElement{Slot: 9, HasSlot: true, CastTime: 1, HasCastTime: true, Round: 7, HasRound: true})
+	add(5000, 9, castElement{Slot: 9, HasSlot: true, CastTime: 1, HasCastTime: true, Round: 7, HasRound: true})
 
 	got := resolveCasts(windows, index, &raw)
 
-	if len(got.Casts) != 3 {
-		t.Fatalf("casts = %d, want 3: %v", len(got.Casts), got.Casts)
+	if len(got.Casts) != 4 {
+		t.Fatalf("casts = %d, want 4: %v", len(got.Casts), got.Casts)
+	}
+	if got.BeforeBuyEnd != 1 {
+		t.Errorf("before-buy casts = %d, want 1", got.BeforeBuyEnd)
 	}
 	if got.UnknownSlot != 1 {
 		t.Errorf("unknown slot = %d, want 1", got.UnknownSlot)
@@ -207,6 +212,10 @@ func TestResolveCastsUsesBuyEndAndDedupes(t *testing.T) {
 	recovered := castIdentity{Subject: subject, Round: 1, Slot: 4, CastMS: 12000}
 	if abs := got.Casts[recovered]; abs != 113000 {
 		t.Errorf("recovered cast = %d, want 113000", abs)
+	}
+	preBuy := castIdentity{Subject: subject, Round: 0, Slot: 4, CastMS: -500}
+	if abs := got.Casts[preBuy]; abs != 1500 {
+		t.Errorf("pre-buy cast = %d, want 1500", abs)
 	}
 	noBuyEnd := castIdentity{Subject: subject, Round: 2, Slot: 9, CastMS: 30000}
 	if abs := got.Casts[noBuyEnd]; abs != 250000 {
@@ -244,6 +253,9 @@ func TestApplyRoundStatsFillsScoreboard(t *testing.T) {
 	raw.Casts[castKey{Actor: actor, TimeMS: 40000, PacketID: 4, Index: 0}] = &castElement{
 		Slot: 5, HasSlot: true, CastTime: 20, HasCastTime: true, Round: 0, HasRound: true,
 	}
+	raw.Casts[castKey{Actor: actor, TimeMS: 12000, PacketID: 5, Index: 0}] = &castElement{
+		Slot: 4, HasSlot: true, CastTime: -1, HasCastTime: true, Round: 0, HasRound: true,
+	}
 
 	state := &stateScan{
 		Timelines: map[string][]stateSample{subject: {
@@ -276,10 +288,13 @@ func TestApplyRoundStatsFillsScoreboard(t *testing.T) {
 	if stats.IncomingDamage != 135 {
 		t.Errorf("incoming damage = %d, want 135", stats.IncomingDamage)
 	}
-	// The earliest grenade casts at 15000 absolute, which is 14000 into the
-	// round; the later grenade and the ultimate are kept as separate slots.
+	// Grenade casts at 14000 and 18000 into the round. The earliest entry keeps
+	// the old wire field, while the full list drives charge counts.
 	if stats.AbilityCasts["Grenade"] != 14000 {
 		t.Errorf("grenade = %d, want 14000", stats.AbilityCasts["Grenade"])
+	}
+	if got := stats.AbilityCastTimes["Grenade"]; len(got) != 2 || got[0] != 14000 || got[1] != 18000 {
+		t.Errorf("grenade times = %v, want [14000 18000]", got)
 	}
 	if stats.AbilityCasts["Ultimate"] != 35000 {
 		t.Errorf("ultimate = %d, want 35000", stats.AbilityCasts["Ultimate"])
@@ -288,11 +303,111 @@ func TestApplyRoundStatsFillsScoreboard(t *testing.T) {
 	if stats.AbilityCasts["Ability2"] != 24000 {
 		t.Errorf("ability2 = %d, want 24000", stats.AbilityCasts["Ability2"])
 	}
-	if len(stats.AbilityCasts) != 3 {
-		t.Errorf("ability casts = %v, want three entries", stats.AbilityCasts)
+	// A negative CastTime is before the barrier drop, one second into the
+	// round-relative timeline when the round starts at 1000.
+	if stats.AbilityCasts["Ability1"] != 3000 {
+		t.Errorf("ability1 = %d, want 3000", stats.AbilityCasts["Ability1"])
 	}
-	if state.CastsUnique != 4 {
-		t.Errorf("cast counter = %d, want 4", state.CastsUnique)
+	if got := stats.AbilityCastTimes["Ability1"]; len(got) != 1 || got[0] != 3000 {
+		t.Errorf("ability1 times = %v, want [3000]", got)
+	}
+	if len(stats.AbilityCasts) != 4 {
+		t.Errorf("ability casts = %v, want four entries", stats.AbilityCasts)
+	}
+	if state.CastsUnique != 5 {
+		t.Errorf("cast counter = %d, want 5", state.CastsUnique)
+	}
+	if state.CastsBeforeBuyEnd != 1 {
+		t.Errorf("before-buy casts = %d, want 1", state.CastsBeforeBuyEnd)
+	}
+}
+
+func TestApplyRoundStatsFillsAbilityCharges(t *testing.T) {
+	const subject = testSubject
+	const puuid = "vrf-test"
+	const actor = uint32(500)
+
+	windows := []roundWindow{
+		{RoundNumber: 1, StartMS: 1000, EndMS: 5000, BuyEndMS: ptr(uint32(2000))},
+	}
+	players := []Player{{Puuid: puuid}}
+	index := newPlayerIndex(&Manifest{Players: []ManifestPlayer{{
+		ActorNetGUID:      100,
+		Subject:           subject,
+		CharacterNetGUID:  ptr(actor),
+		CharacterNetGUIDs: []uint32{actor},
+	}}})
+	puuidBySubject := map[string]string{subject: puuid}
+
+	state := &stateScan{
+		Timelines: map[string][]stateSample{subject: {
+			{TimeMS: 1000, HP: 100, Alive: true, HealthTimeMS: 1000},
+		}},
+		AbilityCharges: []abilityChargeSample{
+			{Subject: subject, Slot: "Ability2", TimeMS: 500, PacketID: 1, Charges: 2},
+			{Subject: subject, Slot: "Ability2", TimeMS: 1500, PacketID: 2, Charges: 1},
+		},
+	}
+	logs := map[int]*roundLog{
+		1: {Stats: map[string]*PlayerStats{puuid: {Puuid: puuid}}},
+	}
+	empty := newFieldStateRows()
+
+	applyRoundStats(windows, players, index, puuidBySubject, state, &empty, logs, newWarnings())
+
+	got := logs[1].Stats[puuid].AbilityCharges["Ability2"]
+	if len(got) != 2 || got[0].TimeMS != 0 || got[0].Charges != 2 ||
+		got[1].TimeMS != 500 || got[1].Charges != 1 {
+		t.Fatalf("ability charges = %+v", got)
+	}
+}
+
+func TestApplyRoundStatsFillsUltimateAndCooldowns(t *testing.T) {
+	const subject = testSubject
+	const puuid = "vrf-test"
+	const actor = uint32(500)
+
+	windows := []roundWindow{
+		{RoundNumber: 1, StartMS: 1000, EndMS: 90000, BuyEndMS: ptr(uint32(2000))},
+	}
+	players := []Player{{Puuid: puuid}}
+	index := newPlayerIndex(&Manifest{Players: []ManifestPlayer{{
+		ActorNetGUID:      100,
+		Subject:           subject,
+		CharacterNetGUID:  ptr(actor),
+		CharacterNetGUIDs: []uint32{actor},
+	}}})
+	puuidBySubject := map[string]string{subject: puuid}
+
+	state := &stateScan{
+		Timelines: map[string][]stateSample{subject: {
+			{TimeMS: 1000, HP: 100, Alive: true, HealthTimeMS: 1000},
+		}},
+		UltimateSamples: []ultimateSample{
+			{Subject: subject, TimeMS: 500, PacketID: 1, Kind: ultimateKindPoints, Points: 3},
+			{Subject: subject, TimeMS: 20000, PacketID: 2, Kind: ultimateKindPoints, Points: 4},
+		},
+		Cooldowns: []cooldownWindow{
+			{Subject: subject, Slot: "Ability2", StartMS: 1000, EndMS: 61000},
+		},
+	}
+	logs := map[int]*roundLog{
+		1: {Stats: map[string]*PlayerStats{puuid: {Puuid: puuid}}},
+	}
+	empty := newFieldStateRows()
+
+	applyRoundStats(windows, players, index, puuidBySubject, state, &empty, logs, newWarnings())
+
+	ultimate := logs[1].Stats[puuid].UltimatePoints
+	if len(ultimate) != 2 || ultimate[0].TimeMS != 0 || ultimate[0].Points != 3 ||
+		ultimate[1].TimeMS != 19000 || ultimate[1].Points != 4 {
+		t.Fatalf("ultimate points = %+v", ultimate)
+	}
+
+	cooldowns := logs[1].Stats[puuid].Cooldowns["Ability2"]
+	if len(cooldowns) != 1 || cooldowns[0].StartTimeMS != 0 ||
+		cooldowns[0].EndTimeMS != 60000 {
+		t.Fatalf("cooldowns = %+v", cooldowns)
 	}
 }
 

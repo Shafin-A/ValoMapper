@@ -72,6 +72,7 @@ type castResolution struct {
 	UnknownSlot   int
 	Unresolved    int
 	WithoutBuyEnd int
+	BeforeBuyEnd  int
 }
 
 // parseCastChild splits "AbilityCastsThisRound[<i>].<Member>_<type>_<hash>" into
@@ -234,8 +235,7 @@ func resolveCasts(windows []roundWindow, index *playerIndex, raw *fieldStateRows
 
 		castMS := int64(element.CastTime * 1000)
 		if castMS < 0 {
-			resolution.Skipped++
-			continue
+			resolution.BeforeBuyEnd++
 		}
 
 		subject, ok := index.subjectForPawn(key.Actor)
@@ -258,11 +258,12 @@ func resolveCasts(windows []roundWindow, index *playerIndex, raw *fieldStateRows
 				continue
 			}
 			if be, hasBuyEnd := buyEnd[roundIndex]; hasBuyEnd {
-				if castMS > math.MaxUint32-int64(be) {
+				candidate := int64(be) + castMS
+				if candidate < 0 || candidate > math.MaxUint32 {
 					resolution.Skipped++
 					continue
 				}
-				abs = be + uint32(castMS)
+				abs = uint32(candidate)
 			} else {
 				// No buy phase for the round: the replication time is the only
 				// clock available, so keep the cast with an approximate time.
@@ -357,19 +358,104 @@ func applyRoundStats(
 	state.CastsUnknownSlot = casts.UnknownSlot
 	state.CastsUnresolved = casts.Unresolved
 	state.CastsWithoutBuyEnd = casts.WithoutBuyEnd
+	state.CastsBeforeBuyEnd = casts.BeforeBuyEnd
 	if casts.WithoutBuyEnd > 0 && warnings != nil {
 		warnings.add("An ability cast in a round without a resolved buy phase used its replication time.")
 	}
 
-	earliest := make(map[castSlotKey]uint32, len(casts.Casts))
+	castTimesBySlot := make(map[castSlotKey][]uint32, len(casts.Casts))
+	castTimesBySubjectSlot := make(map[string]map[int64][]uint32)
 	for identity, abs := range casts.Casts {
 		key := castSlotKey{
 			Subject: identity.Subject,
 			Round:   identity.Round,
 			Slot:    identity.Slot,
 		}
-		if previous, exists := earliest[key]; !exists || abs < previous {
-			earliest[key] = abs
+		castTimesBySlot[key] = append(castTimesBySlot[key], abs)
+
+		bySlot := castTimesBySubjectSlot[identity.Subject]
+		if bySlot == nil {
+			bySlot = make(map[int64][]uint32)
+			castTimesBySubjectSlot[identity.Subject] = bySlot
+		}
+		bySlot[identity.Slot] = append(bySlot[identity.Slot], abs)
+	}
+	for key := range castTimesBySlot {
+		sort.Slice(castTimesBySlot[key], func(i, j int) bool {
+			return castTimesBySlot[key][i] < castTimesBySlot[key][j]
+		})
+	}
+	sortCastTimes(castTimesBySubjectSlot)
+
+	// The folder letter is not always the input slot, so learn the real
+	// mapping from this player's casts before it is used for charges or
+	// cooldowns.
+	abilitySlots := learnAbilitySlots(
+		state.AbilityCharges, state.Cooldowns, castTimesBySubjectSlot,
+	)
+	for _, sample := range state.AbilityCharges {
+		if slots := abilitySlots[sample.Subject]; len(slots) > 0 {
+			if _, ok := slots[sample.Folder]; !ok {
+				state.AbilityChargeUnmapped++
+			}
+		}
+	}
+	for _, window := range state.Cooldowns {
+		if slots := abilitySlots[window.Subject]; len(slots) > 0 {
+			if _, ok := slots[window.Folder]; !ok {
+				state.CooldownUnmapped++
+			}
+		}
+	}
+
+	// Keep charge-capable folders that never produced a value write so their
+	// slots still start the round empty instead of falling back to a full kit.
+	for subject, folders := range state.ChargeFolders {
+		if abilitySlots[subject] == nil {
+			abilitySlots[subject] = make(map[string]string)
+		}
+		used := make(map[string]bool, len(abilitySlots[subject]))
+		for _, slot := range abilitySlots[subject] {
+			used[slot] = true
+		}
+		names := make([]string, 0, len(folders))
+		for folder := range folders {
+			names = append(names, folder)
+		}
+		sort.Strings(names)
+		for _, folder := range names {
+			if _, ok := abilitySlots[subject][folder]; ok {
+				continue
+			}
+			slot := folders[folder]
+			if used[slot] {
+				continue
+			}
+			abilitySlots[subject][folder] = slot
+			used[slot] = true
+		}
+	}
+
+	recharges := buildRechargeWindows(
+		state.AbilityCharges, windows, abilitySlots, state.Cooldowns,
+	)
+	state.RechargeWindows = len(recharges)
+	state.Cooldowns = append(state.Cooldowns, recharges...)
+
+	chargeFoldersBySubject := make(map[string]map[string]bool)
+	for subject, folders := range state.ChargeFolders {
+		chargeFoldersBySubject[subject] = make(map[string]bool, len(folders))
+		for folder := range folders {
+			chargeFoldersBySubject[subject][folder] = true
+		}
+	}
+	for _, sample := range state.AbilityCharges {
+		if chargeFoldersBySubject[sample.Subject] == nil {
+			chargeFoldersBySubject[sample.Subject] = make(map[string]bool)
+		}
+		chargeFoldersBySubject[sample.Subject][sample.Folder] = true
+		if sample.Signature {
+			state.SignatureChargeWrites++
 		}
 	}
 
@@ -428,12 +514,66 @@ func applyRoundStats(
 			if stats.AbilityCasts == nil {
 				stats.AbilityCasts = make(map[string]int, len(castSlotOrder))
 			}
+			if stats.AbilityCastTimes == nil {
+				stats.AbilityCastTimes = make(map[string][]int, len(castSlotOrder))
+			}
 			for _, slot := range castSlotOrder {
-				abs, ok := earliest[castSlotKey{Subject: subject, Round: roundIndex, Slot: slot}]
-				if !ok {
+				absTimes := castTimesBySlot[castSlotKey{
+					Subject: subject,
+					Round:   roundIndex,
+					Slot:    slot,
+				}]
+				if len(absTimes) == 0 {
 					continue
 				}
-				stats.AbilityCasts[castSlotNames[slot]] = roundRelative(abs, window)
+
+				times := make([]int, 0, len(absTimes))
+				seen := make(map[int]struct{}, len(absTimes))
+				for _, abs := range absTimes {
+					relative := roundRelative(abs, window)
+					if _, exists := seen[relative]; exists {
+						continue
+					}
+					seen[relative] = struct{}{}
+					times = append(times, relative)
+				}
+				if len(times) == 0 {
+					continue
+				}
+				stats.AbilityCasts[castSlotNames[slot]] = times[0]
+				stats.AbilityCastTimes[castSlotNames[slot]] = times
+			}
+
+			if len(state.AbilityCharges) > 0 {
+				chargeFolders := chargeFoldersBySubject[subject]
+				if chargeFolders == nil {
+					chargeFolders = map[string]bool{}
+				}
+				chargePoints := abilityChargePointsForRound(
+					state.AbilityCharges, subject, window,
+					abilitySlots[subject], chargeFolders,
+				)
+				if len(chargePoints) > 0 {
+					stats.AbilityCharges = chargePoints
+				}
+			}
+
+			if len(state.UltimateSamples) > 0 {
+				ultimatePoints := ultimatePointsForRound(
+					state.UltimateSamples, subject, window,
+				)
+				if len(ultimatePoints) > 0 {
+					stats.UltimatePoints = ultimatePoints
+				}
+			}
+
+			if len(state.Cooldowns) > 0 {
+				cooldowns := cooldownWindowsForRound(
+					state.Cooldowns, subject, window, abilitySlots[subject],
+				)
+				if len(cooldowns) > 0 {
+					stats.Cooldowns = cooldowns
+				}
 			}
 		}
 	}

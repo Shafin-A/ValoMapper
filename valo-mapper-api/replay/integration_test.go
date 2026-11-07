@@ -110,6 +110,10 @@ func TestIntegrationRealReplay(t *testing.T) {
 	knifeFrames := 0
 	totalHits := 0
 	totalUtilities := 0
+	totalAbilityChargePoints := 0
+	totalUltimatePoints := 0
+	totalCooldownWindows := 0
+	totalRechargeWindows := 0
 	blazeUtilitiesWithPath := 0
 	utilityKinds := make(map[UtilityKind]struct{})
 	utilityAbilityIDs := make(map[string]struct{})
@@ -245,6 +249,87 @@ func TestIntegrationRealReplay(t *testing.T) {
 		if !hasExplodeEvent && hasDetonatedFrame {
 			t.Errorf("round %d has a detonated frame without an explosion event", round.RoundNumber)
 		}
+		for _, stats := range round.PlayerStats {
+			for slot, earliest := range stats.AbilityCasts {
+				times := stats.AbilityCastTimes[slot]
+				if len(times) == 0 || times[0] != earliest {
+					t.Errorf("round %d player %s %s cast times = %v, earliest = %d",
+						round.RoundNumber, stats.Puuid, slot, times, earliest)
+					continue
+				}
+				for i := 1; i < len(times); i++ {
+					if times[i] < times[i-1] {
+						t.Errorf("round %d player %s %s cast times are not sorted: %v",
+							round.RoundNumber, stats.Puuid, slot, times)
+						break
+					}
+				}
+			}
+			for slot, points := range stats.AbilityCharges {
+				totalAbilityChargePoints += len(points)
+				if len(points) == 0 {
+					t.Errorf("round %d player %s %s has an empty charge timeline",
+						round.RoundNumber, stats.Puuid, slot)
+					continue
+				}
+				if points[0].TimeMS != 0 {
+					t.Errorf("round %d player %s %s charge timeline does not start at time 0: %+v",
+						round.RoundNumber, stats.Puuid, slot, points[0])
+				}
+				for i, point := range points {
+					if point.TimeMS < 0 || point.TimeMS > round.DurationMS ||
+						point.Charges < 0 || point.Charges > 20 {
+						t.Errorf("round %d player %s %s charge point is invalid: %+v",
+							round.RoundNumber, stats.Puuid, slot, point)
+					}
+					if i > 0 && point.TimeMS <= points[i-1].TimeMS {
+						t.Errorf("round %d player %s %s charge times are not increasing: %v",
+							round.RoundNumber, stats.Puuid, slot, points)
+						break
+					}
+				}
+			}
+			totalUltimatePoints += len(stats.UltimatePoints)
+			for i, point := range stats.UltimatePoints {
+				if point.TimeMS < 0 || point.TimeMS > round.DurationMS ||
+					point.Points < 0 || point.Points > 12 {
+					t.Errorf("round %d player %s ultimate point is invalid: %+v",
+						round.RoundNumber, stats.Puuid, point)
+				}
+				if i > 0 && point.TimeMS <= stats.UltimatePoints[i-1].TimeMS {
+					t.Errorf("round %d player %s ultimate times are not increasing: %v",
+						round.RoundNumber, stats.Puuid, stats.UltimatePoints)
+					break
+				}
+			}
+			if len(stats.UltimatePoints) > 0 && stats.UltimatePoints[0].TimeMS != 0 {
+				t.Errorf("round %d player %s ultimate timeline does not start at time 0: %+v",
+					round.RoundNumber, stats.Puuid, stats.UltimatePoints[0])
+			}
+			if match.Build == "13.08" && round.RoundNumber == 1 &&
+				len(stats.UltimatePoints) > 0 && stats.UltimatePoints[0].Points != 0 {
+				t.Errorf("13.08 round 1 player %s starts with %d ultimate points",
+					stats.Puuid, stats.UltimatePoints[0].Points)
+			}
+			for slot, windows := range stats.Cooldowns {
+				totalCooldownWindows += len(windows)
+				for _, window := range windows {
+					if window.Recharge {
+						totalRechargeWindows++
+					}
+					if window.StartTimeMS < 0 || window.EndTimeMS <= window.StartTimeMS ||
+						window.StartTimeMS > round.DurationMS {
+						t.Errorf("round %d player %s %s cooldown is invalid: %+v",
+							round.RoundNumber, stats.Puuid, slot, window)
+					}
+					if !window.Recharge && window.EndTimeMS > round.DurationMS {
+						t.Errorf("round %d player %s %s timer cooldown exceeds the round: %+v",
+							round.RoundNumber, stats.Puuid, slot, window)
+					}
+				}
+			}
+		}
+
 		for _, hit := range round.Hits {
 			totalHits++
 			if hit.TimeMS < 0 || hit.TimeMS > round.DurationMS {
@@ -380,7 +465,24 @@ func TestIntegrationRealReplay(t *testing.T) {
 	if totalUtilities == 0 {
 		t.Error("no utility intervals were normalized")
 	}
+	if totalAbilityChargePoints == 0 {
+		t.Error("no ability charge points were normalized")
+	}
+	if totalUltimatePoints == 0 {
+		t.Error("no ultimate points were normalized")
+	}
+	if totalCooldownWindows == 0 {
+		t.Error("no cooldown windows were normalized")
+	}
+	if totalRechargeWindows == 0 {
+		t.Error("no recharge windows were normalized")
+	}
 	for abilityID := range utilityAbilityIDs {
+		// Sova's ultimate is synthesized from the cast record and the laser
+		// state machine; it has no catalogued utility class.
+		if abilityID == "hunters_fury" {
+			continue
+		}
 		if !utilityAbilitySupportedByBuild(match.Build, abilityID) {
 			t.Errorf("normalized ability %q is not catalogued for build %s",
 				abilityID, match.Build)

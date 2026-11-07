@@ -6,7 +6,7 @@ package replay
 // ParserVersion is part of the cache key, the X-Parser-Version response header
 // and the parse log. Bump the leading number whenever the normalised output can
 // change, even if VRFKit itself did not change.
-const ParserVersion = "55+vrfkit.0.4.0"
+const ParserVersion = "67+vrfkit.0.4.0"
 
 // Match mirrors ReplayMatch in the frontend. Field names and JSON tags are the
 // wire contract; do not rename them without a frontend change.
@@ -73,15 +73,42 @@ type PlayerStats struct {
 	Assists int     `json:"assists"`
 	Economy Economy `json:"economy"`
 
-	IncomingDamage int            `json:"incomingDamage"`
-	AbilityCasts   map[string]int `json:"abilityCasts"`
-	WeaponID       string         `json:"weaponId,omitempty"`
-	ArmorID        string         `json:"armorId,omitempty"`
+	IncomingDamage   int                             `json:"incomingDamage"`
+	AbilityCasts     map[string]int                  `json:"abilityCasts"`
+	AbilityCastTimes map[string][]int                `json:"abilityCastTimes,omitempty"`
+	AbilityCharges   map[string][]AbilityChargePoint `json:"abilityCharges,omitempty"`
+	UltimatePoints   []UltimatePoint                 `json:"ultimatePoints,omitempty"`
+	Cooldowns        map[string][]CooldownWindow     `json:"cooldowns,omitempty"`
+	WeaponID         string                          `json:"weaponId,omitempty"`
+	ArmorID          string                          `json:"armorId,omitempty"`
 }
 
 type Economy struct {
 	LoadoutValue int `json:"loadoutValue"`
 	Remaining    int `json:"remaining"`
+}
+
+// AbilityChargePoint is the round-relative charge count for one slot at one
+// point in the round.
+type AbilityChargePoint struct {
+	TimeMS  int `json:"timeMs"`
+	Charges int `json:"charges"`
+}
+
+// UltimatePoint is the round-relative ultimate point count and active flag.
+type UltimatePoint struct {
+	TimeMS int  `json:"timeMs"`
+	Points int  `json:"points"`
+	Active bool `json:"active,omitempty"`
+}
+
+// CooldownWindow is a round-relative signature-cooldown interval. Recharge
+// windows are derived from a used charge refilling rather than a timer
+// component, so the ability may still have another charge available.
+type CooldownWindow struct {
+	StartTimeMS int  `json:"startTimeMs"`
+	EndTimeMS   int  `json:"endTimeMs"`
+	Recharge    bool `json:"recharge,omitempty"`
 }
 
 // Event is the union of the existing RoundEventLogEntry variants. EventType

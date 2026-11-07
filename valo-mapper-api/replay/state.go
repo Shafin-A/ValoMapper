@@ -87,6 +87,28 @@ type stateScan struct {
 	CastsUnknownSlot   int
 	CastsUnresolved    int
 	CastsWithoutBuyEnd int
+	CastsBeforeBuyEnd  int
+
+	AbilityCharges           []abilityChargeSample
+	AbilityChargeWrites      int
+	AbilityChargeUnresolved  int
+	AbilityChargeUnknownSlot int
+	AbilityChargeUnmapped    int
+	SignatureChargeWrites    int
+	ChargeFolders            map[string]map[string]string
+
+	UltimateSamples      []ultimateSample
+	UltimatePointWrites  int
+	UltimateActiveWrites int
+	UltimateUnresolved   int
+
+	Cooldowns           []cooldownWindow
+	CooldownWrites      int
+	CooldownWindows     int
+	CooldownUnresolved  int
+	CooldownUnknownSlot int
+	CooldownUnmapped    int
+	RechargeWindows     int
 
 	Warnings []string
 
@@ -184,6 +206,20 @@ type fieldStateRows struct {
 	OwnerWrites      []stateWrite
 	InstigatorWrites []stateWrite
 	PlantedAtSites   []stateWrite
+
+	// AbilityCharges keeps current-charge writes from ability item actors.
+	AbilityCharges []abilityChargeWrite
+
+	// ChargeActors marks every actor that carries an EquipmentChargeComponent,
+	// including abilities that are never bought in the match.
+	ChargeActors map[uint32]struct{}
+
+	// Ultimate points and the active flag live on the player state actor.
+	UltimatePoints []ultimatePointWrite
+	UltimateActive []ultimateActiveWrite
+
+	// Cooldowns live on ability item actors such as signature deployables.
+	Cooldowns []cooldownWrite
 }
 
 // killDataWrite is one serialized PlayerMatchStatsComponent.KillData element.
@@ -227,10 +263,11 @@ func sortAbilityStateWrites(writes map[uint32][]abilityStateWrite) {
 
 func newFieldStateRows() fieldStateRows {
 	return fieldStateRows{
-		Damage: make(map[damageKey]*damageElement),
-		Hits:   make(map[damageHitKey]*damageHitWrite),
-		Owners: make(map[uint32]uint32),
-		Casts:  make(map[castKey]*castElement),
+		Damage:       make(map[damageKey]*damageElement),
+		Hits:         make(map[damageHitKey]*damageHitWrite),
+		Owners:       make(map[uint32]uint32),
+		Casts:        make(map[castKey]*castElement),
+		ChargeActors: make(map[uint32]struct{}),
 	}
 }
 
@@ -242,6 +279,15 @@ func stateFieldCandidate(name string) bool {
 		return true
 	}
 	return strings.HasSuffix(name, ".PlantedAtSite") ||
+		strings.HasPrefix(name, "AuthResourceAmount") ||
+		name == "AuthSignatureChargeAmount" ||
+		name == "ChargesBoughtThisRound" ||
+		name == "CurrentTemporaryCharges" ||
+		name == "TotalChargesAllowedToPurchaseThisRound" ||
+		name == "NumUltimatePoints" ||
+		name == "bUltimateActive" ||
+		name == "CooldownSeconds" ||
+		name == "CooldownActive" ||
 		strings.HasPrefix(name, "MulticastNotifyDamage_Point.") ||
 		strings.HasPrefix(name, "MulticastNotifyDamage_Base.") ||
 		strings.Contains(name, ".LifeChangeEvents[") ||
@@ -251,6 +297,11 @@ func stateFieldCandidate(name string) bool {
 
 // collectStateField folds the state rows into the existing scanFields pass.
 func (s *fieldScan) collectStateField(row *fieldRow, name string) {
+	isEquipment := strings.Contains(row.GroupPath, "EquipmentChargeComponent")
+	isSignature := strings.Contains(row.GroupPath, "SignatureAbilityResourceComponent")
+	if (isEquipment || isSignature) && row.ActorNetGUID != 0 {
+		s.State.ChargeActors[row.ActorNetGUID] = struct{}{}
+	}
 	switch {
 	case name == "KillData" && strings.Contains(row.GroupPath, "PlayerMatchStatsComponent"):
 		if row.RawBits == nil || row.BitCount <= 0 {
@@ -339,6 +390,45 @@ func (s *fieldScan) collectStateField(row *fieldRow, name string) {
 		if row.ValueI64 != nil {
 			s.State.PlantedAtSites = append(s.State.PlantedAtSites, stateWrite{
 				TimeMS: row.TimeMS, PacketID: row.PacketID, Actor: row.ActorNetGUID, Value: *row.ValueI64,
+			})
+		}
+	case strings.HasPrefix(name, "AuthResourceAmount") &&
+		(isEquipment || isSignature):
+		if row.ValueI64 != nil && *row.ValueI64 >= 0 && *row.ValueI64 <= 1_000_000 {
+			s.State.AbilityCharges = append(s.State.AbilityCharges, abilityChargeWrite{
+				TimeMS: row.TimeMS, PacketID: row.PacketID,
+				Actor: row.ActorNetGUID, Charges: int(*row.ValueI64),
+				Signature: isSignature,
+			})
+		}
+	case name == "NumUltimatePoints" && strings.Contains(row.GroupPath, "PlayerState"):
+		if row.ValueI64 != nil && *row.ValueI64 >= 0 && *row.ValueI64 <= 100 {
+			s.State.UltimatePoints = append(s.State.UltimatePoints, ultimatePointWrite{
+				TimeMS: row.TimeMS, PacketID: row.PacketID,
+				Actor: row.ActorNetGUID, Points: int(*row.ValueI64),
+			})
+		}
+	case name == "bUltimateActive" && strings.Contains(row.GroupPath, "PlayerState"):
+		if row.ValueBool != nil {
+			s.State.UltimateActive = append(s.State.UltimateActive, ultimateActiveWrite{
+				TimeMS: row.TimeMS, PacketID: row.PacketID,
+				Actor: row.ActorNetGUID, Active: *row.ValueBool,
+			})
+		}
+	case name == "CooldownSeconds" &&
+		strings.Contains(row.GroupPath, "Comp_Ability_CooldownComponent"):
+		if row.ValueF64 != nil && *row.ValueF64 > 0 && *row.ValueF64 <= 3600 {
+			s.State.Cooldowns = append(s.State.Cooldowns, cooldownWrite{
+				TimeMS: row.TimeMS, PacketID: row.PacketID,
+				Actor: row.ActorNetGUID, Kind: cooldownKindSeconds, Seconds: *row.ValueF64,
+			})
+		}
+	case name == "CooldownActive" &&
+		strings.Contains(row.GroupPath, "Comp_Ability_CooldownComponent"):
+		if row.ValueBool != nil {
+			s.State.Cooldowns = append(s.State.Cooldowns, cooldownWrite{
+				TimeMS: row.TimeMS, PacketID: row.PacketID,
+				Actor: row.ActorNetGUID, Kind: cooldownKindActive, Active: *row.ValueBool,
 			})
 		}
 	}
@@ -582,6 +672,36 @@ func scanState(exportDir string, index *playerIndex, raw *fieldStateRows) (*stat
 	scan.Actors = actors
 	scan.Outer = outer
 	scan.Paths = paths
+
+	scan.AbilityCharges, scan.AbilityChargeWrites,
+		scan.AbilityChargeUnresolved, scan.AbilityChargeUnknownSlot =
+		buildAbilityChargeSamples(raw, index, actors)
+
+	scan.UltimateSamples, scan.UltimateUnresolved = buildUltimateSamples(
+		raw.UltimatePoints, raw.UltimateActive, index,
+	)
+	scan.UltimatePointWrites = len(raw.UltimatePoints)
+	scan.UltimateActiveWrites = len(raw.UltimateActive)
+
+	ownersByActor := make(map[uint32][]stateWrite)
+	for _, write := range raw.OwnerWrites {
+		ownersByActor[write.Actor] = append(ownersByActor[write.Actor], write)
+	}
+	instigatorsByActor := make(map[uint32][]stateWrite)
+	for _, write := range raw.InstigatorWrites {
+		instigatorsByActor[write.Actor] = append(instigatorsByActor[write.Actor], write)
+	}
+	sortStateWrites(ownersByActor)
+	sortStateWrites(instigatorsByActor)
+	scan.ChargeFolders = collectChargeFolders(
+		raw.ChargeActors, actors, index, ownersByActor, instigatorsByActor,
+	)
+	scan.Cooldowns, scan.CooldownUnresolved, scan.CooldownUnknownSlot =
+		buildCooldownWindows(
+			raw.Cooldowns, index, actors, ownersByActor, instigatorsByActor,
+		)
+	scan.CooldownWrites = len(raw.Cooldowns)
+	scan.CooldownWindows = len(scan.Cooldowns)
 
 	builders := make(map[string]*timelineBuilder, len(index.bySubject))
 	for subject := range index.bySubject {
