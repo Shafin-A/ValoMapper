@@ -49,6 +49,35 @@ func TestApplyPlantCreditBonusesUpdatesDeadTeammate(t *testing.T) {
 	}
 }
 
+func TestApplyPlantCreditBonusesClampsAtCreditCap(t *testing.T) {
+	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 100000}}
+	players := []Player{{Puuid: "planter", TeamID: "Red"}}
+	puuidBySubject := map[string]string{"s-planter": "planter"}
+	logs := map[int]*roundLog{1: {Events: []Event{{
+		EventType:                 "spike_planted",
+		TimeSinceRoundStartMillis: 4000,
+		PlanterPuuid:              "planter",
+	}}}}
+
+	nearCap := &stateScan{Timelines: map[string][]stateSample{
+		"s-planter": {{TimeMS: 2000, Credits: 8900}},
+	}}
+	applyPlantCreditBonuses(windows, players, puuidBySubject, nearCap, logs)
+	if timeline := nearCap.Timelines["s-planter"]; len(timeline) != 2 ||
+		timeline[1].TimeMS != 5000 || timeline[1].Credits != 9000 {
+		t.Fatalf("near-cap timeline = %+v", timeline)
+	}
+
+	atCap := &stateScan{Timelines: map[string][]stateSample{
+		"s-planter": {{TimeMS: 2000, Credits: 9000}},
+	}}
+	applyPlantCreditBonuses(windows, players, puuidBySubject, atCap, logs)
+	if timeline := atCap.Timelines["s-planter"]; len(timeline) != 1 ||
+		timeline[0].Credits != 9000 {
+		t.Fatalf("at-cap timeline = %+v", timeline)
+	}
+}
+
 func TestApplyPlantCreditBonusesDoesNotDoubleApply(t *testing.T) {
 	windows := []roundWindow{{RoundNumber: 1, StartMS: 1000, EndMS: 100000}}
 	players := []Player{{Puuid: "planter", TeamID: "Red"}}

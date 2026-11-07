@@ -544,6 +544,7 @@ func scanUtilities(
 		}
 	}
 
+	truncateAstraMarkers(segments)
 	segments = filterUtilitySegments(segments)
 	nextID := 0
 	for _, segment := range segments {
@@ -662,9 +663,53 @@ func scanUtilities(
 	return result, warnings, nil
 }
 
+// truncateAstraMarkers ends a star marker when an ability consumes that star.
+// The marker manager can keep a star actor open longer than the star itself, so
+// Gravity Well, Nova Pulse and Nebula/Dissipate start times are authoritative.
+func truncateAstraMarkers(segments []utilitySegment) {
+	const markerMatchDistance = 100.0 // 1 metre
+	for i := range segments {
+		marker := &segments[i]
+		if marker.life == nil || marker.life.class.ability != "astra_passive" {
+			continue
+		}
+		for j := range segments {
+			ability := &segments[j]
+			if i == j || ability.life == nil ||
+				ability.roundIndex != marker.roundIndex ||
+				marker.life.owner == "" ||
+				ability.life.owner != marker.life.owner {
+				continue
+			}
+			switch ability.life.class.ability {
+			case "gravity_well", "nova_pulse", "nebula__dissipate":
+			default:
+				continue
+			}
+			if ability.startMS >= marker.endMS {
+				continue
+			}
+			if math.Hypot(
+				ability.position.X-marker.position.X,
+				ability.position.Y-marker.position.Y,
+			) > markerMatchDistance {
+				continue
+			}
+			if ability.startMS <= marker.startMS {
+				marker.endMS = marker.startMS
+				break
+			}
+			marker.endMS = ability.startMS
+		}
+	}
+}
+
 func filterUtilitySegments(segments []utilitySegment) []utilitySegment {
 	result := segments[:0]
 	for _, segment := range segments {
+		if segment.endMS <= segment.startMS {
+			continue
+		}
 		if segment.life.class.splineChild {
 			continue
 		}

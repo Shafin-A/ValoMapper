@@ -5,6 +5,7 @@ import "sort"
 const (
 	spikePlantCreditBonus   = 300
 	spikePlantCreditMatchMS = 1000
+	spikePlantCreditCap     = 9000
 )
 
 // applyPlantCreditBonuses inserts the team-wide plant bonus at the plant time.
@@ -87,14 +88,22 @@ func applyPlantCreditBonus(state *stateScan, subject string, plantMS uint32) {
 		}
 	}
 
+	bonusCredits := current.Credits + spikePlantCreditBonus
+	if bonusCredits > spikePlantCreditCap {
+		bonusCredits = spikePlantCreditCap
+	}
+	if bonusCredits == current.Credits {
+		return
+	}
+
 	if current.TimeMS == plantMS {
-		timeline[index].Credits = current.Credits + spikePlantCreditBonus
+		timeline[index].Credits = bonusCredits
 		state.PlantCreditBonuses++
 		return
 	}
 	sample := current
 	sample.TimeMS = plantMS
-	sample.Credits = current.Credits + spikePlantCreditBonus
+	sample.Credits = bonusCredits
 	timeline = append(timeline, sample)
 	sort.SliceStable(timeline, func(i, j int) bool {
 		return timeline[i].TimeMS < timeline[j].TimeMS
