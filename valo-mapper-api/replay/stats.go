@@ -352,6 +352,8 @@ func applyRoundStats(
 		return
 	}
 
+	applyPlantCreditBonuses(windows, players, puuidBySubject, state, logs)
+
 	casts := resolveCasts(windows, index, raw)
 	state.CastsUnique = len(casts.Casts)
 	state.CastsSkipped = casts.Skipped

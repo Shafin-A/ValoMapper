@@ -509,6 +509,7 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 		"hp_non_player", state.HPNonPlayer,
 		"deaths", state.Deaths,
 		"money_writes", state.MoneyWrites,
+		"plant_credit_bonuses", state.PlantCreditBonuses,
 		"weapon_changes", state.WeaponChanges,
 		"weapon_unresolved", state.WeaponUnresolved,
 		"weapon_zero", state.WeaponZero,

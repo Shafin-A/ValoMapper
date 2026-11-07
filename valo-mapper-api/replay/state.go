@@ -69,7 +69,8 @@ type stateScan struct {
 	HPNonPlayer         int
 	Deaths              int
 
-	MoneyWrites int
+	MoneyWrites        int
+	PlantCreditBonuses int
 
 	WeaponChanges    int
 	WeaponWrites     int
