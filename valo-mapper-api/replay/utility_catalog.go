@@ -179,11 +179,12 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Projectile_Phoenix_Q_FlameWall_ThroughWall":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "blaze"},
 
 	// Raze
-	"Pawn_Clay_E_Boomba":                   {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "boom_bot"},
-	"Projectile_Clay_4_Projectile_Primary": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "paint_shells"},
-	"Projectile_Clay_Q_Satchel_Arming":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "blast_pack"},
-	"GameObject_Clay_Q_Explosion":          {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 500, ability: "blast_pack"},
-	"Projectile_Clay_X_Rocket":             {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "showstopper"},
+	"Pawn_Clay_E_Boomba":                     {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "boom_bot"},
+	"Projectile_Clay_4_Projectile_Primary":   {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "paint_shells"},
+	"Projectile_Clay_4_Projectile_Secondary": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "paint_shells"},
+	"Projectile_Clay_Q_Satchel_Arming":       {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "blast_pack"},
+	"GameObject_Clay_Q_Explosion":            {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 500, ability: "blast_pack"},
+	"Projectile_Clay_X_Rocket":               {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "showstopper"},
 
 	// Reyna
 	"GameObject_Vampire_4_NearsightAOE_Source": {kind: UtilityMarker, minBuild: 1300, ability: "leer"},

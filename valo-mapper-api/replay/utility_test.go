@@ -391,6 +391,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		{"Projectile_Cashew_Q_ShellShockGrenade", "special_delivery"},
 		{"Projectile_Cashew_Q_ShellShockGrenade_Bounce", "special_delivery"},
 		{"Projectile_Clay_4_Projectile_Primary", "paint_shells"},
+		{"Projectile_Clay_4_Projectile_Secondary", "paint_shells"},
 		{"Projectile_Clay_Q_Satchel_Arming", "blast_pack"},
 		{"Projectile_Clay_X_Rocket", "showstopper"},
 		{"Projectile_C_Grenadier_Flash", "flashdrive"},
@@ -492,8 +493,8 @@ func TestUtilityCatalogAddsBlastPackSatchel(t *testing.T) {
 	if entry.kind != UtilityArea || entry.ability != "blast_pack" {
 		t.Fatalf("entry = %#v, want a Blast Pack area", entry)
 	}
-	if entry.maxLifetimeMS != 5000 {
-		t.Fatalf("max lifetime = %dms, want 5000ms", entry.maxLifetimeMS)
+	if entry.maxLifetimeMS != 500 {
+		t.Fatalf("max lifetime = %dms, want 500ms", entry.maxLifetimeMS)
 	}
 }
 
