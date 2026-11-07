@@ -484,6 +484,19 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 	}
 }
 
+func TestUtilityCatalogAddsBlastPackSatchel(t *testing.T) {
+	entry, found := utilityCatalog["GameObject_Clay_Q_Explosion"]
+	if !found {
+		t.Fatal("Raze Blast Pack satchel is missing from the catalog")
+	}
+	if entry.kind != UtilityArea || entry.ability != "blast_pack" {
+		t.Fatalf("entry = %#v, want a Blast Pack area", entry)
+	}
+	if entry.maxLifetimeMS != 5000 {
+		t.Fatalf("max lifetime = %dms, want 5000ms", entry.maxLifetimeMS)
+	}
+}
+
 func TestUtilityCatalogAddsHushAreas(t *testing.T) {
 	tests := []struct {
 		class   string

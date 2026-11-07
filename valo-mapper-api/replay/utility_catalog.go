@@ -182,6 +182,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	"Pawn_Clay_E_Boomba":                   {kind: UtilityMobile, mobile: true, minBuild: 1301, ability: "boom_bot"},
 	"Projectile_Clay_4_Projectile_Primary": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "paint_shells"},
 	"Projectile_Clay_Q_Satchel_Arming":     {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "blast_pack"},
+	"GameObject_Clay_Q_Explosion":          {kind: UtilityArea, minBuild: 1300, maxLifetimeMS: 5000, ability: "blast_pack"},
 	"Projectile_Clay_X_Rocket":             {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "showstopper"},
 
 	// Reyna
