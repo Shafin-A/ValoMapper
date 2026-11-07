@@ -46,6 +46,7 @@ interface AbilityIconProps extends CanvasIconProps {
   currentLength?: number;
   iconOnly?: boolean;
   showOuterCircle?: boolean;
+  lifetimeProgress?: number;
   showCenterIcon?: boolean;
   showRotationHandle?: boolean;
   showHandle?: boolean;
@@ -84,6 +85,7 @@ const renderCircleAbility = (props: AbilityIconProps): ReactNode => {
       fill={colors.fill}
       boxRadius={props.radius}
       outerCircleRadius={activeRadius ? mToPixels(activeRadius) : undefined}
+      lifetimeProgress={props.lifetimeProgress}
       {...props}
     />
   );

@@ -7,6 +7,20 @@ import type {
 
 export const REPLAY_UTILITY_MAX_SAMPLE_AGE_MS = 250;
 
+export const getReplaySmokeLifetimeProgress = (
+  utility: ReplayUtility,
+  timeMs: number,
+): number | undefined => {
+  if (utility.kind !== "smoke" || utility.inactive) {
+    return undefined;
+  }
+  const duration = utility.endTimeMs - utility.startTimeMs;
+  if (duration <= 0) {
+    return undefined;
+  }
+  return Math.min(1, Math.max(0, (timeMs - utility.startTimeMs) / duration));
+};
+
 export const getReplayUtilityPositionAtTime = (
   utility: ReplayUtility,
   timeMs: number,

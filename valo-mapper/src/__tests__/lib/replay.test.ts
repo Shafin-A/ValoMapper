@@ -11,6 +11,7 @@ import {
   buildReplaySnapshotState,
   toReplayCanvasPoint,
 } from "@/lib/replay/snapshot";
+import { getReplaySmokeLifetimeProgress } from "@/lib/replay/utilities";
 import { defaultIconSettings } from "@/contexts/settings-context";
 import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
 import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
@@ -330,6 +331,39 @@ describe("getReplayAbilityDisplays", () => {
     expect(turret?.cooldowns).toEqual([
       { startTimeMs: 1000, endTimeMs: 61000 },
     ]);
+  });
+});
+
+describe("getReplaySmokeLifetimeProgress", () => {
+  const smoke: ReplayUtility = {
+    id: "smoke-1",
+    kind: "smoke",
+    startTimeMs: 1000,
+    endTimeMs: 11000,
+    position: { x: 0, y: 0 },
+  };
+
+  it("runs from 0 to 1 across the active smoke interval", () => {
+    expect(getReplaySmokeLifetimeProgress(smoke, 500)).toBe(0);
+    expect(getReplaySmokeLifetimeProgress(smoke, 1000)).toBe(0);
+    expect(getReplaySmokeLifetimeProgress(smoke, 6000)).toBe(0.5);
+    expect(getReplaySmokeLifetimeProgress(smoke, 11000)).toBe(1);
+    expect(getReplaySmokeLifetimeProgress(smoke, 12000)).toBe(1);
+  });
+
+  it("ignores non-smoke, inactive and zero-length utilities", () => {
+    expect(
+      getReplaySmokeLifetimeProgress({ ...smoke, kind: "area" }, 6000),
+    ).toBeUndefined();
+    expect(
+      getReplaySmokeLifetimeProgress({ ...smoke, inactive: true }, 6000),
+    ).toBeUndefined();
+    expect(
+      getReplaySmokeLifetimeProgress(
+        { ...smoke, startTimeMs: 1000, endTimeMs: 1000 },
+        1000,
+      ),
+    ).toBeUndefined();
   });
 });
 

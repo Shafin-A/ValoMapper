@@ -7,7 +7,7 @@ import {
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useEffect, useRef } from "react";
-import { Circle, Group } from "react-konva";
+import { Circle, Group, Shape } from "react-konva";
 import useImage from "use-image";
 
 interface CanvasCircleIconProps extends CanvasIconProps {
@@ -19,6 +19,7 @@ interface CanvasCircleIconProps extends CanvasIconProps {
   fill: string;
   showAbilityShape?: boolean;
   showOuterCircle?: boolean;
+  lifetimeProgress?: number;
 }
 
 export const CanvasCircleIcon = ({
@@ -45,6 +46,7 @@ export const CanvasCircleIcon = ({
   height,
   showAbilityShape = true,
   showOuterCircle = true,
+  lifetimeProgress,
   registerNode,
   unregisterNode,
 }: CanvasCircleIconProps) => {
@@ -64,14 +66,18 @@ export const CanvasCircleIcon = ({
   }, [id, registerNode, unregisterNode]);
 
   useEffect(() => {
-    if (groupRef.current && image) {
-      requestAnimationFrame(() => {
-        if (groupRef.current) {
-          groupRef.current.clearCache();
-          groupRef.current.cache({ pixelRatio: 2 });
-        }
-      });
+    const group = groupRef.current;
+    if (!group || !image) return;
+    if (lifetimeProgress !== undefined) {
+      group.clearCache();
+      return;
     }
+    requestAnimationFrame(() => {
+      if (groupRef.current) {
+        groupRef.current.clearCache();
+        groupRef.current.cache({ pixelRatio: 2 });
+      }
+    });
   }, [
     image,
     isAlly,
@@ -88,6 +94,7 @@ export const CanvasCircleIcon = ({
     strokeWidth,
     allyColor,
     enemyColor,
+    lifetimeProgress,
   ]);
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
@@ -136,9 +143,64 @@ export const CanvasCircleIcon = ({
             radius={circleRadius}
             strokeWidth={circleStrokeWidth}
             fill={fill}
-            stroke={stroke}
+            stroke={lifetimeProgress === undefined ? stroke : "transparent"}
             listening={false}
           />
+          {lifetimeProgress !== undefined && (
+            <Shape
+              listening={false}
+              perfectDrawEnabled={false}
+              sceneFunc={(context) => {
+                // Clockwise wipe: the elapsed fraction is transparent, with a
+                // short smoothstep band so the leading edge fades softly.
+                const progress = Math.max(
+                  0,
+                  Math.min(1, lifetimeProgress ?? 0),
+                );
+                context.save();
+                context.setAttr("lineWidth", circleStrokeWidth);
+                context.setAttr("strokeStyle", stroke);
+                context.setAttr("lineCap", "butt");
+                if (progress <= 0) {
+                  context.beginPath();
+                  context.arc(0, 0, circleRadius, 0, Math.PI * 2);
+                  context.stroke();
+                  context.restore();
+                  return;
+                }
+                if (progress >= 1) {
+                  context.restore();
+                  return;
+                }
+                const segments = 180;
+                const step = (Math.PI * 2) / segments;
+                const fade = 0.055;
+                const start = -Math.PI / 2;
+                for (let index = 0; index < segments; index += 1) {
+                  const elapsed = index / segments;
+                  if (elapsed < progress) {
+                    continue;
+                  }
+                  const edge = Math.min(1, (elapsed - progress) / fade);
+                  const alpha = edge * edge * (3 - 2 * edge);
+                  if (alpha <= 0) {
+                    continue;
+                  }
+                  context.setAttr("globalAlpha", alpha);
+                  context.beginPath();
+                  context.arc(
+                    0,
+                    0,
+                    circleRadius,
+                    start + index * step,
+                    start + (index + 1) * step + 0.002,
+                  );
+                  context.stroke();
+                }
+                context.restore();
+              }}
+            />
+          )}
           {outerCircleRadius && showOuterCircle && (
             <Circle
               radius={outerCircleRadius}

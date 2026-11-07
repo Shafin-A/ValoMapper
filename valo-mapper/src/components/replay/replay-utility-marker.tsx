@@ -15,6 +15,7 @@ import {
   getReplayUtilityLengthAtTime,
   getReplayUtilityPositionAtTime,
   getReplayUtilityPathAtTime,
+  getReplaySmokeLifetimeProgress,
   getReplayUtilityTrailAtTime,
   getReplayUtilityVisionYawAtTime,
 } from "@/lib/replay/utilities";
@@ -182,6 +183,10 @@ export const ReplayUtilityMarker = ({
   const movementPathStart = movementPath[0];
   const movementPathEnd = movementPath[movementPath.length - 1];
   const utilityLength = getReplayUtilityLengthAtTime(utility, currentTimeMs);
+  const lifetimeProgress = getReplaySmokeLifetimeProgress(
+    utility,
+    currentTimeMs,
+  );
   const yawOffset = abilityIcon
     ? getReplayAbilityYawOffset(abilityIcon.action)
     : null;
@@ -482,6 +487,7 @@ export const ReplayUtilityMarker = ({
           isListening={false}
           showCenterIcon
           showRotationHandle={false}
+          lifetimeProgress={lifetimeProgress}
         />
       )}
       {nullcmdPulses.map((pulse) => (
