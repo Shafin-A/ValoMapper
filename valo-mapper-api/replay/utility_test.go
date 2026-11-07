@@ -444,6 +444,7 @@ func TestUtilityCatalogAddsObservedProjectileTrails(t *testing.T) {
 		"Projectile_Mage_4_SplashGrenade":                         true,
 		"Projectile_Pandemic_4_SmokeGrenade":                      true,
 		"Projectile_Pandemic_Q_AcidGrenade":                       true,
+		"Projectile_Wraith_4_Smoke":                               true,
 		"Projectile_Paprika_Q_RedirectFlash":                      true,
 		"Projectile_Paprika_Q_RedirectFlash_Underhand":            true,
 		"Projectile_Paprika_E_RedirectPull":                       true,

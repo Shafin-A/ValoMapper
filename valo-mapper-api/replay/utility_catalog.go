@@ -167,7 +167,7 @@ var utilityCatalog = map[string]utilityCatalogEntry{
 	// Omen
 	"Zone_Wraith_4_Smoke":                  {kind: UtilitySmoke, minBuild: 1300, ability: "dark_cover"},
 	"Projectile_Wraith_Q_NearsightMissile": {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "paranoia"},
-	"Projectile_Wraith_4_Smoke":            {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "dark_cover"},
+	"Projectile_Wraith_4_Smoke":            {kind: UtilityMobile, replicatedMovement: true, minBuild: 1300, ability: "dark_cover", iconOnly: true},
 
 	// Phoenix
 	"Patch_Phoenix_MolotovFire":                        {kind: UtilityMolly, minBuild: 1300, ability: "hot_hands"},
