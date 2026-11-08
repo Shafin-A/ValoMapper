@@ -224,6 +224,38 @@
   }
 }
 
+@keyframes spike-rock {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+
+  50% {
+    transform: translateY(-14px) rotate(6deg);
+  }
+}
+
+@keyframes spike-glow {
+
+  0%,
+  100% {
+    opacity: 0.75;
+    filter: drop-shadow(0 0 10px color-mix(in oklab, var(--ring) 45%, transparent));
+  }
+
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 28px color-mix(in oklab, var(--ring) 80%, transparent));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-decor * {
+    animation: none !important;
+  }
+}
+
 @keyframes pulse-scale {
 
   0%,

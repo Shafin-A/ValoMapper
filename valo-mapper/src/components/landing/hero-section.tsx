@@ -24,7 +24,7 @@ export const HeroSection = ({
         <div className="absolute -left-8 md:-left-16 top-0 text-4xl md:text-6xl text-primary/30 font-mono">
           [
         </div>
-        <h1 className="text-7xl sm:text-8xl md:text-9xl font-bold mb-4 tracking-tighter">
+        <h1 className="text-[clamp(2.75rem,15vw,8rem)] leading-none font-bold mb-4 tracking-tighter">
           <span className="bg-linear-to-r from-foreground to-primary bg-clip-text text-transparent">
             ValoMapper
           </span>
