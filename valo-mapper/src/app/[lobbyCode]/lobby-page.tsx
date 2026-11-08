@@ -3,10 +3,10 @@
 import { AgentsSidebar } from "@/components/agents-sidebar";
 import { MapStage, MapStageHandle } from "@/components/canvas";
 import { SiteHeader } from "@/components/layout/site-header";
+import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { ToolsSidebar } from "@/components/tools-sidebar";
 import { TourAutoAdvance } from "@/components/tour/tour-auto-advance";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
@@ -18,8 +18,7 @@ import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts/misc/consts";
 import { preloadImages, preloadImagesWithTimeout } from "@/lib/image-preload";
 import { getAgentImgSrc } from "@/lib/utils";
-import { AlertCircle, Home, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -279,13 +278,7 @@ const LobbyEditPage = () => {
           ) : isErrorLobby ? (
             <div className="w-full h-full flex items-center justify-center px-4">
               <div className="max-w-md space-y-4">
-                <div className="flex justify-end">
-                  <Button variant="outline" size="icon" asChild>
-                    <Link href="/">
-                      <Home className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
+                <BackToHomeButton />
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>
