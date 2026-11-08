@@ -41,16 +41,17 @@ export const metadata: Metadata = {
     images: [
       {
         url: `${appUrl}/og-image.png`,
-        width: 512,
-        height: 512,
-        alt: "ValoMapper logo",
+        width: 1200,
+        height: 630,
+        alt: "ValoMapper — create strategies and executes for VALORANT",
       },
     ],
   },
-  icons: {
-    icon: `${appUrl}/og-image.png`,
-    shortcut: `${appUrl}/og-image.png`,
-    apple: `${appUrl}/og-image.png`,
+  twitter: {
+    card: "summary_large_image",
+    title: "ValoMapper",
+    description: "Create strategies and executes for VALORANT",
+    images: [`${appUrl}/og-image.png`],
   },
 };
 
