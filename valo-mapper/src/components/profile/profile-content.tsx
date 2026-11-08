@@ -2,7 +2,6 @@
 
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -14,8 +13,6 @@ import { useUpdateUser } from "@/hooks/api/use-update-user";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Home } from "lucide-react";
-import Link from "next/link";
 import { useDeleteUser } from "@/hooks/api/use-delete-user";
 import { useCancelSubscription } from "@/hooks/api/use-cancel-subscription";
 import { useResumeSubscription } from "@/hooks/api/use-resume-subscription";
@@ -400,14 +397,7 @@ export const ProfileContent = () => {
     <div className="w-full">
       <Card>
         <CardHeader>
-          <CardTitle className="flex gap-2 items-center">
-            <Button variant="outline" size="icon" asChild>
-              <Link href="/">
-                <Home className="h-4 w-4" />
-              </Link>
-            </Button>
-            My Profile
-          </CardTitle>
+          <CardTitle>My Profile</CardTitle>
           <CardDescription>
             View and manage your account information
           </CardDescription>

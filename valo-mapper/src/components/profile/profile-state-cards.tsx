@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
@@ -8,22 +7,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Home } from "lucide-react";
-import Link from "next/link";
+import { AlertCircle } from "lucide-react";
 
 export const ProfileNotAuthenticatedCard = () => {
   return (
     <div className="w-full">
       <Card>
         <CardHeader>
-          <CardTitle className="flex gap-2 items-center">
-            <Button variant="outline" size="icon" asChild>
-              <Link href="/">
-                <Home className="h-4 w-4" />
-              </Link>
-            </Button>
-            Profile
-          </CardTitle>
+          <CardTitle>Profile</CardTitle>
           <CardDescription>Please log in to view your profile</CardDescription>
         </CardHeader>
         <CardContent>
@@ -45,8 +36,7 @@ export const ProfileLoadingCard = () => {
     <div className="w-full">
       <Card>
         <CardHeader>
-          <CardTitle className="flex gap-2 items-center">
-            <Skeleton className="h-10 w-10 rounded" />
+          <CardTitle>
             <Skeleton className="h-6 w-32" />
           </CardTitle>
           <CardDescription>
@@ -89,14 +79,7 @@ export const ProfileUserDataNotFoundCard = () => {
     <div className="w-full">
       <Card>
         <CardHeader>
-          <CardTitle className="flex gap-2 items-center">
-            <Button variant="outline" size="icon" asChild>
-              <Link href="/">
-                <Home className="h-4 w-4" />
-              </Link>
-            </Button>
-            Profile
-          </CardTitle>
+          <CardTitle>Profile</CardTitle>
         </CardHeader>
         <CardContent>
           <Alert variant="destructive">
