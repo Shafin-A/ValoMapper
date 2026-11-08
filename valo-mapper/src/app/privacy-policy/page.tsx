@@ -1,3 +1,4 @@
+import { LegalPageShell } from "@/components/legal/legal-page-shell";
 import { PrivacyPolicy } from "@/components/legal/privacy-policy";
 
 export const metadata = {
@@ -7,10 +8,8 @@ export const metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-background p-6 md:p-12">
-      <div className="max-w-4xl mx-auto">
-        <PrivacyPolicy />
-      </div>
-    </div>
+    <LegalPageShell title="Privacy Policy">
+      <PrivacyPolicy />
+    </LegalPageShell>
   );
 }
