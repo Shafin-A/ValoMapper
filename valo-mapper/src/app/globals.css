@@ -36,9 +36,6 @@
   --sidebar-accent-foreground: #14532d;
   --sidebar-border: #e4e4e7;
   --sidebar-ring: #22c55e;
-  --font-sans: Inter;
-  --font-serif: Lora;
-  --font-mono: Inconsolata;
   --radius: 0.5rem;
   --shadow-2xs: 0px 2px 4px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0px 2px 4px 0px hsl(0 0% 0% / 0.05);
@@ -58,6 +55,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #0c0a09;
   --foreground: #fafafa;
   --card: #18181b;
@@ -90,9 +88,6 @@
   --sidebar-accent-foreground: #d9f99d;
   --sidebar-border: #27272a;
   --sidebar-ring: #65a30d;
-  --font-sans: Inter;
-  --font-serif: Lora;
-  --font-mono: Inconsolata;
   --radius: 0.5rem;
   --shadow-2xs: 0px 2px 4px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0px 2px 4px 0px hsl(0 0% 0% / 0.05);
@@ -107,6 +102,11 @@
   --shadow-xl:
     0px 2px 4px 0px hsl(0 0% 0% / 0.1), 0px 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0px 2px 4px 0px hsl(0 0% 0% / 0.25);
+}
+
+::selection {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }
 
 @theme inline {
@@ -145,7 +145,6 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-geist-serif);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -251,8 +250,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-decor * {
-    animation: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

@@ -9,7 +9,7 @@ import { SettingsProvider } from "@/contexts/settings-context";
 import { WebSocketProvider } from "@/contexts/websocket-context";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { FirebaseAuthProvider } from "@/hooks/use-firebase-auth";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -53,6 +53,10 @@ export const metadata: Metadata = {
     description: "Create strategies and executes for VALORANT",
     images: [`${appUrl}/og-image.png`],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0c0a09",
 };
 
 const RootLayout = ({
