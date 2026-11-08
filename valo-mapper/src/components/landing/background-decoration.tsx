@@ -66,6 +66,8 @@ export const BackgroundDecoration = () => {
           alt=""
           width={2048}
           height={2048}
+          loading="eager"
+          sizes="(max-width: 826px) 92vw, 760px"
           draggable={false}
           className="h-auto w-full select-none"
         />
