@@ -107,6 +107,28 @@ describe("SiteHeader", () => {
     expect(buttons).toHaveLength(4);
   });
 
+  it("should link to the Discord invite", () => {
+    mockUseUser.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    renderSiteHeader(defaultProps);
+
+    const discordLink = screen.getByRole("link", {
+      name: "Join the ValoMapper Discord",
+    });
+
+    expect(discordLink).toHaveAttribute(
+      "href",
+      "https://discord.gg/Hpg2ftnhBV",
+    );
+    expect(discordLink).toHaveAttribute("target", "_blank");
+  });
+
   it("should render when user is loading", () => {
     mockUseUser.mockReturnValue({
       data: undefined,

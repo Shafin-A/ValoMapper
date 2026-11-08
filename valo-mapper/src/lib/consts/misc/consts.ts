@@ -11,6 +11,8 @@ export const VIRTUAL_HEIGHT = 1440;
 
 export const CONTEXT_MENU_DUPLICATE_OFFSET = 20;
 
+export const DISCORD_INVITE_URL = "https://discord.gg/Hpg2ftnhBV";
+
 export const FREE_STRATEGY_LIMIT = 1;
 export const STRATEGY_CLEANUP_GRACE_PERIOD_DAYS = 14;
 

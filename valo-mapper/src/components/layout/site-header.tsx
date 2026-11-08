@@ -2,7 +2,14 @@
 
 import { CircleQuestionMark, SidebarIcon, UserRound } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { DiscordIcon } from "@/components/shared/discord-icon";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { ConnectionStatus, UserAvatars } from "@/components/collaboration";
 import {
   Dialog,
@@ -30,6 +37,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
 import { HelpTab } from "@/components/help/help-tab";
+import { DISCORD_INVITE_URL } from "@/lib/consts";
 
 interface SiteHeaderProps {
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
@@ -98,18 +106,39 @@ export const SiteHeader = ({
             asChild
             variant="ghost"
             className={`h-8 px-2.5 text-sm font-medium ${
-              pathname?.startsWith("/replay")
-                ? "text-white"
-                : "text-white/70"
+              pathname?.startsWith("/replay") ? "text-white" : "text-white/70"
             }`}
           >
             <Link
               href="/replay"
-              aria-current={pathname?.startsWith("/replay") ? "page" : undefined}
+              aria-current={
+                pathname?.startsWith("/replay") ? "page" : undefined
+              }
             >
               Replays
             </Link>
           </Button>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href={DISCORD_INVITE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Join the ValoMapper Discord"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "icon" }),
+                  "h-8 w-8 text-white/70 transition-colors hover:text-white",
+                  showSidebarToggles && "hidden sm:inline-flex",
+                )}
+              >
+                <DiscordIcon className="size-4" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              Report bugs or share feedback on Discord
+            </TooltipContent>
+          </Tooltip>
 
           <Dialog>
             <DialogTrigger asChild>
