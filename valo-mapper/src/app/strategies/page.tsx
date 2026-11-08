@@ -2,8 +2,8 @@
 
 import { StrategiesContent } from "@/components/strategies/strategies-content";
 import { StrategiesHeader } from "@/components/strategies/strategies-header";
+import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFolders } from "@/hooks/api/use-folder";
 import { useUser } from "@/hooks/api/use-user";
@@ -15,10 +15,9 @@ import {
   summarizeStrategyNames,
 } from "@/lib/strategy-cleanup";
 import { StrategyData } from "@/lib/types";
-import { AlertCircle, Home, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Suspense, useState } from "react";
 import { convertFolderOrStrategyId } from "@/lib/utils";
-import Link from "next/link";
 
 const countStrategies = (items: StrategyData[]): number => {
   return items.reduce((total, item) => {
@@ -127,13 +126,7 @@ const MyStrategiesPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md space-y-4">
-          <div className="flex justify-end">
-            <Button variant="outline" size="icon" asChild>
-              <Link href="/">
-                <Home className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+          <BackToHomeButton />
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Authentication Required</AlertTitle>
@@ -166,13 +159,7 @@ const MyStrategiesPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md space-y-4">
-          <div className="flex justify-end">
-            <Button variant="outline" size="icon" asChild>
-              <Link href="/">
-                <Home className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+          <BackToHomeButton />
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Failed to load data</AlertTitle>

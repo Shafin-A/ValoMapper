@@ -1,5 +1,5 @@
-import { Separator } from "@radix-ui/react-separator";
-import { Home, FolderOpen } from "lucide-react";
+import { FolderOpen } from "lucide-react";
+import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreateFolderPopover } from "./create-folder-popover";
 import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
-import Link from "next/link";
 
 interface StrategiesHeaderProps {
   navigationPath: { id: string; name: string }[];
@@ -91,25 +90,22 @@ export const StrategiesHeader = ({
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3 mb-4 h-8">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/">
-              <Home className="size-8" />
-            </Link>
-          </Button>
-          <Separator orientation="vertical" />
-          <FolderOpen className="w-8 h-8" />
-          <h1 className="text-3xl font-bold text-white">
+      <BackToHomeButton className="mb-4" />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <FolderOpen className="h-8 w-8" />
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">
             {navigationPath[navigationPath.length - 1].name}
           </h1>
         </div>
-        <CreateFolderPopover
-          parentFolderId={currentFolderId}
-          onSuccess={refetch}
-          disabled={!canManageFolders}
-          disabledTooltip="Active subscription required to create folders"
-        />
+        <div className="ml-auto">
+          <CreateFolderPopover
+            parentFolderId={currentFolderId}
+            onSuccess={refetch}
+            disabled={!canManageFolders}
+            disabledTooltip="Active subscription required to create folders"
+          />
+        </div>
       </div>
 
       <Breadcrumb>

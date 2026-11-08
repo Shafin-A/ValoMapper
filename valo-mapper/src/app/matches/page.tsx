@@ -1,6 +1,7 @@
 "use client";
 
 import { MatchesContent } from "@/components/matches/matches-content";
+import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { MATCH_QUEUE_FILTER_OPTIONS } from "@/lib/consts";
 import {
   Select,
@@ -13,7 +14,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useMatchesPage } from "@/hooks/use-matches-page";
 import { AlertCircle, Loader2 } from "lucide-react";
-import Link from "next/link";
 
 const MatchesPage = () => {
   const {
@@ -67,6 +67,7 @@ const MatchesPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md space-y-4 w-full">
+          <BackToHomeButton />
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Failed to load matches</AlertTitle>
@@ -84,6 +85,7 @@ const MatchesPage = () => {
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="mx-auto w-full max-w-[1260px] px-3 sm:px-4">
+        <BackToHomeButton className="mb-4" />
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           {canLoadMatches && totalMatches > 0 ? (
             <div className="w-full max-w-60 space-y-2">
@@ -106,10 +108,6 @@ const MatchesPage = () => {
           ) : (
             <div />
           )}
-
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/">Back Home</Link>
-          </Button>
         </div>
 
         {!firebaseUser && (
