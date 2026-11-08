@@ -23,7 +23,6 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { sanitizeRedirectPath } from "@/lib/rso";
-import { Home } from "lucide-react";
 import { useUser } from "@/hooks/api/use-user";
 
 export const LoginForm = ({
@@ -110,14 +109,7 @@ export const LoginForm = ({
     <div className={className} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="flex gap-2 items-center">
-            <Button variant="outline" size="icon" asChild>
-              <Link href="/">
-                <Home />
-              </Link>
-            </Button>
-            Sign in to your account
-          </CardTitle>
+          <CardTitle>Sign in to your account</CardTitle>
           <CardDescription>
             Sign in using one of the methods below
           </CardDescription>
@@ -138,8 +130,9 @@ export const LoginForm = ({
                     <Image
                       src="/riot_fist.svg"
                       alt="Riot logo"
-                      width={24}
-                      height={24}
+                      width={573}
+                      height={532}
+                      className="h-6 w-auto"
                     />
                     {rsoClientId ? "Sign in with Riot" : "Riot not configured"}
                   </a>
@@ -157,6 +150,7 @@ export const LoginForm = ({
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="email@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -177,6 +171,7 @@ export const LoginForm = ({
                 <Input
                   id="password"
                   type="password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

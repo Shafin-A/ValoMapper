@@ -21,7 +21,6 @@ import { useState } from "react";
 import { FirebaseError } from "@firebase/util";
 import { sendEmailVerification } from "firebase/auth";
 import { toast } from "sonner";
-import { Home } from "lucide-react";
 import { useCreateUser } from "@/hooks/api/use-create-user";
 
 export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
@@ -90,14 +89,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
   return (
     <Card {...props}>
       <CardHeader>
-        <CardTitle className="flex gap-2 items-center">
-          <Button variant="outline" size="icon" asChild>
-            <Link href="/">
-              <Home />
-            </Link>
-          </Button>
-          Create an account
-        </CardTitle>
+        <CardTitle>Create an account</CardTitle>
         <CardDescription>
           Enter your information below to create your account
         </CardDescription>
@@ -122,6 +114,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 placeholder="email@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -138,6 +131,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
               <Input
                 id="password"
                 type="password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -155,6 +149,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
               <Input
                 id="confirm-password"
                 type="password"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required

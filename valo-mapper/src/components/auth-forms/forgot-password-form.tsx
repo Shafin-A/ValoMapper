@@ -20,7 +20,6 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
-import { Home } from "lucide-react";
 
 export const ForgotPasswordForm = ({
   className,
@@ -59,14 +58,7 @@ export const ForgotPasswordForm = ({
     <div className={className} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="flex gap-2 items-center">
-            <Button variant="outline" size="icon" asChild>
-              <Link href="/">
-                <Home />
-              </Link>
-            </Button>
-            Reset your password
-          </CardTitle>
+          <CardTitle>Reset your password</CardTitle>
           <CardDescription>
             Enter your email address and we&apos;ll send you a link to reset
             your password
@@ -80,6 +72,7 @@ export const ForgotPasswordForm = ({
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="email@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
