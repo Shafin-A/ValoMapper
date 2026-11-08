@@ -136,7 +136,7 @@ export const ReplayEntryPage = () => {
           <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
             Play a round back in real time
           </h1>
-          <p className="mx-auto max-w-xl text-sm text-white/55 md:text-base">
+          <p className="mx-auto max-w-xl text-sm text-white/70 md:text-base">
             Drop a VALORANT replay file to watch every player move, fight, and
             plant the spike on the map. Draw over the action and copy any moment
             into a normal ValoMapper lobby.
@@ -148,7 +148,7 @@ export const ReplayEntryPage = () => {
           disabled={isLoading}
         />
 
-        <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/30">
+        <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/60">
           <span className="h-px flex-1 bg-primary/60" />
           or
           <span className="h-px flex-1 bg-primary/60" />
@@ -164,7 +164,7 @@ export const ReplayEntryPage = () => {
             <PlayCircle className="mr-2 h-4 w-4" />
             Try the demo replay
           </Button>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-white/70">
             Replays stay in this tab. No account required.
           </p>
         </div>

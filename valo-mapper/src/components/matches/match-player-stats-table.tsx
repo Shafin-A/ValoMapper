@@ -22,7 +22,7 @@ export const MatchPlayerStatsTable = ({
   return (
     <ScrollArea className="w-full">
       <div className="min-w-[640px] pr-2 sm:min-w-[720px]">
-        <div className="mb-2 grid grid-cols-[48px_minmax(140px,1fr)_64px_44px_44px_44px_100px] items-center text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55 sm:grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px] sm:text-[12px]">
+        <div className="mb-2 grid grid-cols-[48px_minmax(140px,1fr)_64px_44px_44px_44px_100px] items-center text-[11px] font-semibold uppercase tracking-[0.1em] text-white/70 sm:grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px] sm:text-[12px]">
           <span className="text-center">Player</span>
           <span aria-hidden="true" />
           <span className="text-center">Score</span>
@@ -79,7 +79,7 @@ export const MatchPlayerStatsTable = ({
                       <p className="truncate text-base font-semibold leading-tight text-white sm:text-lg">
                         {player?.gameName ?? "Player"}
                       </p>
-                      <p className="mt-1 truncate text-xs font-semibold leading-tight text-white/55 sm:text-sm">
+                      <p className="mt-1 truncate text-xs font-semibold leading-tight text-white/70 sm:text-sm">
                         {player?.characterName ?? "Unknown Agent"}
                       </p>
                     </div>
@@ -112,7 +112,7 @@ export const MatchPlayerStatsTable = ({
                     <p className="text-base font-semibold text-white sm:text-lg">
                       {stats.economy.loadoutValue}
                     </p>
-                    <p className="text-base font-semibold text-white/55 sm:text-lg">
+                    <p className="text-base font-semibold text-white/70 sm:text-lg">
                       {stats.economy.remaining}
                     </p>
                   </div>

@@ -347,7 +347,7 @@ export const ToolsSidebar = ({
                       >
                         <SheetHeader className="border-b border-slate-800 px-5 py-4 text-left">
                           <div className="pr-8">
-                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/55">
+                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/70">
                               Match Review
                             </p>
                             <SheetTitle className="mt-1 text-lg text-white">

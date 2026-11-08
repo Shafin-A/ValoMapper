@@ -146,14 +146,14 @@ export const ReplayFileDropzone = ({
             <p className="text-base font-semibold text-white">
               Drop a .vrf replay here
             </p>
-            <p className="text-sm text-white/55">
+            <p className="text-sm text-white/70">
               or click to choose a file from your computer
             </p>
           </div>
         </div>
 
         <div className="flex w-full max-w-md flex-col gap-2">
-          <div className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950/60 p-1.5 pl-2.5 text-[11px] text-white/45">
+          <div className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950/60 p-1.5 pl-2.5 text-[11px] text-white/60">
             <FileVideo className="size-3.5 shrink-0 text-primary" />
             <code className="min-w-0 flex-1 break-all text-left font-mono text-white/70">
               {REPLAY_FOLDER}
@@ -195,7 +195,7 @@ export const ReplayFileDropzone = ({
             type="button"
             onClick={() => setIsHelpOpen((open) => !open)}
             aria-expanded={isHelpOpen}
-            className="mx-auto flex items-center justify-center gap-1.5 text-xs font-medium text-white/55 transition-colors hover:text-white"
+            className="mx-auto flex items-center justify-center gap-1.5 text-xs font-medium text-white/70 transition-colors hover:text-white"
           >
             <HelpCircle className="size-3.5" />
             Where do I find my replay files?

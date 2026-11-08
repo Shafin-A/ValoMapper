@@ -63,7 +63,7 @@ export const ReplayLoadingOverlay = ({
                 <p className="text-base font-semibold text-white">
                   {progress?.label ?? "Reading replay…"}
                 </p>
-                <p className="text-xs text-white/45">
+                <p className="text-xs text-white/60">
                   Larger replays can take a moment. Keep this tab open.
                 </p>
               </div>
@@ -89,7 +89,7 @@ export const ReplayLoadingOverlay = ({
                   />
                 )}
               </div>
-              <div className="flex justify-between text-[11px] text-white/40">
+              <div className="flex justify-between text-[11px] text-white/70">
                 <span>Loading replay</span>
                 <span>{displayedPercent}%</span>
               </div>

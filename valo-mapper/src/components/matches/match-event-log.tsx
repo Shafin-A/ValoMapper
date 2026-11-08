@@ -256,7 +256,7 @@ export const MatchEventLog = ({
 }: MatchEventLogProps) => {
   return (
     <div className={cn("md:h-[652px]", containerClassName)}>
-      <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/55">
+      <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/70">
         Event Log
       </p>
       <ScrollArea

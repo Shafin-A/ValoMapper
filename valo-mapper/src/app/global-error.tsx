@@ -46,7 +46,7 @@ export default function GlobalError({
             <p
               style={{
                 margin: "8px 0 0",
-                color: "#71717a",
+                color: "#a1a1aa",
                 fontSize: 11,
                 fontFamily: "ui-monospace, monospace",
               }}

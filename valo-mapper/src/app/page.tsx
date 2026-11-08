@@ -35,7 +35,7 @@ const LandingPage = () => {
         />
       </div>
       <ExternalLinks />
-      <footer className="absolute inset-x-0 bottom-5 z-10 flex flex-col items-center justify-center gap-1 font-mono text-[11px] tracking-wide text-muted-foreground/60 sm:flex-row sm:gap-3">
+      <footer className="absolute inset-x-0 bottom-5 z-10 flex flex-col items-center justify-center gap-1 font-mono text-[11px] tracking-wide text-muted-foreground sm:flex-row sm:gap-3">
         <span>© {new Date().getFullYear()} ValoMapper</span>
         <span aria-hidden className="hidden text-muted-foreground/30 sm:inline">
           ·

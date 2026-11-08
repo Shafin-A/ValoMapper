@@ -109,7 +109,7 @@ export const LoginForm = ({
     <div className={className} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Sign in to your account</CardTitle>
+          <CardTitle as="h1">Sign in to your account</CardTitle>
           <CardDescription>
             Sign in using one of the methods below
           </CardDescription>

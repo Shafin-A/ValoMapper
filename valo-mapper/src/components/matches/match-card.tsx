@@ -71,7 +71,7 @@ export const MatchCard = forwardRef<HTMLButtonElement, MatchCardProps>(
                 <span className="whitespace-nowrap text-[11px] font-semibold uppercase leading-none tracking-[0.04em] text-white sm:text-[18px] lg:text-[28px]">
                   {match.kills} / {match.deaths} / {match.assists}
                 </span>
-                <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.05em] text-white/55 sm:text-[12px] lg:text-[16px]">
+                <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.05em] text-white/70 sm:text-[12px] lg:text-[16px]">
                   SCORE
                 </span>
                 <span className="whitespace-nowrap text-[10px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[12px] lg:text-[16px]">

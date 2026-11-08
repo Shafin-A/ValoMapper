@@ -300,7 +300,7 @@ const PlayerRow = ({
               )}
             >
               {hpValue}
-              <span className="text-white/35">/100</span>
+              <span className="text-white/60">/100</span>
             </span>
           </div>
         </div>
@@ -357,7 +357,7 @@ const PlayerRow = ({
                 className="h-3.5 w-10 object-contain object-right"
               />
             ) : (
-              <span className="text-[9px] text-white/30">—</span>
+              <span className="text-[9px] text-white/50">—</span>
             )}
           </div>
           <span
@@ -415,7 +415,7 @@ const TeamBlock = ({
         >
           {title}
         </span>
-        <span className="text-[10px] font-medium text-white/55">
+        <span className="text-[10px] font-medium text-white/70">
           {aliveCount} alive
         </span>
       </header>
@@ -506,7 +506,7 @@ export const ReplayScoreHeader = ({
   return (
     <div className="flex items-center justify-between gap-2">
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">
           Round {round.roundNumber} ·{" "}
           {round.attackTeamId === "Blue" ? "Blue attack" : "Red attack"}
         </p>
@@ -515,7 +515,7 @@ export const ReplayScoreHeader = ({
         </p>
       </div>
       <div className="text-right">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">
           Time
         </p>
         <p className="text-sm font-semibold tabular-nums text-white">

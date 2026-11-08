@@ -22,7 +22,7 @@ export default function Error({
           Try again, or head back to the home page.
         </p>
         {error.digest && (
-          <p className="mt-2 font-mono text-[11px] text-muted-foreground/60">
+          <p className="mt-2 font-mono text-[11px] text-muted-foreground">
             Error ID: {error.digest}
           </p>
         )}

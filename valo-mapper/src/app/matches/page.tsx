@@ -90,10 +90,16 @@ const MatchesPage = () => {
     <div className="min-h-screen py-8 px-4">
       <div className="mx-auto w-full max-w-[1260px] px-3 sm:px-4">
         <BackToHomeButton className="mb-4" />
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-white">My Matches</h1>
+          <p className="mt-1 text-sm text-white/70">
+            Recent competitive and unrated matches from your Riot account.
+          </p>
+        </div>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           {canLoadMatches && totalMatches > 0 ? (
             <div className="w-full max-w-60 space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/70">
                 Queue
               </p>
               <Select value={queueFilter} onValueChange={selectQueueFilter}>

@@ -128,7 +128,7 @@ export const ReplayControlsBar = ({
 
         <div className="w-20 shrink-0 text-[11px] font-semibold tabular-nums text-white/80">
           {formatReplayTime(currentTimeMs)}
-          <span className="text-white/35">
+          <span className="text-white/60">
             {" "}
             / {formatReplayTime(round.durationMs)}
           </span>
@@ -161,7 +161,7 @@ export const ReplayControlsBar = ({
         />
       </div>
 
-      <div className="hidden items-center gap-3 px-2 pb-2 text-[10px] text-white/35 md:flex">
+      <div className="hidden items-center gap-3 px-2 pb-2 text-[10px] text-white/60 md:flex">
         <span>
           <kbd className="rounded border border-sidebar-border px-1">Space</kbd>{" "}
           play / pause

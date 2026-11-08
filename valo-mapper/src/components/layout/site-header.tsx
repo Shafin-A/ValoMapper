@@ -84,11 +84,11 @@ export const SiteHeader = ({
 
           <div className="flex items-center gap-2">
             <Link href="/">
-              <h1 className="font-bold">
+              <span className="font-bold">
                 <span className="bg-linear-to-r from-foreground to-primary bg-clip-text text-transparent">
                   ValoMapper
                 </span>
-              </h1>
+              </span>
             </Link>
           </div>
         </div>
