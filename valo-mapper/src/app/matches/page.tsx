@@ -1,6 +1,7 @@
 "use client";
 
 import { MatchesContent } from "@/components/matches/matches-content";
+import { RiotSignInButton } from "@/components/auth/riot-sign-in-button";
 import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { MATCH_QUEUE_FILTER_OPTIONS } from "@/lib/consts";
 import {
@@ -38,6 +39,9 @@ const MatchesPage = () => {
     selectedRoundByMatch,
     selectRound,
   } = useMatchesPage();
+
+  const rsoClientId = process.env.NEXT_PUBLIC_RSO_CLIENT_ID || "";
+  const rsoLink = `/api/auth/rso/start?redirect=${encodeURIComponent("/matches")}`;
 
   if (isPageLoading) {
     return (
@@ -111,21 +115,39 @@ const MatchesPage = () => {
         </div>
 
         {!firebaseUser && (
-          <Alert className="mb-4">
-            <AlertTitle>Sign in required</AlertTitle>
-            <AlertDescription>
-              Sign in to load your recent matches.
-            </AlertDescription>
-          </Alert>
+          <div className="mb-4 space-y-3">
+            <Alert>
+              <AlertTitle>Riot Sign-On required</AlertTitle>
+              <AlertDescription>
+                Matches are only available for Riot Sign-On accounts. Sign in
+                with Riot to view your matches.
+              </AlertDescription>
+            </Alert>
+            <RiotSignInButton
+              href={rsoLink}
+              disabled={!rsoClientId}
+              className="mx-auto max-w-sm"
+            />
+          </div>
         )}
 
         {firebaseUser && !isRSOUser && (
-          <Alert className="mb-4">
-            <AlertTitle>Riot account required</AlertTitle>
-            <AlertDescription>
-              This page is only available for Riot Sign-On users.
-            </AlertDescription>
-          </Alert>
+          <div className="mb-4 space-y-3">
+            <Alert>
+              <AlertTitle>Riot Sign-On required</AlertTitle>
+              <AlertDescription>
+                You&apos;re signed in with email, but matches are only
+                available for Riot Sign-On accounts. Sign in with Riot to view
+                your matches. This switches your current session to your Riot
+                account.
+              </AlertDescription>
+            </Alert>
+            <RiotSignInButton
+              href={rsoLink}
+              disabled={!rsoClientId}
+              className="mx-auto max-w-sm"
+            />
+          </div>
         )}
 
         {canLoadMatches && totalMatches === 0 ? (

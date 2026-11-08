@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import Link from "next/link";
 
 export const ProfileNotAuthenticatedCard = () => {
   return (
@@ -17,7 +19,7 @@ export const ProfileNotAuthenticatedCard = () => {
           <CardTitle>Profile</CardTitle>
           <CardDescription>Please log in to view your profile</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Not Authenticated</AlertTitle>
@@ -25,6 +27,9 @@ export const ProfileNotAuthenticatedCard = () => {
               Please log in to view your profile.
             </AlertDescription>
           </Alert>
+          <Button asChild className="w-full">
+            <Link href="/login?redirect=%2Fprofile">Log in</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

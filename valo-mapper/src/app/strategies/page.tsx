@@ -4,6 +4,7 @@ import { StrategiesContent } from "@/components/strategies/strategies-content";
 import { StrategiesHeader } from "@/components/strategies/strategies-header";
 import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFolders } from "@/hooks/api/use-folder";
 import { useUser } from "@/hooks/api/use-user";
@@ -16,6 +17,7 @@ import {
 } from "@/lib/strategy-cleanup";
 import { StrategyData } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { Suspense, useState } from "react";
 import { convertFolderOrStrategyId } from "@/lib/utils";
 
@@ -137,6 +139,9 @@ const MyStrategiesPage = () => {
               </p>
             </AlertDescription>
           </Alert>
+          <Button asChild className="w-full">
+            <Link href="/login?redirect=%2Fstrategies">Log in</Link>
+          </Button>
         </div>
       </div>
     );

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { FirebaseError } from "firebase/app";
+import { RiotSignInButton } from "@/components/auth/riot-sign-in-button";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -118,29 +118,10 @@ export const LoginForm = ({
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <Button
-                  className="w-full bg-[#d3362f] border border-[#d3362f] hover:bg-[#d3362f]/80 text-white"
-                  asChild
+                <RiotSignInButton
+                  href={rsoLink}
                   disabled={!rsoClientId}
-                >
-                  <a
-                    href={rsoLink}
-                    className="flex items-center justify-center gap-2"
-                  >
-                    <Image
-                      src="/riot_fist.svg"
-                      alt="Riot logo"
-                      width={573}
-                      height={532}
-                      className="h-6 w-auto"
-                    />
-                    {rsoClientId ? "Sign in with Riot" : "Riot not configured"}
-                  </a>
-                </Button>
-                <FieldDescription className="mt-2 text-center text-xs text-muted-foreground">
-                  By signing in, your profile becomes public. Players who
-                  haven&apos;t opted in won&apos;t have their data shown.
-                </FieldDescription>
+                />
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 OR

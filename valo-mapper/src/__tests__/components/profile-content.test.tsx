@@ -201,6 +201,10 @@ describe("ProfileContent", () => {
     expect(
       screen.getByText("Please log in to view your profile."),
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Log in" })).toHaveAttribute(
+      "href",
+      "/login?redirect=%2Fprofile",
+    );
   });
 
   it("shows user data missing state when authenticated user has no profile", () => {
