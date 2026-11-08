@@ -1,5 +1,6 @@
 import QueryProvider from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { NavigationHistoryProvider } from "@/components/providers/navigation-history-provider";
 import { TourProviderWrapper } from "@/components/providers/tour-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -77,8 +78,10 @@ const RootLayout = ({
                   <TourProviderWrapper>
                     <CanvasProvider>
                       <WebSocketProvider>
-                        <KeyboardShortcuts />
-                        {children}
+                        <NavigationHistoryProvider>
+                          <KeyboardShortcuts />
+                          {children}
+                        </NavigationHistoryProvider>
                       </WebSocketProvider>
                     </CanvasProvider>
                     <Toaster richColors closeButton />
