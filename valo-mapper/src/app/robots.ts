@@ -10,10 +10,13 @@ const robots = (): MetadataRoute.Robots => {
       {
         userAgent: "*",
         allow: "/",
-      },
-      {
-        userAgent: "*",
-        disallow: "/api/*",
+        disallow: [
+          "/api/*",
+          "/profile",
+          "/strategies",
+          "/matches",
+          "/billing",
+        ],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

@@ -1,10 +1,16 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
 import {
   getBillingCancelReturnLabel,
   normalizeBillingReturnPath,
 } from "@/lib/billing-return-path";
+
+export const metadata: Metadata = {
+  title: "Subscription cancelled",
+  robots: { index: false, follow: false },
+};
 
 type BillingCancelPageProps = {
   searchParams?: Promise<{

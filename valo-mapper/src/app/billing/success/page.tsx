@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import {
@@ -6,6 +7,11 @@ import {
   normalizeBillingReturnPath,
 } from "@/lib/billing-return-path";
 import { PREMIUM_TRIAL_DAYS } from "@/lib/consts";
+
+export const metadata: Metadata = {
+  title: "Subscription confirmed",
+  robots: { index: false, follow: false },
+};
 
 type BillingSuccessPageProps = {
   searchParams?: Promise<{
