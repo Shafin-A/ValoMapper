@@ -88,7 +88,7 @@ export const BackgroundDecoration = () => {
         width={420}
         height={128}
         className="-left-[20%] top-[6%] w-[62vw] max-w-[680px] opacity-[0.16] sm:-left-[12%] sm:top-[10%]"
-        rotation={-10}
+        rotation={8}
         animation="float 12s ease-in-out infinite"
         flipX
       />
