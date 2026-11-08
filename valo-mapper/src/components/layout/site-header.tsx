@@ -73,6 +73,7 @@ export const SiteHeader = ({
                 className="h-8 w-8"
                 variant="ghost"
                 size="icon"
+                aria-label="Toggle left sidebar"
                 onClick={() => setLeftSidebarOpen((prev) => !prev)}
               >
                 <SidebarIcon />
@@ -142,7 +143,12 @@ export const SiteHeader = ({
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="h-8 w-8" variant="ghost" size="icon">
+              <Button
+                className="h-8 w-8"
+                variant="ghost"
+                size="icon"
+                aria-label="Open help"
+              >
                 <CircleQuestionMark />
               </Button>
             </DialogTrigger>
@@ -161,7 +167,12 @@ export const SiteHeader = ({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="h-8 w-8" variant="ghost" size="icon">
+              <Button
+                className="h-8 w-8"
+                variant="ghost"
+                size="icon"
+                aria-label="Account menu"
+              >
                 <UserRound />
               </Button>
             </DropdownMenuTrigger>
@@ -211,6 +222,7 @@ export const SiteHeader = ({
                 className="h-8 w-8"
                 variant="ghost"
                 size="icon"
+                aria-label="Toggle right sidebar"
                 onClick={() => setRightSidebarOpen((prev) => !prev)}
               >
                 <SidebarIcon className="rotate-180" />

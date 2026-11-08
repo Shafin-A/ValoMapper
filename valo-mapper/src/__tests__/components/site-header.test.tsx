@@ -107,6 +107,31 @@ describe("SiteHeader", () => {
     expect(buttons).toHaveLength(4);
   });
 
+  it("should label the icon-only header buttons", () => {
+    mockUseUser.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    renderSiteHeader(defaultProps);
+
+    expect(
+      screen.getByRole("button", { name: "Toggle left sidebar" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Open help" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Account menu" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Toggle right sidebar" }),
+    ).toBeInTheDocument();
+  });
+
   it("should link to the Discord invite", () => {
     mockUseUser.mockReturnValue({
       data: undefined,
