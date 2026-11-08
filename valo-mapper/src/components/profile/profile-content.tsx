@@ -397,7 +397,7 @@ export const ProfileContent = () => {
     <div className="w-full">
       <Card>
         <CardHeader>
-          <CardTitle>My Profile</CardTitle>
+          <CardTitle as="h1">My Profile</CardTitle>
           <CardDescription>
             View and manage your account information
           </CardDescription>

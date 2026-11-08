@@ -26,37 +26,39 @@ export const ProfileAccountFields = ({
 }: ProfileAccountFieldsProps) => {
   return (
     <>
-      <div className="space-y-2">
-        <Label htmlFor="name">Name</Label>
-        <Input
-          id="name"
-          value={name}
-          onChange={onNameChange}
-          disabled={isRSOUser || !isEditing || isUpdatingUser}
-          placeholder="Your name"
-        />
-        {isRSOUser && (
-          <p className="text-xs text-muted-foreground">
-            Managed by Riot Sign-On. This name updates from your Riot Game Name
-            and Tagline.
-          </p>
-        )}
-      </div>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            value={name}
+            onChange={onNameChange}
+            disabled={isRSOUser || !isEditing || isUpdatingUser}
+            placeholder="Your name"
+          />
+          {isRSOUser && (
+            <p className="text-xs text-muted-foreground">
+              Managed by Riot Sign-On. This name updates from your Riot Game
+              Name and Tagline.
+            </p>
+          )}
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={user.email || ""}
-          disabled
-          className="bg-muted"
-        />
-        {isRSOUser && (
-          <p className="text-xs text-muted-foreground">
-            Email is managed by Riot Sign-On.
-          </p>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={user.email || ""}
+            disabled
+            className="bg-muted"
+          />
+          {isRSOUser && (
+            <p className="text-xs text-muted-foreground">
+              Email is managed by Riot Sign-On.
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
