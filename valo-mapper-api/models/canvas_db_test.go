@@ -103,7 +103,16 @@ func TestGetAllCanvasPhases(t *testing.T) {
 				},
 			},
 			TextsOnCanvas: []CanvasText{
-				{ID: "text1", Text: "Push A", X: 300, Y: 400, Width: 100, Height: 50},
+				{
+					ID:       "text1",
+					Text:     "Push A",
+					Spans:    []CanvasTextSpan{{Text: "Push ", Bold: true}, {Text: "A", Color: "#ff4655"}},
+					FontSize: 24,
+					X:        300,
+					Y:        400,
+					Width:    100,
+					Height:   50,
+				},
 			},
 			ImagesOnCanvas: []CanvasImage{
 				{ID: "img1", Src: "https://example.com/img.png", X: 500, Y: 600, Width: 200, Height: 150},
@@ -161,6 +170,10 @@ func TestGetAllCanvasPhases(t *testing.T) {
 		assert.GreaterOrEqual(t, len(phases[0].TextsOnCanvas), 1)
 		if len(phases[0].TextsOnCanvas) > 0 {
 			assert.Equal(t, "text1", phases[0].TextsOnCanvas[0].ID)
+			assert.Equal(t, 24.0, phases[0].TextsOnCanvas[0].FontSize)
+			require.Len(t, phases[0].TextsOnCanvas[0].Spans, 2)
+			assert.True(t, phases[0].TextsOnCanvas[0].Spans[0].Bold)
+			assert.Equal(t, "#ff4655", phases[0].TextsOnCanvas[0].Spans[1].Color)
 		}
 		assert.GreaterOrEqual(t, len(phases[0].ImagesOnCanvas), 1)
 		if len(phases[0].ImagesOnCanvas) > 0 {
@@ -707,6 +720,34 @@ func TestApplyCanvasPatch(t *testing.T) {
 		phases, err = GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
 		assert.Empty(t, phases[0].AgentsOnCanvas)
+	})
+
+	t.Run("upserts rich text via patch", func(t *testing.T) {
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{{
+			Entity: "text", Action: "upsert", PhaseIndex: 0, ID: "t1",
+			Payload: map[string]any{
+				"id":       "t1",
+				"text":     "Push A",
+				"spans":    []any{map[string]any{"text": "Push ", "bold": true}, map[string]any{"text": "A", "color": "#ff4655"}},
+				"fontSize": 24,
+				"x":        100,
+				"y":        200,
+				"width":    120,
+				"height":   60,
+			},
+		}}}
+
+		err := ApplyCanvasPatch(lobby.Code, patch)
+		require.NoError(t, err)
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		require.Len(t, phases[0].TextsOnCanvas, 1)
+		assert.Equal(t, "Push A", phases[0].TextsOnCanvas[0].Text)
+		assert.Equal(t, 24.0, phases[0].TextsOnCanvas[0].FontSize)
+		require.Len(t, phases[0].TextsOnCanvas[0].Spans, 2)
+		assert.True(t, phases[0].TextsOnCanvas[0].Spans[0].Bold)
+		assert.Equal(t, "#ff4655", phases[0].TextsOnCanvas[0].Spans[1].Color)
 	})
 
 	t.Run("rejects invalid image source in image patch", func(t *testing.T) {

@@ -24,8 +24,21 @@ export type CanvasItem = BaseCanvasItem & {
   isAlly: boolean;
 };
 
+export type TextStyle = {
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  color?: string;
+};
+
+export type TextSpan = TextStyle & {
+  text: string;
+};
+
 export type TextCanvas = BaseCanvasItem & {
   text: string;
+  spans?: TextSpan[];
+  fontSize?: number;
   width: number;
   height: number;
 };

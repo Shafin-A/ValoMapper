@@ -298,12 +298,14 @@ func TestCanvasDrawLineSerialization(t *testing.T) {
 func TestCanvasTextSerialization(t *testing.T) {
 	t.Run("serializes text element", func(t *testing.T) {
 		text := CanvasText{
-			ID:     "text-1",
-			Text:   "Push A",
-			X:      100,
-			Y:      200,
-			Width:  150,
-			Height: 50,
+			ID:       "text-1",
+			Text:     "Push A",
+			Spans:    []CanvasTextSpan{{Text: "Push ", Bold: true}, {Text: "A", Color: "#ff4655"}},
+			FontSize: 24,
+			X:        100,
+			Y:        200,
+			Width:    150,
+			Height:   50,
 		}
 
 		jsonData, err := json.Marshal(text)
@@ -315,10 +317,22 @@ func TestCanvasTextSerialization(t *testing.T) {
 
 		assert.Equal(t, text.ID, decoded.ID)
 		assert.Equal(t, text.Text, decoded.Text)
+		assert.Equal(t, text.FontSize, decoded.FontSize)
+		require.Len(t, decoded.Spans, 2)
+		assert.True(t, decoded.Spans[0].Bold)
+		assert.Equal(t, "#ff4655", decoded.Spans[1].Color)
 		assert.Equal(t, text.X, decoded.X)
 		assert.Equal(t, text.Y, decoded.Y)
 		assert.Equal(t, text.Width, decoded.Width)
 		assert.Equal(t, text.Height, decoded.Height)
+	})
+
+	t.Run("omits empty rich text fields", func(t *testing.T) {
+		jsonData, err := json.Marshal(CanvasText{ID: "text-1", Text: "Plain"})
+		require.NoError(t, err)
+
+		assert.NotContains(t, string(jsonData), "spans")
+		assert.NotContains(t, string(jsonData), "fontSize")
 	})
 }
 

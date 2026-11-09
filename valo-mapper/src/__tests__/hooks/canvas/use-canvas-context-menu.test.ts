@@ -857,6 +857,51 @@ describe("useCanvasContextMenu", () => {
     expect(result.current.contextMenu.itemId).toBe("a1");
   });
 
+  it("uses a grandparent id for nested canvas items", () => {
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const texts = [
+      { id: "t1", text: "Hello", width: 100, height: 50, x: 0, y: 0 },
+    ];
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        texts,
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+      ),
+    );
+
+    const grandparent = { id: () => "t1" };
+    const parent = { id: () => "", getParent: () => grandparent };
+    const evt = {
+      evt: { preventDefault: jest.fn() },
+      target: { id: () => "", getParent: () => parent },
+    } as unknown as KonvaEventObject<PointerEvent>;
+
+    act(() => {
+      result.current.handleContextMenu(evt);
+    });
+
+    expect(result.current.contextMenu).toMatchObject({
+      open: true,
+      itemId: "t1",
+      itemType: "text",
+    });
+  });
+
   it("opens context menu for text item", () => {
     const stageRef = {
       current: createStageMock() as unknown as Stage,

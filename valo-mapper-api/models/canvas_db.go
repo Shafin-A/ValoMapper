@@ -263,19 +263,30 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- TEXTS ----
 	rows, err = tx.Query(ctx, `
-		SELECT id, text, x, y, width, height, phase_index 
-		FROM canvas_texts 
-		WHERE lobby_code = $1 
+		SELECT id, text, spans, font_size, x, y, width, height, phase_index
+		FROM canvas_texts
+		WHERE lobby_code = $1
 		ORDER BY phase_index`, lobbyCode)
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
 		var text CanvasText
+		var spansJSON []byte
+		var fontSize sql.NullFloat64
 		var phaseIndex int
-		if err := rows.Scan(&text.ID, &text.Text, &text.X, &text.Y, &text.Width, &text.Height, &phaseIndex); err != nil {
+		if err := rows.Scan(&text.ID, &text.Text, &spansJSON, &fontSize, &text.X, &text.Y, &text.Width, &text.Height, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
+		}
+		if len(spansJSON) > 0 {
+			if err := json.Unmarshal(spansJSON, &text.Spans); err != nil {
+				rows.Close()
+				return nil, err
+			}
+		}
+		if fontSize.Valid {
+			text.FontSize = fontSize.Float64
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].TextsOnCanvas = append(phases[phaseIndex].TextsOnCanvas, text)
@@ -496,8 +507,23 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 		// Texts
 		for _, t := range phase.TextsOnCanvas {
+			var spansJSON any
+			if len(t.Spans) > 0 {
+				data, marshalErr := json.Marshal(t.Spans)
+				if marshalErr != nil {
+					return fmt.Errorf("failed to marshal text spans: %w", marshalErr)
+				}
+				spansJSON = data
+			}
+
+			var fontSize any
+			if t.FontSize > 0 {
+				fontSize = t.FontSize
+			}
+
 			textRows = append(textRows, []any{
 				t.ID, lobbyCode, t.Text, t.X, t.Y, t.Width, t.Height, phaseIndex,
+				spansJSON, fontSize,
 			})
 		}
 
@@ -593,7 +619,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_texts"},
-			[]string{"id", "lobby_code", "text", "x", "y", "width", "height", "phase_index"},
+			[]string{"id", "lobby_code", "text", "x", "y", "width", "height", "phase_index", "spans", "font_size"},
 			pgx.CopyFromRows(textRows),
 		)
 		if err != nil {
@@ -917,12 +943,27 @@ func applyTextPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 		return fmt.Errorf("missing id for text upsert")
 	}
 
+	var spansJSON any
+	if len(p.Spans) > 0 {
+		data, err := json.Marshal(p.Spans)
+		if err != nil {
+			return err
+		}
+		spansJSON = data
+	}
+
+	var fontSize any
+	if p.FontSize > 0 {
+		fontSize = p.FontSize
+	}
+
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_texts (id, lobby_code, phase_index, text, x, y, width, height)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO canvas_texts (id, lobby_code, phase_index, text, x, y, width, height, spans, font_size)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
-		SET text = EXCLUDED.text, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.Text, p.X, p.Y, p.Width, p.Height)
+		SET text = EXCLUDED.text, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height,
+		    spans = EXCLUDED.spans, font_size = EXCLUDED.font_size`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Text, p.X, p.Y, p.Width, p.Height, spansJSON, fontSize)
 	return err
 }
 

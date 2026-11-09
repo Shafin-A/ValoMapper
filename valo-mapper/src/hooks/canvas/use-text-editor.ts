@@ -2,6 +2,35 @@ import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import Konva from "konva";
 import { RefObject, useCallback, useRef } from "react";
+import {
+  TEXT_MIN_HEIGHT,
+  layoutRichText,
+  normalizeTextSpans,
+  renumberListLines,
+  resolveTextFontSize,
+  spansHaveFormatting,
+  spansToPlainText,
+  textSpansForItem,
+} from "@/lib/rich-text";
+import type { TextCanvas, TextSpan } from "@/lib/types";
+
+export type TextChangeValue = {
+  spans: TextSpan[];
+  fontSize: number;
+};
+
+const heightForText = (
+  textItem: TextCanvas,
+  width: number,
+  spans?: TextSpan[],
+): number => {
+  const layout = layoutRichText(spans ?? textSpansForItem(textItem), {
+    width,
+    fontSize: resolveTextFontSize(textItem.fontSize),
+  });
+
+  return Math.max(TEXT_MIN_HEIGHT, layout.height);
+};
 
 export const useTextEditor = (
   transformerRefs: RefObject<Map<string, Konva.Transformer>>,
@@ -10,10 +39,10 @@ export const useTextEditor = (
     useCanvas();
   const { notifyTextUpdated } = useCollaborativeCanvas();
 
-  const textRefs = useRef<Map<string, Konva.Text>>(new Map());
+  const textRefs = useRef<Map<string, Konva.Rect>>(new Map());
 
   const attachTransformerToText = useCallback(
-    (textNode: Konva.Text | null, transformerId: string) => {
+    (textNode: Konva.Rect | null, transformerId: string) => {
       if (textNode) {
         const transformer = transformerRefs.current.get(transformerId);
         if (transformer) {
@@ -53,10 +82,11 @@ export const useTextEditor = (
 
       const textItem = textsOnCanvas.find((t) => t.id === textId);
       if (textItem) {
-        const updatedText = {
+        const width = textNode.width();
+        const updatedText: TextCanvas = {
           ...textItem,
-          width: textNode.width(),
-          height: textNode.height(),
+          width,
+          height: heightForText({ ...textItem, width }, width),
         };
         setTextsOnCanvas((prev) =>
           prev.map((item) => (item.id === textId ? updatedText : item)),
@@ -67,15 +97,24 @@ export const useTextEditor = (
     [setTextsOnCanvas, textsOnCanvas, notifyTextUpdated],
   );
 
-  const handleTextChange = (textId: string, newText: string) => {
+  const handleTextChange = (textId: string, value: TextChangeValue) => {
     const textItem = textsOnCanvas.find((t) => t.id === textId);
-    if (textItem) {
-      const updatedText = { ...textItem, text: newText };
-      setTextsOnCanvas((prev) =>
-        prev.map((item) => (item.id === textId ? updatedText : item)),
-      );
-      notifyTextUpdated(updatedText);
-    }
+    if (!textItem) return;
+
+    const spans = renumberListLines(normalizeTextSpans(value.spans));
+    const fontSize = resolveTextFontSize(value.fontSize);
+    const updatedText: TextCanvas = {
+      ...textItem,
+      text: spansToPlainText(spans),
+      spans: spansHaveFormatting(spans) ? spans : undefined,
+      fontSize,
+      height: heightForText({ ...textItem, fontSize }, textItem.width, spans),
+    };
+
+    setTextsOnCanvas((prev) =>
+      prev.map((item) => (item.id === textId ? updatedText : item)),
+    );
+    notifyTextUpdated(updatedText);
   };
 
   const handleTextEditComplete = useCallback(() => {

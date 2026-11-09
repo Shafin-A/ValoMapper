@@ -2621,11 +2621,20 @@ const docTemplate = `{
         "models.CanvasText": {
             "type": "object",
             "properties": {
+                "fontSize": {
+                    "type": "number"
+                },
                 "height": {
                     "type": "number"
                 },
                 "id": {
                     "type": "string"
+                },
+                "spans": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.CanvasTextSpan"
+                    }
                 },
                 "text": {
                     "type": "string"
@@ -2638,6 +2647,26 @@ const docTemplate = `{
                 },
                 "y": {
                     "type": "number"
+                }
+            }
+        },
+        "models.CanvasTextSpan": {
+            "type": "object",
+            "properties": {
+                "bold": {
+                    "type": "boolean"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "italic": {
+                    "type": "boolean"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "underline": {
+                    "type": "boolean"
                 }
             }
         },

@@ -25,6 +25,12 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 
+type NodeWithId = {
+  id: () => string;
+  getParent?: () => NodeWithId | null;
+  parent?: NodeWithId | null;
+};
+
 const duplicateItem = <T extends BaseCanvasItem>(
   items: T[],
   itemId: string,
@@ -114,7 +120,19 @@ export const useCanvasContextMenu = (
       const pointerPosition = stage.getPointerPosition();
       if (!pointerPosition) return;
 
-      const targetId = e.target.id() || e.target.parent?.id();
+      let targetNode: NodeWithId | null = e.target as unknown as NodeWithId;
+      let targetId = "";
+      while (targetNode && !targetId) {
+        targetId = targetNode.id();
+        if (targetId) break;
+
+        const parentNode: NodeWithId | null =
+          typeof targetNode.getParent === "function"
+            ? targetNode.getParent()
+            : null;
+
+        targetNode = parentNode ?? targetNode.parent ?? null;
+      }
       if (!targetId) return;
 
       const isAgentItem = agentsOnCanvas.some(

@@ -118,12 +118,22 @@ type CanvasConnectingLine struct {
 }
 
 type CanvasText struct {
-	ID     string  `json:"id"`
-	Text   string  `json:"text"`
-	X      float64 `json:"x"`
-	Y      float64 `json:"y"`
-	Width  float64 `json:"width"`
-	Height float64 `json:"height"`
+	ID       string           `json:"id"`
+	Text     string           `json:"text"`
+	Spans    []CanvasTextSpan `json:"spans,omitempty"`
+	FontSize float64          `json:"fontSize,omitempty"`
+	X        float64          `json:"x"`
+	Y        float64          `json:"y"`
+	Width    float64          `json:"width"`
+	Height   float64          `json:"height"`
+}
+
+type CanvasTextSpan struct {
+	Text      string `json:"text"`
+	Bold      bool   `json:"bold,omitempty"`
+	Italic    bool   `json:"italic,omitempty"`
+	Underline bool   `json:"underline,omitempty"`
+	Color     string `json:"color,omitempty"`
 }
 
 type CanvasImage struct {

@@ -432,10 +432,16 @@ definitions:
     type: object
   models.CanvasText:
     properties:
+      fontSize:
+        type: number
       height:
         type: number
       id:
         type: string
+      spans:
+        items:
+          $ref: '#/definitions/models.CanvasTextSpan'
+        type: array
       text:
         type: string
       width:
@@ -444,6 +450,19 @@ definitions:
         type: number
       "y":
         type: number
+    type: object
+  models.CanvasTextSpan:
+    properties:
+      bold:
+        type: boolean
+      color:
+        type: string
+      italic:
+        type: boolean
+      text:
+        type: string
+      underline:
+        type: boolean
     type: object
   models.CanvasToolIcon:
     properties:

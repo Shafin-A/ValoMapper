@@ -1,0 +1,3 @@
+ALTER TABLE canvas_texts
+    ADD COLUMN IF NOT EXISTS spans JSONB,
+    ADD COLUMN IF NOT EXISTS font_size FLOAT;
