@@ -64,6 +64,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       isDrawMode,
       textsOnCanvas,
       imagesOnCanvas,
+      canvasBackground,
     } = useCanvas();
 
     const { sendCursorPosition, status: wsStatus } = useWebSocket();
@@ -220,8 +221,16 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
         );
       })();
 
+    const canvasBackgroundClassName =
+      canvasBackground === "dots"
+        ? "lobby-canvas-background-dots"
+        : canvasBackground === "grid"
+          ? "lobby-canvas-background-grid"
+          : undefined;
+
     return (
       <div
+        className={canvasBackgroundClassName}
         style={{
           position: "relative",
           width: "100%",

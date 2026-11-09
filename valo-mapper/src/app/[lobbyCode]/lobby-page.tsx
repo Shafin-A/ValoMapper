@@ -259,6 +259,7 @@ const LobbyEditPage = () => {
         sidebarOpen={sidebarState.leftSidebarOpen}
         mapPosition={mapPosition}
         stageRef={stageRef}
+        showBackgroundSettings
       />
 
       <Suspense fallback={<LobbyLoadingSkeleton />}>

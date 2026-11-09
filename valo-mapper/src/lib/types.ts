@@ -360,6 +360,8 @@ export type ConnectingLine = {
 
 export type MapSide = "attack" | "defense";
 
+export type CanvasBackground = "none" | "dots" | "grid";
+
 export type UndoableState = {
   phases: PhaseState[];
   selectedMap: MapOption;

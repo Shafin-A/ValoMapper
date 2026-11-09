@@ -1,5 +1,10 @@
+import {
+  readCanvasBackground,
+  writeCanvasBackground,
+} from "@/lib/canvas-background";
 import { DEFAULT_MAP_OPTIONS } from "@/lib/consts";
 import {
+  CanvasBackground,
   MapOption,
   MapSide,
   DrawLine,
@@ -8,16 +13,25 @@ import {
   Agent,
   ToolIconCanvas,
 } from "@/lib/types";
-import { useRef, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 interface UseCanvasUIOptions {
   initialMapSide?: MapSide;
   initialSelectedMap?: MapOption;
+  lobbyCode?: string;
 }
 
 export const useCanvasUI = ({
   initialMapSide = "defense",
   initialSelectedMap = DEFAULT_MAP_OPTIONS[0],
+  lobbyCode = "",
 }: UseCanvasUIOptions = {}) => {
   const [isAlly, setIsAlly] = useState(true);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
@@ -34,6 +48,25 @@ export const useCanvasUI = ({
   const [showCallouts, setShowCallouts] = useState(false);
   const [showUltOrbs, setShowUltOrbs] = useState(false);
   const [showSpawnBarriers, setShowSpawnBarriers] = useState(false);
+  const [canvasBackground, setCanvasBackgroundState] =
+    useState<CanvasBackground>("none");
+
+  useEffect(() => {
+    setCanvasBackgroundState(readCanvasBackground(lobbyCode));
+  }, [lobbyCode]);
+
+  const setCanvasBackground = useCallback<
+    Dispatch<SetStateAction<CanvasBackground>>
+  >(
+    (value) => {
+      setCanvasBackgroundState((previous) => {
+        const next = typeof value === "function" ? value(previous) : value;
+        writeCanvasBackground(lobbyCode, next);
+        return next;
+      });
+    },
+    [lobbyCode],
+  );
 
   const [selectedCanvasIcon, setSelectedCanvasIcon] = useState<
     Agent | AbilityIconItem | ToolIconCanvas | null
@@ -71,6 +104,8 @@ export const useCanvasUI = ({
     setShowUltOrbs,
     showSpawnBarriers,
     setShowSpawnBarriers,
+    canvasBackground,
+    setCanvasBackground,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
     isSidebarDragActive,

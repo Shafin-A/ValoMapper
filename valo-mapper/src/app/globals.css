@@ -305,3 +305,45 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .lobby-canvas-background-dots {
+    background-color: var(--background);
+    background-image: radial-gradient(
+      circle at 2px 2px,
+      color-mix(in oklab, var(--foreground) 50%, transparent) 1px,
+      transparent 1.5px
+    );
+    background-size: 50px 50px;
+  }
+
+  .lobby-canvas-background-grid {
+    background-color: var(--background);
+    background-image:
+      linear-gradient(
+        to right,
+        color-mix(in oklab, var(--foreground) 10%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--foreground) 10%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to right,
+        color-mix(in oklab, var(--foreground) 20%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--foreground) 20%, transparent) 1px,
+        transparent 1px
+      );
+    background-size:
+      20px 20px,
+      20px 20px,
+      100px 100px,
+      100px 100px;
+  }
+}

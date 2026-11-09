@@ -6,6 +6,7 @@ import type {
   AbilityIconItem,
   Agent,
   AgentCanvas,
+  CanvasBackground,
   ConnectingLine,
   DrawLine,
   IconSettings,
@@ -123,6 +124,8 @@ interface CanvasContextType {
   setShowUltOrbs: Dispatch<SetStateAction<boolean>>;
   showSpawnBarriers: boolean;
   setShowSpawnBarriers: Dispatch<SetStateAction<boolean>>;
+  canvasBackground: CanvasBackground;
+  setCanvasBackground: Dispatch<SetStateAction<CanvasBackground>>;
   isMapTransitioning: boolean;
   setIsMapTransitioning: Dispatch<SetStateAction<boolean>>;
   rotateCanvasItemsForSideSwap: (

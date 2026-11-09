@@ -13,6 +13,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useSettings } from "@/contexts/settings-context";
@@ -20,7 +27,7 @@ import { MAP_OPTIONS, DEFAULT_MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
 import { MatchEventLog } from "@/components/matches/match-event-log";
 import { MatchRoundSelector } from "@/components/matches/match-round-selector";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MapOption } from "@/lib/types";
+import { CanvasBackground, MapOption } from "@/lib/types";
 import type { MatchPlayers, MatchRound } from "@/lib/matches";
 import { Vector2d } from "konva/lib/types";
 import {
@@ -70,6 +77,7 @@ interface ToolsSidebarProps {
   reviewControls?: MatchReviewControls;
   saveAction?: ToolsSectionAction;
   variant?: ToolsSidebarVariant;
+  showBackgroundSettings?: boolean;
 }
 
 export const ToolsSidebar = ({
@@ -79,6 +87,7 @@ export const ToolsSidebar = ({
   reviewControls,
   saveAction,
   variant = "lobby",
+  showBackgroundSettings = false,
 }: ToolsSidebarProps) => {
   const isReplayVariant = variant === "replay";
   const {
@@ -101,6 +110,8 @@ export const ToolsSidebar = ({
     setShowUltOrbs,
     showSpawnBarriers,
     setShowSpawnBarriers,
+    canvasBackground,
+    setCanvasBackground,
     notifyPhaseChangedCallback,
     rotateCanvasItemsForSideSwap,
   } = useCanvas();
@@ -249,6 +260,31 @@ export const ToolsSidebar = ({
                           onCheckedChange={setShowUltOrbs}
                         />
                       </div>
+                      {showBackgroundSettings && (
+                        <div className="space-y-2 border-t pt-3">
+                          <Label htmlFor="canvas-background" className="text-sm">
+                            Background
+                          </Label>
+                          <Select
+                            value={canvasBackground}
+                            onValueChange={(value) =>
+                              setCanvasBackground(value as CanvasBackground)
+                            }
+                          >
+                            <SelectTrigger
+                              id="canvas-background"
+                              className="w-full"
+                            >
+                              <SelectValue placeholder="Select a background" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="dots">Dots</SelectItem>
+                              <SelectItem value="grid">Grid</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </PopoverContent>

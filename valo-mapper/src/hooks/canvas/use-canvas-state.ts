@@ -66,6 +66,7 @@ export const useCanvasState = ({
   const canvasUI = useCanvasUI({
     initialMapSide: initialState?.mapSide,
     initialSelectedMap: initialState?.selectedMap,
+    lobbyCode,
   });
   const phaseManager = usePhaseManager({
     initialCurrentPhaseIndex: initialState?.currentPhaseIndex,
