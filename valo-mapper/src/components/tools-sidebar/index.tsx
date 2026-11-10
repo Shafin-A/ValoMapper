@@ -22,8 +22,10 @@ import {
 } from "@/components/ui/select";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import { phaseHasContent } from "@/hooks/canvas/use-phase-manager";
 import { useSettings } from "@/contexts/settings-context";
 import { MAP_OPTIONS, DEFAULT_MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
+import { cn } from "@/lib/utils";
 import { MatchEventLog } from "@/components/matches/match-event-log";
 import { MatchRoundSelector } from "@/components/matches/match-round-selector";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -79,6 +81,64 @@ interface ToolsSidebarProps {
   variant?: ToolsSidebarVariant;
   showBackgroundSettings?: boolean;
 }
+
+interface PhaseButtonProps {
+  phaseNumber: number;
+  shortcut?: "A" | "D";
+  isEdited: boolean;
+  hasContent: boolean;
+  isSelected: boolean;
+}
+
+const PhaseButton = ({
+  phaseNumber,
+  shortcut,
+  isEdited,
+  hasContent,
+  isSelected,
+}: PhaseButtonProps) => {
+  const editLabel = isEdited
+    ? hasContent
+      ? " (edited)"
+      : " (empty step)"
+    : "";
+
+  const tooltipText =
+    shortcut ??
+    (isEdited ? (hasContent ? "Edited" : "Empty step") : undefined);
+
+  const button = (
+    <ToggleGroupItem
+      value={phaseNumber.toString()}
+      aria-label={`Phase ${phaseNumber}${editLabel}`}
+      className="relative"
+    >
+      {phaseNumber}
+      {isEdited && (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute right-1 top-1 size-1.5 rounded-full",
+            hasContent
+              ? "bg-current opacity-70"
+              : "border border-current opacity-60",
+          )}
+        />
+      )}
+    </ToggleGroupItem>
+  );
+
+  if (isSelected || !tooltipText) {
+    return button;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent>{tooltipText}</TooltipContent>
+    </Tooltip>
+  );
+};
 
 export const ToolsSidebar = ({
   sidebarOpen,
@@ -190,6 +250,8 @@ export const ToolsSidebar = ({
     notifyPhaseChanged(newIndex);
     setPendingPhaseIndex(null);
   };
+
+  const activePhaseIndex = pendingPhaseIndex ?? currentPhaseIndex;
 
   return (
     <SidebarProvider
@@ -475,9 +537,7 @@ export const ToolsSidebar = ({
                   type="single"
                   className="grid grid-cols-5 gap-2 w-full"
                   defaultValue="1"
-                  value={(
-                    (pendingPhaseIndex ?? currentPhaseIndex) + 1
-                  ).toString()}
+                  value={(activePhaseIndex + 1).toString()}
                   onValueChange={(value) => {
                     if (value) {
                       handlePhaseSwitch(Number(value) - 1);
@@ -485,44 +545,21 @@ export const ToolsSidebar = ({
                   }}
                   rounded
                 >
-                  {phases.map((_, i) => {
+                  {phases.map((phase, i) => {
                     const phaseNum = i + 1;
                     const isPrevious = phaseNum === currentPhaseIndex;
                     const isNext = phaseNum === currentPhaseIndex + 2;
-
-                    if (isPrevious) {
-                      return (
-                        <Tooltip key={phaseNum}>
-                          <TooltipTrigger asChild>
-                            <ToggleGroupItem value={phaseNum.toString()}>
-                              {phaseNum}
-                            </ToggleGroupItem>
-                          </TooltipTrigger>
-                          <TooltipContent>A</TooltipContent>
-                        </Tooltip>
-                      );
-                    }
-
-                    if (isNext) {
-                      return (
-                        <Tooltip key={phaseNum}>
-                          <TooltipTrigger asChild>
-                            <ToggleGroupItem value={phaseNum.toString()}>
-                              {phaseNum}
-                            </ToggleGroupItem>
-                          </TooltipTrigger>
-                          <TooltipContent>D</TooltipContent>
-                        </Tooltip>
-                      );
-                    }
+                    const isEdited = editedPhases.has(i);
 
                     return (
-                      <ToggleGroupItem
+                      <PhaseButton
                         key={phaseNum}
-                        value={phaseNum.toString()}
-                      >
-                        {phaseNum}
-                      </ToggleGroupItem>
+                        phaseNumber={phaseNum}
+                        shortcut={isPrevious ? "A" : isNext ? "D" : undefined}
+                        isEdited={isEdited}
+                        hasContent={phaseHasContent(phase)}
+                        isSelected={i === activePhaseIndex}
+                      />
                     );
                   })}
                 </ToggleGroup>

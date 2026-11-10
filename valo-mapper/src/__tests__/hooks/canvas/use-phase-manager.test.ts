@@ -16,7 +16,7 @@ describe("usePhaseManager", () => {
 
     expect(result.current.phases).toHaveLength(10);
     expect(result.current.currentPhaseIndex).toBe(0);
-    expect(result.current.editedPhases).toEqual(new Set([0]));
+    expect(result.current.editedPhases).toEqual(new Set());
   });
 
   it("should have empty initial phase state", () => {
@@ -60,7 +60,7 @@ describe("usePhaseManager", () => {
   it("should mark phase as edited when updated", () => {
     const { result } = renderHook(() => usePhaseManager());
 
-    expect(result.current.editedPhases).toEqual(new Set([0]));
+    expect(result.current.editedPhases).toEqual(new Set());
 
     act(() => {
       result.current.switchToPhase(2);
@@ -217,6 +217,50 @@ describe("usePhaseManager", () => {
     expect(result.current.editedPhases.has(0)).toBe(true);
   });
 
+  it("should keep a cleared phase as an empty keyframe", () => {
+    const { result } = renderHook(() => usePhaseManager());
+
+    act(() => {
+      result.current.updateCurrentPhase({
+        agentsOnCanvas: [
+          {
+            id: "agent-1",
+            name: "Jett",
+            x: 100,
+            y: 100,
+            isAlly: true,
+            role: "Duelist",
+          },
+        ],
+      });
+    });
+
+    act(() => {
+      result.current.switchToPhase(1);
+    });
+
+    expect(result.current.currentPhase.agentsOnCanvas).toHaveLength(1);
+
+    act(() => {
+      result.current.deletePhase(1);
+    });
+
+    expect(result.current.phases[1].agentsOnCanvas).toHaveLength(0);
+    expect(result.current.editedPhases.has(1)).toBe(true);
+
+    act(() => {
+      result.current.switchToPhase(2);
+    });
+
+    expect(result.current.currentPhase.agentsOnCanvas).toHaveLength(0);
+
+    act(() => {
+      result.current.switchToPhase(1);
+    });
+
+    expect(result.current.currentPhase.agentsOnCanvas).toHaveLength(0);
+  });
+
   it("should duplicate a phase", () => {
     const { result } = renderHook(() => usePhaseManager());
 
@@ -298,7 +342,7 @@ describe("usePhaseManager", () => {
     });
 
     expect(result.current.currentPhaseIndex).toBe(0);
-    expect(result.current.editedPhases).toEqual(new Set([0]));
+    expect(result.current.editedPhases).toEqual(new Set());
     expect(result.current.phases[0].agentsOnCanvas).toHaveLength(0);
     expect(result.current.phases[2].agentsOnCanvas).toHaveLength(0);
   });

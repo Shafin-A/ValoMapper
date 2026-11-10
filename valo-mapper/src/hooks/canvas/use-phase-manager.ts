@@ -88,7 +88,7 @@ export const usePhaseManager = ({
   const [editedPhases, setEditedPhases] = useState<Set<number>>(() =>
     normalizeEditedPhases(
       initialPhasesRef.current,
-      initialEditedPhases ?? [clampedInitialPhaseIndex],
+      initialEditedPhases ?? [],
     ),
   );
 
@@ -161,16 +161,18 @@ export const usePhaseManager = ({
 
   const deletePhase = useCallback(
     (index: number) => {
+      const hadContent = phaseHasContent(phasesRef.current[index]);
+
       setPhasesWithRef((prev) => {
         const newPhases = [...prev];
         newPhases[index] = createEmptyPhaseState();
         return newPhases;
       });
       setEditedPhases((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(index);
-        newSet.add(0);
-        return newSet;
+        if (prev.has(index) || hadContent) {
+          return new Set(prev).add(index);
+        }
+        return prev;
       });
     },
     [setPhasesWithRef],
@@ -199,7 +201,7 @@ export const usePhaseManager = ({
         createEmptyPhaseState,
       ),
     );
-    setEditedPhases(new Set([0]));
+    setEditedPhases(new Set());
     setCurrentPhaseIndex(0);
   }, [setPhasesWithRef]);
 
