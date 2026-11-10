@@ -1,7 +1,5 @@
 import { useWebSocket } from "@/contexts/websocket-context";
 import { useCanvasActions, useCanvasPhase } from "@/contexts/canvas-context";
-import { useCanvasPatch } from "@/hooks/canvas/use-canvas-patch";
-import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   AgentCanvas,
@@ -20,13 +18,6 @@ import { debounce } from "@/lib/utils";
 import { MAX_DRAWLINE_POINTS } from "@/lib/consts/misc/consts";
 
 export const useCollaborativeCanvas = () => {
-  const params = useParams();
-  const lobbyCode =
-    typeof params?.lobbyCode === "string" ? params.lobbyCode : "";
-
-  const { enqueueCanvasPatchEntry, flushCanvasPatch } =
-    useCanvasPatch(lobbyCode);
-
   const {
     currentPhaseIndex,
     editedPhases,
@@ -38,6 +29,8 @@ export const useCollaborativeCanvas = () => {
     updateAgentsSettings,
     updateAbilitiesSettings,
     getLatestPhases,
+    enqueueCanvasPatchEntry,
+    flushCanvasPatch,
   } = useCanvasActions();
 
   const drawLineChunks = useRef<Record<string, string[]>>({});

@@ -7,6 +7,7 @@ import type {
   Agent,
   AgentCanvas,
   CanvasBackground,
+  CanvasPatchEntry,
   CanvasSelectionItem,
   ConnectingLine,
   DrawLine,
@@ -142,6 +143,8 @@ interface CanvasActionsContextType {
   ) => void;
   getCurrentStateForSync: () => FullSyncData;
   getLatestPhases: () => PhaseState[];
+  enqueueCanvasPatchEntry: (entry: CanvasPatchEntry) => void;
+  flushCanvasPatch: () => Promise<void>;
   agentsSettings: IconSettings;
   abilitiesSettings: IconSettings;
   updateAgentsSettings: (settings: Partial<IconSettings>) => void;
@@ -479,6 +482,8 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       rotateCanvasItemsForSideSwap: canvasState.rotateCanvasItemsForSideSwap,
       getCurrentStateForSync: canvasState.getCurrentStateForSync,
       getLatestPhases: canvasState.getLatestPhases,
+      enqueueCanvasPatchEntry: canvasState.enqueueCanvasPatchEntry,
+      flushCanvasPatch: canvasState.flushCanvasPatch,
       agentsSettings: canvasState.agentsSettings,
       abilitiesSettings: canvasState.abilitiesSettings,
       updateAgentsSettings: canvasState.updateAgentsSettings,
@@ -500,6 +505,8 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       canvasState.rotateCanvasItemsForSideSwap,
       canvasState.getCurrentStateForSync,
       canvasState.getLatestPhases,
+      canvasState.enqueueCanvasPatchEntry,
+      canvasState.flushCanvasPatch,
       canvasState.agentsSettings,
       canvasState.abilitiesSettings,
       canvasState.updateAgentsSettings,

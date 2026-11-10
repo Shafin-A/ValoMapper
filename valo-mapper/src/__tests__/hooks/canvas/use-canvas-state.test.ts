@@ -164,6 +164,7 @@ describe("useCanvasState", () => {
 
     mockUseCanvasPatch.mockReturnValue({
       enqueueCanvasPatchEntry: jest.fn(),
+      flushCanvasPatch: jest.fn(),
     } as never);
 
     mockUseHistoryManager.mockReturnValue({

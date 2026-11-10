@@ -126,7 +126,10 @@ export const useCanvasState = ({
   abilitiesSettingsRef.current = abilitiesSettings;
 
   const phaseUnloadRef = useRef<(() => void) | null>(null);
-  const { enqueueCanvasPatchEntry } = useCanvasPatch(lobbyCode, phaseUnloadRef);
+  const { enqueueCanvasPatchEntry, flushCanvasPatch } = useCanvasPatch(
+    lobbyCode,
+    phaseUnloadRef,
+  );
 
   const {
     data: lobby,
@@ -761,5 +764,7 @@ export const useCanvasState = ({
     lobbyError,
     rotateCanvasItemsForSideSwap,
     getCurrentStateForSync,
+    enqueueCanvasPatchEntry,
+    flushCanvasPatch,
   };
 };
