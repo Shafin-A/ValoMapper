@@ -37,6 +37,11 @@ const ALL_ABILITY_IMAGE_SOURCES = Array.from(
   ),
 );
 
+const MAP_POSITION = {
+  x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
+  y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
+};
+
 const LobbyEditPage = () => {
   const divRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<MapStageHandle | null>(null);
@@ -207,11 +212,6 @@ const LobbyEditPage = () => {
     };
   }, []);
 
-  const mapPosition = {
-    x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
-    y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
-  };
-
   const params = useParams();
 
   useEffect(() => {
@@ -257,7 +257,7 @@ const LobbyEditPage = () => {
 
       <ToolsSidebar
         sidebarOpen={sidebarState.leftSidebarOpen}
-        mapPosition={mapPosition}
+        mapPosition={MAP_POSITION}
         stageRef={stageRef}
         showBackgroundSettings
       />
@@ -324,7 +324,7 @@ const LobbyEditPage = () => {
               width={VIRTUAL_WIDTH}
               height={VIRTUAL_HEIGHT}
               scale={stageScale}
-              mapPosition={mapPosition}
+              mapPosition={MAP_POSITION}
             />
           )}
         </div>
