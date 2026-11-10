@@ -10,7 +10,8 @@
     "build:demo-replay": "node scripts/build-demo-replay.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "perf:canvas": "node perf/canvas-perf.mjs"
   },
   "dependencies": {
     "@headless-tree/core": "^1.5.1",
@@ -71,6 +72,7 @@
     "jest": "^30.0.0",
     "jest-canvas-mock": "^2.5.2",
     "jest-environment-jsdom": "^30.4.1",
+    "playwright-core": "^1.65.0",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5"
