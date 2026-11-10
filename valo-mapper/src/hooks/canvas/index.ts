@@ -1,6 +1,8 @@
 // Canvas interaction hooks
 export { useCanvasContextMenu } from "./use-canvas-context-menu";
 export { useCanvasDrawing } from "./use-canvas-drawing";
+export { useCanvasSelection } from "./use-canvas-selection";
+export { useCanvasSelectionDrag } from "./use-canvas-selection-drag";
 export { useCanvasZoom } from "./use-canvas-zoom";
 
 // Canvas state management
