@@ -1,5 +1,8 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasEntityActions,
+  useCanvasView,
+} from "@/contexts/canvas-context";
 import { MAP_SIZE } from "@/lib/consts";
 import { CANVAS_MAP_RENDER_SCALE } from "@/lib/map-positioning";
 import { loadVisionMask } from "@/lib/vision-mask-loader";
@@ -106,7 +109,8 @@ export const CanvasArcIcon = ({
   const initialArcRadiusRef = useRef<number>(arcRadius);
   const initialPointerDistanceRef = useRef<number>(0);
 
-  const { setAbilitiesOnCanvas, mapSide, selectedMap } = useCanvas();
+  const { setAbilitiesOnCanvas } = useCanvasEntityActions();
+  const { mapSide, selectedMap } = useCanvasView();
   const [maskState, setMaskState] = useState<{
     source: string;
     mask: VisionMask;

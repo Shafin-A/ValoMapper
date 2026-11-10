@@ -1,4 +1,7 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasEntities,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import Konva from "konva";
 import { RefObject, useCallback, useRef } from "react";
@@ -35,8 +38,8 @@ const heightForText = (
 export const useTextEditor = (
   transformerRefs: RefObject<Map<string, Konva.Transformer>>,
 ) => {
-  const { textsOnCanvas, setTextsOnCanvas, isDrawMode, setEditingTextId } =
-    useCanvas();
+  const { textsOnCanvas, setTextsOnCanvas } = useCanvasEntities();
+  const { isDrawMode, setEditingTextId } = useCanvasUi();
   const { notifyTextUpdated } = useCollaborativeCanvas();
 
   const textRefs = useRef<Map<string, Konva.Rect>>(new Map());

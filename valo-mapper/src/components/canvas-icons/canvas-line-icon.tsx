@@ -1,5 +1,8 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasEntityActions,
+  useCanvasView,
+} from "@/contexts/canvas-context";
 import {
   handleMouseOutDefaultCursor,
   handleMouseOverGrabCursor,
@@ -102,7 +105,8 @@ export const CanvasLineIcon = ({
 
   const [image] = useImage(src);
 
-  const { setAbilitiesOnCanvas, mapSide } = useCanvas();
+  const { setAbilitiesOnCanvas } = useCanvasEntityActions();
+  const { mapSide } = useCanvasView();
 
   useEffect(() => {
     const group = groupRef.current;

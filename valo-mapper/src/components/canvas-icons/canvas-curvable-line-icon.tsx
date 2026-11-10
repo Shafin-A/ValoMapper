@@ -1,5 +1,8 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasEntityActions,
+  useCanvasView,
+} from "@/contexts/canvas-context";
 import { handleMouseOutDefaultCursor } from "@/lib/utils";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
@@ -66,7 +69,8 @@ export const CanvasCurvableLineIcon = ({
 
   const [image] = useImage(src);
 
-  const { setAbilitiesOnCanvas, mapSide } = useCanvas();
+  const { setAbilitiesOnCanvas } = useCanvasEntityActions();
+  const { mapSide } = useCanvasView();
 
   useEffect(() => {
     const group = groupRef.current;

@@ -1,6 +1,6 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
 import { drawLifetimeRing } from "@/components/canvas-icons/lifetime-ring";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasView } from "@/contexts/canvas-context";
 import {
   handleMouseOutDefaultCursor,
   handleMouseOverGrabCursor,
@@ -53,7 +53,7 @@ export const CanvasCircleIcon = ({
 }: CanvasCircleIconProps) => {
   const groupRef = useRef<Konva.Group>(null);
   const [image] = useImage(src);
-  const { mapSide } = useCanvas();
+  const { mapSide } = useCanvasView();
 
   useEffect(() => {
     const group = groupRef.current;
