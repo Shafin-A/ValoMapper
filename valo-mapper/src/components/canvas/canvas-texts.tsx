@@ -202,11 +202,16 @@ export const CanvasTexts = memo(function CanvasTexts({
                 if (currentTransformer) {
                   const h = currentTransformer.height();
                   const scale = stageRef.current?.scaleX() ?? 1;
+                  const width = 10 * scale;
+                  const height = Math.min(
+                    h,
+                    Math.max(50 * scale, h - 10),
+                  );
                   anchor.cornerRadius(10 * scale);
-                  anchor.width(10 * scale);
-                  anchor.height(Math.max(50 * scale, h - 10));
-                  anchor.offsetX((10 * scale) / 2);
-                  anchor.offsetY((h - 10 * scale) / 2);
+                  anchor.width(width);
+                  anchor.height(height);
+                  anchor.offsetX(width / 2);
+                  anchor.offsetY(height / 2);
                 }
               }
             }}
