@@ -1,6 +1,16 @@
+"use client";
+
 import { useWebSocket } from "@/contexts/websocket-context";
 import { useCanvasActions, useCanvasPhase } from "@/contexts/canvas-context";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from "react";
 import {
   AgentCanvas,
   AbilityCanvas,
@@ -17,7 +27,7 @@ import {
 import { debounce } from "@/lib/utils";
 import { MAX_DRAWLINE_POINTS } from "@/lib/consts/misc/consts";
 
-export const useCollaborativeCanvas = () => {
+const useCollaborativeCanvasActions = () => {
   const {
     currentPhaseIndex,
     editedPhases,
@@ -975,4 +985,36 @@ export const useCollaborativeCanvas = () => {
       notifyAllPhasesRotated,
     ],
   );
+};
+
+type CollaborativeCanvasContextType = ReturnType<
+  typeof useCollaborativeCanvasActions
+>;
+
+const CollaborativeCanvasContext = createContext<
+  CollaborativeCanvasContextType | undefined
+>(undefined);
+
+export const CollaborativeCanvasProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
+  const value = useCollaborativeCanvasActions();
+
+  return (
+    <CollaborativeCanvasContext.Provider value={value}>
+      {children}
+    </CollaborativeCanvasContext.Provider>
+  );
+};
+
+export const useCollaborativeCanvas = () => {
+  const context = useContext(CollaborativeCanvasContext);
+  if (context === undefined) {
+    throw new Error(
+      "useCollaborativeCanvas must be used within a CollaborativeCanvasProvider",
+    );
+  }
+  return context;
 };

@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CanvasProvider } from "@/contexts/canvas-context";
 import { SettingsProvider } from "@/contexts/settings-context";
 import { WebSocketProvider } from "@/contexts/websocket-context";
+import { CollaborativeCanvasProvider } from "@/hooks/use-collaborative-canvas";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { FirebaseAuthProvider } from "@/hooks/use-firebase-auth";
 import type { Metadata, Viewport } from "next";
@@ -83,10 +84,12 @@ const RootLayout = ({
                   <TourProviderWrapper>
                     <CanvasProvider>
                       <WebSocketProvider>
-                        <NavigationHistoryProvider>
-                          <KeyboardShortcuts />
-                          {children}
-                        </NavigationHistoryProvider>
+                        <CollaborativeCanvasProvider>
+                          <NavigationHistoryProvider>
+                            <KeyboardShortcuts />
+                            {children}
+                          </NavigationHistoryProvider>
+                        </CollaborativeCanvasProvider>
                       </WebSocketProvider>
                     </CanvasProvider>
                     <Toaster richColors closeButton />
