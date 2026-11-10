@@ -1,4 +1,5 @@
 import { ContextMenuPopover } from "@/components/canvas/context-menu-popover";
+import "@/lib/konva-config";
 import { RemoteCursors } from "@/components/collaboration";
 import { useCanvasEntities, useCanvasUi, useCanvasView } from "@/contexts/canvas-context";
 import { useWebSocket } from "@/contexts/websocket-context";
