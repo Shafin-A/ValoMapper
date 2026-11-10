@@ -123,7 +123,11 @@ export const usePhaseManager = ({
         };
         return newPhases;
       });
-      setEditedPhases((prev) => new Set(prev).add(currentPhaseIndex));
+      setEditedPhases((prev) =>
+        prev.has(currentPhaseIndex)
+          ? prev
+          : new Set(prev).add(currentPhaseIndex),
+      );
     },
     [currentPhaseIndex, setPhasesWithRef],
   );

@@ -586,10 +586,6 @@ describe("useCanvasState", () => {
       getCurrentState: () => UndoableState;
     };
 
-    expect(latestHistoryConfig.getCurrentState).not.toBe(
-      initialHistoryConfig.getCurrentState,
-    );
-
     expect(initialHistoryConfig.getCurrentState()).toEqual(
       expect.objectContaining({
         selectedMap: updatedMap,

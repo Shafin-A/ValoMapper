@@ -7,13 +7,26 @@ import {
   usePhaseTransitions,
 } from "@/hooks/canvas";
 import { useCanvasPatch } from "@/hooks/canvas/use-canvas-patch";
+import type { PhaseStateUpdate } from "@/hooks/canvas/use-phase-manager";
 import {
   normalizeEditedPhases,
   phaseHasContent,
 } from "@/hooks/canvas/use-phase-manager";
 import { useSettings } from "@/contexts/settings-context";
 import { defaultIconSettings } from "@/contexts/settings-context";
-import { MapOption, MapSide, PhaseState, UndoableState } from "@/lib/types";
+import {
+  AbilityCanvas,
+  AgentCanvas,
+  ConnectingLine,
+  DrawLine,
+  ImageCanvas,
+  MapOption,
+  MapSide,
+  PhaseState,
+  TextCanvas,
+  ToolIconCanvas,
+  UndoableState,
+} from "@/lib/types";
 import { MAP_SIZE, VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts";
 import { useParams } from "next/navigation";
 import {
@@ -74,6 +87,20 @@ export const useCanvasState = ({
     initialPhases: initialState?.phases,
     initialPhaseCount,
   });
+
+  const setSelectedMapBase = canvasUI.setSelectedMap;
+  const setMapSideBase = canvasUI.setMapSide;
+  const resetEditsBase = canvasUI.resetEdits;
+
+  const getLatestPhases = phaseManager.getLatestPhases;
+  const updateCurrentPhaseBase = phaseManager.updateCurrentPhase;
+  const switchToPhaseBase = phaseManager.switchToPhase;
+  const duplicatePhaseBase = phaseManager.duplicatePhase;
+  const deletePhaseBase = phaseManager.deletePhase;
+  const setCurrentPhaseIndexBase = phaseManager.setCurrentPhaseIndex;
+  const setPhasesBase = phaseManager.setPhases;
+  const setEditedPhasesBase = phaseManager.setEditedPhases;
+  const resetAllPhasesBase = phaseManager.resetAllPhases;
   const {
     agentsSettings,
     abilitiesSettings,
@@ -136,62 +163,64 @@ export const useCanvasState = ({
     phaseManager.updateCurrentPhase,
   );
 
+  const setAgentsOnCanvasBase = canvasItems.setAgentsOnCanvas;
+  const setAbilitiesOnCanvasBase = canvasItems.setAbilitiesOnCanvas;
+  const setDrawLinesBase = canvasItems.setDrawLines;
+  const setConnectingLinesBase = canvasItems.setConnectingLines;
+  const setImagesOnCanvasBase = canvasItems.setImagesOnCanvas;
+  const setTextsOnCanvasBase = canvasItems.setTextsOnCanvas;
+  const setToolIconsOnCanvasBase = canvasItems.setToolIconsOnCanvas;
+
   const wrappedSetAgentsOnCanvas = useCallback(
-    (value: Parameters<typeof canvasItems.setAgentsOnCanvas>[0]) => {
-      canvasItems.setAgentsOnCanvas(value);
+    (value: SetStateAction<AgentCanvas[]>) => {
+      setAgentsOnCanvasBase(value);
     },
-    [canvasItems],
+    [setAgentsOnCanvasBase],
   );
 
   const wrappedSetAbilitiesOnCanvas = useCallback(
-    (value: Parameters<typeof canvasItems.setAbilitiesOnCanvas>[0]) => {
-      canvasItems.setAbilitiesOnCanvas(value);
+    (value: SetStateAction<AbilityCanvas[]>) => {
+      setAbilitiesOnCanvasBase(value);
     },
-    [canvasItems],
+    [setAbilitiesOnCanvasBase],
   );
 
   const wrappedSetDrawLines = useCallback(
-    (value: Parameters<typeof canvasItems.setDrawLines>[0]) => {
-      canvasItems.setDrawLines(value);
+    (value: SetStateAction<DrawLine[]>) => {
+      setDrawLinesBase(value);
     },
-    [canvasItems],
+    [setDrawLinesBase],
   );
 
   const wrappedSetConnectingLines = useCallback(
-    (value: Parameters<typeof canvasItems.setConnectingLines>[0]) => {
-      canvasItems.setConnectingLines(value);
+    (value: SetStateAction<ConnectingLine[]>) => {
+      setConnectingLinesBase(value);
     },
-    [canvasItems],
+    [setConnectingLinesBase],
   );
 
   const wrappedSetImagesOnCanvas = useCallback(
-    (value: Parameters<typeof canvasItems.setImagesOnCanvas>[0]) => {
-      canvasItems.setImagesOnCanvas(value);
+    (value: SetStateAction<ImageCanvas[]>) => {
+      setImagesOnCanvasBase(value);
     },
-    [canvasItems],
+    [setImagesOnCanvasBase],
   );
 
   const wrappedSetTextsOnCanvas = useCallback(
-    (value: Parameters<typeof canvasItems.setTextsOnCanvas>[0]) => {
-      canvasItems.setTextsOnCanvas(value);
+    (value: SetStateAction<TextCanvas[]>) => {
+      setTextsOnCanvasBase(value);
     },
-    [canvasItems],
+    [setTextsOnCanvasBase],
   );
 
   const wrappedSetToolIconsOnCanvas = useCallback(
-    (value: Parameters<typeof canvasItems.setToolIconsOnCanvas>[0]) => {
-      canvasItems.setToolIconsOnCanvas(value);
+    (value: SetStateAction<ToolIconCanvas[]>) => {
+      setToolIconsOnCanvasBase(value);
     },
-    [canvasItems],
+    [setToolIconsOnCanvasBase],
   );
 
   const getCurrentState = useCallback((): UndoableState => {
-    void phaseManager;
-    void canvasUI.selectedMap;
-    void canvasUI.mapSide;
-    void agentsSettings;
-    void abilitiesSettings;
-
     return {
       phases: getLatestPhasesRef.current(),
       selectedMap: selectedMapRef.current,
@@ -201,13 +230,7 @@ export const useCanvasState = ({
       agentsSettings: agentsSettingsRef.current,
       abilitiesSettings: abilitiesSettingsRef.current,
     };
-  }, [
-    phaseManager,
-    canvasUI.selectedMap,
-    canvasUI.mapSide,
-    agentsSettings,
-    abilitiesSettings,
-  ]);
+  }, []);
 
   const normalizeHistoryState = useCallback(
     (state: UndoableState): UndoableState => ({
@@ -237,23 +260,31 @@ export const useCanvasState = ({
         setHistoryReplayCommitTick((prev) => prev + 1);
       }
 
-      phaseManager.setPhases(state.phases);
+      setPhasesBase(state.phases);
 
       if (state.currentPhaseIndex !== undefined) {
-        phaseManager.setCurrentPhaseIndex(state.currentPhaseIndex);
+        setCurrentPhaseIndexBase(state.currentPhaseIndex);
       }
 
-      phaseManager.setEditedPhases(
+      setEditedPhasesBase(
         normalizeEditedPhases(state.phases, state.editedPhases),
       );
 
-      canvasUI.setSelectedMap(state.selectedMap);
-      canvasUI.setMapSide(state.mapSide);
+      setSelectedMapBase(state.selectedMap);
+      setMapSideBase(state.mapSide);
 
       updateAgentsSettings(state.agentsSettings ?? defaultIconSettings);
       updateAbilitiesSettings(state.abilitiesSettings ?? defaultIconSettings);
     },
-    [phaseManager, canvasUI, updateAgentsSettings, updateAbilitiesSettings],
+    [
+      setPhasesBase,
+      setCurrentPhaseIndexBase,
+      setEditedPhasesBase,
+      setSelectedMapBase,
+      setMapSideBase,
+      updateAgentsSettings,
+      updateAbilitiesSettings,
+    ],
   );
 
   useEffect(() => {
@@ -267,63 +298,63 @@ export const useCanvasState = ({
   }, [historyReplayCommitTick, getCurrentState]);
 
   const wrappedUpdateCurrentPhase = useCallback(
-    (updates: Parameters<typeof phaseManager.updateCurrentPhase>[0]) => {
-      phaseManager.updateCurrentPhase(updates);
+    (updates: PhaseStateUpdate) => {
+      updateCurrentPhaseBase(updates);
     },
-    [phaseManager],
+    [updateCurrentPhaseBase],
   );
 
   const wrappedSwitchToPhase = useCallback(
     (index: number) => {
-      phaseManager.switchToPhase(index);
+      switchToPhaseBase(index);
     },
-    [phaseManager],
+    [switchToPhaseBase],
   );
 
   const wrappedDuplicatePhase = useCallback(
     (index: number) => {
-      phaseManager.duplicatePhase(index);
+      duplicatePhaseBase(index);
     },
-    [phaseManager],
+    [duplicatePhaseBase],
   );
 
   const wrappedDeletePhase = useCallback(
     (index: number) => {
-      phaseManager.deletePhase(index);
+      deletePhaseBase(index);
     },
-    [phaseManager],
+    [deletePhaseBase],
   );
 
   const wrappedSetCurrentPhaseIndex = useCallback(
     (index: number) => {
-      phaseManager.setCurrentPhaseIndex(index);
+      setCurrentPhaseIndexBase(index);
     },
-    [phaseManager],
+    [setCurrentPhaseIndexBase],
   );
 
   const wrappedSetPhases = useCallback(
     (value: PhaseState[] | ((prev: PhaseState[]) => PhaseState[])) => {
-      phaseManager.setPhases(value);
+      setPhasesBase(value);
     },
-    [phaseManager],
+    [setPhasesBase],
   );
 
   const wrappedResetAllPhases = useCallback(() => {
-    phaseManager.resetAllPhases();
-  }, [phaseManager]);
+    resetAllPhasesBase();
+  }, [resetAllPhasesBase]);
 
   const wrappedSetSelectedMap = useCallback(
     (value: SetStateAction<MapOption>) => {
-      canvasUI.setSelectedMap(value);
+      setSelectedMapBase(value);
     },
-    [canvasUI],
+    [setSelectedMapBase],
   );
 
   const wrappedSetMapSide = useCallback(
     (value: SetStateAction<MapSide>) => {
-      canvasUI.setMapSide(value);
+      setMapSideBase(value);
     },
-    [canvasUI],
+    [setMapSideBase],
   );
 
   const wrappedUpdateAgentsSettings = useCallback(
@@ -433,13 +464,18 @@ export const useCanvasState = ({
   const resetState = useCallback(
     (resetAllPhases = false) => {
       if (resetAllPhases) {
-        phaseManager.resetAllPhases();
+        resetAllPhasesBase();
       } else {
-        phaseManager.deletePhase(phaseManager.currentPhaseIndex);
+        deletePhaseBase(phaseManager.currentPhaseIndex);
       }
-      canvasUI.resetEdits();
+      resetEditsBase();
     },
-    [phaseManager, canvasUI],
+    [
+      resetAllPhasesBase,
+      deletePhaseBase,
+      phaseManager.currentPhaseIndex,
+      resetEditsBase,
+    ],
   );
 
   const phaseUnloadStateRef = useRef({
@@ -459,7 +495,7 @@ export const useCanvasState = ({
       const { currentPhaseIndex, editedPhases } = phaseUnloadStateRef.current;
       if (editedPhases.has(currentPhaseIndex)) return;
 
-      const phase = phaseManager.getLatestPhases()[currentPhaseIndex];
+      const phase = getLatestPhases()[currentPhaseIndex];
       if (!phase) return;
 
       if (!phaseHasContent(phase)) return;
@@ -536,7 +572,7 @@ export const useCanvasState = ({
         },
       });
     };
-  }, [phaseManager.getLatestPhases, enqueueCanvasPatchEntry, phaseManager]);
+  }, [getLatestPhases, enqueueCanvasPatchEntry]);
 
   useEffect(() => {
     if (lobbyCode === lastHistoryScopeRef.current) return;
@@ -579,8 +615,8 @@ export const useCanvasState = ({
         });
         applyState(normalizedLobbyState);
       } else {
-        phaseManager.resetAllPhases();
-        canvasUI.resetEdits();
+        resetAllPhasesBase();
+        resetEditsBase();
         setIsHistoryTrackingEnabled(false);
         setPendingHistorySeed({ scope: lobbyCode, source: "current" });
       }
@@ -589,8 +625,8 @@ export const useCanvasState = ({
     lobbyCode,
     lobby,
     applyState,
-    phaseManager,
-    canvasUI,
+    resetAllPhasesBase,
+    resetEditsBase,
     normalizeHistoryState,
   ]);
 
@@ -606,7 +642,7 @@ export const useCanvasState = ({
       const mapCenterX = (VIRTUAL_WIDTH - MAP_SIZE) / 2 + MAP_SIZE / 2;
       const mapCenterY = (VIRTUAL_HEIGHT - MAP_SIZE) / 2 + MAP_SIZE / 2;
 
-      const currentPhases = phaseManager.getLatestPhases();
+      const currentPhases = getLatestPhases();
       const newPhases = currentPhases.map((phase) => ({
         ...phase,
         agentsOnCanvas: phase.agentsOnCanvas.map((agent) => ({
@@ -659,10 +695,10 @@ export const useCanvasState = ({
         })),
       }));
 
-      phaseManager.setPhases(newPhases);
+      setPhasesBase(newPhases);
       onRotated?.(newPhases);
     },
-    [phaseManager],
+    [getLatestPhases, setPhasesBase],
   );
 
   const getCurrentStateForSync = useCallback(
