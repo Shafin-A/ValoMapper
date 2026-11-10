@@ -1,4 +1,7 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasEntities,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useSetHoveredElementId } from "@/contexts/hover-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
@@ -8,7 +11,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { TextEditor } from "@/components/canvas/text-editor";
 import { RichText } from "@/components/canvas/rich-text";
 import Konva from "konva";
-import { RefObject, useCallback, useState } from "react";
+import { RefObject, memo, useCallback, useState } from "react";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import {
   TEXT_MIN_HEIGHT,
@@ -28,19 +31,14 @@ interface CanvasTextProps {
 
 const EMPTY_PLACEHOLDER = "Click to add text...";
 
-export const CanvasTexts = ({
+export const CanvasTexts = memo(function CanvasTexts({
   stageRef,
   transformerRefs,
   deleteGroupRef,
   selectionDrag,
-}: CanvasTextProps) => {
-  const {
-    textsOnCanvas,
-    isDrawMode,
-    editingTextId,
-    setTextsOnCanvas,
-    selectedCanvasIcon,
-  } = useCanvas();
+}: CanvasTextProps) {
+  const { textsOnCanvas, setTextsOnCanvas } = useCanvasEntities();
+  const { isDrawMode, editingTextId, selectedCanvasIcon } = useCanvasUi();
 
   const setHoveredElementId = useSetHoveredElementId();
 
@@ -225,4 +223,4 @@ export const CanvasTexts = ({
       </Group>
     );
   });
-};
+});

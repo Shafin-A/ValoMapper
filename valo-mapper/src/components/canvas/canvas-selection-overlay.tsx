@@ -1,4 +1,9 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasEntities,
+  useCanvasScale,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
   type CanvasRect,
@@ -7,7 +12,7 @@ import {
 import { canvasMarqueeStore } from "@/lib/canvas-marquee-store";
 import type Konva from "konva";
 import type { Stage } from "konva/lib/Stage";
-import { Fragment, useEffect, useState, useSyncExternalStore } from "react";
+import { Fragment, memo, useEffect, useState, useSyncExternalStore } from "react";
 import { Group, Layer, Rect } from "react-konva";
 
 interface CanvasSelectionOverlayProps {
@@ -16,21 +21,21 @@ interface CanvasSelectionOverlayProps {
   scale: number;
 }
 
-export const CanvasSelectionOverlay = ({
+export const CanvasSelectionOverlay = memo(function CanvasSelectionOverlay({
   stageRef,
   outlineGroupRef,
   scale,
-}: CanvasSelectionOverlayProps) => {
+}: CanvasSelectionOverlayProps) {
   const {
-    selectedCanvasItems,
     agentsOnCanvas,
     abilitiesOnCanvas,
     textsOnCanvas,
     imagesOnCanvas,
     toolIconsOnCanvas,
-    currentStageScale,
-    getRegisteredNode,
-  } = useCanvas();
+  } = useCanvasEntities();
+  const { selectedCanvasItems } = useCanvasUi();
+  const { currentStageScale } = useCanvasScale();
+  const { getRegisteredNode } = useCanvasActions();
   const { agentsSettings, abilitiesSettings } = useSettings();
 
   const marqueeRect = useSyncExternalStore(
@@ -149,4 +154,4 @@ export const CanvasSelectionOverlay = ({
       )}
     </Layer>
   );
-};
+});

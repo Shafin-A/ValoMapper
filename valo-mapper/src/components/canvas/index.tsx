@@ -1,6 +1,6 @@
 import { ContextMenuPopover } from "@/components/canvas/context-menu-popover";
 import { RemoteCursors } from "@/components/collaboration";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasEntities, useCanvasUi, useCanvasView } from "@/contexts/canvas-context";
 import { useWebSocket } from "@/contexts/websocket-context";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
@@ -87,7 +87,7 @@ const CanvasContextMenu = memo(function CanvasContextMenu({
     textsOnCanvas,
     imagesOnCanvas,
     toolIconsOnCanvas,
-  } = useCanvas();
+  } = useCanvasEntities();
 
   const currentItem = contextMenu.open
     ? contextMenu.anchorType === "agent"
@@ -138,7 +138,8 @@ export const MapStage = memo(
       },
       forwardedRef,
     ) => {
-    const { isDrawMode, canvasBackground } = useCanvas();
+    const { isDrawMode } = useCanvasUi();
+    const { canvasBackground } = useCanvasView();
 
     const { sendCursorPosition, status: wsStatus } = useWebSocket();
 

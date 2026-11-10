@@ -1,16 +1,17 @@
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { Line } from "react-konva";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasEntities } from "@/contexts/canvas-context";
 import { ConnectingLine } from "@/lib/types";
 
 interface CanvasConnectingLinesProps {
   onLineClick?: (line: ConnectingLine) => void;
 }
 
-export const CanvasConnectingLines: React.FC<CanvasConnectingLinesProps> = ({
+export const CanvasConnectingLines = memo(function CanvasConnectingLines({
   onLineClick,
-}) => {
-  const { connectingLines, agentsOnCanvas, abilitiesOnCanvas } = useCanvas();
+}: CanvasConnectingLinesProps) {
+  const { connectingLines, agentsOnCanvas, abilitiesOnCanvas } =
+    useCanvasEntities();
 
   const itemsById = useMemo(() => {
     const map = new Map<string, { x: number; y: number }>();
@@ -60,4 +61,4 @@ export const CanvasConnectingLines: React.FC<CanvasConnectingLinesProps> = ({
       })}
     </>
   );
-};
+});

@@ -1,4 +1,7 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasEntities,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import {
   useHoveredElementId,
   useSetHoveredElementId,
@@ -8,7 +11,7 @@ import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selectio
 import { useImageTransform } from "@/hooks/canvas";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
-import { RefObject } from "react";
+import { RefObject, memo } from "react";
 import { Group, Image, Rect, Text, Transformer } from "react-konva";
 
 interface CanvasImageProps {
@@ -19,20 +22,15 @@ interface CanvasImageProps {
   selectionDrag: SelectionDragController;
 }
 
-export const CanvasImages = ({
+export const CanvasImages = memo(function CanvasImages({
   stageRef,
   transformerRefs,
   deleteGroupRef,
   onImageDoubleClick,
   selectionDrag,
-}: CanvasImageProps) => {
-  const {
-    imagesOnCanvas,
-    isDrawMode,
-    editingTextId,
-    setImagesOnCanvas,
-    selectedCanvasIcon,
-  } = useCanvas();
+}: CanvasImageProps) {
+  const { imagesOnCanvas, setImagesOnCanvas } = useCanvasEntities();
+  const { isDrawMode, editingTextId, selectedCanvasIcon } = useCanvasUi();
 
   const hoveredElementId = useHoveredElementId();
   const setHoveredElementId = useSetHoveredElementId();
@@ -238,4 +236,4 @@ export const CanvasImages = ({
       </Group>
     );
   });
-};
+});

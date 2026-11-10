@@ -3,13 +3,15 @@
 import { useRemoteCursors } from "@/contexts/cursor-context";
 import { CursorMoveData } from "@/lib/websocket-types";
 import { Group, Circle, Label, Tag, Text } from "react-konva";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 
 interface RemoteCursorsProps {
   scale: number;
 }
 
-export const RemoteCursors = ({ scale }: RemoteCursorsProps) => {
+export const RemoteCursors = memo(function RemoteCursors({
+  scale,
+}: RemoteCursorsProps) {
   const cursors = useRemoteCursors();
 
   const cursorArray = useMemo(() => Array.from(cursors.values()), [cursors]);
@@ -21,7 +23,7 @@ export const RemoteCursors = ({ scale }: RemoteCursorsProps) => {
       ))}
     </Group>
   );
-};
+});
 
 interface RemoteCursorProps {
   cursor: CursorMoveData;
