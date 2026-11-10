@@ -156,11 +156,28 @@ export const useCanvasEvents = (
     handleTouchEnd: handleZoomTouchEnd,
   } = useCanvasZoom(stageRef, baseScale, isDrawMode);
 
+  const scaleFrameRef = useRef<number | null>(null);
+
   const syncCurrentStageScale = useCallback(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    setCurrentStageScale(stage.scaleX());
+    if (scaleFrameRef.current !== null) return;
+
+    scaleFrameRef.current = requestAnimationFrame(() => {
+      scaleFrameRef.current = null;
+      const stage = stageRef.current;
+      if (!stage) return;
+      setCurrentStageScale(stage.scaleX());
+    });
   }, [stageRef, setCurrentStageScale]);
+
+  useEffect(
+    () => () => {
+      if (scaleFrameRef.current !== null) {
+        cancelAnimationFrame(scaleFrameRef.current);
+        scaleFrameRef.current = null;
+      }
+    },
+    [],
+  );
 
   const handleWheel = useCallback(
     (e: Parameters<typeof handleZoomWheel>[0]) => {
