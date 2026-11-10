@@ -9,6 +9,7 @@ const CHROME_PATH = process.env.PERF_CHROME_PATH;
 const HEADLESS = process.env.PERF_HEADLESS === "1";
 const CURSOR_MS = Number(process.env.PERF_CURSOR_MS ?? 3000);
 const SETTLE_MS = 800;
+const NO_NAVIGATE = process.env.PERF_NO_NAVIGATE === "1";
 
 if (!LOBBY_URL) {
   console.error(
@@ -56,7 +57,7 @@ const openBrowser = async () => {
 
     await page.bringToFront();
 
-    if (!page.url().includes(targetPath)) {
+    if (!NO_NAVIGATE) {
       await page.goto(LOBBY_URL, { waitUntil: "domcontentloaded" });
     }
 

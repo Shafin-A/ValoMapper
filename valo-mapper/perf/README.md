@@ -52,6 +52,7 @@ publicly reachable.
 | `PERF_CURSOR_MS`    | `3000`               | Duration of the cursor scenario              |
 | `PERF_CHROME_PATH`  | unset                | Explicit Chrome executable for launch mode   |
 | `PERF_HEADLESS`     | unset (`1` = on)     | Run launch mode headless                     |
+| `PERF_NO_NAVIGATE`  | unset (`1` = skip)   | Skip the automatic lobby reload              |
 
 ## Scenarios
 
@@ -75,6 +76,8 @@ stats, commit counters, checks, viewport, and DPR.
 
 ## Notes
 
+- The harness reloads the lobby tab before measuring so it always runs the
+  latest modules. Pass `PERF_NO_NAVIGATE=1` to skip the reload.
 - The cursor scenario adds a temporary `PerfBot` presence entry; it disconnects
   at the end of the scenario.
 - If `window.__canvasPerf` is missing, the harness prints a warning and skips
