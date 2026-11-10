@@ -222,15 +222,23 @@ export const useCanvasState = ({
 
   const getCurrentState = useCallback((): UndoableState => {
     return {
-      phases: getLatestPhasesRef.current(),
-      selectedMap: selectedMapRef.current,
-      mapSide: mapSideRef.current,
-      currentPhaseIndex: currentPhaseIndexRef.current,
-      editedPhases: Array.from(editedPhasesRef.current),
-      agentsSettings: agentsSettingsRef.current,
-      abilitiesSettings: abilitiesSettingsRef.current,
+      phases: phaseManager.phases,
+      selectedMap: canvasUI.selectedMap,
+      mapSide: canvasUI.mapSide,
+      currentPhaseIndex: phaseManager.currentPhaseIndex,
+      editedPhases: Array.from(phaseManager.editedPhases),
+      agentsSettings,
+      abilitiesSettings,
     };
-  }, []);
+  }, [
+    phaseManager.phases,
+    phaseManager.currentPhaseIndex,
+    phaseManager.editedPhases,
+    canvasUI.selectedMap,
+    canvasUI.mapSide,
+    agentsSettings,
+    abilitiesSettings,
+  ]);
 
   const normalizeHistoryState = useCallback(
     (state: UndoableState): UndoableState => ({

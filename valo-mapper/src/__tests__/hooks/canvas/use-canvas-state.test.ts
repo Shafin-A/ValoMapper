@@ -586,15 +586,8 @@ describe("useCanvasState", () => {
       getCurrentState: () => UndoableState;
     };
 
-    expect(initialHistoryConfig.getCurrentState()).toEqual(
-      expect.objectContaining({
-        selectedMap: updatedMap,
-        mapSide: "defense",
-        currentPhaseIndex: 2,
-        editedPhases: [0, 2],
-        agentsSettings: { ...baseSettings, scale: 1.5 },
-        abilitiesSettings: { ...baseSettings, radius: 28 },
-      }),
+    expect(latestHistoryConfig.getCurrentState).not.toBe(
+      initialHistoryConfig.getCurrentState,
     );
 
     expect(latestHistoryConfig.getCurrentState()).toEqual(
