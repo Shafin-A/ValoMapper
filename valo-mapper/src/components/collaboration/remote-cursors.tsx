@@ -1,6 +1,6 @@
 "use client";
 
-import { useWebSocket } from "@/contexts/websocket-context";
+import { useRemoteCursors } from "@/contexts/cursor-context";
 import { CursorMoveData } from "@/lib/websocket-types";
 import { Group, Circle, Label, Tag, Text } from "react-konva";
 import { useMemo } from "react";
@@ -10,7 +10,7 @@ interface RemoteCursorsProps {
 }
 
 export const RemoteCursors = ({ scale }: RemoteCursorsProps) => {
-  const { cursors } = useWebSocket();
+  const cursors = useRemoteCursors();
 
   const cursorArray = useMemo(() => Array.from(cursors.values()), [cursors]);
 

@@ -48,9 +48,45 @@ export const useLobbyWebSocket = ({
   const lastCursorSendRef = useRef(0);
   const onMessageRef = useRef(onMessage);
 
+  const pendingCursorsRef = useRef<Map<string, CursorMoveData>>(new Map());
+  const cursorFrameRef = useRef<number | null>(null);
+
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
+
+  const flushPendingCursors = useCallback(() => {
+    cursorFrameRef.current = null;
+
+    const pending = pendingCursorsRef.current;
+    if (pending.size === 0) return;
+
+    pendingCursorsRef.current = new Map();
+
+    setCursors((previous) => {
+      const next = new Map(previous);
+      pending.forEach((cursor, userId) => next.set(userId, cursor));
+      return next;
+    });
+  }, []);
+
+  const queueCursorMove = useCallback(
+    (cursor: CursorMoveData) => {
+      pendingCursorsRef.current.set(cursor.userId, {
+        ...cursor,
+        timestamp: Date.now(),
+      } as CursorMoveData & { timestamp: number });
+
+      if (cursorFrameRef.current !== null) return;
+
+      if (typeof requestAnimationFrame === "function") {
+        cursorFrameRef.current = requestAnimationFrame(flushPendingCursors);
+      } else {
+        flushPendingCursors();
+      }
+    },
+    [flushPendingCursors],
+  );
 
   const connect = useCallback(() => {
     if (!lobbyCode || !enabled) return;
@@ -99,6 +135,13 @@ export const useLobbyWebSocket = ({
             setUsers(data.users);
 
             const currentUserIds = new Set(data.users.map((u) => u.id));
+
+            pendingCursorsRef.current.forEach((_, userId) => {
+              if (!currentUserIds.has(userId)) {
+                pendingCursorsRef.current.delete(userId);
+              }
+            });
+
             setCursors((prev) => {
               const next = new Map(prev);
               let hasChanges = false;
@@ -114,16 +157,7 @@ export const useLobbyWebSocket = ({
           }
 
           if (message.type === WS_MESSAGE_TYPES.CURSOR_MOVE) {
-            const data = message.data as CursorMoveData;
-            setCursors((prev) => {
-              const next = new Map(prev);
-
-              next.set(data.userId, {
-                ...data,
-                timestamp: Date.now(),
-              } as CursorMoveData & { timestamp: number });
-              return next;
-            });
+            queueCursorMove(message.data as CursorMoveData);
             continue;
           }
 
@@ -163,12 +197,18 @@ export const useLobbyWebSocket = ({
       console.error("[WebSocket] Error:", error);
       setStatus("error");
     };
-  }, [lobbyCode, username, color, enabled]);
+  }, [lobbyCode, username, color, enabled, queueCursorMove]);
 
   useEffect(() => {
     connect();
 
     return () => {
+      if (cursorFrameRef.current !== null) {
+        cancelAnimationFrame(cursorFrameRef.current);
+        cursorFrameRef.current = null;
+      }
+      pendingCursorsRef.current.clear();
+
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }

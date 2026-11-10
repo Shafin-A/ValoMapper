@@ -7,7 +7,6 @@ import {
   AbilityMessageData,
   AgentMessageData,
   ConnectingLineMessageData,
-  CursorMoveData,
   DrawLineMessageData,
   FullSyncData,
   ImageMessageData,
@@ -36,12 +35,12 @@ import {
   useRef,
 } from "react";
 import { useCanvas } from "./canvas-context";
+import { RemoteCursorsProvider } from "./cursor-context";
 import { useUpdateLobby } from "@/hooks/api/use-update-lobby";
 
 interface WebSocketContextType {
   status: WSConnectionStatus;
   users: UserPresence[];
-  cursors: Map<string, CursorMoveData>;
   sendCursorPosition: (x: number, y: number) => void;
 
   broadcastAgentAdded: (
@@ -732,7 +731,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     () => ({
       status,
       users,
-      cursors,
       sendCursorPosition,
       broadcastAgentAdded,
       broadcastAgentMoved,
@@ -763,7 +761,6 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     [
       status,
       users,
-      cursors,
       sendCursorPosition,
       broadcastAgentAdded,
       broadcastAgentMoved,
@@ -795,7 +792,9 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
 
   return (
     <WebSocketContext.Provider value={value}>
-      {children}
+      <RemoteCursorsProvider cursors={cursors}>
+        {children}
+      </RemoteCursorsProvider>
     </WebSocketContext.Provider>
   );
 };
