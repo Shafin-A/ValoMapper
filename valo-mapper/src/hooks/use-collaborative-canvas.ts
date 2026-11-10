@@ -1,5 +1,5 @@
 import { useWebSocket } from "@/contexts/websocket-context";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasActions, useCanvasPhase } from "@/contexts/canvas-context";
 import { useCanvasPatch } from "@/hooks/canvas/use-canvas-patch";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -30,18 +30,15 @@ export const useCollaborativeCanvas = () => {
   const {
     currentPhaseIndex,
     editedPhases,
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    drawLines,
-    connectingLines,
-    textsOnCanvas,
-    imagesOnCanvas,
-    toolIconsOnCanvas,
+  } = useCanvasPhase();
+
+  const {
     agentsSettings,
     abilitiesSettings,
     updateAgentsSettings,
     updateAbilitiesSettings,
-  } = useCanvas();
+    getLatestPhases,
+  } = useCanvasActions();
 
   const drawLineChunks = useRef<Record<string, string[]>>({});
 
@@ -62,7 +59,10 @@ export const useCollaborativeCanvas = () => {
 
       syncedPhasesRef.current.add(phaseIndex);
 
-      agentsOnCanvas.forEach((agent) => {
+      const phase = getLatestPhases()[phaseIndex];
+      if (!phase) return;
+
+      phase.agentsOnCanvas.forEach((agent) => {
         enqueueCanvasPatchEntry({
           entity: "agent",
           action: "add",
@@ -72,7 +72,7 @@ export const useCollaborativeCanvas = () => {
         });
       });
 
-      abilitiesOnCanvas.forEach((ability) => {
+      phase.abilitiesOnCanvas.forEach((ability) => {
         enqueueCanvasPatchEntry({
           entity: "ability",
           action: "add",
@@ -82,7 +82,7 @@ export const useCollaborativeCanvas = () => {
         });
       });
 
-      drawLines.forEach((line) => {
+      phase.drawLines.forEach((line) => {
         enqueueCanvasPatchEntry({
           entity: "drawline",
           action: "add",
@@ -92,7 +92,7 @@ export const useCollaborativeCanvas = () => {
         });
       });
 
-      connectingLines.forEach((line) => {
+      phase.connectingLines.forEach((line) => {
         enqueueCanvasPatchEntry({
           entity: "connectingline",
           action: "add",
@@ -102,7 +102,7 @@ export const useCollaborativeCanvas = () => {
         });
       });
 
-      textsOnCanvas.forEach((text) => {
+      phase.textsOnCanvas.forEach((text) => {
         enqueueCanvasPatchEntry({
           entity: "text",
           action: "add",
@@ -112,7 +112,7 @@ export const useCollaborativeCanvas = () => {
         });
       });
 
-      imagesOnCanvas.forEach((image) => {
+      phase.imagesOnCanvas.forEach((image) => {
         enqueueCanvasPatchEntry({
           entity: "image",
           action: "add",
@@ -122,7 +122,7 @@ export const useCollaborativeCanvas = () => {
         });
       });
 
-      toolIconsOnCanvas.forEach((icon) => {
+      phase.toolIconsOnCanvas.forEach((icon) => {
         enqueueCanvasPatchEntry({
           entity: "toolicon",
           action: "add",
@@ -139,17 +139,7 @@ export const useCollaborativeCanvas = () => {
         payload: { editedPhases: [...Array.from(editedPhases), phaseIndex] },
       });
     },
-    [
-      editedPhases,
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      drawLines,
-      connectingLines,
-      textsOnCanvas,
-      imagesOnCanvas,
-      toolIconsOnCanvas,
-      enqueueCanvasPatchEntry,
-    ],
+    [editedPhases, getLatestPhases, enqueueCanvasPatchEntry],
   );
 
   const syncPhaseIfNecessaryRef = useRef(syncPhaseIfNecessary);
@@ -928,35 +918,68 @@ export const useCollaborativeCanvas = () => {
     [editedPhases, enqueueCanvasPatchEntry],
   );
 
-  return {
-    isConnected,
-    notifyAgentAdded,
-    notifyAgentMoved,
-    notifyAgentRemoved,
-    notifyAbilityAdded,
-    notifyAbilityMoved,
-    notifyAbilityRemoved,
-    notifyLineDrawn,
-    notifyLineRemoved,
-    notifyConnLineAdded,
-    notifyConnLineUpdated,
-    notifyConnLineRemoved,
-    notifyTextAdded,
-    notifyTextUpdated,
-    notifyTextRemoved,
-    notifyImageAdded,
-    notifyImageMoved,
-    notifyImageRemoved,
-    notifyToolIconAdded,
-    notifyToolIconMoved,
-    notifyToolIconRemoved,
-    notifyMapChanged,
-    notifySideChanged,
-    notifyPhaseChanged,
-    notifyCanvasClear,
-    notifyAgentsSettingsChanged,
-    notifyAbilitiesSettingsChanged,
-    notifyFullSync,
-    notifyAllPhasesRotated,
-  };
+  return useMemo(
+    () => ({
+      isConnected,
+      notifyAgentAdded,
+      notifyAgentMoved,
+      notifyAgentRemoved,
+      notifyAbilityAdded,
+      notifyAbilityMoved,
+      notifyAbilityRemoved,
+      notifyLineDrawn,
+      notifyLineRemoved,
+      notifyConnLineAdded,
+      notifyConnLineUpdated,
+      notifyConnLineRemoved,
+      notifyTextAdded,
+      notifyTextUpdated,
+      notifyTextRemoved,
+      notifyImageAdded,
+      notifyImageMoved,
+      notifyImageRemoved,
+      notifyToolIconAdded,
+      notifyToolIconMoved,
+      notifyToolIconRemoved,
+      notifyMapChanged,
+      notifySideChanged,
+      notifyPhaseChanged,
+      notifyCanvasClear,
+      notifyAgentsSettingsChanged,
+      notifyAbilitiesSettingsChanged,
+      notifyFullSync,
+      notifyAllPhasesRotated,
+    }),
+    [
+      isConnected,
+      notifyAgentAdded,
+      notifyAgentMoved,
+      notifyAgentRemoved,
+      notifyAbilityAdded,
+      notifyAbilityMoved,
+      notifyAbilityRemoved,
+      notifyLineDrawn,
+      notifyLineRemoved,
+      notifyConnLineAdded,
+      notifyConnLineUpdated,
+      notifyConnLineRemoved,
+      notifyTextAdded,
+      notifyTextUpdated,
+      notifyTextRemoved,
+      notifyImageAdded,
+      notifyImageMoved,
+      notifyImageRemoved,
+      notifyToolIconAdded,
+      notifyToolIconMoved,
+      notifyToolIconRemoved,
+      notifyMapChanged,
+      notifySideChanged,
+      notifyPhaseChanged,
+      notifyCanvasClear,
+      notifyAgentsSettingsChanged,
+      notifyAbilitiesSettingsChanged,
+      notifyFullSync,
+      notifyAllPhasesRotated,
+    ],
+  );
 };
