@@ -1,6 +1,10 @@
 "use client";
 
 import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useHoveredElementId,
+  useSetHoveredElementId,
+} from "@/contexts/hover-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useKeyboardShortcuts } from "@/hooks/canvas/use-keyboard-shortcuts";
 import { usePathname } from "next/navigation";
@@ -10,6 +14,8 @@ export const KeyboardShortcuts = () => {
   const collab = useCollaborativeCanvas();
   const pathname = usePathname();
   const isReplayRoute = Boolean(pathname?.startsWith("/replay"));
+  const hoveredElementId = useHoveredElementId();
+  const setHoveredElementId = useSetHoveredElementId();
 
   useKeyboardShortcuts({
     enabled: !isReplayRoute,
@@ -32,8 +38,8 @@ export const KeyboardShortcuts = () => {
     notifyTextRemoved: collab.notifyTextRemoved,
     notifyImageRemoved: collab.notifyImageRemoved,
     notifyToolIconRemoved: collab.notifyToolIconRemoved,
-    hoveredElementId: canvas.hoveredElementId,
-    setHoveredElementId: canvas.setHoveredElementId,
+    hoveredElementId,
+    setHoveredElementId,
     setImagesOnCanvas: canvas.setImagesOnCanvas,
     setTextsOnCanvas: canvas.setTextsOnCanvas,
     setAgentsOnCanvas: canvas.setAgentsOnCanvas,

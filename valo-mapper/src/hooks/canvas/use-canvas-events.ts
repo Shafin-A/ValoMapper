@@ -1,4 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import { useSetCurrentStroke } from "@/contexts/drawing-preview-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
   applyVisionConeAttachment,
@@ -61,8 +62,9 @@ export const useCanvasEvents = (
     connectingLines,
     setConnectingLines,
     tool,
-    setCurrentStroke,
   } = useCanvas();
+
+  const setCurrentStroke = useSetCurrentStroke();
 
   const { agentsSettings, abilitiesSettings, drawSettings, eraserSettings } =
     useSettings();
@@ -243,7 +245,7 @@ export const useCanvasEvents = (
     ],
   );
 
-  const { marqueeRect, handleRightMouseDown } = useCanvasSelection({
+  const { handleRightMouseDown } = useCanvasSelection({
     stageRef,
     enabled:
       enableMultiSelect &&
@@ -651,7 +653,6 @@ export const useCanvasEvents = (
     handleTouchEnd,
     handleDragMove,
     contextMenu,
-    marqueeRect,
     selectionDrag,
     currentLineRef,
     deleteGroupRef,

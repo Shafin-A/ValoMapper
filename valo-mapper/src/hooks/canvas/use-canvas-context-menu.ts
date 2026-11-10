@@ -927,11 +927,16 @@ export const useCanvasContextMenu = (
     toolIconsOnCanvas,
   ]);
 
-  return {
-    contextMenu: {
+  const contextMenuWithCapabilities = useMemo(
+    () => ({
       ...contextMenu,
       capabilities,
-    },
+    }),
+    [contextMenu, capabilities],
+  );
+
+  return {
+    contextMenu: contextMenuWithCapabilities,
     openContextMenu,
     handleContextMenu,
     handlePopoverOpenChange,

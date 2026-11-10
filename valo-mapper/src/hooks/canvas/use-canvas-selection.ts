@@ -2,7 +2,6 @@ import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
   type CanvasItemCollections,
-  type CanvasRect,
   getCanvasItemWorldRect,
   getSelectableCanvasItems,
   isRectFullyInside,
@@ -12,7 +11,8 @@ import type { KonvaEventObject } from "konva/lib/Node";
 import type Konva from "konva";
 import type { Stage } from "konva/lib/Stage";
 import type { Vector2d } from "konva/lib/types";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { canvasMarqueeStore } from "@/lib/canvas-marquee-store";
 
 const DRAG_THRESHOLD = 5;
 
@@ -51,7 +51,6 @@ export const useCanvasSelection = ({
   } = useCanvas();
   const { agentsSettings, abilitiesSettings } = useSettings();
 
-  const [marqueeRect, setMarqueeRect] = useState<CanvasRect | null>(null);
   const stateRef = useRef<RightDragState | null>(null);
   const frameRef = useRef<number | null>(null);
   const windowMoveRef = useRef<((event: MouseEvent) => void) | null>(null);
@@ -108,7 +107,7 @@ export const useCanvasSelection = ({
 
   const clearMarquee = useCallback(() => {
     cancelScheduledMarquee();
-    setMarqueeRect(null);
+    canvasMarqueeStore.set(null);
   }, [cancelScheduledMarquee]);
 
   const removeWindowListeners = useCallback(() => {
@@ -234,7 +233,7 @@ export const useCanvasSelection = ({
       const marquee = normalizeRect(state.startWorld, state.currentWorld);
       cancelScheduledMarquee();
       frameRef.current = requestAnimationFrame(() => {
-        setMarqueeRect(marquee);
+        canvasMarqueeStore.set(marquee);
       });
     },
     [cancelScheduledMarquee, getWorldPointer, stageRef],
@@ -318,12 +317,12 @@ export const useCanvasSelection = ({
     () => () => {
       removeWindowListeners();
       cancelScheduledMarquee();
+      canvasMarqueeStore.set(null);
     },
     [cancelScheduledMarquee, removeWindowListeners],
   );
 
   return {
-    marqueeRect,
     handleRightMouseDown,
     cancel,
   };

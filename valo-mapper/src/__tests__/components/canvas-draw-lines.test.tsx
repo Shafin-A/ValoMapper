@@ -1,19 +1,22 @@
 import { render } from "@testing-library/react";
 import { CanvasDrawLines } from "@/components/canvas/canvas-draw-lines";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCurrentStroke } from "@/contexts/drawing-preview-context";
 import { getTraversalDurationSeconds } from "@/lib/consts";
 
 jest.mock("@/contexts/canvas-context");
+jest.mock("@/contexts/drawing-preview-context");
 
 const mockUseCanvas = jest.mocked(useCanvas);
+const mockUseCurrentStroke = jest.mocked(useCurrentStroke);
 
 describe("CanvasDrawLines", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseCanvas.mockReturnValue({
       drawLines: [],
-      currentStroke: null,
     } as unknown as ReturnType<typeof useCanvas>);
+    mockUseCurrentStroke.mockReturnValue(null);
   });
 
   it("renders a traversal time label derived from the line length", () => {
@@ -35,7 +38,6 @@ describe("CanvasDrawLines", () => {
           traversalTime: "knife-walk",
         },
       ],
-      currentStroke: null,
     } as unknown as ReturnType<typeof useCanvas>);
 
     const { container } = render(
@@ -57,22 +59,22 @@ describe("CanvasDrawLines", () => {
   it("renders the preview traversal label near the active endpoint", () => {
     mockUseCanvas.mockReturnValue({
       drawLines: [],
-      currentStroke: {
-        id: "line-1",
-        tool: "pencil",
-        points: [
-          { x: 10, y: 60 },
-          { x: 110, y: 60 },
-        ],
-        color: "#ffffff",
-        size: 4,
-        isDashed: false,
-        isArrowHead: false,
-        shape: "straight",
-        opacity: 1,
-        traversalTime: "knife-walk",
-      },
     } as unknown as ReturnType<typeof useCanvas>);
+    mockUseCurrentStroke.mockReturnValue({
+      id: "line-1",
+      tool: "pencil",
+      points: [
+        { x: 10, y: 60 },
+        { x: 110, y: 60 },
+      ],
+      color: "#ffffff",
+      size: 4,
+      isDashed: false,
+      isArrowHead: false,
+      shape: "straight",
+      opacity: 1,
+      traversalTime: "knife-walk",
+    });
 
     const { container } = render(
       <CanvasDrawLines currentLineRef={{ current: null }} />,

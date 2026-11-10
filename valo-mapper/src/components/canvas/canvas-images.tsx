@@ -1,4 +1,8 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useHoveredElementId,
+  useSetHoveredElementId,
+} from "@/contexts/hover-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { useImageTransform } from "@/hooks/canvas";
@@ -27,10 +31,11 @@ export const CanvasImages = ({
     isDrawMode,
     editingTextId,
     setImagesOnCanvas,
-    hoveredElementId,
-    setHoveredElementId,
     selectedCanvasIcon,
   } = useCanvas();
+
+  const hoveredElementId = useHoveredElementId();
+  const setHoveredElementId = useSetHoveredElementId();
 
   const { notifyImageMoved, notifyImageRemoved } = useCollaborativeCanvas();
 

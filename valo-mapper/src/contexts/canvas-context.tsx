@@ -29,13 +29,14 @@ import {
   ReactNode,
   RefObject,
   SetStateAction,
-  useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
 import { filterExistingSelection } from "@/lib/canvas-selection";
+import { DrawingPreviewProvider } from "./drawing-preview-context";
+import { HoveredElementProvider } from "./hover-context";
 
 interface CanvasContextType {
   agentsOnCanvas: AgentCanvas[];
@@ -60,8 +61,6 @@ interface CanvasContextType {
   setMapSide: Dispatch<SetStateAction<MapSide>>;
   tool: Tool;
   setTool: Dispatch<SetStateAction<Tool>>;
-  currentStroke: DrawLine | null;
-  setCurrentStroke: Dispatch<SetStateAction<DrawLine | null>>;
   drawLines: DrawLine[];
   setDrawLines: Dispatch<SetStateAction<DrawLine[]>>;
   connectingLines: ConnectingLine[];
@@ -108,8 +107,6 @@ interface CanvasContextType {
   isLoadingLobby: boolean;
   isErrorLobby: boolean;
   lobbyError: Error | null;
-  hoveredElementId: string | null;
-  setHoveredElementId: Dispatch<SetStateAction<string | null>>;
   recenterCanvasCallback: RefObject<(() => void) | null>;
   onUndoRedoCallback: RefObject<
     | ((
@@ -163,9 +160,6 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
     onHistoryReplaySettled: (settledState, previousState, targetState) =>
       onUndoRedoCallback.current?.(settledState, previousState, targetState),
   });
-  const [hoveredElementId, setHoveredElementIdState] = useState<string | null>(
-    null,
-  );
   const [isMapTransitioning, setIsMapTransitioning] = useState(false);
   const recenterCanvasCallback = useRef<(() => void) | null>(null);
 
@@ -237,24 +231,10 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
     ((phaseIndex: number) => void) | null
   >(null);
 
-  const setHoveredElementId = useCallback(
-    (value: React.SetStateAction<string | null>) => {
-      if (canvasState.editingTextId) return;
-      setHoveredElementIdState((prev) =>
-        typeof value === "function"
-          ? (value as (prevState: string | null) => string | null)(prev)
-          : value,
-      );
-    },
-    [canvasState.editingTextId],
-  );
-
   return (
     <CanvasContext.Provider
       value={{
         ...canvasState,
-        hoveredElementId,
-        setHoveredElementId,
         recenterCanvasCallback,
         onUndoRedoCallback,
         onApplyHistoryStateCallback,
@@ -263,7 +243,9 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
         setIsMapTransitioning,
       }}
     >
-      {children}
+      <HoveredElementProvider>
+        <DrawingPreviewProvider>{children}</DrawingPreviewProvider>
+      </HoveredElementProvider>
     </CanvasContext.Provider>
   );
 };

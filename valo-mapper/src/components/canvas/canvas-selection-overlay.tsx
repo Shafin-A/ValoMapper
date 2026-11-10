@@ -4,21 +4,20 @@ import {
   type CanvasRect,
   getCanvasItemWorldRect,
 } from "@/lib/canvas-selection";
+import { canvasMarqueeStore } from "@/lib/canvas-marquee-store";
 import type Konva from "konva";
 import type { Stage } from "konva/lib/Stage";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useSyncExternalStore } from "react";
 import { Group, Layer, Rect } from "react-konva";
 
 interface CanvasSelectionOverlayProps {
   stageRef: React.RefObject<Stage | null>;
-  marqueeRect: CanvasRect | null;
   outlineGroupRef: React.RefObject<Konva.Group | null>;
   scale: number;
 }
 
 export const CanvasSelectionOverlay = ({
   stageRef,
-  marqueeRect,
   outlineGroupRef,
   scale,
 }: CanvasSelectionOverlayProps) => {
@@ -33,6 +32,12 @@ export const CanvasSelectionOverlay = ({
     getRegisteredNode,
   } = useCanvas();
   const { agentsSettings, abilitiesSettings } = useSettings();
+
+  const marqueeRect = useSyncExternalStore(
+    canvasMarqueeStore.subscribe,
+    canvasMarqueeStore.getSnapshot,
+    canvasMarqueeStore.getServerSnapshot,
+  );
 
   const [outlines, setOutlines] = useState<Record<string, CanvasRect>>({});
 

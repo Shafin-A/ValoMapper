@@ -1,4 +1,5 @@
 import { useCanvas } from "@/contexts/canvas-context";
+import { useSetHoveredElementId } from "@/contexts/hover-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { useTextEditor } from "@/hooks/canvas";
@@ -38,9 +39,10 @@ export const CanvasTexts = ({
     isDrawMode,
     editingTextId,
     setTextsOnCanvas,
-    setHoveredElementId,
     selectedCanvasIcon,
   } = useCanvas();
+
+  const setHoveredElementId = useSetHoveredElementId();
 
   const { notifyTextUpdated, notifyTextRemoved } = useCollaborativeCanvas();
 

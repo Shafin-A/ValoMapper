@@ -1,4 +1,4 @@
-import React, { Ref } from "react";
+import React, { Ref, memo } from "react";
 import Konva from "konva";
 import {
   Arrow,
@@ -10,6 +10,7 @@ import {
   Text,
 } from "react-konva";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useCurrentStroke } from "@/contexts/drawing-preview-context";
 import {
   getTraversalDurationSeconds,
   getTraversalSelection,
@@ -246,14 +247,14 @@ interface CanvasDrawLinesProps {
   >;
 }
 
-export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
-  currentLineRef,
-}) => {
-  const { drawLines, currentStroke } = useCanvas();
-
+const DrawLinesList = memo(function DrawLinesList({
+  lines,
+}: {
+  lines: DrawLine[];
+}) {
   return (
     <>
-      {drawLines.map((line) => (
+      {lines.map((line) => (
         <React.Fragment key={line.id}>
           {line.shape === "rectangle" && line.points.length === 2 ? (
             <Rect
@@ -309,6 +310,19 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
           {renderTraversalLabel(line, `${line.id}-traversal-time`)}
         </React.Fragment>
       ))}
+    </>
+  );
+});
+
+export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
+  currentLineRef,
+}) => {
+  const { drawLines } = useCanvas();
+  const currentStroke = useCurrentStroke();
+
+  return (
+    <>
+      <DrawLinesList lines={drawLines} />
 
       {currentStroke &&
         (currentStroke.shape === "rectangle" ? (

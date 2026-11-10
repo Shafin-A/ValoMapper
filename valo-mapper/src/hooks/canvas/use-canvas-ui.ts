@@ -7,7 +7,6 @@ import {
   CanvasBackground,
   MapOption,
   MapSide,
-  DrawLine,
   Tool,
   AbilityIconItem,
   Agent,
@@ -40,7 +39,6 @@ export const useCanvasUI = ({
   const [selectedMap, setSelectedMap] = useState<MapOption>(initialSelectedMap);
   const [mapSide, setMapSide] = useState<MapSide>(initialMapSide);
 
-  const [currentStroke, setCurrentStroke] = useState<DrawLine | null>(null);
   const [tool, setTool] = useState<Tool>("pencil");
   const [isDrawMode, setIsDrawMode] = useState(false);
   const isDrawing = useRef(false);
@@ -94,8 +92,6 @@ export const useCanvasUI = ({
     setSelectedMap,
     mapSide,
     setMapSide,
-    currentStroke,
-    setCurrentStroke,
     tool,
     setTool,
     isDrawMode,

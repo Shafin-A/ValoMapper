@@ -25,6 +25,11 @@ jest.mock("@/contexts/canvas-context", () => ({
   useCanvas: jest.fn(),
 }));
 
+jest.mock("@/contexts/drawing-preview-context", () => ({
+  useSetCurrentStroke: jest.fn(() => jest.fn()),
+  useCurrentStroke: jest.fn(() => null),
+}));
+
 jest.mock("@/contexts/settings-context", () => ({
   useSettings: jest.fn(),
 }));

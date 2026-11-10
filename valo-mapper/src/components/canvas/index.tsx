@@ -11,6 +11,7 @@ import {
   forwardRef,
   useState,
   useCallback,
+  memo,
   type ReactNode,
 } from "react";
 import { Layer, Stage } from "react-konva";
@@ -51,27 +52,93 @@ interface MapStageProps {
   enableMultiSelect?: boolean;
 }
 
-export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
-  (
-    {
-      width,
-      height,
-      scale,
-      mapPosition,
-      replayOverlay,
-      enableMultiSelect = true,
-    },
-    forwardedRef,
-  ) => {
-    const {
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      isDrawMode,
-      textsOnCanvas,
-      imagesOnCanvas,
-      toolIconsOnCanvas,
-      canvasBackground,
-    } = useCanvas();
+type CanvasContextMenuData = ReturnType<typeof useCanvasEvents>["contextMenu"];
+
+interface CanvasContextMenuProps {
+  contextMenu: CanvasContextMenuData;
+  onOpenChange: (open: boolean) => void;
+  onDuplicate: () => void;
+  onToggleAlly?: () => void;
+  onToggleAgentDead?: () => void;
+  onSwapAbility?: () => void;
+  onToggleAbilityIconOnly?: () => void;
+  onToggleAbilityOuterCircle?: () => void;
+  onRemoveAttachedVisionCone?: () => void;
+  onDetachVisionCone?: () => void;
+  onDelete: () => void;
+}
+
+const CanvasContextMenu = memo(function CanvasContextMenu({
+  contextMenu,
+  onOpenChange,
+  onDuplicate,
+  onToggleAlly,
+  onToggleAgentDead,
+  onSwapAbility,
+  onToggleAbilityIconOnly,
+  onToggleAbilityOuterCircle,
+  onRemoveAttachedVisionCone,
+  onDetachVisionCone,
+  onDelete,
+}: CanvasContextMenuProps) {
+  const {
+    agentsOnCanvas,
+    abilitiesOnCanvas,
+    textsOnCanvas,
+    imagesOnCanvas,
+    toolIconsOnCanvas,
+  } = useCanvas();
+
+  const currentItem = contextMenu.open
+    ? contextMenu.anchorType === "agent"
+      ? (agentsOnCanvas.find((a) => a.id === contextMenu.anchorId) ?? null)
+      : contextMenu.anchorType === "ability"
+        ? (abilitiesOnCanvas.find((a) => a.id === contextMenu.anchorId) ?? null)
+        : contextMenu.anchorType === "text"
+          ? (textsOnCanvas.find((t) => t.id === contextMenu.anchorId) ?? null)
+          : contextMenu.anchorType === "image"
+            ? (imagesOnCanvas.find((i) => i.id === contextMenu.anchorId) ?? null)
+            : (toolIconsOnCanvas.find(
+                (toolIcon) => toolIcon.id === contextMenu.anchorId,
+              ) ?? null)
+    : null;
+
+  return (
+    <ContextMenuPopover
+      open={contextMenu.open}
+      x={contextMenu.x}
+      y={contextMenu.y}
+      itemType={contextMenu.anchorType}
+      selectedCount={contextMenu.targetItems.length}
+      currentItem={currentItem}
+      onOpenChange={onOpenChange}
+      onDuplicate={onDuplicate}
+      onToggleAlly={onToggleAlly}
+      onToggleAgentDead={onToggleAgentDead}
+      onSwapAbility={onSwapAbility}
+      onToggleAbilityIconOnly={onToggleAbilityIconOnly}
+      onToggleAbilityOuterCircle={onToggleAbilityOuterCircle}
+      onRemoveAttachedVisionCone={onRemoveAttachedVisionCone}
+      onDetachVisionCone={onDetachVisionCone}
+      onDelete={onDelete}
+    />
+  );
+});
+
+export const MapStage = memo(
+  forwardRef<MapStageHandle, MapStageProps>(
+    (
+      {
+        width,
+        height,
+        scale,
+        mapPosition,
+        replayOverlay,
+        enableMultiSelect = true,
+      },
+      forwardedRef,
+    ) => {
+    const { isDrawMode, canvasBackground } = useCanvas();
 
     const { sendCursorPosition, status: wsStatus } = useWebSocket();
 
@@ -109,7 +176,6 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       handlePopoverOpenChange,
       handleDragMove,
       contextMenu,
-      marqueeRect,
       selectionDrag,
       currentLineRef,
       deleteGroupRef,
@@ -183,22 +249,6 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
     useEffect(() => {
       handleDragMove();
     }, [scale, handleDragMove]);
-
-    const currentItem = contextMenu.open
-      ? contextMenu.anchorType === "agent"
-        ? (agentsOnCanvas.find((a) => a.id === contextMenu.anchorId) ?? null)
-        : contextMenu.anchorType === "ability"
-          ? (abilitiesOnCanvas.find((a) => a.id === contextMenu.anchorId) ??
-            null)
-          : contextMenu.anchorType === "text"
-            ? (textsOnCanvas.find((t) => t.id === contextMenu.anchorId) ?? null)
-            : contextMenu.anchorType === "image"
-              ? (imagesOnCanvas.find((i) => i.id === contextMenu.anchorId) ??
-                null)
-              : (toolIconsOnCanvas.find(
-                  (toolIcon) => toolIcon.id === contextMenu.anchorId,
-                ) ?? null)
-      : null;
 
     const canSwapAbility =
       contextMenu.open && contextMenu.capabilities.canSwapAbility;
@@ -301,7 +351,6 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           </Layer>
           <CanvasSelectionOverlay
             stageRef={stageRef}
-            marqueeRect={marqueeRect}
             outlineGroupRef={selectionOutlineGroupRef}
             scale={scale}
           />
@@ -310,13 +359,8 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           </Layer>
         </Stage>
 
-        <ContextMenuPopover
-          open={contextMenu.open}
-          x={contextMenu.x}
-          y={contextMenu.y}
-          itemType={contextMenu.anchorType}
-          selectedCount={contextMenu.targetItems.length}
-          currentItem={currentItem}
+        <CanvasContextMenu
+          contextMenu={contextMenu}
           onOpenChange={handlePopoverOpenChange}
           onDuplicate={handleDuplicate}
           onToggleAlly={
@@ -365,7 +409,8 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
         />
       </div>
     );
-  },
+    },
+  ),
 );
 
 MapStage.displayName = "MapStage";

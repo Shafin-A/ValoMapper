@@ -1,5 +1,6 @@
 import { CanvasIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
+import { useSetHoveredElementId } from "@/contexts/hover-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
@@ -40,11 +41,12 @@ export const CanvasAgents = ({
     registerNode,
     unregisterNode,
     getRegisteredNode,
-    setHoveredElementId,
     selectedCanvasIcon,
     isSidebarDragActive,
     editingTextId,
   } = useCanvas();
+
+  const setHoveredElementId = useSetHoveredElementId();
 
   const { agentsSettings } = useSettings();
   const {
