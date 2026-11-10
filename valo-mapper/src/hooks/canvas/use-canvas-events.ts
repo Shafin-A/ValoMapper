@@ -30,6 +30,16 @@ import { useCanvasSelectionDrag } from "./use-canvas-selection-drag";
 import { useCanvasZoom } from "./use-canvas-zoom";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
+const PENCIL_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E") 5 18, crosshair`;
+const ERASER_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3C/svg%3E") 12 12, crosshair`;
+
+const setContainerCursor = (stage: Stage, cursor: string) => {
+  const container = stage.container();
+  if (container.style.cursor !== cursor) {
+    container.style.cursor = cursor;
+  }
+};
+
 export const useCanvasEvents = (
   stageRef: React.RefObject<Stage | null>,
   baseScale: number,
@@ -84,12 +94,12 @@ export const useCanvasEvents = (
 
     if (isDrawMode) {
       if (tool === "pencil") {
-        stage.container().style.cursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E") 5 18, crosshair`;
+        setContainerCursor(stage, PENCIL_CURSOR);
       } else if (tool === "eraser") {
-        stage.container().style.cursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3C/svg%3E") 12 12, crosshair`;
+        setContainerCursor(stage, ERASER_CURSOR);
       }
     } else {
-      stage.container().style.cursor = "default";
+      setContainerCursor(stage, "default");
     }
   }, [isDrawMode, tool, stageRef]);
 
@@ -528,8 +538,8 @@ export const useCanvasEvents = (
     }
 
     const stage = stageRef.current;
-    if (stage && stage.container) {
-      stage.container().style.cursor = "default";
+    if (stage) {
+      setContainerCursor(stage, "default");
     }
   }, [handleMouseUp, isSidebarDragActive, removeTempDragIcon, stageRef]);
 
