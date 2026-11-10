@@ -1,12 +1,12 @@
 import { render, waitFor } from "@testing-library/react";
 import { CanvasMapBackground } from "@/components/canvas/canvas-map-background";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasView } from "@/contexts/canvas-context";
 import { RefObject } from "react";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 
 jest.mock("@/contexts/canvas-context");
 
-const mockUseCanvas = jest.mocked(useCanvas);
+const mockuseCanvasView = jest.mocked(useCanvasView);
 
 describe("CanvasMapBackground", () => {
   const mockStageRef: RefObject<KonvaStage | null> = {
@@ -25,8 +25,8 @@ describe("CanvasMapBackground", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
+    mockuseCanvasView.mockReturnValue(
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvasView>,
     );
   });
 
@@ -75,10 +75,10 @@ describe("CanvasMapBackground", () => {
         />,
       );
 
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         selectedMap: { id: "bind", text: "Bind", textColor: "text-white" },
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       rerender(
         <CanvasMapBackground
@@ -100,10 +100,10 @@ describe("CanvasMapBackground", () => {
         />,
       );
 
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         selectedMap: { id: "bind", text: "Bind", textColor: "text-white" },
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       rerender(
         <CanvasMapBackground
@@ -136,10 +136,10 @@ describe("CanvasMapBackground", () => {
     });
 
     it("should apply correct rotation for attack side", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         mapSide: "attack" as const,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasMapBackground
@@ -245,14 +245,14 @@ describe("CanvasMapBackground", () => {
 
       const maps = ["bind", "haven", "split"];
       for (const mapId of maps) {
-        mockUseCanvas.mockReturnValue({
+        mockuseCanvasView.mockReturnValue({
           ...defaultCanvasMock,
           selectedMap: {
             id: mapId,
             text: mapId,
             textColor: "text-white",
           },
-        } as unknown as ReturnType<typeof useCanvas>);
+        } as unknown as ReturnType<typeof useCanvasView>);
 
         rerender(
           <CanvasMapBackground

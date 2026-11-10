@@ -1,18 +1,19 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasView } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { getMapSpawnBarriers, MAP_SIZE } from "@/lib/consts";
 import { Vector2d } from "konva/lib/types";
+import { memo } from "react";
 import { Group, Line } from "react-konva";
 
 interface CanvasSpawnBarriersProps {
   mapPosition: Vector2d;
 }
 
-export const CanvasSpawnBarriers = ({
+export const CanvasSpawnBarriers = memo(function CanvasSpawnBarriers({
   mapPosition,
-}: CanvasSpawnBarriersProps) => {
+}: CanvasSpawnBarriersProps) {
   const { selectedMap, mapSide, showSpawnBarriers, isMapTransitioning } =
-    useCanvas();
+    useCanvasView();
   const { agentsSettings } = useSettings();
 
   const allyColor = agentsSettings.allyColor;
@@ -63,4 +64,4 @@ export const CanvasSpawnBarriers = ({
       })}
     </Group>
   );
-};
+});

@@ -1,14 +1,18 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasView } from "@/contexts/canvas-context";
 import { getMapUltOrbs, MAP_SIZE } from "@/lib/consts";
 import { Vector2d } from "konva/lib/types";
+import { memo } from "react";
 import { Circle, Group } from "react-konva";
 
 interface CanvasUltOrbsProps {
   mapPosition: Vector2d;
 }
 
-export const CanvasUltOrbs = ({ mapPosition }: CanvasUltOrbsProps) => {
-  const { selectedMap, mapSide, showUltOrbs, isMapTransitioning } = useCanvas();
+export const CanvasUltOrbs = memo(function CanvasUltOrbs({
+  mapPosition,
+}: CanvasUltOrbsProps) {
+  const { selectedMap, mapSide, showUltOrbs, isMapTransitioning } =
+    useCanvasView();
 
   if (!showUltOrbs || isMapTransitioning) {
     return null;
@@ -45,4 +49,4 @@ export const CanvasUltOrbs = ({ mapPosition }: CanvasUltOrbsProps) => {
       })}
     </Group>
   );
-};
+});

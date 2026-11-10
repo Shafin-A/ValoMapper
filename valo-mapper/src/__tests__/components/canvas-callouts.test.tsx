@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { CanvasCallouts } from "@/components/canvas/canvas-callouts";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasView } from "@/contexts/canvas-context";
 import { getMapCallouts } from "@/lib/consts";
 
 jest.mock("@/contexts/canvas-context");
@@ -9,7 +9,7 @@ jest.mock("@/lib/consts", () => ({
   getMapCallouts: jest.fn(),
 }));
 
-const mockUseCanvas = jest.mocked(useCanvas);
+const mockuseCanvasView = jest.mocked(useCanvasView);
 const mockGetMapCallouts = jest.mocked(getMapCallouts);
 
 describe("CanvasCallouts", () => {
@@ -42,8 +42,8 @@ describe("CanvasCallouts", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
+    mockuseCanvasView.mockReturnValue(
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvasView>,
     );
     mockGetMapCallouts.mockReturnValue(mockCalloutData);
   });
@@ -59,10 +59,10 @@ describe("CanvasCallouts", () => {
     });
 
     it("should not render when showCallouts is false", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         showCallouts: false,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
@@ -73,10 +73,10 @@ describe("CanvasCallouts", () => {
     });
 
     it("should not render during map transition", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: true,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
@@ -130,10 +130,10 @@ describe("CanvasCallouts", () => {
     });
 
     it("should handle attack side positioning", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         mapSide: "attack" as const,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
@@ -153,10 +153,10 @@ describe("CanvasCallouts", () => {
       let group = container.querySelector('[data-testid="konva-group"]');
       expect(group).toBeInTheDocument();
 
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: true,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       rerender(<CanvasCallouts mapPosition={{ x: 0, y: 0 }} />);
 
@@ -165,10 +165,10 @@ describe("CanvasCallouts", () => {
     });
 
     it("should reappear after transition ends", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: true,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container, rerender } = render(
         <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,
@@ -177,10 +177,10 @@ describe("CanvasCallouts", () => {
       let group = container.querySelector('[data-testid="konva-group"]');
       expect(group).not.toBeInTheDocument();
 
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: false,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       rerender(<CanvasCallouts mapPosition={{ x: 0, y: 0 }} />);
 
@@ -207,10 +207,10 @@ describe("CanvasCallouts", () => {
       };
 
       mockGetMapCallouts.mockReturnValue(bindCalloutData);
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         selectedMap: { id: "bind", text: "Bind", textColor: "text-white" },
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasCallouts mapPosition={{ x: 0, y: 0 }} />,

@@ -1,16 +1,19 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasView } from "@/contexts/canvas-context";
 import { getMapCallouts, MAP_SIZE } from "@/lib/consts";
 import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
 import { Vector2d } from "konva/lib/types";
+import { memo } from "react";
 import { Group, Label, Tag, Text } from "react-konva";
 
 interface CanvasCalloutsProps {
   mapPosition: Vector2d;
 }
 
-export const CanvasCallouts = ({ mapPosition }: CanvasCalloutsProps) => {
+export const CanvasCallouts = memo(function CanvasCallouts({
+  mapPosition,
+}: CanvasCalloutsProps) {
   const { selectedMap, mapSide, showCallouts, isMapTransitioning } =
-    useCanvas();
+    useCanvasView();
 
   if (!showCallouts || isMapTransitioning) {
     return null;
@@ -72,4 +75,4 @@ export const CanvasCallouts = ({ mapPosition }: CanvasCalloutsProps) => {
       })}
     </Group>
   );
-};
+});

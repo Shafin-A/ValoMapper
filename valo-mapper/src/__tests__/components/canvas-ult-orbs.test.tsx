@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { CanvasUltOrbs } from "@/components/canvas/canvas-ult-orbs";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasView } from "@/contexts/canvas-context";
 import { getMapUltOrbs } from "@/lib/consts";
 
 jest.mock("@/contexts/canvas-context");
@@ -9,7 +9,7 @@ jest.mock("@/lib/consts", () => ({
   getMapUltOrbs: jest.fn(),
 }));
 
-const mockUseCanvas = jest.mocked(useCanvas);
+const mockuseCanvasView = jest.mocked(useCanvasView);
 const mockGetMapUltOrbs = jest.mocked(getMapUltOrbs);
 
 describe("CanvasUltOrbs", () => {
@@ -29,8 +29,8 @@ describe("CanvasUltOrbs", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
+    mockuseCanvasView.mockReturnValue(
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvasView>,
     );
     mockGetMapUltOrbs.mockReturnValue(mockUltOrbData);
   });
@@ -46,10 +46,10 @@ describe("CanvasUltOrbs", () => {
     });
 
     it("should not render when showUltOrbs is false", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         showUltOrbs: false,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
@@ -60,10 +60,10 @@ describe("CanvasUltOrbs", () => {
     });
 
     it("should not render during map transition", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: true,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
@@ -120,10 +120,10 @@ describe("CanvasUltOrbs", () => {
     });
 
     it("should handle attack side positioning", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         mapSide: "attack" as const,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
@@ -143,10 +143,10 @@ describe("CanvasUltOrbs", () => {
       let group = container.querySelector('[data-testid="konva-group"]');
       expect(group).toBeInTheDocument();
 
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: true,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       rerender(<CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />);
 
@@ -155,10 +155,10 @@ describe("CanvasUltOrbs", () => {
     });
 
     it("should reappear after transition ends", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: true,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container, rerender } = render(
         <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,
@@ -167,10 +167,10 @@ describe("CanvasUltOrbs", () => {
       let group = container.querySelector('[data-testid="konva-group"]');
       expect(group).not.toBeInTheDocument();
 
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: false,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       rerender(<CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />);
 
@@ -189,10 +189,10 @@ describe("CanvasUltOrbs", () => {
       };
 
       mockGetMapUltOrbs.mockReturnValue(havenUltOrbData);
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         selectedMap: { id: "haven", text: "Haven", textColor: "text-white" },
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasUltOrbs mapPosition={{ x: 0, y: 0 }} />,

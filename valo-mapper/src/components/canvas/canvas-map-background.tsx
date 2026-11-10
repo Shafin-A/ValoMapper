@@ -3,8 +3,8 @@ import { Image, Group } from "react-konva";
 import { MAP_SIZE } from "@/lib/consts";
 import { CANVAS_MAP_RENDER_SCALE } from "@/lib/map-positioning";
 import { Vector2d } from "konva/lib/types";
-import { useCanvas } from "@/contexts/canvas-context";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { useCanvasView } from "@/contexts/canvas-context";
+import { RefObject, memo, useEffect, useRef, useState } from "react";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import Konva from "konva";
 
@@ -17,11 +17,11 @@ interface CachedMap {
   image: HTMLImageElement;
 }
 
-export const CanvasMapBackground = ({
+export const CanvasMapBackground = memo(function CanvasMapBackground({
   mapPosition,
   stageRef,
-}: CanvasMapBackgroundProps & { stageRef: RefObject<KonvaStage | null> }) => {
-  const { selectedMap, mapSide, setIsMapTransitioning } = useCanvas();
+}: CanvasMapBackgroundProps & { stageRef: RefObject<KonvaStage | null> }) {
+  const { selectedMap, mapSide, setIsMapTransitioning } = useCanvasView();
   const [mapImage, status] = useImage(`/maps/minimaps/${selectedMap.id}.webp`);
 
   const [currentMap, setCurrentMap] = useState<CachedMap | null>(null);
@@ -133,4 +133,4 @@ export const CanvasMapBackground = ({
       )}
     </Group>
   );
-};
+});

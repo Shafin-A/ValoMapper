@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { CanvasSpawnBarriers } from "@/components/canvas/canvas-spawn-barriers";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasView } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { getMapSpawnBarriers } from "@/lib/consts";
 
@@ -11,7 +11,7 @@ jest.mock("@/lib/consts", () => ({
   getMapSpawnBarriers: jest.fn(),
 }));
 
-const mockUseCanvas = jest.mocked(useCanvas);
+const mockuseCanvasView = jest.mocked(useCanvasView);
 const mockUseSettings = jest.mocked(useSettings);
 const mockGetMapSpawnBarriers = jest.mocked(getMapSpawnBarriers);
 
@@ -51,8 +51,8 @@ describe("CanvasSpawnBarriers", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
+    mockuseCanvasView.mockReturnValue(
+      defaultCanvasMock as unknown as ReturnType<typeof useCanvasView>,
     );
     mockUseSettings.mockReturnValue(
       defaultSettingsMock as unknown as ReturnType<typeof useSettings>,
@@ -71,10 +71,10 @@ describe("CanvasSpawnBarriers", () => {
     });
 
     it("should not render when showSpawnBarriers is false", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         showSpawnBarriers: false,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
@@ -85,10 +85,10 @@ describe("CanvasSpawnBarriers", () => {
     });
 
     it("should not render during map transition", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: true,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
@@ -206,10 +206,10 @@ describe("CanvasSpawnBarriers", () => {
     });
 
     it("should handle attack side positioning", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         mapSide: "attack" as const,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
@@ -229,10 +229,10 @@ describe("CanvasSpawnBarriers", () => {
       let group = container.querySelector('[data-testid="konva-group"]');
       expect(group).toBeInTheDocument();
 
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: true,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       rerender(<CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />);
 
@@ -241,10 +241,10 @@ describe("CanvasSpawnBarriers", () => {
     });
 
     it("should reappear after transition ends", () => {
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: true,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container, rerender } = render(
         <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
@@ -253,10 +253,10 @@ describe("CanvasSpawnBarriers", () => {
       let group = container.querySelector('[data-testid="konva-group"]');
       expect(group).not.toBeInTheDocument();
 
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         isMapTransitioning: false,
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       rerender(<CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />);
 
@@ -280,10 +280,10 @@ describe("CanvasSpawnBarriers", () => {
       };
 
       mockGetMapSpawnBarriers.mockReturnValue(bindBarrierData);
-      mockUseCanvas.mockReturnValue({
+      mockuseCanvasView.mockReturnValue({
         ...defaultCanvasMock,
         selectedMap: { id: "bind", text: "Bind", textColor: "text-white" },
-      } as unknown as ReturnType<typeof useCanvas>);
+      } as unknown as ReturnType<typeof useCanvasView>);
 
       const { container } = render(
         <CanvasSpawnBarriers mapPosition={{ x: 0, y: 0 }} />,
