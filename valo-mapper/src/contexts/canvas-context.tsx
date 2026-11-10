@@ -30,6 +30,7 @@ import {
   ReactNode,
   RefObject,
   SetStateAction,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -218,16 +219,6 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
   const onApplyHistoryStateCallback = useRef<
     ((state: UndoableState, previousState: UndoableState) => void) | null
   >(null);
-  const canvasState = useCanvasState({
-    initialPhaseCount,
-    initialState,
-    onApplyHistoryState: (state, previousState) =>
-      onApplyHistoryStateCallback.current?.(state, previousState),
-    onHistoryReplaySettled: (settledState, previousState, targetState) =>
-      onUndoRedoCallback.current?.(settledState, previousState, targetState),
-  });
-  const [isMapTransitioning, setIsMapTransitioning] = useState(false);
-  const recenterCanvasCallback = useRef<(() => void) | null>(null);
   const onUndoRedoCallback = useRef<
     | ((
         settledState: UndoableState,
@@ -239,6 +230,37 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
   const notifyPhaseChangedCallback = useRef<
     ((phaseIndex: number) => void) | null
   >(null);
+
+  const handleApplyHistoryState = useCallback(
+    (state: UndoableState, previousState: UndoableState) => {
+      onApplyHistoryStateCallback.current?.(state, previousState);
+    },
+    [],
+  );
+
+  const handleHistoryReplaySettled = useCallback(
+    (
+      settledState: UndoableState,
+      previousState: UndoableState,
+      targetState: UndoableState,
+    ) => {
+      onUndoRedoCallback.current?.(
+        settledState,
+        previousState,
+        targetState,
+      );
+    },
+    [],
+  );
+
+  const canvasState = useCanvasState({
+    initialPhaseCount,
+    initialState,
+    onApplyHistoryState: handleApplyHistoryState,
+    onHistoryReplaySettled: handleHistoryReplaySettled,
+  });
+  const [isMapTransitioning, setIsMapTransitioning] = useState(false);
+  const recenterCanvasCallback = useRef<(() => void) | null>(null);
 
   const {
     setSelectedCanvasItems,
