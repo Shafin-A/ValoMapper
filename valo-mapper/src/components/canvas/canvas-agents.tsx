@@ -2,6 +2,7 @@ import { CanvasIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import {
   getAttachedVisionConeIds,
@@ -19,9 +20,13 @@ import { Group } from "react-konva";
 
 interface CanvasAgentProps {
   deleteGroupRef: React.RefObject<Konva.Group | null>;
+  selectionDrag: SelectionDragController;
 }
 
-export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
+export const CanvasAgents = ({
+  deleteGroupRef,
+  selectionDrag,
+}: CanvasAgentProps) => {
   const {
     agentsOnCanvas,
     setAgentsOnCanvas,
@@ -192,8 +197,10 @@ export const CanvasAgents = ({ deleteGroupRef }: CanvasAgentProps) => {
               agentsSettings,
               getRegisteredNode,
             });
+            selectionDrag.handleDragMove(e);
           }}
           onDragEnd={(e) => {
+            if (selectionDrag.handleDragEnd(e)) return;
             handleAgentDragEnd(e, agent);
           }}
           width={agentsSettings.scale}

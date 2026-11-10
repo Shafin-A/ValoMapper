@@ -1,5 +1,6 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { useTextEditor } from "@/hooks/canvas";
 import { Group, Rect, Transformer } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
@@ -21,6 +22,7 @@ interface CanvasTextProps {
   stageRef: RefObject<Konva.Stage | null>;
   transformerRefs: RefObject<Map<string, Konva.Transformer>>;
   deleteGroupRef: RefObject<Konva.Group | null>;
+  selectionDrag: SelectionDragController;
 }
 
 const EMPTY_PLACEHOLDER = "Click to add text...";
@@ -29,6 +31,7 @@ export const CanvasTexts = ({
   stageRef,
   transformerRefs,
   deleteGroupRef,
+  selectionDrag,
 }: CanvasTextProps) => {
   const {
     textsOnCanvas,
@@ -119,8 +122,13 @@ export const CanvasTexts = ({
         onMouseLeave={() =>
           !selectedCanvasIcon && !editingTextId && setHoveredElementId(null)
         }
-        onDragMove={(e) => handleDragMove(e, deleteGroupRef, textNode)}
+        onDragMove={(e) => {
+          handleDragMove(e, deleteGroupRef, textNode);
+          selectionDrag.handleDragMove(e);
+        }}
         onDragEnd={(e) => {
+          if (selectionDrag.handleDragEnd(e)) return;
+
           handleDragEnd(
             e,
             textItem,
@@ -165,7 +173,7 @@ export const CanvasTexts = ({
             onChange={(value) => handleTextChange(textItem.id, value)}
             onClose={handleTextEditComplete}
           />
-        ) : (
+        ) : !selectionDrag.isMultiSelected(textItem.id) ? (
           <Transformer
             ref={(node) => {
               if (node) {
@@ -211,7 +219,7 @@ export const CanvasTexts = ({
               };
             }}
           />
-        )}
+        ) : null}
       </Group>
     );
   });

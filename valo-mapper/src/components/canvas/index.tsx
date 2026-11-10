@@ -24,20 +24,13 @@ import { CanvasTexts } from "./canvas-texts";
 import { CanvasImages } from "./canvas-images";
 import { CanvasMapBackground } from "./canvas-map-background";
 import { CanvasDrawLines } from "./canvas-draw-lines";
+import { CanvasSelectionOverlay } from "./canvas-selection-overlay";
 import { DeleteZone } from "./delete-zone";
 import { CanvasToolIcons } from "./canvas-tool-icons";
 import { useCanvasEvents } from "@/hooks/canvas";
-import {
-  findAbilityDefinitionByAction,
-  getAbilityVariants,
-} from "@/lib/consts/configs/agent-icon/consts";
-import {
-  getAttachedVisionConeIds,
-  isVisionConeAction,
-} from "@/lib/vision-cone-utils";
 import { FullscreenImageModal } from "./fullscreen-image-modal";
 import { LineupViewDialog } from "./lineup-view-dialog";
-import { AbilityCanvas, ConnectingLine } from "@/lib/types";
+import { ConnectingLine } from "@/lib/types";
 
 export interface MapStageHandle {
   stage: KonvaStage | null;
@@ -54,16 +47,29 @@ interface MapStageProps {
    * player so playback never mutates the canvas history.
    */
   replayOverlay?: ReactNode;
+  /** Disable marquee multi-select on read-only canvases such as replay. */
+  enableMultiSelect?: boolean;
 }
 
 export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
-  ({ width, height, scale, mapPosition, replayOverlay }, forwardedRef) => {
+  (
+    {
+      width,
+      height,
+      scale,
+      mapPosition,
+      replayOverlay,
+      enableMultiSelect = true,
+    },
+    forwardedRef,
+  ) => {
     const {
       agentsOnCanvas,
       abilitiesOnCanvas,
       isDrawMode,
       textsOnCanvas,
       imagesOnCanvas,
+      toolIconsOnCanvas,
       canvasBackground,
     } = useCanvas();
 
@@ -77,6 +83,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       useState<ConnectingLine | null>(null);
 
     const transformerRefs = useRef<Map<string, Konva.Transformer>>(new Map());
+    const selectionOutlineGroupRef = useRef<Konva.Group | null>(null);
 
     const {
       handleWheel,
@@ -84,6 +91,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       handleTouchMove,
       handleTouchEnd,
       handleStageClick,
+      handleStageMouseDown,
       handleStagePointerUp,
       handleStageMouseLeave,
       handleStageMouseEnter,
@@ -101,9 +109,16 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
       handlePopoverOpenChange,
       handleDragMove,
       contextMenu,
+      marqueeRect,
+      selectionDrag,
       currentLineRef,
       deleteGroupRef,
-    } = useCanvasEvents(stageRef, scale);
+    } = useCanvasEvents(
+      stageRef,
+      scale,
+      enableMultiSelect,
+      selectionOutlineGroupRef,
+    );
 
     const handleMouseMoveWithCursor = useCallback(() => {
       handleStageMouseMove();
@@ -170,56 +185,26 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
     }, [scale, handleDragMove]);
 
     const currentItem = contextMenu.open
-      ? contextMenu.itemType === "agent"
-        ? (agentsOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null)
-        : contextMenu.itemType === "ability"
-          ? (abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId) ?? null)
-          : contextMenu.itemType === "text"
-            ? (textsOnCanvas.find((t) => t.id === contextMenu.itemId) ?? null)
-            : contextMenu.itemType === "image"
-              ? (imagesOnCanvas.find((i) => i.id === contextMenu.itemId) ??
+      ? contextMenu.anchorType === "agent"
+        ? (agentsOnCanvas.find((a) => a.id === contextMenu.anchorId) ?? null)
+        : contextMenu.anchorType === "ability"
+          ? (abilitiesOnCanvas.find((a) => a.id === contextMenu.anchorId) ??
+            null)
+          : contextMenu.anchorType === "text"
+            ? (textsOnCanvas.find((t) => t.id === contextMenu.anchorId) ?? null)
+            : contextMenu.anchorType === "image"
+              ? (imagesOnCanvas.find((i) => i.id === contextMenu.anchorId) ??
                 null)
-              : null
+              : (toolIconsOnCanvas.find(
+                  (toolIcon) => toolIcon.id === contextMenu.anchorId,
+                ) ?? null)
       : null;
 
     const canSwapAbility =
-      contextMenu.open &&
-      contextMenu.itemType === "ability" &&
-      currentItem != null &&
-      (() => {
-        const def = findAbilityDefinitionByAction(
-          (currentItem as AbilityCanvas).action,
-        );
-        return def ? getAbilityVariants(def).length > 1 : false;
-      })();
+      contextMenu.open && contextMenu.capabilities.canSwapAbility;
 
     const canRemoveAttachedVisionCone =
-      contextMenu.open &&
-      (() => {
-        if (
-          contextMenu.itemType === "agent" ||
-          contextMenu.itemType === "tool"
-        ) {
-          return (
-            getAttachedVisionConeIds(abilitiesOnCanvas, contextMenu.itemId)
-              .length > 0
-          );
-        }
-
-        if (contextMenu.itemType !== "ability") {
-          return false;
-        }
-
-        const ability = abilitiesOnCanvas.find(
-          (item) => item.id === contextMenu.itemId,
-        );
-
-        return Boolean(
-          ability &&
-          !isVisionConeAction(ability.action) &&
-          getAttachedVisionConeIds(abilitiesOnCanvas, ability.id).length > 0,
-        );
-      })();
+      contextMenu.open && contextMenu.capabilities.canRemoveAttachedVisionCone;
 
     const canvasBackgroundClassName =
       canvasBackground === "dots"
@@ -250,7 +235,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           onDragMove={handleDragMove}
           onMouseMove={handleMouseMoveWithCursor}
           onMouseEnter={handleStageMouseEnter}
-          onMouseDown={handleStageClick}
+          onMouseDown={handleStageMouseDown}
           onTouchStart={(e) => {
             handleTouchStart(e);
             handleStageClick();
@@ -265,7 +250,11 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           }}
           onMouseUp={handleStagePointerUp}
           onMouseLeave={handleStageMouseLeave}
-          onContextMenu={handleContextMenu}
+          onContextMenu={
+            enableMultiSelect
+              ? (event) => event.evt.preventDefault()
+              : handleContextMenu
+          }
         >
           <Layer isListening={false}>
             <CanvasMapBackground
@@ -282,25 +271,40 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
             <CanvasAbilities
               deleteGroupRef={deleteGroupRef}
               mapPosition={mapPosition}
+              selectionDrag={selectionDrag}
             />
-            <CanvasAgents deleteGroupRef={deleteGroupRef} />
-            <CanvasToolIcons deleteGroupRef={deleteGroupRef} />
+            <CanvasAgents
+              deleteGroupRef={deleteGroupRef}
+              selectionDrag={selectionDrag}
+            />
+            <CanvasToolIcons
+              deleteGroupRef={deleteGroupRef}
+              selectionDrag={selectionDrag}
+            />
             <CanvasImages
               stageRef={stageRef}
               transformerRefs={transformerRefs}
               deleteGroupRef={deleteGroupRef}
               onImageDoubleClick={setFullscreenImageSrc}
+              selectionDrag={selectionDrag}
             />
             <CanvasTexts
               stageRef={stageRef}
               transformerRefs={transformerRefs}
               deleteGroupRef={deleteGroupRef}
+              selectionDrag={selectionDrag}
             />
           </Layer>
           <Layer isListening={isDrawMode}>
             <CanvasDrawLines currentLineRef={currentLineRef} />
             <DeleteZone deleteGroupRef={deleteGroupRef} />
           </Layer>
+          <CanvasSelectionOverlay
+            stageRef={stageRef}
+            marqueeRect={marqueeRect}
+            outlineGroupRef={selectionOutlineGroupRef}
+            scale={scale}
+          />
           <Layer isListening={false}>
             <RemoteCursors scale={scale} />
           </Layer>
@@ -310,22 +314,29 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
           open={contextMenu.open}
           x={contextMenu.x}
           y={contextMenu.y}
-          itemType={contextMenu.itemType}
+          itemType={contextMenu.anchorType}
+          selectedCount={contextMenu.targetItems.length}
           currentItem={currentItem}
           onOpenChange={handlePopoverOpenChange}
           onDuplicate={handleDuplicate}
-          onToggleAlly={handleToggleAlly}
+          onToggleAlly={
+            contextMenu.capabilities.canToggleAlly
+              ? handleToggleAlly
+              : undefined
+          }
           onToggleAgentDead={
-            contextMenu.itemType === "agent" ? handleToggleAgentDead : undefined
+            contextMenu.capabilities.canToggleAgentDead
+              ? handleToggleAgentDead
+              : undefined
           }
           onSwapAbility={canSwapAbility ? handleSwapAbility : undefined}
           onToggleAbilityIconOnly={
-            contextMenu.itemType === "ability"
+            contextMenu.capabilities.canToggleAbilityIconOnly
               ? handleToggleAbilityIconOnly
               : undefined
           }
           onToggleAbilityOuterCircle={
-            contextMenu.itemType === "ability"
+            contextMenu.capabilities.canToggleAbilityOuterCircle
               ? handleToggleAbilityOuterCircle
               : undefined
           }
@@ -335,7 +346,7 @@ export const MapStage = forwardRef<MapStageHandle, MapStageProps>(
               : undefined
           }
           onDetachVisionCone={
-            contextMenu.itemType === "ability"
+            contextMenu.capabilities.canDetachVisionCone
               ? handleDetachVisionCone
               : undefined
           }

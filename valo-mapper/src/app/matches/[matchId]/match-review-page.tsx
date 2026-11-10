@@ -561,6 +561,7 @@ const MatchReviewPage = () => {
                 height={VIRTUAL_HEIGHT}
                 scale={stageScale}
                 mapPosition={mapPosition}
+                enableMultiSelect={false}
               />
             </div>
           )}

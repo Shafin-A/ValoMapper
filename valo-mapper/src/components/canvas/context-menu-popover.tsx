@@ -9,6 +9,7 @@ import {
   AgentCanvas,
   ImageCanvas,
   TextCanvas,
+  ToolIconCanvas,
 } from "@/lib/types";
 import { isVisionConeAction } from "@/lib/vision-cone-utils";
 import { isArcAbility, isCircleAbility } from "@/lib/utils";
@@ -35,10 +36,17 @@ interface ContextMenuPopoverProps {
   x: number;
   y: number;
   itemType: "agent" | "ability" | "text" | "image" | "tool";
-  currentItem: AgentCanvas | AbilityCanvas | TextCanvas | ImageCanvas | null;
+  selectedCount: number;
+  currentItem:
+    | AgentCanvas
+    | AbilityCanvas
+    | TextCanvas
+    | ImageCanvas
+    | ToolIconCanvas
+    | null;
   onOpenChange: (open: boolean) => void;
   onDuplicate: () => void;
-  onToggleAlly: () => void;
+  onToggleAlly?: () => void;
   onToggleAgentDead?: () => void;
   onSwapAbility?: () => void;
   onToggleAbilityIconOnly?: () => void;
@@ -64,7 +72,12 @@ const itemLabel = (itemType: ContextMenuPopoverProps["itemType"]): string => {
 };
 
 const isAllyItem = (
-  item: AgentCanvas | AbilityCanvas | TextCanvas | ImageCanvas,
+  item:
+    | AgentCanvas
+    | AbilityCanvas
+    | TextCanvas
+    | ImageCanvas
+    | ToolIconCanvas,
   itemType: ContextMenuPopoverProps["itemType"],
 ): item is AgentCanvas | AbilityCanvas => {
   return itemType !== "text" && itemType !== "image" && itemType !== "tool";
@@ -93,6 +106,7 @@ export const ContextMenuPopover = ({
   x,
   y,
   itemType,
+  selectedCount,
   currentItem,
   onOpenChange,
   onDuplicate,
@@ -229,6 +243,10 @@ export const ContextMenuPopover = ({
   }, [open]);
 
   const snapType = snapshotItemType.current;
+  const isMultiSelection = selectedCount > 1;
+  const selectionLabel = isMultiSelection
+    ? `${selectedCount} Items`
+    : itemLabel(snapType);
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -242,13 +260,19 @@ export const ContextMenuPopover = ({
             height: 1,
             pointerEvents: "none",
           }}
+          onContextMenu={(event) => event.preventDefault()}
         />
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-2" side="top" align="start">
+      <PopoverContent
+        className="w-auto p-2"
+        side="top"
+        align="start"
+        onContextMenu={(event) => event.preventDefault()}
+      >
         <div className="flex items-center space-x-1">
           <ConditionalTooltip
             enabled={allowTooltips}
-            content={`Duplicate ${itemLabel(snapType)}`}
+            content={`Duplicate ${selectionLabel}`}
           >
             <Button variant="ghost" size="sm" onClick={onDuplicate}>
               <Copy />
@@ -260,12 +284,21 @@ export const ContextMenuPopover = ({
             className="data-[orientation=vertical]:h-6"
           />
 
-          {snapshotItem.current &&
+          {onToggleAlly &&
+            snapshotItem.current &&
             isAllyItem(snapshotItem.current, snapType) && (
               <>
                 <ConditionalTooltip
                   enabled={allowTooltips}
-                  content={snapshotIsAlly.current ? "Make Enemy" : "Make Ally"}
+                  content={
+                    isMultiSelection
+                      ? snapshotIsAlly.current
+                        ? "Make All Enemy"
+                        : "Make All Ally"
+                      : snapshotIsAlly.current
+                        ? "Make Enemy"
+                        : "Make Ally"
+                  }
                 >
                   <Button variant="ghost" size="sm" onClick={onToggleAlly}>
                     {snapshotIsAlly.current ? <HeartCrack /> : <Heart />}
@@ -282,7 +315,13 @@ export const ContextMenuPopover = ({
                     <ConditionalTooltip
                       enabled={allowTooltips}
                       content={
-                        snapshotIsGray.current ? "Revive Agent" : "Kill Agent"
+                        isMultiSelection
+                          ? snapshotIsGray.current
+                            ? "Revive All Agents"
+                            : "Kill All Agents"
+                          : snapshotIsGray.current
+                            ? "Revive Agent"
+                            : "Kill Agent"
                       }
                     >
                       <Button
@@ -307,7 +346,7 @@ export const ContextMenuPopover = ({
             <>
               <ConditionalTooltip
                 enabled={allowTooltips}
-                content="Swap Ability"
+                content={isMultiSelection ? "Swap All Abilities" : "Swap Ability"}
               >
                 <Button
                   variant="ghost"
@@ -330,9 +369,13 @@ export const ContextMenuPopover = ({
               <ConditionalTooltip
                 enabled={allowTooltips}
                 content={
-                  snapshotAbilityIconOnly.current
-                    ? "Show Ability Shapes"
-                    : "Hide Ability Shapes"
+                  isMultiSelection
+                    ? snapshotAbilityIconOnly.current
+                      ? "Show All Ability Shapes"
+                      : "Hide All Ability Shapes"
+                    : snapshotAbilityIconOnly.current
+                      ? "Show Ability Shapes"
+                      : "Hide Ability Shapes"
                 }
               >
                 <Button
@@ -361,9 +404,13 @@ export const ContextMenuPopover = ({
               <ConditionalTooltip
                 enabled={allowTooltips}
                 content={
-                  snapshotAbilityShowOuterCircle.current
-                    ? "Hide Range"
-                    : "Show Range"
+                  isMultiSelection
+                    ? snapshotAbilityShowOuterCircle.current
+                      ? "Hide All Ranges"
+                      : "Show All Ranges"
+                    : snapshotAbilityShowOuterCircle.current
+                      ? "Hide Range"
+                      : "Show Range"
                 }
               >
                 <Button
@@ -391,7 +438,9 @@ export const ContextMenuPopover = ({
             <>
               <ConditionalTooltip
                 enabled={allowTooltips}
-                content="Remove Vision Cone"
+                content={
+                  isMultiSelection ? "Remove Vision Cones" : "Remove Vision Cone"
+                }
               >
                 <Button
                   variant="ghost"
@@ -416,7 +465,9 @@ export const ContextMenuPopover = ({
             <>
               <ConditionalTooltip
                 enabled={allowTooltips}
-                content="Detach Vision Cone"
+                content={
+                  isMultiSelection ? "Detach Vision Cones" : "Detach Vision Cone"
+                }
               >
                 <Button
                   variant="ghost"
@@ -436,7 +487,7 @@ export const ContextMenuPopover = ({
 
           <ConditionalTooltip
             enabled={allowTooltips}
-            content={`Delete ${itemLabel(snapType)}`}
+            content={`Delete ${selectionLabel}`}
           >
             <Button variant="destructiveGhost" size="sm" onClick={onDelete}>
               <Trash2 />

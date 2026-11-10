@@ -1,5 +1,6 @@
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { useImageTransform } from "@/hooks/canvas";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
 import Konva from "konva";
@@ -11,6 +12,7 @@ interface CanvasImageProps {
   transformerRefs: RefObject<Map<string, Konva.Transformer>>;
   deleteGroupRef: RefObject<Konva.Group | null>;
   onImageDoubleClick?: (imageSrc: string) => void;
+  selectionDrag: SelectionDragController;
 }
 
 export const CanvasImages = ({
@@ -18,6 +20,7 @@ export const CanvasImages = ({
   transformerRefs,
   deleteGroupRef,
   onImageDoubleClick,
+  selectionDrag,
 }: CanvasImageProps) => {
   const {
     imagesOnCanvas,
@@ -93,8 +96,13 @@ export const CanvasImages = ({
         draggable={!isDrawMode && !editingTextId}
         x={imageItem.x}
         y={imageItem.y}
-        onDragMove={(e) => handleDragMove(e, deleteGroupRef, imageNode)}
+        onDragMove={(e) => {
+          handleDragMove(e, deleteGroupRef, imageNode);
+          selectionDrag.handleDragMove(e);
+        }}
         onDragEnd={(e) => {
+          if (selectionDrag.handleDragEnd(e)) return;
+
           handleDragEnd(
             e,
             imageItem,
@@ -178,7 +186,8 @@ export const CanvasImages = ({
         {(hoveredImageId === imageItem.id ||
           hoveredElementId === imageItem.id) &&
           !isDrawMode &&
-          !editingTextId && (
+          !editingTextId &&
+          !selectionDrag.isMultiSelected(imageItem.id) && (
             <Transformer
               ref={(node) => {
                 if (node) {

@@ -2,6 +2,7 @@ import { CanvasIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import {
   getAttachedVisionConeIds,
   syncAttachedVisionConeNodePositions,
@@ -23,9 +24,13 @@ import { Group } from "react-konva";
 
 interface CanvasToolIconsProps {
   deleteGroupRef: React.RefObject<Konva.Group | null>;
+  selectionDrag: SelectionDragController;
 }
 
-export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
+export const CanvasToolIcons = ({
+  deleteGroupRef,
+  selectionDrag,
+}: CanvasToolIconsProps) => {
   const {
     toolIconsOnCanvas,
     setToolIconsOnCanvas,
@@ -161,8 +166,12 @@ export const CanvasToolIcons = ({ deleteGroupRef }: CanvasToolIconsProps) => {
               abilitiesOnCanvas,
               getRegisteredNode,
             });
+            selectionDrag.handleDragMove(e);
           }}
-          onDragEnd={(e) => handleToolIconDragEnd(e, toolIcon)}
+          onDragEnd={(e) => {
+            if (selectionDrag.handleDragEnd(e)) return;
+            handleToolIconDragEnd(e, toolIcon);
+          }}
           width={toolIcon.width}
           height={toolIcon.height}
           borderOpacity={0}

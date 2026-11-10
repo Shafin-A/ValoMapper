@@ -2,6 +2,7 @@ import { AbilityIcon } from "@/components/canvas-icons";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import {
@@ -23,11 +24,13 @@ import { Group } from "react-konva";
 interface CanvasAbilityProps {
   deleteGroupRef: React.RefObject<Konva.Group | null>;
   mapPosition: Vector2d;
+  selectionDrag: SelectionDragController;
 }
 
 export const CanvasAbilities = ({
   deleteGroupRef,
   mapPosition,
+  selectionDrag,
 }: CanvasAbilityProps) => {
   const {
     abilitiesOnCanvas,
@@ -229,8 +232,11 @@ export const CanvasAbilities = ({
               abilitiesOnCanvas,
               getRegisteredNode,
             });
+            selectionDrag.handleDragMove(e);
           }}
           onDragEnd={(e) => {
+            if (selectionDrag.handleDragEnd(e)) return;
+
             if (isVisionConeAction(ability.action)) {
               handleVisionConeDragEnd(e, ability);
               return;

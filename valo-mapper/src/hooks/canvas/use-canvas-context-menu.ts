@@ -3,12 +3,21 @@ import {
   AbilityCanvas,
   AgentCanvas,
   BaseCanvasItem,
+  CanvasSelectionItem,
   ConnectingLine,
   ImageCanvas,
   ItemType,
   TextCanvas,
   ToolIconCanvas,
 } from "@/lib/types";
+import {
+  type CanvasItemCollections,
+  filterExistingSelection,
+  getCanvasItemInstance,
+  getCanvasItemTypeById,
+  getContextMenuCapabilities,
+  resolveCanvasItemTarget,
+} from "@/lib/canvas-selection";
 import { getNextId } from "@/lib/utils";
 import {
   canAttachVisionCone,
@@ -21,15 +30,16 @@ import {
   findAbilityDefinitionByAction,
   getAbilityVariants,
 } from "@/lib/consts/configs/agent-icon/consts";
-import { KonvaEventObject } from "konva/lib/Node";
+import { type KonvaEventObject, type Node as KonvaNode } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
-import { Dispatch, SetStateAction, useCallback, useState } from "react";
-
-type NodeWithId = {
-  id: () => string;
-  getParent?: () => NodeWithId | null;
-  parent?: NodeWithId | null;
-};
+import type { Vector2d } from "konva/lib/types";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 
 const duplicateItem = <T extends BaseCanvasItem>(
   items: T[],
@@ -51,19 +61,13 @@ const duplicateItem = <T extends BaseCanvasItem>(
   return null;
 };
 
-const deleteItem = <T extends BaseCanvasItem>(
-  itemId: string,
-  setItems: Dispatch<SetStateAction<T[]>>,
-): void => {
-  setItems((prev) => prev.filter((item) => item.id !== itemId));
-};
-
 interface ContextMenuState {
   open: boolean;
   x: number;
   y: number;
-  itemId: string;
-  itemType: ItemType;
+  targetItems: CanvasSelectionItem[];
+  anchorId: string;
+  anchorType: ItemType;
 }
 
 export const useCanvasContextMenu = (
@@ -80,6 +84,8 @@ export const useCanvasContextMenu = (
   setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>,
   connectingLines: ConnectingLine[],
   setConnectingLines: Dispatch<SetStateAction<ConnectingLine[]>>,
+  selectedCanvasItems: CanvasSelectionItem[],
+  setSelectedCanvasItems: Dispatch<SetStateAction<CanvasSelectionItem[]>>,
 ) => {
   const {
     notifyAgentAdded,
@@ -97,94 +103,107 @@ export const useCanvasContextMenu = (
     notifyConnLineRemoved,
   } = useCollaborativeCanvas();
 
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-    open: false,
-    x: 0,
-    y: 0,
-    itemId: "",
-    itemType: "agent",
-  });
-
-  const closeContextMenu = useCallback(() => {
-    setContextMenu((prev) => ({ ...prev, open: false }));
-  }, []);
-
-  const handleContextMenu = useCallback(
-    (e: KonvaEventObject<PointerEvent>) => {
-      e.evt.preventDefault();
-
-      const stage = stageRef.current;
-      if (!stage || e.target === stage) return;
-
-      const containerRect = stage.container().getBoundingClientRect();
-      const pointerPosition = stage.getPointerPosition();
-      if (!pointerPosition) return;
-
-      let targetNode: NodeWithId | null = e.target as unknown as NodeWithId;
-      let targetId = "";
-      while (targetNode && !targetId) {
-        targetId = targetNode.id();
-        if (targetId) break;
-
-        const parentNode: NodeWithId | null =
-          typeof targetNode.getParent === "function"
-            ? targetNode.getParent()
-            : null;
-
-        targetNode = parentNode ?? targetNode.parent ?? null;
-      }
-      if (!targetId) return;
-
-      const isAgentItem = agentsOnCanvas.some(
-        (agent) => agent.id.toString() === targetId,
-      );
-      const isAbilityItem = abilitiesOnCanvas.some(
-        (ability) => ability.id.toString() === targetId,
-      );
-      const isTextItem = textsOnCanvas.some(
-        (text) => text.id.toString() === targetId,
-      );
-      const isImageItem = imagesOnCanvas.some(
-        (image) => image.id.toString() === targetId,
-      );
-      const isToolIconItem = toolIconsOnCanvas.some(
-        (toolIcon) => toolIcon.id === targetId,
-      );
-
-      if (
-        !isAgentItem &&
-        !isAbilityItem &&
-        !isTextItem &&
-        !isImageItem &&
-        !isToolIconItem
-      )
-        return;
-
-      let itemType: ItemType;
-      if (isAgentItem) itemType = "agent";
-      else if (isAbilityItem) itemType = "ability";
-      else if (isTextItem) itemType = "text";
-      else if (isImageItem) itemType = "image";
-      else itemType = "tool";
-
-      setContextMenu({
-        open: true,
-        x: containerRect.left + pointerPosition.x,
-        y: containerRect.top + pointerPosition.y,
-        itemId: targetId,
-        itemType,
-      });
-
-      e.cancelBubble = true;
-    },
+  const collections = useMemo<CanvasItemCollections>(
+    () => ({
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+      textsOnCanvas,
+      imagesOnCanvas,
+      toolIconsOnCanvas,
+    }),
     [
-      stageRef,
       agentsOnCanvas,
       abilitiesOnCanvas,
       textsOnCanvas,
       imagesOnCanvas,
       toolIconsOnCanvas,
     ],
+  );
+
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    open: false,
+    x: 0,
+    y: 0,
+    targetItems: [],
+    anchorId: "",
+    anchorType: "agent",
+  });
+
+  const capabilities = useMemo(() => {
+    const targets = contextMenu.targetItems
+      .map((selection) => getCanvasItemInstance(collections, selection))
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+    return getContextMenuCapabilities(targets, collections);
+  }, [collections, contextMenu.targetItems]);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu((prev) => ({ ...prev, open: false }));
+  }, []);
+
+  const openContextMenu = useCallback(
+    (targetNode: KonvaNode | null, pointerPosition: Vector2d | null) => {
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      const resolvedTarget = resolveCanvasItemTarget(targetNode, collections);
+
+      if (!resolvedTarget) {
+        setSelectedCanvasItems([]);
+        setContextMenu((previous) => ({ ...previous, open: false }));
+        return;
+      }
+
+      const pointer = pointerPosition ?? stage.getPointerPosition();
+      if (!pointer) return;
+
+      const isAlreadySelected = selectedCanvasItems.some(
+        (selection) =>
+          selection.id === resolvedTarget.id &&
+          selection.type === resolvedTarget.type,
+      );
+
+      const targetItems = isAlreadySelected
+        ? filterExistingSelection(collections, selectedCanvasItems)
+        : [resolvedTarget];
+
+      if (targetItems.length === 0) {
+        targetItems.push(resolvedTarget);
+      }
+
+      if (!isAlreadySelected) {
+        setSelectedCanvasItems([resolvedTarget]);
+      }
+
+      const containerRect = stage.container().getBoundingClientRect();
+
+      setContextMenu({
+        open: true,
+        x: containerRect.left + pointer.x,
+        y: containerRect.top + pointer.y,
+        targetItems,
+        anchorId: resolvedTarget.id,
+        anchorType: resolvedTarget.type,
+      });
+    },
+    [
+      collections,
+      selectedCanvasItems,
+      setSelectedCanvasItems,
+      stageRef,
+    ],
+  );
+
+  const handleContextMenu = useCallback(
+    (e: KonvaEventObject<PointerEvent>) => {
+      e.evt.preventDefault();
+      openContextMenu(
+        e.target as unknown as KonvaNode,
+        stageRef.current?.getPointerPosition() ?? null,
+      );
+      e.cancelBubble = true;
+    },
+    [openContextMenu, stageRef],
   );
 
   const handlePopoverOpenChange = useCallback((open: boolean) => {
@@ -206,28 +225,6 @@ export const useCanvasContextMenu = (
         prev.filter((ability) => !removedIds.has(ability.id)),
       );
       removedAbilityIds.forEach((abilityId) => notifyAbilityRemoved(abilityId));
-    },
-    [abilitiesOnCanvas, setAbilitiesOnCanvas, notifyAbilityRemoved],
-  );
-
-  const removeAbilityWithAttachedVisionCones = useCallback(
-    (abilityId: string) => {
-      const removedAbilityIds = [
-        abilityId,
-        ...getAttachedVisionConeIds(abilitiesOnCanvas, abilityId),
-      ];
-      const removedIds = new Set(removedAbilityIds);
-
-      if (!abilitiesOnCanvas.some((ability) => removedIds.has(ability.id))) {
-        return;
-      }
-
-      setAbilitiesOnCanvas((prev) =>
-        prev.filter((ability) => !removedIds.has(ability.id)),
-      );
-      removedAbilityIds.forEach((removedAbilityId) =>
-        notifyAbilityRemoved(removedAbilityId),
-      );
     },
     [abilitiesOnCanvas, setAbilitiesOnCanvas, notifyAbilityRemoved],
   );
@@ -260,56 +257,95 @@ export const useCanvasContextMenu = (
     [abilitiesOnCanvas, setAbilitiesOnCanvas, notifyAbilityAdded],
   );
 
-  const handleDuplicate = useCallback(async () => {
-    if (!contextMenu.open) return;
-
-    const { itemId, itemType } = contextMenu;
-
-    switch (itemType) {
-      case "agent": {
-        const newAgent = duplicateItem(
-          agentsOnCanvas,
-          itemId,
-          setAgentsOnCanvas,
-          itemType,
-        );
-        if (newAgent) {
-          notifyAgentAdded(newAgent as AgentCanvas);
-          duplicateAttachedVisionConesForHost(
+  const duplicateSingleItem = useCallback(
+    (itemId: string, itemType: ItemType) => {
+      switch (itemType) {
+        case "agent": {
+          const newAgent = duplicateItem(
+            agentsOnCanvas,
             itemId,
-            newAgent.id,
-            newAgent.x,
-            newAgent.y,
+            setAgentsOnCanvas,
+            itemType,
           );
-        }
-        break;
-      }
-      case "ability": {
-        const ability = abilitiesOnCanvas.find((item) => item.id === itemId);
-        if (!ability) {
+          if (newAgent) {
+            notifyAgentAdded(newAgent as AgentCanvas);
+            duplicateAttachedVisionConesForHost(
+              itemId,
+              newAgent.id,
+              newAgent.x,
+              newAgent.y,
+            );
+          }
           break;
         }
+        case "ability": {
+          const ability = abilitiesOnCanvas.find((item) => item.id === itemId);
+          if (!ability) {
+            break;
+          }
 
-        const attachedAbilityHost =
-          isVisionConeAction(ability.action) && ability.attachedToId
-            ? abilitiesOnCanvas.find(
-                (item) =>
-                  item.id === ability.attachedToId &&
-                  !isVisionConeAction(item.action),
-              )
-            : undefined;
+          const attachedAbilityHost =
+            isVisionConeAction(ability.action) && ability.attachedToId
+              ? abilitiesOnCanvas.find(
+                  (item) =>
+                    item.id === ability.attachedToId &&
+                    !isVisionConeAction(item.action),
+                )
+              : undefined;
 
-        if (attachedAbilityHost) {
+          if (attachedAbilityHost) {
+            const newAbility = duplicateItem(
+              abilitiesOnCanvas,
+              attachedAbilityHost.id,
+              setAbilitiesOnCanvas,
+              itemType,
+            );
+            if (newAbility) {
+              notifyAbilityAdded(newAbility as AbilityCanvas);
+              duplicateAttachedVisionConesForHost(
+                attachedAbilityHost.id,
+                newAbility.id,
+                newAbility.x,
+                newAbility.y,
+              );
+            }
+            break;
+          }
+
+          if (isVisionConeAction(ability.action)) {
+            const attachmentHost = findVisionConeAttachmentHost({
+              attachedToId: ability.attachedToId,
+              agentsOnCanvas,
+              abilitiesOnCanvas,
+              toolIconsOnCanvas,
+              excludeId: ability.id,
+            });
+            const originX = attachmentHost?.x ?? ability.x;
+            const originY = attachmentHost?.y ?? ability.y;
+
+            const duplicatedCone: AbilityCanvas = {
+              ...ability,
+              id: getNextId(itemType),
+              x: originX + CONTEXT_MENU_DUPLICATE_OFFSET,
+              y: originY + CONTEXT_MENU_DUPLICATE_OFFSET,
+              attachedToId: undefined,
+            };
+
+            setAbilitiesOnCanvas((prev) => [...prev, duplicatedCone]);
+            notifyAbilityAdded(duplicatedCone);
+            break;
+          }
+
           const newAbility = duplicateItem(
             abilitiesOnCanvas,
-            attachedAbilityHost.id,
+            itemId,
             setAbilitiesOnCanvas,
             itemType,
           );
           if (newAbility) {
             notifyAbilityAdded(newAbility as AbilityCanvas);
             duplicateAttachedVisionConesForHost(
-              attachedAbilityHost.id,
+              itemId,
               newAbility.id,
               newAbility.x,
               newAbility.y,
@@ -317,429 +353,586 @@ export const useCanvasContextMenu = (
           }
           break;
         }
-
-        if (isVisionConeAction(ability.action)) {
-          const attachmentHost = findVisionConeAttachmentHost({
-            attachedToId: ability.attachedToId,
-            agentsOnCanvas,
-            abilitiesOnCanvas,
-            toolIconsOnCanvas,
-            excludeId: ability.id,
-          });
-          const originX = attachmentHost?.x ?? ability.x;
-          const originY = attachmentHost?.y ?? ability.y;
-
-          const duplicatedCone: AbilityCanvas = {
-            ...ability,
-            id: getNextId(itemType),
-            x: originX + CONTEXT_MENU_DUPLICATE_OFFSET,
-            y: originY + CONTEXT_MENU_DUPLICATE_OFFSET,
-            attachedToId: undefined,
-          };
-
-          setAbilitiesOnCanvas((prev) => [...prev, duplicatedCone]);
-          notifyAbilityAdded(duplicatedCone);
+        case "text": {
+          const newText = duplicateItem(
+            textsOnCanvas,
+            itemId,
+            setTextsOnCanvas,
+            itemType,
+          );
+          if (newText) notifyTextAdded(newText as TextCanvas);
           break;
         }
+        case "image": {
+          const newImage = duplicateItem(
+            imagesOnCanvas,
+            itemId,
+            setImagesOnCanvas,
+            itemType,
+          );
+          if (newImage) {
+            notifyImageAdded(newImage as ImageCanvas);
+          }
+          break;
+        }
+        case "tool": {
+          const newToolIcon = duplicateItem(
+            toolIconsOnCanvas,
+            itemId,
+            setToolIconsOnCanvas,
+            itemType,
+          );
+          if (newToolIcon) {
+            notifyToolIconAdded(newToolIcon as ToolIconCanvas);
+            duplicateAttachedVisionConesForHost(
+              itemId,
+              newToolIcon.id,
+              newToolIcon.x,
+              newToolIcon.y,
+            );
+          }
+          break;
+        }
+      }
+    },
+    [
+      agentsOnCanvas,
+      setAgentsOnCanvas,
+      notifyAgentAdded,
+      abilitiesOnCanvas,
+      setAbilitiesOnCanvas,
+      notifyAbilityAdded,
+      textsOnCanvas,
+      setTextsOnCanvas,
+      notifyTextAdded,
+      imagesOnCanvas,
+      setImagesOnCanvas,
+      notifyImageAdded,
+      toolIconsOnCanvas,
+      setToolIconsOnCanvas,
+      notifyToolIconAdded,
+      duplicateAttachedVisionConesForHost,
+    ],
+  );
 
-        const newAbility = duplicateItem(
-          abilitiesOnCanvas,
-          itemId,
-          setAbilitiesOnCanvas,
-          itemType,
-        );
-        if (newAbility) {
-          notifyAbilityAdded(newAbility as AbilityCanvas);
-          duplicateAttachedVisionConesForHost(
-            itemId,
-            newAbility.id,
-            newAbility.x,
-            newAbility.y,
-          );
-        }
-        break;
-      }
-      case "text": {
-        const newText = duplicateItem(
-          textsOnCanvas,
-          itemId,
-          setTextsOnCanvas,
-          itemType,
-        );
-        if (newText) notifyTextAdded(newText as TextCanvas);
-        break;
-      }
-      case "image": {
-        const newImage = duplicateItem(
-          imagesOnCanvas,
-          itemId,
-          setImagesOnCanvas,
-          itemType,
-        );
-        if (newImage) {
-          notifyImageAdded(newImage as ImageCanvas);
-        }
-        break;
-      }
-      case "tool": {
-        const newToolIcon = duplicateItem(
-          toolIconsOnCanvas,
-          itemId,
-          setToolIconsOnCanvas,
-          itemType,
-        );
-        if (newToolIcon) {
-          notifyToolIconAdded(newToolIcon as ToolIconCanvas);
-          duplicateAttachedVisionConesForHost(
-            itemId,
-            newToolIcon.id,
-            newToolIcon.x,
-            newToolIcon.y,
-          );
-        }
-        break;
-      }
-    }
+  const handleDuplicate = useCallback(() => {
+    if (!contextMenu.open) return;
+
+    contextMenu.targetItems.forEach((target) =>
+      duplicateSingleItem(target.id, target.type),
+    );
     closeContextMenu();
-  }, [
-    contextMenu,
-    closeContextMenu,
-    agentsOnCanvas,
-    setAgentsOnCanvas,
-    notifyAgentAdded,
-    abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    notifyAbilityAdded,
-    textsOnCanvas,
-    setTextsOnCanvas,
-    notifyTextAdded,
-    imagesOnCanvas,
-    setImagesOnCanvas,
-    notifyImageAdded,
-    toolIconsOnCanvas,
-    setToolIconsOnCanvas,
-    notifyToolIconAdded,
-    duplicateAttachedVisionConesForHost,
-  ]);
+  }, [contextMenu, closeContextMenu, duplicateSingleItem]);
+
+  const deleteTargetItems = useCallback(
+    (targets: CanvasSelectionItem[]) => {
+      if (targets.length === 0) return;
+
+      const queue: CanvasSelectionItem[] = [];
+      const visited = new Set<string>();
+      const removedAgentIds = new Set<string>();
+      const removedAbilityIds = new Set<string>();
+      const removedTextIds = new Set<string>();
+      const removedImageIds = new Set<string>();
+      const removedToolIconIds = new Set<string>();
+      const removedLineIds = new Set<string>();
+
+      const enqueue = (target: CanvasSelectionItem) => {
+        const key = `${target.type}:${target.id}`;
+        if (visited.has(key)) return;
+        visited.add(key);
+        queue.push(target);
+      };
+
+      const enqueueById = (id: string) => {
+        const type = getCanvasItemTypeById(id, collections);
+        if (type) enqueue({ id, type });
+      };
+
+      targets.forEach(enqueue);
+
+      while (queue.length > 0) {
+        const target = queue.shift();
+        if (!target) continue;
+
+        const entry = getCanvasItemInstance(collections, target);
+        if (!entry) continue;
+
+        switch (entry.type) {
+          case "agent": {
+            removedAgentIds.add(entry.item.id);
+            getAttachedVisionConeIds(
+              collections.abilitiesOnCanvas,
+              entry.item.id,
+            ).forEach((id) => removedAbilityIds.add(id));
+            collections.toolIconsOnCanvas
+              .filter((toolIcon) => toolIcon.attachedToId === entry.item.id)
+              .forEach((toolIcon) => removedToolIconIds.add(toolIcon.id));
+
+            const connectedLine = connectingLines.find(
+              (line) =>
+                line.fromId === entry.item.id || line.toId === entry.item.id,
+            );
+            if (connectedLine) {
+              removedLineIds.add(connectedLine.id);
+              enqueueById(
+                connectedLine.fromId === entry.item.id
+                  ? connectedLine.toId
+                  : connectedLine.fromId,
+              );
+            }
+            break;
+          }
+          case "ability": {
+            const ability = entry.item;
+            if (isVisionConeAction(ability.action) && ability.attachedToId) {
+              enqueueById(ability.attachedToId);
+              break;
+            }
+
+            removedAbilityIds.add(ability.id);
+            getAttachedVisionConeIds(
+              collections.abilitiesOnCanvas,
+              ability.id,
+            ).forEach((id) => removedAbilityIds.add(id));
+
+            const connectedLine = connectingLines.find(
+              (line) =>
+                line.fromId === ability.id || line.toId === ability.id,
+            );
+            if (connectedLine) {
+              removedLineIds.add(connectedLine.id);
+              enqueueById(
+                connectedLine.fromId === ability.id
+                  ? connectedLine.toId
+                  : connectedLine.fromId,
+              );
+            }
+            break;
+          }
+          case "text":
+            removedTextIds.add(entry.item.id);
+            break;
+          case "image":
+            removedImageIds.add(entry.item.id);
+            break;
+          case "tool":
+            removedToolIconIds.add(entry.item.id);
+            getAttachedVisionConeIds(
+              collections.abilitiesOnCanvas,
+              entry.item.id,
+            ).forEach((id) => removedAbilityIds.add(id));
+            break;
+        }
+      }
+
+      if (removedAgentIds.size > 0) {
+        setAgentsOnCanvas((previous) =>
+          previous.filter((agent) => !removedAgentIds.has(agent.id)),
+        );
+        removedAgentIds.forEach((id) => notifyAgentRemoved(id));
+      }
+      if (removedAbilityIds.size > 0) {
+        setAbilitiesOnCanvas((previous) =>
+          previous.filter((ability) => !removedAbilityIds.has(ability.id)),
+        );
+        removedAbilityIds.forEach((id) => notifyAbilityRemoved(id));
+      }
+      if (removedTextIds.size > 0) {
+        setTextsOnCanvas((previous) =>
+          previous.filter((text) => !removedTextIds.has(text.id)),
+        );
+        removedTextIds.forEach((id) => notifyTextRemoved(id));
+      }
+      if (removedImageIds.size > 0) {
+        setImagesOnCanvas((previous) =>
+          previous.filter((image) => !removedImageIds.has(image.id)),
+        );
+        removedImageIds.forEach((id) => notifyImageRemoved(id));
+      }
+      if (removedToolIconIds.size > 0) {
+        setToolIconsOnCanvas((previous) =>
+          previous.filter((toolIcon) => !removedToolIconIds.has(toolIcon.id)),
+        );
+        removedToolIconIds.forEach((id) => notifyToolIconRemoved(id));
+      }
+      if (removedLineIds.size > 0) {
+        setConnectingLines((previous) =>
+          previous.filter((line) => !removedLineIds.has(line.id)),
+        );
+        removedLineIds.forEach((id) => notifyConnLineRemoved(id));
+      }
+
+      setSelectedCanvasItems((previous) =>
+        previous.filter(
+          (selection) =>
+            !removedAgentIds.has(selection.id) &&
+            !removedAbilityIds.has(selection.id) &&
+            !removedTextIds.has(selection.id) &&
+            !removedImageIds.has(selection.id) &&
+            !removedToolIconIds.has(selection.id),
+        ),
+      );
+    },
+    [
+      collections,
+      connectingLines,
+      notifyAbilityRemoved,
+      notifyAgentRemoved,
+      notifyConnLineRemoved,
+      notifyImageRemoved,
+      notifyTextRemoved,
+      notifyToolIconRemoved,
+      setAbilitiesOnCanvas,
+      setAgentsOnCanvas,
+      setConnectingLines,
+      setImagesOnCanvas,
+      setSelectedCanvasItems,
+      setTextsOnCanvas,
+      setToolIconsOnCanvas,
+    ],
+  );
 
   const handleDelete = useCallback(() => {
     if (!contextMenu.open) return;
 
-    const { itemId, itemType } = contextMenu;
-
-    const targetAbility =
-      itemType === "ability"
-        ? abilitiesOnCanvas.find((ability) => ability.id === itemId)
-        : undefined;
-    const attachedAbilityHost =
-      targetAbility &&
-      isVisionConeAction(targetAbility.action) &&
-      targetAbility.attachedToId
-        ? abilitiesOnCanvas.find(
-            (ability) =>
-              ability.id === targetAbility.attachedToId &&
-              !isVisionConeAction(ability.action),
-          )
-        : undefined;
-    const effectiveItemId = attachedAbilityHost?.id ?? itemId;
-
-    const connectedLine = connectingLines.find(
-      (line) =>
-        line.fromId === effectiveItemId || line.toId === effectiveItemId,
-    );
-
-    switch (itemType) {
-      case "agent":
-        deleteItem(itemId, setAgentsOnCanvas);
-        notifyAgentRemoved(itemId);
-        removeAttachedVisionCones(itemId);
-        if (connectedLine) {
-          const connectedId =
-            connectedLine.fromId === itemId
-              ? connectedLine.toId
-              : connectedLine.fromId;
-          removeAbilityWithAttachedVisionCones(connectedId);
-          setConnectingLines((prev) =>
-            prev.filter((line) => line.id !== connectedLine.id),
-          );
-          notifyConnLineRemoved(connectedLine.id);
-        }
-        break;
-      case "ability":
-        removeAbilityWithAttachedVisionCones(effectiveItemId);
-        if (connectedLine) {
-          const connectedId =
-            connectedLine.fromId === effectiveItemId
-              ? connectedLine.toId
-              : connectedLine.fromId;
-          deleteItem(connectedId, setAgentsOnCanvas);
-          notifyAgentRemoved(connectedId);
-          removeAttachedVisionCones(connectedId);
-          setConnectingLines((prev) =>
-            prev.filter((line) => line.id !== connectedLine.id),
-          );
-          notifyConnLineRemoved(connectedLine.id);
-        }
-        break;
-      case "text":
-        deleteItem(itemId, setTextsOnCanvas);
-        notifyTextRemoved(itemId);
-        break;
-      case "image":
-        deleteItem(itemId, setImagesOnCanvas);
-        notifyImageRemoved(itemId);
-        break;
-      case "tool":
-        deleteItem(itemId, setToolIconsOnCanvas);
-        notifyToolIconRemoved(itemId);
-        removeAttachedVisionCones(itemId);
-        break;
-    }
+    deleteTargetItems(contextMenu.targetItems);
     closeContextMenu();
-  }, [
-    contextMenu,
-    closeContextMenu,
-    abilitiesOnCanvas,
-    connectingLines,
-    setAgentsOnCanvas,
-    setConnectingLines,
-    setTextsOnCanvas,
-    setImagesOnCanvas,
-    setToolIconsOnCanvas,
-    notifyAgentRemoved,
-    notifyTextRemoved,
-    notifyImageRemoved,
-    notifyToolIconRemoved,
-    notifyConnLineRemoved,
-    removeAttachedVisionCones,
-    removeAbilityWithAttachedVisionCones,
-  ]);
+  }, [contextMenu, closeContextMenu, deleteTargetItems]);
+
+  const getAnchorEntry = useCallback(
+    () =>
+      getCanvasItemInstance(collections, {
+        id: contextMenu.anchorId,
+        type: contextMenu.anchorType,
+      }),
+    [collections, contextMenu.anchorId, contextMenu.anchorType],
+  );
 
   const handleToggleAlly = useCallback(() => {
     if (!contextMenu.open) return;
 
-    const { itemId, itemType } = contextMenu;
-
-    if (itemType === "agent") {
-      const agent = agentsOnCanvas.find((a) => a.id === itemId);
-      if (agent) {
-        const updatedAgent = { ...agent, isAlly: !agent.isAlly };
-        setAgentsOnCanvas((prev) =>
-          prev.map((a) => (a.id === itemId ? updatedAgent : a)),
-        );
-        notifyAgentMoved(updatedAgent);
-      }
-    } else if (itemType === "ability") {
-      const ability = abilitiesOnCanvas.find((a) => a.id === itemId);
-      if (ability) {
-        const updatedAbility = { ...ability, isAlly: !ability.isAlly };
-        setAbilitiesOnCanvas((prev) =>
-          prev.map((a) => (a.id === itemId ? updatedAbility : a)),
-        );
-        notifyAbilityMoved(updatedAbility);
-      }
+    const anchor = getAnchorEntry();
+    if (
+      !anchor ||
+      (anchor.type !== "agent" && anchor.type !== "ability")
+    ) {
+      return;
     }
+
+    const nextIsAlly = !anchor.item.isAlly;
+    const agentIds = new Set(
+      contextMenu.targetItems
+        .filter((target) => target.type === "agent")
+        .map((target) => target.id),
+    );
+    const abilityIds = new Set(
+      contextMenu.targetItems
+        .filter((target) => target.type === "ability")
+        .map((target) => target.id),
+    );
+
+    if (agentIds.size > 0) {
+      const updatedAgents = agentsOnCanvas
+        .filter((agent) => agentIds.has(agent.id))
+        .map((agent) => ({ ...agent, isAlly: nextIsAlly }));
+
+      setAgentsOnCanvas((previous) =>
+        previous.map((agent) =>
+          agentIds.has(agent.id)
+            ? { ...agent, isAlly: nextIsAlly }
+            : agent,
+        ),
+      );
+      updatedAgents.forEach(notifyAgentMoved);
+    }
+
+    if (abilityIds.size > 0) {
+      const updatedAbilities = abilitiesOnCanvas
+        .filter((ability) => abilityIds.has(ability.id))
+        .map((ability) => ({ ...ability, isAlly: nextIsAlly }));
+
+      setAbilitiesOnCanvas((previous) =>
+        previous.map((ability) =>
+          abilityIds.has(ability.id)
+            ? { ...ability, isAlly: nextIsAlly }
+            : ability,
+        ),
+      );
+      updatedAbilities.forEach(notifyAbilityMoved);
+    }
+
     closeContextMenu();
   }, [
-    contextMenu,
-    agentsOnCanvas,
     abilitiesOnCanvas,
-    setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
+    agentsOnCanvas,
     closeContextMenu,
-    notifyAgentMoved,
+    contextMenu,
+    getAnchorEntry,
     notifyAbilityMoved,
+    notifyAgentMoved,
+    setAbilitiesOnCanvas,
+    setAgentsOnCanvas,
   ]);
 
   const handleToggleAgentDead = useCallback(() => {
-    if (!contextMenu.open || contextMenu.itemType !== "agent") return;
+    if (!contextMenu.open) return;
 
-    const agent = agentsOnCanvas.find((item) => item.id === contextMenu.itemId);
-    if (!agent) return;
+    const anchor = getAnchorEntry();
+    if (!anchor || anchor.type !== "agent") return;
 
-    const updatedAgent: AgentCanvas = {
-      ...agent,
-      isGray: !agent.isGray,
-    };
-
-    setAgentsOnCanvas((prev) =>
-      prev.map((item) => (item.id === agent.id ? updatedAgent : item)),
+    const nextIsGray = !anchor.item.isGray;
+    const agentIds = new Set(
+      contextMenu.targetItems
+        .filter((target) => target.type === "agent")
+        .map((target) => target.id),
     );
-    notifyAgentMoved(updatedAgent);
+
+    const updatedAgents = agentsOnCanvas
+      .filter((agent) => agentIds.has(agent.id))
+      .map((agent) => ({ ...agent, isGray: nextIsGray }));
+
+    setAgentsOnCanvas((previous) =>
+      previous.map((agent) =>
+        agentIds.has(agent.id) ? { ...agent, isGray: nextIsGray } : agent,
+      ),
+    );
+    updatedAgents.forEach(notifyAgentMoved);
     closeContextMenu();
   }, [
-    contextMenu,
     agentsOnCanvas,
-    setAgentsOnCanvas,
-    notifyAgentMoved,
     closeContextMenu,
+    contextMenu,
+    getAnchorEntry,
+    notifyAgentMoved,
+    setAgentsOnCanvas,
   ]);
 
   const handleSwapAbility = useCallback(() => {
-    if (!contextMenu.open || contextMenu.itemType !== "ability") return;
+    if (!contextMenu.open) return;
 
-    const ability = abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId);
-    if (!ability) return;
+    const updates = new Map<string, AbilityCanvas>();
 
-    const definition = findAbilityDefinitionByAction(ability.action);
-    if (!definition) return;
+    contextMenu.targetItems
+      .filter((target) => target.type === "ability")
+      .forEach((target) => {
+        const ability = abilitiesOnCanvas.find(
+          (item) => item.id === target.id,
+        );
+        if (!ability) return;
 
-    const variants = getAbilityVariants(definition);
-    if (variants.length < 2) return;
+        const definition = findAbilityDefinitionByAction(ability.action);
+        if (!definition) return;
 
-    const currentIndex = variants.findIndex((v) => v.action === ability.action);
-    const nextVariant = variants[(currentIndex + 1) % variants.length];
+        const variants = getAbilityVariants(definition);
+        if (variants.length < 2) return;
 
-    const updatedAbility: AbilityCanvas = {
-      ...ability,
-      action: nextVariant.action,
-      name: nextVariant.name,
-    };
-    setAbilitiesOnCanvas((prev) =>
-      prev.map((a) => (a.id === ability.id ? updatedAbility : a)),
+        const currentIndex = variants.findIndex(
+          (variant) => variant.action === ability.action,
+        );
+        const nextVariant = variants[(currentIndex + 1) % variants.length];
+
+        updates.set(ability.id, {
+          ...ability,
+          action: nextVariant.action,
+          name: nextVariant.name,
+        });
+      });
+
+    if (updates.size === 0) {
+      closeContextMenu();
+      return;
+    }
+
+    setAbilitiesOnCanvas((previous) =>
+      previous.map((ability) => updates.get(ability.id) ?? ability),
     );
-    notifyAbilityMoved(updatedAbility);
+    updates.forEach((ability) => notifyAbilityMoved(ability));
     closeContextMenu();
   }, [
-    contextMenu,
     abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    notifyAbilityMoved,
     closeContextMenu,
+    contextMenu,
+    notifyAbilityMoved,
+    setAbilitiesOnCanvas,
   ]);
 
   const handleToggleAbilityIconOnly = useCallback(() => {
-    if (!contextMenu.open || contextMenu.itemType !== "ability") return;
+    if (!contextMenu.open) return;
 
-    const ability = abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId);
-    if (!ability || ability.action === "icon") return;
-
-    const updatedAbility: AbilityCanvas = {
-      ...ability,
-      iconOnly: !ability.iconOnly,
-    };
-
-    if (
-      isVisionConeAction(ability.action) &&
-      !canAttachVisionCone(updatedAbility)
-    ) {
-      updatedAbility.attachedToId = undefined;
+    const anchor = getAnchorEntry();
+    if (!anchor || anchor.type !== "ability" || anchor.item.action === "icon") {
+      return;
     }
 
-    setAbilitiesOnCanvas((prev) =>
-      prev.map((a) => (a.id === ability.id ? updatedAbility : a)),
+    const nextIconOnly = !anchor.item.iconOnly;
+    const abilityIds = new Set(
+      contextMenu.targetItems
+        .filter((target) => target.type === "ability")
+        .map((target) => target.id),
     );
-    notifyAbilityMoved(updatedAbility);
+    const updates = new Map<string, AbilityCanvas>();
+
+    abilitiesOnCanvas
+      .filter((ability) => abilityIds.has(ability.id))
+      .forEach((ability) => {
+        if (ability.action === "icon") return;
+
+        const updated: AbilityCanvas = {
+          ...ability,
+          iconOnly: nextIconOnly,
+        };
+
+        if (
+          isVisionConeAction(ability.action) &&
+          !canAttachVisionCone(updated)
+        ) {
+          updated.attachedToId = undefined;
+        }
+
+        updates.set(updated.id, updated);
+      });
+
+    setAbilitiesOnCanvas((previous) =>
+      previous.map((ability) => updates.get(ability.id) ?? ability),
+    );
+    updates.forEach((ability) => notifyAbilityMoved(ability));
     closeContextMenu();
   }, [
-    contextMenu,
     abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    notifyAbilityMoved,
     closeContextMenu,
+    contextMenu,
+    getAnchorEntry,
+    notifyAbilityMoved,
+    setAbilitiesOnCanvas,
   ]);
 
   const handleToggleAbilityOuterCircle = useCallback(() => {
-    if (!contextMenu.open || contextMenu.itemType !== "ability") return;
+    if (!contextMenu.open) return;
 
-    const ability = abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId);
-    if (!ability) return;
+    const anchor = getAnchorEntry();
+    if (!anchor || anchor.type !== "ability") return;
 
-    const updatedAbility: AbilityCanvas = {
-      ...ability,
-      showOuterCircle: ability.showOuterCircle === false ? true : false,
-    };
-
-    setAbilitiesOnCanvas((prev) =>
-      prev.map((a) => (a.id === ability.id ? updatedAbility : a)),
+    const nextShowOuterCircle = anchor.item.showOuterCircle === false;
+    const abilityIds = new Set(
+      contextMenu.targetItems
+        .filter((target) => target.type === "ability")
+        .map((target) => target.id),
     );
-    notifyAbilityMoved(updatedAbility);
+
+    const updates = abilitiesOnCanvas
+      .filter((ability) => abilityIds.has(ability.id))
+      .map((ability) => ({
+        ...ability,
+        showOuterCircle: nextShowOuterCircle,
+      }));
+
+    setAbilitiesOnCanvas((previous) =>
+      previous.map(
+        (ability) =>
+          updates.find((updated) => updated.id === ability.id) ?? ability,
+      ),
+    );
+    updates.forEach((ability) => notifyAbilityMoved(ability));
     closeContextMenu();
   }, [
-    contextMenu,
     abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    notifyAbilityMoved,
     closeContextMenu,
+    contextMenu,
+    getAnchorEntry,
+    notifyAbilityMoved,
+    setAbilitiesOnCanvas,
   ]);
 
   const handleRemoveAttachedVisionCone = useCallback(() => {
     if (!contextMenu.open) return;
 
-    const { itemId, itemType } = contextMenu;
+    contextMenu.targetItems.forEach((target) => {
+      let hostId: string | null = null;
 
-    const hostId =
-      itemType === "agent" || itemType === "tool"
-        ? itemId
-        : itemType === "ability"
-          ? (() => {
-              const ability = abilitiesOnCanvas.find((a) => a.id === itemId);
-              return ability && !isVisionConeAction(ability.action)
-                ? ability.id
-                : null;
-            })()
-          : null;
+      if (target.type === "agent" || target.type === "tool") {
+        hostId = target.id;
+      } else if (target.type === "ability") {
+        const ability = abilitiesOnCanvas.find(
+          (item) => item.id === target.id,
+        );
+        hostId =
+          ability && !isVisionConeAction(ability.action) ? ability.id : null;
+      }
 
-    if (
-      !hostId ||
-      getAttachedVisionConeIds(abilitiesOnCanvas, hostId).length === 0
-    ) {
-      return;
-    }
+      if (
+        hostId &&
+        getAttachedVisionConeIds(abilitiesOnCanvas, hostId).length > 0
+      ) {
+        removeAttachedVisionCones(hostId);
+      }
+    });
 
-    removeAttachedVisionCones(hostId);
     closeContextMenu();
   }, [
-    contextMenu,
     abilitiesOnCanvas,
+    contextMenu,
     removeAttachedVisionCones,
     closeContextMenu,
   ]);
 
   const handleDetachVisionCone = useCallback(() => {
-    if (!contextMenu.open || contextMenu.itemType !== "ability") return;
+    if (!contextMenu.open) return;
 
-    const ability = abilitiesOnCanvas.find((a) => a.id === contextMenu.itemId);
-    if (
-      !ability ||
-      !isVisionConeAction(ability.action) ||
-      !ability.attachedToId
-    ) {
-      return;
-    }
-
-    const attachmentHost = findVisionConeAttachmentHost({
-      attachedToId: ability.attachedToId,
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      toolIconsOnCanvas,
-      excludeId: ability.id,
-    });
-
-    const updatedAbility: AbilityCanvas = {
-      ...ability,
-      x: attachmentHost?.x ?? ability.x,
-      y: attachmentHost?.y ?? ability.y,
-      attachedToId: undefined,
-    };
-
-    setAbilitiesOnCanvas((prev) =>
-      prev.map((item) => (item.id === ability.id ? updatedAbility : item)),
+    const abilityIds = new Set(
+      contextMenu.targetItems
+        .filter((target) => target.type === "ability")
+        .map((target) => target.id),
     );
-    notifyAbilityMoved(updatedAbility);
+    const updates = new Map<string, AbilityCanvas>();
+
+    abilitiesOnCanvas
+      .filter((ability) => abilityIds.has(ability.id))
+      .forEach((ability) => {
+        if (
+          !isVisionConeAction(ability.action) ||
+          !ability.attachedToId
+        ) {
+          return;
+        }
+
+        const attachmentHost = findVisionConeAttachmentHost({
+          attachedToId: ability.attachedToId,
+          agentsOnCanvas,
+          abilitiesOnCanvas,
+          toolIconsOnCanvas,
+          excludeId: ability.id,
+        });
+
+        updates.set(ability.id, {
+          ...ability,
+          x: attachmentHost?.x ?? ability.x,
+          y: attachmentHost?.y ?? ability.y,
+          attachedToId: undefined,
+        });
+      });
+
+    setAbilitiesOnCanvas((previous) =>
+      previous.map((ability) => updates.get(ability.id) ?? ability),
+    );
+    updates.forEach((ability) => notifyAbilityMoved(ability));
     closeContextMenu();
   }, [
-    contextMenu,
     abilitiesOnCanvas,
     agentsOnCanvas,
-    toolIconsOnCanvas,
-    setAbilitiesOnCanvas,
-    notifyAbilityMoved,
     closeContextMenu,
+    contextMenu,
+    notifyAbilityMoved,
+    setAbilitiesOnCanvas,
+    toolIconsOnCanvas,
   ]);
 
   return {
-    contextMenu,
+    contextMenu: {
+      ...contextMenu,
+      capabilities,
+    },
+    openContextMenu,
     handleContextMenu,
     handlePopoverOpenChange,
     handleDuplicate,

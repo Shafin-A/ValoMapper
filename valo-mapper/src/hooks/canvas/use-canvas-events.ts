@@ -13,21 +13,33 @@ import {
 } from "@/lib/tool-icon";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import { getNextId, isAgent } from "@/lib/utils";
+import {
+  type CanvasItemCollections,
+  resolveCanvasItemTarget,
+} from "@/lib/canvas-selection";
 import { Stage } from "konva/lib/Stage";
+import type Konva from "konva";
+import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useMemo } from "react";
 import { useCanvasContextMenu } from "./use-canvas-context-menu";
 import { useCanvasDrawing } from "./use-canvas-drawing";
+import { useCanvasSelection } from "./use-canvas-selection";
+import { useCanvasSelectionDrag } from "./use-canvas-selection-drag";
 import { useCanvasZoom } from "./use-canvas-zoom";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
 export const useCanvasEvents = (
   stageRef: React.RefObject<Stage | null>,
   baseScale: number,
+  enableMultiSelect = true,
+  selectionOutlineGroupRef?: React.RefObject<Konva.Group | null>,
 ) => {
   const {
     selectedCanvasIcon,
     setSelectedCanvasIcon,
+    selectedCanvasItems,
+    setSelectedCanvasItems,
     isSidebarDragActive,
     setIsSidebarDragActive,
     setCurrentStageScale,
@@ -183,6 +195,7 @@ export const useCanvasEvents = (
 
   const {
     contextMenu,
+    openContextMenu,
     handleContextMenu,
     handlePopoverOpenChange,
     handleDuplicate,
@@ -194,6 +207,7 @@ export const useCanvasEvents = (
     handleToggleAbilityOuterCircle,
     handleRemoveAttachedVisionCone,
     handleDetachVisionCone,
+    closeContextMenu,
   } = useCanvasContextMenu(
     stageRef,
     agentsOnCanvas,
@@ -208,7 +222,40 @@ export const useCanvasEvents = (
     setToolIconsOnCanvas,
     connectingLines,
     setConnectingLines,
+    selectedCanvasItems,
+    setSelectedCanvasItems,
   );
+
+  const collections = useMemo<CanvasItemCollections>(
+    () => ({
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+      textsOnCanvas,
+      imagesOnCanvas,
+      toolIconsOnCanvas,
+    }),
+    [
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+      textsOnCanvas,
+      imagesOnCanvas,
+      toolIconsOnCanvas,
+    ],
+  );
+
+  const { marqueeRect, handleRightMouseDown } = useCanvasSelection({
+    stageRef,
+    enabled:
+      enableMultiSelect &&
+      !isDrawMode &&
+      !editingTextId &&
+      !isSidebarDragActive,
+    onRightClick: openContextMenu,
+  });
+
+  const selectionDrag = useCanvasSelectionDrag({
+    outlineGroupRef: selectionOutlineGroupRef,
+  });
 
   const handleIconPlacement = useCallback(
     (position?: Vector2d) => {
@@ -356,35 +403,78 @@ export const useCanvasEvents = (
     ],
   );
 
-  const handleStageClick = useCallback(() => {
-    if (editingTextId) {
-      return;
-    }
-
-    if (isDrawMode) {
-      handleDrawing();
-      return;
-    }
-
-    if (isSidebarDragActive) {
-      return;
-    }
-
-    if (selectedCanvasIcon) {
-      const worldPos = getWorldPointerPosition();
-      if (worldPos) {
-        handleIconPlacement(worldPos);
+  const handleStageClick = useCallback(
+    (event?: KonvaEventObject<MouseEvent>) => {
+      if (editingTextId) {
+        return;
       }
-    }
-  }, [
-    editingTextId,
-    isDrawMode,
-    isSidebarDragActive,
-    selectedCanvasIcon,
-    handleDrawing,
-    handleIconPlacement,
-    getWorldPointerPosition,
-  ]);
+
+      if (event?.evt.button === 0) {
+        const target = resolveCanvasItemTarget(
+          event.target as unknown as import("konva/lib/Node").Node,
+          collections,
+        );
+        const targetIsSelected =
+          target !== null &&
+          selectedCanvasItems.some(
+            (selection) =>
+              selection.id === target.id && selection.type === target.type,
+          );
+
+        if (!targetIsSelected) {
+          setSelectedCanvasItems([]);
+        }
+      }
+
+      if (isDrawMode) {
+        handleDrawing();
+        return;
+      }
+
+      if (isSidebarDragActive) {
+        return;
+      }
+
+      if (selectedCanvasIcon) {
+        const worldPos = getWorldPointerPosition();
+        if (worldPos) {
+          handleIconPlacement(worldPos);
+        }
+      }
+    },
+    [
+      editingTextId,
+      collections,
+      selectedCanvasItems,
+      setSelectedCanvasItems,
+      isDrawMode,
+      isSidebarDragActive,
+      selectedCanvasIcon,
+      handleDrawing,
+      handleIconPlacement,
+      getWorldPointerPosition,
+    ],
+  );
+
+  const handleStageMouseDown = useCallback(
+    (event: KonvaEventObject<MouseEvent>) => {
+      if (event.evt.button === 2 && enableMultiSelect) {
+        closeContextMenu();
+        handleRightMouseDown(event);
+        return;
+      }
+
+      if (event.evt.button === 0) {
+        handleStageClick(event);
+      }
+    },
+    [
+      closeContextMenu,
+      enableMultiSelect,
+      handleRightMouseDown,
+      handleStageClick,
+    ],
+  );
 
   const handleStagePointerUp = useCallback(() => {
     handleMouseUp();
@@ -539,6 +629,7 @@ export const useCanvasEvents = (
   return {
     handleWheel,
     handleStageClick,
+    handleStageMouseDown,
     handleStagePointerUp,
     handleStageMouseMove,
     handleStageMouseLeave,
@@ -560,6 +651,8 @@ export const useCanvasEvents = (
     handleTouchEnd,
     handleDragMove,
     contextMenu,
+    marqueeRect,
+    selectionDrag,
     currentLineRef,
     deleteGroupRef,
   };

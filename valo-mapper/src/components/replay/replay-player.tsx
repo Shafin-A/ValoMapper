@@ -321,6 +321,7 @@ export const ReplayPlayer = ({
                 height={VIRTUAL_HEIGHT}
                 scale={stageScale}
                 mapPosition={mapPosition}
+                enableMultiSelect={false}
                 replayOverlay={
                   <ReplayCanvasLayer
                     match={match}
