@@ -1,5 +1,9 @@
 import { CanvasIcon } from "@/components/canvas-icons";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasEntities,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useSetHoveredElementId } from "@/contexts/hover-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
@@ -14,6 +18,7 @@ import {
   getToolIconAttachmentPosition,
 } from "@/lib/tool-icon";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import type { ToolIconCanvas } from "@/lib/types";
 import {
   TEMP_DRAG_ID,
   TOOL_ICON_CONTOUR_COLOR,
@@ -21,6 +26,7 @@ import {
 } from "@/lib/consts";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
+import { memo, useCallback, useRef } from "react";
 import { Group } from "react-konva";
 
 interface CanvasToolIconsProps {
@@ -28,24 +34,87 @@ interface CanvasToolIconsProps {
   selectionDrag: SelectionDragController;
 }
 
-export const CanvasToolIcons = ({
+interface ToolIconNodeProps {
+  toolIcon: ToolIconCanvas;
+  isDrawMode: boolean;
+  editingTextId: string | null;
+  isHoverEnabled: boolean;
+  registerNode: (id: string, node: Konva.Node) => void;
+  unregisterNode: (id: string) => void;
+  onHoverEnter: (id: string) => void;
+  onHoverLeave: () => void;
+  onDragMove: (
+    event: KonvaEventObject<DragEvent>,
+    toolIcon: ToolIconCanvas,
+  ) => void;
+  onDragEnd: (
+    event: KonvaEventObject<DragEvent>,
+    toolIcon: ToolIconCanvas,
+  ) => void;
+}
+
+const ToolIconNode = memo(function ToolIconNode({
+  toolIcon,
+  isDrawMode,
+  editingTextId,
+  isHoverEnabled,
+  registerNode,
+  unregisterNode,
+  onHoverEnter,
+  onHoverLeave,
+  onDragMove,
+  onDragEnd,
+}: ToolIconNodeProps) {
+  return (
+    <Group
+      onMouseEnter={() => isHoverEnabled && onHoverEnter(toolIcon.id)}
+      onMouseLeave={() => isHoverEnabled && onHoverLeave()}
+    >
+      <CanvasIcon
+        id={toolIcon.id}
+        isAlly={true}
+        x={toolIcon.x}
+        y={toolIcon.y}
+        src={`/tools/${toolIcon.name}.webp`}
+        draggable={!isDrawMode && !editingTextId}
+        isListening={!isDrawMode && !editingTextId}
+        onDragMove={(event) => onDragMove(event, toolIcon)}
+        onDragEnd={(event) => onDragEnd(event, toolIcon)}
+        width={toolIcon.width}
+        height={toolIcon.height}
+        borderOpacity={0}
+        strokeWidth={0}
+        contourColor={TOOL_ICON_CONTOUR_COLOR}
+        contourWidth={TOOL_ICON_CONTOUR_WIDTH}
+        radius={0}
+        fill=""
+        allyColor={"#ffffff"}
+        enemyColor={"#ffffff"}
+        registerNode={registerNode}
+        unregisterNode={unregisterNode}
+        hasShadow={true}
+      />
+    </Group>
+  );
+});
+
+export const CanvasToolIcons = memo(function CanvasToolIcons({
   deleteGroupRef,
   selectionDrag,
-}: CanvasToolIconsProps) => {
+}: CanvasToolIconsProps) {
   const {
     toolIconsOnCanvas,
     setToolIconsOnCanvas,
     agentsOnCanvas,
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
-    isDrawMode,
-    registerNode,
-    unregisterNode,
-    getRegisteredNode,
-    selectedCanvasIcon,
-    editingTextId,
-    isSidebarDragActive,
-  } = useCanvas();
+  } = useCanvasEntities();
+
+  const { isDrawMode, selectedCanvasIcon, editingTextId, isSidebarDragActive } =
+    useCanvasUi();
+
+  const { registerNode, unregisterNode, getRegisteredNode } =
+    useCanvasActions();
 
   const setHoveredElementId = useSetHoveredElementId();
 
@@ -71,7 +140,7 @@ export const CanvasToolIcons = ({
 
   const handleToolIconDragEnd = (
     e: KonvaEventObject<DragEvent>,
-    toolIcon: (typeof toolIconsOnCanvas)[number],
+    toolIcon: ToolIconCanvas,
   ) => {
     const target = e.target;
     const isOverDeleteGroup = target.getAttr("isOverDeleteGroup");
@@ -135,60 +204,75 @@ export const CanvasToolIcons = ({
     notifyToolIconMoved(updatedIcon);
   };
 
+  const handleNodeDragMoveRef = useRef<
+    ((event: KonvaEventObject<DragEvent>, toolIcon: ToolIconCanvas) => void) | null
+  >(null);
+
+  handleNodeDragMoveRef.current = (event, toolIcon) => {
+    handleDragMove(event, deleteGroupRef);
+    syncAttachedVisionConeNodePositions({
+      hostId: toolIcon.id,
+      hostNode: event.target,
+      abilitiesOnCanvas,
+      getRegisteredNode,
+    });
+    selectionDrag.handleDragMove(event);
+  };
+
+  const handleNodeDragEndRef = useRef<
+    ((event: KonvaEventObject<DragEvent>, toolIcon: ToolIconCanvas) => void) | null
+  >(null);
+
+  handleNodeDragEndRef.current = (event, toolIcon) => {
+    if (selectionDrag.handleDragEnd(event)) return;
+    handleToolIconDragEnd(event, toolIcon);
+  };
+
+  const handleNodeDragMove = useCallback(
+    (event: KonvaEventObject<DragEvent>, toolIcon: ToolIconCanvas) => {
+      handleNodeDragMoveRef.current?.(event, toolIcon);
+    },
+    [],
+  );
+
+  const handleNodeDragEnd = useCallback(
+    (event: KonvaEventObject<DragEvent>, toolIcon: ToolIconCanvas) => {
+      handleNodeDragEndRef.current?.(event, toolIcon);
+    },
+    [],
+  );
+
+  const handleHoverEnter = useCallback(
+    (id: string) => setHoveredElementId(id),
+    [setHoveredElementId],
+  );
+
+  const handleHoverLeave = useCallback(
+    () => setHoveredElementId(null),
+    [setHoveredElementId],
+  );
+
+  const isHoverEnabled = !selectedCanvasIcon && !editingTextId;
+
   return toolIconsOnCanvas.map((toolIcon) => {
     if (isSidebarDragActive && toolIcon.id === TEMP_DRAG_ID) {
       return null;
     }
 
     return (
-      <Group
+      <ToolIconNode
         key={toolIcon.id}
-        onMouseEnter={() =>
-          !selectedCanvasIcon &&
-          !editingTextId &&
-          setHoveredElementId(toolIcon.id)
-        }
-        onMouseLeave={() =>
-          !selectedCanvasIcon && !editingTextId && setHoveredElementId(null)
-        }
-      >
-        <CanvasIcon
-          id={toolIcon.id}
-          isAlly={true}
-          x={toolIcon.x}
-          y={toolIcon.y}
-          src={`/tools/${toolIcon.name}.webp`}
-          draggable={!isDrawMode && !editingTextId}
-          isListening={!isDrawMode && !editingTextId}
-          onDragMove={(e) => {
-            handleDragMove(e, deleteGroupRef);
-            syncAttachedVisionConeNodePositions({
-              hostId: toolIcon.id,
-              hostNode: e.target,
-              abilitiesOnCanvas,
-              getRegisteredNode,
-            });
-            selectionDrag.handleDragMove(e);
-          }}
-          onDragEnd={(e) => {
-            if (selectionDrag.handleDragEnd(e)) return;
-            handleToolIconDragEnd(e, toolIcon);
-          }}
-          width={toolIcon.width}
-          height={toolIcon.height}
-          borderOpacity={0}
-          strokeWidth={0}
-          contourColor={TOOL_ICON_CONTOUR_COLOR}
-          contourWidth={TOOL_ICON_CONTOUR_WIDTH}
-          radius={0}
-          fill=""
-          allyColor={"#ffffff"}
-          enemyColor={"#ffffff"}
-          registerNode={registerNode}
-          unregisterNode={unregisterNode}
-          hasShadow={true}
-        />
-      </Group>
+        toolIcon={toolIcon}
+        isDrawMode={isDrawMode}
+        editingTextId={editingTextId}
+        isHoverEnabled={isHoverEnabled}
+        registerNode={registerNode}
+        unregisterNode={unregisterNode}
+        onHoverEnter={handleHoverEnter}
+        onHoverLeave={handleHoverLeave}
+        onDragMove={handleNodeDragMove}
+        onDragEnd={handleNodeDragEnd}
+      />
     );
   });
-};
+});

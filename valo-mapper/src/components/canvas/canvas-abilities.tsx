@@ -1,5 +1,9 @@
 import { AbilityIcon } from "@/components/canvas-icons";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasEntities,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useSetHoveredElementId } from "@/contexts/hover-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
@@ -17,9 +21,11 @@ import {
   syncAttachedVisionConeNodePositions,
 } from "@/lib/vision-cone-utils";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import type { AbilityCanvas, IconSettings } from "@/lib/types";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import type { Vector2d } from "konva/lib/types";
+import { memo, useCallback, useMemo, useRef } from "react";
 import { Group } from "react-konva";
 
 interface CanvasAbilityProps {
@@ -28,11 +34,91 @@ interface CanvasAbilityProps {
   selectionDrag: SelectionDragController;
 }
 
-export const CanvasAbilities = ({
+interface AbilityNodeProps {
+  ability: AbilityCanvas;
+  x: number;
+  y: number;
+  isAttached: boolean;
+  src?: string;
+  mapPosition: Vector2d;
+  abilitiesSettings: IconSettings;
+  isDrawMode: boolean;
+  editingTextId: string | null;
+  isHoverEnabled: boolean;
+  registerNode: (id: string, node: Konva.Node) => void;
+  unregisterNode: (id: string) => void;
+  onHoverEnter: (id: string) => void;
+  onHoverLeave: () => void;
+  onDragMove: (
+    event: KonvaEventObject<DragEvent>,
+    ability: AbilityCanvas,
+  ) => void;
+  onDragEnd: (event: KonvaEventObject<DragEvent>, ability: AbilityCanvas) => void;
+  onInteractionEnd: (ability: AbilityCanvas, data: object) => void;
+}
+
+const AbilityNode = memo(function AbilityNode({
+  ability,
+  x,
+  y,
+  isAttached,
+  src,
+  mapPosition,
+  abilitiesSettings,
+  isDrawMode,
+  editingTextId,
+  isHoverEnabled,
+  registerNode,
+  unregisterNode,
+  onHoverEnter,
+  onHoverLeave,
+  onDragMove,
+  onDragEnd,
+  onInteractionEnd,
+}: AbilityNodeProps) {
+  return (
+    <Group
+      onMouseEnter={() => isHoverEnabled && onHoverEnter(ability.id)}
+      onMouseLeave={() => isHoverEnabled && onHoverLeave()}
+    >
+      <AbilityIcon
+        id={ability.id}
+        isAlly={ability.isAlly}
+        action={ability.action}
+        mapPosition={mapPosition}
+        x={x}
+        y={y}
+        rotation={ability.currentRotation}
+        src={src ?? ""}
+        draggable={!isDrawMode && !editingTextId && !isAttached}
+        isListening={!isDrawMode && !editingTextId}
+        onDragMove={(event) => onDragMove(event, ability)}
+        onDragEnd={(event) => onDragEnd(event, ability)}
+        width={abilitiesSettings.scale}
+        height={abilitiesSettings.scale}
+        borderOpacity={abilitiesSettings.borderOpacity}
+        strokeWidth={abilitiesSettings.borderWidth}
+        radius={abilitiesSettings.radius}
+        allyColor={abilitiesSettings.allyColor}
+        enemyColor={abilitiesSettings.enemyColor}
+        currentPath={ability.currentPath}
+        currentLength={ability.currentLength}
+        iconOnly={ability.iconOnly}
+        showOuterCircle={ability.showOuterCircle}
+        showCenterIcon={!isAttached}
+        registerNode={registerNode}
+        unregisterNode={unregisterNode}
+        onInteractionEnd={(data) => onInteractionEnd(ability, data)}
+      />
+    </Group>
+  );
+});
+
+export const CanvasAbilities = memo(function CanvasAbilities({
   deleteGroupRef,
   mapPosition,
   selectionDrag,
-}: CanvasAbilityProps) => {
+}: CanvasAbilityProps) {
   const {
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,
@@ -41,14 +127,13 @@ export const CanvasAbilities = ({
     toolIconsOnCanvas,
     connectingLines,
     setConnectingLines,
-    isDrawMode,
-    registerNode,
-    unregisterNode,
-    getRegisteredNode,
-    selectedCanvasIcon,
-    isSidebarDragActive,
-    editingTextId,
-  } = useCanvas();
+  } = useCanvasEntities();
+
+  const { isDrawMode, selectedCanvasIcon, isSidebarDragActive, editingTextId } =
+    useCanvasUi();
+
+  const { registerNode, unregisterNode, getRegisteredNode } =
+    useCanvasActions();
 
   const setHoveredElementId = useSetHoveredElementId();
 
@@ -103,7 +188,7 @@ export const CanvasAbilities = ({
 
   const handleVisionConeDragEnd = (
     e: KonvaEventObject<DragEvent>,
-    ability: (typeof abilitiesOnCanvas)[number],
+    ability: AbilityCanvas,
   ) => {
     const node = e.target;
     const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
@@ -168,16 +253,93 @@ export const CanvasAbilities = ({
     notifyAbilityMoved(updatedAbility);
   };
 
-  const orderedAbilities = [...abilitiesOnCanvas].sort((left, right) => {
-    const leftAttached = isAttachedVisionCone(left);
-    const rightAttached = isAttachedVisionCone(right);
+  const handleNodeDragMoveRef = useRef<
+    ((event: KonvaEventObject<DragEvent>, ability: AbilityCanvas) => void) | null
+  >(null);
 
-    if (leftAttached === rightAttached) {
-      return 0;
+  handleNodeDragMoveRef.current = (event, ability) => {
+    handleDragMove(event, deleteGroupRef);
+    syncAttachedVisionConeNodePositions({
+      hostId: ability.id,
+      hostNode: event.target,
+      abilitiesOnCanvas,
+      getRegisteredNode,
+    });
+    selectionDrag.handleDragMove(event);
+  };
+
+  const handleNodeDragEndRef = useRef<
+    ((event: KonvaEventObject<DragEvent>, ability: AbilityCanvas) => void) | null
+  >(null);
+
+  handleNodeDragEndRef.current = (event, ability) => {
+    if (selectionDrag.handleDragEnd(event)) return;
+
+    if (isVisionConeAction(ability.action)) {
+      handleVisionConeDragEnd(event, ability);
+      return;
     }
 
-    return leftAttached ? -1 : 1;
-  });
+    handleDragEnd(
+      event,
+      ability,
+      setAbilitiesOnCanvas,
+      deleteGroupRef,
+      connectingLines,
+      setConnectingLines,
+      (connectedId) => removeAgentWithAttachedVisionCones(connectedId),
+      notifyAbilityRemoved,
+      notifyAbilityMoved,
+      () => removeAttachedVisionCones(ability.id),
+    );
+  };
+
+  const handleNodeDragMove = useCallback(
+    (event: KonvaEventObject<DragEvent>, ability: AbilityCanvas) => {
+      handleNodeDragMoveRef.current?.(event, ability);
+    },
+    [],
+  );
+
+  const handleNodeDragEnd = useCallback(
+    (event: KonvaEventObject<DragEvent>, ability: AbilityCanvas) => {
+      handleNodeDragEndRef.current?.(event, ability);
+    },
+    [],
+  );
+
+  const handleHoverEnter = useCallback(
+    (id: string) => setHoveredElementId(id),
+    [setHoveredElementId],
+  );
+
+  const handleHoverLeave = useCallback(
+    () => setHoveredElementId(null),
+    [setHoveredElementId],
+  );
+
+  const handleInteractionEnd = useCallback(
+    (ability: AbilityCanvas, data: object) =>
+      notifyAbilityMoved({ ...ability, ...data }),
+    [notifyAbilityMoved],
+  );
+
+  const orderedAbilities = useMemo(
+    () =>
+      [...abilitiesOnCanvas].sort((left, right) => {
+        const leftAttached = isAttachedVisionCone(left);
+        const rightAttached = isAttachedVisionCone(right);
+
+        if (leftAttached === rightAttached) {
+          return 0;
+        }
+
+        return leftAttached ? -1 : 1;
+      }),
+    [abilitiesOnCanvas],
+  );
+
+  const isHoverEnabled = !selectedCanvasIcon && !editingTextId;
 
   return orderedAbilities.map((ability) => {
     if (isSidebarDragActive && ability.id === TEMP_DRAG_ID) {
@@ -204,78 +366,26 @@ export const CanvasAbilities = ({
     }
 
     return (
-      <Group
+      <AbilityNode
         key={ability.id}
-        onMouseEnter={() =>
-          !selectedCanvasIcon &&
-          !editingTextId &&
-          setHoveredElementId(ability.id)
-        }
-        onMouseLeave={() =>
-          !selectedCanvasIcon && !editingTextId && setHoveredElementId(null)
-        }
-      >
-        <AbilityIcon
-          id={ability.id}
-          isAlly={ability.isAlly}
-          action={ability.action}
-          mapPosition={mapPosition}
-          x={attachmentHost?.x ?? ability.x}
-          y={attachmentHost?.y ?? ability.y}
-          rotation={ability.currentRotation}
-          src={lookupEntry?.src}
-          draggable={!isDrawMode && !editingTextId && !isAttached}
-          isListening={!isDrawMode && !editingTextId}
-          onDragMove={(e) => {
-            handleDragMove(e, deleteGroupRef);
-            syncAttachedVisionConeNodePositions({
-              hostId: ability.id,
-              hostNode: e.target,
-              abilitiesOnCanvas,
-              getRegisteredNode,
-            });
-            selectionDrag.handleDragMove(e);
-          }}
-          onDragEnd={(e) => {
-            if (selectionDrag.handleDragEnd(e)) return;
-
-            if (isVisionConeAction(ability.action)) {
-              handleVisionConeDragEnd(e, ability);
-              return;
-            }
-
-            handleDragEnd(
-              e,
-              ability,
-              setAbilitiesOnCanvas,
-              deleteGroupRef,
-              connectingLines,
-              setConnectingLines,
-              (connectedId) => removeAgentWithAttachedVisionCones(connectedId),
-              notifyAbilityRemoved,
-              notifyAbilityMoved,
-              () => removeAttachedVisionCones(ability.id),
-            );
-          }}
-          width={abilitiesSettings.scale}
-          height={abilitiesSettings.scale}
-          borderOpacity={abilitiesSettings.borderOpacity}
-          strokeWidth={abilitiesSettings.borderWidth}
-          radius={abilitiesSettings.radius}
-          allyColor={abilitiesSettings.allyColor}
-          enemyColor={abilitiesSettings.enemyColor}
-          currentPath={ability.currentPath}
-          currentLength={ability.currentLength}
-          iconOnly={ability.iconOnly}
-          showOuterCircle={ability.showOuterCircle}
-          showCenterIcon={!isAttached}
-          registerNode={registerNode}
-          unregisterNode={unregisterNode}
-          onInteractionEnd={(data) => {
-            notifyAbilityMoved({ ...ability, ...data });
-          }}
-        />
-      </Group>
+        ability={ability}
+        x={attachmentHost?.x ?? ability.x}
+        y={attachmentHost?.y ?? ability.y}
+        isAttached={isAttached}
+        src={lookupEntry?.src}
+        mapPosition={mapPosition}
+        abilitiesSettings={abilitiesSettings}
+        isDrawMode={isDrawMode}
+        editingTextId={editingTextId}
+        isHoverEnabled={isHoverEnabled}
+        registerNode={registerNode}
+        unregisterNode={unregisterNode}
+        onHoverEnter={handleHoverEnter}
+        onHoverLeave={handleHoverLeave}
+        onDragMove={handleNodeDragMove}
+        onDragEnd={handleNodeDragEnd}
+        onInteractionEnd={handleInteractionEnd}
+      />
     );
   });
-};
+});
