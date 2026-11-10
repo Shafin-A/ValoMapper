@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { RefObject, useCallback, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
@@ -53,7 +53,6 @@ export const useCanvasPatch = (
 ) => {
   const queueRef = useRef<CanvasPatchEntry[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [pending, setPending] = useState(0);
 
   const mutation = useMutation({
     mutationFn: (entries: CanvasPatchEntry[]) =>
@@ -77,13 +76,11 @@ export const useCanvasPatch = (
     }
 
     queueRef.current = [];
-    setPending(0);
 
     try {
       await mutateRef.current(entries);
     } catch (error) {
       queueRef.current = [...entries, ...queueRef.current];
-      setPending(queueRef.current.length);
       console.error("Canvas patch failed after retries, re-queueing", error);
       toast.error("Canvas patch update failed.");
       scheduleFlushRef.current();
@@ -118,7 +115,6 @@ export const useCanvasPatch = (
       }
 
       queueRef.current.push(entry);
-      setPending(queueRef.current.length);
 
       if (queueRef.current.length >= PATCH_BATCH_SIZE) {
         void flushCanvasPatchRef.current();
@@ -153,7 +149,6 @@ export const useCanvasPatch = (
 
       navigator.sendBeacon(url, blob);
       queueRef.current = [];
-      setPending(0);
     };
 
     window.addEventListener("beforeunload", handlePageUnload);
@@ -174,7 +169,6 @@ export const useCanvasPatch = (
   }, [lobbyCode]);
 
   return {
-    pending,
     enqueueCanvasPatchEntry,
     flushCanvasPatch,
   };
