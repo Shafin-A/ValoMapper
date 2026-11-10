@@ -1,4 +1,4 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvas, useCanvasActions } from "@/contexts/canvas-context";
 import { useSetCurrentStroke } from "@/contexts/drawing-preview-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
@@ -53,7 +53,6 @@ export const useCanvasEvents = (
     setSelectedCanvasItems,
     isSidebarDragActive,
     setIsSidebarDragActive,
-    setCurrentStageScale,
     agentsOnCanvas,
     setAgentsOnCanvas,
     abilitiesOnCanvas,
@@ -75,6 +74,7 @@ export const useCanvasEvents = (
   } = useCanvas();
 
   const setCurrentStroke = useSetCurrentStroke();
+  const { setCurrentStageScale } = useCanvasActions();
 
   const { agentsSettings, abilitiesSettings, drawSettings, eraserSettings } =
     useSettings();

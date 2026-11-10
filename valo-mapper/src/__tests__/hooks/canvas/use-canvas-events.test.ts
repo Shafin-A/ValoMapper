@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import type { AbilityCanvas, AgentCanvas, ToolIconCanvas } from "@/lib/types";
 import type { Stage } from "konva/lib/Stage";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvas, useCanvasActions } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { getNextId } from "@/lib/utils";
 import { useCanvasEvents } from "@/hooks/canvas/use-canvas-events";
@@ -23,6 +23,7 @@ type StageMock = {
 
 jest.mock("@/contexts/canvas-context", () => ({
   useCanvas: jest.fn(),
+  useCanvasActions: jest.fn(),
 }));
 
 jest.mock("@/contexts/drawing-preview-context", () => ({
@@ -47,6 +48,9 @@ jest.mock("@/lib/utils", () => {
 });
 
 const mockUseCanvas = useCanvas as jest.MockedFunction<typeof useCanvas>;
+const mockUseCanvasActions = useCanvasActions as jest.MockedFunction<
+  typeof useCanvasActions
+>;
 const mockUseSettings = useSettings as jest.MockedFunction<typeof useSettings>;
 const mockUseCanvasZoom = useCanvasZoom as jest.MockedFunction<
   typeof useCanvasZoom
@@ -159,6 +163,10 @@ describe("useCanvasEvents", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetNextId.mockReturnValue("agent-new");
+
+    mockUseCanvasActions.mockReturnValue({
+      setCurrentStageScale: jest.fn(),
+    } as never);
 
     mockUseSettings.mockReturnValue({
       agentsSettings: {

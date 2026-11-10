@@ -1,4 +1,4 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvas, useCanvasScale } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import {
   MAP_SIZE,
@@ -49,8 +49,8 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
     setSelectedCanvasIcon,
     isSidebarDragActive,
     setIsSidebarDragActive,
-    currentStageScale,
   } = useCanvas();
+  const { currentStageScale } = useCanvasScale();
   const { notifyToolIconAdded } = useCollaborativeCanvas();
 
   const [dragPreviewPosition, setDragPreviewPosition] = useState<{

@@ -145,6 +145,7 @@ interface CanvasActionsContextType {
   getLatestPhases: () => PhaseState[];
   enqueueCanvasPatchEntry: (entry: CanvasPatchEntry) => void;
   flushCanvasPatch: () => Promise<void>;
+  setCurrentStageScale: Dispatch<SetStateAction<number>>;
   agentsSettings: IconSettings;
   abilitiesSettings: IconSettings;
   updateAgentsSettings: (settings: Partial<IconSettings>) => void;
@@ -174,7 +175,6 @@ export interface CanvasContextType
   extends CanvasEntitiesContextType,
     CanvasViewContextType,
     CanvasUiContextType,
-    CanvasScaleContextType,
     CanvasPhaseContextType,
     CanvasHistoryContextType,
     CanvasActionsContextType {}
@@ -484,6 +484,7 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       getLatestPhases: canvasState.getLatestPhases,
       enqueueCanvasPatchEntry: canvasState.enqueueCanvasPatchEntry,
       flushCanvasPatch: canvasState.flushCanvasPatch,
+      setCurrentStageScale: canvasState.setCurrentStageScale,
       agentsSettings: canvasState.agentsSettings,
       abilitiesSettings: canvasState.abilitiesSettings,
       updateAgentsSettings: canvasState.updateAgentsSettings,
@@ -507,6 +508,7 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       canvasState.getLatestPhases,
       canvasState.enqueueCanvasPatchEntry,
       canvasState.flushCanvasPatch,
+      canvasState.setCurrentStageScale,
       canvasState.agentsSettings,
       canvasState.abilitiesSettings,
       canvasState.updateAgentsSettings,
@@ -582,7 +584,6 @@ export const useCanvas = (): CanvasContextType => {
   const entities = useCanvasEntities();
   const view = useCanvasView();
   const ui = useCanvasUi();
-  const scale = useCanvasScale();
   const phase = useCanvasPhase();
   const history = useCanvasHistory();
   const actions = useCanvasActions();
@@ -592,11 +593,10 @@ export const useCanvas = (): CanvasContextType => {
       ...entities,
       ...view,
       ...ui,
-      ...scale,
       ...phase,
       ...history,
       ...actions,
     }),
-    [entities, view, ui, scale, phase, history, actions],
+    [entities, view, ui, phase, history, actions],
   );
 };

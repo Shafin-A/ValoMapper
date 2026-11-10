@@ -37,7 +37,7 @@ import { SettingsPanel } from "./settings-panel";
 import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
 import { SIDEBAR_WIDTH, TEMP_DRAG_ID } from "@/lib/consts";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvas, useCanvasScale } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { getAgentImgSrc, isAgent } from "@/lib/utils";
 import { Loader2, AlertCircle, Info } from "lucide-react";
@@ -93,7 +93,6 @@ export const AgentsSidebar = ({
     setSelectedCanvasIcon,
     isSidebarDragActive,
     setIsSidebarDragActive,
-    currentStageScale,
     isAlly,
     setIsAlly,
     setIsDrawMode,
@@ -101,6 +100,8 @@ export const AgentsSidebar = ({
     isLoadingLobby,
     isErrorLobby,
   } = useCanvas();
+
+  const { currentStageScale } = useCanvasScale();
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
   const [onMap, setOnMap] = useState(false);
