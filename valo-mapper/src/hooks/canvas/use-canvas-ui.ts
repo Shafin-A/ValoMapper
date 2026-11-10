@@ -76,12 +76,17 @@ export const useCanvasUI = ({
   const [isSidebarDragActive, setIsSidebarDragActive] = useState(false);
   const [currentStageScale, setCurrentStageScale] = useState(1);
 
-  const resetEdits = () => {
+  const resetEdits = useCallback(() => {
     setEditingTextId(null);
     setSelectedCanvasIcon(null);
     setSelectedCanvasItems([]);
     setIsSidebarDragActive(false);
-  };
+  }, [
+    setEditingTextId,
+    setSelectedCanvasIcon,
+    setSelectedCanvasItems,
+    setIsSidebarDragActive,
+  ]);
 
   return {
     isAlly,

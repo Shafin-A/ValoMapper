@@ -75,3 +75,17 @@ describe("useCanvasUI canvas background", () => {
     });
   });
 });
+
+describe("useCanvasUI callback stability", () => {
+  it("keeps resetEdits stable across rerenders", () => {
+    const { result, rerender } = renderHook(() =>
+      useCanvasUI({ lobbyCode: "ABCD" }),
+    );
+
+    const initialResetEdits = result.current.resetEdits;
+
+    rerender();
+
+    expect(result.current.resetEdits).toBe(initialResetEdits);
+  });
+});
