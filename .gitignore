@@ -53,3 +53,6 @@ logs
 
 serviceAccountKey.json
 ARCHITECTURE.md
+
+# perf harness output
+valo-mapper/perf/results/
