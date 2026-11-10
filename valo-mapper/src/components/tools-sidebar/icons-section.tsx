@@ -1,4 +1,4 @@
-import { useCanvas, useCanvasPreviewScale } from "@/contexts/canvas-context";
+import { useCanvas, useCanvasScale } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import {
   MAP_SIZE,
@@ -50,7 +50,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
     isSidebarDragActive,
     setIsSidebarDragActive,
   } = useCanvas();
-  const { previewScale: stagePreviewScale } = useCanvasPreviewScale();
+
   const { notifyToolIconAdded } = useCollaborativeCanvas();
 
   const [dragPreviewPosition, setDragPreviewPosition] = useState<{
@@ -60,14 +60,6 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
 
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const pendingSidebarDragRef = useRef<PendingSidebarDrag | null>(null);
-
-  const previewScale = stagePreviewScale > 0 ? stagePreviewScale : 1;
-  const dragPreviewX = dragPreviewPosition
-    ? dragPreviewPosition.x / previewScale
-    : 0;
-  const dragPreviewY = dragPreviewPosition
-    ? dragPreviewPosition.y / previewScale
-    : 0;
   const didStartSidebarDragRef = useRef(false);
   const suppressClickUntilRef = useRef(0);
 
@@ -345,41 +337,66 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
         dragPreviewPosition &&
         viewportSize.width > 0 &&
         viewportSize.height > 0 && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none fixed z-120"
-            style={{ inset: 0 }}
-          >
-            <Stage
-              width={viewportSize.width}
-              height={viewportSize.height}
-              scaleX={previewScale}
-              scaleY={previewScale}
-            >
-              <Layer listening={false}>
-                <CanvasIcon
-                  id={TEMP_DRAG_ID}
-                  isAlly={true}
-                  x={dragPreviewX}
-                  y={dragPreviewY}
-                  src={`/tools/${selectedCanvasIcon.name}.webp`}
-                  isListening={false}
-                  draggable={false}
-                  width={selectedCanvasIcon.width}
-                  height={selectedCanvasIcon.height}
-                  borderOpacity={0}
-                  strokeWidth={0}
-                  contourColor={TOOL_ICON_CONTOUR_COLOR}
-                  contourWidth={TOOL_ICON_CONTOUR_WIDTH}
-                  radius={0}
-                  fill=""
-                  allyColor="#ffffff"
-                  enemyColor="#ffffff"
-                />
-              </Layer>
-            </Stage>
-          </div>
+          <ToolsDragPreview
+            position={dragPreviewPosition}
+            viewportSize={viewportSize}
+            icon={selectedCanvasIcon}
+          />
         )}
+    </div>
+  );
+};
+
+interface ToolsDragPreviewProps {
+  position: { x: number; y: number };
+  viewportSize: { width: number; height: number };
+  icon: { name: string; width: number; height: number };
+}
+
+const ToolsDragPreview = ({
+  position,
+  viewportSize,
+  icon,
+}: ToolsDragPreviewProps) => {
+  const { currentStageScale } = useCanvasScale();
+  const previewScale = currentStageScale > 0 ? currentStageScale : 1;
+  const dragPreviewX = position.x / previewScale;
+  const dragPreviewY = position.y / previewScale;
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed z-120"
+      style={{ inset: 0 }}
+    >
+      <Stage
+        width={viewportSize.width}
+        height={viewportSize.height}
+        scaleX={previewScale}
+        scaleY={previewScale}
+      >
+        <Layer listening={false}>
+          <CanvasIcon
+            id={TEMP_DRAG_ID}
+            isAlly={true}
+            x={dragPreviewX}
+            y={dragPreviewY}
+            src={`/tools/${icon.name}.webp`}
+            isListening={false}
+            draggable={false}
+            width={icon.width}
+            height={icon.height}
+            borderOpacity={0}
+            strokeWidth={0}
+            contourColor={TOOL_ICON_CONTOUR_COLOR}
+            contourWidth={TOOL_ICON_CONTOUR_WIDTH}
+            radius={0}
+            fill=""
+            allyColor="#ffffff"
+            enemyColor="#ffffff"
+          />
+        </Layer>
+      </Stage>
     </div>
   );
 };
