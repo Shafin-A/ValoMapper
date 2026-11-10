@@ -1,26 +1,26 @@
 import { render } from "@testing-library/react";
 import { CanvasDrawLines } from "@/components/canvas/canvas-draw-lines";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasEntities } from "@/contexts/canvas-context";
 import { useCurrentStroke } from "@/contexts/drawing-preview-context";
 import { getTraversalDurationSeconds } from "@/lib/consts";
 
 jest.mock("@/contexts/canvas-context");
 jest.mock("@/contexts/drawing-preview-context");
 
-const mockUseCanvas = jest.mocked(useCanvas);
+const mockUseCanvasEntities = jest.mocked(useCanvasEntities);
 const mockUseCurrentStroke = jest.mocked(useCurrentStroke);
 
 describe("CanvasDrawLines", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseCanvas.mockReturnValue({
+    mockUseCanvasEntities.mockReturnValue({
       drawLines: [],
-    } as unknown as ReturnType<typeof useCanvas>);
+    } as unknown as ReturnType<typeof useCanvasEntities>);
     mockUseCurrentStroke.mockReturnValue(null);
   });
 
   it("renders a traversal time label derived from the line length", () => {
-    mockUseCanvas.mockReturnValue({
+    mockUseCanvasEntities.mockReturnValue({
       drawLines: [
         {
           id: "line-1",
@@ -38,7 +38,7 @@ describe("CanvasDrawLines", () => {
           traversalTime: "knife-walk",
         },
       ],
-    } as unknown as ReturnType<typeof useCanvas>);
+    } as unknown as ReturnType<typeof useCanvasEntities>);
 
     const { container } = render(
       <CanvasDrawLines currentLineRef={{ current: null }} />,
@@ -57,9 +57,9 @@ describe("CanvasDrawLines", () => {
   });
 
   it("renders the preview traversal label near the active endpoint", () => {
-    mockUseCanvas.mockReturnValue({
+    mockUseCanvasEntities.mockReturnValue({
       drawLines: [],
-    } as unknown as ReturnType<typeof useCanvas>);
+    } as unknown as ReturnType<typeof useCanvasEntities>);
     mockUseCurrentStroke.mockReturnValue({
       id: "line-1",
       tool: "pencil",
@@ -98,7 +98,7 @@ describe("CanvasDrawLines", () => {
   });
 
   it("does not render a traversal time label when no option is selected", () => {
-    mockUseCanvas.mockReturnValue({
+    mockUseCanvasEntities.mockReturnValue({
       drawLines: [
         {
           id: "line-1",
@@ -116,7 +116,7 @@ describe("CanvasDrawLines", () => {
         },
       ],
       currentStroke: null,
-    } as unknown as ReturnType<typeof useCanvas>);
+    } as unknown as ReturnType<typeof useCanvasEntities>);
 
     const { container } = render(
       <CanvasDrawLines currentLineRef={{ current: null }} />,
@@ -129,7 +129,7 @@ describe("CanvasDrawLines", () => {
   });
 
   it("does not render traversal labels for rectangle or ellipse drawings", () => {
-    mockUseCanvas.mockReturnValue({
+    mockUseCanvasEntities.mockReturnValue({
       drawLines: [
         {
           id: "rect-1",
@@ -163,7 +163,7 @@ describe("CanvasDrawLines", () => {
         },
       ],
       currentStroke: null,
-    } as unknown as ReturnType<typeof useCanvas>);
+    } as unknown as ReturnType<typeof useCanvasEntities>);
 
     const { container } = render(
       <CanvasDrawLines currentLineRef={{ current: null }} />,

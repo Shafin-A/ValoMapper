@@ -1,4 +1,4 @@
-import React, { Ref, memo } from "react";
+import React, { Ref, memo, useMemo } from "react";
 import Konva from "konva";
 import {
   Arrow,
@@ -9,7 +9,7 @@ import {
   Rect,
   Text,
 } from "react-konva";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasEntities } from "@/contexts/canvas-context";
 import { useCurrentStroke } from "@/contexts/drawing-preview-context";
 import {
   getTraversalDurationSeconds,
@@ -247,6 +247,77 @@ interface CanvasDrawLinesProps {
   >;
 }
 
+const DrawLineShape = memo(function DrawLineShape({
+  line,
+}: {
+  line: DrawLine;
+}) {
+  const flatPoints = useMemo(
+    () =>
+      line.shape === "rectangle" || line.shape === "circle"
+        ? undefined
+        : line.points.flatMap((point) => [point.x, point.y]),
+    [line.points, line.shape],
+  );
+
+  return (
+    <>
+      {line.shape === "rectangle" && line.points.length === 2 ? (
+        <Rect
+          isListening={false}
+          perfectDrawEnabled={false}
+          {...getRectProps(line.points[0], line.points[1])}
+          stroke={line.color}
+          strokeWidth={line.size}
+          dash={line.isDashed ? [15, 10] : []}
+          fillEnabled={false}
+          opacity={line.opacity ?? 1}
+          globalCompositeOperation={"source-over"}
+        />
+      ) : line.shape === "circle" && line.points.length === 2 ? (
+        <Ellipse
+          isListening={false}
+          perfectDrawEnabled={false}
+          {...getEllipseProps(line.points[0], line.points[1])}
+          stroke={line.color}
+          strokeWidth={line.size}
+          dash={line.isDashed ? [15, 10] : []}
+          fillEnabled={false}
+          opacity={line.opacity ?? 1}
+          globalCompositeOperation={"source-over"}
+        />
+      ) : line.isArrowHead && line.tool !== "eraser" ? (
+        <Arrow
+          isListening={false}
+          perfectDrawEnabled={false}
+          points={flatPoints ?? []}
+          stroke={line.color}
+          strokeWidth={line.size}
+          dash={line.isDashed ? [15, 10] : []}
+          tension={line.shape === "straight" ? 0 : 1}
+          opacity={line.opacity ?? 1}
+          globalCompositeOperation={"source-over"}
+        />
+      ) : (
+        <Line
+          isListening={false}
+          perfectDrawEnabled={false}
+          points={flatPoints ?? []}
+          stroke={line.color}
+          strokeWidth={line.size}
+          dash={line.isDashed && line.tool !== "eraser" ? [15, 10] : []}
+          tension={line.shape === "straight" ? 0 : 1}
+          opacity={line.tool === "eraser" ? 1 : (line.opacity ?? 1)}
+          globalCompositeOperation={
+            line.tool === "eraser" ? "destination-out" : "source-over"
+          }
+        />
+      )}
+      {renderTraversalLabel(line, `${line.id}-traversal-time`)}
+    </>
+  );
+});
+
 const DrawLinesList = memo(function DrawLinesList({
   lines,
 }: {
@@ -255,69 +326,16 @@ const DrawLinesList = memo(function DrawLinesList({
   return (
     <>
       {lines.map((line) => (
-        <React.Fragment key={line.id}>
-          {line.shape === "rectangle" && line.points.length === 2 ? (
-            <Rect
-              isListening={false}
-              perfectDrawEnabled={false}
-              {...getRectProps(line.points[0], line.points[1])}
-              stroke={line.color}
-              strokeWidth={line.size}
-              dash={line.isDashed ? [15, 10] : []}
-              fillEnabled={false}
-              opacity={line.opacity ?? 1}
-              globalCompositeOperation={"source-over"}
-            />
-          ) : line.shape === "circle" && line.points.length === 2 ? (
-            <Ellipse
-              isListening={false}
-              perfectDrawEnabled={false}
-              {...getEllipseProps(line.points[0], line.points[1])}
-              stroke={line.color}
-              strokeWidth={line.size}
-              dash={line.isDashed ? [15, 10] : []}
-              fillEnabled={false}
-              opacity={line.opacity ?? 1}
-              globalCompositeOperation={"source-over"}
-            />
-          ) : line.isArrowHead && line.tool !== "eraser" ? (
-            <Arrow
-              isListening={false}
-              perfectDrawEnabled={false}
-              points={line.points.flatMap((point) => [point.x, point.y])}
-              stroke={line.color}
-              strokeWidth={line.size}
-              dash={line.isDashed ? [15, 10] : []}
-              tension={line.shape === "straight" ? 0 : 1}
-              opacity={line.opacity ?? 1}
-              globalCompositeOperation={"source-over"}
-            />
-          ) : (
-            <Line
-              isListening={false}
-              perfectDrawEnabled={false}
-              points={line.points.flatMap((point) => [point.x, point.y])}
-              stroke={line.color}
-              strokeWidth={line.size}
-              dash={line.isDashed && line.tool !== "eraser" ? [15, 10] : []}
-              tension={line.shape === "straight" ? 0 : 1}
-              opacity={line.tool === "eraser" ? 1 : (line.opacity ?? 1)}
-              globalCompositeOperation={
-                line.tool === "eraser" ? "destination-out" : "source-over"
-              }
-            />
-          )}
-          {renderTraversalLabel(line, `${line.id}-traversal-time`)}
-        </React.Fragment>
+        <DrawLineShape key={line.id} line={line} />
       ))}
     </>
   );
 });
 
-export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
+export const CanvasDrawLines = memo(function CanvasDrawLines({
   currentLineRef,
-}) => {
-  const { drawLines } = useCanvas();
+}: CanvasDrawLinesProps) {
+  const { drawLines } = useCanvasEntities();
   const currentStroke = useCurrentStroke();
 
   return (
@@ -428,4 +446,4 @@ export const CanvasDrawLines: React.FC<CanvasDrawLinesProps> = ({
         ))}
     </>
   );
-};
+});
