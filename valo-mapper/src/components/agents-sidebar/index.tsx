@@ -37,7 +37,10 @@ import { SettingsPanel } from "./settings-panel";
 import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
 import { SIDEBAR_WIDTH, TEMP_DRAG_ID } from "@/lib/consts";
-import { useCanvas, useCanvasScale } from "@/contexts/canvas-context";
+import {
+  useCanvas,
+  useCanvasPreviewScale,
+} from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { getAgentImgSrc, isAgent } from "@/lib/utils";
 import { Loader2, AlertCircle, Info } from "lucide-react";
@@ -101,7 +104,7 @@ export const AgentsSidebar = ({
     isErrorLobby,
   } = useCanvas();
 
-  const { currentStageScale } = useCanvasScale();
+  const { previewScale: stagePreviewScale } = useCanvasPreviewScale();
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
   const [onMap, setOnMap] = useState(false);
@@ -127,7 +130,7 @@ export const AgentsSidebar = ({
     (ability) => ability.id === TEMP_DRAG_ID,
   );
 
-  const previewScale = currentStageScale > 0 ? currentStageScale : 1;
+  const previewScale = stagePreviewScale > 0 ? stagePreviewScale : 1;
 
   const dragPreviewX = dragPreviewPosition
     ? dragPreviewPosition.x / previewScale

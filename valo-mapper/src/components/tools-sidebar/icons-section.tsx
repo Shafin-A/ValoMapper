@@ -1,4 +1,4 @@
-import { useCanvas, useCanvasScale } from "@/contexts/canvas-context";
+import { useCanvas, useCanvasPreviewScale } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import {
   MAP_SIZE,
@@ -50,7 +50,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
     isSidebarDragActive,
     setIsSidebarDragActive,
   } = useCanvas();
-  const { currentStageScale } = useCanvasScale();
+  const { previewScale: stagePreviewScale } = useCanvasPreviewScale();
   const { notifyToolIconAdded } = useCollaborativeCanvas();
 
   const [dragPreviewPosition, setDragPreviewPosition] = useState<{
@@ -61,7 +61,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const pendingSidebarDragRef = useRef<PendingSidebarDrag | null>(null);
 
-  const previewScale = currentStageScale > 0 ? currentStageScale : 1;
+  const previewScale = stagePreviewScale > 0 ? stagePreviewScale : 1;
   const dragPreviewX = dragPreviewPosition
     ? dragPreviewPosition.x / previewScale
     : 0;

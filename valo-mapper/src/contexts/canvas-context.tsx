@@ -113,6 +113,10 @@ interface CanvasScaleContextType {
   setCurrentStageScale: Dispatch<SetStateAction<number>>;
 }
 
+interface CanvasPreviewScaleContextType {
+  previewScale: number;
+}
+
 interface CanvasPhaseContextType {
   phases: PhaseState[];
   currentPhaseIndex: number;
@@ -195,6 +199,9 @@ const CanvasUiContext = createContext<CanvasUiContextType | undefined>(
 const CanvasScaleContext = createContext<CanvasScaleContextType | undefined>(
   undefined,
 );
+const CanvasPreviewScaleContext = createContext<
+  CanvasPreviewScaleContextType | undefined
+>(undefined);
 const CanvasPhaseContext = createContext<CanvasPhaseContextType | undefined>(
   undefined,
 );
@@ -457,6 +464,40 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
     [canvasState.currentStageScale, canvasState.setCurrentStageScale],
   );
 
+  const [previewScale, setPreviewScale] = useState(
+    canvasState.currentStageScale,
+  );
+  const latestPreviewScaleRef = useRef(canvasState.currentStageScale);
+  latestPreviewScaleRef.current = canvasState.currentStageScale;
+  const previewScaleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (previewScaleTimerRef.current !== null) {
+      return;
+    }
+
+    previewScaleTimerRef.current = setTimeout(() => {
+      previewScaleTimerRef.current = null;
+      setPreviewScale(latestPreviewScaleRef.current);
+    }, 120);
+  }, [canvasState.currentStageScale]);
+
+  useEffect(
+    () => () => {
+      if (previewScaleTimerRef.current !== null) {
+        clearTimeout(previewScaleTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  const previewScaleValue = useMemo<CanvasPreviewScaleContextType>(
+    () => ({ previewScale }),
+    [previewScale],
+  );
+
   const phaseValue = useMemo<CanvasPhaseContextType>(
     () => ({
       phases: canvasState.phases,
@@ -551,13 +592,17 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
           <CanvasPhaseContext.Provider value={phaseValue}>
             <CanvasUiContext.Provider value={uiValue}>
               <CanvasScaleContext.Provider value={scaleValue}>
-                <CanvasEntityActionsContext.Provider value={entityActionsValue}>
-                  <CanvasEntitiesContext.Provider value={entitiesValue}>
-                    <HoveredElementProvider>
-                      <DrawingPreviewProvider>{children}</DrawingPreviewProvider>
-                    </HoveredElementProvider>
-                  </CanvasEntitiesContext.Provider>
-                </CanvasEntityActionsContext.Provider>
+                <CanvasPreviewScaleContext.Provider value={previewScaleValue}>
+                  <CanvasEntityActionsContext.Provider value={entityActionsValue}>
+                    <CanvasEntitiesContext.Provider value={entitiesValue}>
+                      <HoveredElementProvider>
+                        <DrawingPreviewProvider>
+                          {children}
+                        </DrawingPreviewProvider>
+                      </HoveredElementProvider>
+                    </CanvasEntitiesContext.Provider>
+                  </CanvasEntityActionsContext.Provider>
+                </CanvasPreviewScaleContext.Provider>
               </CanvasScaleContext.Provider>
             </CanvasUiContext.Provider>
           </CanvasPhaseContext.Provider>
@@ -592,6 +637,9 @@ export const useCanvasUi = () =>
 
 export const useCanvasScale = () =>
   useRequiredContext(CanvasScaleContext, "useCanvasScale");
+
+export const useCanvasPreviewScale = () =>
+  useRequiredContext(CanvasPreviewScaleContext, "useCanvasPreviewScale");
 
 export const useCanvasPhase = () =>
   useRequiredContext(CanvasPhaseContext, "useCanvasPhase");
