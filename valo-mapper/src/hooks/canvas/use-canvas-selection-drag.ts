@@ -171,9 +171,7 @@ export const useCanvasSelectionDrag = ({
       group.position({ x: 0, y: 0 });
       group.getLayer()?.batchDraw();
     }
-  }, [outlineGroupRef]);
-
-  const handleDragMove = useCallback(
+  }, [outlineGroupRef]);  const handleDragMove = useCallback(
     (event: KonvaEventObject<DragEvent>) => {
       const id = event.target.id();
       if (!selectedIdSet.has(id)) return;
@@ -308,9 +306,17 @@ export const useCanvasSelectionDrag = ({
     ],
   );
 
-  return {
-    isMultiSelected,
-    handleDragMove,
-    handleDragEnd,
-  };
+  const latestRef = useRef({ isMultiSelected, handleDragMove, handleDragEnd });
+  latestRef.current = { isMultiSelected, handleDragMove, handleDragEnd };
+
+  return useMemo(
+    () => ({
+      isMultiSelected: (id: string) => latestRef.current.isMultiSelected(id),
+      handleDragMove: (event: KonvaEventObject<DragEvent>) =>
+        latestRef.current.handleDragMove(event),
+      handleDragEnd: (event: KonvaEventObject<DragEvent>) =>
+        latestRef.current.handleDragEnd(event),
+    }),
+    [],
+  );
 };
