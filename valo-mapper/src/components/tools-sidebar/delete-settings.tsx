@@ -117,22 +117,36 @@ export const DeleteSettings = () => {
     connectingLines.forEach((line) => notifyConnLineRemoved(line.id));
   };
 
-  const handleResetState = async () => {
+  const handleResetCurrentPhase = async () => {
     resetState();
     notifyCanvasClear();
+  };
+
+  const handleResetAllPhases = async () => {
+    resetState(true);
+    notifyCanvasClear(true);
   };
 
   return (
     <div className="space-y-1 mt-6">
       <div className="flex flex-col items-center gap-4 p-2 justify-center">
-        <Button
-          data-tour="clear-canvas"
-          variant="destructive"
-          className="w-full"
-          onClick={handleResetState}
-        >
-          Delete All
-        </Button>
+        <div className="flex flex-col gap-2 w-full">
+          <Button
+            data-tour="clear-canvas"
+            variant="destructiveOutline"
+            className="w-full"
+            onClick={handleResetCurrentPhase}
+          >
+            Delete Current Phase
+          </Button>
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={handleResetAllPhases}
+          >
+            Delete All Phases
+          </Button>
+        </div>
         <div className="grid grid-cols-3 gap-2 w-full">
           <Tooltip>
             <TooltipTrigger asChild>
