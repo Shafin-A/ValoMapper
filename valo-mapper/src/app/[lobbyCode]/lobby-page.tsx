@@ -7,7 +7,7 @@ import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { ToolsSidebar } from "@/components/tools-sidebar";
 import { TourAutoAdvance } from "@/components/tour/tour-auto-advance";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasActions } from "@/contexts/canvas-context";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
   clearPendingLobbyToast,
@@ -52,15 +52,8 @@ const LobbyEditPage = () => {
 
   const sidebarState = useSidebarState();
 
-  const {
-    isLoadingLobby,
-    isErrorLobby,
-    lobbyError,
-    selectedMap,
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    toolIconsOnCanvas,
-  } = useCanvas();
+  const { isLoadingLobby, isErrorLobby, lobbyError, getCurrentStateForSync } =
+    useCanvasActions();
 
   useEffect(() => {
     if (isLoadingLobby || isErrorLobby) return;
@@ -79,13 +72,19 @@ const LobbyEditPage = () => {
     const preloadCriticalAssets = async () => {
       setIsAssetWarmupReady(false);
 
+      const state = getCurrentStateForSync();
+      const phase = state.phases[state.currentPhaseIndex];
+
       const criticalSources = [
-        `/maps/minimaps/${selectedMap.id}.webp`,
-        ...agentsOnCanvas.map((agent) => getAgentImgSrc(agent.name)),
-        ...abilitiesOnCanvas
+        `/maps/minimaps/${state.selectedMap.id}.webp`,
+        ...(phase?.agentsOnCanvas.map((agent) => getAgentImgSrc(agent.name)) ??
+          []),
+        ...(phase?.abilitiesOnCanvas
           .map((ability) => ABILITY_LOOKUP[ability.name]?.src)
-          .filter((src): src is string => Boolean(src)),
-        ...toolIconsOnCanvas.map((toolIcon) => `/tools/${toolIcon.name}.webp`),
+          .filter((src): src is string => Boolean(src)) ?? []),
+        ...(phase?.toolIconsOnCanvas.map(
+          (toolIcon) => `/tools/${toolIcon.name}.webp`,
+        ) ?? []),
       ];
 
       try {
@@ -105,14 +104,7 @@ const LobbyEditPage = () => {
       isCancelled = true;
       window.clearTimeout(fallbackTimeout);
     };
-  }, [
-    isLoadingLobby,
-    isErrorLobby,
-    selectedMap.id,
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    toolIconsOnCanvas,
-  ]);
+  }, [isLoadingLobby, isErrorLobby, getCurrentStateForSync]);
 
   useEffect(() => {
     if (!isAssetWarmupReady) return;
