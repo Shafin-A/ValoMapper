@@ -3,7 +3,12 @@ import { useCanvasContextMenu } from "@/hooks/canvas/use-canvas-context-menu";
 import { getNextId } from "@/lib/utils";
 import type { Stage } from "konva/lib/Stage";
 import type { KonvaEventObject } from "konva/lib/Node";
-import type { AgentCanvas, AbilityCanvas } from "@/lib/types";
+import type {
+  AgentCanvas,
+  AbilityCanvas,
+  ConnectingLine,
+  ToolIconCanvas,
+} from "@/lib/types";
 
 jest.mock("@/lib/utils", () => {
   const actual = jest.requireActual("@/lib/utils");
@@ -57,6 +62,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -74,8 +81,8 @@ describe("useCanvasContextMenu", () => {
       open: true,
       x: 15,
       y: 27,
-      itemId: "a1",
-      itemType: "agent",
+      anchorId: "a1",
+      anchorType: "agent",
     });
   });
 
@@ -106,6 +113,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -122,7 +131,7 @@ describe("useCanvasContextMenu", () => {
 
     expect(setAgents).toHaveBeenCalled();
     expect(agentsState).toHaveLength(2);
-    expect(agentsState[1]).toMatchObject({ id: "new-id", x: 21, y: 22 });
+    expect(agentsState[1]).toMatchObject({ id: "new-id", x: 41, y: 42 });
   });
 
   it("duplicates an agent with its attached vision cone", () => {
@@ -170,6 +179,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -185,13 +196,13 @@ describe("useCanvasContextMenu", () => {
     });
 
     expect(agentsState).toHaveLength(2);
-    expect(agentsState[1]).toMatchObject({ id: "agent-copy", x: 21, y: 22 });
+    expect(agentsState[1]).toMatchObject({ id: "agent-copy", x: 41, y: 42 });
     expect(abilitiesState).toHaveLength(2);
     expect(abilitiesState[1]).toMatchObject({
       id: "cone-copy",
       attachedToId: "agent-copy",
-      x: 21,
-      y: 22,
+      x: 41,
+      y: 42,
     });
   });
 
@@ -241,6 +252,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -259,14 +272,14 @@ describe("useCanvasContextMenu", () => {
     expect(abilitiesState[2]).toMatchObject({
       id: "ability-copy",
       action: "kayo_knife",
-      x: 30,
-      y: 40,
+      x: 50,
+      y: 60,
     });
     expect(abilitiesState[3]).toMatchObject({
       id: "cone-copy",
       attachedToId: "ability-copy",
-      x: 30,
-      y: 40,
+      x: 50,
+      y: 60,
     });
   });
 
@@ -295,6 +308,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         abilityState,
         setAbilities,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -353,6 +368,8 @@ describe("useCanvasContextMenu", () => {
         setAgents,
         abilitiesState,
         setAbilities,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -421,6 +438,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -467,6 +486,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         abilitiesState,
         setAbilities,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -525,6 +546,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         abilitiesState,
         setAbilities,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -592,6 +615,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -628,6 +653,8 @@ describe("useCanvasContextMenu", () => {
         stageRef,
         agentsState,
         setAgents,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -688,6 +715,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -738,6 +767,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -773,6 +804,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -793,6 +826,8 @@ describe("useCanvasContextMenu", () => {
     const { result } = renderHook(() =>
       useCanvasContextMenu(
         stageRef,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -842,6 +877,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -854,7 +891,7 @@ describe("useCanvasContextMenu", () => {
       result.current.handleContextMenu(evt);
     });
 
-    expect(result.current.contextMenu.itemId).toBe("a1");
+    expect(result.current.contextMenu.anchorId).toBe("a1");
   });
 
   it("uses a grandparent id for nested canvas items", () => {
@@ -881,6 +918,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -897,8 +936,8 @@ describe("useCanvasContextMenu", () => {
 
     expect(result.current.contextMenu).toMatchObject({
       open: true,
-      itemId: "t1",
-      itemType: "text",
+      anchorId: "t1",
+      anchorType: "text",
     });
   });
 
@@ -926,6 +965,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -936,7 +977,7 @@ describe("useCanvasContextMenu", () => {
       } as unknown as KonvaEventObject<PointerEvent>);
     });
 
-    expect(result.current.contextMenu.itemType).toBe("text");
+    expect(result.current.contextMenu.anchorType).toBe("text");
   });
 
   it("opens context menu for image item", () => {
@@ -963,6 +1004,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -973,7 +1016,7 @@ describe("useCanvasContextMenu", () => {
       } as unknown as KonvaEventObject<PointerEvent>);
     });
 
-    expect(result.current.contextMenu.itemType).toBe("image");
+    expect(result.current.contextMenu.anchorType).toBe("image");
   });
 
   it("opens context menu for tool icon item", () => {
@@ -1000,6 +1043,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -1010,7 +1055,7 @@ describe("useCanvasContextMenu", () => {
       } as unknown as KonvaEventObject<PointerEvent>);
     });
 
-    expect(result.current.contextMenu.itemType).toBe("tool");
+    expect(result.current.contextMenu.anchorType).toBe("tool");
   });
 
   it("duplicates a text item", () => {
@@ -1039,6 +1084,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -1054,7 +1101,7 @@ describe("useCanvasContextMenu", () => {
     });
 
     expect(textState).toHaveLength(2);
-    expect(textState[1]).toMatchObject({ id: "new-id", x: 25, y: 30 });
+    expect(textState[1]).toMatchObject({ id: "new-id", x: 45, y: 50 });
   });
 
   it("duplicates an image item", () => {
@@ -1084,6 +1131,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -1099,7 +1148,7 @@ describe("useCanvasContextMenu", () => {
     });
 
     expect(imageState).toHaveLength(2);
-    expect(imageState[1]).toMatchObject({ id: "new-id", x: 30, y: 40 });
+    expect(imageState[1]).toMatchObject({ id: "new-id", x: 50, y: 60 });
   });
 
   it("duplicates a tool icon item", () => {
@@ -1128,6 +1177,8 @@ describe("useCanvasContextMenu", () => {
         setToolIcons,
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -1143,7 +1194,7 @@ describe("useCanvasContextMenu", () => {
     });
 
     expect(toolState).toHaveLength(2);
-    expect(toolState[1]).toMatchObject({ id: "new-id", x: 35, y: 45 });
+    expect(toolState[1]).toMatchObject({ id: "new-id", x: 55, y: 65 });
   });
 
   it("deletes a text item", () => {
@@ -1165,6 +1216,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         textState,
         setTexts,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -1214,6 +1267,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -1254,6 +1309,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         toolState,
         setToolIcons,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
       ),
@@ -1305,6 +1362,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -1347,6 +1406,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         abilitiesState,
         setAbilities,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -1406,6 +1467,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -1432,6 +1495,8 @@ describe("useCanvasContextMenu", () => {
     const { result } = renderHook(() =>
       useCanvasContextMenu(
         stageRef,
+        [],
+        jest.fn(),
         [],
         jest.fn(),
         [],
@@ -1481,6 +1546,8 @@ describe("useCanvasContextMenu", () => {
         jest.fn(),
         [],
         jest.fn(),
+        [],
+        jest.fn(),
       ),
     );
 
@@ -1498,5 +1565,526 @@ describe("useCanvasContextMenu", () => {
     });
 
     expect(result.current.contextMenu.open).toBe(false);
+  });
+
+  it("targets the whole selection when right-clicking a selected item", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    const agents: AgentCanvas[] = [
+      { id: "a1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
+      { id: "a2", name: "Sova", role: "Initiator", isAlly: true, x: 10, y: 10 },
+    ];
+    const selected = [
+      { id: "a1", type: "agent" as const },
+      { id: "a2", type: "agent" as const },
+    ];
+    const setSelected = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        agents,
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        selected,
+        setSelected,
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "a1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    expect(result.current.contextMenu.targetItems).toHaveLength(2);
+    expect(result.current.contextMenu.capabilities.canToggleAlly).toBe(true);
+    expect(setSelected).not.toHaveBeenCalled();
+  });
+
+  it("hides the ally toggle when the selection has mixed ally states", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    const agents: AgentCanvas[] = [
+      { id: "a1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
+      { id: "a2", name: "Sova", role: "Initiator", isAlly: false, x: 10, y: 10 },
+    ];
+    const selected = [
+      { id: "a1", type: "agent" as const },
+      { id: "a2", type: "agent" as const },
+    ];
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        agents,
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        selected,
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "a1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    expect(result.current.contextMenu.capabilities.canToggleAlly).toBe(false);
+  });
+
+  it("deletes every item in the selection", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    let agentsState: AgentCanvas[] = [
+      { id: "a1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
+      { id: "a2", name: "Sova", role: "Initiator", isAlly: true, x: 10, y: 10 },
+    ];
+    const setAgents = jest.fn((updater) => {
+      agentsState =
+        typeof updater === "function" ? updater(agentsState) : updater;
+    });
+    let selected = [
+      { id: "a1", type: "agent" as const },
+      { id: "a2", type: "agent" as const },
+    ];
+    const setSelected = jest.fn((updater) => {
+      selected = typeof updater === "function" ? updater(selected) : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        agentsState,
+        setAgents,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        selected,
+        setSelected,
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "a1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleDelete();
+    });
+
+    expect(agentsState).toHaveLength(0);
+    expect(selected).toHaveLength(0);
+  });
+
+  it("toggles ally state for every selected agent", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    let agentsState: AgentCanvas[] = [
+      { id: "a1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
+      { id: "a2", name: "Sova", role: "Initiator", isAlly: true, x: 10, y: 10 },
+    ];
+    const setAgents = jest.fn((updater) => {
+      agentsState =
+        typeof updater === "function" ? updater(agentsState) : updater;
+    });
+    const selected = [
+      { id: "a1", type: "agent" as const },
+      { id: "a2", type: "agent" as const },
+    ];
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        agentsState,
+        setAgents,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        selected,
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "a1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleToggleAlly();
+    });
+
+    expect(agentsState.map((agent) => agent.isAlly)).toEqual([false, false]);
+  });
+
+  it("cleans up attachments and connected items when deleting a selection", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+
+    let agentsState: AgentCanvas[] = [
+      { id: "a1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
+      { id: "a2", name: "Sova", role: "Initiator", isAlly: true, x: 10, y: 10 },
+    ];
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: "cone-1",
+        name: "Vision Cone 60",
+        action: "vision_cone_60",
+        isAlly: true,
+        x: 0,
+        y: 0,
+        attachedToId: "a1",
+      },
+      {
+        id: "ability-1",
+        name: "Knife",
+        action: "kayo_knife",
+        isAlly: true,
+        x: 10,
+        y: 10,
+      },
+    ];
+    let toolIconsState: ToolIconCanvas[] = [
+      {
+        id: "tool-1",
+        name: "spike",
+        width: 32,
+        height: 32,
+        x: 5,
+        y: 5,
+        attachedToId: "a1",
+      },
+    ];
+    let connectingLinesState: ConnectingLine[] = [
+      {
+        id: "line-1",
+        fromId: "a2",
+        toId: "ability-1",
+        strokeColor: "#ffffff",
+        strokeWidth: 2,
+      },
+    ];
+    const selected = [
+      { id: "a1", type: "agent" as const },
+      { id: "a2", type: "agent" as const },
+    ];
+
+    const setAgents = jest.fn((updater) => {
+      agentsState =
+        typeof updater === "function" ? updater(agentsState) : updater;
+    });
+    const setAbilities = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+    const setToolIcons = jest.fn((updater) => {
+      toolIconsState =
+        typeof updater === "function" ? updater(toolIconsState) : updater;
+    });
+    const setConnectingLines = jest.fn((updater) => {
+      connectingLinesState =
+        typeof updater === "function"
+          ? updater(connectingLinesState)
+          : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        agentsState,
+        setAgents,
+        abilitiesState,
+        setAbilities,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        toolIconsState,
+        setToolIcons,
+        connectingLinesState,
+        setConnectingLines,
+        selected,
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "a1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleDelete();
+    });
+
+    expect(agentsState).toHaveLength(0);
+    expect(abilitiesState).toHaveLength(0);
+    expect(toolIconsState).toHaveLength(0);
+    expect(connectingLinesState).toHaveLength(0);
+  });
+
+  it("duplicates every selected host with its attached vision cone", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    const agents: AgentCanvas[] = [
+      { id: "a1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
+      { id: "a2", name: "Sova", role: "Initiator", isAlly: true, x: 10, y: 10 },
+    ];
+    let agentsState = [...agents];
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: "cone-1",
+        name: "Vision Cone 60",
+        action: "vision_cone_60",
+        isAlly: true,
+        x: 0,
+        y: 0,
+        attachedToId: "a1",
+      },
+      {
+        id: "cone-2",
+        name: "Vision Cone 60",
+        action: "vision_cone_60",
+        isAlly: true,
+        x: 10,
+        y: 10,
+        attachedToId: "a2",
+      },
+    ];
+    const selected = [
+      { id: "a1", type: "agent" as const },
+      { id: "a2", type: "agent" as const },
+    ];
+    const setAgents = jest.fn((updater) => {
+      agentsState =
+        typeof updater === "function" ? updater(agentsState) : updater;
+    });
+    const setAbilities = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    mockGetNextId
+      .mockReturnValueOnce("agent-copy-1")
+      .mockReturnValueOnce("cone-copy-1")
+      .mockReturnValueOnce("agent-copy-2")
+      .mockReturnValueOnce("cone-copy-2");
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        agentsState,
+        setAgents,
+        abilitiesState,
+        setAbilities,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        selected,
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "a1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleDuplicate();
+    });
+
+    expect(agentsState).toHaveLength(4);
+    expect(abilitiesState).toHaveLength(4);
+    expect(agentsState.map((agent) => agent.id)).toEqual([
+      "a1",
+      "a2",
+      "agent-copy-1",
+      "agent-copy-2",
+    ]);
+    expect(
+      abilitiesState.filter((ability) => ability.attachedToId === "agent-copy-1"),
+    ).toHaveLength(1);
+    expect(
+      abilitiesState.filter((ability) => ability.attachedToId === "agent-copy-2"),
+    ).toHaveLength(1);
+  });
+
+  it("toggles icon-only mode for every selected ability", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: "ab1",
+        name: "Brimstone Smoke",
+        action: "brim_smoke",
+        isAlly: true,
+        x: 0,
+        y: 0,
+        iconOnly: false,
+      },
+      {
+        id: "ab2",
+        name: "Knife",
+        action: "kayo_knife",
+        isAlly: true,
+        x: 10,
+        y: 10,
+        iconOnly: false,
+      },
+    ];
+    const selected = [
+      { id: "ab1", type: "ability" as const },
+      { id: "ab2", type: "ability" as const },
+    ];
+    const setAbilities = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        [],
+        jest.fn(),
+        abilitiesState,
+        setAbilities,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        selected,
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "ab1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleToggleAbilityIconOnly();
+    });
+
+    expect(abilitiesState.map((ability) => ability.iconOnly)).toEqual([
+      true,
+      true,
+    ]);
+  });
+
+  it("swaps every selected swappable ability", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    let abilitiesState: AbilityCanvas[] = [
+      {
+        id: "ab1",
+        name: "M-Pulse Concuss",
+        action: "miks_stun",
+        isAlly: true,
+        x: 0,
+        y: 0,
+      },
+      {
+        id: "ab2",
+        name: "M-Pulse Heal",
+        action: "miks_heal",
+        isAlly: true,
+        x: 10,
+        y: 10,
+      },
+    ];
+    const selected = [
+      { id: "ab1", type: "ability" as const },
+      { id: "ab2", type: "ability" as const },
+    ];
+    const setAbilities = jest.fn((updater) => {
+      abilitiesState =
+        typeof updater === "function" ? updater(abilitiesState) : updater;
+    });
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        [],
+        jest.fn(),
+        abilitiesState,
+        setAbilities,
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        selected,
+        jest.fn(),
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "ab1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleSwapAbility();
+    });
+
+    expect(abilitiesState.map((ability) => ability.action)).toEqual([
+      "miks_heal",
+      "miks_stun",
+    ]);
   });
 });

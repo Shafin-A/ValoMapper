@@ -9,7 +9,7 @@ export const MIN_ZOOM_SCALE = 1;
 export const VIRTUAL_WIDTH = 2560;
 export const VIRTUAL_HEIGHT = 1440;
 
-export const CONTEXT_MENU_DUPLICATE_OFFSET = 20;
+export const CONTEXT_MENU_DUPLICATE_OFFSET = 40;
 
 export const DISCORD_INVITE_URL = "https://discord.gg/Hpg2ftnhBV";
 
