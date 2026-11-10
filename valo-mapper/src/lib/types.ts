@@ -604,6 +604,18 @@ export type StackMembersResponse = {
 
 export type ItemType = "agent" | "ability" | "text" | "image" | "tool";
 
+export type CanvasSelectionItem = {
+  id: string;
+  type: ItemType;
+};
+
+export type CanvasItemInstance =
+  | { type: "agent"; item: AgentCanvas }
+  | { type: "ability"; item: AbilityCanvas }
+  | { type: "text"; item: TextCanvas }
+  | { type: "image"; item: ImageCanvas }
+  | { type: "tool"; item: ToolIconCanvas };
+
 export type Callout = {
   regionName: string;
   superRegionName: string;

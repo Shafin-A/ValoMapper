@@ -11,6 +11,7 @@ import {
   Tool,
   AbilityIconItem,
   Agent,
+  CanvasSelectionItem,
   ToolIconCanvas,
 } from "@/lib/types";
 import {
@@ -71,12 +72,16 @@ export const useCanvasUI = ({
   const [selectedCanvasIcon, setSelectedCanvasIcon] = useState<
     Agent | AbilityIconItem | ToolIconCanvas | null
   >(null);
+  const [selectedCanvasItems, setSelectedCanvasItems] = useState<
+    CanvasSelectionItem[]
+  >([]);
   const [isSidebarDragActive, setIsSidebarDragActive] = useState(false);
   const [currentStageScale, setCurrentStageScale] = useState(1);
 
   const resetEdits = () => {
     setEditingTextId(null);
     setSelectedCanvasIcon(null);
+    setSelectedCanvasItems([]);
     setIsSidebarDragActive(false);
   };
 
@@ -108,6 +113,8 @@ export const useCanvasUI = ({
     setCanvasBackground,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
+    selectedCanvasItems,
+    setSelectedCanvasItems,
     isSidebarDragActive,
     setIsSidebarDragActive,
     currentStageScale,

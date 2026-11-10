@@ -7,6 +7,7 @@ import type {
   Agent,
   AgentCanvas,
   CanvasBackground,
+  CanvasSelectionItem,
   ConnectingLine,
   DrawLine,
   IconSettings,
@@ -30,9 +31,11 @@ import {
   SetStateAction,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
+import { filterExistingSelection } from "@/lib/canvas-selection";
 
 interface CanvasContextType {
   agentsOnCanvas: AgentCanvas[];
@@ -43,6 +46,8 @@ interface CanvasContextType {
   setSelectedCanvasIcon: Dispatch<
     SetStateAction<Agent | AbilityIconItem | ToolIconCanvas | null>
   >;
+  selectedCanvasItems: CanvasSelectionItem[];
+  setSelectedCanvasItems: Dispatch<SetStateAction<CanvasSelectionItem[]>>;
   isSidebarDragActive: boolean;
   setIsSidebarDragActive: Dispatch<SetStateAction<boolean>>;
   currentStageScale: number;
@@ -163,6 +168,63 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
   );
   const [isMapTransitioning, setIsMapTransitioning] = useState(false);
   const recenterCanvasCallback = useRef<(() => void) | null>(null);
+
+  const {
+    setSelectedCanvasItems,
+    agentsOnCanvas,
+    abilitiesOnCanvas,
+    textsOnCanvas,
+    imagesOnCanvas,
+    toolIconsOnCanvas,
+    currentPhaseIndex,
+    selectedMap,
+    mapSide,
+    isDrawMode,
+    editingTextId,
+  } = canvasState;
+
+  useEffect(() => {
+    setSelectedCanvasItems([]);
+  }, [
+    currentPhaseIndex,
+    selectedMap.id,
+    mapSide,
+    isDrawMode,
+    setSelectedCanvasItems,
+  ]);
+
+  useEffect(() => {
+    if (editingTextId) {
+      setSelectedCanvasItems([]);
+    }
+  }, [editingTextId, setSelectedCanvasItems]);
+
+  useEffect(() => {
+    setSelectedCanvasItems((previous) => {
+      if (previous.length === 0) return previous;
+
+      const next = filterExistingSelection(
+        {
+          agentsOnCanvas,
+          abilitiesOnCanvas,
+          textsOnCanvas,
+          imagesOnCanvas,
+          toolIconsOnCanvas,
+        },
+        previous,
+      );
+
+      return next.length === previous.length ? previous : next;
+    });
+  }, [
+    agentsOnCanvas,
+    abilitiesOnCanvas,
+    textsOnCanvas,
+    imagesOnCanvas,
+    toolIconsOnCanvas,
+    setSelectedCanvasItems,
+  ]);
+
   const onUndoRedoCallback = useRef<
     | ((
         settledState: UndoableState,
