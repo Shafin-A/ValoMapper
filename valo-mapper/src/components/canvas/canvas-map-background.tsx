@@ -4,6 +4,7 @@ import { MAP_SIZE } from "@/lib/consts";
 import { CANVAS_MAP_RENDER_SCALE } from "@/lib/map-positioning";
 import { Vector2d } from "konva/lib/types";
 import { useCanvasView } from "@/contexts/canvas-context";
+import { useCommitCount } from "@/lib/perf-beacon";
 import { RefObject, memo, useEffect, useRef, useState } from "react";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import Konva from "konva";
@@ -21,6 +22,8 @@ export const CanvasMapBackground = memo(function CanvasMapBackground({
   mapPosition,
   stageRef,
 }: CanvasMapBackgroundProps & { stageRef: RefObject<KonvaStage | null> }) {
+  useCommitCount("CanvasMapBackground");
+
   const { selectedMap, mapSide, setIsMapTransitioning } = useCanvasView();
   const [mapImage, status] = useImage(`/maps/minimaps/${selectedMap.id}.webp`);
 

@@ -11,6 +11,7 @@ import {
 } from "react-konva";
 import { useCanvasEntities } from "@/contexts/canvas-context";
 import { useCurrentStroke } from "@/contexts/drawing-preview-context";
+import { useCommitCount } from "@/lib/perf-beacon";
 import {
   getTraversalDurationSeconds,
   getTraversalSelection,
@@ -335,6 +336,8 @@ const DrawLinesList = memo(function DrawLinesList({
 export const CanvasDrawLines = memo(function CanvasDrawLines({
   currentLineRef,
 }: CanvasDrawLinesProps) {
+  useCommitCount("CanvasDrawLines");
+
   const { drawLines } = useCanvasEntities();
   const currentStroke = useCurrentStroke();
 

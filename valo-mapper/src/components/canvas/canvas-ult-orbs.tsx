@@ -1,4 +1,5 @@
 import { useCanvasView } from "@/contexts/canvas-context";
+import { useCommitCount } from "@/lib/perf-beacon";
 import { getMapUltOrbs, MAP_SIZE } from "@/lib/consts";
 import { Vector2d } from "konva/lib/types";
 import { memo } from "react";
@@ -11,6 +12,8 @@ interface CanvasUltOrbsProps {
 export const CanvasUltOrbs = memo(function CanvasUltOrbs({
   mapPosition,
 }: CanvasUltOrbsProps) {
+  useCommitCount("CanvasUltOrbs");
+
   const { selectedMap, mapSide, showUltOrbs, isMapTransitioning } =
     useCanvasView();
 

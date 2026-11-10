@@ -1,4 +1,5 @@
 import { useCanvasView } from "@/contexts/canvas-context";
+import { useCommitCount } from "@/lib/perf-beacon";
 import { useSettings } from "@/contexts/settings-context";
 import { getMapSpawnBarriers, MAP_SIZE } from "@/lib/consts";
 import { Vector2d } from "konva/lib/types";
@@ -12,6 +13,8 @@ interface CanvasSpawnBarriersProps {
 export const CanvasSpawnBarriers = memo(function CanvasSpawnBarriers({
   mapPosition,
 }: CanvasSpawnBarriersProps) {
+  useCommitCount("CanvasSpawnBarriers");
+
   const { selectedMap, mapSide, showSpawnBarriers, isMapTransitioning } =
     useCanvasView();
   const { agentsSettings } = useSettings();

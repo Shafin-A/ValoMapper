@@ -2,6 +2,7 @@ import { ContextMenuPopover } from "@/components/canvas/context-menu-popover";
 import "@/lib/konva-config";
 import { RemoteCursors } from "@/components/collaboration";
 import { useCanvasEntities, useCanvasUi, useCanvasView } from "@/contexts/canvas-context";
+import { useCommitCount } from "@/lib/perf-beacon";
 import { useWebSocket } from "@/contexts/websocket-context";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
@@ -139,6 +140,8 @@ export const MapStage = memo(
       },
       forwardedRef,
     ) => {
+    useCommitCount("MapStage");
+
     const { isDrawMode } = useCanvasUi();
     const { canvasBackground } = useCanvasView();
 

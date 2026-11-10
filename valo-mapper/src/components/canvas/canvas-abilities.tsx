@@ -21,6 +21,7 @@ import {
   syncAttachedVisionConeNodePositions,
 } from "@/lib/vision-cone-utils";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import { useCommitCount } from "@/lib/perf-beacon";
 import type { AbilityCanvas, IconSettings } from "@/lib/types";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
@@ -119,6 +120,8 @@ export const CanvasAbilities = memo(function CanvasAbilities({
   mapPosition,
   selectionDrag,
 }: CanvasAbilityProps) {
+  useCommitCount("CanvasAbilities");
+
   const {
     abilitiesOnCanvas,
     setAbilitiesOnCanvas,

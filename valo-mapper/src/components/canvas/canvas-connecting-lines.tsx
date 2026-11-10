@@ -1,6 +1,7 @@
 import React, { memo, useMemo } from "react";
 import { Line } from "react-konva";
 import { useCanvasEntities } from "@/contexts/canvas-context";
+import { useCommitCount } from "@/lib/perf-beacon";
 import { ConnectingLine } from "@/lib/types";
 
 interface CanvasConnectingLinesProps {
@@ -10,6 +11,8 @@ interface CanvasConnectingLinesProps {
 export const CanvasConnectingLines = memo(function CanvasConnectingLines({
   onLineClick,
 }: CanvasConnectingLinesProps) {
+  useCommitCount("CanvasConnectingLines");
+
   const { connectingLines, agentsOnCanvas, abilitiesOnCanvas } =
     useCanvasEntities();
 

@@ -1,4 +1,5 @@
 import { useCanvasView } from "@/contexts/canvas-context";
+import { useCommitCount } from "@/lib/perf-beacon";
 import { getMapCallouts, MAP_SIZE } from "@/lib/consts";
 import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
 import { Vector2d } from "konva/lib/types";
@@ -12,6 +13,8 @@ interface CanvasCalloutsProps {
 export const CanvasCallouts = memo(function CanvasCallouts({
   mapPosition,
 }: CanvasCalloutsProps) {
+  useCommitCount("CanvasCallouts");
+
   const { selectedMap, mapSide, showCallouts, isMapTransitioning } =
     useCanvasView();
 

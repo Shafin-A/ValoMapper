@@ -19,6 +19,7 @@ import {
   syncAttachedToolIconNodePositions,
 } from "@/lib/tool-icon";
 import { getAgentImgSrc, handleDragEnd, handleDragMove } from "@/lib/utils";
+import { useCommitCount } from "@/lib/perf-beacon";
 import type { AgentCanvas, IconSettings } from "@/lib/types";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
@@ -94,6 +95,8 @@ export const CanvasAgents = memo(function CanvasAgents({
   deleteGroupRef,
   selectionDrag,
 }: CanvasAgentProps) {
+  useCommitCount("CanvasAgents");
+
   const {
     agentsOnCanvas,
     setAgentsOnCanvas,

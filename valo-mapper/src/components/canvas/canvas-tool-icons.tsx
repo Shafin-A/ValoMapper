@@ -18,6 +18,7 @@ import {
   getToolIconAttachmentPosition,
 } from "@/lib/tool-icon";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import { useCommitCount } from "@/lib/perf-beacon";
 import type { ToolIconCanvas } from "@/lib/types";
 import {
   TEMP_DRAG_ID,
@@ -102,6 +103,8 @@ export const CanvasToolIcons = memo(function CanvasToolIcons({
   deleteGroupRef,
   selectionDrag,
 }: CanvasToolIconsProps) {
+  useCommitCount("CanvasToolIcons");
+
   const {
     toolIconsOnCanvas,
     setToolIconsOnCanvas,

@@ -3,6 +3,7 @@ import {
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useSetHoveredElementId } from "@/contexts/hover-context";
+import { useCommitCount } from "@/lib/perf-beacon";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { useTextEditor } from "@/hooks/canvas";
@@ -37,6 +38,8 @@ export const CanvasTexts = memo(function CanvasTexts({
   deleteGroupRef,
   selectionDrag,
 }: CanvasTextProps) {
+  useCommitCount("CanvasTexts");
+
   const { textsOnCanvas, setTextsOnCanvas } = useCanvasEntities();
   const { isDrawMode, editingTextId, selectedCanvasIcon } = useCanvasUi();
 

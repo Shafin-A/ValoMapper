@@ -7,6 +7,7 @@ import {
   useSetHoveredElementId,
 } from "@/contexts/hover-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import { useCommitCount } from "@/lib/perf-beacon";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { useImageTransform } from "@/hooks/canvas";
 import { handleDragEnd, handleDragMove } from "@/lib/utils";
@@ -29,6 +30,8 @@ export const CanvasImages = memo(function CanvasImages({
   onImageDoubleClick,
   selectionDrag,
 }: CanvasImageProps) {
+  useCommitCount("CanvasImages");
+
   const { imagesOnCanvas, setImagesOnCanvas } = useCanvasEntities();
   const { isDrawMode, editingTextId, selectedCanvasIcon } = useCanvasUi();
 

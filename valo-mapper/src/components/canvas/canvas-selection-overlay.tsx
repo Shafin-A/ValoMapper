@@ -10,6 +10,7 @@ import {
   getCanvasItemWorldRect,
 } from "@/lib/canvas-selection";
 import { canvasMarqueeStore } from "@/lib/canvas-marquee-store";
+import { useCommitCount } from "@/lib/perf-beacon";
 import type Konva from "konva";
 import type { Stage } from "konva/lib/Stage";
 import { Fragment, memo, useEffect, useState, useSyncExternalStore } from "react";
@@ -26,6 +27,8 @@ export const CanvasSelectionOverlay = memo(function CanvasSelectionOverlay({
   outlineGroupRef,
   scale,
 }: CanvasSelectionOverlayProps) {
+  useCommitCount("CanvasSelectionOverlay");
+
   const {
     agentsOnCanvas,
     abilitiesOnCanvas,

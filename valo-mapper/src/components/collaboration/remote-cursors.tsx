@@ -1,6 +1,7 @@
 "use client";
 
 import { useRemoteCursors } from "@/contexts/cursor-context";
+import { useCommitCount } from "@/lib/perf-beacon";
 import { CursorMoveData } from "@/lib/websocket-types";
 import { Group, Circle, Label, Tag, Text } from "react-konva";
 import { memo, useMemo } from "react";
@@ -12,6 +13,8 @@ interface RemoteCursorsProps {
 export const RemoteCursors = memo(function RemoteCursors({
   scale,
 }: RemoteCursorsProps) {
+  useCommitCount("RemoteCursors");
+
   const cursors = useRemoteCursors();
 
   const cursorArray = useMemo(() => Array.from(cursors.values()), [cursors]);
