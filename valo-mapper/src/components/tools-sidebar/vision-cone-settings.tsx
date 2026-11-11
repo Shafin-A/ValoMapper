@@ -97,6 +97,7 @@ export const VisionConeSettings = ({
   const handleVisionConePointerDown = useCallback(
     (event: React.PointerEvent<HTMLButtonElement>, coneName: string) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (event.pointerType === "pen") return;
       event.preventDefault();
 
       if (typeof event.currentTarget.setPointerCapture === "function") {

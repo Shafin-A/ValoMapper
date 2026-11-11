@@ -136,6 +136,7 @@ export const IconsSection = ({ setSidebarOpen }: IconsSectionProps) => {
     height: number,
   ) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (event.pointerType === "pen") return;
     event.preventDefault();
 
     if (typeof event.currentTarget.setPointerCapture === "function") {

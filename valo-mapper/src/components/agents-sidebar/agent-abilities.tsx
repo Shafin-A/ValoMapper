@@ -122,6 +122,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
                       size="icon"
                       className="absolute -top-2 -right-2 size-7 rounded-full shadow-sm sm:size-5"
                       onPointerDown={(event) => {
+                        if (event.pointerType === "pen") return;
                         event.preventDefault();
                         event.stopPropagation();
                       }}

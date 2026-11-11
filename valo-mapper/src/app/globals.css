@@ -306,6 +306,12 @@
   }
 }
 
+@media (hover: none), (pointer: coarse) {
+  [data-slot="tooltip-content"] {
+    display: none !important;
+  }
+}
+
 @layer utilities {
   .lobby-canvas-background-dots {
     background-color: var(--background);

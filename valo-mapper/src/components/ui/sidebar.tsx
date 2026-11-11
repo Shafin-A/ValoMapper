@@ -198,7 +198,7 @@ function Sidebar({
           data-slot="sidebar"
           data-mobile="true"
           className={cn(
-            "bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] [&>button]:hidden",
+            "bg-sidebar text-sidebar-foreground w-(--sidebar-width) select-none p-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] [-webkit-touch-callout:none] [&>button]:hidden",
             side === "left"
               ? "pl-[env(safe-area-inset-left)]"
               : "pr-[env(safe-area-inset-right)]",
@@ -390,7 +390,7 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="sidebar-content"
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto select-none [-webkit-touch-callout:none] group-data-[collapsible=icon]:overflow-hidden",
         className,
       )}
       {...props}

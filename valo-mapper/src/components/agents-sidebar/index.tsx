@@ -316,10 +316,12 @@ export const AgentsSidebar = ({
     kind: "agent" | "ability",
   ) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    event.preventDefault();
 
     ignoreNextSidebarClickRef.current = false;
     suppressClickUntilRef.current = 0;
+
+    if (event.pointerType === "pen") return;
+    event.preventDefault();
 
     if (typeof event.currentTarget.setPointerCapture === "function") {
       event.currentTarget.setPointerCapture(event.pointerId);

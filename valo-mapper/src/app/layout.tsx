@@ -9,6 +9,7 @@ import { SettingsProvider } from "@/contexts/settings-context";
 import { WebSocketProvider } from "@/contexts/websocket-context";
 import { CollaborativeCanvasProvider } from "@/hooks/use-collaborative-canvas";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
+import { PenTapToClick } from "@/components/providers/pen-tap-to-click";
 import { FirebaseAuthProvider } from "@/hooks/use-firebase-auth";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -88,6 +89,7 @@ const RootLayout = ({
                         <CollaborativeCanvasProvider>
                           <NavigationHistoryProvider>
                             <KeyboardShortcuts />
+                            <PenTapToClick />
                             {children}
                           </NavigationHistoryProvider>
                         </CollaborativeCanvasProvider>
