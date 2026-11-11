@@ -71,6 +71,20 @@ describe("useSidebarState", () => {
     expect(result.current.rightSidebarOpen).toBe(false);
   });
 
+  it("should reopen both sidebars when switching from mobile to desktop", () => {
+    mockUseIsMobile.mockReturnValue(true);
+    const { result, rerender } = renderHook(() => useSidebarState());
+
+    expect(result.current.leftSidebarOpen).toBe(false);
+    expect(result.current.rightSidebarOpen).toBe(false);
+
+    mockUseIsMobile.mockReturnValue(false);
+    rerender();
+
+    expect(result.current.leftSidebarOpen).toBe(true);
+    expect(result.current.rightSidebarOpen).toBe(true);
+  });
+
   it("should keep sidebars mutually exclusive on mobile", () => {
     mockUseIsMobile.mockReturnValue(true);
     const { result } = renderHook(() => useSidebarState());

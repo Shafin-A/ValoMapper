@@ -144,6 +144,43 @@ describe("useIsMobile", () => {
     expect(result.current).toBe(false);
   });
 
+  it("should update when a tablet rotates between portrait and landscape", () => {
+    let innerWidth = 768;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      get: () => innerWidth,
+    });
+
+    const listeners: Array<() => void> = [];
+    matchMediaMock.mockImplementation((query: string) => ({
+      matches: query === "(pointer: coarse)",
+      addEventListener: jest.fn((event: string, callback: () => void) => {
+        listeners.push(callback);
+      }),
+      removeEventListener: jest.fn(),
+    }));
+
+    const { result } = renderHook(() => useIsMobile());
+
+    // Tablet portrait: tablet width + coarse pointer -> mobile layout.
+    expect(result.current).toBe(true);
+
+    innerWidth = 1024;
+    act(() => {
+      listeners.forEach((listener) => listener());
+    });
+
+    // Tablet landscape: wide enough for the desktop layout.
+    expect(result.current).toBe(false);
+
+    innerWidth = 768;
+    act(() => {
+      listeners.forEach((listener) => listener());
+    });
+
+    expect(result.current).toBe(true);
+  });
+
   it("should remove event listener on unmount", () => {
     Object.defineProperty(window, "innerWidth", {
       writable: true,

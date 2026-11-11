@@ -3,6 +3,7 @@ import {
   SetStateAction,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,11 +12,18 @@ export const useSidebarState = () => {
   const isMobile = useIsMobile();
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+  const wasMobileRef = useRef(isMobile);
 
   useEffect(() => {
-    if (!isMobile) return;
-    setLeftSidebarOpen(false);
-    setRightSidebarOpen(false);
+    if (isMobile) {
+      setLeftSidebarOpen(false);
+      setRightSidebarOpen(false);
+    } else if (wasMobileRef.current) {
+      setLeftSidebarOpen(true);
+      setRightSidebarOpen(true);
+    }
+
+    wasMobileRef.current = isMobile;
   }, [isMobile]);
 
   const setLeftSidebarOpenWithMobileRules: Dispatch<SetStateAction<boolean>> =
