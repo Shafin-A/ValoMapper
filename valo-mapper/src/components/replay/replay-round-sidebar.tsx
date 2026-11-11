@@ -15,6 +15,7 @@ import { ReplayWarningsBanner } from "./replay-warnings-banner";
 
 export const ReplayRoundSidebar = ({
   sidebarOpen,
+  setSidebarOpen,
   players,
   round,
   currentTimeMs,
@@ -25,6 +26,7 @@ export const ReplayRoundSidebar = ({
   replayId,
 }: {
   sidebarOpen: boolean;
+  setSidebarOpen?: (open: boolean) => void;
   players: MatchPlayers;
   round: ReplayRound;
   currentTimeMs: number;
@@ -37,6 +39,7 @@ export const ReplayRoundSidebar = ({
   return (
     <SidebarProvider
       open={sidebarOpen}
+      onOpenChange={setSidebarOpen}
       style={{
         ["--sidebar-width" as keyof React.CSSProperties]: `${SIDEBAR_WIDTH}px`,
         ["--sidebar-width-mobile" as keyof React.CSSProperties]: `${SIDEBAR_WIDTH}px`,

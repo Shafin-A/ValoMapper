@@ -378,6 +378,7 @@ export const ReplayPlayer = ({
 
       <ReplayRoundSidebar
         sidebarOpen={sidebarState.rightSidebarOpen}
+        setSidebarOpen={sidebarState.setRightSidebarOpen}
         players={match.players}
         round={round}
         currentTimeMs={currentTimeMs}

@@ -455,6 +455,7 @@ export const AgentsSidebar = ({
   return (
     <SidebarProvider
       open={sidebarOpen}
+      onOpenChange={setSidebarOpen}
       style={{
         ["--sidebar-width" as keyof React.CSSProperties]: `${SIDEBAR_WIDTH}px`,
         ["--sidebar-width-mobile" as keyof React.CSSProperties]: `${SIDEBAR_WIDTH}px`,

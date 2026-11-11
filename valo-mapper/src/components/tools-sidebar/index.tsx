@@ -268,6 +268,7 @@ export const ToolsSidebar = ({
         ["--sidebar-width-mobile" as keyof React.CSSProperties]: `${SIDEBAR_WIDTH}px`,
       }}
       open={sidebarOpen}
+      onOpenChange={setSidebarOpen}
     >
       <Sidebar
         className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"

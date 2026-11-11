@@ -2,6 +2,7 @@
 
 import { AgentsSidebar } from "@/components/agents-sidebar";
 import { MapStage, MapStageHandle } from "@/components/canvas";
+import { MobileCanvasToolbar } from "@/components/canvas/mobile-canvas-toolbar";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ToolsSidebar } from "@/components/tools-sidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -548,24 +549,28 @@ const MatchReviewPage = () => {
       />
 
       <Suspense fallback={<MatchReviewLoadingSkeleton />}>
-        <div
-          className="flex h-[calc(100svh-1px-var(--header-height))] overflow-hidden"
-          ref={divRef}
-        >
-          {!isScaleReady ? (
-            <MatchReviewLoadingSkeleton />
-          ) : (
-            <div className="flex-1">
-              <MapStage
-                ref={stageRef}
-                width={VIRTUAL_WIDTH}
-                height={VIRTUAL_HEIGHT}
-                scale={stageScale}
-                mapPosition={mapPosition}
-                enableMultiSelect={false}
-              />
-            </div>
-          )}
+        <div className="flex h-[calc(100svh-1px-var(--header-height))] flex-col overflow-hidden">
+          <div className="min-h-0 flex-1" ref={divRef}>
+            {!isScaleReady ? (
+              <MatchReviewLoadingSkeleton />
+            ) : (
+              <div className="h-full">
+                <MapStage
+                  ref={stageRef}
+                  width={VIRTUAL_WIDTH}
+                  height={VIRTUAL_HEIGHT}
+                  scale={stageScale}
+                  mapPosition={mapPosition}
+                  enableMultiSelect={false}
+                />
+              </div>
+            )}
+          </div>
+          <MobileCanvasToolbar
+            stageRef={stageRef}
+            onOpenTools={() => sidebarState.setLeftSidebarOpen(true)}
+            onOpenAgents={() => sidebarState.setRightSidebarOpen(true)}
+          />
         </div>
       </Suspense>
 
