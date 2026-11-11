@@ -65,16 +65,16 @@ export const MatchCard = forwardRef<HTMLButtonElement, MatchCardProps>(
           <div className="flex min-w-0 flex-1 items-center gap-1.5 px-1.5 pr-[36%] sm:gap-2 sm:px-3 sm:pr-[35%] lg:gap-3 lg:px-5 lg:pr-[30%]">
             <div className="min-w-0">
               <div className="grid grid-cols-[auto_auto] items-baseline gap-x-1.5 gap-y-1.5 sm:grid-cols-[auto_1fr] sm:gap-x-2">
-                <span className="whitespace-nowrap text-[11px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[18px] lg:text-[28px]">
+                <span className="whitespace-nowrap text-[13px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[18px] lg:text-[28px]">
                   KDA
                 </span>
-                <span className="whitespace-nowrap text-[11px] font-semibold uppercase leading-none tracking-[0.04em] text-white sm:text-[18px] lg:text-[28px]">
+                <span className="whitespace-nowrap text-[13px] font-semibold uppercase leading-none tracking-[0.04em] text-white sm:text-[18px] lg:text-[28px]">
                   {match.kills} / {match.deaths} / {match.assists}
                 </span>
-                <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.05em] text-white/70 sm:text-[12px] lg:text-[16px]">
+                <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.05em] text-white/70 sm:text-[12px] lg:text-[16px]">
                   SCORE
                 </span>
-                <span className="whitespace-nowrap text-[10px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[12px] lg:text-[16px]">
+                <span className="whitespace-nowrap text-[11px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[12px] lg:text-[16px]">
                   {match.personalScore}
                 </span>
               </div>
@@ -83,11 +83,11 @@ export const MatchCard = forwardRef<HTMLButtonElement, MatchCardProps>(
 
           <div className="absolute right-1 top-1/2 z-40 w-[34%] -translate-y-1/2 text-right sm:right-2 sm:w-[32%] lg:left-1/2 lg:right-auto lg:w-[30%] lg:-translate-x-1/2 lg:text-center">
             <p
-              className={`text-[16px] font-semibold uppercase leading-none tracking-[0.04em] sm:text-[24px] lg:text-[36px] ${resultClasses.accentText}`}
+              className={`text-[18px] font-semibold uppercase leading-none tracking-[0.04em] sm:text-[24px] lg:text-[36px] ${resultClasses.accentText}`}
             >
               {getResultLabel(match.result)}
             </p>
-            <p className="mt-0.5 text-[20px] font-semibold leading-none tracking-[0.03em] text-white sm:mt-1 sm:text-[24px] lg:mt-2 lg:text-[32px]">
+            <p className="mt-0.5 text-[22px] font-semibold leading-none tracking-[0.03em] text-white sm:mt-1 sm:text-[24px] lg:mt-2 lg:text-[32px]">
               <span
                 className={
                   resultTone === "Win"

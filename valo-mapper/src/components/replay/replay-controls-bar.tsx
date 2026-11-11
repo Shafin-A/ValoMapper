@@ -30,7 +30,7 @@ const ReplaySpeedSelect = memo(function ReplaySpeedSelect({
       value={String(speed)}
       onValueChange={(value) => onSpeedChange(Number(value) as ReplaySpeed)}
     >
-      <SelectTrigger size="sm" className="h-8 w-[68px] shrink-0">
+      <SelectTrigger size="sm" className="h-10 w-[68px] shrink-0 sm:h-8">
         <SelectValue />
       </SelectTrigger>
       <SelectContent align="end">
@@ -100,7 +100,7 @@ export const ReplayControlsBar = ({
   onStartAtBarrierDropChange: (startAtBarrierDrop: boolean) => void;
 }) => {
   return (
-    <div className="border-t border-sidebar-border bg-sidebar">
+    <div className="border-t border-sidebar-border bg-sidebar pb-[env(safe-area-inset-bottom)]">
       <div className="px-2 pt-1">
         <MatchRoundSelector
           rounds={rounds}
@@ -115,7 +115,7 @@ export const ReplayControlsBar = ({
         <Button
           type="button"
           size="icon"
-          className="h-8 w-8 shrink-0 rounded-full"
+          className="h-10 w-10 shrink-0 rounded-full sm:h-8 sm:w-8"
           onClick={onTogglePlay}
           aria-label={isPlaying ? "Pause replay" : "Play replay"}
         >
@@ -126,7 +126,7 @@ export const ReplayControlsBar = ({
           )}
         </Button>
 
-        <div className="w-20 shrink-0 text-[11px] font-semibold tabular-nums text-white/80">
+        <div className="w-16 shrink-0 text-[11px] font-semibold tabular-nums text-white/80 sm:w-20">
           {formatReplayTime(currentTimeMs)}
           <span className="text-white/60">
             {" "}
