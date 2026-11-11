@@ -5,6 +5,7 @@ import {
   type CanvasItemCollections,
   getCanvasItemInstance,
 } from "@/lib/canvas-selection";
+import { isMobileLayout } from "@/lib/mobile-layout";
 import type { CanvasSelectionItem } from "@/lib/types";
 import {
   syncAttachedToolIconNodePositions,
@@ -251,7 +252,7 @@ export const useCanvasSelectionDrag = ({
       const id = event.target.id();
       const group = groupDragRef.current;
 
-      deleteGroupRef?.current?.visible(false);
+      deleteGroupRef?.current?.visible(!isMobileLayout());
 
       if (!group && !isMultiSelected(id)) {
         if (selectedIdSet.has(id)) {

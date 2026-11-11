@@ -10,6 +10,7 @@ import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
+import { isMobileLayout } from "@/lib/mobile-layout";
 import {
   applyVisionConeAttachment,
   canAttachVisionCone,
@@ -197,7 +198,7 @@ export const CanvasAbilities = memo(function CanvasAbilities({
     const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
 
     if (deleteGroupRef.current) {
-      deleteGroupRef.current.visible(false);
+      deleteGroupRef.current.visible(!isMobileLayout());
       deleteGroupRef.current.opacity(0.5);
     }
 

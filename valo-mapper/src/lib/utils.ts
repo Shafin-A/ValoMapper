@@ -1,3 +1,4 @@
+import { isMobileLayout } from "@/lib/mobile-layout";
 import {
   ADJUSTABLE_LINE_ABILITY_CONFIGS,
   ARC_ABILITY_CONFIGS,
@@ -384,7 +385,7 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
   const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
 
   if (deleteGroupRef?.current) {
-    deleteGroupRef.current.visible(false);
+    deleteGroupRef.current.visible(!isMobileLayout());
     deleteGroupRef.current.opacity(0.5);
   }
 
