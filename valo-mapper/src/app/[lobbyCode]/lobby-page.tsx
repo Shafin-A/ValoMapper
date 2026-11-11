@@ -21,6 +21,7 @@ import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts/misc/consts";
 import { getCanvasFitScale } from "@/lib/canvas-scale";
 import { preloadImages, preloadImagesWithTimeout } from "@/lib/image-preload";
+import { shouldWarmAllAssets } from "@/lib/network-policy";
 import { getAgentImgSrc } from "@/lib/utils";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -112,7 +113,7 @@ const LobbyEditPage = () => {
   }, [isLoadingLobby, isErrorLobby, getCurrentStateForSync]);
 
   useEffect(() => {
-    if (!isAssetWarmupReady) return;
+    if (!isAssetWarmupReady || !shouldWarmAllAssets(isMobile)) return;
 
     const requestIdleCallback =
       window.requestIdleCallback ||
@@ -141,7 +142,7 @@ const LobbyEditPage = () => {
     );
 
     return () => cancelIdleCallback(id);
-  }, [isAssetWarmupReady]);
+  }, [isAssetWarmupReady, isMobile]);
 
   useLayoutEffect(() => {
     let scaleReady = false;
