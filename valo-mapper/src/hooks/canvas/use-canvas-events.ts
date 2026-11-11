@@ -32,6 +32,7 @@ import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
 const PENCIL_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E") 5 18, crosshair`;
 const ERASER_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3C/svg%3E") 12 12, crosshair`;
+const TAP_MOVE_THRESHOLD_PX = 10;
 
 const setContainerCursor = (stage: Stage, cursor: string) => {
   const container = stage.container();
@@ -87,6 +88,13 @@ export const useCanvasEvents = (
   } = useCollaborativeCanvas();
 
   const frameRef = useRef<number | null>(null);
+  const touchGestureRef = useRef({
+    active: false,
+    moved: false,
+    multiTouch: false,
+    startX: 0,
+    startY: 0,
+  });
 
   const setCursorForCurrentTool = useCallback(() => {
     const stage = stageRef.current;
@@ -187,40 +195,17 @@ export const useCanvasEvents = (
     [handleZoomWheel, syncCurrentStageScale],
   );
 
-  const handleTouchStart = useCallback(
-    (e: Parameters<typeof handleZoomTouchStart>[0]) => {
-      handleZoomTouchStart(e);
-      syncCurrentStageScale();
-    },
-    [handleZoomTouchStart, syncCurrentStageScale],
-  );
-
-  const handleTouchMove = useCallback(
-    (e: Parameters<typeof handleZoomTouchMove>[0]) => {
-      handleZoomTouchMove(e);
-      syncCurrentStageScale();
-    },
-    [handleZoomTouchMove, syncCurrentStageScale],
-  );
-
-  const handleTouchEnd = useCallback(
-    (e: Parameters<typeof handleZoomTouchEnd>[0]) => {
-      handleZoomTouchEnd(e);
-      syncCurrentStageScale();
-    },
-    [handleZoomTouchEnd, syncCurrentStageScale],
-  );
-
-  const { handleDrawing, handleMouseUp, currentLineRef } = useCanvasDrawing(
-    getWorldPointerPosition,
-    isDrawing,
-    tool,
-    drawSettings,
-    eraserSettings,
-    drawLines,
-    setDrawLines,
-    setCurrentStroke,
-  );
+  const { handleDrawing, handleMouseUp, cancelDrawing, currentLineRef } =
+    useCanvasDrawing(
+      getWorldPointerPosition,
+      isDrawing,
+      tool,
+      drawSettings,
+      eraserSettings,
+      drawLines,
+      setDrawLines,
+      setCurrentStroke,
+    );
 
   const {
     contextMenu,
@@ -284,6 +269,7 @@ export const useCanvasEvents = (
 
   const selectionDrag = useCanvasSelectionDrag({
     outlineGroupRef: selectionOutlineGroupRef,
+    deleteGroupRef,
   });
 
   const handleIconPlacement = useCallback(
@@ -548,6 +534,145 @@ export const useCanvasEvents = (
     updateTempDragPreview,
   ]);
 
+  const resetTouchGesture = useCallback(() => {
+    touchGestureRef.current.active = false;
+    touchGestureRef.current.moved = false;
+    touchGestureRef.current.multiTouch = false;
+    touchGestureRef.current.startX = 0;
+    touchGestureRef.current.startY = 0;
+  }, []);
+
+  const handleTouchStart = useCallback(
+    (e: Parameters<typeof handleZoomTouchStart>[0]) => {
+      const touches = e.evt.touches;
+      const gesture = touchGestureRef.current;
+
+      if (touches.length > 1) {
+        gesture.multiTouch = true;
+        if (isDrawing.current) {
+          cancelDrawing();
+        }
+      } else if (touches.length === 1 && !gesture.active) {
+        const touch = touches[0];
+        gesture.active = true;
+        gesture.moved = false;
+        gesture.multiTouch = false;
+        gesture.startX = touch.clientX;
+        gesture.startY = touch.clientY;
+      }
+
+      handleZoomTouchStart(e);
+      syncCurrentStageScale();
+
+      if (isDrawMode && touches.length === 1 && !gesture.multiTouch) {
+        handleDrawing();
+      }
+    },
+    [
+      cancelDrawing,
+      handleDrawing,
+      handleZoomTouchStart,
+      isDrawMode,
+      isDrawing,
+      syncCurrentStageScale,
+    ],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: Parameters<typeof handleZoomTouchMove>[0]) => {
+      const touches = e.evt.touches;
+      const gesture = touchGestureRef.current;
+
+      if (touches.length > 1) {
+        gesture.multiTouch = true;
+        if (isDrawing.current) {
+          cancelDrawing();
+        }
+      } else if (touches.length === 1 && gesture.active) {
+        const touch = touches[0];
+        const distance = Math.hypot(
+          touch.clientX - gesture.startX,
+          touch.clientY - gesture.startY,
+        );
+
+        if (distance > TAP_MOVE_THRESHOLD_PX) {
+          gesture.moved = true;
+        }
+      }
+
+      handleZoomTouchMove(e);
+      syncCurrentStageScale();
+
+      if (isDrawMode && !gesture.multiTouch) {
+        handleStageMouseMove();
+      }
+    },
+    [
+      cancelDrawing,
+      handleStageMouseMove,
+      handleZoomTouchMove,
+      isDrawMode,
+      isDrawing,
+      syncCurrentStageScale,
+    ],
+  );
+
+  const handleTouchEnd = useCallback(
+    (e: Parameters<typeof handleZoomTouchEnd>[0]) => {
+      const gesture = touchGestureRef.current;
+      const remainingTouches = e.evt.touches.length;
+      const isCleanTap =
+        gesture.active && !gesture.moved && !gesture.multiTouch;
+
+      handleZoomTouchEnd(e);
+      syncCurrentStageScale();
+
+      if (isDrawMode) {
+        if (isDrawing.current) {
+          handleStagePointerUp();
+        }
+      } else if (isCleanTap && remainingTouches === 0) {
+        // Konva updates pointer positions on touchend; make sure the lifted
+        // touch is the position used for placement.
+        stageRef.current?.setPointersPositions(e.evt);
+        handleStageClick();
+      }
+
+      if (remainingTouches === 0) {
+        resetTouchGesture();
+      }
+    },
+    [
+      handleStageClick,
+      handleStagePointerUp,
+      handleZoomTouchEnd,
+      isDrawMode,
+      isDrawing,
+      resetTouchGesture,
+      stageRef,
+      syncCurrentStageScale,
+    ],
+  );
+
+  const handleTouchCancel = useCallback(
+    (e: Parameters<typeof handleZoomTouchEnd>[0]) => {
+      if (isDrawing.current) {
+        cancelDrawing();
+      }
+
+      handleZoomTouchEnd(e);
+      syncCurrentStageScale();
+      resetTouchGesture();
+    },
+    [
+      cancelDrawing,
+      handleZoomTouchEnd,
+      isDrawing,
+      resetTouchGesture,
+      syncCurrentStageScale,
+    ],
+  );
+
   const handleStageMouseLeave = useCallback(() => {
     handleMouseUp();
     if (!isSidebarDragActive) {
@@ -678,6 +803,7 @@ export const useCanvasEvents = (
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
+    handleTouchCancel,
     handleDragMove,
     contextMenu,
     selectionDrag,

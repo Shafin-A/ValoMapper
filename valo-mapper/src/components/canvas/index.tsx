@@ -162,7 +162,7 @@ export const MapStage = memo(
       handleTouchStart,
       handleTouchMove,
       handleTouchEnd,
-      handleStageClick,
+      handleTouchCancel,
       handleStageMouseDown,
       handleStagePointerUp,
       handleStageMouseLeave,
@@ -291,18 +291,10 @@ export const MapStage = memo(
           onMouseMove={handleMouseMoveWithCursor}
           onMouseEnter={handleStageMouseEnter}
           onMouseDown={handleStageMouseDown}
-          onTouchStart={(e) => {
-            handleTouchStart(e);
-            handleStageClick();
-          }}
-          onTouchMove={(e) => {
-            handleTouchMove(e);
-            handleStageMouseMove();
-          }}
-          onTouchEnd={(e) => {
-            handleTouchEnd(e);
-            handleStagePointerUp();
-          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchCancel}
           onMouseUp={handleStagePointerUp}
           onMouseLeave={handleStageMouseLeave}
           onContextMenu={

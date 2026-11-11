@@ -14,6 +14,10 @@ export const DeleteZone = ({ deleteGroupRef }: DeleteZoneProps) => {
   const [iconImg, setIconImg] = useState<HTMLImageElement | null>(null);
 
   useEffect(() => {
+    deleteGroupRef.current?.visible(false);
+  }, [deleteGroupRef]);
+
+  useEffect(() => {
     const svgString = renderToStaticMarkup(
       <svg
         width="32"

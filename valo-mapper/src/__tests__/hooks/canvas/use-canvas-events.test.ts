@@ -156,9 +156,22 @@ const createCanvasContext = (
     ...overrides,
   }) as unknown as ReturnType<typeof useCanvas>;
 
+type TouchHandlerEvent = Parameters<
+  ReturnType<typeof useCanvasEvents>["handleTouchStart"]
+>[0];
+
+const createTouchEvent = (
+  touches: Array<{ clientX: number; clientY: number }>,
+  changedTouches: Array<{ clientX: number; clientY: number }> = touches,
+) =>
+  ({
+    evt: { touches, changedTouches },
+  }) as unknown as TouchHandlerEvent;
+
 describe("useCanvasEvents", () => {
   const handleDrawingMock = jest.fn();
   const handleMouseUpMock = jest.fn();
+  const cancelDrawingMock = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -212,6 +225,7 @@ describe("useCanvasEvents", () => {
     mockUseCanvasDrawing.mockReturnValue({
       handleDrawing: handleDrawingMock,
       handleMouseUp: handleMouseUpMock,
+      cancelDrawing: cancelDrawingMock,
       currentLineRef: { current: null },
     });
 
@@ -762,5 +776,199 @@ describe("useCanvasEvents", () => {
     });
     expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
     expect(setIsSidebarDragActive).toHaveBeenCalledWith(false);
+  });
+
+  it("places a selected agent on a clean one-finger tap", () => {
+    let agentsState: AgentCanvas[] = [
+      {
+        id: TEMP_DRAG_ID,
+        name: "Jett",
+        role: "Duelist",
+        isAlly: true,
+        x: 0,
+        y: 0,
+      },
+    ];
+
+    const setAgentsOnCanvas = jest.fn((updater) => {
+      agentsState =
+        typeof updater === "function" ? updater(agentsState) : updater;
+    });
+    const setSelectedCanvasIcon = jest.fn();
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        selectedCanvasIcon: { name: "Jett", role: "Duelist" },
+        setSelectedCanvasIcon,
+        agentsOnCanvas: agentsState,
+        setAgentsOnCanvas,
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleTouchStart(
+        createTouchEvent([{ clientX: 10, clientY: 20 }]),
+      );
+      result.current.handleTouchEnd(
+        createTouchEvent([], [{ clientX: 10, clientY: 20 }]),
+      );
+    });
+
+    expect(setAgentsOnCanvas).toHaveBeenCalled();
+    expect(agentsState[0]).toMatchObject({
+      id: "agent-new",
+      x: 4,
+      y: 8,
+    });
+    expect(setSelectedCanvasIcon).toHaveBeenCalledWith(null);
+  });
+
+  it("does not place a selected agent on a multi-touch gesture", () => {
+    const setAgentsOnCanvas = jest.fn();
+    const setSelectedCanvasIcon = jest.fn();
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        selectedCanvasIcon: { name: "Jett", role: "Duelist" },
+        setSelectedCanvasIcon,
+        agentsOnCanvas: [
+          {
+            id: TEMP_DRAG_ID,
+            name: "Jett",
+            role: "Duelist",
+            isAlly: true,
+            x: 0,
+            y: 0,
+          },
+        ],
+        setAgentsOnCanvas,
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleTouchStart(
+        createTouchEvent([
+          { clientX: 10, clientY: 20 },
+          { clientX: 90, clientY: 80 },
+        ]),
+      );
+      result.current.handleTouchEnd(createTouchEvent([]));
+    });
+
+    expect(setAgentsOnCanvas).not.toHaveBeenCalled();
+    expect(setSelectedCanvasIcon).not.toHaveBeenCalled();
+  });
+
+  it("does not place a selected agent after a pan", () => {
+    const setAgentsOnCanvas = jest.fn();
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        selectedCanvasIcon: { name: "Jett", role: "Duelist" },
+        agentsOnCanvas: [
+          {
+            id: TEMP_DRAG_ID,
+            name: "Jett",
+            role: "Duelist",
+            isAlly: true,
+            x: 0,
+            y: 0,
+          },
+        ],
+        setAgentsOnCanvas,
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleTouchStart(
+        createTouchEvent([{ clientX: 10, clientY: 20 }]),
+      );
+      result.current.handleTouchMove(
+        createTouchEvent([{ clientX: 200, clientY: 200 }]),
+      );
+      result.current.handleTouchEnd(createTouchEvent([]));
+    });
+
+    expect(setAgentsOnCanvas).not.toHaveBeenCalled();
+  });
+
+  it("cancels drawing when a second finger starts a pinch", () => {
+    const isDrawing = { current: true };
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        isDrawMode: true,
+        isDrawing,
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleTouchStart(
+        createTouchEvent([
+          { clientX: 10, clientY: 20 },
+          { clientX: 90, clientY: 80 },
+        ]),
+      );
+    });
+
+    expect(cancelDrawingMock).toHaveBeenCalledTimes(1);
+    expect(handleDrawingMock).not.toHaveBeenCalled();
+  });
+
+  it("starts and finishes drawing on a one-finger touch", () => {
+    const isDrawing = { current: false };
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        isDrawMode: true,
+        isDrawing,
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock() as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleTouchStart(
+        createTouchEvent([{ clientX: 10, clientY: 20 }]),
+      );
+    });
+
+    expect(handleDrawingMock).toHaveBeenCalledTimes(1);
+
+    isDrawing.current = true;
+
+    act(() => {
+      result.current.handleTouchEnd(createTouchEvent([]));
+    });
+
+    expect(handleMouseUpMock).toHaveBeenCalledTimes(1);
   });
 });

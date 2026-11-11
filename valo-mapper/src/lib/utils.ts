@@ -384,6 +384,7 @@ export const handleDragEnd = <T extends BaseCanvasItem>(
   const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
 
   if (deleteGroupRef?.current) {
+    deleteGroupRef.current.visible(false);
     deleteGroupRef.current.opacity(0.5);
   }
 
@@ -440,6 +441,7 @@ export const handleDragMove = (
 
   const group = e.target;
   const deleteGroup = deleteGroupRef.current;
+  deleteGroup.visible(true);
 
   const deleteZone = {
     x: deleteGroup.x(),

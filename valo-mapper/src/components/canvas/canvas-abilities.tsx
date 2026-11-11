@@ -197,6 +197,7 @@ export const CanvasAbilities = memo(function CanvasAbilities({
     const isOverDeleteGroup = node.getAttr("isOverDeleteGroup") as boolean;
 
     if (deleteGroupRef.current) {
+      deleteGroupRef.current.visible(false);
       deleteGroupRef.current.opacity(0.5);
     }
 

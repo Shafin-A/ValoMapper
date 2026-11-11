@@ -28,10 +28,12 @@ export interface SelectionDragController {
 
 interface UseCanvasSelectionDragOptions {
   outlineGroupRef?: React.RefObject<Konva.Group | null>;
+  deleteGroupRef?: React.RefObject<Konva.Group | null>;
 }
 
 export const useCanvasSelectionDrag = ({
   outlineGroupRef,
+  deleteGroupRef,
 }: UseCanvasSelectionDragOptions = {}): SelectionDragController => {
   const {
     selectedCanvasItems,
@@ -249,6 +251,8 @@ export const useCanvasSelectionDrag = ({
       const id = event.target.id();
       const group = groupDragRef.current;
 
+      deleteGroupRef?.current?.visible(false);
+
       if (!group && !isMultiSelected(id)) {
         if (selectedIdSet.has(id)) {
           requestAnimationFrame(() => resetGroupDrag());
@@ -296,6 +300,7 @@ export const useCanvasSelectionDrag = ({
     },
     [
       collections,
+      deleteGroupRef,
       deleteItems,
       getRegisteredNode,
       isMultiSelected,

@@ -168,6 +168,13 @@ export const useCanvasDrawing = (
     notifyLineRemoved,
   ]);
 
+  const cancelDrawing = useCallback(() => {
+    drawingBufferRef.current = [];
+    erasedLineIdsRef.current.clear();
+    isDrawing.current = false;
+    setCurrentStroke(null);
+  }, [isDrawing, setCurrentStroke]);
+
   const handleMouseUp = useCallback(() => {
     if (isDrawing.current && drawingBufferRef.current.length > 0) {
       const isTwoPoint =
@@ -227,6 +234,7 @@ export const useCanvasDrawing = (
   return {
     handleDrawing,
     handleMouseUp,
+    cancelDrawing,
     currentLineRef,
   };
 };
