@@ -1,5 +1,6 @@
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -45,7 +46,7 @@ import {
 } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { getAgentImgSrc, isAgent } from "@/lib/utils";
-import { Loader2, AlertCircle, Info } from "lucide-react";
+import { Loader2, AlertCircle, X } from "lucide-react";
 import { Layer, Stage } from "react-konva";
 import { AbilityIcon, CanvasIcon } from "@/components/canvas-icons";
 import {
@@ -53,12 +54,8 @@ import {
   getAbilityVariants,
   resolveAbilityVariant,
 } from "@/lib/consts/configs/agent-icon/consts";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { InfoHint } from "@/components/shared/info-hint";
 
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
@@ -94,6 +91,7 @@ export const AgentsSidebar = ({
     abilitiesOnCanvas,
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
+    setToolIconsOnCanvas,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
     isSidebarDragActive,
@@ -180,9 +178,12 @@ export const AgentsSidebar = ({
     ) => {
       setSelectedCanvasIcon(icon);
 
-      // Clear any stale TEMP_DRAG_ID from the other list before adding to this one
+      // Clear any stale TEMP_DRAG_ID from the other lists before adding to this one
       setAgentsOnCanvas((prev) => prev.filter((c) => c.id !== TEMP_DRAG_ID));
       setAbilitiesOnCanvas((prev) => prev.filter((c) => c.id !== TEMP_DRAG_ID));
+      setToolIconsOnCanvas((prev) =>
+        prev.filter((c) => c.id !== TEMP_DRAG_ID),
+      );
 
       const newCanvasIcon = {
         ...icon,
@@ -199,14 +200,28 @@ export const AgentsSidebar = ({
         return [...withoutDrag, newCanvasIcon];
       });
     },
-    [isAlly, setAgentsOnCanvas, setAbilitiesOnCanvas, setSelectedCanvasIcon],
+    [
+      isAlly,
+      setAgentsOnCanvas,
+      setAbilitiesOnCanvas,
+      setSelectedCanvasIcon,
+      setToolIconsOnCanvas,
+    ],
   );
 
   const clearSelection = useCallback(() => {
     setSelectedCanvasIcon(null);
     setAgentsOnCanvas((prev) => prev.filter((c) => c.id !== TEMP_DRAG_ID));
     setAbilitiesOnCanvas((prev) => prev.filter((c) => c.id !== TEMP_DRAG_ID));
-  }, [setAgentsOnCanvas, setAbilitiesOnCanvas, setSelectedCanvasIcon]);
+    setToolIconsOnCanvas((prev) =>
+      prev.filter((c) => c.id !== TEMP_DRAG_ID),
+    );
+  }, [
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    setSelectedCanvasIcon,
+    setToolIconsOnCanvas,
+  ]);
 
   const resolveAbility = useCallback(
     (ability: AbilityIconDefinition): AbilityIconItem => {
@@ -455,28 +470,33 @@ export const AgentsSidebar = ({
           <div className="flex flex-col gap-3 p-2">
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold">Agents</span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="inline-flex items-center justify-center"
-                    type="button"
-                  >
-                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
+              <div className="flex items-center gap-1">
+                <InfoHint label="Agent sidebar help">
                   <div className="space-y-2">
                     <p>
-                      Press E while hovering an agent/ability on the map to
-                      delete it
+                      {isMobile
+                        ? "Tap an agent or ability to select it, then tap the map to place it. Drag the icon onto the map to place it directly."
+                        : "Press E while hovering an agent/ability on the map to delete it"}
                     </p>
                     <p>
-                      Choose an agent/ability, then click the map to place it,
-                      or drag it directly onto the map
+                      {isMobile
+                        ? "Drag an item to the trash zone to delete it. Pinch to zoom and drag the map to pan."
+                        : "Choose an agent/ability, then click the map to place it, or drag it directly onto the map"}
                     </p>
                   </div>
-                </TooltipContent>
-              </Tooltip>
+                </InfoHint>
+                {isMobile && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10"
+                    aria-label="Close agents sidebar"
+                    onClick={() => setSidebarOpen?.(false)}
+                  >
+                    <X />
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

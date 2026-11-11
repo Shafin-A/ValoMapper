@@ -58,7 +58,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
       <Button
         variant="default"
         size="icon"
-        className="absolute -top-2 -left-2 rounded-full size-6"
+        className="absolute -top-2 -left-2 size-9 rounded-full sm:size-6"
         onClick={onClose}
       >
         <X />
@@ -120,7 +120,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
                       type="button"
                       variant="secondary"
                       size="icon"
-                      className="absolute -top-2 -right-2 size-5 rounded-full shadow-sm"
+                      className="absolute -top-2 -right-2 size-7 rounded-full shadow-sm sm:size-5"
                       onPointerDown={(event) => {
                         event.preventDefault();
                         event.stopPropagation();

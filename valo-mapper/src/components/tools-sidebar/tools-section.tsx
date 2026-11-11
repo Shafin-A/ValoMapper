@@ -20,7 +20,6 @@ import {
   Scan,
   Trash2,
   Undo,
-  Info,
   Eye,
   type LucideIcon,
 } from "lucide-react";
@@ -39,6 +38,8 @@ import { useRecenterCanvas } from "@/hooks/use-recenter-canvas";
 import { ImageUploadButton } from "./image-upload-button";
 import { TextAddButton } from "./text-add-button";
 import { MapStageHandle } from "@/components/canvas";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { InfoHint } from "@/components/shared/info-hint";
 
 export interface ToolsSectionAction {
   icon: LucideIcon;
@@ -64,6 +65,7 @@ export const ToolsSection = ({
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [openLineupDialog, setOpenLineupDialog] = useState(false);
   const [visionConesOpen, setVisionConesOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const {
     undo,
@@ -135,23 +137,24 @@ export const ToolsSection = ({
       <div className="space-y-2 mt-4" data-tour="tools-section">
         <div className="flex items-center justify-between">
           <span className="text-base font-semibold">Tools</span>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className="inline-flex items-center justify-center"
-                type="button"
-              >
-                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <div className="space-y-1">
-                <p>Press Q to enter draw mode </p>
-                <p>Press W to enter erase mode </p>
-                <p>Press E while hovering an element to delete it</p>
-                <p>Press R to recenter the canvas</p>
-                <p>Press Ctrl+Z/Ctrl+Shift+Z to undo/redo</p>
-              </div>
+          <InfoHint label="About tools">
+            <div className="max-w-xs">
+              {isMobile ? (
+                <div className="space-y-1">
+                  <p>Tap Draw or Erase, then drag on the map.</p>
+                  <p>Tap Undo/Redo to fix mistakes.</p>
+                  <p>Drag an item to the trash zone to delete it.</p>
+                  <p>Pinch to zoom and drag the map to pan.</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <p>Press Q to enter draw mode </p>
+                  <p>Press W to enter erase mode </p>
+                  <p>Press E while hovering an element to delete it</p>
+                  <p>Press R to recenter the canvas</p>
+                  <p>Press Ctrl+Z/Ctrl+Shift+Z to undo/redo</p>
+                </div>
+              )}
               <div className="mt-2">
                 <p>
                   {saveAction
@@ -159,16 +162,17 @@ export const ToolsSection = ({
                     : "Add text, images, and drawings here. Also recenter the view, screenshot the canvas, save to folders, sync changes to the lobby, or undo/redo any action."}
                 </p>
               </div>
-            </TooltipContent>
-          </Tooltip>
+            </div>
+          </InfoHint>
         </div>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-5 gap-2 [&>button]:h-11 sm:[&>button]:h-10">
           <div className="invisible" aria-hidden="true" />
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="lg"
+                aria-label="Recenter canvas"
                 onClick={handleRecenterCanvas}
                 disabled={!stageRef}
               >
@@ -215,6 +219,7 @@ export const ToolsSection = ({
                       data-tour="save-strategy"
                       variant="ghost"
                       size="lg"
+                      aria-label={!isAuthenticated ? "Log in to save" : "Save"}
                       disabled={!isAuthenticated}
                     >
                       <Save />
@@ -237,6 +242,7 @@ export const ToolsSection = ({
                 disabled={!canUndo}
                 variant="ghost"
                 size="lg"
+                aria-label="Undo"
               >
                 <Undo />
               </Button>
@@ -253,6 +259,7 @@ export const ToolsSection = ({
                 disabled={!canRedo}
                 variant="ghost"
                 size="lg"
+                aria-label="Redo"
               >
                 <Redo />
               </Button>
@@ -266,6 +273,7 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <Toggle
                 size="lg"
+                aria-label="Draw"
                 data-state={isDrawMode && tool === "pencil" ? "on" : "off"}
                 pressed={isDrawMode && tool === "pencil"}
                 onPressedChange={(pressed) =>
@@ -284,6 +292,7 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <Toggle
                 size="lg"
+                aria-label="Erase"
                 data-state={isDrawMode && tool === "eraser" ? "on" : "off"}
                 pressed={isDrawMode && tool === "eraser"}
                 onPressedChange={(pressed) =>
@@ -303,6 +312,7 @@ export const ToolsSection = ({
               <Toggle
                 size="lg"
                 variant="destructive"
+                aria-label="Delete options"
                 data-state={isDeleteSettingsOpen ? "on" : "off"}
                 pressed={isDeleteSettingsOpen}
                 onPressedChange={handleDeletePressedChange}
@@ -319,6 +329,7 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <TextAddButton
                 mapPosition={mapPosition}
+                aria-label="Add text"
                 onBeforeAdd={() => {
                   setVisionConesOpen(false);
                 }}
@@ -334,6 +345,7 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <ImageUploadButton
                 mapPosition={mapPosition}
+                aria-label="Add image"
                 onImageAdded={notifyImageAdded}
                 disabled={!stageRef}
               />
@@ -347,6 +359,7 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <Toggle
                 size="lg"
+                aria-label="Vision cones"
                 data-state={visionConesOpen ? "on" : "off"}
                 pressed={visionConesOpen}
                 onPressedChange={(pressed) => {
@@ -368,6 +381,7 @@ export const ToolsSection = ({
               <Button
                 variant="ghost"
                 size="lg"
+                aria-label="Take screenshot"
                 onClick={handleScreenshot}
                 disabled={!stageRef}
               >
@@ -383,7 +397,11 @@ export const ToolsSection = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="lg">
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    aria-label="Add lineup"
+                  >
                     <MapPinned />
                   </Button>
                 </DialogTrigger>

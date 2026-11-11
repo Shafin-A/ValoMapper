@@ -32,15 +32,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CanvasBackground, MapOption } from "@/lib/types";
 import type { MatchPlayers, MatchRound } from "@/lib/matches";
 import { Vector2d } from "konva/lib/types";
+import { AlertCircle, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Info,
-  Loader2,
-} from "lucide-react";
-import { RefObject, Suspense, useEffect } from "react";
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  Suspense,
+  useEffect,
+} from "react";
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { MapStageHandle } from "@/components/canvas";
 import { IconsSection } from "./icons-section";
 import { MapSelect } from "./map-select-button";
@@ -55,6 +56,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InfoHint } from "@/components/shared/info-hint";
 
 interface MatchReviewControls {
   mapName: string;
@@ -74,6 +76,7 @@ type ToolsSidebarVariant = "lobby" | "match-review" | "replay";
 
 interface ToolsSidebarProps {
   sidebarOpen: boolean;
+  setSidebarOpen?: Dispatch<SetStateAction<boolean>>;
   mapPosition: Vector2d;
   stageRef?: RefObject<MapStageHandle | null>;
   reviewControls?: MatchReviewControls;
@@ -142,6 +145,7 @@ const PhaseButton = ({
 
 export const ToolsSidebar = ({
   sidebarOpen,
+  setSidebarOpen,
   mapPosition,
   stageRef,
   reviewControls,
@@ -149,6 +153,7 @@ export const ToolsSidebar = ({
   variant = "lobby",
   showBackgroundSettings = false,
 }: ToolsSidebarProps) => {
+  const isMobile = useIsMobile();
   const isReplayVariant = variant === "replay";
   const {
     selectedMap,
@@ -193,6 +198,9 @@ export const ToolsSidebar = ({
   const handleMapSelect = (option: MapOption) => {
     setSelectedMap(option);
     resetState(true);
+    if (isMobile) {
+      setSidebarOpen?.(false);
+    }
   };
 
   const handleRotationToggle = () => {
@@ -270,22 +278,27 @@ export const ToolsSidebar = ({
           <div className="flex flex-col gap-3 p-2">
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold">Maps</span>
-              <Popover open={mapSettingsOpen} onOpenChange={setMapSettingsOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    disabled={isLoadingLobby || isErrorLobby}
-                  >
-                    <Settings
-                      className={`h-4 w-4 transition-transform duration-300 ${
-                        mapSettingsOpen ? "rotate-90" : ""
-                      }`}
-                    />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56" align="end">
+              <div className="flex items-center gap-1">
+                <Popover
+                  open={mapSettingsOpen}
+                  onOpenChange={setMapSettingsOpen}
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 sm:h-6 sm:w-6"
+                      aria-label="Map settings"
+                      disabled={isLoadingLobby || isErrorLobby}
+                    >
+                      <Settings
+                        className={`h-4 w-4 transition-transform duration-300 ${
+                          mapSettingsOpen ? "rotate-90" : ""
+                        }`}
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56" align="end">
                   <div className="space-y-4">
                     <h4 className="font-medium text-sm">Map Settings</h4>
                     <div className="flex flex-col gap-3">
@@ -350,7 +363,19 @@ export const ToolsSidebar = ({
                     </div>
                   </div>
                 </PopoverContent>
-              </Popover>
+                </Popover>
+                {isMobile && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10"
+                    aria-label="Close maps sidebar"
+                    onClick={() => setSidebarOpen?.(false)}
+                  >
+                    <X />
+                  </Button>
+                )}
+              </div>
             </div>
             {isReplayVariant ? (
               <MapSelect
@@ -510,28 +535,29 @@ export const ToolsSidebar = ({
               <div className="space-y-2 mt-4" data-tour="phases">
                 <div className="flex items-center justify-between">
                   <span className="text-base font-semibold">Phases</span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        className="inline-flex items-center justify-center"
-                        type="button"
-                      >
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <div className="space-y-2">
+                  <InfoHint label="About phases">
+                    <div className="space-y-2">
+                      {isMobile ? (
                         <p>
-                          Press A and D to switch back and forth between phases
+                          Tap a phase number to switch phases. Build your
+                          strategy step by step by placing agents and abilities
+                          at different phases.
                         </p>
-                        <p>
-                          Use Phases to build out and detail your strategy step
-                          by step by placing agents and abilites at different
-                          phases
-                        </p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
+                      ) : (
+                        <>
+                          <p>
+                            Press A and D to switch back and forth between
+                            phases
+                          </p>
+                          <p>
+                            Use Phases to build out and detail your strategy
+                            step by step by placing agents and abilites at
+                            different phases
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </InfoHint>
                 </div>
                 <ToggleGroup
                   type="single"
@@ -570,7 +596,7 @@ export const ToolsSidebar = ({
                 stageRef={stageRef}
                 saveAction={saveAction}
               />
-              <IconsSection mapPosition={mapPosition} />
+              <IconsSection setSidebarOpen={setSidebarOpen} />
             </div>
           </Suspense>
 
