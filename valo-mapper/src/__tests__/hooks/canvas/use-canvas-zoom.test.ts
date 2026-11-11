@@ -71,6 +71,10 @@ const createStageMock = (
 };
 
 describe("useCanvasZoom", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it("positions and scales the delete group on drag move", () => {
     const stage = createStageMock(2, { x: 10, y: 20 });
     const stageRef: RefObject<Stage | null> = {
@@ -147,6 +151,60 @@ describe("useCanvasZoom", () => {
     expect(firstPositionCall?.x).toBeCloseTo(-25, 5);
     expect(firstPositionCall?.y).toBeCloseTo(-25, 5);
     expect(deleteGroup.position).toHaveBeenCalled();
+  });
+
+  it("allows a deeper zoom on touch devices", () => {
+    const matchMediaSpy = jest
+      .spyOn(window, "matchMedia")
+      .mockReturnValue({ matches: true } as MediaQueryList);
+
+    const stage = createStageMock(7, { x: 0, y: 0 });
+    const stageRef: RefObject<Stage | null> = {
+      current: stage as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasZoom(stageRef, 1, false));
+
+    const wheelEvent = {
+      evt: {
+        deltaY: -1,
+        ctrlKey: false,
+        preventDefault: jest.fn(),
+      },
+    } as unknown as KonvaEventObject<WheelEvent>;
+
+    result.current.handleWheel(wheelEvent);
+
+    expect(stage.scale).toHaveBeenCalledWith({ x: 8, y: 8 });
+
+    matchMediaSpy.mockRestore();
+  });
+
+  it("keeps the desktop max zoom on fine pointers", () => {
+    const matchMediaSpy = jest
+      .spyOn(window, "matchMedia")
+      .mockReturnValue({ matches: false } as MediaQueryList);
+
+    const stage = createStageMock(7, { x: 0, y: 0 });
+    const stageRef: RefObject<Stage | null> = {
+      current: stage as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasZoom(stageRef, 1, false));
+
+    const wheelEvent = {
+      evt: {
+        deltaY: -1,
+        ctrlKey: false,
+        preventDefault: jest.fn(),
+      },
+    } as unknown as KonvaEventObject<WheelEvent>;
+
+    result.current.handleWheel(wheelEvent);
+
+    expect(stage.scale).toHaveBeenCalledWith({ x: 4, y: 4 });
+
+    matchMediaSpy.mockRestore();
   });
 
   it("handles pinch start, move, and end", () => {

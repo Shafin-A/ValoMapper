@@ -3,6 +3,7 @@ import {
   MIN_ZOOM_SCALE,
   SCALE_FACTOR,
   SIDEBAR_WIDTH,
+  TOUCH_MAX_ZOOM_SCALE,
 } from "@/lib/consts";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
@@ -10,11 +11,18 @@ import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
 import { useCallback, useEffect, useRef } from "react";
 
+const getMaxZoomScale = () =>
+  typeof window !== "undefined" &&
+  (window.matchMedia?.("(pointer: coarse)")?.matches ?? false)
+    ? TOUCH_MAX_ZOOM_SCALE
+    : MAX_ZOOM_SCALE;
+
 export const useCanvasZoom = (
   stageRef: React.RefObject<Stage | null>,
   baseScale: number,
   isDrawMode: boolean,
 ) => {
+  const maxZoomScale = getMaxZoomScale();
   const pinchInitialDistanceRef = useRef<number | null>(null);
   const pinchInitialScaleRef = useRef<number | null>(null);
   const pinchCenterRef = useRef<Vector2d | null>(null);
@@ -92,7 +100,7 @@ export const useCanvasZoom = (
 
       const clampedZoomScale = Math.max(
         MIN_ZOOM_SCALE,
-        Math.min(MAX_ZOOM_SCALE, newZoomScale),
+        Math.min(maxZoomScale, newZoomScale),
       );
 
       const newTotalScale = baseScale * clampedZoomScale;
@@ -107,7 +115,7 @@ export const useCanvasZoom = (
 
       handleDragMove();
     },
-    [handleDragMove, stageRef, baseScale],
+    [handleDragMove, stageRef, baseScale, maxZoomScale],
   );
 
   const handleTouchStart = useCallback(
@@ -178,7 +186,7 @@ export const useCanvasZoom = (
 
       const clampedZoomScale = Math.max(
         MIN_ZOOM_SCALE,
-        Math.min(MAX_ZOOM_SCALE, newTotalScaleRaw / baseScale),
+        Math.min(maxZoomScale, newTotalScaleRaw / baseScale),
       );
       const newTotalScale = clampedZoomScale * baseScale;
 
@@ -197,7 +205,7 @@ export const useCanvasZoom = (
       stage.position(newPos);
       handleDragMove();
     },
-    [baseScale, handleDragMove, stageRef],
+    [baseScale, handleDragMove, maxZoomScale, stageRef],
   );
 
   const handleTouchEnd = useCallback(

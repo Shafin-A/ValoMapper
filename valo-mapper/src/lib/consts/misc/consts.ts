@@ -4,6 +4,8 @@ export const SIDEBAR_WIDTH = 320;
 export const SCALE_FACTOR = 1.25;
 export const MAP_SIZE = 1000;
 export const MAX_ZOOM_SCALE = 4;
+
+export const TOUCH_MAX_ZOOM_SCALE = 8;
 export const MIN_ZOOM_SCALE = 1;
 
 export const VIRTUAL_WIDTH = 2560;
