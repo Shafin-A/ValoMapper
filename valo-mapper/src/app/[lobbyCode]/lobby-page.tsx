@@ -4,6 +4,7 @@ import { AgentsSidebar } from "@/components/agents-sidebar";
 import { MapStage, MapStageHandle } from "@/components/canvas";
 import { MobileCanvasToolbar } from "@/components/canvas/mobile-canvas-toolbar";
 import { SiteHeader } from "@/components/layout/site-header";
+import { MobileOnboarding } from "@/components/onboarding/mobile-onboarding";
 import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { ToolsSidebar } from "@/components/tools-sidebar";
 import { TourAutoAdvance } from "@/components/tour/tour-auto-advance";
@@ -335,6 +336,15 @@ const LobbyEditPage = () => {
       <AgentsSidebar
         sidebarOpen={sidebarState.rightSidebarOpen}
         setSidebarOpen={sidebarState.setRightSidebarOpen}
+      />
+
+      <MobileOnboarding
+        ready={
+          isScaleReady &&
+          isAssetWarmupReady &&
+          !isLoadingLobby &&
+          !isErrorLobby
+        }
       />
     </div>
   );
