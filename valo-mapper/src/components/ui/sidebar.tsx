@@ -197,7 +197,12 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className={cn(
+            "bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] [&>button]:hidden",
+            side === "left"
+              ? "pl-[env(safe-area-inset-left)]"
+              : "pr-[env(safe-area-inset-right)]",
+          )}
           onOpenAutoFocus={(event) => event.preventDefault()}
           style={
             {

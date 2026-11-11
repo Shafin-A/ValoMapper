@@ -514,11 +514,12 @@ const MatchReviewPage = () => {
   }
 
   return (
-    <div className="[--header-height:calc(--spacing(14))]">
+    <div className="[--header-height:calc(--spacing(14)_+_env(safe-area-inset-top))]">
       <SiteHeader {...sidebarState} />
 
       <ToolsSidebar
         sidebarOpen={sidebarState.leftSidebarOpen}
+        setSidebarOpen={sidebarState.setLeftSidebarOpen}
         mapPosition={mapPosition}
         stageRef={stageRef}
         saveAction={{

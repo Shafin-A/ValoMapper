@@ -113,7 +113,7 @@ export const ReplayEntryPage = () => {
   }, [router]);
 
   return (
-    <div className="[--header-height:calc(--spacing(14))] min-h-screen">
+    <div className="[--header-height:calc(--spacing(14)_+_env(safe-area-inset-top))] min-h-screen">
       <SiteHeader {...sidebarState} showSidebarToggles={false} />
 
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-10 md:py-16">

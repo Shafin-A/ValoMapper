@@ -292,12 +292,13 @@ export const ReplayPlayer = ({
   } as CSSProperties;
 
   return (
-    <div className="[--header-height:calc(--spacing(14))]">
+    <div className="[--header-height:calc(--spacing(14)_+_env(safe-area-inset-top))]">
       <SiteHeader {...sidebarState} />
 
       <ToolsSidebar
         variant="replay"
         sidebarOpen={sidebarState.leftSidebarOpen}
+        setSidebarOpen={sidebarState.setLeftSidebarOpen}
         mapPosition={mapPosition}
         stageRef={stageRef}
         saveAction={{

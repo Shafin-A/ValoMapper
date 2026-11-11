@@ -242,13 +242,14 @@ const LobbyEditPage = () => {
   const isNotFound = lobbyError?.message?.includes("not found");
 
   return (
-    <div className="[--header-height:calc(--spacing(14))]">
+    <div className="[--header-height:calc(--spacing(14)_+_env(safe-area-inset-top))]">
       <TourAutoAdvance />
 
       <SiteHeader {...sidebarState} />
 
       <ToolsSidebar
         sidebarOpen={sidebarState.leftSidebarOpen}
+        setSidebarOpen={sidebarState.setLeftSidebarOpen}
         mapPosition={MAP_POSITION}
         stageRef={stageRef}
         showBackgroundSettings

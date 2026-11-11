@@ -65,12 +65,12 @@ export const SiteHeader = ({
 
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
-      <div className="flex h-(--header-height) w-full items-center justify-between gap-2 px-2">
-        <div className="flex items-center gap-2 h-full">
+      <div className="flex h-(--header-height) w-full items-center justify-between gap-1 px-2 pt-[env(safe-area-inset-top)] sm:gap-2">
+        <div className="flex h-full items-center gap-1 sm:gap-2">
           {showSidebarToggles && (
             <>
               <Button
-                className="h-8 w-8"
+                className="h-10 w-10 sm:h-8 sm:w-8"
                 variant="ghost"
                 size="icon"
                 aria-label="Toggle left sidebar"
@@ -78,13 +78,16 @@ export const SiteHeader = ({
               >
                 <SidebarIcon />
               </Button>
-              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Separator
+                orientation="vertical"
+                className="mr-2 hidden h-4 sm:block"
+              />
             </>
           )}
 
           <div className="flex items-center gap-2">
-            <Link href="/">
-              <span className="font-bold">
+            <Link href="/" className="whitespace-nowrap">
+              <span className="text-sm font-bold sm:text-base">
                 <span className="bg-linear-to-r from-foreground to-primary bg-clip-text text-transparent">
                   ValoMapper
                 </span>
@@ -102,11 +105,11 @@ export const SiteHeader = ({
           )}
         </div>
 
-        <div className="flex items-center gap-2 h-full">
+        <div className="flex h-full items-center gap-1 sm:gap-2">
           <Button
             asChild
             variant="ghost"
-            className={`h-8 px-2.5 text-sm font-medium ${
+            className={`h-10 px-2 text-sm font-medium sm:h-8 sm:px-2.5 ${
               pathname?.startsWith("/replay") ? "text-white" : "text-white/70"
             }`}
           >
@@ -129,7 +132,7 @@ export const SiteHeader = ({
                 aria-label="Join the ValoMapper Discord"
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "icon" }),
-                  "h-8 w-8 text-white/70 transition-colors hover:text-white",
+                  "h-10 w-10 text-white/70 transition-colors hover:text-white sm:h-8 sm:w-8",
                   showSidebarToggles && "hidden sm:inline-flex",
                 )}
               >
@@ -144,7 +147,7 @@ export const SiteHeader = ({
           <Dialog>
             <DialogTrigger asChild>
               <Button
-                className="h-8 w-8"
+                className="h-10 w-10 sm:h-8 sm:w-8"
                 variant="ghost"
                 size="icon"
                 aria-label="Open help"
@@ -168,7 +171,7 @@ export const SiteHeader = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className="h-8 w-8"
+                className="h-10 w-10 sm:h-8 sm:w-8"
                 variant="ghost"
                 size="icon"
                 aria-label="Account menu"
@@ -217,9 +220,12 @@ export const SiteHeader = ({
 
           {showSidebarToggles && (
             <>
-              <Separator orientation="vertical" className="ml-2 h-4" />
+              <Separator
+                orientation="vertical"
+                className="ml-2 hidden h-4 sm:block"
+              />
               <Button
-                className="h-8 w-8"
+                className="h-10 w-10 sm:h-8 sm:w-8"
                 variant="ghost"
                 size="icon"
                 aria-label="Toggle right sidebar"
