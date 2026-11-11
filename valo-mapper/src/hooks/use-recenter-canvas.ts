@@ -1,9 +1,13 @@
 import { useCallback } from "react";
 import { MapStageHandle } from "@/components/canvas";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { getCanvasFitScale } from "@/lib/canvas-scale";
 
 export const useRecenterCanvas = (
   stageRef?: React.RefObject<MapStageHandle | null>,
 ): (() => void) => {
+  const isMobile = useIsMobile();
+
   return useCallback(() => {
     const stageHandle = stageRef?.current;
     if (!stageHandle) return;
@@ -19,9 +23,11 @@ export const useRecenterCanvas = (
     const stageWidth = stage.width();
     const stageHeight = stage.height();
 
-    const scaleX = containerWidth / stageWidth;
-    const scaleY = containerHeight / stageHeight;
-    const baseScale = Math.min(scaleX, scaleY);
+    const baseScale = getCanvasFitScale(
+      containerWidth,
+      containerHeight,
+      isMobile,
+    );
 
     const scaledWidth = stageWidth * baseScale;
     const scaledHeight = stageHeight * baseScale;
@@ -34,5 +40,5 @@ export const useRecenterCanvas = (
     stage.batchDraw();
 
     stageHandle.handleDragMove();
-  }, [stageRef]);
+  }, [isMobile, stageRef]);
 };

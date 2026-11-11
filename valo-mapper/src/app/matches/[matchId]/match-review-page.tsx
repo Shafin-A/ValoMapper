@@ -18,12 +18,14 @@ import {
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
   buildMatchReviewRoundStates,
   cloneUndoableState,
 } from "@/lib/match-review";
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH, MAP_SIZE } from "@/lib/consts";
+import { getCanvasFitScale } from "@/lib/canvas-scale";
 import { getPlayerSummary } from "@/lib/matches";
 import { UndoableState } from "@/lib/types";
 import { AlertCircle, ArrowUpRight, Loader2 } from "lucide-react";
@@ -61,6 +63,7 @@ const MatchReviewPage = () => {
   } = useMatchSummary(matchId ?? null, true, true);
   const createLobbyMutation = useCreateLobby();
 
+  const isMobile = useIsMobile();
   const sidebarState = useSidebarState();
   const divRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<MapStageHandle | null>(null);
@@ -228,9 +231,11 @@ const MatchReviewPage = () => {
 
       if (containerWidth === 0 || containerHeight === 0) return;
 
-      const scaleX = containerWidth / VIRTUAL_WIDTH;
-      const scaleY = containerHeight / VIRTUAL_HEIGHT;
-      const scale = Math.min(scaleX, scaleY);
+      const scale = getCanvasFitScale(
+        containerWidth,
+        containerHeight,
+        isMobile,
+      );
 
       setStageScale(scale);
       markScaleReady();
@@ -276,7 +281,7 @@ const MatchReviewPage = () => {
       window.clearTimeout(fallbackTimeout);
       window.removeEventListener("resize", updateScale);
     };
-  }, []);
+  }, [isMobile]);
 
   const snapshotCurrentRoundState = useCallback((): UndoableState => {
     return cloneUndoableState({

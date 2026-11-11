@@ -9,6 +9,7 @@ import { ToolsSidebar } from "@/components/tools-sidebar";
 import { TourAutoAdvance } from "@/components/tour/tour-auto-advance";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useCanvasActions } from "@/contexts/canvas-context";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
   clearPendingLobbyToast,
@@ -17,6 +18,7 @@ import {
 import { AGENTS, MAP_OPTIONS, MAP_SIZE } from "@/lib/consts";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts/misc/consts";
+import { getCanvasFitScale } from "@/lib/canvas-scale";
 import { preloadImages, preloadImagesWithTimeout } from "@/lib/image-preload";
 import { getAgentImgSrc } from "@/lib/utils";
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -51,6 +53,7 @@ const LobbyEditPage = () => {
   const [isAssetWarmupReady, setIsAssetWarmupReady] = useState(false);
   const hasCompletedInitialAssetWarmup = useRef(false);
 
+  const isMobile = useIsMobile();
   const sidebarState = useSidebarState();
 
   const { isLoadingLobby, isErrorLobby, lobbyError, getCurrentStateForSync } =
@@ -156,9 +159,11 @@ const LobbyEditPage = () => {
 
       if (containerWidth === 0 || containerHeight === 0) return;
 
-      const scaleX = containerWidth / VIRTUAL_WIDTH;
-      const scaleY = containerHeight / VIRTUAL_HEIGHT;
-      const scale = Math.min(scaleX, scaleY);
+      const scale = getCanvasFitScale(
+        containerWidth,
+        containerHeight,
+        isMobile,
+      );
 
       setStageScale(scale);
       markScaleReady();
@@ -203,7 +208,7 @@ const LobbyEditPage = () => {
       window.clearTimeout(fallbackTimeout);
       window.removeEventListener("resize", updateScale);
     };
-  }, []);
+  }, [isMobile]);
 
   const params = useParams();
 

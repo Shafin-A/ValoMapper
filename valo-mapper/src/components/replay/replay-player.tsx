@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useReplayPlayback } from "@/hooks/use-replay-playback";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { MAP_SIZE, SIDEBAR_WIDTH, VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts";
+import { getCanvasFitScale } from "@/lib/canvas-scale";
 import {
   buildReplayInitialState,
   buildReplaySnapshotState,
@@ -72,6 +74,7 @@ export const ReplayPlayer = ({
     firstRound?.roundNumber ?? 1,
   );
   const [stageScale, setStageScale] = useState(1);
+  const isMobile = useIsMobile();
   const [isScaleReady, setIsScaleReady] = useState(false);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [hideDeadAgents, setHideDeadAgents] = useState(false);
@@ -167,10 +170,9 @@ export const ReplayPlayer = ({
 
       if (containerWidth === 0 || containerHeight === 0) return;
 
-      const scaleX = containerWidth / VIRTUAL_WIDTH;
-      const scaleY = containerHeight / VIRTUAL_HEIGHT;
-
-      setStageScale(Math.min(scaleX, scaleY));
+      setStageScale(
+        getCanvasFitScale(containerWidth, containerHeight, isMobile),
+      );
       markScaleReady();
     };
 
@@ -203,7 +205,7 @@ export const ReplayPlayer = ({
       window.clearTimeout(fallbackTimeout);
       window.removeEventListener("resize", updateScale);
     };
-  }, []);
+  }, [isMobile]);
 
   const handleSelectRound = useCallback((roundNumber: number) => {
     setSelectedRoundNumber(roundNumber);
