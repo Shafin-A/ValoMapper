@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { tourSteps } from "@/components/tour/tour-steps";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { hasSeenOnboarding } from "@/lib/onboarding";
 
 const TourContent = ({ children }: { children: React.ReactNode }) => {
   const { hasCompletedTour, startTour, isTourOpen } = useTour();
@@ -19,7 +20,13 @@ const TourContent = ({ children }: { children: React.ReactNode }) => {
   const isLobbyPage = pathname ? LOBBY_ID_REGEX.test(pathname) : false;
 
   useEffect(() => {
-    if (!hasCompletedTour && !isTourOpen && isLobbyPage && !isMobile) {
+    if (
+      !hasCompletedTour &&
+      !isTourOpen &&
+      isLobbyPage &&
+      !isMobile &&
+      !hasSeenOnboarding()
+    ) {
       const timer = setTimeout(() => {
         startTour();
       }, 1000);
@@ -74,10 +81,11 @@ export const TourProviderWrapper = ({
 const TourContentWrapper = ({ children }: { children: React.ReactNode }) => {
   const { isTourOpen, markTourAsCompleted } = useTour();
   const { setIsOpen, currentStep } = useReactour();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    setIsOpen(isTourOpen);
-  }, [isTourOpen, setIsOpen]);
+    setIsOpen(isTourOpen && !isMobile);
+  }, [isTourOpen, isMobile, setIsOpen]);
 
   useEffect(() => {
     if (!isTourOpen && currentStep > 0) {

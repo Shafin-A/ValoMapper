@@ -9,6 +9,10 @@ import {
 } from "react";
 import { useUser } from "@/hooks/api/use-user";
 import { useUpdateUser } from "@/hooks/api/use-update-user";
+import {
+  hasSeenOnboarding,
+  markOnboardingSeen,
+} from "@/lib/onboarding";
 
 interface TourContextType {
   isTourOpen: boolean;
@@ -41,12 +45,7 @@ export const TourProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const { data: user } = useUser();
   const updateUser = useUpdateUser();
-  const [hasCompletedTour, setHasCompletedTour] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("valomapper-tour-completed") === "true";
-    }
-    return false;
-  });
+  const [hasCompletedTour, setHasCompletedTour] = useState(hasSeenOnboarding);
 
   const [autoAdvanceState, setAutoAdvanceState] = useState({
     step1Advanced: false,
@@ -67,6 +66,7 @@ export const TourProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user]);
 
   const startTour = useCallback(() => {
+    markOnboardingSeen();
     setIsTourOpen(true);
     setCurrentStep(0);
   }, []);
@@ -83,6 +83,7 @@ export const TourProvider = ({ children }: { children: React.ReactNode }) => {
 
   const markTourAsCompleted = useCallback(() => {
     setHasCompletedTour(true);
+    markOnboardingSeen();
     if (typeof window !== "undefined") {
       localStorage.setItem("valomapper-tour-completed", "true");
     }

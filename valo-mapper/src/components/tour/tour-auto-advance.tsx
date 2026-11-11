@@ -4,9 +4,11 @@ import { useCanvas } from "@/contexts/canvas-context";
 import { useTour } from "@/contexts/tour-context";
 import { useTour as useReactour } from "@reactour/tour";
 import { useEffect, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const TourAutoAdvance = () => {
   const { isTourOpen, autoAdvanceState, markStepAdvanced } = useTour();
+  const isMobile = useIsMobile();
   const { currentStep, setCurrentStep } = useReactour();
   const { selectedCanvasIcon } = useCanvas();
   const previousSelectedIconRef = useRef<string | null>(null);
@@ -20,6 +22,7 @@ export const TourAutoAdvance = () => {
   useEffect(() => {
     if (
       isTourOpen &&
+      !isMobile &&
       currentStep === 1 &&
       !autoAdvanceState.step1Advanced &&
       selectedCanvasIcon?.name === "Brimstone"
@@ -32,6 +35,7 @@ export const TourAutoAdvance = () => {
     }
   }, [
     isTourOpen,
+    isMobile,
     currentStep,
     selectedCanvasIcon,
     setCurrentStep,
@@ -40,7 +44,12 @@ export const TourAutoAdvance = () => {
   ]);
 
   useEffect(() => {
-    if (isTourOpen && currentStep === 3 && !autoAdvanceState.step3Advanced) {
+    if (
+      isTourOpen &&
+      !isMobile &&
+      currentStep === 3 &&
+      !autoAdvanceState.step3Advanced
+    ) {
       const checkAbilitiesPanel = setInterval(() => {
         const abilitiesButton = document.querySelector(
           '[data-tour="brimstone-abilities-button"][data-state="on"]',
@@ -58,6 +67,7 @@ export const TourAutoAdvance = () => {
     }
   }, [
     isTourOpen,
+    isMobile,
     currentStep,
     setCurrentStep,
     autoAdvanceState.step3Advanced,
@@ -65,7 +75,12 @@ export const TourAutoAdvance = () => {
   ]);
 
   useEffect(() => {
-    if (isTourOpen && currentStep === 4 && !autoAdvanceState.step4Advanced) {
+    if (
+      isTourOpen &&
+      !isMobile &&
+      currentStep === 4 &&
+      !autoAdvanceState.step4Advanced
+    ) {
       if (
         selectedCanvasIcon &&
         selectedCanvasIcon.name !== "Brimstone" &&
@@ -81,6 +96,7 @@ export const TourAutoAdvance = () => {
     }
   }, [
     isTourOpen,
+    isMobile,
     currentStep,
     selectedCanvasIcon,
     setCurrentStep,

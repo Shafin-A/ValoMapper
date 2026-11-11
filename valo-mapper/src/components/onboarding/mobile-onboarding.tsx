@@ -19,9 +19,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  hasSeenOnboarding,
+  markMobileOnboardingCompleted,
+  markOnboardingSeen,
+} from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
-
-const STORAGE_KEY = "valomapper-mobile-onboarding-completed";
 
 type OnboardingStep = {
   title: string;
@@ -68,18 +71,12 @@ export const MobileOnboarding = ({ ready }: { ready: boolean }) => {
   const [stepIndex, setStepIndex] = useState(0);
 
   useEffect(() => {
-    if (!isMobile || !ready) return;
+    if (!isMobile || !ready || hasSeenOnboarding()) return;
 
-    let completed = false;
-    try {
-      completed = localStorage.getItem(STORAGE_KEY) === "true";
-    } catch {
-      completed = false;
-    }
-
-    if (completed) return;
-
-    const timer = window.setTimeout(() => setOpen(true), 800);
+    const timer = window.setTimeout(() => {
+      markOnboardingSeen();
+      setOpen(true);
+    }, 800);
     return () => window.clearTimeout(timer);
   }, [isMobile, ready]);
 
@@ -88,12 +85,7 @@ export const MobileOnboarding = ({ ready }: { ready: boolean }) => {
   }
 
   const complete = () => {
-    try {
-      localStorage.setItem(STORAGE_KEY, "true");
-    } catch {
-      // Ignore storage failures; the sheet still closes for this session.
-    }
-
+    markMobileOnboardingCompleted();
     setOpen(false);
     setStepIndex(0);
   };

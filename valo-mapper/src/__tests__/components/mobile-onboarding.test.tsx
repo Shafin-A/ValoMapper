@@ -27,6 +27,7 @@ describe("MobileOnboarding", () => {
 
     expect(screen.getByText("Mobile quick start")).toBeInTheDocument();
     expect(screen.getByText("Place items")).toBeInTheDocument();
+    expect(localStorage.getItem("valomapper-onboarding-seen")).toBe("true");
   });
 
   it("walks through the steps and saves completion", () => {
@@ -48,6 +49,18 @@ describe("MobileOnboarding", () => {
 
   it("does not show when onboarding was already completed", () => {
     localStorage.setItem("valomapper-mobile-onboarding-completed", "true");
+
+    render(<MobileOnboarding ready />);
+
+    act(() => {
+      jest.advanceTimersByTime(800);
+    });
+
+    expect(screen.queryByText("Mobile quick start")).not.toBeInTheDocument();
+  });
+
+  it("does not show when the desktop tour was already seen", () => {
+    localStorage.setItem("valomapper-tour-completed", "true");
 
     render(<MobileOnboarding ready />);
 
