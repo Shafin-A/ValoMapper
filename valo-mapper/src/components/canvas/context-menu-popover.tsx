@@ -28,7 +28,15 @@ import {
   Trash2,
 } from "lucide-react";
 import { Separator } from "../ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "../ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useRef, useState } from "react";
 
 interface ContextMenuPopoverProps {
@@ -119,6 +127,7 @@ export const ContextMenuPopover = ({
   onDetachVisionCone,
   onDelete,
 }: ContextMenuPopoverProps) => {
+  const isMobile = useIsMobile();
   // Tooltip opens on its own after opening popover for some reason so need to delay it
   const [allowTooltips, setAllowTooltips] = useState(false);
 
@@ -247,6 +256,171 @@ export const ContextMenuPopover = ({
   const selectionLabel = isMultiSelection
     ? `${selectedCount} Items`
     : itemLabel(snapType);
+
+  const mobileActions: Array<{
+    key: string;
+    label: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+    destructive?: boolean;
+  }> = [];
+
+  const abilityItem =
+    itemType === "ability" ? (currentItem as AbilityCanvas | null) : null;
+  const isIconAbility = abilityItem?.action === "icon";
+  const itemIsAlly =
+    currentItem && isAllyItem(currentItem, itemType)
+      ? currentItem.isAlly
+      : false;
+  const itemIsGray =
+    itemType === "agent" ? Boolean((currentItem as AgentCanvas | null)?.isGray) : false;
+  const showOuterCircle = abilityItem?.showOuterCircle ?? true;
+
+  mobileActions.push({
+    key: "duplicate",
+    label: isMultiSelection
+      ? `Duplicate ${selectedCount} items`
+      : `Duplicate ${selectionLabel.toLowerCase()}`,
+    icon: <Copy className="size-5" />,
+    onClick: onDuplicate,
+  });
+
+  if (
+    onToggleAlly &&
+    currentItem &&
+    isAllyItem(currentItem, itemType)
+  ) {
+    mobileActions.push({
+      key: "ally",
+      label: isMultiSelection
+        ? itemIsAlly
+          ? "Make all enemy"
+          : "Make all ally"
+        : itemIsAlly
+          ? "Make enemy"
+          : "Make ally",
+      icon: itemIsAlly ? (
+        <HeartCrack className="size-5" />
+      ) : (
+        <Heart className="size-5" />
+      ),
+      onClick: onToggleAlly,
+    });
+
+    if (onToggleAgentDead) {
+      mobileActions.push({
+        key: "dead",
+        label: isMultiSelection
+          ? itemIsGray
+            ? "Revive agents"
+            : "Kill agents"
+          : itemIsGray
+            ? "Revive agent"
+            : "Kill agent",
+        icon: itemIsGray ? (
+          <Cross className="size-5" />
+        ) : (
+          <Skull className="size-5" />
+        ),
+        onClick: onToggleAgentDead,
+      });
+    }
+  }
+
+  if (onSwapAbility) {
+    mobileActions.push({
+      key: "swap",
+      label: isMultiSelection ? "Swap abilities" : "Swap ability",
+      icon: <RefreshCw className="size-5" />,
+      onClick: onSwapAbility,
+    });
+  }
+
+  if (onToggleAbilityIconOnly && !isIconAbility) {
+    mobileActions.push({
+      key: "shapes",
+      label: abilityItem?.iconOnly
+        ? "Show ability shapes"
+        : "Hide ability shapes",
+      icon: <Shapes className="size-5" />,
+      onClick: onToggleAbilityIconOnly,
+    });
+  }
+
+  if (onToggleAbilityOuterCircle) {
+    mobileActions.push({
+      key: "range",
+      label: showOuterCircle
+        ? "Hide ability range"
+        : "Show ability range",
+      icon: <CircleDashed className="size-5" />,
+      onClick: onToggleAbilityOuterCircle,
+    });
+  }
+
+  if (onRemoveAttachedVisionCone) {
+    mobileActions.push({
+      key: "remove-cone",
+      label: isMultiSelection ? "Remove vision cones" : "Remove vision cone",
+      icon: <Eye className="size-5" />,
+      onClick: onRemoveAttachedVisionCone,
+    });
+  }
+
+  if (onDetachVisionCone) {
+    mobileActions.push({
+      key: "detach-cone",
+      label: isMultiSelection ? "Detach vision cones" : "Detach vision cone",
+      icon: <Minus className="size-5" />,
+      onClick: onDetachVisionCone,
+    });
+  }
+
+  mobileActions.push({
+    key: "delete",
+    label: `Delete ${selectionLabel.toLowerCase()}`,
+    icon: <Trash2 className="size-5" />,
+    onClick: onDelete,
+    destructive: true,
+  });
+
+  const handleMobileAction = (action: (typeof mobileActions)[number]) => {
+    action.onClick();
+    onOpenChange(false);
+  };
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="bottom"
+          className="max-h-[80dvh] gap-0 rounded-t-xl pb-[env(safe-area-inset-bottom)]"
+        >
+          <SheetHeader className="border-b px-4 pb-3 text-left">
+            <SheetTitle>{selectionLabel}</SheetTitle>
+            <SheetDescription>Choose an action</SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-1 overflow-y-auto px-3 py-3">
+            {mobileActions.map((action, index) => (
+              <div key={action.key}>
+                {action.destructive && index > 0 && (
+                  <Separator className="my-1" />
+                )}
+                <Button
+                  variant={action.destructive ? "destructiveGhost" : "ghost"}
+                  className="h-12 w-full justify-start gap-3 px-3 text-base"
+                  onClick={() => handleMobileAction(action)}
+                >
+                  {action.icon}
+                  <span>{action.label}</span>
+                </Button>
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>

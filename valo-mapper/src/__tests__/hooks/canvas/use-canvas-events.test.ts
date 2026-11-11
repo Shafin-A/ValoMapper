@@ -16,6 +16,7 @@ type StageMock = {
   scaleX: jest.Mock<number>;
   findOne: jest.Mock<{ position: jest.Mock } | null, [string?]>;
   container: jest.Mock;
+  getIntersection: jest.Mock;
   setPointersPositions: jest.Mock;
   draggable: jest.Mock;
   isDragging: jest.Mock<boolean>;
@@ -68,6 +69,7 @@ const createStageMock = (overrides: Partial<StageMock> = {}): StageMock => ({
   position: jest.fn(() => ({ x: 2, y: 4 })),
   scaleX: jest.fn(() => 2),
   findOne: jest.fn(() => null),
+  getIntersection: jest.fn(() => null),
   container: jest.fn(() => ({
     contains: jest.fn(() => false),
     getBoundingClientRect: jest.fn(
@@ -172,6 +174,7 @@ describe("useCanvasEvents", () => {
   const handleDrawingMock = jest.fn();
   const handleMouseUpMock = jest.fn();
   const cancelDrawingMock = jest.fn();
+  const openContextMenuMock = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -249,7 +252,7 @@ describe("useCanvasEvents", () => {
           canDetachVisionCone: false,
         },
       },
-      openContextMenu: jest.fn(),
+      openContextMenu: openContextMenuMock,
       handleContextMenu: jest.fn(),
       handlePopoverOpenChange: jest.fn(),
       handleDuplicate: jest.fn(),
@@ -937,6 +940,55 @@ describe("useCanvasEvents", () => {
 
     expect(cancelDrawingMock).toHaveBeenCalledTimes(1);
     expect(handleDrawingMock).not.toHaveBeenCalled();
+  });
+
+  it("opens the item action sheet on a long press", () => {
+    jest.useFakeTimers();
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        agentsOnCanvas: [
+          {
+            id: "agent-1",
+            name: "Jett",
+            role: "Duelist",
+            isAlly: true,
+            x: 0,
+            y: 0,
+          },
+        ],
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock({
+        getIntersection: jest.fn(() => ({
+          id: () => "agent-1",
+          getParent: () => null,
+        })),
+      }) as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleTouchStart(
+        createTouchEvent([{ clientX: 10, clientY: 20 }]),
+      );
+      jest.advanceTimersByTime(500);
+    });
+
+    expect(openContextMenuMock).toHaveBeenCalledWith(expect.anything(), {
+      x: 10,
+      y: 20,
+    });
+
+    act(() => {
+      result.current.handleTouchEnd(createTouchEvent([]));
+      jest.runOnlyPendingTimers();
+    });
+
+    jest.useRealTimers();
   });
 
   it("starts and finishes drawing on a one-finger touch", () => {

@@ -3,6 +3,7 @@ import { Line } from "react-konva";
 import { useCanvasEntities } from "@/contexts/canvas-context";
 import { useCommitCount } from "@/lib/perf-beacon";
 import { ConnectingLine } from "@/lib/types";
+import { shouldSuppressCanvasItemTap } from "@/lib/canvas-long-press";
 
 interface CanvasConnectingLinesProps {
   onLineClick?: (line: ConnectingLine) => void;
@@ -44,8 +45,22 @@ export const CanvasConnectingLines = memo(function CanvasConnectingLines({
             strokeWidth={line.strokeWidth}
             isListening={isInteractive}
             perfectDrawEnabled={false}
-            onClick={isInteractive ? () => onLineClick?.(line) : undefined}
-            onTap={isInteractive ? () => onLineClick?.(line) : undefined}
+            onClick={
+              isInteractive
+                ? () => {
+                    if (shouldSuppressCanvasItemTap()) return;
+                    onLineClick?.(line);
+                  }
+                : undefined
+            }
+            onTap={
+              isInteractive
+                ? () => {
+                    if (shouldSuppressCanvasItemTap()) return;
+                    onLineClick?.(line);
+                  }
+                : undefined
+            }
             hitStrokeWidth={isInteractive ? 20 : 0}
             onMouseEnter={(e) => {
               const container = e.target.getStage()?.container();

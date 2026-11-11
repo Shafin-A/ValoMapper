@@ -15,6 +15,10 @@ import {
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import { getNextId, isAgent } from "@/lib/utils";
 import {
+  clearCanvasItemTapSuppression,
+  markCanvasItemTapSuppressed,
+} from "@/lib/canvas-long-press";
+import {
   type CanvasItemCollections,
   resolveCanvasItemTarget,
 } from "@/lib/canvas-selection";
@@ -33,6 +37,7 @@ import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 const PENCIL_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E") 5 18, crosshair`;
 const ERASER_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3C/svg%3E") 12 12, crosshair`;
 const TAP_MOVE_THRESHOLD_PX = 10;
+const LONG_PRESS_MS = 500;
 
 const setContainerCursor = (stage: Stage, cursor: string) => {
   const container = stage.container();
@@ -92,9 +97,11 @@ export const useCanvasEvents = (
     active: false,
     moved: false,
     multiTouch: false,
+    longPress: false,
     startX: 0,
     startY: 0,
   });
+  const longPressTimerRef = useRef<number | null>(null);
 
   const setCursorForCurrentTool = useCallback(() => {
     const stage = stageRef.current;
@@ -538,9 +545,69 @@ export const useCanvasEvents = (
     touchGestureRef.current.active = false;
     touchGestureRef.current.moved = false;
     touchGestureRef.current.multiTouch = false;
+    touchGestureRef.current.longPress = false;
     touchGestureRef.current.startX = 0;
     touchGestureRef.current.startY = 0;
   }, []);
+
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const startLongPressTimer = useCallback(() => {
+    clearLongPressTimer();
+
+    if (
+      isDrawMode ||
+      selectedCanvasIcon ||
+      isSidebarDragActive ||
+      editingTextId
+    ) {
+      return;
+    }
+
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressTimerRef.current = null;
+
+      const stage = stageRef.current;
+      const pointer = stage?.getPointerPosition();
+      if (!stage || !pointer) return;
+
+      const target = stage.getIntersection(pointer);
+      if (
+        !target ||
+        !resolveCanvasItemTarget(
+          target as unknown as import("konva/lib/Node").Node,
+          collections,
+        )
+      ) {
+        return;
+      }
+
+      touchGestureRef.current.longPress = true;
+      markCanvasItemTapSuppressed();
+      openContextMenu(target, pointer);
+
+      // Fallback in case the sheet captures the eventual touchend.
+      window.setTimeout(() => {
+        resetTouchGesture();
+        clearCanvasItemTapSuppression();
+      }, 1500);
+    }, LONG_PRESS_MS);
+  }, [
+    clearLongPressTimer,
+    collections,
+    editingTextId,
+    isDrawMode,
+    isSidebarDragActive,
+    openContextMenu,
+    resetTouchGesture,
+    selectedCanvasIcon,
+    stageRef,
+  ]);
 
   const handleTouchStart = useCallback(
     (e: Parameters<typeof handleZoomTouchStart>[0]) => {
@@ -549,6 +616,7 @@ export const useCanvasEvents = (
 
       if (touches.length > 1) {
         gesture.multiTouch = true;
+        clearLongPressTimer();
         if (isDrawing.current) {
           cancelDrawing();
         }
@@ -559,6 +627,7 @@ export const useCanvasEvents = (
         gesture.multiTouch = false;
         gesture.startX = touch.clientX;
         gesture.startY = touch.clientY;
+        startLongPressTimer();
       }
 
       handleZoomTouchStart(e);
@@ -570,10 +639,12 @@ export const useCanvasEvents = (
     },
     [
       cancelDrawing,
+      clearLongPressTimer,
       handleDrawing,
       handleZoomTouchStart,
       isDrawMode,
       isDrawing,
+      startLongPressTimer,
       syncCurrentStageScale,
     ],
   );
@@ -585,6 +656,7 @@ export const useCanvasEvents = (
 
       if (touches.length > 1) {
         gesture.multiTouch = true;
+        clearLongPressTimer();
         if (isDrawing.current) {
           cancelDrawing();
         }
@@ -597,6 +669,7 @@ export const useCanvasEvents = (
 
         if (distance > TAP_MOVE_THRESHOLD_PX) {
           gesture.moved = true;
+          clearLongPressTimer();
         }
       }
 
@@ -609,6 +682,7 @@ export const useCanvasEvents = (
     },
     [
       cancelDrawing,
+      clearLongPressTimer,
       handleStageMouseMove,
       handleZoomTouchMove,
       isDrawMode,
@@ -622,8 +696,12 @@ export const useCanvasEvents = (
       const gesture = touchGestureRef.current;
       const remainingTouches = e.evt.touches.length;
       const isCleanTap =
-        gesture.active && !gesture.moved && !gesture.multiTouch;
+        gesture.active &&
+        !gesture.moved &&
+        !gesture.multiTouch &&
+        !gesture.longPress;
 
+      clearLongPressTimer();
       handleZoomTouchEnd(e);
       syncCurrentStageScale();
 
@@ -640,9 +718,13 @@ export const useCanvasEvents = (
 
       if (remainingTouches === 0) {
         resetTouchGesture();
+        // Let the item's own tap handler see the suppression flag during this
+        // event, then re-enable normal taps.
+        window.setTimeout(clearCanvasItemTapSuppression, 0);
       }
     },
     [
+      clearLongPressTimer,
       handleStageClick,
       handleStagePointerUp,
       handleZoomTouchEnd,
@@ -656,6 +738,8 @@ export const useCanvasEvents = (
 
   const handleTouchCancel = useCallback(
     (e: Parameters<typeof handleZoomTouchEnd>[0]) => {
+      clearLongPressTimer();
+
       if (isDrawing.current) {
         cancelDrawing();
       }
@@ -663,14 +747,24 @@ export const useCanvasEvents = (
       handleZoomTouchEnd(e);
       syncCurrentStageScale();
       resetTouchGesture();
+      window.setTimeout(clearCanvasItemTapSuppression, 0);
     },
     [
       cancelDrawing,
+      clearLongPressTimer,
       handleZoomTouchEnd,
       isDrawing,
       resetTouchGesture,
       syncCurrentStageScale,
     ],
+  );
+
+  useEffect(
+    () => () => {
+      clearLongPressTimer();
+      clearCanvasItemTapSuppression();
+    },
+    [clearLongPressTimer],
   );
 
   const handleStageMouseLeave = useCallback(() => {

@@ -16,6 +16,7 @@ import {
   textSpansForItem,
 } from "@/lib/rich-text";
 import type { TextCanvas, TextSpan } from "@/lib/types";
+import { shouldSuppressCanvasItemTap } from "@/lib/canvas-long-press";
 
 export type TextChangeValue = {
   spans: TextSpan[];
@@ -59,7 +60,7 @@ export const useTextEditor = (
 
   const handleTextClick = useCallback(
     (textId: string) => {
-      if (isDrawMode) return;
+      if (isDrawMode || shouldSuppressCanvasItemTap()) return;
       setEditingTextId(textId);
     },
     [isDrawMode, setEditingTextId],
