@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { ColorPickerButton } from "@/components/shared/color-picker-button";
 
 interface SettingsPanelProps {
   settings: IconSettings;
@@ -105,20 +106,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       </div>
       <div className="flex items-center gap-6 p-2">
         <span className="text-sm font-medium w-20">Ally Color</span>
-        <input
-          type="color"
+        <ColorPickerButton
+          label="Ally color"
           value={settings.allyColor}
-          onChange={(e) => debouncedSetAllyColor(e.target.value)}
-          className="h-6 w-6 cursor-pointer rounded"
+          onChange={debouncedSetAllyColor}
         />
       </div>
       <div className="flex items-center gap-6 p-2">
         <span className="text-sm font-medium w-20">Enemy Color</span>
-        <input
-          type="color"
+        <ColorPickerButton
+          label="Enemy color"
           value={settings.enemyColor}
-          onChange={(e) => debouncedSetEnemyColor(e.target.value)}
-          className="h-6 w-6 cursor-pointer rounded"
+          onChange={debouncedSetEnemyColor}
         />
       </div>
     </>

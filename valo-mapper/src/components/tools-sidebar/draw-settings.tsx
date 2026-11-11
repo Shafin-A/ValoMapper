@@ -7,6 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ColorPickerButton } from "@/components/shared/color-picker-button";
 import { useSettings } from "@/contexts/settings-context";
 import {
   getTraversalSelection,
@@ -102,11 +103,10 @@ export const DrawSettings = () => {
 
       <div className="flex items-center gap-6 p-2">
         <span className="text-sm font-medium w-20">Color</span>
-        <input
-          type="color"
+        <ColorPickerButton
+          label="Draw color"
           value={drawSettings.color}
-          onChange={(e) => debouncedSetColor(e.target.value)}
-          className="h-6 w-6 cursor-pointer rounded"
+          onChange={debouncedSetColor}
         />
       </div>
 

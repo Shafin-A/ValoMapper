@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DrawSettings } from "@/components/tools-sidebar/draw-settings";
 import { useSettings } from "@/contexts/settings-context";
@@ -12,6 +12,10 @@ describe("DrawSettings", () => {
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   const baseDrawSettings = {
     size: 5,
     color: "#ffffff",
@@ -21,6 +25,26 @@ describe("DrawSettings", () => {
     opacity: 1,
     traversalTime: null,
   };
+
+  it("updates the draw color from a preset swatch", () => {
+    jest.useFakeTimers();
+    const updateDrawSettings = jest.fn();
+
+    mockUseSettings.mockReturnValue({
+      drawSettings: baseDrawSettings,
+      updateDrawSettings,
+    } as unknown as ReturnType<typeof useSettings>);
+
+    render(<DrawSettings />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Draw color" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Draw color #FF4655" }),
+    );
+    jest.advanceTimersByTime(20);
+
+    expect(updateDrawSettings).toHaveBeenCalledWith({ color: "#FF4655" });
+  });
 
   it("shows the currently selected traversal option", () => {
     mockUseSettings.mockReturnValue({
