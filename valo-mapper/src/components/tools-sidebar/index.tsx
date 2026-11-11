@@ -596,6 +596,11 @@ export const ToolsSidebar = ({
                 mapPosition={mapPosition}
                 stageRef={stageRef}
                 saveAction={saveAction}
+                onTextAdded={() => {
+                  if (isMobile) {
+                    setSidebarOpen?.(false);
+                  }
+                }}
               />
               <IconsSection setSidebarOpen={setSidebarOpen} />
             </div>

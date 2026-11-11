@@ -55,12 +55,14 @@ interface ToolsSectionProps {
   mapPosition: Vector2d;
   stageRef?: RefObject<MapStageHandle | null>;
   saveAction?: ToolsSectionAction;
+  onTextAdded?: () => void;
 }
 
 export const ToolsSection = ({
   mapPosition,
   stageRef,
   saveAction,
+  onTextAdded,
 }: ToolsSectionProps) => {
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [openLineupDialog, setOpenLineupDialog] = useState(false);
@@ -333,6 +335,7 @@ export const ToolsSection = ({
                 onBeforeAdd={() => {
                   setVisionConesOpen(false);
                 }}
+                onTextAdded={onTextAdded}
                 disabled={!stageRef}
               />
             </TooltipTrigger>
