@@ -34,6 +34,9 @@ import { useCanvasEvents } from "@/hooks/canvas";
 import { FullscreenImageModal } from "./fullscreen-image-modal";
 import { LineupViewDialog } from "./lineup-view-dialog";
 import { ConnectingLine } from "@/lib/types";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { Minus, Plus, Scan } from "lucide-react";
 
 export interface MapStageHandle {
   stage: KonvaStage | null;
@@ -142,6 +145,7 @@ export const MapStage = memo(
     ) => {
     useCommitCount("MapStage");
 
+    const isMobile = useIsMobile();
     const { isDrawMode } = useCanvasUi();
     const { canvasBackground } = useCanvasView();
 
@@ -159,6 +163,9 @@ export const MapStage = memo(
 
     const {
       handleWheel,
+      handleZoomIn,
+      handleZoomOut,
+      handleResetZoom,
       handleTouchStart,
       handleTouchMove,
       handleTouchEnd,
@@ -357,6 +364,38 @@ export const MapStage = memo(
             <RemoteCursors scale={scale} />
           </Layer>
         </Stage>
+
+        {isMobile && (
+          <div className="absolute bottom-3 right-3 z-20 flex flex-col gap-0.5 rounded-lg border bg-background/90 p-1 shadow-md backdrop-blur">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11"
+              aria-label="Zoom in"
+              onClick={handleZoomIn}
+            >
+              <Plus />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11"
+              aria-label="Zoom out"
+              onClick={handleZoomOut}
+            >
+              <Minus />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11"
+              aria-label="Fit map"
+              onClick={handleResetZoom}
+            >
+              <Scan />
+            </Button>
+          </div>
+        )}
 
         <CanvasContextMenu
           contextMenu={contextMenu}

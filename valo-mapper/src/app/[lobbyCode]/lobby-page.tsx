@@ -321,7 +321,6 @@ const LobbyEditPage = () => {
           )}
           </div>
           <MobileCanvasToolbar
-            stageRef={stageRef}
             onOpenTools={() => sidebarState.setLeftSidebarOpen(true)}
             onOpenAgents={() => sidebarState.setRightSidebarOpen(true)}
           />

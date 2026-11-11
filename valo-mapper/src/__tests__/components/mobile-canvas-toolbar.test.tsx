@@ -2,7 +2,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { MobileCanvasToolbar } from "@/components/canvas/mobile-canvas-toolbar";
 import { useCanvas } from "@/contexts/canvas-context";
-import type { MapStageHandle } from "@/components/canvas";
 
 jest.mock("@/contexts/canvas-context", () => ({
   useCanvas: jest.fn(),
@@ -10,10 +9,6 @@ jest.mock("@/contexts/canvas-context", () => ({
 
 jest.mock("@/hooks/use-mobile", () => ({
   useIsMobile: () => true,
-}));
-
-jest.mock("@/hooks/use-recenter-canvas", () => ({
-  useRecenterCanvas: jest.fn(() => jest.fn()),
 }));
 
 jest.mock("@/components/tools-sidebar/delete-settings", () => ({
@@ -25,11 +20,9 @@ const mockUseCanvas = jest.mocked(useCanvas);
 const renderToolbar = () => {
   const onOpenTools = jest.fn();
   const onOpenAgents = jest.fn();
-  const stageRef = { current: null as MapStageHandle | null };
 
   render(
     <MobileCanvasToolbar
-      stageRef={stageRef}
       onOpenTools={onOpenTools}
       onOpenAgents={onOpenAgents}
     />,

@@ -21,6 +21,9 @@ type StageMock = {
   position: jest.Mock<{ x: number; y: number }, [{ x: number; y: number }?]>;
   x: jest.Mock<number, []>;
   y: jest.Mock<number, []>;
+  width: jest.Mock<number, []>;
+  height: jest.Mock<number, []>;
+  batchDraw: jest.Mock<void, []>;
   draggable: jest.Mock<void, [boolean?]>;
   isDragging: jest.Mock<boolean, []>;
   stopDrag: jest.Mock<void, []>;
@@ -62,6 +65,9 @@ const createStageMock = (
     }),
     x: jest.fn(() => position.x),
     y: jest.fn(() => position.y),
+    width: jest.fn(() => 1000),
+    height: jest.fn(() => 800),
+    batchDraw: jest.fn(),
     draggable: jest.fn(),
     isDragging: jest.fn(() => false),
     stopDrag: jest.fn(),
@@ -203,6 +209,61 @@ describe("useCanvasZoom", () => {
     result.current.handleWheel(wheelEvent);
 
     expect(stage.scale).toHaveBeenCalledWith({ x: 4, y: 4 });
+
+    matchMediaSpy.mockRestore();
+  });
+
+  it("zooms in and out around the viewport center", () => {
+    const stage = createStageMock(1, { x: 0, y: 0 });
+    const stageRef: RefObject<Stage | null> = {
+      current: stage as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasZoom(stageRef, 1, false));
+
+    result.current.handleZoomIn();
+
+    expect(stage.scale).toHaveBeenLastCalledWith({ x: 1.25, y: 1.25 });
+    expect(stage.position).toHaveBeenLastCalledWith({
+      x: -125,
+      y: -100,
+    });
+
+    result.current.handleZoomOut();
+
+    expect(stage.scale).toHaveBeenLastCalledWith({ x: 1, y: 1 });
+    expect(stage.position).toHaveBeenLastCalledWith({ x: 0, y: 0 });
+  });
+
+  it("resets zoom to the fit scale", () => {
+    const stage = createStageMock(2, { x: -200, y: -100 });
+    const stageRef: RefObject<Stage | null> = {
+      current: stage as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasZoom(stageRef, 1, false));
+
+    result.current.handleResetZoom();
+
+    expect(stage.scale).toHaveBeenLastCalledWith({ x: 1, y: 1 });
+    expect(stage.position).toHaveBeenLastCalledWith({ x: 0, y: 0 });
+  });
+
+  it("respects the touch max zoom for button zooming", () => {
+    const matchMediaSpy = jest
+      .spyOn(window, "matchMedia")
+      .mockReturnValue({ matches: true } as MediaQueryList);
+
+    const stage = createStageMock(7, { x: 0, y: 0 });
+    const stageRef: RefObject<Stage | null> = {
+      current: stage as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasZoom(stageRef, 1, false));
+
+    result.current.handleZoomIn();
+
+    expect(stage.scale).toHaveBeenLastCalledWith({ x: 8, y: 8 });
 
     matchMediaSpy.mockRestore();
   });

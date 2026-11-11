@@ -166,6 +166,9 @@ export const useCanvasEvents = (
     deleteGroupRef,
     handleDragMove,
     handleWheel: handleZoomWheel,
+    handleZoomIn: handleZoomInRaw,
+    handleZoomOut: handleZoomOutRaw,
+    handleResetZoom: handleResetZoomRaw,
     handleTouchStart: handleZoomTouchStart,
     handleTouchMove: handleZoomTouchMove,
     handleTouchEnd: handleZoomTouchEnd,
@@ -201,6 +204,21 @@ export const useCanvasEvents = (
     },
     [handleZoomWheel, syncCurrentStageScale],
   );
+
+  const handleZoomIn = useCallback(() => {
+    handleZoomInRaw();
+    syncCurrentStageScale();
+  }, [handleZoomInRaw, syncCurrentStageScale]);
+
+  const handleZoomOut = useCallback(() => {
+    handleZoomOutRaw();
+    syncCurrentStageScale();
+  }, [handleZoomOutRaw, syncCurrentStageScale]);
+
+  const handleResetZoom = useCallback(() => {
+    handleResetZoomRaw();
+    syncCurrentStageScale();
+  }, [handleResetZoomRaw, syncCurrentStageScale]);
 
   const { handleDrawing, handleMouseUp, cancelDrawing, currentLineRef } =
     useCanvasDrawing(
@@ -876,6 +894,9 @@ export const useCanvasEvents = (
 
   return {
     handleWheel,
+    handleZoomIn,
+    handleZoomOut,
+    handleResetZoom,
     handleStageClick,
     handleStageMouseDown,
     handleStagePointerUp,

@@ -5,7 +5,6 @@ import {
   Eraser,
   Pencil,
   Redo,
-  Scan,
   SidebarIcon,
   Trash2,
   Undo,
@@ -23,11 +22,8 @@ import { Toggle } from "@/components/ui/toggle";
 import { DeleteSettings } from "@/components/tools-sidebar/delete-settings";
 import { useCanvas } from "@/contexts/canvas-context";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useRecenterCanvas } from "@/hooks/use-recenter-canvas";
-import type { MapStageHandle } from "@/components/canvas";
 
 interface MobileCanvasToolbarProps {
-  stageRef: React.RefObject<MapStageHandle | null>;
   onOpenTools: () => void;
   onOpenAgents: () => void;
 }
@@ -36,7 +32,6 @@ interface MobileCanvasToolbarProps {
  * Persistent mobile-only toolbar for the actions used most while editing.
  */
 export const MobileCanvasToolbar = ({
-  stageRef,
   onOpenTools,
   onOpenAgents,
 }: MobileCanvasToolbarProps) => {
@@ -54,7 +49,6 @@ export const MobileCanvasToolbar = ({
   } = useCanvas();
   const isMobile = useIsMobile();
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
-  const handleRecenterCanvas = useRecenterCanvas(stageRef);
 
   const setDrawMode = (pressed: boolean) => {
     setIsDeleteSettingsOpen(false);
@@ -142,16 +136,6 @@ export const MobileCanvasToolbar = ({
           onClick={openDeleteSheet}
         >
           <Trash2 />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-11 min-w-0 flex-1"
-          aria-label="Recenter canvas"
-          disabled={!stageRef}
-          onClick={handleRecenterCanvas}
-        >
-          <Scan />
         </Button>
         <Button
           variant="ghost"

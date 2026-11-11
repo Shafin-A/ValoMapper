@@ -118,6 +118,81 @@ export const useCanvasZoom = (
     [handleDragMove, stageRef, baseScale, maxZoomScale],
   );
 
+  const zoomFromViewportCenter = useCallback(
+    (direction: 1 | -1) => {
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      const container = stage.container();
+      const host = container.parentElement as HTMLElement | null;
+      const containerWidth = host?.offsetWidth ?? container.offsetWidth;
+      const containerHeight = host?.offsetHeight ?? container.offsetHeight;
+
+      const center: Vector2d = {
+        x: containerWidth / 2,
+        y: containerHeight / 2,
+      };
+
+      const currentZoomScale = stage.scaleX() / baseScale;
+      const nextZoomScale =
+        direction > 0
+          ? currentZoomScale * SCALE_FACTOR
+          : currentZoomScale / SCALE_FACTOR;
+      const clampedZoomScale = Math.max(
+        MIN_ZOOM_SCALE,
+        Math.min(maxZoomScale, nextZoomScale),
+      );
+
+      if (clampedZoomScale === currentZoomScale) return;
+
+      const worldPoint: Vector2d = {
+        x: (center.x - stage.x()) / stage.scaleX(),
+        y: (center.y - stage.y()) / stage.scaleX(),
+      };
+      const newTotalScale = baseScale * clampedZoomScale;
+
+      stage.scale({ x: newTotalScale, y: newTotalScale });
+      stage.position({
+        x: center.x - worldPoint.x * newTotalScale,
+        y: center.y - worldPoint.y * newTotalScale,
+      });
+      stage.batchDraw();
+      handleDragMove();
+    },
+    [baseScale, handleDragMove, maxZoomScale, stageRef],
+  );
+
+  const handleZoomIn = useCallback(
+    () => zoomFromViewportCenter(1),
+    [zoomFromViewportCenter],
+  );
+
+  const handleZoomOut = useCallback(
+    () => zoomFromViewportCenter(-1),
+    [zoomFromViewportCenter],
+  );
+
+  const handleResetZoom = useCallback(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const container = stage.container();
+    const host = container.parentElement as HTMLElement | null;
+    const containerWidth = host?.offsetWidth ?? container.offsetWidth;
+    const containerHeight = host?.offsetHeight ?? container.offsetHeight;
+
+    const scaledWidth = stage.width() * baseScale;
+    const scaledHeight = stage.height() * baseScale;
+
+    stage.scale({ x: baseScale, y: baseScale });
+    stage.position({
+      x: (containerWidth - scaledWidth) / 2,
+      y: (containerHeight - scaledHeight) / 2,
+    });
+    stage.batchDraw();
+    handleDragMove();
+  }, [baseScale, handleDragMove, stageRef]);
+
   const handleTouchStart = useCallback(
     (e: KonvaEventObject<TouchEvent>) => {
       const touches = e.evt.touches;
@@ -244,6 +319,9 @@ export const useCanvasZoom = (
     deleteGroupRef,
     handleDragMove,
     handleWheel,
+    handleZoomIn,
+    handleZoomOut,
+    handleResetZoom,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
