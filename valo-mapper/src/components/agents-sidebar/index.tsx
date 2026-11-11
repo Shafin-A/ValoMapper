@@ -277,11 +277,11 @@ export const AgentsSidebar = ({
   ) => {
     if (ignoreNextSidebarClickRef.current) {
       ignoreNextSidebarClickRef.current = false;
-      return;
+      return false;
     }
 
     if (performance.now() < suppressClickUntilRef.current) {
-      return;
+      return false;
     }
 
     const isSameIcon = selectedCanvasIcon
@@ -295,7 +295,7 @@ export const AgentsSidebar = ({
     if (isSameIcon) {
       if (isSidebarDragActive) {
         setIsSidebarDragActive(false);
-        return;
+        return true;
       }
 
       setIconsOnCanvas((prev) =>
@@ -306,6 +306,8 @@ export const AgentsSidebar = ({
       beginIconPlacement(icon, setIconsOnCanvas);
       setIsSidebarDragActive(false);
     }
+
+    return true;
   };
 
   const handleIconPointerDown = (
@@ -315,6 +317,9 @@ export const AgentsSidebar = ({
   ) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     event.preventDefault();
+
+    ignoreNextSidebarClickRef.current = false;
+    suppressClickUntilRef.current = 0;
 
     if (typeof event.currentTarget.setPointerCapture === "function") {
       event.currentTarget.setPointerCapture(event.pointerId);
@@ -345,6 +350,10 @@ export const AgentsSidebar = ({
     if (!agent) return;
     setIsDrawMode(false);
     setEditingTextId(null);
+
+    const didSelect = handleIconClick(agent, setAgentsOnCanvas);
+    if (!didSelect) return;
+
     const isSameAgent =
       selectedCanvasIcon &&
       isAgent(selectedCanvasIcon) &&
@@ -354,7 +363,7 @@ export const AgentsSidebar = ({
     } else {
       setSelectedAgentAbilities(agent);
     }
-    handleIconClick(agent, setAgentsOnCanvas);
+
     if (isMobile) {
       setSidebarOpen?.(false);
     }
@@ -372,7 +381,10 @@ export const AgentsSidebar = ({
     if (!ability) return;
     setIsDrawMode(false);
     setEditingTextId(null);
-    handleIconClick(ability, setAbilitiesOnCanvas);
+
+    const didSelect = handleIconClick(ability, setAbilitiesOnCanvas);
+    if (!didSelect) return;
+
     if (isMobile) {
       setSidebarOpen?.(false);
     }
