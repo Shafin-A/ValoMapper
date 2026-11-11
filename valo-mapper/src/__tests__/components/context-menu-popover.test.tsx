@@ -76,4 +76,18 @@ describe("ContextMenuPopover mobile actions", () => {
     expect(screen.getByText("Swap ability")).toBeInTheDocument();
     expect(screen.getByText("Delete agent")).toBeInTheDocument();
   });
+
+  it("calls the kill agent action", () => {
+    const onToggleAgentDead = jest.fn();
+
+    renderMenu({
+      itemType: "agent",
+      currentItem: agentItem,
+      onToggleAgentDead,
+    });
+
+    fireEvent.click(screen.getByText("Kill agent"));
+
+    expect(onToggleAgentDead).toHaveBeenCalledTimes(1);
+  });
 });

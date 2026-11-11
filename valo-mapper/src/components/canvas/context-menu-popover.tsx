@@ -307,24 +307,25 @@ export const ContextMenuPopover = ({
       onClick: onToggleAlly,
     });
 
-    if (onToggleAgentDead) {
-      mobileActions.push({
-        key: "dead",
-        label: isMultiSelection
-          ? itemIsGray
-            ? "Revive agents"
-            : "Kill agents"
-          : itemIsGray
-            ? "Revive agent"
-            : "Kill agent",
-        icon: itemIsGray ? (
-          <Cross className="size-5" />
-        ) : (
-          <Skull className="size-5" />
-        ),
-        onClick: onToggleAgentDead,
-      });
-    }
+  }
+
+  if (onToggleAgentDead && itemType === "agent") {
+    mobileActions.push({
+      key: "dead",
+      label: isMultiSelection
+        ? itemIsGray
+          ? "Revive agents"
+          : "Kill agents"
+        : itemIsGray
+          ? "Revive agent"
+          : "Kill agent",
+      icon: itemIsGray ? (
+        <Cross className="size-5" />
+      ) : (
+        <Skull className="size-5" />
+      ),
+      onClick: onToggleAgentDead,
+    });
   }
 
   if (onSwapAbility) {
