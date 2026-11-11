@@ -730,7 +730,29 @@ export const useCanvasEvents = (
       } else if (isCleanTap && remainingTouches === 0) {
         // Konva updates pointer positions on touchend; make sure the lifted
         // touch is the position used for placement.
-        stageRef.current?.setPointersPositions(e.evt);
+        const stage = stageRef.current;
+        stage?.setPointersPositions(e.evt);
+
+        const pointer = stage?.getPointerPosition();
+        const intersection =
+          stage && pointer ? stage.getIntersection(pointer) : null;
+        const tappedItem = intersection
+          ? resolveCanvasItemTarget(
+              intersection as unknown as import("konva/lib/Node").Node,
+              collections,
+            )
+          : null;
+        const tappedItemIsSelected =
+          tappedItem !== null &&
+          selectedCanvasItems.some(
+            (item) =>
+              item.id === tappedItem.id && item.type === tappedItem.type,
+          );
+
+        if (!tappedItemIsSelected) {
+          setSelectedCanvasItems([]);
+        }
+
         handleStageClick();
       }
 
@@ -743,12 +765,15 @@ export const useCanvasEvents = (
     },
     [
       clearLongPressTimer,
+      collections,
       handleStageClick,
       handleStagePointerUp,
       handleZoomTouchEnd,
       isDrawMode,
       isDrawing,
       resetTouchGesture,
+      selectedCanvasItems,
+      setSelectedCanvasItems,
       stageRef,
       syncCurrentStageScale,
     ],

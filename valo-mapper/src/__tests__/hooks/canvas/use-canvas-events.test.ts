@@ -784,6 +784,85 @@ describe("useCanvasEvents", () => {
     expect(setIsSidebarDragActive).toHaveBeenCalledWith(false);
   });
 
+  it("clears the selection when tapping empty canvas", () => {
+    const setSelectedCanvasItems = jest.fn();
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        selectedCanvasItems: [{ id: "agent-1", type: "agent" }],
+        setSelectedCanvasItems,
+        agentsOnCanvas: [
+          {
+            id: "agent-1",
+            name: "Jett",
+            role: "Duelist",
+            isAlly: true,
+            x: 0,
+            y: 0,
+          },
+        ],
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock({
+        getIntersection: jest.fn(() => null),
+      }) as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleTouchStart(
+        createTouchEvent([{ clientX: 10, clientY: 20 }]),
+      );
+      result.current.handleTouchEnd(createTouchEvent([]));
+    });
+
+    expect(setSelectedCanvasItems).toHaveBeenCalledWith([]);
+  });
+
+  it("keeps the selection when tapping the selected item", () => {
+    const setSelectedCanvasItems = jest.fn();
+
+    mockUseCanvas.mockReturnValue(
+      createCanvasContext({
+        selectedCanvasItems: [{ id: "agent-1", type: "agent" }],
+        setSelectedCanvasItems,
+        agentsOnCanvas: [
+          {
+            id: "agent-1",
+            name: "Jett",
+            role: "Duelist",
+            isAlly: true,
+            x: 0,
+            y: 0,
+          },
+        ],
+      }),
+    );
+
+    const stageRef = {
+      current: createStageMock({
+        getIntersection: jest.fn(() => ({
+          id: () => "agent-1",
+          getParent: () => null,
+        })),
+      }) as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasEvents(stageRef, 1));
+
+    act(() => {
+      result.current.handleTouchStart(
+        createTouchEvent([{ clientX: 10, clientY: 20 }]),
+      );
+      result.current.handleTouchEnd(createTouchEvent([]));
+    });
+
+    expect(setSelectedCanvasItems).not.toHaveBeenCalledWith([]);
+  });
+
   it("places a selected agent on a clean one-finger tap", () => {
     let agentsState: AgentCanvas[] = [
       {
