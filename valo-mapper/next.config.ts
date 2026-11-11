@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
   // This lets phones/tablets on the local network load the dev server
   // (including CSS/HMR) when testing over Wi-Fi.
   allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "*.local"],
+  agentRules: false,
   images: {
     localPatterns: [
       {
