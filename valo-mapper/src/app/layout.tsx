@@ -10,6 +10,7 @@ import { WebSocketProvider } from "@/contexts/websocket-context";
 import { CollaborativeCanvasProvider } from "@/hooks/use-collaborative-canvas";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { PenTapToClick } from "@/components/providers/pen-tap-to-click";
+import { ServiceWorkerRegistration } from "@/components/providers/service-worker-registration";
 import { FirebaseAuthProvider } from "@/hooks/use-firebase-auth";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -32,7 +33,13 @@ export const metadata: Metadata = {
     default: "ValoMapper | Create strategies and executes for VALORANT",
     template: "%s | ValoMapper",
   },
+  applicationName: "ValoMapper",
   description: "Create strategies and executes for VALORANT",
+  appleWebApp: {
+    capable: true,
+    title: "ValoMapper",
+    statusBarStyle: "black-translucent",
+  },
   metadataBase: new URL(appUrl),
   openGraph: {
     title: "ValoMapper",
@@ -90,6 +97,7 @@ const RootLayout = ({
                           <NavigationHistoryProvider>
                             <KeyboardShortcuts />
                             <PenTapToClick />
+                            <ServiceWorkerRegistration />
                             {children}
                           </NavigationHistoryProvider>
                         </CollaborativeCanvasProvider>
