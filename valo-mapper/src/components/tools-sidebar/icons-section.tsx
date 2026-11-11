@@ -1,14 +1,11 @@
 import { useCanvas, useCanvasScale } from "@/contexts/canvas-context";
-import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import {
-  MAP_SIZE,
   WEAPONS,
   TEMP_DRAG_ID,
   TOOL_ICON_CONTOUR_COLOR,
   TOOL_ICON_CONTOUR_WIDTH,
 } from "@/lib/consts";
-import { getNextId } from "@/lib/utils";
-import { Vector2d } from "konva/lib/types";
+
 import { CanvasIcon } from "@/components/canvas-icons";
 import { Stage, Layer } from "react-konva";
 import { ToolIconButton } from "./tool-icon-button";
@@ -20,15 +17,18 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { InfoHint } from "@/components/shared/info-hint";
 
 interface IconsSectionProps {
-  mapPosition: Vector2d;
+  setSidebarOpen?: Dispatch<SetStateAction<boolean>>;
 }
 
 type PendingSidebarDrag = {
@@ -40,10 +40,13 @@ type PendingSidebarDrag = {
   height: number;
 };
 
-export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
+export const IconsSection = ({ setSidebarOpen }: IconsSectionProps) => {
+  const isMobile = useIsMobile();
   const {
     setEditingTextId,
     setIsDrawMode,
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
     setToolIconsOnCanvas,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
@@ -51,7 +54,10 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
     setIsSidebarDragActive,
   } = useCanvas();
 
-  const { notifyToolIconAdded } = useCollaborativeCanvas();
+  const selectedToolIconName =
+    selectedCanvasIcon && "width" in selectedCanvasIcon
+      ? selectedCanvasIcon.name
+      : null;
 
   const [dragPreviewPosition, setDragPreviewPosition] = useState<{
     x: number;
@@ -63,29 +69,64 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
   const didStartSidebarDragRef = useRef(false);
   const suppressClickUntilRef = useRef(0);
 
-  const handleAddToolIcon = (name: string, width: number, height: number) => {
-    setEditingTextId(null);
-    setIsDrawMode(false);
+  const beginToolPlacement = useCallback(
+    (name: string, width: number, height: number) => {
+      setEditingTextId(null);
+      setIsDrawMode(false);
 
-    const newToolIcon = {
-      id: getNextId("tool"),
-      x: mapPosition.x + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-      y: mapPosition.y + MAP_SIZE / 2 + Math.round(Math.random() * 20),
-      name,
-      width,
-      height,
-    };
+      const temporaryToolIcon = {
+        id: TEMP_DRAG_ID,
+        name,
+        width,
+        height,
+        x: -1000,
+        y: -1000,
+      };
 
-    setToolIconsOnCanvas((prev) => [...prev, newToolIcon]);
-    notifyToolIconAdded(newToolIcon);
-  };
+      setSelectedCanvasIcon(temporaryToolIcon);
+      setAgentsOnCanvas((prev) =>
+        prev.filter((agent) => agent.id !== TEMP_DRAG_ID),
+      );
+      setAbilitiesOnCanvas((prev) =>
+        prev.filter((ability) => ability.id !== TEMP_DRAG_ID),
+      );
+      setToolIconsOnCanvas((prev) => [
+        ...prev.filter((toolIcon) => toolIcon.id !== TEMP_DRAG_ID),
+        temporaryToolIcon,
+      ]);
+    },
+    [
+      setAbilitiesOnCanvas,
+      setAgentsOnCanvas,
+      setEditingTextId,
+      setIsDrawMode,
+      setSelectedCanvasIcon,
+      setToolIconsOnCanvas,
+    ],
+  );
 
   const handleToolClick = (name: string, width: number, height: number) => {
     if (performance.now() < suppressClickUntilRef.current) {
       return;
     }
 
-    handleAddToolIcon(name, width, height);
+    const isSameTool =
+      selectedCanvasIcon &&
+      "width" in selectedCanvasIcon &&
+      selectedCanvasIcon.name === name;
+
+    if (isSameTool) {
+      setSelectedCanvasIcon(null);
+      setToolIconsOnCanvas((prev) =>
+        prev.filter((toolIcon) => toolIcon.id !== TEMP_DRAG_ID),
+      );
+      return;
+    }
+
+    beginToolPlacement(name, width, height);
+    if (isMobile) {
+      setSidebarOpen?.(false);
+    }
   };
 
   const handleToolPointerDown = (
@@ -138,33 +179,6 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
   }, [isSidebarDragActive]);
 
   useEffect(() => {
-    const beginToolPlacement = (
-      name: string,
-      width: number,
-      height: number,
-    ) => {
-      setSelectedCanvasIcon({
-        id: TEMP_DRAG_ID,
-        name,
-        width,
-        height,
-        x: -1000,
-        y: -1000,
-      });
-
-      setToolIconsOnCanvas((prev) => [
-        ...prev.filter((toolIcon) => toolIcon.id !== TEMP_DRAG_ID),
-        {
-          id: TEMP_DRAG_ID,
-          name,
-          width,
-          height,
-          x: -1000,
-          y: -1000,
-        },
-      ]);
-    };
-
     const handleWindowPointerMove = (event: PointerEvent) => {
       const pendingDrag = pendingSidebarDragRef.current;
       if (!pendingDrag || pendingDrag.pointerId !== event.pointerId) {
@@ -215,11 +229,10 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
       window.removeEventListener("pointercancel", clearPendingDrag);
     };
   }, [
+    beginToolPlacement,
     setEditingTextId,
     setIsDrawMode,
     setIsSidebarDragActive,
-    setSelectedCanvasIcon,
-    setToolIconsOnCanvas,
   ]);
 
   useEffect(() => {
@@ -239,22 +252,24 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
     <div className="mt-4" data-tour="icons-section">
       <div className="flex items-center justify-between mb-4">
         <span className="text-base font-semibold">Icons</span>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              className="inline-flex items-center justify-center"
-              type="button"
-            >
-              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <div className="space-y-2">
-              <p>Press E while hovering an icon on the map to delete it</p>
-              <p>Click or drag an icon onto the map to place it</p>
-            </div>
-          </TooltipContent>
-        </Tooltip>
+        <InfoHint label="About icons">
+          <div className="space-y-2">
+            {isMobile ? (
+              <>
+                <p>Tap an icon to select it, then tap the map to place it.</p>
+                <p>
+                  Or drag an icon onto the map. Drag it to the trash zone to
+                  delete it.
+                </p>
+              </>
+            ) : (
+              <>
+                <p>Press E while hovering an icon on the map to delete it</p>
+                <p>Click or drag an icon onto the map to place it</p>
+              </>
+            )}
+          </div>
+        </InfoHint>
       </div>
 
       <Accordion type="multiple" className="w-full">
@@ -264,6 +279,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
             <div className="grid grid-cols-5 gap-2 pt-2">
               <ToolIconButton
                 name="spike"
+                selected={selectedToolIconName === "spike"}
                 onClick={() => handleToolClick("spike", 32, 32)}
                 onPointerDown={(event) =>
                   handleToolPointerDown(event, "spike", 32, 32)
@@ -279,21 +295,25 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
             <div className="flex gap-4 pt-2">
               <WeaponColumn
                 weapons={WEAPONS.sidearms}
+                selectedToolName={selectedToolIconName}
                 onClick={handleToolClick}
                 onPointerDown={handleToolPointerDown}
               />
               <WeaponColumn
                 weapons={[...WEAPONS.smgs, ...WEAPONS.shotguns]}
+                selectedToolName={selectedToolIconName}
                 onClick={handleToolClick}
                 onPointerDown={handleToolPointerDown}
               />
               <WeaponColumn
                 weapons={WEAPONS.rifles}
+                selectedToolName={selectedToolIconName}
                 onClick={handleToolClick}
                 onPointerDown={handleToolPointerDown}
               />
               <WeaponColumn
                 weapons={[...WEAPONS.snipers, ...WEAPONS.machineGuns]}
+                selectedToolName={selectedToolIconName}
                 onClick={handleToolClick}
                 onPointerDown={handleToolPointerDown}
               />
@@ -307,6 +327,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
             <div className="grid grid-cols-5 gap-2 pt-2">
               <ToolIconButton
                 name="light_shield"
+                selected={selectedToolIconName === "light_shield"}
                 onClick={() => handleToolClick("light_shield", 32, 32)}
                 onPointerDown={(event) =>
                   handleToolPointerDown(event, "light_shield", 32, 32)
@@ -314,6 +335,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
               />
               <ToolIconButton
                 name="regen_shield"
+                selected={selectedToolIconName === "regen_shield"}
                 onClick={() => handleToolClick("regen_shield", 32, 32)}
                 onPointerDown={(event) =>
                   handleToolPointerDown(event, "regen_shield", 32, 32)
@@ -321,6 +343,7 @@ export const IconsSection = ({ mapPosition }: IconsSectionProps) => {
               />
               <ToolIconButton
                 name="heavy_shield"
+                selected={selectedToolIconName === "heavy_shield"}
                 onClick={() => handleToolClick("heavy_shield", 32, 32)}
                 onPointerDown={(event) =>
                   handleToolPointerDown(event, "heavy_shield", 32, 32)

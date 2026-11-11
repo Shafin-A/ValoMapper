@@ -3,6 +3,7 @@ import { ToolIconButton } from "./tool-icon-button";
 
 interface WeaponColumnProps {
   weapons: { name: string; width: number; height: number }[];
+  selectedToolName?: string | null;
   onClick: (name: string, width: number, height: number) => void;
   onPointerDown: (
     event: PointerEvent<HTMLButtonElement>,
@@ -14,6 +15,7 @@ interface WeaponColumnProps {
 
 export const WeaponColumn = ({
   weapons,
+  selectedToolName,
   onClick,
   onPointerDown,
 }: WeaponColumnProps) => (
@@ -22,6 +24,7 @@ export const WeaponColumn = ({
       <Fragment key={weapon.name}>
         <ToolIconButton
           name={weapon.name}
+          selected={selectedToolName === weapon.name}
           onClick={() => onClick(weapon.name, weapon.width, weapon.height)}
           onPointerDown={(event) =>
             onPointerDown(event, weapon.name, weapon.width, weapon.height)

@@ -185,6 +185,7 @@ export const VisionConeSettings = ({
             <ToolIconButton
               name={item.icon}
               fileEnding="svg"
+              selected={selectedCanvasIcon?.name === item.name}
               onClick={() => handleVisionConeClick(item.name)}
               onPointerDown={(event) =>
                 handleVisionConePointerDown(event, item.name)
