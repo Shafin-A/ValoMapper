@@ -25,6 +25,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Next.js blocks cross-origin requests to dev-only resources by default.
+  // This lets phones/tablets on the local network load the dev server
+  // (including CSS/HMR) when testing over Wi-Fi.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "*.local"],
   images: {
     localPatterns: [
       {
