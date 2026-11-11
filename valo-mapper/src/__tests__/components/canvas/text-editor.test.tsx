@@ -1,7 +1,13 @@
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { TextEditor } from "@/components/canvas/text-editor";
 import { readSpansFromDom, spansToPlainText } from "@/lib/rich-text";
 import type { TextSpan } from "@/lib/types";
+
+const mockIsMobile = jest.fn(() => false);
+
+jest.mock("@/hooks/use-mobile", () => ({
+  useIsMobile: () => mockIsMobile(),
+}));
 
 jest.mock("react-konva-utils", () => ({
   Html: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -43,6 +49,7 @@ const renderEditor = (
 describe("TextEditor", () => {
   beforeEach(() => {
     jest.useFakeTimers();
+    mockIsMobile.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -120,6 +127,42 @@ describe("TextEditor", () => {
 
     expect(editor.isConnected).toBe(true);
     expect(document.activeElement).toBe(editor);
+  });
+
+  it("renders a full-screen mobile editor and does not submit on Enter", () => {
+    mockIsMobile.mockReturnValue(true);
+
+    const onChange = jest.fn();
+    const onClose = jest.fn();
+
+    render(
+      <TextEditor
+        spans={[{ text: "mobile text" }]}
+        fontSize={18}
+        width={100}
+        height={40}
+        onChange={onChange}
+        onClose={onClose}
+      />,
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "Edit text" }),
+    ).toBeInTheDocument();
+
+    const editor = document.querySelector<HTMLDivElement>(
+      '[contenteditable="true"]',
+    );
+    if (!editor) throw new Error("editor not found");
+
+    fireEvent.keyDown(editor, { key: "Enter" });
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: /Done/i }));
+
+    expect(onClose).toHaveBeenCalled();
   });
 
   it("keeps the original text when closing before typing", () => {

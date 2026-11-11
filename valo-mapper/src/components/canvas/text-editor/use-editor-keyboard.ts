@@ -33,6 +33,7 @@ interface UseEditorKeyboardOptions {
   readCurrentFormats: () => ActiveFormats;
   restorePendingFormats: (desired: ActiveFormats) => void;
   replaceEditorContent: (html: string) => void;
+  submitOnEnter?: boolean;
 }
 
 export const useEditorKeyboard = ({
@@ -44,6 +45,7 @@ export const useEditorKeyboard = ({
   readCurrentFormats,
   restorePendingFormats,
   replaceEditorContent,
+  submitOnEnter = true,
 }: UseEditorKeyboardOptions) => {
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter") {
@@ -144,6 +146,11 @@ export const useEditorKeyboard = ({
           syncFromEditor();
           return;
         }
+      }
+
+      if (!submitOnEnter) {
+        window.setTimeout(syncFromEditor, 0);
+        return;
       }
 
       event.preventDefault();

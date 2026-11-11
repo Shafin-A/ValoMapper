@@ -34,6 +34,7 @@ import { useCanvasEvents } from "@/hooks/canvas";
 import { FullscreenImageModal } from "./fullscreen-image-modal";
 import { LineupViewDialog } from "./lineup-view-dialog";
 import { ConnectingLine } from "@/lib/types";
+import { MobileTextEditorHost } from "./mobile-text-editor-host";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Scan } from "lucide-react";
@@ -364,6 +365,8 @@ export const MapStage = memo(
             <RemoteCursors scale={scale} />
           </Layer>
         </Stage>
+
+        <MobileTextEditorHost />
 
         {isMobile && (
           <div className="absolute bottom-3 right-3 z-20 flex flex-col gap-0.5 rounded-lg border bg-background/90 p-1 shadow-md backdrop-blur">

@@ -15,11 +15,13 @@ interface TextEditorToolbarProps {
   onToggleList: (type: "bullet" | "number") => void;
   onFontSizeChange: (size: number) => void;
   onMouseDown: (event: ReactMouseEvent<HTMLDivElement>) => void;
+  mobile?: boolean;
 }
 
-const formatButtonClass = (active: boolean) =>
+const formatButtonClass = (active: boolean, mobile?: boolean) =>
   cn(
-    "h-6 w-6 rounded text-zinc-300 hover:bg-zinc-700 hover:text-white",
+    mobile ? "h-10 w-10" : "h-6 w-6",
+    "shrink-0 rounded text-zinc-300 hover:bg-zinc-700 hover:text-white",
     active && "bg-zinc-700 text-white",
   );
 
@@ -34,6 +36,7 @@ export const TextEditorToolbar = ({
   onToggleList,
   onFontSizeChange,
   onMouseDown,
+  mobile = false,
 }: TextEditorToolbarProps) => {
   const formatButtonProps = (command: string, label: string) => ({
     type: "button" as const,
@@ -52,26 +55,29 @@ export const TextEditorToolbar = ({
       <Button
         {...formatButtonProps("bold", "Bold")}
         aria-pressed={activeFormats.bold}
-        className={formatButtonClass(activeFormats.bold)}
+        className={formatButtonClass(activeFormats.bold, mobile)}
       >
         <Bold />
       </Button>
       <Button
         {...formatButtonProps("italic", "Italic")}
         aria-pressed={activeFormats.italic}
-        className={formatButtonClass(activeFormats.italic)}
+        className={formatButtonClass(activeFormats.italic, mobile)}
       >
         <Italic />
       </Button>
       <Button
         {...formatButtonProps("underline", "Underline")}
         aria-pressed={activeFormats.underline}
-        className={formatButtonClass(activeFormats.underline)}
+        className={formatButtonClass(activeFormats.underline, mobile)}
       >
         <Underline />
       </Button>
 
-      <span className="mx-1 h-4 w-px bg-zinc-700" aria-hidden />
+      <span
+        className={cn("mx-1 w-px bg-zinc-700", mobile ? "h-6" : "h-4")}
+        aria-hidden
+      />
 
       <Button
         type="button"
@@ -79,7 +85,7 @@ export const TextEditorToolbar = ({
         size="icon"
         aria-label="Bullet list"
         aria-pressed={activeFormats.bullet}
-        className={formatButtonClass(activeFormats.bullet)}
+        className={formatButtonClass(activeFormats.bullet, mobile)}
         onMouseDown={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -94,7 +100,7 @@ export const TextEditorToolbar = ({
         size="icon"
         aria-label="Numbered list"
         aria-pressed={activeFormats.numbered}
-        className={formatButtonClass(activeFormats.numbered)}
+        className={formatButtonClass(activeFormats.numbered, mobile)}
         onMouseDown={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -104,7 +110,10 @@ export const TextEditorToolbar = ({
         <ListOrdered />
       </Button>
 
-      <span className="mx-1 h-4 w-px bg-zinc-700" aria-hidden />
+      <span
+        className={cn("mx-1 w-px bg-zinc-700", mobile ? "h-6" : "h-4")}
+        aria-hidden
+      />
 
       {TEXT_COLORS.map((color) => (
         <button
@@ -113,7 +122,8 @@ export const TextEditorToolbar = ({
           aria-label={`Text color ${color}`}
           aria-pressed={activeFormats.color === color}
           className={cn(
-            "size-4 rounded-full border",
+            "shrink-0 rounded-full border",
+            mobile ? "size-7" : "size-4",
             activeFormats.color === color
               ? "border-white"
               : "border-zinc-600",
@@ -131,18 +141,27 @@ export const TextEditorToolbar = ({
         type="color"
         aria-label="Custom text color"
         value={activeFormats.color}
-        className="size-5 cursor-pointer rounded border-0 bg-transparent p-0"
+        className={cn(
+          "shrink-0 cursor-pointer rounded border-0 bg-transparent p-0",
+          mobile ? "size-8" : "size-5",
+        )}
         onMouseDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
         onChange={(event) => onColor(event.target.value)}
       />
 
-      <span className="mx-1 h-4 w-px bg-zinc-700" aria-hidden />
+      <span
+        className={cn("mx-1 w-px bg-zinc-700", mobile ? "h-6" : "h-4")}
+        aria-hidden
+      />
 
       <select
         aria-label="Font size"
         value={fontSize}
-        className="h-6 rounded bg-zinc-800 px-1 text-[11px] text-white outline-none"
+        className={cn(
+          "shrink-0 rounded bg-zinc-800 px-1 text-white outline-none",
+          mobile ? "h-10 text-base" : "h-6 text-[11px]",
+        )}
         onMouseDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
         onChange={(event) => onFontSizeChange(Number(event.target.value))}

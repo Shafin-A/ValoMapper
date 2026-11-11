@@ -1,8 +1,11 @@
 import { Html } from "react-konva-utils";
 import { useCallback, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import {
   DEFAULT_TEXT_COLOR,
   TEXT_FONT_FAMILY,
@@ -50,6 +53,7 @@ interface TextEditorProps {
   height: number;
   onChange: (value: { spans: TextSpan[]; fontSize: number }) => void;
   onClose: () => void;
+  mobile?: boolean;
 }
 
 export const TextEditor = ({
@@ -59,7 +63,11 @@ export const TextEditor = ({
   height,
   onChange,
   onClose,
+  mobile,
 }: TextEditorProps) => {
+  const detectedMobile = useIsMobile();
+  const isMobile = mobile ?? detectedMobile;
+  const viewport = useVisualViewport();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<HTMLDivElement | null>(null);
@@ -334,14 +342,19 @@ export const TextEditor = ({
     editor.focus();
 
     const range = document.createRange();
-    range.selectNodeContents(editor);
+    if (isMobile) {
+      range.selectNodeContents(editor);
+      range.collapse(false);
+    } else {
+      range.selectNodeContents(editor);
+    }
 
     const selection = window.getSelection();
     selection?.removeAllRanges();
     selection?.addRange(range);
 
     return document.activeElement === editor;
-  }, []);
+  }, [isMobile]);
 
   useEditorFocus(focusEditor);
 
@@ -386,6 +399,7 @@ export const TextEditor = ({
     readCurrentFormats,
     restorePendingFormats,
     replaceEditorContent,
+    submitOnEnter: !isMobile,
   });
 
   const stopPropagation = (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -445,6 +459,137 @@ export const TextEditor = ({
     zIndex: 2,
     whiteSpace: "nowrap",
   };
+
+  const mobileDisplayFontSize = Math.max(editorFontSize, 16);
+
+  const mobileOverlayStyle: CSSProperties = {
+    position: "fixed",
+    top: viewport.top,
+    left: 0,
+    width: "100%",
+    height: viewport.height > 0 ? viewport.height : "100dvh",
+    zIndex: 100,
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "#0c0a09",
+  };
+
+  const mobileEditorStyle: CSSProperties = {
+    position: "relative",
+    width: "100%",
+    minHeight: "45vh",
+    boxSizing: "border-box",
+    padding: `${TEXT_PADDING + 6}px`,
+    margin: 0,
+    border: "none",
+    outline: "none",
+    background: "none",
+    resize: "none",
+    fontSize: `${mobileDisplayFontSize}px`,
+    fontFamily: `${TEXT_FONT_FAMILY}, sans-serif`,
+    lineHeight: 1.5,
+    color: DEFAULT_TEXT_COLOR,
+    caretColor: DEFAULT_TEXT_COLOR,
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
+    overflowY: "auto",
+  };
+
+  const mobileToolbarStyle: CSSProperties = {
+    position: "relative",
+    display: "flex",
+    flexShrink: 0,
+    alignItems: "center",
+    gap: "4px",
+    width: "100%",
+    padding: "8px 12px",
+    paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
+    borderTop: "1px solid #3f3f46",
+    backgroundColor: "#18181b",
+    overflowX: "auto",
+    overflowY: "hidden",
+    whiteSpace: "nowrap",
+    zIndex: 2,
+  };
+
+  if (isMobile && typeof document !== "undefined") {
+    return createPortal(
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Edit text"
+        style={mobileOverlayStyle}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-white">Edit text</p>
+            <p className="text-xs text-zinc-400">
+              Tap Done when you&apos;re finished
+            </p>
+          </div>
+          <Button size="sm" className="gap-1.5" onClick={commit}>
+            <Check className="size-4" />
+            Done
+          </Button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div
+            className="relative min-h-[45vh] rounded-lg border border-zinc-800 bg-[#18181b]"
+            onMouseDown={stopPropagation}
+          >
+            <div
+              ref={attachEditor}
+              role="textbox"
+              aria-label="Text content"
+              aria-multiline="true"
+              contentEditable
+              suppressContentEditableWarning
+              style={mobileEditorStyle}
+              onInput={syncFromEditor}
+              onKeyDown={handleKeyDown}
+              onKeyUp={updateActiveFormats}
+              onMouseUp={updateActiveFormats}
+              onPaste={handlePaste}
+            />
+            {isEmpty && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute select-none"
+                style={{
+                  left: TEXT_PADDING + 6,
+                  top: TEXT_PADDING + 6,
+                  color: TEXT_PLACEHOLDER_COLOR,
+                  fontSize: mobileDisplayFontSize,
+                  fontFamily: `${TEXT_FONT_FAMILY}, sans-serif`,
+                  lineHeight: 1.5,
+                }}
+              >
+                Type your text...
+              </span>
+            )}
+          </div>
+        </div>
+
+        <TextEditorToolbar
+          mobile
+          toolbarRef={toolbarRef}
+          style={mobileToolbarStyle}
+          activeFormats={activeFormats}
+          fontSize={editorFontSize}
+          sizeOptions={sizeOptions}
+          onCommand={applyCommand}
+          onColor={applyColor}
+          onToggleList={toggleList}
+          onFontSizeChange={handleFontSizeChange}
+          onMouseDown={stopPropagation}
+        />
+      </div>,
+      document.body,
+    );
+  }
 
   return (
     <Html>

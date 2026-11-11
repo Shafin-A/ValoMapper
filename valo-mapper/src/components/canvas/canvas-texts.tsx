@@ -7,6 +7,7 @@ import { useCommitCount } from "@/lib/perf-beacon";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { useTextEditor } from "@/hooks/canvas";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Group, Rect, Transformer } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { TextEditor } from "@/components/canvas/text-editor";
@@ -49,6 +50,7 @@ export const CanvasTexts = memo(function CanvasTexts({
 
   const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
 
+  const isMobile = useIsMobile();
   const {
     textRefs,
     attachTransformerToText,
@@ -167,15 +169,17 @@ export const CanvasTexts = memo(function CanvasTexts({
           <RichText layout={layout} />
         </Group>
         {isEditing ? (
-          <TextEditor
-            key={textItem.id}
-            spans={spans}
-            fontSize={fontSize}
-            width={boxWidth}
-            height={boxHeight}
-            onChange={(value) => handleTextChange(textItem.id, value)}
-            onClose={handleTextEditComplete}
-          />
+          isMobile ? null : (
+            <TextEditor
+              key={textItem.id}
+              spans={spans}
+              fontSize={fontSize}
+              width={boxWidth}
+              height={boxHeight}
+              onChange={(value) => handleTextChange(textItem.id, value)}
+              onClose={handleTextEditComplete}
+            />
+          )
         ) : !selectionDrag.isMultiSelected(textItem.id) ? (
           <Transformer
             ref={(node) => {

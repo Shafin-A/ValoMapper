@@ -36,12 +36,45 @@ const heightForText = (
   return Math.max(TEXT_MIN_HEIGHT, layout.height);
 };
 
+export const useTextEditing = () => {
+  const { textsOnCanvas, setTextsOnCanvas } = useCanvasEntities();
+  const { setEditingTextId } = useCanvasUi();
+  const { notifyTextUpdated } = useCollaborativeCanvas();
+
+  const handleTextChange = (textId: string, value: TextChangeValue) => {
+    const textItem = textsOnCanvas.find((t) => t.id === textId);
+    if (!textItem) return;
+
+    const spans = renumberListLines(normalizeTextSpans(value.spans));
+    const fontSize = resolveTextFontSize(value.fontSize);
+    const updatedText: TextCanvas = {
+      ...textItem,
+      text: spansToPlainText(spans),
+      spans: spansHaveFormatting(spans) ? spans : undefined,
+      fontSize,
+      height: heightForText({ ...textItem, fontSize }, textItem.width, spans),
+    };
+
+    setTextsOnCanvas((prev) =>
+      prev.map((item) => (item.id === textId ? updatedText : item)),
+    );
+    notifyTextUpdated(updatedText);
+  };
+
+  const handleTextEditComplete = useCallback(() => {
+    setEditingTextId(null);
+  }, [setEditingTextId]);
+
+  return { handleTextChange, handleTextEditComplete };
+};
+
 export const useTextEditor = (
   transformerRefs: RefObject<Map<string, Konva.Transformer>>,
 ) => {
   const { textsOnCanvas, setTextsOnCanvas } = useCanvasEntities();
   const { isDrawMode, setEditingTextId } = useCanvasUi();
   const { notifyTextUpdated } = useCollaborativeCanvas();
+  const { handleTextChange, handleTextEditComplete } = useTextEditing();
 
   const textRefs = useRef<Map<string, Konva.Rect>>(new Map());
 
@@ -100,30 +133,6 @@ export const useTextEditor = (
     },
     [setTextsOnCanvas, textsOnCanvas, notifyTextUpdated],
   );
-
-  const handleTextChange = (textId: string, value: TextChangeValue) => {
-    const textItem = textsOnCanvas.find((t) => t.id === textId);
-    if (!textItem) return;
-
-    const spans = renumberListLines(normalizeTextSpans(value.spans));
-    const fontSize = resolveTextFontSize(value.fontSize);
-    const updatedText: TextCanvas = {
-      ...textItem,
-      text: spansToPlainText(spans),
-      spans: spansHaveFormatting(spans) ? spans : undefined,
-      fontSize,
-      height: heightForText({ ...textItem, fontSize }, textItem.width, spans),
-    };
-
-    setTextsOnCanvas((prev) =>
-      prev.map((item) => (item.id === textId ? updatedText : item)),
-    );
-    notifyTextUpdated(updatedText);
-  };
-
-  const handleTextEditComplete = useCallback(() => {
-    setEditingTextId(null);
-  }, [setEditingTextId]);
 
   return {
     textRefs,
