@@ -10,6 +10,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
 import { useCallback, useEffect, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const getMaxZoomScale = () =>
   typeof window !== "undefined" &&
@@ -22,6 +23,7 @@ export const useCanvasZoom = (
   baseScale: number,
   isDrawMode: boolean,
 ) => {
+  const isMobile = useIsMobile();
   const maxZoomScale = getMaxZoomScale();
   const pinchInitialDistanceRef = useRef<number | null>(null);
   const pinchInitialScaleRef = useRef<number | null>(null);
@@ -40,7 +42,8 @@ export const useCanvasZoom = (
     const containerWidth = host?.offsetWidth ?? container.offsetWidth;
 
     const SMALL_SCREEN_BREAKPOINT = 768;
-    const isSmallScreen = containerWidth < SMALL_SCREEN_BREAKPOINT;
+    const isSmallScreen =
+      isMobile || containerWidth < SMALL_SCREEN_BREAKPOINT;
 
     const DELETE_ZONE_WIDTH = isSmallScreen ? 84 : 100;
     const PADDING = 20;
@@ -70,7 +73,7 @@ export const useCanvasZoom = (
       x: 1 / totalScale,
       y: 1 / totalScale,
     });
-  }, [stageRef]);
+  }, [isMobile, stageRef]);
 
   const handleWheel = useCallback(
     (e: KonvaEventObject<WheelEvent>) => {

@@ -1,9 +1,14 @@
 import { renderHook } from "@testing-library/react";
 import { useCanvasZoom } from "@/hooks/canvas/use-canvas-zoom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { KonvaEventObject } from "konva/lib/Node";
 import type { Stage } from "konva/lib/Stage";
 import type Konva from "konva";
 import type { RefObject } from "react";
+
+jest.mock("@/hooks/use-mobile");
+
+const mockUseIsMobile = jest.mocked(useIsMobile);
 
 type StageMock = {
   container: () => {
@@ -77,6 +82,10 @@ const createStageMock = (
 };
 
 describe("useCanvasZoom", () => {
+  beforeEach(() => {
+    mockUseIsMobile.mockReturnValue(false);
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -122,6 +131,35 @@ describe("useCanvasZoom", () => {
     result.current.handleDragMove();
 
     expect(deleteGroup.position).toHaveBeenCalledWith({ x: 282, y: 24 });
+    expect(deleteGroup.scale).toHaveBeenCalledWith({ x: 1, y: 1 });
+  });
+
+  it("positions the delete zone top-right on tablets using the mobile layout", () => {
+    mockUseIsMobile.mockReturnValue(true);
+
+    const stage = createStageMock(
+      1,
+      { x: 0, y: 0 },
+      { width: 800, height: 800 },
+    );
+    const stageRef: RefObject<Stage | null> = {
+      current: stage as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasZoom(stageRef, 1, false));
+
+    const deleteGroup = {
+      position: jest.fn(),
+      scale: jest.fn(),
+    } as Partial<Konva.Group>;
+    result.current.deleteGroupRef.current = deleteGroup as Konva.Group;
+
+    result.current.handleDragMove();
+
+    expect(deleteGroup.position).toHaveBeenCalledWith({
+      x: 800 - 84 - 24,
+      y: 24,
+    });
     expect(deleteGroup.scale).toHaveBeenCalledWith({ x: 1, y: 1 });
   });
 
