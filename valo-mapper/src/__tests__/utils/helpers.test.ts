@@ -179,5 +179,27 @@ describe("Utils", () => {
 
       expect(id1).not.toBe(id2);
     });
+
+    it("should fall back when crypto.randomUUID is unavailable", () => {
+      const descriptor = Object.getOwnPropertyDescriptor(crypto, "randomUUID");
+
+      try {
+        Object.defineProperty(crypto, "randomUUID", {
+          configurable: true,
+          value: undefined,
+        });
+
+        const id = getNextId("agent");
+        const uuidPart = id.replace("agent-", "");
+
+        expect(uuidPart).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+        );
+      } finally {
+        if (descriptor) {
+          Object.defineProperty(crypto, "randomUUID", descriptor);
+        }
+      }
+    });
   });
 });

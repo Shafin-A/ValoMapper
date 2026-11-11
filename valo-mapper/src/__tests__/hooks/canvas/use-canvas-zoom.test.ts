@@ -198,4 +198,49 @@ describe("useCanvasZoom", () => {
 
     expect(stage.draggable).toHaveBeenLastCalledWith(true);
   });
+
+  it("zooms in at the same rate on a phone-sized base scale", () => {
+    const stage = createStageMock(0.15, { x: 0, y: 0 });
+    const stageRef: RefObject<Stage | null> = {
+      current: stage as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasZoom(stageRef, 0.15, false));
+
+    const startEvent = {
+      evt: {
+        touches: [
+          { clientX: 100, clientY: 100 },
+          { clientX: 200, clientY: 100 },
+        ],
+        preventDefault: jest.fn(),
+      },
+      target: {},
+    } as unknown as KonvaEventObject<TouchEvent>;
+
+    result.current.handleTouchStart(startEvent);
+
+    const moveEvent = {
+      evt: {
+        touches: [
+          { clientX: 50, clientY: 100 },
+          { clientX: 250, clientY: 100 },
+        ],
+        preventDefault: jest.fn(),
+      },
+      target: {},
+    } as unknown as KonvaEventObject<TouchEvent>;
+
+    result.current.handleTouchMove(moveEvent);
+
+    const scaleCalls = stage.scale.mock.calls;
+    const scaleCall = scaleCalls[scaleCalls.length - 1]?.[0];
+    expect(scaleCall?.x).toBeCloseTo(0.3, 5);
+    expect(scaleCall?.y).toBeCloseTo(0.3, 5);
+
+    const positionCalls = stage.position.mock.calls;
+    const positionCall = positionCalls[positionCalls.length - 1]?.[0];
+    expect(positionCall?.x).toBeCloseTo(-150, 5);
+    expect(positionCall?.y).toBeCloseTo(-100, 5);
+  });
 });

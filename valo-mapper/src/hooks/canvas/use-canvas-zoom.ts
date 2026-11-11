@@ -134,9 +134,9 @@ export const useCanvasZoom = (
         y: (p.y - stagePos.y) / totalScale,
       }));
 
-      const dx = worldPoints[0].x - worldPoints[1].x;
-      const dy = worldPoints[0].y - worldPoints[1].y;
-      pinchInitialDistanceRef.current = Math.hypot(dx, dy);
+      const dx = touchPoints[0].x - touchPoints[1].x;
+      const dy = touchPoints[0].y - touchPoints[1].y;
+      pinchInitialDistanceRef.current = Math.max(Math.hypot(dx, dy), 1);
       pinchInitialScaleRef.current = totalScale;
       pinchCenterRef.current = {
         x: (worldPoints[0].x + worldPoints[1].x) / 2,
