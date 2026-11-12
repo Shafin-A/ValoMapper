@@ -8,7 +8,7 @@ export { useCanvasZoom } from "./use-canvas-zoom";
 // Canvas state management
 export { useCanvasItems } from "./use-canvas-items";
 export { useCanvasState } from "./use-canvas-state";
-export { useCanvasUI } from "./use-canvas-ui";
+export { useCanvasUiState } from "./use-canvas-ui-state";
 
 // Canvas utilities
 export { useHistoryManager } from "./use-history-manager";

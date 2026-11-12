@@ -1,14 +1,14 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { useCanvasUI } from "@/hooks/canvas/use-canvas-ui";
+import { useCanvasUiState } from "@/hooks/canvas/use-canvas-ui-state";
 import { getCanvasBackgroundStorageKey } from "@/lib/canvas-background";
 
-describe("useCanvasUI canvas background", () => {
+describe("useCanvasUiState canvas background", () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
 
   it("defaults to none when nothing is stored", async () => {
-    const { result } = renderHook(() => useCanvasUI({ lobbyCode: "AAAA" }));
+    const { result } = renderHook(() => useCanvasUiState({ lobbyCode: "AAAA" }));
 
     await waitFor(() => {
       expect(result.current.canvasBackground).toBe("none");
@@ -21,7 +21,7 @@ describe("useCanvasUI canvas background", () => {
       "grid",
     );
 
-    const { result } = renderHook(() => useCanvasUI({ lobbyCode: "AAAA" }));
+    const { result } = renderHook(() => useCanvasUiState({ lobbyCode: "AAAA" }));
 
     await waitFor(() => {
       expect(result.current.canvasBackground).toBe("grid");
@@ -31,7 +31,7 @@ describe("useCanvasUI canvas background", () => {
   it("persists changes and keeps each lobby independent", async () => {
     const { result, rerender } = renderHook(
       ({ lobbyCode }: { lobbyCode: string }) =>
-        useCanvasUI({ lobbyCode }),
+        useCanvasUiState({ lobbyCode }),
       { initialProps: { lobbyCode: "AAAA" } },
     );
 
@@ -76,10 +76,10 @@ describe("useCanvasUI canvas background", () => {
   });
 });
 
-describe("useCanvasUI callback stability", () => {
+describe("useCanvasUiState callback stability", () => {
   it("keeps resetEdits stable across rerenders", () => {
     const { result, rerender } = renderHook(() =>
-      useCanvasUI({ lobbyCode: "ABCD" }),
+      useCanvasUiState({ lobbyCode: "ABCD" }),
     );
 
     const initialResetEdits = result.current.resetEdits;

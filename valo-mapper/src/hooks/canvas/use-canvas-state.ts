@@ -1,7 +1,7 @@
 import { useLobby } from "@/hooks/api/use-lobby";
 import {
   useCanvasItems,
-  useCanvasUI,
+  useCanvasUiState,
   useHistoryManager,
   usePhaseManager,
   usePhaseTransitions,
@@ -81,7 +81,7 @@ export const useCanvasState = ({
   const initialState = initialStateRef.current;
 
   const phaseTransitions = usePhaseTransitions();
-  const canvasUI = useCanvasUI({
+  const canvasUI = useCanvasUiState({
     initialMapSide: initialState?.mapSide,
     initialSelectedMap: initialState?.selectedMap,
     lobbyCode,

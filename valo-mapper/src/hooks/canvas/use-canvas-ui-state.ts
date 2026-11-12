@@ -28,7 +28,7 @@ interface UseCanvasUIOptions {
   lobbyCode?: string;
 }
 
-export const useCanvasUI = ({
+export const useCanvasUiState = ({
   initialMapSide = "defense",
   initialSelectedMap = DEFAULT_MAP_OPTIONS[0],
   lobbyCode = "",

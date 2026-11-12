@@ -3,7 +3,7 @@ import { useCanvasState } from "@/hooks/canvas/use-canvas-state";
 import { useLobby } from "@/hooks/api/use-lobby";
 import {
   useCanvasItems,
-  useCanvasUI,
+  useCanvasUiState,
   useHistoryManager,
   usePhaseManager,
   usePhaseTransitions,
@@ -19,7 +19,7 @@ jest.mock("@/hooks/api/use-lobby", () => ({
 
 jest.mock("@/hooks/canvas", () => ({
   useCanvasItems: jest.fn(),
-  useCanvasUI: jest.fn(),
+  useCanvasUiState: jest.fn(),
   useHistoryManager: jest.fn(),
   usePhaseManager: jest.fn(),
   usePhaseTransitions: jest.fn(),
@@ -39,7 +39,7 @@ jest.mock("next/navigation", () => ({
 
 const mockUseLobby = jest.mocked(useLobby);
 const mockUseCanvasItems = jest.mocked(useCanvasItems);
-const mockUseCanvasUI = jest.mocked(useCanvasUI);
+const mockUseCanvasUI = jest.mocked(useCanvasUiState);
 const mockUseHistoryManager = jest.mocked(useHistoryManager);
 const mockUsePhaseManager = jest.mocked(usePhaseManager);
 const mockUsePhaseTransitions = jest.mocked(usePhaseTransitions);
