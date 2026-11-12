@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ReplayTimeline } from "@/components/replay/replay-timeline";
+import { createReplayClock } from "@/lib/replay/clock";
 import type { ReplayRound } from "@/lib/replay/types";
 import type { MatchPlayerSummary } from "@/lib/types";
 
@@ -35,7 +36,7 @@ describe("ReplayTimeline spike markers", () => {
       <ReplayTimeline
         round={round}
         players={[]}
-        currentTimeMs={0}
+        clock={createReplayClock(0)}
         onSeek={jest.fn()}
       />,
     );
@@ -55,7 +56,7 @@ describe("ReplayTimeline spike markers", () => {
       <ReplayTimeline
         round={round}
         players={[]}
-        currentTimeMs={0}
+        clock={createReplayClock(0)}
         onSeek={jest.fn()}
       />,
     );
@@ -107,7 +108,7 @@ describe("ReplayTimeline spike markers", () => {
       <ReplayTimeline
         round={killRound}
         players={players}
-        currentTimeMs={0}
+        clock={createReplayClock(0)}
         onSeek={jest.fn()}
       />,
     );
@@ -132,7 +133,7 @@ describe("ReplayTimeline spike markers", () => {
       <ReplayTimeline
         round={round}
         players={[]}
-        currentTimeMs={0}
+        clock={createReplayClock(0)}
         onSeek={jest.fn()}
       />,
     );
@@ -191,7 +192,7 @@ describe("ReplayTimeline spike markers", () => {
       <ReplayTimeline
         round={killRound}
         players={players}
-        currentTimeMs={0}
+        clock={createReplayClock(0)}
         onSeek={jest.fn()}
       />,
     );

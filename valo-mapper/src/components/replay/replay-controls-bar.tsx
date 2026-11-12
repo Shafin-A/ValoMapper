@@ -9,7 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useReplayClockStep } from "@/hooks/use-replay-clock";
 import type { MatchPlayers } from "@/lib/matches";
+import type { ReplayClock } from "@/lib/replay/clock";
 import { formatReplayTime } from "@/lib/replay/display";
 import type { ReplayRound } from "@/lib/replay/types";
 import { REPLAY_SPEEDS, type ReplaySpeed } from "@/hooks/use-replay-playback";
@@ -44,6 +46,12 @@ const ReplaySpeedSelect = memo(function ReplaySpeedSelect({
   );
 });
 
+const ReplayTimeLabel = ({ clock }: { clock: ReplayClock }) => {
+  const currentTimeMs = useReplayClockStep(clock, 1000);
+
+  return <>{formatReplayTime(currentTimeMs)}</>;
+};
+
 export const ReplayControlsBar = ({
   rounds,
   selectedRoundNumber,
@@ -54,7 +62,7 @@ export const ReplayControlsBar = ({
   onSelectRound,
   round,
   players,
-  currentTimeMs,
+  clock,
   isPlaying,
   speed,
   onTogglePlay,
@@ -80,7 +88,7 @@ export const ReplayControlsBar = ({
   onSelectRound: (roundNumber: number) => void;
   round: ReplayRound;
   players: MatchPlayers;
-  currentTimeMs: number;
+  clock: ReplayClock;
   isPlaying: boolean;
   speed: ReplaySpeed;
   onTogglePlay: () => void;
@@ -127,7 +135,7 @@ export const ReplayControlsBar = ({
         </Button>
 
         <div className="w-16 shrink-0 text-[11px] font-semibold tabular-nums text-white/80 sm:w-20">
-          {formatReplayTime(currentTimeMs)}
+          <ReplayTimeLabel clock={clock} />
           <span className="text-white/60">
             {" "}
             / {formatReplayTime(round.durationMs)}
@@ -138,7 +146,7 @@ export const ReplayControlsBar = ({
           <ReplayTimeline
             round={round}
             players={players}
-            currentTimeMs={currentTimeMs}
+            clock={clock}
             onSeek={onSeek}
           />
         </div>

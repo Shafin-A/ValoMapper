@@ -1,5 +1,6 @@
 "use client";
 
+import { createReplayClock } from "@/lib/replay/clock";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export const REPLAY_SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
@@ -40,45 +41,46 @@ export const useReplayPlayback = ({
   const startRef = useRef(start);
   startRef.current = start;
   const activeStartRef = useRef(start);
-  const [currentTimeMs, setCurrentTimeMs] = useState(start);
+
+  const clockRef = useRef<ReturnType<typeof createReplayClock> | null>(null);
+  if (!clockRef.current) {
+    clockRef.current = createReplayClock(start);
+  }
+  const clock = clockRef.current;
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState<ReplaySpeed>(1);
 
-  const timeRef = useRef(start);
   const frameRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
 
   const seek = useCallback(
     (timeMs: number, options?: { pause?: boolean }) => {
-      const nextTime = clamp(timeMs, 0, durationMs);
-      timeRef.current = nextTime;
-      setCurrentTimeMs(nextTime);
+      clock.setTime(clamp(timeMs, 0, durationMs));
 
       if (options?.pause ?? true) {
         setIsPlaying(false);
       }
     },
-    [durationMs],
+    [clock, durationMs],
   );
 
   const seekRelative = useCallback(
     (deltaMs: number) => {
-      seek(timeRef.current + deltaMs, { pause: false });
+      seek(clock.getTime() + deltaMs, { pause: false });
     },
-    [seek],
+    [clock, seek],
   );
 
   const togglePlay = useCallback(() => {
-    if (timeRef.current >= durationMs) {
-      const nextStart = activeStartRef.current;
-      timeRef.current = nextStart;
-      setCurrentTimeMs(nextStart);
+    if (clock.getTime() >= durationMs) {
+      clock.setTime(activeStartRef.current);
       setIsPlaying(true);
       return;
     }
 
     setIsPlaying((previous) => !previous);
-  }, [durationMs]);
+  }, [clock, durationMs]);
 
   const cycleSpeed = useCallback((direction: -1 | 1) => {
     setSpeed((previous) => {
@@ -91,10 +93,9 @@ export const useReplayPlayback = ({
   useEffect(() => {
     const nextStart = startRef.current;
     activeStartRef.current = nextStart;
-    timeRef.current = nextStart;
-    setCurrentTimeMs(nextStart);
+    clock.setTime(nextStart);
     setIsPlaying(false);
-  }, [resetKey]);
+  }, [clock, resetKey]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -110,9 +111,8 @@ export const useReplayPlayback = ({
       const deltaMs = (timestamp - lastTimestampRef.current) * speed;
       lastTimestampRef.current = timestamp;
 
-      const nextTime = Math.min(durationMs, timeRef.current + deltaMs);
-      timeRef.current = nextTime;
-      setCurrentTimeMs(nextTime);
+      const nextTime = Math.min(durationMs, clock.getTime() + deltaMs);
+      clock.setTime(nextTime);
 
       if (nextTime >= durationMs) {
         setIsPlaying(false);
@@ -131,7 +131,7 @@ export const useReplayPlayback = ({
       }
       lastTimestampRef.current = null;
     };
-  }, [durationMs, isPlaying, speed]);
+  }, [clock, durationMs, isPlaying, speed]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -174,7 +174,8 @@ export const useReplayPlayback = ({
   }, [cycleSpeed, seekRelative, togglePlay]);
 
   return {
-    currentTimeMs,
+    clock,
+    getCurrentTimeMs: clock.getTime,
     isPlaying,
     speed,
     seek,

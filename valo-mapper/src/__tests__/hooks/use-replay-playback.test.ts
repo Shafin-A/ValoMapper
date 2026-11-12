@@ -11,7 +11,7 @@ describe("useReplayPlayback start time", () => {
       }),
     );
 
-    expect(result.current.currentTimeMs).toBe(2_500);
+    expect(result.current.getCurrentTimeMs()).toBe(2_500);
   });
 
   it("resets to the barrier drop when the round changes", () => {
@@ -26,10 +26,10 @@ describe("useReplayPlayback start time", () => {
     );
 
     act(() => result.current.seek(6_000));
-    expect(result.current.currentTimeMs).toBe(6_000);
+    expect(result.current.getCurrentTimeMs()).toBe(6_000);
 
     rerender({ resetKey: "round-2", startTimeMs: 1_500 });
-    expect(result.current.currentTimeMs).toBe(1_500);
+    expect(result.current.getCurrentTimeMs()).toBe(1_500);
   });
 
   it("only applies a new start time when the round changes", () => {
@@ -46,12 +46,12 @@ describe("useReplayPlayback start time", () => {
     act(() => result.current.seek(6_000));
     rerender({ startTimeMs: 0 });
 
-    expect(result.current.currentTimeMs).toBe(6_000);
+    expect(result.current.getCurrentTimeMs()).toBe(6_000);
 
     act(() => result.current.seek(10_000));
     act(() => result.current.togglePlay());
 
-    expect(result.current.currentTimeMs).toBe(2_500);
+    expect(result.current.getCurrentTimeMs()).toBe(2_500);
   });
 
   it("restarts at the barrier drop after the round ends", () => {
@@ -66,7 +66,7 @@ describe("useReplayPlayback start time", () => {
     act(() => result.current.seek(10_000));
     act(() => result.current.togglePlay());
 
-    expect(result.current.currentTimeMs).toBe(2_500);
+    expect(result.current.getCurrentTimeMs()).toBe(2_500);
     expect(result.current.isPlaying).toBe(true);
   });
 
@@ -80,7 +80,7 @@ describe("useReplayPlayback start time", () => {
     );
 
     act(() => result.current.seek(500));
-    expect(result.current.currentTimeMs).toBe(500);
+    expect(result.current.getCurrentTimeMs()).toBe(500);
   });
 
   it("keeps playing when seeking with pause disabled", () => {
@@ -96,7 +96,7 @@ describe("useReplayPlayback start time", () => {
 
     act(() => result.current.seek(4_000, { pause: false }));
 
-    expect(result.current.currentTimeMs).toBe(4_000);
+    expect(result.current.getCurrentTimeMs()).toBe(4_000);
     expect(result.current.isPlaying).toBe(true);
   });
 
@@ -118,7 +118,7 @@ describe("useReplayPlayback start time", () => {
       );
     });
 
-    expect(result.current.currentTimeMs).toBe(7_000);
+    expect(result.current.getCurrentTimeMs()).toBe(7_000);
     expect(result.current.isPlaying).toBe(true);
   });
 
@@ -137,7 +137,7 @@ describe("useReplayPlayback start time", () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
     });
 
-    expect(result.current.currentTimeMs).toBe(0);
+    expect(result.current.getCurrentTimeMs()).toBe(0);
     expect(result.current.isPlaying).toBe(false);
   });
 });

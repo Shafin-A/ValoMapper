@@ -8,7 +8,12 @@ import { getToolIconAttachmentPosition } from "@/lib/tool-icon";
 import type { MapSide, ToolIconCanvas } from "@/lib/types";
 import { getReplayPlayerStateAtTime } from "@/lib/replay/frames";
 import { getReplayWeaponIcon } from "@/lib/replay/display";
-import type { ReplayFrame, ReplayMatch, ReplayRound } from "@/lib/replay/types";
+import type {
+  ReplayFrame,
+  ReplayFramePlayer,
+  ReplayMatch,
+  ReplayRound,
+} from "@/lib/replay/types";
 import {
   getReplayAgentId,
   getReplayMapPosition,
@@ -51,13 +56,30 @@ export const ReplayCanvasLayer = ({
     return null;
   }
 
+  const currentByPuuid = new Map<string, ReplayFramePlayer>();
+  for (const player of frame.players) {
+    currentByPuuid.set(player.puuid, player);
+  }
+
+  const latestByPuuid = new Map<string, ReplayFramePlayer | null>();
+  for (const player of match.players) {
+    latestByPuuid.set(
+      player.puuid,
+      currentByPuuid.get(player.puuid) ??
+        getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs),
+    );
+  }
+
+  const isAlive = (puuid: string) =>
+    latestByPuuid.get(puuid)?.alive ?? true;
+
   const getPlayerState = (puuid: string) => {
-    const current = frame.players.find((player) => player.puuid === puuid);
+    const current = currentByPuuid.get(puuid);
     if (current) {
       return current;
     }
 
-    const latest = getReplayPlayerStateAtTime(round, puuid, currentTimeMs);
+    const latest = latestByPuuid.get(puuid);
     return latest && !latest.alive ? latest : null;
   };
 
@@ -94,9 +116,7 @@ export const ReplayCanvasLayer = ({
           // Position still comes from the interpolated frame. Liveness comes from
           // the round-scoped scan-back so a body's last pose cannot keep a vision
           // cone after death.
-          const alive =
-            getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
-              ?.alive ?? true;
+          const alive = isAlive(player.puuid);
           if (!alive) {
             return null;
           }
@@ -178,9 +198,7 @@ export const ReplayCanvasLayer = ({
         ))}
 
       {match.players.map((player, index) => {
-        const alive =
-          getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
-            ?.alive ?? true;
+        const alive = isAlive(player.puuid);
         if (hideDeadAgents && !alive) {
           return null;
         }
@@ -216,9 +234,7 @@ export const ReplayCanvasLayer = ({
 
       {!hideAgentWeapons &&
         match.players.map((player, index) => {
-          const alive =
-            getReplayPlayerStateAtTime(round, player.puuid, currentTimeMs)
-              ?.alive ?? true;
+          const alive = isAlive(player.puuid);
           if (!alive) {
             return null;
           }

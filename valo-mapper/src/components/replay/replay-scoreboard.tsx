@@ -1,7 +1,9 @@
 "use client";
 
 import { MATCH_TONE_CLASSES } from "@/lib/consts";
+import { useReplayClockStep } from "@/hooks/use-replay-clock";
 import { getAgentImageSrc } from "@/lib/matches";
+import type { ReplayClock } from "@/lib/replay/clock";
 import {
   formatReplayTime,
   getPlayerHpBarColor,
@@ -448,14 +450,15 @@ const TeamBlock = ({
 export const ReplayScoreboard = ({
   players,
   round,
-  currentTimeMs,
+  clock,
   viewerPuuid,
 }: {
   players: MatchPlayerSummary[];
   round: ReplayRound;
-  currentTimeMs: number;
+  clock: ReplayClock;
   viewerPuuid?: string;
 }) => {
+  const currentTimeMs = useReplayClockStep(clock, 250);
   const states = useMemo(() => {
     const next = new Map<string, ReplayFramePlayer | null>();
     for (const player of players) {
@@ -498,11 +501,13 @@ export const ReplayScoreboard = ({
 
 export const ReplayScoreHeader = ({
   round,
-  currentTimeMs,
+  clock,
 }: {
   round: ReplayRound;
-  currentTimeMs: number;
+  clock: ReplayClock;
 }) => {
+  const currentTimeMs = useReplayClockStep(clock, 1000);
+
   return (
     <div className="flex items-center justify-between gap-2">
       <div>

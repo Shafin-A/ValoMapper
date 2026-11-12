@@ -7,7 +7,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
+import { useReplayClockTime } from "@/hooks/use-replay-clock";
 import { formatReplayTime } from "@/lib/replay/display";
+import type { ReplayClock } from "@/lib/replay/clock";
 import type { ReplayRound } from "@/lib/replay/types";
 import type { MatchPlayers } from "@/lib/matches";
 import { cn } from "@/lib/utils";
@@ -75,30 +77,46 @@ const getMarkerAriaLabel = (
   }`;
 };
 
+const ReplayTimelineSlider = ({
+  clock,
+  round,
+  onSeek,
+}: {
+  clock: ReplayClock;
+  round: ReplayRound;
+  onSeek: (timeMs: number) => void;
+}) => {
+  const currentTimeMs = useReplayClockTime(clock);
+
+  return (
+    <Slider
+      value={[Math.min(currentTimeMs, round.durationMs)]}
+      min={0}
+      max={round.durationMs}
+      step={100}
+      onValueChange={([value]) => onSeek(value)}
+      aria-label="Replay timeline"
+      className="**:data-[slot=slider-thumb]:relative **:data-[slot=slider-thumb]:z-10"
+    />
+  );
+};
+
 export const ReplayTimeline = ({
   round,
   players,
-  currentTimeMs,
+  clock,
   onSeek,
 }: {
   round: ReplayRound;
   players: MatchPlayers;
-  currentTimeMs: number;
+  clock: ReplayClock;
   onSeek: (timeMs: number) => void;
 }) => {
   const barrierDropTimeMs = round.buyEndTimeMs;
 
   return (
     <div className="relative w-full">
-      <Slider
-        value={[Math.min(currentTimeMs, round.durationMs)]}
-        min={0}
-        max={round.durationMs}
-        step={100}
-        onValueChange={([value]) => onSeek(value)}
-        aria-label="Replay timeline"
-        className="**:data-[slot=slider-thumb]:relative **:data-[slot=slider-thumb]:z-10"
-      />
+      <ReplayTimelineSlider clock={clock} round={round} onSeek={onSeek} />
       {typeof barrierDropTimeMs === "number" &&
         barrierDropTimeMs > 0 &&
         barrierDropTimeMs <= round.durationMs && (

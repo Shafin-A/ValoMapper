@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { ReplayScoreboard } from "@/components/replay/replay-scoreboard";
+import { createReplayClock } from "@/lib/replay/clock";
 import type {
   ReplayFrame,
   ReplayRound,
@@ -100,7 +101,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={round}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -153,7 +154,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={killjoyPlayers}
         round={chargeRound}
-        currentTimeMs={1500}
+        clock={createReplayClock(1500)}
         viewerPuuid="blue-1"
       />,
     );
@@ -165,7 +166,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={killjoyPlayers}
         round={chargeRound}
-        currentTimeMs={2500}
+        clock={createReplayClock(2500)}
         viewerPuuid="blue-1"
       />,
     );
@@ -193,7 +194,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={buildRound(3)}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -205,7 +206,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={buildRound(8)}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -217,7 +218,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={buildRound(0, true)}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -251,7 +252,7 @@ describe("ReplayScoreboard", () => {
             : player,
         )}
         round={cooldownRound}
-        currentTimeMs={12000}
+        clock={createReplayClock(12000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -268,7 +269,7 @@ describe("ReplayScoreboard", () => {
             : player,
         )}
         round={cooldownRound}
-        currentTimeMs={62000}
+        clock={createReplayClock(62000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -312,7 +313,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={sovaPlayers}
         round={rechargeRound}
-        currentTimeMs={12000}
+        clock={createReplayClock(12000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -359,7 +360,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={omenPlayers}
         round={rechargeRound}
-        currentTimeMs={12000}
+        clock={createReplayClock(12000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -372,7 +373,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={omenPlayers}
         round={rechargeRound}
-        currentTimeMs={22000}
+        clock={createReplayClock(22000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -410,7 +411,7 @@ describe("ReplayScoreboard", () => {
               : stats,
           ),
         }}
-        currentTimeMs={6000}
+        clock={createReplayClock(6000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -436,7 +437,7 @@ describe("ReplayScoreboard", () => {
               : stats,
           ),
         }}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -462,7 +463,7 @@ describe("ReplayScoreboard", () => {
               : stats,
           ),
         }}
-        currentTimeMs={2000}
+        clock={createReplayClock(2000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -477,7 +478,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={round}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -521,7 +522,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={deadRound}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -536,7 +537,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={round}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -552,7 +553,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={round}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="blue-1"
       />,
     );
@@ -570,7 +571,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={round}
-        currentTimeMs={4000}
+        clock={createReplayClock(4000)}
         viewerPuuid="red-1"
       />,
     );
@@ -585,7 +586,7 @@ describe("ReplayScoreboard", () => {
       <ReplayScoreboard
         players={players}
         round={{ ...round, frames: [] }}
-        currentTimeMs={0}
+        clock={createReplayClock(0)}
         viewerPuuid="blue-1"
       />,
     );

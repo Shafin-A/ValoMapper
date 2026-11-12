@@ -16,6 +16,7 @@ import {
 import { useCanvas } from "@/contexts/canvas-context";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useReplayClockStep } from "@/hooks/use-replay-clock";
 import { useReplayPlayback } from "@/hooks/use-replay-playback";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { MAP_SIZE, SIDEBAR_WIDTH, VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts";
@@ -23,10 +24,10 @@ import { getCanvasFitScale } from "@/lib/canvas-scale";
 import {
   buildReplayInitialState,
   buildReplaySnapshotState,
-  getActiveEventIndex,
-  getReplayFrameAtTime,
   getReplayMapOption,
 } from "@/lib/replay";
+import type { ReplayClock } from "@/lib/replay/clock";
+import { getReplayFrameAtTime } from "@/lib/replay/frames";
 import type { ReplayMatch } from "@/lib/replay/types";
 import type { UndoableState } from "@/lib/types";
 import { AlertCircle, ArrowUpRight, Loader2 } from "lucide-react";
@@ -39,11 +40,16 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { ReplayCanvasLayer } from "./replay-canvas-layer";
+import { ReplayCanvasOverlay } from "./replay-canvas-overlay";
 import { ReplayControlsBar } from "./replay-controls-bar";
 import { ReplayRoundSidebar } from "./replay-round-sidebar";
 
 const REPLAY_MAP_SIDE = "defense" as const;
+
+const REPLAY_MAP_POSITION = {
+  x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
+  y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
+};
 
 export const ReplayPlayer = ({
   match,
@@ -93,22 +99,21 @@ export const ReplayPlayer = ({
     setSelectedRoundNumber(firstRound?.roundNumber ?? 1);
   }, [firstRound?.roundNumber, replayId]);
 
-  const { currentTimeMs, isPlaying, speed, seek, setSpeed, togglePlay } =
-    useReplayPlayback({
-      durationMs: round?.durationMs ?? 0,
-      resetKey: `${replayId}:${round?.roundNumber ?? 0}`,
-      startTimeMs: startAtBarrierDrop ? (round?.buyEndTimeMs ?? 0) : 0,
-    });
+  const {
+    clock,
+    isPlaying,
+    speed,
+    seek,
+    setSpeed,
+    togglePlay,
+    getCurrentTimeMs,
+  } = useReplayPlayback({
+    durationMs: round?.durationMs ?? 0,
+    resetKey: `${replayId}:${round?.roundNumber ?? 0}`,
+    startTimeMs: startAtBarrierDrop ? (round?.buyEndTimeMs ?? 0) : 0,
+  });
 
-  const frame = useMemo(
-    () => (round ? getReplayFrameAtTime(round, currentTimeMs) : null),
-    [currentTimeMs, round],
-  );
-
-  const selectedEventIndex = useMemo(
-    () => (round ? getActiveEventIndex(round, currentTimeMs) : null),
-    [currentTimeMs, round],
-  );
+  const canSaveReplay = Boolean(round && round.frames.length > 0);
 
   const currentState = useMemo<UndoableState>(
     () => ({
@@ -229,6 +234,9 @@ export const ReplayPlayer = ({
   );
 
   const handleSaveToLobby = useCallback(() => {
+    const timeMs = getCurrentTimeMs();
+    const frame = round ? getReplayFrameAtTime(round, timeMs) : null;
+
     if (!round || !frame) {
       return;
     }
@@ -248,15 +256,14 @@ export const ReplayPlayer = ({
       pendingToast: {
         type: "replay-save",
         roundNumber: round.roundNumber,
-        timeMs: Math.round(currentTimeMs),
+        timeMs: Math.round(timeMs),
         replayId,
       },
     });
   }, [
     createLobbyMutation,
     currentState,
-    currentTimeMs,
-    frame,
+    getCurrentTimeMs,
     hideAgentWeapons,
     hideDeadAgents,
     mapSide,
@@ -283,11 +290,6 @@ export const ReplayPlayer = ({
     );
   }
 
-  const mapPosition = {
-    x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
-    y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
-  };
-
   const controlsInsetStyle = {
     "--replay-controls-left": `${sidebarState.leftSidebarOpen ? SIDEBAR_WIDTH : 0}px`,
     "--replay-controls-right": `${sidebarState.rightSidebarOpen ? SIDEBAR_WIDTH : 0}px`,
@@ -301,7 +303,7 @@ export const ReplayPlayer = ({
         variant="replay"
         sidebarOpen={sidebarState.leftSidebarOpen}
         setSidebarOpen={sidebarState.setLeftSidebarOpen}
-        mapPosition={mapPosition}
+        mapPosition={REPLAY_MAP_POSITION}
         stageRef={stageRef}
         saveAction={{
           icon: ArrowUpRight,
@@ -323,14 +325,13 @@ export const ReplayPlayer = ({
                 width={VIRTUAL_WIDTH}
                 height={VIRTUAL_HEIGHT}
                 scale={stageScale}
-                mapPosition={mapPosition}
+                mapPosition={REPLAY_MAP_POSITION}
                 enableMultiSelect={false}
                 replayOverlay={
-                  <ReplayCanvasLayer
+                  <ReplayCanvasOverlay
+                    clock={clock}
                     match={match}
                     round={round}
-                    frame={frame}
-                    currentTimeMs={currentTimeMs}
                     mapSide={mapSide}
                     hideDeadAgents={hideDeadAgents}
                     hideAgentWeapons={hideAgentWeapons}
@@ -355,7 +356,7 @@ export const ReplayPlayer = ({
               onSelectRound={handleSelectRound}
               round={round}
               players={match.players}
-              currentTimeMs={currentTimeMs}
+              clock={clock}
               isPlaying={isPlaying}
               speed={speed}
               onTogglePlay={togglePlay}
@@ -383,9 +384,8 @@ export const ReplayPlayer = ({
         setSidebarOpen={sidebarState.setRightSidebarOpen}
         players={match.players}
         round={round}
-        currentTimeMs={currentTimeMs}
+        clock={clock}
         viewerPuuid={match.viewer?.puuid}
-        selectedEventIndex={selectedEventIndex}
         onSelectEvent={handleSelectEvent}
         warnings={match.warnings}
         replayId={replayId}
@@ -406,7 +406,7 @@ export const ReplayPlayer = ({
             <p className="font-medium text-foreground">What gets copied</p>
             <p>
               Map: {match.mapName} · Round {round.roundNumber} ·{" "}
-              {formatSnapshotTime(currentTimeMs)}
+              <ReplayMomentLabel clock={clock} />
             </p>
             <p>
               Current agent positions, vision cones, spike, and the latest kill
@@ -424,7 +424,7 @@ export const ReplayPlayer = ({
             </Button>
             <Button
               onClick={handleSaveToLobby}
-              disabled={createLobbyMutation.isPending || !frame}
+              disabled={createLobbyMutation.isPending || !canSaveReplay}
             >
               {createLobbyMutation.isPending ? "Creating..." : "Copy to Lobby"}
             </Button>
@@ -440,6 +440,12 @@ const formatSnapshotTime = (timeMs: number) => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+};
+
+const ReplayMomentLabel = ({ clock }: { clock: ReplayClock }) => {
+  const timeMs = useReplayClockStep(clock, 1000);
+
+  return <>{formatSnapshotTime(timeMs)}</>;
 };
 
 const ReplayPlayerLoadingSkeleton = () => (

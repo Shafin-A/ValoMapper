@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { ReplayControlsBar } from "@/components/replay/replay-controls-bar";
+import { createReplayClock } from "@/lib/replay/clock";
 import type { ReplayRound } from "@/lib/replay/types";
 
 const mockSelectContentRender = jest.fn();
@@ -59,7 +60,7 @@ const handlers = {
 const barElement = (
   rounds: ReplayRound[],
   currentPlayerTeamId?: string,
-  currentTimeMs = 0,
+  clock = createReplayClock(0),
 ) => (
   <ReplayControlsBar
     rounds={rounds}
@@ -68,7 +69,7 @@ const barElement = (
     onSelectRound={handlers.onSelectRound}
     round={rounds[0]}
     players={[]}
-    currentTimeMs={currentTimeMs}
+    clock={clock}
     isPlaying={false}
     speed={1}
     onTogglePlay={handlers.onTogglePlay}
@@ -128,7 +129,7 @@ describe("ReplayControlsBar speed select", () => {
     const { rerender } = render(barElement(rounds));
     mockSelectContentRender.mockClear();
 
-    rerender(barElement(rounds, undefined, 500));
+    rerender(barElement(rounds, undefined, createReplayClock(500)));
 
     expect(mockSelectContentRender).not.toHaveBeenCalled();
   });

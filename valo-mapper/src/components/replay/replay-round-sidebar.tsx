@@ -7,20 +7,57 @@ import {
   SidebarHeader,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { useReplayClockStep } from "@/hooks/use-replay-clock";
 import { SIDEBAR_WIDTH } from "@/lib/consts";
+import type { ReplayClock } from "@/lib/replay/clock";
+import { getActiveEventIndex } from "@/lib/replay/frames";
 import type { ReplayRound } from "@/lib/replay/types";
 import type { MatchPlayers } from "@/lib/matches";
+import { memo, useMemo } from "react";
 import { ReplayScoreHeader, ReplayScoreboard } from "./replay-scoreboard";
 import { ReplayWarningsBanner } from "./replay-warnings-banner";
+
+const MemoizedMatchEventLog = memo(MatchEventLog);
+
+const ReplayEventLog = ({
+  clock,
+  round,
+  players,
+  viewerPuuid,
+  onSelectEvent,
+}: {
+  clock: ReplayClock;
+  round: ReplayRound;
+  players: MatchPlayers;
+  viewerPuuid?: string;
+  onSelectEvent: (eventIndex: number) => void;
+}) => {
+  const currentTimeMs = useReplayClockStep(clock, 100);
+  const selectedEventIndex = useMemo(
+    () => getActiveEventIndex(round, currentTimeMs),
+    [currentTimeMs, round],
+  );
+
+  return (
+    <MemoizedMatchEventLog
+      containerClassName="md:h-auto"
+      scrollAreaClassName="h-[240px] md:h-[300px]"
+      events={round.eventLog}
+      players={players}
+      currentPlayerPuuid={viewerPuuid}
+      selectedEventIndex={selectedEventIndex}
+      onSelectEvent={onSelectEvent}
+    />
+  );
+};
 
 export const ReplayRoundSidebar = ({
   sidebarOpen,
   setSidebarOpen,
   players,
   round,
-  currentTimeMs,
+  clock,
   viewerPuuid,
-  selectedEventIndex,
   onSelectEvent,
   warnings,
   replayId,
@@ -29,9 +66,8 @@ export const ReplayRoundSidebar = ({
   setSidebarOpen?: (open: boolean) => void;
   players: MatchPlayers;
   round: ReplayRound;
-  currentTimeMs: number;
+  clock: ReplayClock;
   viewerPuuid?: string;
-  selectedEventIndex: number | null;
   onSelectEvent: (eventIndex: number) => void;
   warnings?: string[];
   replayId: string;
@@ -55,7 +91,7 @@ export const ReplayRoundSidebar = ({
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold">Replay</span>
             </div>
-            <ReplayScoreHeader round={round} currentTimeMs={currentTimeMs} />
+            <ReplayScoreHeader round={round} clock={clock} />
           </div>
         </SidebarHeader>
 
@@ -69,18 +105,16 @@ export const ReplayRoundSidebar = ({
           <ReplayScoreboard
             players={players}
             round={round}
-            currentTimeMs={currentTimeMs}
+            clock={clock}
             viewerPuuid={viewerPuuid}
           />
 
           <div className="mt-3 border-t border-slate-800/80 pt-2">
-            <MatchEventLog
-              containerClassName="md:h-auto"
-              scrollAreaClassName="h-[240px] md:h-[300px]"
-              events={round.eventLog}
+            <ReplayEventLog
+              clock={clock}
+              round={round}
               players={players}
-              currentPlayerPuuid={viewerPuuid}
-              selectedEventIndex={selectedEventIndex}
+              viewerPuuid={viewerPuuid}
               onSelectEvent={onSelectEvent}
             />
           </div>
