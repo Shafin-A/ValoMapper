@@ -54,6 +54,7 @@ import {
   type CanvasConnectingLinesContextValue,
   type CanvasDrawLinesContextValue,
   type CanvasEntitiesContextValue,
+  type CanvasEntitiesSnapshot,
   type CanvasImagesContextValue,
   type CanvasTextsContextValue,
   type CanvasToolIconsContextValue,
@@ -145,6 +146,7 @@ interface CanvasActionsContextType {
   ) => void;
   getCurrentStateForSync: () => FullSyncData;
   getLatestPhases: () => PhaseState[];
+  getLatestEntities: () => CanvasEntitiesSnapshot;
   enqueueCanvasPatchEntry: (entry: CanvasPatchEntry) => void;
   flushCanvasPatch: () => Promise<void>;
   setCurrentStageScale: Dispatch<SetStateAction<number>>;
@@ -521,6 +523,7 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       rotateCanvasItemsForSideSwap: canvasState.rotateCanvasItemsForSideSwap,
       getCurrentStateForSync: canvasState.getCurrentStateForSync,
       getLatestPhases: canvasState.getLatestPhases,
+      getLatestEntities: canvasState.getLatestEntities,
       enqueueCanvasPatchEntry: canvasState.enqueueCanvasPatchEntry,
       flushCanvasPatch: canvasState.flushCanvasPatch,
       setCurrentStageScale: canvasState.setCurrentStageScale,
@@ -545,6 +548,7 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       canvasState.rotateCanvasItemsForSideSwap,
       canvasState.getCurrentStateForSync,
       canvasState.getLatestPhases,
+      canvasState.getLatestEntities,
       canvasState.enqueueCanvasPatchEntry,
       canvasState.flushCanvasPatch,
       canvasState.setCurrentStageScale,

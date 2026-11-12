@@ -1,4 +1,5 @@
 import { DrawLine, DrawSettings, EraserSettings, Tool } from "@/lib/types";
+import type { CanvasEntitiesSnapshot } from "@/contexts/canvas-entity-contexts";
 import {
   doesEraserIntersect,
   getIntersectingLines,
@@ -31,6 +32,7 @@ export const useCanvasDrawing = (
   drawLines: DrawLine[],
   setDrawLines: Dispatch<SetStateAction<DrawLine[]>>,
   setCurrentStroke: Dispatch<SetStateAction<DrawLine | null>>,
+  getLatestEntities?: () => CanvasEntitiesSnapshot,
 ) => {
   const { notifyLineDrawn, notifyLineRemoved } = useCollaborativeCanvas();
   const drawingBufferRef = useRef<Vector2d[]>([]);
@@ -84,13 +86,14 @@ export const useCanvasDrawing = (
 
         if (tool === "eraser" && eraserSettings.mode === "line") {
           const currentSegment = [lastPoint, worldPos];
+          const activeDrawLines = getLatestEntities?.().drawLines ?? drawLines;
           const intersectingLineIndices = getIntersectingLines(
             currentSegment,
-            drawLines,
+            activeDrawLines,
           );
 
           const newlyIntersectedLineIds = intersectingLineIndices
-            .map((index) => drawLines[index]?.id)
+            .map((index) => activeDrawLines[index]?.id)
             .filter((id): id is string => !!id)
             .filter((id) => !erasedLineIdsRef.current.has(id));
 
@@ -159,6 +162,7 @@ export const useCanvasDrawing = (
   }, [
     drawSettings,
     eraserSettings,
+    getLatestEntities,
     getWorldPointerPosition,
     isDrawing,
     setCurrentStroke,
@@ -205,7 +209,8 @@ export const useCanvasDrawing = (
         if (eraserSettings.mode === "line") {
           setCurrentStroke(null);
         } else {
-          if (doesEraserIntersect(drawingBufferRef.current, drawLines)) {
+          const activeDrawLines = getLatestEntities?.().drawLines ?? drawLines;
+          if (doesEraserIntersect(drawingBufferRef.current, activeDrawLines)) {
             setDrawLines((prev) => [...prev, finalStroke]);
             notifyLineDrawn(finalStroke);
           }
@@ -225,6 +230,7 @@ export const useCanvasDrawing = (
     tool,
     drawSettings,
     drawLines,
+    getLatestEntities,
     setCurrentStroke,
     setDrawLines,
     eraserSettings,

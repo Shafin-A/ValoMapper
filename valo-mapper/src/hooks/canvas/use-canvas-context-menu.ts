@@ -1,4 +1,5 @@
 import { CONTEXT_MENU_DUPLICATE_OFFSET } from "@/lib/consts";
+import type { CanvasEntitiesSnapshot } from "@/contexts/canvas-entity-contexts";
 import {
   AbilityCanvas,
   AgentCanvas,
@@ -86,6 +87,7 @@ export const useCanvasContextMenu = (
   setConnectingLines: Dispatch<SetStateAction<ConnectingLine[]>>,
   selectedCanvasItems: CanvasSelectionItem[],
   setSelectedCanvasItems: Dispatch<SetStateAction<CanvasSelectionItem[]>>,
+  getLatestEntities?: () => CanvasEntitiesSnapshot,
 ) => {
   const {
     notifyAgentAdded,
@@ -137,6 +139,42 @@ export const useCanvasContextMenu = (
     return getContextMenuCapabilities(targets, collections);
   }, [collections, contextMenu.targetItems]);
 
+  const getEntities = useCallback(
+    () => {
+      const latest = getLatestEntities?.();
+
+      return {
+        agentsOnCanvas: latest?.agentsOnCanvas ?? agentsOnCanvas,
+        abilitiesOnCanvas: latest?.abilitiesOnCanvas ?? abilitiesOnCanvas,
+        textsOnCanvas: latest?.textsOnCanvas ?? textsOnCanvas,
+        imagesOnCanvas: latest?.imagesOnCanvas ?? imagesOnCanvas,
+        toolIconsOnCanvas: latest?.toolIconsOnCanvas ?? toolIconsOnCanvas,
+        connectingLines: latest?.connectingLines ?? connectingLines,
+      };
+    },
+    [
+      getLatestEntities,
+      agentsOnCanvas,
+      abilitiesOnCanvas,
+      textsOnCanvas,
+      imagesOnCanvas,
+      toolIconsOnCanvas,
+      connectingLines,
+    ],
+  );
+
+  const getCollections = useCallback((): CanvasItemCollections => {
+    const entities = getEntities();
+
+    return {
+      agentsOnCanvas: entities.agentsOnCanvas,
+      abilitiesOnCanvas: entities.abilitiesOnCanvas,
+      textsOnCanvas: entities.textsOnCanvas,
+      imagesOnCanvas: entities.imagesOnCanvas,
+      toolIconsOnCanvas: entities.toolIconsOnCanvas,
+    };
+  }, [getEntities]);
+
   const closeContextMenu = useCallback(() => {
     setContextMenu((prev) => ({ ...prev, open: false }));
   }, []);
@@ -146,6 +184,7 @@ export const useCanvasContextMenu = (
       const stage = stageRef.current;
       if (!stage) return;
 
+      const collections = getCollections();
       const resolvedTarget = resolveCanvasItemTarget(targetNode, collections);
 
       if (!resolvedTarget) {
@@ -187,7 +226,7 @@ export const useCanvasContextMenu = (
       });
     },
     [
-      collections,
+      getCollections,
       selectedCanvasItems,
       setSelectedCanvasItems,
       stageRef,
@@ -212,6 +251,7 @@ export const useCanvasContextMenu = (
 
   const removeAttachedVisionCones = useCallback(
     (hostId: string) => {
+      const { abilitiesOnCanvas } = getEntities();
       const removedAbilityIds = getAttachedVisionConeIds(
         abilitiesOnCanvas,
         hostId,
@@ -226,11 +266,12 @@ export const useCanvasContextMenu = (
       );
       removedAbilityIds.forEach((abilityId) => notifyAbilityRemoved(abilityId));
     },
-    [abilitiesOnCanvas, setAbilitiesOnCanvas, notifyAbilityRemoved],
+    [getEntities, setAbilitiesOnCanvas, notifyAbilityRemoved],
   );
 
   const duplicateAttachedVisionConesForHost = useCallback(
     (hostId: string, duplicatedHostId: string, x: number, y: number) => {
+      const { abilitiesOnCanvas } = getEntities();
       const attachedCone = [...abilitiesOnCanvas]
         .reverse()
         .find(
@@ -254,11 +295,19 @@ export const useCanvasContextMenu = (
       setAbilitiesOnCanvas((prev) => [...prev, duplicatedCone]);
       notifyAbilityAdded(duplicatedCone);
     },
-    [abilitiesOnCanvas, setAbilitiesOnCanvas, notifyAbilityAdded],
+    [getEntities, setAbilitiesOnCanvas, notifyAbilityAdded],
   );
 
   const duplicateSingleItem = useCallback(
     (itemId: string, itemType: ItemType) => {
+      const {
+        agentsOnCanvas,
+        abilitiesOnCanvas,
+        textsOnCanvas,
+        imagesOnCanvas,
+        toolIconsOnCanvas,
+      } = getEntities();
+
       switch (itemType) {
         case "agent": {
           const newAgent = duplicateItem(
@@ -396,19 +445,15 @@ export const useCanvasContextMenu = (
       }
     },
     [
-      agentsOnCanvas,
+      getEntities,
       setAgentsOnCanvas,
       notifyAgentAdded,
-      abilitiesOnCanvas,
       setAbilitiesOnCanvas,
       notifyAbilityAdded,
-      textsOnCanvas,
       setTextsOnCanvas,
       notifyTextAdded,
-      imagesOnCanvas,
       setImagesOnCanvas,
       notifyImageAdded,
-      toolIconsOnCanvas,
       setToolIconsOnCanvas,
       notifyToolIconAdded,
       duplicateAttachedVisionConesForHost,
@@ -428,6 +473,8 @@ export const useCanvasContextMenu = (
     (targets: CanvasSelectionItem[]) => {
       if (targets.length === 0) return;
 
+      const collections = getCollections();
+      const { connectingLines } = getEntities();
       const queue: CanvasSelectionItem[] = [];
       const visited = new Set<string>();
       const removedAgentIds = new Set<string>();
@@ -575,8 +622,8 @@ export const useCanvasContextMenu = (
       );
     },
     [
-      collections,
-      connectingLines,
+      getCollections,
+      getEntities,
       notifyAbilityRemoved,
       notifyAgentRemoved,
       notifyConnLineRemoved,
@@ -600,18 +647,17 @@ export const useCanvasContextMenu = (
     closeContextMenu();
   }, [contextMenu, closeContextMenu, deleteTargetItems]);
 
-  const getAnchorEntry = useCallback(
-    () =>
-      getCanvasItemInstance(collections, {
-        id: contextMenu.anchorId,
-        type: contextMenu.anchorType,
-      }),
-    [collections, contextMenu.anchorId, contextMenu.anchorType],
-  );
+  const getAnchorEntry = useCallback(() => {
+    return getCanvasItemInstance(getCollections(), {
+      id: contextMenu.anchorId,
+      type: contextMenu.anchorType,
+    });
+  }, [getCollections, contextMenu.anchorId, contextMenu.anchorType]);
 
   const handleToggleAlly = useCallback(() => {
     if (!contextMenu.open) return;
 
+    const { agentsOnCanvas, abilitiesOnCanvas } = getEntities();
     const anchor = getAnchorEntry();
     if (
       !anchor ||
@@ -664,11 +710,10 @@ export const useCanvasContextMenu = (
 
     closeContextMenu();
   }, [
-    abilitiesOnCanvas,
-    agentsOnCanvas,
     closeContextMenu,
     contextMenu,
     getAnchorEntry,
+    getEntities,
     notifyAbilityMoved,
     notifyAgentMoved,
     setAbilitiesOnCanvas,
@@ -678,6 +723,7 @@ export const useCanvasContextMenu = (
   const handleToggleAgentDead = useCallback(() => {
     if (!contextMenu.open) return;
 
+    const { agentsOnCanvas } = getEntities();
     const anchor = getAnchorEntry();
     if (!anchor || anchor.type !== "agent") return;
 
@@ -700,10 +746,10 @@ export const useCanvasContextMenu = (
     updatedAgents.forEach(notifyAgentMoved);
     closeContextMenu();
   }, [
-    agentsOnCanvas,
     closeContextMenu,
     contextMenu,
     getAnchorEntry,
+    getEntities,
     notifyAgentMoved,
     setAgentsOnCanvas,
   ]);
@@ -711,6 +757,7 @@ export const useCanvasContextMenu = (
   const handleSwapAbility = useCallback(() => {
     if (!contextMenu.open) return;
 
+    const { abilitiesOnCanvas } = getEntities();
     const updates = new Map<string, AbilityCanvas>();
 
     contextMenu.targetItems
@@ -750,9 +797,9 @@ export const useCanvasContextMenu = (
     updates.forEach((ability) => notifyAbilityMoved(ability));
     closeContextMenu();
   }, [
-    abilitiesOnCanvas,
     closeContextMenu,
     contextMenu,
+    getEntities,
     notifyAbilityMoved,
     setAbilitiesOnCanvas,
   ]);
@@ -760,6 +807,7 @@ export const useCanvasContextMenu = (
   const handleToggleAbilityIconOnly = useCallback(() => {
     if (!contextMenu.open) return;
 
+    const { abilitiesOnCanvas } = getEntities();
     const anchor = getAnchorEntry();
     if (!anchor || anchor.type !== "ability" || anchor.item.action === "icon") {
       return;
@@ -799,10 +847,10 @@ export const useCanvasContextMenu = (
     updates.forEach((ability) => notifyAbilityMoved(ability));
     closeContextMenu();
   }, [
-    abilitiesOnCanvas,
     closeContextMenu,
     contextMenu,
     getAnchorEntry,
+    getEntities,
     notifyAbilityMoved,
     setAbilitiesOnCanvas,
   ]);
@@ -810,6 +858,7 @@ export const useCanvasContextMenu = (
   const handleToggleAbilityOuterCircle = useCallback(() => {
     if (!contextMenu.open) return;
 
+    const { abilitiesOnCanvas } = getEntities();
     const anchor = getAnchorEntry();
     if (!anchor || anchor.type !== "ability") return;
 
@@ -836,10 +885,10 @@ export const useCanvasContextMenu = (
     updates.forEach((ability) => notifyAbilityMoved(ability));
     closeContextMenu();
   }, [
-    abilitiesOnCanvas,
     closeContextMenu,
     contextMenu,
     getAnchorEntry,
+    getEntities,
     notifyAbilityMoved,
     setAbilitiesOnCanvas,
   ]);
@@ -847,6 +896,7 @@ export const useCanvasContextMenu = (
   const handleRemoveAttachedVisionCone = useCallback(() => {
     if (!contextMenu.open) return;
 
+    const { abilitiesOnCanvas } = getEntities();
     contextMenu.targetItems.forEach((target) => {
       let hostId: string | null = null;
 
@@ -870,7 +920,7 @@ export const useCanvasContextMenu = (
 
     closeContextMenu();
   }, [
-    abilitiesOnCanvas,
+    getEntities,
     contextMenu,
     removeAttachedVisionCones,
     closeContextMenu,
@@ -879,6 +929,8 @@ export const useCanvasContextMenu = (
   const handleDetachVisionCone = useCallback(() => {
     if (!contextMenu.open) return;
 
+    const { abilitiesOnCanvas, agentsOnCanvas, toolIconsOnCanvas } =
+      getEntities();
     const abilityIds = new Set(
       contextMenu.targetItems
         .filter((target) => target.type === "ability")
@@ -918,13 +970,11 @@ export const useCanvasContextMenu = (
     updates.forEach((ability) => notifyAbilityMoved(ability));
     closeContextMenu();
   }, [
-    abilitiesOnCanvas,
-    agentsOnCanvas,
+    getEntities,
     closeContextMenu,
     contextMenu,
     notifyAbilityMoved,
     setAbilitiesOnCanvas,
-    toolIconsOnCanvas,
   ]);
 
   const contextMenuWithCapabilities = useMemo(

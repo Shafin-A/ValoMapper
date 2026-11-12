@@ -1,4 +1,4 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasActions, useCanvasUi } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCanvasItemActions, type CanvasItemMove } from "@/hooks/canvas/use-canvas-item-actions";
 import {
@@ -36,37 +36,25 @@ export const useCanvasSelectionDrag = ({
   outlineGroupRef,
   deleteGroupRef,
 }: UseCanvasSelectionDragOptions = {}): SelectionDragController => {
-  const {
-    selectedCanvasItems,
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    textsOnCanvas,
-    imagesOnCanvas,
-    toolIconsOnCanvas,
-    getRegisteredNode,
-  } = useCanvas();
+  const { selectedCanvasItems } = useCanvasUi();
+  const { getRegisteredNode, getLatestEntities } = useCanvasActions();
   const { agentsSettings } = useSettings();
   const { deleteItems, moveItems } = useCanvasItemActions();
 
   const groupDragRef = useRef<GroupDragState | null>(null);
   const frameRef = useRef<number | null>(null);
 
-  const collections = useMemo<CanvasItemCollections>(
-    () => ({
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      textsOnCanvas,
-      imagesOnCanvas,
-      toolIconsOnCanvas,
-    }),
-    [
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      textsOnCanvas,
-      imagesOnCanvas,
-      toolIconsOnCanvas,
-    ],
-  );
+  const getCollections = useCallback((): CanvasItemCollections => {
+    const entities = getLatestEntities();
+
+    return {
+      agentsOnCanvas: entities.agentsOnCanvas,
+      abilitiesOnCanvas: entities.abilitiesOnCanvas,
+      textsOnCanvas: entities.textsOnCanvas,
+      imagesOnCanvas: entities.imagesOnCanvas,
+      toolIconsOnCanvas: entities.toolIconsOnCanvas,
+    };
+  }, [getLatestEntities]);
 
   const selectedIdSet = useMemo(
     () => new Set(selectedCanvasItems.map((selection) => selection.id)),
@@ -82,6 +70,7 @@ export const useCanvasSelectionDrag = ({
   const buildGroupDragState = useCallback(
     (anchorId: string): GroupDragState => {
       const starts = new Map<string, Vector2d>();
+      const collections = getCollections();
 
       selectedCanvasItems.forEach((selection) => {
         const entry = getCanvasItemInstance(collections, selection);
@@ -98,7 +87,7 @@ export const useCanvasSelectionDrag = ({
         starts,
       };
     },
-    [collections, selectedCanvasItems],
+    [getCollections, selectedCanvasItems],
   );
 
   const scheduleDragOffset = useCallback(
@@ -124,6 +113,8 @@ export const useCanvasSelectionDrag = ({
       selection: CanvasSelectionItem,
       node: import("konva/lib/Node").Node,
     ) => {
+      const collections = getCollections();
+      const { abilitiesOnCanvas, toolIconsOnCanvas } = getLatestEntities();
       const entry = getCanvasItemInstance(collections, selection);
       if (!entry) return;
 
@@ -154,11 +145,10 @@ export const useCanvasSelectionDrag = ({
       }
     },
     [
-      abilitiesOnCanvas,
       agentsSettings,
-      collections,
+      getCollections,
+      getLatestEntities,
       getRegisteredNode,
-      toolIconsOnCanvas,
     ],
   );
 
@@ -178,6 +168,8 @@ export const useCanvasSelectionDrag = ({
     (event: KonvaEventObject<DragEvent>) => {
       const id = event.target.id();
       if (!selectedIdSet.has(id)) return;
+
+      const collections = getCollections();
 
       if (!isMultiSelected(id)) {
         const selection = selectedCanvasItems.find((item) => item.id === id);
@@ -237,7 +229,7 @@ export const useCanvasSelectionDrag = ({
     },
     [
       buildGroupDragState,
-      collections,
+      getCollections,
       getRegisteredNode,
       isMultiSelected,
       scheduleDragOffset,
@@ -251,6 +243,7 @@ export const useCanvasSelectionDrag = ({
     (event: KonvaEventObject<DragEvent>) => {
       const id = event.target.id();
       const group = groupDragRef.current;
+      const collections = getCollections();
 
       deleteGroupRef?.current?.visible(!isMobileLayout());
 
@@ -300,9 +293,9 @@ export const useCanvasSelectionDrag = ({
       return true;
     },
     [
-      collections,
       deleteGroupRef,
       deleteItems,
+      getCollections,
       getRegisteredNode,
       isMultiSelected,
       moveItems,

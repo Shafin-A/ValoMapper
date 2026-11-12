@@ -1,4 +1,4 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasActions, useCanvasUi } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
   type CanvasItemCollections,
@@ -40,15 +40,8 @@ export const useCanvasSelection = ({
   enabled,
   onRightClick,
 }: UseCanvasSelectionOptions) => {
-  const {
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    textsOnCanvas,
-    imagesOnCanvas,
-    toolIconsOnCanvas,
-    setSelectedCanvasItems,
-    getRegisteredNode,
-  } = useCanvas();
+  const { setSelectedCanvasItems } = useCanvasUi();
+  const { getRegisteredNode, getLatestEntities } = useCanvasActions();
   const { agentsSettings, abilitiesSettings } = useSettings();
 
   const stateRef = useRef<RightDragState | null>(null);
@@ -57,18 +50,22 @@ export const useCanvasSelection = ({
   const windowUpRef = useRef<((event: MouseEvent) => void) | null>(null);
   const suppressContextMenuRef = useRef(false);
 
-  const collections = {
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    textsOnCanvas,
-    imagesOnCanvas,
-    toolIconsOnCanvas,
-  } satisfies CanvasItemCollections;
+  const getCollections = useCallback((): CanvasItemCollections => {
+    const entities = getLatestEntities();
+
+    return {
+      agentsOnCanvas: entities.agentsOnCanvas,
+      abilitiesOnCanvas: entities.abilitiesOnCanvas,
+      textsOnCanvas: entities.textsOnCanvas,
+      imagesOnCanvas: entities.imagesOnCanvas,
+      toolIconsOnCanvas: entities.toolIconsOnCanvas,
+    };
+  }, [getLatestEntities]);
 
   const latestRef = useRef({
     enabled,
     onRightClick,
-    collections,
+    getCollections,
     settings: { agentsSettings, abilitiesSettings },
     setSelectedCanvasItems,
     getRegisteredNode,
@@ -76,7 +73,7 @@ export const useCanvasSelection = ({
   latestRef.current = {
     enabled,
     onRightClick,
-    collections,
+    getCollections,
     settings: { agentsSettings, abilitiesSettings },
     setSelectedCanvasItems,
     getRegisteredNode,
@@ -160,12 +157,13 @@ export const useCanvasSelection = ({
       if (state.moved) {
         const marquee = normalizeRect(state.startWorld, state.currentWorld);
         const {
-          collections,
+          getCollections,
           settings,
           setSelectedCanvasItems,
           getRegisteredNode,
         } = latestRef.current;
 
+        const collections = getCollections();
         const selected = getSelectableCanvasItems(
           collections,
         ).filter((entry) => {

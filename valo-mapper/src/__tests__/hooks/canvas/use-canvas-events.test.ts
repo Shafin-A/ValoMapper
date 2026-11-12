@@ -2,7 +2,12 @@ import { renderHook, act } from "@testing-library/react";
 import { TEMP_DRAG_ID } from "@/lib/consts";
 import type { AbilityCanvas, AgentCanvas, ToolIconCanvas } from "@/lib/types";
 import type { Stage } from "konva/lib/Stage";
-import { useCanvas, useCanvasActions } from "@/contexts/canvas-context";
+import {
+  useCanvas,
+  useCanvasActions,
+  useCanvasEntityActions,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { getNextId } from "@/lib/utils";
 import { useCanvasEvents } from "@/hooks/canvas/use-canvas-events";
@@ -25,6 +30,8 @@ type StageMock = {
 jest.mock("@/contexts/canvas-context", () => ({
   useCanvas: jest.fn(),
   useCanvasActions: jest.fn(),
+  useCanvasEntityActions: jest.fn(),
+  useCanvasUi: jest.fn(),
 }));
 
 jest.mock("@/contexts/drawing-preview-context", () => ({
@@ -52,6 +59,9 @@ const mockUseCanvas = useCanvas as jest.MockedFunction<typeof useCanvas>;
 const mockUseCanvasActions = useCanvasActions as jest.MockedFunction<
   typeof useCanvasActions
 >;
+const mockUseCanvasEntityActions =
+  useCanvasEntityActions as jest.MockedFunction<typeof useCanvasEntityActions>;
+const mockUseCanvasUi = useCanvasUi as jest.MockedFunction<typeof useCanvasUi>;
 const mockUseSettings = useSettings as jest.MockedFunction<typeof useSettings>;
 const mockUseCanvasZoom = useCanvasZoom as jest.MockedFunction<
   typeof useCanvasZoom
@@ -180,9 +190,13 @@ describe("useCanvasEvents", () => {
     jest.clearAllMocks();
     mockGetNextId.mockReturnValue("agent-new");
 
-    mockUseCanvasActions.mockReturnValue({
+    mockUseCanvas.mockReturnValue(createCanvasContext());
+    mockUseCanvasUi.mockImplementation(() => mockUseCanvas());
+    mockUseCanvasEntityActions.mockImplementation(() => mockUseCanvas());
+    mockUseCanvasActions.mockImplementation(() => ({
       setCurrentStageScale: jest.fn(),
-    } as never);
+      getLatestEntities: () => mockUseCanvas(),
+    } as never));
 
     mockUseSettings.mockReturnValue({
       agentsSettings: {

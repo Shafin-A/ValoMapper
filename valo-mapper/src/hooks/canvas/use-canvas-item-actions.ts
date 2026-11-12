@@ -1,4 +1,8 @@
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasEntityActions,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import {
@@ -29,21 +33,16 @@ export type CanvasItemMove = {
 };
 
 export const useCanvasItemActions = () => {
+  const { getLatestEntities } = useCanvasActions();
   const {
-    agentsOnCanvas,
     setAgentsOnCanvas,
-    abilitiesOnCanvas,
     setAbilitiesOnCanvas,
-    textsOnCanvas,
     setTextsOnCanvas,
-    imagesOnCanvas,
     setImagesOnCanvas,
-    toolIconsOnCanvas,
     setToolIconsOnCanvas,
-    connectingLines,
     setConnectingLines,
-    setSelectedCanvasItems,
-  } = useCanvas();
+  } = useCanvasEntityActions();
+  const { setSelectedCanvasItems } = useCanvasUi();
   const { agentsSettings, abilitiesSettings } = useSettings();
   const {
     notifyAgentMoved,
@@ -59,17 +58,18 @@ export const useCanvasItemActions = () => {
     notifyConnLineRemoved,
   } = useCollaborativeCanvas();
 
-  const collections: CanvasItemCollections = {
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    textsOnCanvas,
-    imagesOnCanvas,
-    toolIconsOnCanvas,
-  };
-
   const deleteItems = useCallback(
     (targets: CanvasSelectionItem[]) => {
       if (targets.length === 0) return;
+
+      const {
+        agentsOnCanvas,
+        abilitiesOnCanvas,
+        textsOnCanvas,
+        imagesOnCanvas,
+        toolIconsOnCanvas,
+        connectingLines,
+      } = getLatestEntities();
 
       const currentCollections: CanvasItemCollections = {
         agentsOnCanvas,
@@ -242,10 +242,7 @@ export const useCanvasItemActions = () => {
       );
     },
     [
-      abilitiesOnCanvas,
-      agentsOnCanvas,
-      connectingLines,
-      imagesOnCanvas,
+      getLatestEntities,
       notifyAbilityRemoved,
       notifyAgentRemoved,
       notifyConnLineRemoved,
@@ -259,14 +256,20 @@ export const useCanvasItemActions = () => {
       setSelectedCanvasItems,
       setTextsOnCanvas,
       setToolIconsOnCanvas,
-      textsOnCanvas,
-      toolIconsOnCanvas,
     ],
   );
 
   const moveItems = useCallback(
     (moves: CanvasItemMove[]) => {
       if (moves.length === 0) return;
+
+      const {
+        agentsOnCanvas,
+        abilitiesOnCanvas,
+        textsOnCanvas,
+        imagesOnCanvas,
+        toolIconsOnCanvas,
+      } = getLatestEntities();
 
       const moveById = new Map(
         moves.map((move) => [move.entry.item.id, move]),
@@ -443,11 +446,9 @@ export const useCanvasItemActions = () => {
       });
     },
     [
-      abilitiesOnCanvas,
       abilitiesSettings,
-      agentsOnCanvas,
       agentsSettings,
-      imagesOnCanvas,
+      getLatestEntities,
       notifyAbilityMoved,
       notifyAbilityRemoved,
       notifyAgentMoved,
@@ -459,10 +460,8 @@ export const useCanvasItemActions = () => {
       setImagesOnCanvas,
       setTextsOnCanvas,
       setToolIconsOnCanvas,
-      textsOnCanvas,
-      toolIconsOnCanvas,
     ],
   );
 
-  return { deleteItems, moveItems, collections };
+  return { deleteItems, moveItems };
 };

@@ -64,6 +64,27 @@ export interface CanvasEntitiesContextValue
     CanvasImagesContextValue,
     CanvasToolIconsContextValue {}
 
+export type CanvasEntitiesSnapshot = Pick<
+  CanvasEntitiesContextValue,
+  | "agentsOnCanvas"
+  | "abilitiesOnCanvas"
+  | "drawLines"
+  | "connectingLines"
+  | "textsOnCanvas"
+  | "imagesOnCanvas"
+  | "toolIconsOnCanvas"
+>;
+
+export const EMPTY_CANVAS_ENTITIES: CanvasEntitiesSnapshot = {
+  agentsOnCanvas: [],
+  abilitiesOnCanvas: [],
+  drawLines: [],
+  connectingLines: [],
+  textsOnCanvas: [],
+  imagesOnCanvas: [],
+  toolIconsOnCanvas: [],
+};
+
 const CanvasAgentsContext = createContext<
   CanvasAgentsContextValue | undefined
 >(undefined);

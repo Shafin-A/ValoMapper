@@ -15,6 +15,10 @@ import {
 import { useSettings } from "@/contexts/settings-context";
 import { defaultIconSettings } from "@/contexts/settings-context";
 import {
+  EMPTY_CANVAS_ENTITIES,
+  type CanvasEntitiesSnapshot,
+} from "@/contexts/canvas-entity-contexts";
+import {
   AbilityCanvas,
   AgentCanvas,
   ConnectingLine,
@@ -763,6 +767,24 @@ export const useCanvasState = ({
     [],
   );
 
+  const getLatestEntities = useCallback((): CanvasEntitiesSnapshot => {
+    const phase = getLatestPhasesRef.current()[currentPhaseIndexRef.current];
+
+    if (!phase) {
+      return EMPTY_CANVAS_ENTITIES;
+    }
+
+    return {
+      agentsOnCanvas: phase.agentsOnCanvas,
+      abilitiesOnCanvas: phase.abilitiesOnCanvas,
+      drawLines: phase.drawLines,
+      connectingLines: phase.connectingLines,
+      textsOnCanvas: phase.textsOnCanvas,
+      imagesOnCanvas: phase.imagesOnCanvas,
+      toolIconsOnCanvas: phase.toolIconsOnCanvas,
+    };
+  }, []);
+
   return {
     ...phaseManager,
     updateCurrentPhase: wrappedUpdateCurrentPhase,
@@ -802,6 +824,7 @@ export const useCanvasState = ({
     lobbyError,
     rotateCanvasItemsForSideSwap,
     getCurrentStateForSync,
+    getLatestEntities,
     enqueueCanvasPatchEntry,
     flushCanvasPatch,
   };

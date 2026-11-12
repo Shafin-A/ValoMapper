@@ -1,4 +1,8 @@
-import { useCanvas, useCanvasActions } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasEntityActions,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useSetCurrentStroke } from "@/contexts/drawing-preview-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
@@ -26,7 +30,7 @@ import { Stage } from "konva/lib/Stage";
 import type Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
-import { useCallback, useRef, useEffect, useMemo } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { useCanvasContextMenu } from "./use-canvas-context-menu";
 import { useCanvasDrawing } from "./use-canvas-drawing";
 import { useCanvasSelection } from "./use-canvas-selection";
@@ -59,28 +63,25 @@ export const useCanvasEvents = (
     setSelectedCanvasItems,
     isSidebarDragActive,
     setIsSidebarDragActive,
-    agentsOnCanvas,
-    setAgentsOnCanvas,
-    abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    textsOnCanvas,
-    setTextsOnCanvas,
-    imagesOnCanvas,
-    setImagesOnCanvas,
-    toolIconsOnCanvas,
-    setToolIconsOnCanvas,
     isDrawMode,
     editingTextId,
     isDrawing,
-    drawLines,
-    setDrawLines,
-    connectingLines,
-    setConnectingLines,
     tool,
-  } = useCanvas();
+  } = useCanvasUi();
+  const {
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    setTextsOnCanvas,
+    setImagesOnCanvas,
+    setToolIconsOnCanvas,
+    setDrawLines,
+    setConnectingLines,
+  } = useCanvasEntityActions();
+  const { setCurrentStageScale, getLatestEntities } = useCanvasActions();
+
+  const entities = getLatestEntities();
 
   const setCurrentStroke = useSetCurrentStroke();
-  const { setCurrentStageScale } = useCanvasActions();
 
   const { agentsSettings, abilitiesSettings, drawSettings, eraserSettings } =
     useSettings();
@@ -227,9 +228,10 @@ export const useCanvasEvents = (
       tool,
       drawSettings,
       eraserSettings,
-      drawLines,
+      entities.drawLines,
       setDrawLines,
       setCurrentStroke,
+      getLatestEntities,
     );
 
   const {
@@ -249,38 +251,34 @@ export const useCanvasEvents = (
     closeContextMenu,
   } = useCanvasContextMenu(
     stageRef,
-    agentsOnCanvas,
+    entities.agentsOnCanvas,
     setAgentsOnCanvas,
-    abilitiesOnCanvas,
+    entities.abilitiesOnCanvas,
     setAbilitiesOnCanvas,
-    textsOnCanvas,
+    entities.textsOnCanvas,
     setTextsOnCanvas,
-    imagesOnCanvas,
+    entities.imagesOnCanvas,
     setImagesOnCanvas,
-    toolIconsOnCanvas,
+    entities.toolIconsOnCanvas,
     setToolIconsOnCanvas,
-    connectingLines,
+    entities.connectingLines,
     setConnectingLines,
     selectedCanvasItems,
     setSelectedCanvasItems,
+    getLatestEntities,
   );
 
-  const collections = useMemo<CanvasItemCollections>(
-    () => ({
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      textsOnCanvas,
-      imagesOnCanvas,
-      toolIconsOnCanvas,
-    }),
-    [
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      textsOnCanvas,
-      imagesOnCanvas,
-      toolIconsOnCanvas,
-    ],
-  );
+  const getCollections = useCallback((): CanvasItemCollections => {
+    const latest = getLatestEntities();
+
+    return {
+      agentsOnCanvas: latest.agentsOnCanvas,
+      abilitiesOnCanvas: latest.abilitiesOnCanvas,
+      textsOnCanvas: latest.textsOnCanvas,
+      imagesOnCanvas: latest.imagesOnCanvas,
+      toolIconsOnCanvas: latest.toolIconsOnCanvas,
+    };
+  }, [getLatestEntities]);
 
   const { handleRightMouseDown } = useCanvasSelection({
     stageRef,
@@ -301,6 +299,9 @@ export const useCanvasEvents = (
     (position?: Vector2d) => {
       const stage = stageRef.current;
       if (!stage || !selectedCanvasIcon) return;
+
+      const { agentsOnCanvas, abilitiesOnCanvas, toolIconsOnCanvas } =
+        getLatestEntities();
 
       let pos: Vector2d;
       if (position) {
@@ -426,11 +427,9 @@ export const useCanvasEvents = (
     },
     [
       selectedCanvasIcon,
-      agentsOnCanvas,
-      abilitiesOnCanvas,
-      toolIconsOnCanvas,
       agentsSettings,
       abilitiesSettings,
+      getLatestEntities,
       setAbilitiesOnCanvas,
       setAgentsOnCanvas,
       setToolIconsOnCanvas,
@@ -445,6 +444,8 @@ export const useCanvasEvents = (
 
   const handleStageClick = useCallback(
     (event?: KonvaEventObject<MouseEvent>) => {
+      const collections = getCollections();
+
       if (editingTextId) {
         return;
       }
@@ -484,7 +485,7 @@ export const useCanvasEvents = (
     },
     [
       editingTextId,
-      collections,
+      getCollections,
       selectedCanvasItems,
       setSelectedCanvasItems,
       isDrawMode,
@@ -577,6 +578,7 @@ export const useCanvasEvents = (
 
   const startLongPressTimer = useCallback(() => {
     clearLongPressTimer();
+    const collections = getCollections();
 
     if (
       isDrawMode ||
@@ -617,7 +619,7 @@ export const useCanvasEvents = (
     }, LONG_PRESS_MS);
   }, [
     clearLongPressTimer,
-    collections,
+    getCollections,
     editingTextId,
     isDrawMode,
     isSidebarDragActive,
@@ -711,6 +713,7 @@ export const useCanvasEvents = (
 
   const handleTouchEnd = useCallback(
     (e: Parameters<typeof handleZoomTouchEnd>[0]) => {
+      const collections = getCollections();
       const gesture = touchGestureRef.current;
       const remainingTouches = e.evt.touches.length;
       const isCleanTap =
@@ -765,7 +768,7 @@ export const useCanvasEvents = (
     },
     [
       clearLongPressTimer,
-      collections,
+      getCollections,
       handleStageClick,
       handleStagePointerUp,
       handleZoomTouchEnd,
