@@ -34,11 +34,16 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { useCanvas } from "./canvas-context";
+import {
+  useCanvasActions,
+  useCanvasEntityActions,
+  useCanvasPhase,
+  useCanvasUi,
+  useCanvasView,
+} from "./canvas-context";
 import { RemoteCursorsProvider } from "./cursor-context";
 import { useUpdateLobby } from "@/hooks/api/use-update-lobby";
 import { electFullSyncSender } from "@/lib/ws-sync-election";
-
 interface WebSocketContextType {
   status: WSConnectionStatus;
   users: UserPresence[];
@@ -131,17 +136,17 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     setTextsOnCanvas,
     setImagesOnCanvas,
     setToolIconsOnCanvas,
-    setSelectedMap,
-    setMapSide,
-    currentPhaseIndex,
-    editingTextId,
-    switchToPhase,
+  } = useCanvasEntityActions();
+  const { setSelectedMap, setMapSide } = useCanvasView();
+  const { currentPhaseIndex, switchToPhase } = useCanvasPhase();
+  const { editingTextId } = useCanvasUi();
+  const {
     onUndoRedoCallback,
     rotateCanvasItemsForSideSwap,
     getCurrentStateForSync,
     applyRemoteState,
     resetState,
-  } = useCanvas();
+  } = useCanvasActions();
 
   const { updateAgentsSettings, updateAbilitiesSettings } = useSettings();
 
@@ -815,4 +820,9 @@ export const useWebSocket = () => {
     throw new Error("useWebSocket must be used within a WebSocketProvider");
   }
   return context;
+};
+
+export const useWebSocketUsers = (): UserPresence[] => {
+  const context = useContext(WebSocketContext);
+  return context?.users ?? [];
 };

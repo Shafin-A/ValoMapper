@@ -4,11 +4,7 @@ import { NavigationHistoryProvider } from "@/components/providers/navigation-his
 import { TourProviderWrapper } from "@/components/providers/tour-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { CanvasProvider } from "@/contexts/canvas-context";
 import { SettingsProvider } from "@/contexts/settings-context";
-import { WebSocketProvider } from "@/contexts/websocket-context";
-import { CollaborativeCanvasProvider } from "@/hooks/use-collaborative-canvas";
-import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { PenTapToClick } from "@/components/providers/pen-tap-to-click";
 import { ServiceWorkerRegistration } from "@/components/providers/service-worker-registration";
 import { FirebaseAuthProvider } from "@/hooks/use-firebase-auth";
@@ -91,18 +87,11 @@ const RootLayout = ({
               <FirebaseAuthProvider>
                 <SettingsProvider>
                   <TourProviderWrapper>
-                    <CanvasProvider>
-                      <WebSocketProvider>
-                        <CollaborativeCanvasProvider>
-                          <NavigationHistoryProvider>
-                            <KeyboardShortcuts />
-                            <PenTapToClick />
-                            <ServiceWorkerRegistration />
-                            {children}
-                          </NavigationHistoryProvider>
-                        </CollaborativeCanvasProvider>
-                      </WebSocketProvider>
-                    </CanvasProvider>
+                    <NavigationHistoryProvider>
+                      <PenTapToClick />
+                      <ServiceWorkerRegistration />
+                      {children}
+                    </NavigationHistoryProvider>
                     <Toaster richColors closeButton />
                   </TourProviderWrapper>
                 </SettingsProvider>

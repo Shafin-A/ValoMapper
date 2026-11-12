@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useUser } from "@/hooks/api/use-user";
 import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
-import { useWebSocket } from "@/contexts/websocket-context";
+import { useWebSocketUsers } from "@/contexts/websocket-context";
 import { usePathname } from "next/navigation";
 import { User } from "@/lib/types";
 
@@ -15,7 +15,7 @@ jest.mock("@/hooks/api/use-pending-stack-invite", () => ({
   usePendingStackInvites: jest.fn(),
 }));
 jest.mock("@/contexts/websocket-context", () => ({
-  useWebSocket: jest.fn(),
+  useWebSocketUsers: jest.fn(),
 }));
 
 const mockUseFirebaseAuth = useFirebaseAuth as jest.MockedFunction<
@@ -24,8 +24,8 @@ const mockUseFirebaseAuth = useFirebaseAuth as jest.MockedFunction<
 const mockUseUser = useUser as jest.MockedFunction<typeof useUser>;
 const mockUsePendingStackInvites =
   usePendingStackInvites as jest.MockedFunction<typeof usePendingStackInvites>;
-const mockUseWebSocket = useWebSocket as jest.MockedFunction<
-  typeof useWebSocket
+const mockUseWebSocketUsers = useWebSocketUsers as jest.MockedFunction<
+  typeof useWebSocketUsers
 >;
 const mockUsePathname = jest.mocked(usePathname);
 
@@ -60,9 +60,7 @@ describe("SiteHeader", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUsePathname.mockReturnValue("/");
-    mockUseWebSocket.mockReturnValue({
-      users: [],
-    } as unknown as ReturnType<typeof useWebSocket>);
+    mockUseWebSocketUsers.mockReturnValue([]);
     mockUsePendingStackInvites.mockReturnValue({
       data: [],
     } as unknown as ReturnType<typeof usePendingStackInvites>);

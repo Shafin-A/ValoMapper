@@ -31,7 +31,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { useWebSocket } from "@/contexts/websocket-context";
+import { useWebSocketUsers } from "@/contexts/websocket-context";
 import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -54,7 +54,7 @@ export const SiteHeader = ({
   const { logout } = useFirebaseAuth();
   const { data: user, isLoading } = useUser();
   const pathname = usePathname();
-  const { users } = useWebSocket();
+  const users = useWebSocketUsers();
   const isRSOUser = Boolean(user?.rsoSubjectId);
   const canCheckPendingInvite =
     !isLoading && Boolean(user) && user?.subscriptionPlan !== "stack";
