@@ -12,7 +12,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasAgents,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { AGENTS, TEMP_DRAG_ID } from "@/lib/consts";
 import { Agent, AgentRole } from "@/lib/types";
@@ -39,8 +42,8 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
 }) => {
   const { agentsSettings } = useSettings();
 
-  const { agentsOnCanvas, isAlly, selectedCanvasIcon, setSelectedCanvasIcon } =
-    useCanvas();
+  const { agentsOnCanvas } = useCanvasAgents();
+  const { isAlly, selectedCanvasIcon, setSelectedCanvasIcon } = useCanvasUi();
 
   const allyColor = agentsSettings.allyColor;
   const enemyColor = agentsSettings.enemyColor;

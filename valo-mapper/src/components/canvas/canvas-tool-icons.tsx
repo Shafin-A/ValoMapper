@@ -1,7 +1,9 @@
 import { CanvasIcon } from "@/components/canvas-icons";
 import {
+  useCanvasAbilities,
   useCanvasActions,
-  useCanvasEntities,
+  useCanvasAgents,
+  useCanvasToolIcons,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useSetHoveredElementId } from "@/contexts/hover-context";
@@ -105,13 +107,9 @@ export const CanvasToolIcons = memo(function CanvasToolIcons({
 }: CanvasToolIconsProps) {
   useCommitCount("CanvasToolIcons");
 
-  const {
-    toolIconsOnCanvas,
-    setToolIconsOnCanvas,
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-  } = useCanvasEntities();
+  const { toolIconsOnCanvas, setToolIconsOnCanvas } = useCanvasToolIcons();
+  const { agentsOnCanvas } = useCanvasAgents();
+  const { abilitiesOnCanvas, setAbilitiesOnCanvas } = useCanvasAbilities();
 
   const { isDrawMode, selectedCanvasIcon, editingTextId, isSidebarDragActive } =
     useCanvasUi();

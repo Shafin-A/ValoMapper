@@ -5,7 +5,7 @@ import Image from "next/image";
 import { RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/settings-context";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasUi } from "@/contexts/canvas-context";
 import {
   Tooltip,
   TooltipContent,
@@ -40,7 +40,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
 }) => {
   const { agentsSettings } = useSettings();
 
-  const { isAlly, selectedCanvasIcon } = useCanvas();
+  const { isAlly, selectedCanvasIcon } = useCanvasUi();
 
   const allyColor = agentsSettings.allyColor;
   const enemyColor = agentsSettings.enemyColor;

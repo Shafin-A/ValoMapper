@@ -41,8 +41,12 @@ import { AgentsGrid } from "./agents-grid";
 import AgentAbilities from "./agent-abilities";
 import { SIDEBAR_WIDTH, TEMP_DRAG_ID } from "@/lib/consts";
 import {
-  useCanvas,
+  useCanvasAbilities,
+  useCanvasActions,
+  useCanvasAgents,
+  useCanvasEntityActions,
   useCanvasScale,
+  useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { getAgentImgSrc, isAgent } from "@/lib/utils";
@@ -86,12 +90,10 @@ export const AgentsSidebar = ({
   const { notifyAgentsSettingsChanged, notifyAbilitiesSettingsChanged } =
     useCollaborativeCanvas();
 
+  const { agentsOnCanvas, setAgentsOnCanvas } = useCanvasAgents();
+  const { abilitiesOnCanvas, setAbilitiesOnCanvas } = useCanvasAbilities();
+  const { setToolIconsOnCanvas } = useCanvasEntityActions();
   const {
-    agentsOnCanvas,
-    abilitiesOnCanvas,
-    setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
-    setToolIconsOnCanvas,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
     isSidebarDragActive,
@@ -100,9 +102,8 @@ export const AgentsSidebar = ({
     setIsAlly,
     setIsDrawMode,
     setEditingTextId,
-    isLoadingLobby,
-    isErrorLobby,
-  } = useCanvas();
+  } = useCanvasUi();
+  const { isLoadingLobby, isErrorLobby } = useCanvasActions();
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
   const [onMap, setOnMap] = useState(false);

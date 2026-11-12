@@ -1,6 +1,13 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import MatchReviewPage from "@/app/matches/[matchId]/match-review-page";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasHistory,
+  useCanvasPhase,
+  useCanvasUi,
+  useCanvasView,
+} from "@/contexts/canvas-context";
+import { useSettings } from "@/contexts/settings-context";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -57,7 +64,15 @@ jest.mock("@/components/tools-sidebar", () => ({
 }));
 
 jest.mock("@/contexts/canvas-context", () => ({
-  useCanvas: jest.fn(),
+  useCanvasActions: jest.fn(),
+  useCanvasHistory: jest.fn(),
+  useCanvasPhase: jest.fn(),
+  useCanvasUi: jest.fn(),
+  useCanvasView: jest.fn(),
+}));
+
+jest.mock("@/contexts/settings-context", () => ({
+  useSettings: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/use-match-summary", () => ({
@@ -81,7 +96,12 @@ jest.mock("@/lib/match-review", () => ({
   cloneUndoableState: jest.fn((state) => state),
 }));
 
-const mockUseCanvas = jest.mocked(useCanvas);
+const mockUseCanvasActions = jest.mocked(useCanvasActions);
+const mockUseCanvasHistory = jest.mocked(useCanvasHistory);
+const mockUseCanvasPhase = jest.mocked(useCanvasPhase);
+const mockUseCanvasUi = jest.mocked(useCanvasUi);
+const mockUseCanvasView = jest.mocked(useCanvasView);
+const mockUseSettings = jest.mocked(useSettings);
 const mockUseCreateLobby = jest.mocked(useCreateLobby);
 const mockUseMatchSummary = jest.mocked(useMatchSummary);
 const mockUseFirebaseAuth = jest.mocked(useFirebaseAuth);
@@ -221,22 +241,43 @@ const multiPhaseRoundState: UndoableState = {
 const createCanvasContext = (
   applyRemoteState: jest.Mock,
   state: UndoableState = seededRoundState,
-) =>
-  ({
-    agentsSettings: undefined,
-    abilitiesSettings: undefined,
-    applyRemoteState,
-    currentPhaseIndex: state.currentPhaseIndex,
-    editedPhases: new Set(state.editedPhases),
-    isTransitioning: { current: false },
-    mapSide: state.mapSide,
-    onApplyHistoryStateCallback: { current: null },
-    notifyPhaseChangedCallback: { current: null },
-    phases: state.phases,
-    selectedMap: state.selectedMap,
-    switchToPhase: jest.fn(),
-    transitionToPhase: jest.fn(),
-  }) as unknown as ReturnType<typeof useCanvas>;
+) => ({
+  agentsSettings: undefined,
+  abilitiesSettings: undefined,
+  applyRemoteState,
+  currentPhaseIndex: state.currentPhaseIndex,
+  editedPhases: new Set(state.editedPhases),
+  isTransitioning: { current: false },
+  mapSide: state.mapSide,
+  onApplyHistoryStateCallback: {
+    current: null,
+  } as {
+    current:
+      | ((nextState: UndoableState, previousState: UndoableState) => void)
+      | null;
+  },
+  notifyPhaseChangedCallback: { current: null } as {
+    current: ((phaseIndex: number) => void) | null;
+  },
+  phases: state.phases,
+  selectedMap: state.selectedMap,
+  switchToPhase: jest.fn(),
+  transitionToPhase: jest.fn(),
+});
+
+type CanvasContextMock = ReturnType<typeof createCanvasContext>;
+
+const applyCanvasContext = (getContext: () => CanvasContextMock) => {
+  mockUseCanvasActions.mockImplementation(
+    () => getContext() as unknown as ReturnType<typeof useCanvasActions>,
+  );
+  mockUseCanvasPhase.mockImplementation(
+    () => getContext() as unknown as ReturnType<typeof useCanvasPhase>,
+  );
+  mockUseCanvasView.mockImplementation(
+    () => getContext() as unknown as ReturnType<typeof useCanvasView>,
+  );
+};
 
 describe("MatchReviewPage", () => {
   beforeEach(() => {
@@ -281,13 +322,31 @@ describe("MatchReviewPage", () => {
       },
       viewerTeamId: "Blue",
     });
+    mockUseSettings.mockReturnValue({
+      agentsSettings: undefined,
+      abilitiesSettings: undefined,
+    } as unknown as ReturnType<typeof useSettings>);
+    mockUseCanvasHistory.mockReturnValue({
+      undo: jest.fn(),
+      redo: jest.fn(),
+      canUndo: false,
+      canRedo: false,
+    } as unknown as ReturnType<typeof useCanvasHistory>);
+    mockUseCanvasUi.mockReturnValue({
+      isDrawMode: false,
+      setIsDrawMode: jest.fn(),
+      tool: "pencil",
+      setTool: jest.fn(),
+      setEditingTextId: jest.fn(),
+      setIsDeleteSettingsOpen: jest.fn(),
+    } as unknown as ReturnType<typeof useCanvasUi>);
   });
 
   it("hydrates replay state only once for the same round snapshot", async () => {
     const firstApplyRemoteState = jest.fn();
     let currentCanvasContext = createCanvasContext(firstApplyRemoteState);
 
-    mockUseCanvas.mockImplementation(() => currentCanvasContext);
+    applyCanvasContext(() => currentCanvasContext);
 
     const { rerender } = render(<MatchReviewPage />);
 
@@ -310,9 +369,7 @@ describe("MatchReviewPage", () => {
     const applyRemoteState = jest.fn();
     const replace = jest.fn();
 
-    mockUseCanvas.mockImplementation(() =>
-      createCanvasContext(applyRemoteState),
-    );
+    applyCanvasContext(() => createCanvasContext(applyRemoteState));
     mockUseRouter.mockReturnValue({
       replace,
     } as unknown as ReturnType<typeof useRouter>);
@@ -351,7 +408,7 @@ describe("MatchReviewPage", () => {
     const replace = jest.fn();
     const currentCanvasContext = createCanvasContext(applyRemoteState);
 
-    mockUseCanvas.mockImplementation(() => currentCanvasContext);
+    applyCanvasContext(() => currentCanvasContext);
     mockUseRouter.mockReturnValue({
       replace,
     } as unknown as ReturnType<typeof useRouter>);
@@ -399,9 +456,7 @@ describe("MatchReviewPage", () => {
   it("renders replay without viewer context for public access", async () => {
     const applyRemoteState = jest.fn();
 
-    mockUseCanvas.mockImplementation(() =>
-      createCanvasContext(applyRemoteState),
-    );
+    applyCanvasContext(() => createCanvasContext(applyRemoteState));
     mockUseMatchSummary.mockReturnValue({
       data: {
         ...matchSummary,
@@ -440,7 +495,7 @@ describe("MatchReviewPage", () => {
     const applyRemoteState = jest.fn();
     const mutate = jest.fn();
 
-    mockUseCanvas.mockImplementation(() =>
+    applyCanvasContext(() =>
       createCanvasContext(applyRemoteState, multiPhaseRoundState),
     );
     mockUseCreateLobby.mockReturnValue({

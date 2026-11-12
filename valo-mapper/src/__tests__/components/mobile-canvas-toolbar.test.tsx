@@ -1,10 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { MobileCanvasToolbar } from "@/components/canvas/mobile-canvas-toolbar";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasHistory,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 
 jest.mock("@/contexts/canvas-context", () => ({
-  useCanvas: jest.fn(),
+  useCanvasHistory: jest.fn(),
+  useCanvasUi: jest.fn(),
 }));
 
 jest.mock("@/hooks/use-mobile", () => ({
@@ -15,7 +19,8 @@ jest.mock("@/components/tools-sidebar/delete-settings", () => ({
   DeleteSettings: () => <div>Delete settings</div>,
 }));
 
-const mockUseCanvas = jest.mocked(useCanvas);
+const mockUseCanvasHistory = jest.mocked(useCanvasHistory);
+const mockUseCanvasUi = jest.mocked(useCanvasUi);
 
 const renderToolbar = () => {
   const onOpenTools = jest.fn();
@@ -41,18 +46,20 @@ describe("MobileCanvasToolbar", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseCanvas.mockReturnValue({
+    mockUseCanvasHistory.mockReturnValue({
       undo,
       redo,
       canUndo: true,
       canRedo: true,
+    } as unknown as ReturnType<typeof useCanvasHistory>);
+    mockUseCanvasUi.mockReturnValue({
       isDrawMode: false,
       setIsDrawMode,
       tool: "pencil",
       setTool,
       setEditingTextId,
       setIsDeleteSettingsOpen,
-    } as unknown as ReturnType<typeof useCanvas>);
+    } as unknown as ReturnType<typeof useCanvasUi>);
   });
 
   it("runs undo and redo", () => {

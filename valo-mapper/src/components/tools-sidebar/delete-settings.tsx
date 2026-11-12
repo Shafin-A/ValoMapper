@@ -4,7 +4,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasAbilities,
+  useCanvasActions,
+  useCanvasAgents,
+  useCanvasConnectingLines,
+  useCanvasDrawLines,
+  useCanvasImages,
+  useCanvasTexts,
+  useCanvasToolIcons,
+} from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import {
   ALargeSmall,
@@ -16,23 +25,14 @@ import {
 } from "lucide-react";
 
 export const DeleteSettings = () => {
-  const {
-    resetState,
-    agentsOnCanvas,
-    setAgentsOnCanvas,
-    abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    drawLines,
-    setDrawLines,
-    textsOnCanvas,
-    setTextsOnCanvas,
-    imagesOnCanvas,
-    setImagesOnCanvas,
-    toolIconsOnCanvas,
-    setToolIconsOnCanvas,
-    connectingLines,
-    setConnectingLines,
-  } = useCanvas();
+  const { agentsOnCanvas, setAgentsOnCanvas } = useCanvasAgents();
+  const { abilitiesOnCanvas, setAbilitiesOnCanvas } = useCanvasAbilities();
+  const { drawLines, setDrawLines } = useCanvasDrawLines();
+  const { textsOnCanvas, setTextsOnCanvas } = useCanvasTexts();
+  const { imagesOnCanvas, setImagesOnCanvas } = useCanvasImages();
+  const { toolIconsOnCanvas, setToolIconsOnCanvas } = useCanvasToolIcons();
+  const { connectingLines, setConnectingLines } = useCanvasConnectingLines();
+  const { resetState } = useCanvasActions();
 
   const {
     notifyCanvasClear,

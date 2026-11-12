@@ -9,7 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { AGENTS } from "@/lib/consts";
 import { getNextId } from "@/lib/utils";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasEntityActions,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { Vector2d } from "konva/lib/types";
@@ -33,12 +36,9 @@ export const LineupDialog = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
 
-  const {
-    setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
-    setConnectingLines,
-    isAlly,
-  } = useCanvas();
+  const { setAgentsOnCanvas, setAbilitiesOnCanvas, setConnectingLines } =
+    useCanvasEntityActions();
+  const { isAlly } = useCanvasUi();
 
   const { notifyAgentAdded, notifyAbilityAdded, notifyConnLineAdded } =
     useCollaborativeCanvas();

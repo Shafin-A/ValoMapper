@@ -1,14 +1,17 @@
 "use client";
 
 import { TextEditor } from "@/components/canvas/text-editor";
-import { useCanvasEntities, useCanvasUi } from "@/contexts/canvas-context";
+import {
+  useCanvasTexts,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useTextEditing } from "@/hooks/canvas/use-text-editor";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { resolveTextFontSize, textSpansForItem } from "@/lib/rich-text";
 
 export const MobileTextEditorHost = () => {
   const isMobile = useIsMobile();
-  const { textsOnCanvas } = useCanvasEntities();
+  const { textsOnCanvas } = useCanvasTexts();
   const { editingTextId } = useCanvasUi();
   const { handleTextChange, handleTextEditComplete } = useTextEditing();
 

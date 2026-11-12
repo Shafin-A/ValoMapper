@@ -1,5 +1,5 @@
 import {
-  useCanvasEntities,
+  useCanvasImages,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import {
@@ -32,7 +32,7 @@ export const CanvasImages = memo(function CanvasImages({
 }: CanvasImageProps) {
   useCommitCount("CanvasImages");
 
-  const { imagesOnCanvas, setImagesOnCanvas } = useCanvasEntities();
+  const { imagesOnCanvas, setImagesOnCanvas } = useCanvasImages();
   const { isDrawMode, editingTextId, selectedCanvasIcon } = useCanvasUi();
 
   const hoveredElementId = useHoveredElementId();

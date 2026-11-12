@@ -1,5 +1,5 @@
 import {
-  useCanvasEntities,
+  useCanvasTexts,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useSetHoveredElementId } from "@/contexts/hover-context";
@@ -41,7 +41,7 @@ export const CanvasTexts = memo(function CanvasTexts({
 }: CanvasTextProps) {
   useCommitCount("CanvasTexts");
 
-  const { textsOnCanvas, setTextsOnCanvas } = useCanvasEntities();
+  const { textsOnCanvas, setTextsOnCanvas } = useCanvasTexts();
   const { isDrawMode, editingTextId, selectedCanvasIcon } = useCanvasUi();
 
   const setHoveredElementId = useSetHoveredElementId();

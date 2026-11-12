@@ -1,6 +1,10 @@
 import React, { memo, useMemo } from "react";
 import { Line } from "react-konva";
-import { useCanvasEntities } from "@/contexts/canvas-context";
+import {
+  useCanvasAbilities,
+  useCanvasAgents,
+  useCanvasConnectingLines,
+} from "@/contexts/canvas-context";
 import { useCommitCount } from "@/lib/perf-beacon";
 import { ConnectingLine } from "@/lib/types";
 import { shouldSuppressCanvasItemTap } from "@/lib/canvas-long-press";
@@ -14,8 +18,9 @@ export const CanvasConnectingLines = memo(function CanvasConnectingLines({
 }: CanvasConnectingLinesProps) {
   useCommitCount("CanvasConnectingLines");
 
-  const { connectingLines, agentsOnCanvas, abilitiesOnCanvas } =
-    useCanvasEntities();
+  const { connectingLines } = useCanvasConnectingLines();
+  const { agentsOnCanvas } = useCanvasAgents();
+  const { abilitiesOnCanvas } = useCanvasAbilities();
 
   const itemsById = useMemo(() => {
     const map = new Map<string, { x: number; y: number }>();

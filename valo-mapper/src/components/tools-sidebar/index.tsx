@@ -20,7 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasPhase,
+  useCanvasView,
+} from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { phaseHasContent } from "@/hooks/canvas/use-phase-manager";
 import { useSettings } from "@/contexts/settings-context";
@@ -160,15 +164,6 @@ export const ToolsSidebar = ({
     setSelectedMap,
     mapSide,
     setMapSide,
-    resetState,
-    phases,
-    currentPhaseIndex,
-    switchToPhase,
-    transitionToPhase,
-    isTransitioning,
-    editedPhases,
-    isLoadingLobby,
-    isErrorLobby,
     showCallouts,
     setShowCallouts,
     showUltOrbs,
@@ -177,9 +172,22 @@ export const ToolsSidebar = ({
     setShowSpawnBarriers,
     canvasBackground,
     setCanvasBackground,
+  } = useCanvasView();
+  const {
+    phases,
+    currentPhaseIndex,
+    switchToPhase,
+    transitionToPhase,
+    isTransitioning,
+    editedPhases,
+  } = useCanvasPhase();
+  const {
+    resetState,
+    isLoadingLobby,
+    isErrorLobby,
     notifyPhaseChangedCallback,
     rotateCanvasItemsForSideSwap,
-  } = useCanvas();
+  } = useCanvasActions();
 
   const { agentsSettings } = useSettings();
   const { notifyPhaseChanged, notifyAllPhasesRotated } =

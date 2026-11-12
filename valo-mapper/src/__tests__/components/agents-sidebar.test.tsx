@@ -5,7 +5,7 @@ import { AgentsGrid } from "@/components/agents-sidebar/agents-grid";
 import AgentAbilities from "@/components/agents-sidebar/agent-abilities";
 import { Agent, AbilityIconDefinition } from "@/lib/types";
 import { Tabs } from "@/components/ui/tabs";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasAgents, useCanvasUi } from "@/contexts/canvas-context";
 import {
   getAbilityVariants,
   resolveAbilityVariant,
@@ -21,26 +21,39 @@ jest.mock("@/contexts/settings-context", () => ({
 }));
 
 jest.mock("@/contexts/canvas-context", () => ({
-  useCanvas: jest.fn(),
+  useCanvasAgents: jest.fn(),
+  useCanvasUi: jest.fn(),
 }));
 
-const mockUseCanvas = jest.mocked(useCanvas);
+const mockUseCanvasAgents = jest.mocked(useCanvasAgents);
+const mockUseCanvasUi = jest.mocked(useCanvasUi);
 
-const defaultCanvasMock = {
-  agentsOnCanvas: [
-    { id: "1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
-    {
-      id: "2",
-      name: "Sage",
-      role: "Sentinel",
-      isAlly: false,
-      x: 100,
-      y: 100,
-    },
-  ],
+const defaultAgents = [
+  { id: "1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
+  {
+    id: "2",
+    name: "Sage",
+    role: "Sentinel",
+    isAlly: false,
+    x: 100,
+    y: 100,
+  },
+];
+
+const defaultCanvasUiMock = {
   isAlly: true,
   selectedCanvasIcon: null,
   setSelectedCanvasIcon: jest.fn(),
+};
+
+const mockAgentsContext = (agentsOnCanvas = defaultAgents) => {
+  mockUseCanvasAgents.mockReturnValue({
+    agentsOnCanvas,
+    setAgentsOnCanvas: jest.fn(),
+  } as unknown as ReturnType<typeof useCanvasAgents>);
+  mockUseCanvasUi.mockReturnValue(
+    defaultCanvasUiMock as unknown as ReturnType<typeof useCanvasUi>,
+  );
 };
 
 describe("RoleTabs", () => {
@@ -98,9 +111,7 @@ describe("AgentsGrid", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
-    );
+    mockAgentsContext();
   });
 
   it("should render agents grid", () => {
@@ -132,10 +143,7 @@ describe("AgentsGrid", () => {
   });
 
   it("should show empty state when filtering by onMap with no matching agents", () => {
-    mockUseCanvas.mockReturnValue({
-      ...defaultCanvasMock,
-      agentsOnCanvas: [],
-    } as unknown as ReturnType<typeof useCanvas>);
+    mockAgentsContext([]);
 
     render(<AgentsGrid {...defaultProps} onMap={true} />);
 
@@ -143,10 +151,7 @@ describe("AgentsGrid", () => {
   });
 
   it("should show role-specific empty state message", () => {
-    mockUseCanvas.mockReturnValue({
-      ...defaultCanvasMock,
-      agentsOnCanvas: [],
-    } as unknown as ReturnType<typeof useCanvas>);
+    mockAgentsContext([]);
 
     render(
       <AgentsGrid {...defaultProps} selectedRole="Duelist" onMap={true} />,
@@ -175,9 +180,7 @@ describe("AgentAbilities", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseCanvas.mockReturnValue(
-      defaultCanvasMock as unknown as ReturnType<typeof useCanvas>,
-    );
+    mockAgentsContext();
   });
 
   it("should render close button and ability images", () => {

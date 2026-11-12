@@ -9,7 +9,7 @@ import {
   Rect,
   Text,
 } from "react-konva";
-import { useCanvasEntities } from "@/contexts/canvas-context";
+import { useCanvasDrawLines } from "@/contexts/canvas-context";
 import { useCurrentStroke } from "@/contexts/drawing-preview-context";
 import { useCommitCount } from "@/lib/perf-beacon";
 import {
@@ -338,7 +338,7 @@ export const CanvasDrawLines = memo(function CanvasDrawLines({
 }: CanvasDrawLinesProps) {
   useCommitCount("CanvasDrawLines");
 
-  const { drawLines } = useCanvasEntities();
+  const { drawLines } = useCanvasDrawLines();
   const currentStroke = useCurrentStroke();
 
   return (

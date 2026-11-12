@@ -1,6 +1,6 @@
 "use client";
 
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasUi } from "@/contexts/canvas-context";
 import { useTour } from "@/contexts/tour-context";
 import { useTour as useReactour } from "@reactour/tour";
 import { useEffect, useRef } from "react";
@@ -10,7 +10,7 @@ export const TourAutoAdvance = () => {
   const { isTourOpen, autoAdvanceState, markStepAdvanced } = useTour();
   const isMobile = useIsMobile();
   const { currentStep, setCurrentStep } = useReactour();
-  const { selectedCanvasIcon } = useCanvas();
+  const { selectedCanvasIcon } = useCanvasUi();
   const previousSelectedIconRef = useRef<string | null>(null);
 
   useEffect(() => {

@@ -1,7 +1,10 @@
 import { CanvasIcon } from "@/components/canvas-icons";
 import {
+  useCanvasAbilities,
   useCanvasActions,
-  useCanvasEntities,
+  useCanvasAgents,
+  useCanvasConnectingLines,
+  useCanvasToolIcons,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useSetHoveredElementId } from "@/contexts/hover-context";
@@ -97,16 +100,10 @@ export const CanvasAgents = memo(function CanvasAgents({
 }: CanvasAgentProps) {
   useCommitCount("CanvasAgents");
 
-  const {
-    agentsOnCanvas,
-    setAgentsOnCanvas,
-    abilitiesOnCanvas,
-    setAbilitiesOnCanvas,
-    toolIconsOnCanvas,
-    setToolIconsOnCanvas,
-    connectingLines,
-    setConnectingLines,
-  } = useCanvasEntities();
+  const { agentsOnCanvas, setAgentsOnCanvas } = useCanvasAgents();
+  const { abilitiesOnCanvas, setAbilitiesOnCanvas } = useCanvasAbilities();
+  const { toolIconsOnCanvas, setToolIconsOnCanvas } = useCanvasToolIcons();
+  const { connectingLines, setConnectingLines } = useCanvasConnectingLines();
 
   const { isDrawMode, selectedCanvasIcon, isSidebarDragActive, editingTextId } =
     useCanvasUi();

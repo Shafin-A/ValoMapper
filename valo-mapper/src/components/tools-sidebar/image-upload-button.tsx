@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, Loader2 } from "lucide-react";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasEntityActions } from "@/contexts/canvas-context";
 import {
   ALLOWED_IMAGE_UPLOAD_MIME_TYPES,
   IMAGE_UPLOAD_ACCEPT_ATTR,
@@ -24,7 +24,7 @@ export const ImageUploadButton = React.forwardRef<
   ImageUploadButtonProps
 >(({ mapPosition, onImageAdded, onClick, ...props }, ref) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { setImagesOnCanvas } = useCanvas();
+  const { setImagesOnCanvas } = useCanvasEntityActions();
   const [isUploading, setIsUploading] = useState(false);
 
   const handleUploadClick = useCallback(() => {

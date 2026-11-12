@@ -20,7 +20,10 @@ import {
 } from "@/components/ui/sheet";
 import { Toggle } from "@/components/ui/toggle";
 import { DeleteSettings } from "@/components/tools-sidebar/delete-settings";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasHistory,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MobileCanvasToolbarProps {
@@ -35,18 +38,15 @@ export const MobileCanvasToolbar = ({
   onOpenTools,
   onOpenAgents,
 }: MobileCanvasToolbarProps) => {
+  const { undo, redo, canUndo, canRedo } = useCanvasHistory();
   const {
-    undo,
-    redo,
-    canUndo,
-    canRedo,
     isDrawMode,
     setIsDrawMode,
     tool,
     setTool,
     setEditingTextId,
     setIsDeleteSettingsOpen,
-  } = useCanvas();
+  } = useCanvasUi();
   const isMobile = useIsMobile();
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
 

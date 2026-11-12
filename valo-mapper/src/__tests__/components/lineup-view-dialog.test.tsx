@@ -14,7 +14,7 @@ const render = (children: React.ReactElement) => {
 };
 
 jest.mock("@/contexts/canvas-context", () => ({
-  useCanvas: () => ({
+  useCanvasEntityActions: () => ({
     setConnectingLines: mockSetConnectingLines,
   }),
 }));

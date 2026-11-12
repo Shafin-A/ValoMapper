@@ -6,7 +6,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasHistory,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { Tool } from "@/lib/types";
 import { Vector2d } from "konva/lib/types";
 import {
@@ -69,11 +73,8 @@ export const ToolsSection = ({
   const [visionConesOpen, setVisionConesOpen] = useState(false);
   const isMobile = useIsMobile();
 
+  const { undo, redo, canUndo, canRedo } = useCanvasHistory();
   const {
-    undo,
-    redo,
-    canUndo,
-    canRedo,
     setIsDrawMode,
     tool,
     setTool,
@@ -81,8 +82,8 @@ export const ToolsSection = ({
     isDeleteSettingsOpen,
     setIsDeleteSettingsOpen,
     setEditingTextId,
-    recenterCanvasCallback,
-  } = useCanvas();
+  } = useCanvasUi();
+  const { recenterCanvasCallback } = useCanvasActions();
 
   const { notifyImageAdded } = useCollaborativeCanvas();
 

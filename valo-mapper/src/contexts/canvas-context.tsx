@@ -39,25 +39,27 @@ import {
   type Context,
 } from "react";
 import { filterExistingSelection } from "@/lib/canvas-selection";
+import {
+  CanvasEntityProviders,
+  useCanvasAbilities,
+  useCanvasAgents,
+  useCanvasConnectingLines,
+  useCanvasDrawLines,
+  useCanvasEntities,
+  useCanvasImages,
+  useCanvasTexts,
+  useCanvasToolIcons,
+  type CanvasAbilitiesContextValue,
+  type CanvasAgentsContextValue,
+  type CanvasConnectingLinesContextValue,
+  type CanvasDrawLinesContextValue,
+  type CanvasEntitiesContextValue,
+  type CanvasImagesContextValue,
+  type CanvasTextsContextValue,
+  type CanvasToolIconsContextValue,
+} from "./canvas-entity-contexts";
 import { DrawingPreviewProvider } from "./drawing-preview-context";
 import { HoveredElementProvider } from "./hover-context";
-
-interface CanvasEntitiesContextType {
-  agentsOnCanvas: AgentCanvas[];
-  setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>;
-  abilitiesOnCanvas: AbilityCanvas[];
-  setAbilitiesOnCanvas: Dispatch<SetStateAction<AbilityCanvas[]>>;
-  drawLines: DrawLine[];
-  setDrawLines: Dispatch<SetStateAction<DrawLine[]>>;
-  connectingLines: ConnectingLine[];
-  setConnectingLines: Dispatch<SetStateAction<ConnectingLine[]>>;
-  textsOnCanvas: TextCanvas[];
-  setTextsOnCanvas: Dispatch<SetStateAction<TextCanvas[]>>;
-  imagesOnCanvas: ImageCanvas[];
-  setImagesOnCanvas: Dispatch<SetStateAction<ImageCanvas[]>>;
-  toolIconsOnCanvas: ToolIconCanvas[];
-  setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>;
-}
 
 interface CanvasEntityActionsContextType {
   setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>;
@@ -172,16 +174,13 @@ interface CanvasActionsContextType {
 }
 
 export interface CanvasContextType
-  extends CanvasEntitiesContextType,
+  extends CanvasEntitiesContextValue,
     CanvasViewContextType,
     CanvasUiContextType,
     CanvasPhaseContextType,
     CanvasHistoryContextType,
     CanvasActionsContextType {}
 
-const CanvasEntitiesContext = createContext<
-  CanvasEntitiesContextType | undefined
->(undefined);
 const CanvasEntityActionsContext = createContext<
   CanvasEntityActionsContextType | undefined
 >(undefined);
@@ -317,39 +316,60 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
     setSelectedCanvasItems,
   ]);
 
-  const entitiesValue = useMemo<CanvasEntitiesContextType>(
+  const agentsValue = useMemo<CanvasAgentsContextValue>(
     () => ({
       agentsOnCanvas: canvasState.agentsOnCanvas,
       setAgentsOnCanvas: canvasState.setAgentsOnCanvas,
+    }),
+    [canvasState.agentsOnCanvas, canvasState.setAgentsOnCanvas],
+  );
+
+  const abilitiesValue = useMemo<CanvasAbilitiesContextValue>(
+    () => ({
       abilitiesOnCanvas: canvasState.abilitiesOnCanvas,
       setAbilitiesOnCanvas: canvasState.setAbilitiesOnCanvas,
+    }),
+    [canvasState.abilitiesOnCanvas, canvasState.setAbilitiesOnCanvas],
+  );
+
+  const drawLinesValue = useMemo<CanvasDrawLinesContextValue>(
+    () => ({
       drawLines: canvasState.drawLines,
       setDrawLines: canvasState.setDrawLines,
+    }),
+    [canvasState.drawLines, canvasState.setDrawLines],
+  );
+
+  const connectingLinesValue = useMemo<CanvasConnectingLinesContextValue>(
+    () => ({
       connectingLines: canvasState.connectingLines,
       setConnectingLines: canvasState.setConnectingLines,
+    }),
+    [canvasState.connectingLines, canvasState.setConnectingLines],
+  );
+
+  const textsValue = useMemo<CanvasTextsContextValue>(
+    () => ({
       textsOnCanvas: canvasState.textsOnCanvas,
       setTextsOnCanvas: canvasState.setTextsOnCanvas,
+    }),
+    [canvasState.textsOnCanvas, canvasState.setTextsOnCanvas],
+  );
+
+  const imagesValue = useMemo<CanvasImagesContextValue>(
+    () => ({
       imagesOnCanvas: canvasState.imagesOnCanvas,
       setImagesOnCanvas: canvasState.setImagesOnCanvas,
+    }),
+    [canvasState.imagesOnCanvas, canvasState.setImagesOnCanvas],
+  );
+
+  const toolIconsValue = useMemo<CanvasToolIconsContextValue>(
+    () => ({
       toolIconsOnCanvas: canvasState.toolIconsOnCanvas,
       setToolIconsOnCanvas: canvasState.setToolIconsOnCanvas,
     }),
-    [
-      canvasState.agentsOnCanvas,
-      canvasState.setAgentsOnCanvas,
-      canvasState.abilitiesOnCanvas,
-      canvasState.setAbilitiesOnCanvas,
-      canvasState.drawLines,
-      canvasState.setDrawLines,
-      canvasState.connectingLines,
-      canvasState.setConnectingLines,
-      canvasState.textsOnCanvas,
-      canvasState.setTextsOnCanvas,
-      canvasState.imagesOnCanvas,
-      canvasState.setImagesOnCanvas,
-      canvasState.toolIconsOnCanvas,
-      canvasState.setToolIconsOnCanvas,
-    ],
+    [canvasState.toolIconsOnCanvas, canvasState.setToolIconsOnCanvas],
   );
 
   const entityActionsValue = useMemo<CanvasEntityActionsContextType>(
@@ -549,11 +569,19 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
             <CanvasUiContext.Provider value={uiValue}>
               <CanvasScaleContext.Provider value={scaleValue}>
                 <CanvasEntityActionsContext.Provider value={entityActionsValue}>
-                  <CanvasEntitiesContext.Provider value={entitiesValue}>
+                  <CanvasEntityProviders
+                    agents={agentsValue}
+                    abilities={abilitiesValue}
+                    drawLines={drawLinesValue}
+                    connectingLines={connectingLinesValue}
+                    texts={textsValue}
+                    images={imagesValue}
+                    toolIcons={toolIconsValue}
+                  >
                     <HoveredElementProvider>
                       <DrawingPreviewProvider>{children}</DrawingPreviewProvider>
                     </HoveredElementProvider>
-                  </CanvasEntitiesContext.Provider>
+                  </CanvasEntityProviders>
                 </CanvasEntityActionsContext.Provider>
               </CanvasScaleContext.Provider>
             </CanvasUiContext.Provider>
@@ -575,9 +603,6 @@ const useRequiredContext = <T,>(
   return value;
 };
 
-export const useCanvasEntities = () =>
-  useRequiredContext(CanvasEntitiesContext, "useCanvasEntities");
-
 export const useCanvasEntityActions = () =>
   useRequiredContext(CanvasEntityActionsContext, "useCanvasEntityActions");
 
@@ -598,6 +623,17 @@ export const useCanvasHistory = () =>
 
 export const useCanvasActions = () =>
   useRequiredContext(CanvasActionsContext, "useCanvasActions");
+
+export {
+  useCanvasAbilities,
+  useCanvasAgents,
+  useCanvasConnectingLines,
+  useCanvasDrawLines,
+  useCanvasEntities,
+  useCanvasImages,
+  useCanvasTexts,
+  useCanvasToolIcons,
+};
 
 export const useCanvas = (): CanvasContextType => {
   const entities = useCanvasEntities();

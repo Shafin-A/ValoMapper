@@ -1,4 +1,8 @@
-import { useCanvas, useCanvasScale } from "@/contexts/canvas-context";
+import {
+  useCanvasEntityActions,
+  useCanvasScale,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import {
   WEAPONS,
   TEMP_DRAG_ID,
@@ -45,14 +49,16 @@ export const IconsSection = ({ setSidebarOpen }: IconsSectionProps) => {
   const {
     setEditingTextId,
     setIsDrawMode,
-    setAgentsOnCanvas,
-    setAbilitiesOnCanvas,
-    setToolIconsOnCanvas,
     selectedCanvasIcon,
     setSelectedCanvasIcon,
     isSidebarDragActive,
     setIsSidebarDragActive,
-  } = useCanvas();
+  } = useCanvasUi();
+  const {
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    setToolIconsOnCanvas,
+  } = useCanvasEntityActions();
 
   const selectedToolIconName =
     selectedCanvasIcon && "width" in selectedCanvasIcon

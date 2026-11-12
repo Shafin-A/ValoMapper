@@ -5,7 +5,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ToolIconButton } from "./tool-icon-button";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasEntityActions,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { MAP_SIZE, TEMP_DRAG_ID, VISION_CONE_ITEMS } from "@/lib/consts";
@@ -19,12 +22,12 @@ export const VisionConeSettings = ({
   const {
     setIsDrawMode,
     setEditingTextId,
-    setAbilitiesOnCanvas,
     setSelectedCanvasIcon,
     selectedCanvasIcon,
     setIsSidebarDragActive,
     isAlly,
-  } = useCanvas();
+  } = useCanvasUi();
+  const { setAbilitiesOnCanvas } = useCanvasEntityActions();
   const { notifyAbilityAdded } = useCollaborativeCanvas();
 
   const pendingVisionConeDragRef = useRef<{

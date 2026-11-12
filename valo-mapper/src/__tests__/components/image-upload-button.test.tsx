@@ -1,11 +1,13 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ImageUploadButton } from "@/components/tools-sidebar/image-upload-button";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasEntityActions } from "@/contexts/canvas-context";
 
-type UseCanvasMock = jest.MockedFunction<typeof useCanvas>;
+type UseCanvasEntityActionsMock = jest.MockedFunction<
+  typeof useCanvasEntityActions
+>;
 
 jest.mock("@/contexts/canvas-context", () => ({
-  useCanvas: jest.fn(),
+  useCanvasEntityActions: jest.fn(),
 }));
 
 describe("ImageUploadButton", () => {
@@ -37,9 +39,9 @@ describe("ImageUploadButton", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useCanvas as UseCanvasMock).mockReturnValue({
+    (useCanvasEntityActions as UseCanvasEntityActionsMock).mockReturnValue({
       setImagesOnCanvas,
-    } as unknown as ReturnType<typeof useCanvas>);
+    } as unknown as ReturnType<typeof useCanvasEntityActions>);
   });
 
   it("disables the upload button while upload is in progress", async () => {

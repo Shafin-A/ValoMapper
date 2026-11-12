@@ -15,7 +15,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasPhase,
+  useCanvasView,
+} from "@/contexts/canvas-context";
+import { useSettings } from "@/contexts/settings-context";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useMatchSummary } from "@/hooks/api/use-match-summary";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -88,21 +93,21 @@ const MatchReviewPage = () => {
     {},
   );
 
+  const { agentsSettings, abilitiesSettings } = useSettings();
   const {
-    agentsSettings,
-    abilitiesSettings,
     applyRemoteState,
+    onApplyHistoryStateCallback,
+    notifyPhaseChangedCallback,
+  } = useCanvasActions();
+  const {
+    phases,
     currentPhaseIndex,
     editedPhases,
     isTransitioning,
-    mapSide,
-    onApplyHistoryStateCallback,
-    notifyPhaseChangedCallback,
-    phases,
-    selectedMap,
     switchToPhase,
     transitionToPhase,
-  } = useCanvas();
+  } = useCanvasPhase();
+  const { mapSide, selectedMap } = useCanvasView();
 
   const reviewSeed = useMemo(() => {
     if (!matchSummary) {

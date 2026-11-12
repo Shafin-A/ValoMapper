@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { ALargeSmall } from "lucide-react";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasEntityActions,
+  useCanvasUi,
+} from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { MAP_SIZE } from "@/lib/consts";
 import { getNextId } from "@/lib/utils";
@@ -20,7 +23,8 @@ export const TextAddButton = React.forwardRef<
   HTMLButtonElement,
   TextAddButtonProps
 >(({ mapPosition, onTextAdded, onBeforeAdd, onClick, ...props }, ref) => {
-  const { setTextsOnCanvas, setEditingTextId, setIsDrawMode } = useCanvas();
+  const { setTextsOnCanvas } = useCanvasEntityActions();
+  const { setEditingTextId, setIsDrawMode } = useCanvasUi();
   const { notifyTextAdded } = useCollaborativeCanvas();
 
   const handleAddText = useCallback(() => {

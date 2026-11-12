@@ -37,7 +37,7 @@ import {
 } from "../ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 
 interface ContextMenuPopoverProps {
   open: boolean;
@@ -109,7 +109,7 @@ const ConditionalTooltip = ({
     <>{children}</>
   );
 
-export const ContextMenuPopover = ({
+export const ContextMenuPopover = memo(function ContextMenuPopover({
   open,
   x,
   y,
@@ -126,7 +126,7 @@ export const ContextMenuPopover = ({
   onRemoveAttachedVisionCone,
   onDetachVisionCone,
   onDelete,
-}: ContextMenuPopoverProps) => {
+}: ContextMenuPopoverProps) {
   const isMobile = useIsMobile();
   // Tooltip opens on its own after opening popover for some reason so need to delay it
   const [allowTooltips, setAllowTooltips] = useState(false);
@@ -672,4 +672,4 @@ export const ContextMenuPopover = ({
       </PopoverContent>
     </Popover>
   );
-};
+});

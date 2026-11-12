@@ -11,7 +11,7 @@ import { ConnectingLine } from "@/lib/types";
 import { LineupFullscreenViewer } from "../tools-sidebar/lineup-dialog/lineup-fullscreen-viewer";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
-import { useCanvas } from "@/contexts/canvas-context";
+import { useCanvasEntityActions } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { getYoutubeEmbedUrl } from "@/lib/utils";
 import { LineupViewContent } from "./lineup-view-content";
@@ -28,7 +28,7 @@ export const LineupViewDialog = ({
   isOpen,
   onClose,
 }: LineupViewDialogProps) => {
-  const { setConnectingLines } = useCanvas();
+  const { setConnectingLines } = useCanvasEntityActions();
   const { notifyConnLineUpdated } = useCollaborativeCanvas();
 
   const [isFullscreen, setIsFullscreen] = useState(false);

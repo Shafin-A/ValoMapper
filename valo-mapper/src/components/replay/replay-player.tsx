@@ -13,7 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCanvas } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasPhase,
+  useCanvasView,
+} from "@/contexts/canvas-context";
+import { useSettings } from "@/contexts/settings-context";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useReplayClockStep } from "@/hooks/use-replay-clock";
@@ -63,16 +68,10 @@ export const ReplayPlayer = ({
   const stageRef = useRef<MapStageHandle | null>(null);
   const appliedReplayRef = useRef<string | null>(null);
 
-  const {
-    agentsSettings,
-    abilitiesSettings,
-    applyRemoteState,
-    currentPhaseIndex,
-    editedPhases,
-    mapSide,
-    phases,
-    selectedMap,
-  } = useCanvas();
+  const { agentsSettings, abilitiesSettings } = useSettings();
+  const { applyRemoteState } = useCanvasActions();
+  const { currentPhaseIndex, editedPhases, phases } = useCanvasPhase();
+  const { mapSide, selectedMap } = useCanvasView();
   const createLobbyMutation = useCreateLobby();
 
   const firstRound = match.rounds[0];
