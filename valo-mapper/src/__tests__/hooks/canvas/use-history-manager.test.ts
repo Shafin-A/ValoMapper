@@ -184,6 +184,18 @@ describe("useHistoryManager", () => {
     }
 
     expect(result.current.history.length).toBeLessThanOrEqual(50);
+    expect(result.current.canRedo).toBe(false);
+
+    act(() => {
+      result.current.undo();
+    });
+    expect(result.current.canRedo).toBe(true);
+
+    applyState.mockClear();
+    act(() => {
+      result.current.redo();
+    });
+    expect(applyState.mock.calls[0][0]).toBeDefined();
   });
 
   it("should clear redo history when new state is saved after undo", () => {

@@ -126,10 +126,11 @@ export const useCanvasState = ({
   abilitiesSettingsRef.current = abilitiesSettings;
 
   const phaseUnloadRef = useRef<(() => void) | null>(null);
-  const { enqueueCanvasPatchEntry, flushCanvasPatch } = useCanvasPatch(
-    lobbyCode,
-    phaseUnloadRef,
-  );
+  const {
+    enqueueCanvasPatchEntry,
+    flushCanvasPatch,
+    hasPendingCanvasPatches,
+  } = useCanvasPatch(lobbyCode, phaseUnloadRef);
 
   const {
     data: lobby,
@@ -612,6 +613,11 @@ export const useCanvasState = ({
       parseTimestamp(lobbyUpdatedAt) > parseTimestamp(lastApplied);
 
     if (isNewLobby || isUpdatedRemotely) {
+      // Skip a snapshot that may predate queued patches.
+      if (!isNewLobby && hasPendingCanvasPatches?.()) {
+        return;
+      }
+
       lastLoadedLobbyRef.current = lobbyCode;
       lastAppliedLobbyUpdatedAt.current = lobbyUpdatedAt;
 
@@ -639,6 +645,7 @@ export const useCanvasState = ({
     resetAllPhasesBase,
     resetEditsBase,
     normalizeHistoryState,
+    hasPendingCanvasPatches,
   ]);
 
   const applyRemoteState = useCallback(

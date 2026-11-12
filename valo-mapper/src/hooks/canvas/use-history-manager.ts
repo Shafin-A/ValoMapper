@@ -20,6 +20,23 @@ interface HistoryManagerConfig {
   ) => void;
 }
 
+const MAX_HISTORY_SIZE = 50;
+
+const appendHistoryEntry = (
+  history: UndoableState[],
+  state: UndoableState,
+  historyIndex: number,
+): UndoableState[] => {
+  const nextHistory = history.slice(0, historyIndex + 1);
+  nextHistory.push(state);
+
+  if (nextHistory.length > MAX_HISTORY_SIZE) {
+    nextHistory.shift();
+  }
+
+  return nextHistory;
+};
+
 export const useHistoryManager = ({
   getCurrentState,
   applyState,
@@ -45,20 +62,11 @@ export const useHistoryManager = ({
 
     lastSavedState.current = currentState;
 
-    setHistory((prevHistory) => {
-      const newHistory = prevHistory.slice(0, historyIndex + 1);
-      newHistory.push(currentState);
+    setHistory((prevHistory) =>
+      appendHistoryEntry(prevHistory, currentState, historyIndex),
+    );
 
-      const maxHistorySize = 50;
-      if (newHistory.length > maxHistorySize) {
-        newHistory.shift();
-        return newHistory;
-      }
-
-      return newHistory;
-    });
-
-    setHistoryIndex((prev) => prev + 1);
+    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY_SIZE - 1));
   }, [getCurrentState, historyIndex, isTrackingEnabled]);
 
   useEffect(() => {
@@ -100,26 +108,11 @@ export const useHistoryManager = ({
     pendingSaveTimeout.current = setTimeout(() => {
       lastSavedState.current = currentState;
 
-      setHistory((prevHistory) => {
-        const newHistory = prevHistory.slice(0, historyIndex + 1);
-        newHistory.push(currentState);
+      setHistory((prevHistory) =>
+        appendHistoryEntry(prevHistory, currentState, historyIndex),
+      );
 
-        const maxHistorySize = 50;
-        if (newHistory.length > maxHistorySize) {
-          newHistory.shift();
-          return newHistory;
-        }
-
-        return newHistory;
-      });
-
-      setHistoryIndex((prev) => {
-        const newIndex = prev + 1;
-        if (history.length >= 50) {
-          return 49;
-        }
-        return newIndex;
-      });
+      setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY_SIZE - 1));
     }, 0);
 
     return () => {
@@ -128,7 +121,7 @@ export const useHistoryManager = ({
         pendingSaveTimeout.current = null;
       }
     };
-  }, [getCurrentState, historyIndex, history.length, isTrackingEnabled]);
+  }, [getCurrentState, historyIndex, isTrackingEnabled]);
 
   const resetHistory = useCallback(
     (baselineState?: UndoableState | null) => {

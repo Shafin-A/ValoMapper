@@ -639,25 +639,15 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
       sendMessage<FullSyncData>(WS_MESSAGE_TYPES.FULL_SYNC, settledState);
 
       if (lobbyCode) {
-        try {
-          updateLobby(settledState);
-        } catch (error) {
+        void updateLobby(settledState).catch((error: unknown) => {
           console.error("Failed to persist undo/redo canvas state", error);
-        }
+        });
       }
     };
     return () => {
       onUndoRedoCallback.current = null;
     };
-  }, [
-    onUndoRedoCallback,
-    getCurrentStateForSync,
-    updateLobby,
-    lobbyCode,
-    user,
-    users.length,
-    sendMessage,
-  ]);
+  }, [onUndoRedoCallback, updateLobby, lobbyCode, sendMessage]);
 
   const broadcastToolIconAdded = useCallback(
     (toolIcon: ToolIconMessageData["toolIcon"], phaseIndex: number) => {

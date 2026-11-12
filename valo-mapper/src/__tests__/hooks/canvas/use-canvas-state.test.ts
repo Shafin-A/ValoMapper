@@ -165,6 +165,7 @@ describe("useCanvasState", () => {
     mockUseCanvasPatch.mockReturnValue({
       enqueueCanvasPatchEntry: jest.fn(),
       flushCanvasPatch: jest.fn(),
+      hasPendingCanvasPatches: jest.fn(() => false),
     } as never);
 
     mockUseHistoryManager.mockReturnValue({
@@ -627,5 +628,69 @@ describe("useCanvasState", () => {
     await waitFor(() => {
       expect(result.current.resetHistory).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("skips a refetched lobby while canvas patches are still pending", async () => {
+    const lobbyState: UndoableState = {
+      phases: createEmptyPhases(),
+      selectedMap: baseMap,
+      mapSide: "defense",
+      currentPhaseIndex: 0,
+      editedPhases: [],
+      agentsSettings: baseSettings,
+      abilitiesSettings: baseSettings,
+    };
+
+    mockUseLobby.mockReturnValue({
+      data: {
+        lobbyCode: "ABCD",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-02T00:00:00Z"),
+        canvasState: lobbyState,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    const { rerender } = renderHook(() => useCanvasState());
+
+    await waitFor(() => {
+      const phaseManager = mockUsePhaseManager.mock.results[0]?.value as {
+        setPhases: jest.Mock;
+      };
+      expect(phaseManager.setPhases).toHaveBeenCalled();
+    });
+
+    const phaseManager = mockUsePhaseManager.mock.results[0]?.value as {
+      setPhases: jest.Mock;
+    };
+    phaseManager.setPhases.mockClear();
+
+    const hasPendingCanvasPatches = jest.fn(() => true);
+    mockUseCanvasPatch.mockReturnValue({
+      enqueueCanvasPatchEntry: jest.fn(),
+      flushCanvasPatch: jest.fn(),
+      hasPendingCanvasPatches,
+    } as never);
+
+    mockUseLobby.mockReturnValue({
+      data: {
+        lobbyCode: "ABCD",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-03T00:00:00Z"),
+        canvasState: lobbyState,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    await act(async () => {
+      rerender();
+    });
+
+    expect(hasPendingCanvasPatches).toHaveBeenCalled();
+    expect(phaseManager.setPhases).not.toHaveBeenCalled();
   });
 });
