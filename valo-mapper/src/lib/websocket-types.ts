@@ -47,6 +47,9 @@ export const WS_MESSAGE_TYPES = {
   CURSOR_MOVE: "cursor_move",
   USER_TYPING: "user_typing",
 
+  /** Unicast to the connecting socket with its server-assigned id. */
+  CLIENT_HELLO: "client_hello",
+
   BATCH_UPDATE: "batch_update",
 } as const;
 
@@ -124,6 +127,10 @@ export type SettingsChangedData = {
 
 export type UserListData = {
   users: UserPresence[];
+};
+
+export type ClientHelloData = {
+  clientId: string;
 };
 
 export type CursorMoveData = {

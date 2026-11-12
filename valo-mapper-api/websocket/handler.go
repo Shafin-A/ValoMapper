@@ -52,6 +52,17 @@ func HandleWebSocket(hub *Hub) http.HandlerFunc {
 
 		client := NewClient(hub, conn, lobbyCode, username, color)
 
+		// Queue hello before registration so it precedes the user_list broadcast.
+		helloMessage, err := (&Message{
+			Type: MessageTypeClientHello,
+			Data: map[string]any{"clientId": client.id},
+		}).Marshal()
+		if err != nil {
+			slog.Error("error marshaling client hello", "error", err)
+		} else {
+			client.send <- helloMessage
+		}
+
 		hub.register <- client
 
 		go client.WritePump()

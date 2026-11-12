@@ -90,7 +90,7 @@ export const HelpTab = () => {
                 <h2 className="mb-3 text-xl font-bold text-muted-foreground text-center sm:mb-4 sm:text-2xl">
                   {tab.name}
                 </h2>
-                <div className="font-medium text-muted-foreground break-words">
+                <div className="font-medium text-muted-foreground wrap-break-word">
                   {tab.type === "text" ? (
                     <div className="whitespace-pre-line">{tab.content}</div>
                   ) : tab.value === "privacy_policy" ? (

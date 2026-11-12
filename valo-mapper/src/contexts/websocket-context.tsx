@@ -37,6 +37,7 @@ import {
 import { useCanvas } from "./canvas-context";
 import { RemoteCursorsProvider } from "./cursor-context";
 import { useUpdateLobby } from "@/hooks/api/use-update-lobby";
+import { electFullSyncSender } from "@/lib/ws-sync-election";
 
 interface WebSocketContextType {
   status: WSConnectionStatus;
@@ -422,7 +423,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     ],
   );
 
-  const { status, users, cursors, sendMessage, sendCursorPosition } =
+  const { status, users, clientId, cursors, sendMessage, sendCursorPosition } =
     useLobbyWebSocket({
       lobbyCode,
       username: user?.name,
@@ -624,15 +625,34 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
 
   broadcastStateSyncRef.current = broadcastStateSync;
 
-  // When a new user joins an active session, broadcast a FULL_SYNC
-  const prevUsersLengthRef = useRef(0);
+  // Elect one existing client to send FULL_SYNC instead of every client.
+  const previousUsersRef = useRef<UserPresence[]>([]);
+
   useEffect(() => {
-    const prev = prevUsersLengthRef.current;
-    prevUsersLengthRef.current = users.length;
-    if (users.length > prev && prev > 0) {
-      broadcastStateSyncRef.current?.();
+    const previousUsers = previousUsersRef.current;
+    previousUsersRef.current = users;
+
+    if (previousUsers.length === 0) {
+      return;
     }
-  }, [users]);
+
+    const previousIds = new Set(previousUsers.map((presence) => presence.id));
+    const hasNewUser = users.some((presence) => !previousIds.has(presence.id));
+
+    if (!hasNewUser) {
+      return;
+    }
+
+    // No server-assigned id yet: keep the old fan-out.
+    if (clientId) {
+      const electedSender = electFullSyncSender(users, previousIds);
+      if (electedSender !== clientId) {
+        return;
+      }
+    }
+
+    broadcastStateSyncRef.current?.();
+  }, [clientId, users]);
 
   useEffect(() => {
     onUndoRedoCallback.current = (settledState) => {

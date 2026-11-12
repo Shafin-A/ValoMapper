@@ -59,8 +59,7 @@ describe("useLobbyWebSocket", () => {
     global.WebSocket = originalWebSocket;
   });
 
-  it("keeps connected status when a replaced socket closes late", () => {
-    const { result, rerender } = renderHook(
+  it("keeps connected status when a replaced socket closes late", () => {    const { result, rerender } = renderHook(
       ({ username }) =>
         useLobbyWebSocket({
           lobbyCode: "ABCD",
@@ -105,5 +104,37 @@ describe("useLobbyWebSocket", () => {
 
     expect(secondSocket.sentMessages).toHaveLength(1);
     expect(firstSocket.sentMessages).toHaveLength(0);
+  });
+
+  it("identifies the socket from the client hello message", () => {
+    const onMessage = jest.fn();
+
+    const { result } = renderHook(
+      () =>
+        useLobbyWebSocket({
+          lobbyCode: "ABCD",
+          username: "User",
+          onMessage,
+        }),
+      { reactStrictMode: false },
+    );
+
+    const socket = MockWebSocket.instances[0];
+
+    act(() => {
+      socket.emitOpen();
+    });
+
+    act(() => {
+      socket.onmessage?.({
+        data: JSON.stringify({
+          type: "client_hello",
+          data: { clientId: "socket-1" },
+        }),
+      });
+    });
+
+    expect(result.current.clientId).toBe("socket-1");
+    expect(onMessage).not.toHaveBeenCalled();
   });
 });

@@ -36,6 +36,8 @@ const (
 	MessageTypeCursorMove = "cursor_move"
 	MessageTypeUserTyping = "user_typing"
 
+	MessageTypeClientHello = "client_hello"
+
 	MessageTypeBatchUpdate = "batch_update"
 )
 

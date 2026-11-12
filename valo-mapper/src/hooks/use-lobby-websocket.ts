@@ -1,4 +1,5 @@
 import {
+  ClientHelloData,
   CursorMoveData,
   UserListData,
   UserPresence,
@@ -22,6 +23,8 @@ interface UseLobbyWebSocketReturn {
   status: WSConnectionStatus;
   users: UserPresence[];
   cursors: Map<string, CursorMoveData>;
+  /** Server-assigned id for this socket, from the `client_hello` message. */
+  clientId: string | null;
   sendMessage: <T>(type: string, data: T, phaseIndex?: number) => void;
   sendCursorPosition: (x: number, y: number) => void;
 }
@@ -38,6 +41,9 @@ export const useLobbyWebSocket = ({
 }: UseLobbyWebSocketOptions): UseLobbyWebSocketReturn => {
   const [status, setStatus] = useState<WSConnectionStatus>("disconnected");
   const [users, setUsers] = useState<UserPresence[]>([]);
+  // Keep the previous id during reconnects: a stale id loses the election,
+  // while clearing it would let every client broadcast.
+  const [clientId, setClientId] = useState<string | null>(null);
   const [cursors, setCursors] = useState<Map<string, CursorMoveData>>(
     new Map(),
   );
@@ -129,6 +135,14 @@ export const useLobbyWebSocket = ({
 
         for (const msgStr of messages) {
           const message: WSMessage = JSON.parse(msgStr);
+
+          if (message.type === WS_MESSAGE_TYPES.CLIENT_HELLO) {
+            const data = message.data as ClientHelloData;
+            if (typeof data?.clientId === "string") {
+              setClientId(data.clientId);
+            }
+            continue;
+          }
 
           if (message.type === WS_MESSAGE_TYPES.USER_LIST) {
             const data = message.data as UserListData;
@@ -280,6 +294,7 @@ export const useLobbyWebSocket = ({
     status,
     users,
     cursors,
+    clientId,
     sendMessage,
     sendCursorPosition,
   };
