@@ -46,8 +46,24 @@ export const useHistoryManager = ({
 }: HistoryManagerConfig) => {
   const [history, setHistory] = useState<UndoableState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const historyRef = useRef(history);
+  const historyIndexRef = useRef(historyIndex);
+  historyRef.current = history;
+  historyIndexRef.current = historyIndex;
+
+  const getCurrentStateRef = useRef(getCurrentState);
+  const applyStateRef = useRef(applyState);
+  const onApplyHistoryStateRef = useRef(onApplyHistoryState);
+  const onHistoryReplaySettledRef = useRef(onHistoryReplaySettled);
+  getCurrentStateRef.current = getCurrentState;
+  applyStateRef.current = applyState;
+  onApplyHistoryStateRef.current = onApplyHistoryState;
+  onHistoryReplaySettledRef.current = onHistoryReplaySettled;
+
   const isUpdatingFromHistory = useRef(false);
   const lastSavedState = useRef<UndoableState | null>(null);
+  const lastSavedStateJSON = useRef<string | null>(null);
   const pendingSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const blockedAutoSaveStateJSON = useRef<string | null>(null);
 
@@ -58,16 +74,17 @@ export const useHistoryManager = ({
 
     blockedAutoSaveStateJSON.current = null;
 
-    const currentState = getCurrentState();
+    const currentState = getCurrentStateRef.current();
 
     lastSavedState.current = currentState;
+    lastSavedStateJSON.current = null;
 
     setHistory((prevHistory) =>
-      appendHistoryEntry(prevHistory, currentState, historyIndex),
+      appendHistoryEntry(prevHistory, currentState, historyIndexRef.current),
     );
 
     setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY_SIZE - 1));
-  }, [getCurrentState, historyIndex, isTrackingEnabled]);
+  }, [isTrackingEnabled]);
 
   useEffect(() => {
     if (!isTrackingEnabled || isUpdatingFromHistory.current) {
@@ -98,18 +115,22 @@ export const useHistoryManager = ({
       return;
     }
 
-    if (
-      lastSavedState.current &&
-      JSON.stringify(lastSavedState.current) === currentStateJSON
-    ) {
-      return;
+    if (lastSavedState.current) {
+      const lastSavedJSON =
+        lastSavedStateJSON.current ?? JSON.stringify(lastSavedState.current);
+      lastSavedStateJSON.current = lastSavedJSON;
+
+      if (lastSavedJSON === currentStateJSON) {
+        return;
+      }
     }
 
     pendingSaveTimeout.current = setTimeout(() => {
       lastSavedState.current = currentState;
+      lastSavedStateJSON.current = currentStateJSON;
 
       setHistory((prevHistory) =>
-        appendHistoryEntry(prevHistory, currentState, historyIndex),
+        appendHistoryEntry(prevHistory, currentState, historyIndexRef.current),
       );
 
       setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY_SIZE - 1));
@@ -121,11 +142,11 @@ export const useHistoryManager = ({
         pendingSaveTimeout.current = null;
       }
     };
-  }, [getCurrentState, historyIndex, isTrackingEnabled]);
+  }, [getCurrentState, isTrackingEnabled]);
 
   const resetHistory = useCallback(
     (baselineState?: UndoableState | null) => {
-      const currentState = getCurrentState();
+      const currentState = getCurrentStateRef.current();
 
       if (pendingSaveTimeout.current) {
         clearTimeout(pendingSaveTimeout.current);
@@ -135,49 +156,64 @@ export const useHistoryManager = ({
       isUpdatingFromHistory.current = false;
       blockedAutoSaveStateJSON.current = JSON.stringify(currentState);
       lastSavedState.current = baselineState ?? null;
+      lastSavedStateJSON.current = baselineState
+        ? JSON.stringify(baselineState)
+        : null;
       setHistory(baselineState ? [baselineState] : []);
       setHistoryIndex(baselineState ? 0 : -1);
     },
-    [getCurrentState],
+    [],
   );
 
-  const applyHistoryState = useCallback(
-    (state: UndoableState) => {
-      const previousState = getCurrentState();
+  const applyHistoryState = useCallback((state: UndoableState) => {
+    const previousState = getCurrentStateRef.current();
 
-      if (pendingSaveTimeout.current) {
-        clearTimeout(pendingSaveTimeout.current);
-        pendingSaveTimeout.current = null;
-      }
+    if (pendingSaveTimeout.current) {
+      clearTimeout(pendingSaveTimeout.current);
+      pendingSaveTimeout.current = null;
+    }
 
-      isUpdatingFromHistory.current = true;
-      blockedAutoSaveStateJSON.current = JSON.stringify(state);
-      lastSavedState.current = state;
-      applyState(state, (settledState) => {
-        blockedAutoSaveStateJSON.current = JSON.stringify(settledState);
-        isUpdatingFromHistory.current = false;
-        onHistoryReplaySettled?.(settledState, previousState, state);
-      });
-      onApplyHistoryState?.(state, previousState);
-    },
-    [applyState, getCurrentState, onApplyHistoryState, onHistoryReplaySettled],
-  );
+    const stateJSON = JSON.stringify(state);
+
+    isUpdatingFromHistory.current = true;
+    blockedAutoSaveStateJSON.current = stateJSON;
+    lastSavedState.current = state;
+    lastSavedStateJSON.current = stateJSON;
+    applyStateRef.current(state, (settledState) => {
+      const settledStateJSON = JSON.stringify(settledState);
+
+      blockedAutoSaveStateJSON.current = settledStateJSON;
+      lastSavedStateJSON.current = settledStateJSON;
+      isUpdatingFromHistory.current = false;
+      onHistoryReplaySettledRef.current?.(
+        settledState,
+        previousState,
+        state,
+      );
+    });
+    onApplyHistoryStateRef.current?.(state, previousState);
+  }, []);
 
   const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      const previousState = history[historyIndex - 1];
+    const index = historyIndexRef.current;
+
+    if (index > 0) {
+      const previousState = historyRef.current[index - 1];
       setHistoryIndex((prev) => prev - 1);
       applyHistoryState(previousState);
     }
-  }, [history, historyIndex, applyHistoryState]);
+  }, [applyHistoryState]);
 
   const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const nextState = history[historyIndex + 1];
+    const index = historyIndexRef.current;
+    const entries = historyRef.current;
+
+    if (index < entries.length - 1) {
+      const nextState = entries[index + 1];
       setHistoryIndex((prev) => prev + 1);
       applyHistoryState(nextState);
     }
-  }, [history, historyIndex, applyHistoryState]);
+  }, [applyHistoryState]);
 
   return {
     history,

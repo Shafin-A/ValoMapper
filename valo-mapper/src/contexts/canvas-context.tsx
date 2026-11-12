@@ -133,7 +133,6 @@ interface CanvasHistoryContextType {
   canUndo: boolean;
   canRedo: boolean;
   saveToHistory: () => void;
-  history: UndoableState[];
 }
 
 interface CanvasActionsContextType {
@@ -485,7 +484,6 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       canUndo: canvasState.canUndo,
       canRedo: canvasState.canRedo,
       saveToHistory: canvasState.saveToHistory,
-      history: canvasState.history,
     }),
     [
       canvasState.undo,
@@ -493,7 +491,6 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       canvasState.canUndo,
       canvasState.canRedo,
       canvasState.saveToHistory,
-      canvasState.history,
     ],
   );
 

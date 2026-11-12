@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  ReactNode,
+} from "react";
 import { DrawSettings, EraserSettings, IconSettings } from "@/lib/types";
 
 export const defaultIconSettings: IconSettings = {
@@ -53,37 +60,59 @@ export const SettingsProvider = ({ children }: SettingsProviderProps) => {
     mode: "line",
   });
 
-  const updateAgentsSettings = (newSettings: Partial<IconSettings>) => {
-    setAgentsSettings((prev) => ({ ...prev, ...newSettings }));
-  };
+  const updateAgentsSettings = useCallback(
+    (newSettings: Partial<IconSettings>) => {
+      setAgentsSettings((prev) => ({ ...prev, ...newSettings }));
+    },
+    [],
+  );
 
-  const updateAbilitiesSettings = (newSettings: Partial<IconSettings>) => {
-    setAbilitiesSettings((prev) => ({ ...prev, ...newSettings }));
-  };
+  const updateAbilitiesSettings = useCallback(
+    (newSettings: Partial<IconSettings>) => {
+      setAbilitiesSettings((prev) => ({ ...prev, ...newSettings }));
+    },
+    [],
+  );
 
-  const updateDrawSettings = (newSettings: Partial<DrawSettings>) => {
-    setDrawSettings((prev) => ({ ...prev, ...newSettings }));
-  };
+  const updateDrawSettings = useCallback(
+    (newSettings: Partial<DrawSettings>) => {
+      setDrawSettings((prev) => ({ ...prev, ...newSettings }));
+    },
+    [],
+  );
 
-  const updateEraserSettings = (newSettings: Partial<EraserSettings>) => {
-    setEraserSettings((prev) => ({ ...prev, ...newSettings }));
-  };
+  const updateEraserSettings = useCallback(
+    (newSettings: Partial<EraserSettings>) => {
+      setEraserSettings((prev) => ({ ...prev, ...newSettings }));
+    },
+    [],
+  );
+
+  const value = useMemo(
+    () => ({
+      agentsSettings,
+      abilitiesSettings,
+      drawSettings,
+      eraserSettings,
+      updateAgentsSettings,
+      updateAbilitiesSettings,
+      updateDrawSettings,
+      updateEraserSettings,
+    }),
+    [
+      agentsSettings,
+      abilitiesSettings,
+      drawSettings,
+      eraserSettings,
+      updateAgentsSettings,
+      updateAbilitiesSettings,
+      updateDrawSettings,
+      updateEraserSettings,
+    ],
+  );
 
   return (
-    <SettingsContext.Provider
-      value={{
-        agentsSettings,
-        abilitiesSettings,
-        drawSettings,
-        eraserSettings,
-        updateAgentsSettings,
-        updateAbilitiesSettings,
-        updateDrawSettings,
-        updateEraserSettings,
-      }}
-    >
-      {children}
-    </SettingsContext.Provider>
+    <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
   );
 };
 

@@ -73,8 +73,6 @@ const LobbyEditPage = () => {
       setIsAssetWarmupReady(true);
     };
 
-    let fallbackTimeout = window.setTimeout(markWarmupReady, 3000);
-
     const preloadCriticalAssets = async () => {
       setIsAssetWarmupReady(false);
 
@@ -104,7 +102,7 @@ const LobbyEditPage = () => {
 
     void preloadCriticalAssets();
 
-    fallbackTimeout = window.setTimeout(markWarmupReady, 3000);
+    const fallbackTimeout = window.setTimeout(markWarmupReady, 3000);
 
     return () => {
       isCancelled = true;

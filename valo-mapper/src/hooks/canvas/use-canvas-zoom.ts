@@ -9,7 +9,7 @@ import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Stage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const getMaxZoomScale = () =>
@@ -24,7 +24,7 @@ export const useCanvasZoom = (
   isDrawMode: boolean,
 ) => {
   const isMobile = useIsMobile();
-  const maxZoomScale = getMaxZoomScale();
+  const maxZoomScale = useMemo(getMaxZoomScale, []);
   const pinchInitialDistanceRef = useRef<number | null>(null);
   const pinchInitialScaleRef = useRef<number | null>(null);
   const pinchCenterRef = useRef<Vector2d | null>(null);

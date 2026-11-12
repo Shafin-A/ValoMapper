@@ -363,7 +363,7 @@ export const CanvasAbilities = memo(function CanvasAbilities({
     const isAttached = canAttachVisionCone(ability) && attachmentHost !== null;
 
     const lookupEntry = ABILITY_LOOKUP[ability.name];
-    if (!lookupEntry) {
+    if (!lookupEntry && process.env.NODE_ENV !== "production") {
       console.warn(
         `[Canvas] ABILITY_LOOKUP missing entry for "${ability.name}", available keys:`,
         Object.keys(ABILITY_LOOKUP),
