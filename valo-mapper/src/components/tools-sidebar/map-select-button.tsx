@@ -81,7 +81,7 @@ export const MapSelect = ({
       data-tour="map-rotation"
       variant="outline"
       onClick={handleRotationToggle}
-      className="h-20 w-16 transition-all duration-200 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="h-20 w-16 shrink-0 transition-all duration-200 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
       disabled={disabled}
     >
       <RefreshCw
@@ -98,9 +98,11 @@ export const MapSelect = ({
 
   if (readOnly) {
     return (
-      <div className={`flex items-center justify-center gap-2 ${className}`}>
+      <div
+        className={`flex w-full min-w-0 items-center justify-center gap-2 ${className}`}
+      >
         <div
-          className="relative h-20 w-56 overflow-hidden rounded-md border-2 border-gray-300 p-0 dark:border-input"
+          className="relative h-20 min-w-0 flex-1 overflow-hidden rounded-md border-2 border-gray-300 p-0 dark:border-input"
           style={{
             backgroundImage: `url(/maps/listviewicons/${selectedMap.id}.webp)`,
             backgroundSize: "cover",
@@ -116,13 +118,15 @@ export const MapSelect = ({
   }
 
   return (
-    <div className={`flex items-center justify-center gap-2 ${className}`}>
+    <div
+      className={`flex w-full min-w-0 items-center justify-center gap-2 ${className}`}
+    >
       <DropdownMenu>
         <DropdownMenuTrigger asChild disabled={disabled}>
           <Button
             data-tour="map-selector"
             variant="outline"
-            className="relative h-20 w-56 hover:opacity-80 transition-all duration-400 ease-in-out border-2 border-gray-300 hover:border-gray-400 p-0 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative h-20 min-w-0 flex-1 hover:opacity-80 transition-all duration-400 ease-in-out border-2 border-gray-300 hover:border-gray-400 p-0 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               backgroundImage: `url(/maps/listviewicons/${selectedMap.id}.webp)`,
               backgroundSize: "cover",
