@@ -693,4 +693,27 @@ describe("useCanvasState", () => {
     expect(hasPendingCanvasPatches).toHaveBeenCalled();
     expect(phaseManager.setPhases).not.toHaveBeenCalled();
   });
+
+  it("advances the state revision on canvas changes", () => {
+    mockUseLobby.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useCanvasState());
+
+    const historyConfig = mockUseHistoryManager.mock.calls.at(-1)?.[0] as {
+      getRevision: () => number;
+    };
+    const before = historyConfig.getRevision();
+
+    act(() => {
+      result.current.setAgentsOnCanvas([]);
+      result.current.setSelectedMap(baseMap);
+    });
+
+    expect(historyConfig.getRevision()).toBe(before + 2);
+  });
 });

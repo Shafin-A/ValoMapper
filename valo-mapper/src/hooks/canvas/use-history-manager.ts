@@ -8,6 +8,7 @@ interface HistoryManagerConfig {
     state: UndoableState,
     onSettled?: (settledState: UndoableState) => void,
   ) => void;
+  getRevision?: () => number;
   isTrackingEnabled?: boolean;
   onApplyHistoryState?: (
     state: UndoableState,
@@ -40,6 +41,7 @@ const appendHistoryEntry = (
 export const useHistoryManager = ({
   getCurrentState,
   applyState,
+  getRevision,
   isTrackingEnabled = true,
   onApplyHistoryState,
   onHistoryReplaySettled,
@@ -64,6 +66,7 @@ export const useHistoryManager = ({
   const isUpdatingFromHistory = useRef(false);
   const lastSavedState = useRef<UndoableState | null>(null);
   const lastSavedStateJSON = useRef<string | null>(null);
+  const lastSavedRevision = useRef<number | null>(null);
   const pendingSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const blockedAutoSaveStateJSON = useRef<string | null>(null);
 
@@ -78,13 +81,14 @@ export const useHistoryManager = ({
 
     lastSavedState.current = currentState;
     lastSavedStateJSON.current = null;
+    lastSavedRevision.current = getRevision?.() ?? null;
 
     setHistory((prevHistory) =>
       appendHistoryEntry(prevHistory, currentState, historyIndexRef.current),
     );
 
     setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY_SIZE - 1));
-  }, [isTrackingEnabled]);
+  }, [getRevision, isTrackingEnabled]);
 
   useEffect(() => {
     if (!isTrackingEnabled || isUpdatingFromHistory.current) {
@@ -92,14 +96,29 @@ export const useHistoryManager = ({
     }
 
     const currentState = getCurrentState();
-    const currentStateJSON = JSON.stringify(currentState);
+    const revision = getRevision?.();
+    const legacyCurrentStateJSON =
+      revision === undefined ? JSON.stringify(currentState) : null;
 
-    if (blockedAutoSaveStateJSON.current === currentStateJSON) {
-      return;
-    }
+    if (revision === undefined) {
+      if (blockedAutoSaveStateJSON.current === legacyCurrentStateJSON) {
+        return;
+      }
 
-    if (blockedAutoSaveStateJSON.current !== null) {
+      if (blockedAutoSaveStateJSON.current !== null) {
+        blockedAutoSaveStateJSON.current = null;
+      }
+    } else if (blockedAutoSaveStateJSON.current !== null) {
+      const blockedStateJSON = blockedAutoSaveStateJSON.current;
+      const blockedMatchJSON = JSON.stringify(currentState);
       blockedAutoSaveStateJSON.current = null;
+
+      if (blockedStateJSON === blockedMatchJSON) {
+        lastSavedState.current = currentState;
+        lastSavedStateJSON.current = blockedMatchJSON;
+        lastSavedRevision.current = revision;
+        return;
+      }
     }
 
     const currentPhase = currentState.phases[currentState.currentPhaseIndex];
@@ -115,19 +134,47 @@ export const useHistoryManager = ({
       return;
     }
 
+    if (revision !== undefined) {
+      if (lastSavedRevision.current === revision) {
+        return;
+      }
+
+      pendingSaveTimeout.current = setTimeout(() => {
+        lastSavedState.current = currentState;
+        lastSavedRevision.current = revision;
+
+        setHistory((prevHistory) =>
+          appendHistoryEntry(
+            prevHistory,
+            currentState,
+            historyIndexRef.current,
+          ),
+        );
+
+        setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY_SIZE - 1));
+      }, 0);
+
+      return () => {
+        if (pendingSaveTimeout.current) {
+          clearTimeout(pendingSaveTimeout.current);
+          pendingSaveTimeout.current = null;
+        }
+      };
+    }
+
     if (lastSavedState.current) {
       const lastSavedJSON =
         lastSavedStateJSON.current ?? JSON.stringify(lastSavedState.current);
       lastSavedStateJSON.current = lastSavedJSON;
 
-      if (lastSavedJSON === currentStateJSON) {
+      if (lastSavedJSON === legacyCurrentStateJSON) {
         return;
       }
     }
 
     pendingSaveTimeout.current = setTimeout(() => {
       lastSavedState.current = currentState;
-      lastSavedStateJSON.current = currentStateJSON;
+      lastSavedStateJSON.current = legacyCurrentStateJSON;
 
       setHistory((prevHistory) =>
         appendHistoryEntry(prevHistory, currentState, historyIndexRef.current),
@@ -142,7 +189,7 @@ export const useHistoryManager = ({
         pendingSaveTimeout.current = null;
       }
     };
-  }, [getCurrentState, isTrackingEnabled]);
+  }, [getCurrentState, getRevision, isTrackingEnabled]);
 
   const resetHistory = useCallback(
     (baselineState?: UndoableState | null) => {
@@ -159,10 +206,11 @@ export const useHistoryManager = ({
       lastSavedStateJSON.current = baselineState
         ? JSON.stringify(baselineState)
         : null;
+      lastSavedRevision.current = getRevision?.() ?? null;
       setHistory(baselineState ? [baselineState] : []);
       setHistoryIndex(baselineState ? 0 : -1);
     },
-    [],
+    [getRevision],
   );
 
   const applyHistoryState = useCallback((state: UndoableState) => {
@@ -183,7 +231,9 @@ export const useHistoryManager = ({
       const settledStateJSON = JSON.stringify(settledState);
 
       blockedAutoSaveStateJSON.current = settledStateJSON;
+      lastSavedState.current = settledState;
       lastSavedStateJSON.current = settledStateJSON;
+      lastSavedRevision.current = getRevision?.() ?? null;
       isUpdatingFromHistory.current = false;
       onHistoryReplaySettledRef.current?.(
         settledState,
@@ -192,7 +242,7 @@ export const useHistoryManager = ({
       );
     });
     onApplyHistoryStateRef.current?.(state, previousState);
-  }, []);
+  }, [getRevision]);
 
   const undo = useCallback(() => {
     const index = historyIndexRef.current;

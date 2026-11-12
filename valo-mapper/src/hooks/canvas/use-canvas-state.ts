@@ -126,6 +126,11 @@ export const useCanvasState = ({
   abilitiesSettingsRef.current = abilitiesSettings;
 
   const phaseUnloadRef = useRef<(() => void) | null>(null);
+  const revisionRef = useRef(0);
+  const bumpRevision = useCallback(() => {
+    revisionRef.current += 1;
+  }, []);
+  const getRevision = useCallback(() => revisionRef.current, []);
   const {
     enqueueCanvasPatchEntry,
     flushCanvasPatch,
@@ -177,51 +182,58 @@ export const useCanvasState = ({
 
   const wrappedSetAgentsOnCanvas = useCallback(
     (value: SetStateAction<AgentCanvas[]>) => {
+      bumpRevision();
       setAgentsOnCanvasBase(value);
     },
-    [setAgentsOnCanvasBase],
+    [bumpRevision, setAgentsOnCanvasBase],
   );
 
   const wrappedSetAbilitiesOnCanvas = useCallback(
     (value: SetStateAction<AbilityCanvas[]>) => {
+      bumpRevision();
       setAbilitiesOnCanvasBase(value);
     },
-    [setAbilitiesOnCanvasBase],
+    [bumpRevision, setAbilitiesOnCanvasBase],
   );
 
   const wrappedSetDrawLines = useCallback(
     (value: SetStateAction<DrawLine[]>) => {
+      bumpRevision();
       setDrawLinesBase(value);
     },
-    [setDrawLinesBase],
+    [bumpRevision, setDrawLinesBase],
   );
 
   const wrappedSetConnectingLines = useCallback(
     (value: SetStateAction<ConnectingLine[]>) => {
+      bumpRevision();
       setConnectingLinesBase(value);
     },
-    [setConnectingLinesBase],
+    [bumpRevision, setConnectingLinesBase],
   );
 
   const wrappedSetImagesOnCanvas = useCallback(
     (value: SetStateAction<ImageCanvas[]>) => {
+      bumpRevision();
       setImagesOnCanvasBase(value);
     },
-    [setImagesOnCanvasBase],
+    [bumpRevision, setImagesOnCanvasBase],
   );
 
   const wrappedSetTextsOnCanvas = useCallback(
     (value: SetStateAction<TextCanvas[]>) => {
+      bumpRevision();
       setTextsOnCanvasBase(value);
     },
-    [setTextsOnCanvasBase],
+    [bumpRevision, setTextsOnCanvasBase],
   );
 
   const wrappedSetToolIconsOnCanvas = useCallback(
     (value: SetStateAction<ToolIconCanvas[]>) => {
+      bumpRevision();
       setToolIconsOnCanvasBase(value);
     },
-    [setToolIconsOnCanvasBase],
+    [bumpRevision, setToolIconsOnCanvasBase],
   );
 
   const getCurrentState = useCallback((): UndoableState => {
@@ -267,6 +279,7 @@ export const useCanvasState = ({
       state: UndoableState,
       onSettled?: (settledState: UndoableState) => void,
     ) => {
+      bumpRevision();
       pendingHistoryReplayCompletionRef.current = onSettled ?? null;
       if (onSettled) {
         setHistoryReplayCommitTick((prev) => prev + 1);
@@ -289,6 +302,7 @@ export const useCanvasState = ({
       updateAbilitiesSettings(state.abilitiesSettings ?? defaultIconSettings);
     },
     [
+      bumpRevision,
       setPhasesBase,
       setCurrentPhaseIndexBase,
       setEditedPhasesBase,
@@ -311,66 +325,76 @@ export const useCanvasState = ({
 
   const wrappedUpdateCurrentPhase = useCallback(
     (updates: PhaseStateUpdate) => {
+      bumpRevision();
       updateCurrentPhaseBase(updates);
     },
-    [updateCurrentPhaseBase],
+    [bumpRevision, updateCurrentPhaseBase],
   );
 
   const wrappedSwitchToPhase = useCallback(
     (index: number) => {
+      bumpRevision();
       switchToPhaseBase(index);
     },
-    [switchToPhaseBase],
+    [bumpRevision, switchToPhaseBase],
   );
 
   const wrappedDuplicatePhase = useCallback(
     (index: number) => {
+      bumpRevision();
       duplicatePhaseBase(index);
     },
-    [duplicatePhaseBase],
+    [bumpRevision, duplicatePhaseBase],
   );
 
   const wrappedDeletePhase = useCallback(
     (index: number) => {
+      bumpRevision();
       deletePhaseBase(index);
     },
-    [deletePhaseBase],
+    [bumpRevision, deletePhaseBase],
   );
 
   const wrappedSetCurrentPhaseIndex = useCallback(
     (index: number) => {
+      bumpRevision();
       setCurrentPhaseIndexBase(index);
     },
-    [setCurrentPhaseIndexBase],
+    [bumpRevision, setCurrentPhaseIndexBase],
   );
 
   const wrappedSetPhases = useCallback(
     (value: PhaseState[] | ((prev: PhaseState[]) => PhaseState[])) => {
+      bumpRevision();
       setPhasesBase(value);
     },
-    [setPhasesBase],
+    [bumpRevision, setPhasesBase],
   );
 
   const wrappedResetAllPhases = useCallback(() => {
+    bumpRevision();
     resetAllPhasesBase();
-  }, [resetAllPhasesBase]);
+  }, [bumpRevision, resetAllPhasesBase]);
 
   const wrappedSetSelectedMap = useCallback(
     (value: SetStateAction<MapOption>) => {
+      bumpRevision();
       setSelectedMapBase(value);
     },
-    [setSelectedMapBase],
+    [bumpRevision, setSelectedMapBase],
   );
 
   const wrappedSetMapSide = useCallback(
     (value: SetStateAction<MapSide>) => {
+      bumpRevision();
       setMapSideBase(value);
     },
-    [setMapSideBase],
+    [bumpRevision, setMapSideBase],
   );
 
   const wrappedUpdateAgentsSettings = useCallback(
     (settings: Parameters<typeof updateAgentsSettings>[0]) => {
+      bumpRevision();
       const newSettings = { ...agentsSettings, ...settings };
 
       updateAgentsSettings(settings);
@@ -384,6 +408,7 @@ export const useCanvasState = ({
     },
     [
       agentsSettings,
+      bumpRevision,
       updateAgentsSettings,
       phaseManager.currentPhaseIndex,
       enqueueCanvasPatchEntry,
@@ -392,6 +417,7 @@ export const useCanvasState = ({
 
   const wrappedUpdateAbilitiesSettings = useCallback(
     (settings: Parameters<typeof updateAbilitiesSettings>[0]) => {
+      bumpRevision();
       const newSettings = { ...abilitiesSettings, ...settings };
 
       updateAbilitiesSettings(settings);
@@ -405,6 +431,7 @@ export const useCanvasState = ({
     },
     [
       abilitiesSettings,
+      bumpRevision,
       updateAbilitiesSettings,
       phaseManager.currentPhaseIndex,
       enqueueCanvasPatchEntry,
@@ -414,6 +441,7 @@ export const useCanvasState = ({
   const historyManager = useHistoryManager({
     getCurrentState,
     applyState,
+    getRevision,
     isTrackingEnabled: isHistoryTrackingEnabled,
     onApplyHistoryState,
     onHistoryReplaySettled,
@@ -475,6 +503,7 @@ export const useCanvasState = ({
 
   const resetState = useCallback(
     (resetAllPhases = false) => {
+      bumpRevision();
       if (resetAllPhases) {
         resetAllPhasesBase();
       } else {
@@ -483,6 +512,7 @@ export const useCanvasState = ({
       resetEditsBase();
     },
     [
+      bumpRevision,
       resetAllPhasesBase,
       deletePhaseBase,
       phaseManager.currentPhaseIndex,
@@ -714,9 +744,10 @@ export const useCanvasState = ({
       }));
 
       setPhasesBase(newPhases);
+      bumpRevision();
       onRotated?.(newPhases);
     },
-    [getLatestPhases, setPhasesBase],
+    [getLatestPhases, setPhasesBase, bumpRevision],
   );
 
   const getCurrentStateForSync = useCallback(

@@ -640,4 +640,120 @@ describe("useHistoryManager", () => {
     expect(result.current.history).toEqual([mockState]);
     expect(result.current.canUndo).toBe(false);
   });
+
+  it("skips auto-saves while the state revision is unchanged", () => {
+    let revision = 0;
+    const getRevision = () => revision;
+    const states = [
+      { ...mockState, currentPhaseIndex: 0 },
+      { ...mockState, currentPhaseIndex: 0 },
+      { ...mockState, currentPhaseIndex: 1 },
+    ];
+
+    const { result, rerender } = renderHook(
+      ({ version }: { version: number }) =>
+        useHistoryManager({
+          getCurrentState: () => states[version],
+          applyState,
+          getRevision,
+        }),
+      { initialProps: { version: 0 } },
+    );
+
+    act(() => {
+      jest.advanceTimersByTime(0);
+    });
+    expect(result.current.history).toHaveLength(1);
+
+    rerender({ version: 1 });
+    act(() => {
+      jest.advanceTimersByTime(0);
+    });
+    expect(result.current.history).toHaveLength(1);
+
+    revision = 1;
+    rerender({ version: 2 });
+    act(() => {
+      jest.advanceTimersByTime(0);
+    });
+    expect(result.current.history).toHaveLength(2);
+  });
+
+  it("does not auto-save the seeded baseline when the revision is unchanged", () => {
+    const revision = 0;
+    const getRevision = () => revision;
+    const baseline = { ...mockState, currentPhaseIndex: 0 };
+    const states = [baseline, { ...baseline }];
+
+    const { result, rerender } = renderHook(
+      ({ version }: { version: number }) =>
+        useHistoryManager({
+          getCurrentState: () => states[version],
+          applyState,
+          getRevision,
+        }),
+      { initialProps: { version: 0 } },
+    );
+
+    act(() => {
+      result.current.resetHistory(baseline);
+      jest.advanceTimersByTime(0);
+    });
+    expect(result.current.history).toEqual([baseline]);
+
+    rerender({ version: 1 });
+    act(() => {
+      jest.advanceTimersByTime(0);
+    });
+    expect(result.current.history).toEqual([baseline]);
+  });
+
+  it("does not auto-save a settled history replay", () => {
+    let revision = 0;
+    const getRevision = () => revision;
+    const s0 = { ...mockState, currentPhaseIndex: 0 };
+    const s1 = { ...mockState, currentPhaseIndex: 1 };
+    const settled = { ...mockState, currentPhaseIndex: 2 };
+
+    const applyStateWithSettle = jest.fn(
+      (
+        _state: UndoableState,
+        onSettled?: (settledState: UndoableState) => void,
+      ) => {
+        revision += 1;
+        onSettled?.(settled);
+      },
+    );
+
+    const { result, rerender } = renderHook(
+      ({ version }: { version: number }) =>
+        useHistoryManager({
+          getCurrentState: () => [s0, s1][version],
+          applyState: applyStateWithSettle,
+          getRevision,
+        }),
+      { initialProps: { version: 0 } },
+    );
+
+    act(() => {
+      result.current.resetHistory(s0);
+    });
+    expect(result.current.history).toEqual([s0]);
+
+    revision = 1;
+    rerender({ version: 1 });
+    act(() => {
+      jest.advanceTimersByTime(0);
+    });
+    expect(result.current.history).toEqual([s0, s1]);
+
+    act(() => {
+      result.current.undo();
+    });
+    rerender({ version: 1 });
+    act(() => {
+      jest.advanceTimersByTime(0);
+    });
+    expect(result.current.history).toEqual([s0, s1]);
+  });
 });
