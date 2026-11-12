@@ -15,7 +15,8 @@ import {
   TRAVERSAL_WEAPON_OPTIONS,
 } from "@/lib/consts";
 import type { TraversalWeapon } from "@/lib/types";
-import { cn, debounce } from "@/lib/utils";
+import { cn } from "@/lib/cn";
+import { debounce } from "@/lib/utils";
 import {
   Circle,
   LineSquiggle,

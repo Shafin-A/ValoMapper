@@ -12,7 +12,7 @@ import { formatReplayTime } from "@/lib/replay/display";
 import type { ReplayClock } from "@/lib/replay/clock";
 import type { ReplayRound } from "@/lib/replay/types";
 import type { MatchPlayers } from "@/lib/matches";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 
 const getMarkerClassName = (
   event: ReplayRound["eventLog"][number],

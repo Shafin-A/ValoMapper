@@ -9,7 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import { ConnectionStatus, UserAvatars } from "@/components/collaboration";
 import {
   Dialog,

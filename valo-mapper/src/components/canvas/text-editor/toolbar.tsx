@@ -1,7 +1,7 @@
 import { Bold, Italic, List, ListOrdered, Underline } from "lucide-react";
 import type { CSSProperties, MouseEvent as ReactMouseEvent, RefObject } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import { TEXT_COLORS, type ActiveFormats } from "./formatting";
 
 interface TextEditorToolbarProps {

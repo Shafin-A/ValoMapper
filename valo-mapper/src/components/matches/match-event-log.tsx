@@ -1,6 +1,6 @@
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getMatchTone, MATCH_TONE_CLASSES } from "@/lib/consts";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import {
   MATCH_SPIKE_IMAGE_CLASS_NAME,
   MATCH_SPIKE_IMAGE_WRAPPER_CLASS_NAME,

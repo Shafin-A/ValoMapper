@@ -23,7 +23,7 @@ import type {
   ReplayRoundPlayer,
 } from "@/lib/replay/types";
 import type { MatchPlayerSummary } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import { Shield } from "lucide-react";
 import Image from "next/image";
 import { useMemo } from "react";

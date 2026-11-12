@@ -12,7 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import { FolderPen, MoreVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { DeleteDialog } from "./delete-dialog";

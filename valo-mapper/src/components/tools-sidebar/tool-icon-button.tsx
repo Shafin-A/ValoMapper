@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import Image from "next/image";
 
 interface ToolIconButtonProps {

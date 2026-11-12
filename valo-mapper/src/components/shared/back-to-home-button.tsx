@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { usePreviousPathname } from "@/components/providers/navigation-history-provider";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 
 interface BackToHomeButtonProps {
   className?: string;

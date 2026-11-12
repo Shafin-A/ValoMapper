@@ -1,7 +1,7 @@
 "use client";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import { AlertTriangle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 

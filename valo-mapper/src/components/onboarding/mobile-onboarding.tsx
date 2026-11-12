@@ -24,7 +24,7 @@ import {
   markMobileOnboardingCompleted,
   markOnboardingSeen,
 } from "@/lib/onboarding";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 
 type OnboardingStep = {
   title: string;

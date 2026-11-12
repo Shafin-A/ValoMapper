@@ -25,7 +25,7 @@ import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { phaseHasContent } from "@/hooks/canvas/use-phase-manager";
 import { useSettings } from "@/contexts/settings-context";
 import { MAP_OPTIONS, DEFAULT_MAP_OPTIONS, SIDEBAR_WIDTH } from "@/lib/consts";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import { MatchEventLog } from "@/components/matches/match-event-log";
 import { MatchRoundSelector } from "@/components/matches/match-round-selector";
 import { Checkbox } from "@/components/ui/checkbox";

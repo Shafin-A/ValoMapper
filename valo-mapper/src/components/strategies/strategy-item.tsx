@@ -7,7 +7,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn, getRelativeTime } from "@/lib/utils";
+import { cn } from "@/lib/cn";
+import { getRelativeTime } from "@/lib/utils";
 import { FolderInput, FolderPen, MoreVertical, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";

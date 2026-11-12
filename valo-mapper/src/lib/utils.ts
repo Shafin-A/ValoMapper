@@ -26,16 +26,12 @@ import {
   StrategyData,
   XLineAbility,
 } from "@/lib/types";
-import { clsx, type ClassValue } from "clsx";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
 import { Dispatch, SetStateAction } from "react";
-import { twMerge } from "tailwind-merge";
 
-export const cn = (...inputs: ClassValue[]) => {
-  return twMerge(clsx(inputs));
-};
+export { cn } from "./cn";
 
 export const debounce = <Args extends unknown[], Return>(
   func: (...args: Args) => Return,

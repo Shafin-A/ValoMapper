@@ -2,7 +2,7 @@
 
 import { useWebSocket } from "@/contexts/websocket-context";
 import { UserPresence, WSConnectionStatus } from "@/lib/websocket-types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 import {
   Tooltip,
   TooltipContent,
