@@ -25,6 +25,7 @@ import {
   PhaseState,
 } from "@/lib/types";
 import { debounce } from "@/lib/utils";
+import { enqueueCanvasPhaseSnapshot } from "@/lib/canvas-patches";
 import { MAX_DRAWLINE_POINTS } from "@/lib/consts/misc/consts";
 
 const useCollaborativeCanvasActions = () => {
@@ -65,81 +66,11 @@ const useCollaborativeCanvasActions = () => {
       const phase = getLatestPhases()[phaseIndex];
       if (!phase) return;
 
-      phase.agentsOnCanvas.forEach((agent) => {
-        enqueueCanvasPatchEntry({
-          entity: "agent",
-          action: "add",
-          phaseIndex,
-          id: agent.id,
-          payload: agent,
-        });
-      });
-
-      phase.abilitiesOnCanvas.forEach((ability) => {
-        enqueueCanvasPatchEntry({
-          entity: "ability",
-          action: "add",
-          phaseIndex,
-          id: ability.id,
-          payload: ability,
-        });
-      });
-
-      phase.drawLines.forEach((line) => {
-        enqueueCanvasPatchEntry({
-          entity: "drawline",
-          action: "add",
-          phaseIndex,
-          id: line.id,
-          payload: line,
-        });
-      });
-
-      phase.connectingLines.forEach((line) => {
-        enqueueCanvasPatchEntry({
-          entity: "connectingline",
-          action: "add",
-          phaseIndex,
-          id: line.id,
-          payload: line,
-        });
-      });
-
-      phase.textsOnCanvas.forEach((text) => {
-        enqueueCanvasPatchEntry({
-          entity: "text",
-          action: "add",
-          phaseIndex,
-          id: text.id,
-          payload: text,
-        });
-      });
-
-      phase.imagesOnCanvas.forEach((image) => {
-        enqueueCanvasPatchEntry({
-          entity: "image",
-          action: "add",
-          phaseIndex,
-          id: image.id,
-          payload: image,
-        });
-      });
-
-      phase.toolIconsOnCanvas.forEach((icon) => {
-        enqueueCanvasPatchEntry({
-          entity: "toolicon",
-          action: "add",
-          phaseIndex,
-          id: icon.id,
-          payload: icon,
-        });
-      });
-
-      enqueueCanvasPatchEntry({
-        entity: "edited_phases",
-        action: "update",
+      enqueueCanvasPhaseSnapshot({
+        phase,
         phaseIndex,
-        payload: { editedPhases: [...Array.from(editedPhases), phaseIndex] },
+        editedPhases,
+        enqueue: enqueueCanvasPatchEntry,
       });
     },
     [editedPhases, getLatestPhases, enqueueCanvasPatchEntry],
@@ -182,140 +113,110 @@ const useCollaborativeCanvasActions = () => {
 
   const isConnected = status === "connected";
 
-  const notifyAgentAdded = useCallback(
-    (agent: AgentCanvas) => {
+  const notifyChange = useCallback(
+    ({
+      entity,
+      action,
+      id,
+      payload,
+      broadcast,
+    }: {
+      entity: string;
+      action: "add" | "update" | "remove";
+      id?: string;
+      payload?: Record<string, unknown>;
+      broadcast?: () => void;
+    }) => {
       syncPhaseIfNecessaryRef.current(currentPhaseIndex);
       enqueueCanvasPatchEntry({
-        entity: "agent",
-        action: "add",
+        entity,
+        action,
         phaseIndex: currentPhaseIndex,
-        id: agent.id,
-        payload: agent,
+        id,
+        payload,
       });
 
       if (isConnected) {
-        broadcastAgentAdded(agent, currentPhaseIndex);
+        broadcast?.();
       }
     },
-    [
-      isConnected,
-      broadcastAgentAdded,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [isConnected, currentPhaseIndex, enqueueCanvasPatchEntry],
+  );
+
+  const notifyAgentAdded = useCallback(
+    (agent: AgentCanvas) => {
+      notifyChange({
+        entity: "agent",
+        action: "add",
+        id: agent.id,
+        payload: agent,
+        broadcast: () => broadcastAgentAdded(agent, currentPhaseIndex),
+      });
+    },
+    [broadcastAgentAdded, currentPhaseIndex, notifyChange],
   );
 
   const notifyAgentMoved = useCallback(
     (agent: AgentCanvas) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "agent",
         action: "update",
-        phaseIndex: currentPhaseIndex,
         id: agent.id,
         payload: agent,
+        broadcast: () => broadcastAgentMoved(agent, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastAgentMoved(agent, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastAgentMoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastAgentMoved, currentPhaseIndex, notifyChange],
   );
 
   const notifyAgentRemoved = useCallback(
     (id: string) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "agent",
         action: "remove",
-        phaseIndex: currentPhaseIndex,
         id,
+        broadcast: () => broadcastAgentRemoved(id, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastAgentRemoved(id, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastAgentRemoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastAgentRemoved, currentPhaseIndex, notifyChange],
   );
 
   const notifyAbilityAdded = useCallback(
     (ability: AbilityCanvas) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "ability",
         action: "add",
-        phaseIndex: currentPhaseIndex,
         id: ability.id,
         payload: ability,
+        broadcast: () => broadcastAbilityAdded(ability, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastAbilityAdded(ability, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastAbilityAdded,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastAbilityAdded, currentPhaseIndex, notifyChange],
   );
 
   const notifyAbilityMoved = useCallback(
     (ability: AbilityCanvas) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "ability",
         action: "update",
-        phaseIndex: currentPhaseIndex,
         id: ability.id,
         payload: ability,
+        broadcast: () => broadcastAbilityMoved(ability, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastAbilityMoved(ability, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastAbilityMoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastAbilityMoved, currentPhaseIndex, notifyChange],
   );
 
   const notifyAbilityRemoved = useCallback(
     (id: string) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "ability",
         action: "remove",
-        phaseIndex: currentPhaseIndex,
         id,
+        broadcast: () => broadcastAbilityRemoved(id, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastAbilityRemoved(id, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastAbilityRemoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastAbilityRemoved, currentPhaseIndex, notifyChange],
   );
 
   const splitDrawLineIntoChunks = (line: DrawLine): DrawLine[] => {
@@ -408,161 +309,91 @@ const useCollaborativeCanvasActions = () => {
 
   const notifyConnLineAdded = useCallback(
     (line: ConnectingLine) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "connectingline",
         action: "add",
-        phaseIndex: currentPhaseIndex,
         id: line.id,
         payload: line,
+        broadcast: () => broadcastConnLineAdded(line, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastConnLineAdded(line, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastConnLineAdded,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastConnLineAdded, currentPhaseIndex, notifyChange],
   );
 
   const notifyConnLineUpdated = useCallback(
     (line: ConnectingLine) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "connectingline",
         action: "update",
-        phaseIndex: currentPhaseIndex,
         id: line.id,
         payload: line,
+        broadcast: () => broadcastConnLineUpdated(line, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastConnLineUpdated(line, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastConnLineUpdated,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastConnLineUpdated, currentPhaseIndex, notifyChange],
   );
 
   const notifyConnLineRemoved = useCallback(
     (id: string) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "connectingline",
         action: "remove",
-        phaseIndex: currentPhaseIndex,
         id,
+        broadcast: () => broadcastConnLineRemoved(id, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastConnLineRemoved(id, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastConnLineRemoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastConnLineRemoved, currentPhaseIndex, notifyChange],
   );
 
   const notifyTextAdded = useCallback(
     (text: TextCanvas) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "text",
         action: "add",
-        phaseIndex: currentPhaseIndex,
         id: text.id,
         payload: text,
+        broadcast: () => broadcastTextAdded(text, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastTextAdded(text, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastTextAdded,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastTextAdded, currentPhaseIndex, notifyChange],
   );
 
   const notifyTextUpdated = useCallback(
     (text: TextCanvas) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "text",
         action: "update",
-        phaseIndex: currentPhaseIndex,
         id: text.id,
         payload: text,
+        broadcast: () => broadcastTextUpdated(text, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastTextUpdated(text, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastTextUpdated,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastTextUpdated, currentPhaseIndex, notifyChange],
   );
 
   const notifyTextRemoved = useCallback(
     (id: string) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "text",
         action: "remove",
-        phaseIndex: currentPhaseIndex,
         id,
+        broadcast: () => broadcastTextRemoved(id, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastTextRemoved(id, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastTextRemoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastTextRemoved, currentPhaseIndex, notifyChange],
   );
 
   const notifyImageAdded = useCallback(
     (image: ImageCanvas) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "image",
         action: "add",
-        phaseIndex: currentPhaseIndex,
         id: image.id,
         payload: image,
+        broadcast: () => broadcastImageAdded(image, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastImageAdded(image, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastImageAdded,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastImageAdded, currentPhaseIndex, notifyChange],
   );
 
   const notifyFullSync = useCallback(() => {
@@ -575,115 +406,65 @@ const useCollaborativeCanvasActions = () => {
 
   const notifyImageMoved = useCallback(
     (image: ImageCanvas) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "image",
         action: "update",
-        phaseIndex: currentPhaseIndex,
         id: image.id,
         payload: image,
+        broadcast: () => broadcastImageMoved(image, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastImageMoved(image, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastImageMoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastImageMoved, currentPhaseIndex, notifyChange],
   );
 
   const notifyImageRemoved = useCallback(
     (id: string) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "image",
         action: "remove",
-        phaseIndex: currentPhaseIndex,
         id,
+        broadcast: () => broadcastImageRemoved(id, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastImageRemoved(id, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastImageRemoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastImageRemoved, currentPhaseIndex, notifyChange],
   );
 
   const notifyToolIconAdded = useCallback(
     (toolIcon: ToolIconCanvas) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "toolicon",
         action: "add",
-        phaseIndex: currentPhaseIndex,
         id: toolIcon.id,
         payload: toolIcon,
+        broadcast: () => broadcastToolIconAdded(toolIcon, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastToolIconAdded(toolIcon, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastToolIconAdded,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastToolIconAdded, currentPhaseIndex, notifyChange],
   );
 
   const notifyToolIconMoved = useCallback(
     (toolIcon: ToolIconCanvas) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "toolicon",
         action: "update",
-        phaseIndex: currentPhaseIndex,
         id: toolIcon.id,
         payload: toolIcon,
+        broadcast: () => broadcastToolIconMoved(toolIcon, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastToolIconMoved(toolIcon, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastToolIconMoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastToolIconMoved, currentPhaseIndex, notifyChange],
   );
 
   const notifyToolIconRemoved = useCallback(
     (id: string) => {
-      syncPhaseIfNecessaryRef.current(currentPhaseIndex);
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "toolicon",
         action: "remove",
-        phaseIndex: currentPhaseIndex,
         id,
+        broadcast: () => broadcastToolIconRemoved(id, currentPhaseIndex),
       });
-
-      if (isConnected) {
-        broadcastToolIconRemoved(id, currentPhaseIndex);
-      }
     },
-    [
-      isConnected,
-      broadcastToolIconRemoved,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastToolIconRemoved, currentPhaseIndex, notifyChange],
   );
 
   const sendAgentsSettingsUpdate = useMemo(
@@ -752,15 +533,15 @@ const useCollaborativeCanvasActions = () => {
 
   const notifyMapChanged = useCallback(
     (selectedMap: MapOption, resetAll: boolean = false) => {
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "map",
         action: "update",
-        phaseIndex: currentPhaseIndex,
         payload: {
           id: selectedMap.id,
           text: selectedMap.text,
           textColor: selectedMap.textColor,
         },
+        broadcast: () => broadcastMapChanged(selectedMap),
       });
 
       if (resetAll) {
@@ -771,38 +552,20 @@ const useCollaborativeCanvasActions = () => {
           payload: { resetAll: true },
         });
       }
-
-      if (isConnected) {
-        broadcastMapChanged(selectedMap);
-      }
     },
-    [
-      isConnected,
-      broadcastMapChanged,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastMapChanged, currentPhaseIndex, enqueueCanvasPatchEntry, notifyChange],
   );
 
   const notifySideChanged = useCallback(
     (mapSide: MapSide) => {
-      enqueueCanvasPatchEntry({
+      notifyChange({
         entity: "side",
         action: "update",
-        phaseIndex: currentPhaseIndex,
         payload: { mapSide },
+        broadcast: () => broadcastSideChanged(mapSide),
       });
-
-      if (isConnected) {
-        broadcastSideChanged(mapSide);
-      }
     },
-    [
-      isConnected,
-      broadcastSideChanged,
-      currentPhaseIndex,
-      enqueueCanvasPatchEntry,
-    ],
+    [broadcastSideChanged, notifyChange],
   );
 
   const notifyCanvasClear = useCallback(

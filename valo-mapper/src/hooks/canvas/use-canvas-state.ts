@@ -18,6 +18,7 @@ import {
   EMPTY_CANVAS_ENTITIES,
   type CanvasEntitiesSnapshot,
 } from "@/contexts/canvas-entity-contexts";
+import { enqueueCanvasPhaseSnapshot } from "@/lib/canvas-patches";
 import {
   AbilityCanvas,
   AgentCanvas,
@@ -546,76 +547,11 @@ export const useCanvasState = ({
 
       if (!phaseHasContent(phase)) return;
 
-      phase.agentsOnCanvas.forEach((agent) =>
-        enqueueCanvasPatchEntry({
-          entity: "agent",
-          action: "add",
-          phaseIndex: currentPhaseIndex,
-          id: agent.id,
-          payload: agent,
-        }),
-      );
-      phase.abilitiesOnCanvas.forEach((ability) =>
-        enqueueCanvasPatchEntry({
-          entity: "ability",
-          action: "add",
-          phaseIndex: currentPhaseIndex,
-          id: ability.id,
-          payload: ability,
-        }),
-      );
-      phase.drawLines.forEach((line) =>
-        enqueueCanvasPatchEntry({
-          entity: "drawline",
-          action: "add",
-          phaseIndex: currentPhaseIndex,
-          id: line.id,
-          payload: line,
-        }),
-      );
-      phase.connectingLines.forEach((line) =>
-        enqueueCanvasPatchEntry({
-          entity: "connectingline",
-          action: "add",
-          phaseIndex: currentPhaseIndex,
-          id: line.id,
-          payload: line,
-        }),
-      );
-      phase.textsOnCanvas.forEach((text) =>
-        enqueueCanvasPatchEntry({
-          entity: "text",
-          action: "add",
-          phaseIndex: currentPhaseIndex,
-          id: text.id,
-          payload: text,
-        }),
-      );
-      phase.imagesOnCanvas.forEach((image) =>
-        enqueueCanvasPatchEntry({
-          entity: "image",
-          action: "add",
-          phaseIndex: currentPhaseIndex,
-          id: image.id,
-          payload: image,
-        }),
-      );
-      phase.toolIconsOnCanvas.forEach((icon) =>
-        enqueueCanvasPatchEntry({
-          entity: "toolicon",
-          action: "add",
-          phaseIndex: currentPhaseIndex,
-          id: icon.id,
-          payload: icon,
-        }),
-      );
-      enqueueCanvasPatchEntry({
-        entity: "edited_phases",
-        action: "update",
+      enqueueCanvasPhaseSnapshot({
+        phase,
         phaseIndex: currentPhaseIndex,
-        payload: {
-          editedPhases: [...Array.from(editedPhases), currentPhaseIndex],
-        },
+        editedPhases,
+        enqueue: enqueueCanvasPatchEntry,
       });
     };
   }, [getLatestPhases, enqueueCanvasPatchEntry]);
