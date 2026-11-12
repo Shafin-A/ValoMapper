@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -14,7 +15,7 @@ export const useDeleteUser = () => {
       }),
     onSuccess: async () => {
       toast.success("User deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ["user"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
     },
     onError: (error) => {
       toast.error(`Failed to delete user: ${error.message}`);

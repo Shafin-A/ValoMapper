@@ -1,4 +1,5 @@
 "use client";
+import { queryKeys } from "@/lib/query-keys";
 
 import { apiFetchWithAuth, authQueryOptions } from "@/lib/api";
 import { Folder, Strategy } from "@/lib/types";
@@ -14,7 +15,7 @@ export const useFolders = () => {
   } = useFirebaseAuth();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["folders-and-strategies"],
+    queryKey: queryKeys.folders,
     queryFn: async () => {
       const [folders, strategies] = await Promise.all([
         apiFetchWithAuth<Folder[]>("/api/folders", getIdToken),

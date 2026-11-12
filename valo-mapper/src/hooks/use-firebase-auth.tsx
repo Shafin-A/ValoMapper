@@ -1,6 +1,7 @@
 "use client";
 
 import { auth } from "@/lib/firebase";
+import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   createUserWithEmailAndPassword,
@@ -46,11 +47,11 @@ export const FirebaseAuthProvider = ({
       setLoading(false);
 
       if (firebaseUser) {
-        queryClient.invalidateQueries({ queryKey: ["user"] });
-        queryClient.invalidateQueries({ queryKey: ["folders-and-strategies"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.user });
+        queryClient.invalidateQueries({ queryKey: queryKeys.folders });
       } else {
-        queryClient.removeQueries({ queryKey: ["user"] });
-        queryClient.removeQueries({ queryKey: ["folders-and-strategies"] });
+        queryClient.removeQueries({ queryKey: queryKeys.user });
+        queryClient.removeQueries({ queryKey: queryKeys.folders });
       }
     });
 
@@ -88,8 +89,8 @@ export const FirebaseAuthProvider = ({
 
   const logout = useCallback(async () => {
     await signOut(auth);
-    queryClient.removeQueries({ queryKey: ["user"] });
-    queryClient.removeQueries({ queryKey: ["folders-and-strategies"] });
+    queryClient.removeQueries({ queryKey: queryKeys.user });
+    queryClient.removeQueries({ queryKey: queryKeys.folders });
   }, [queryClient]);
 
   const value = useMemo<FirebaseAuthContextValue>(

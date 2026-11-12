@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { CanvasState, Lobby } from "@/lib/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -14,7 +15,7 @@ export const useUpdateLobby = (lobbyCode: string) => {
       }),
     onSuccess: (data) => {
       if (lobbyCode) {
-        queryClient.setQueryData(["lobby", lobbyCode], data);
+        queryClient.setQueryData(queryKeys.lobby(lobbyCode), data);
       }
     },
     onError: (error) => {

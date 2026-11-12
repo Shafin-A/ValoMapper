@@ -1,3 +1,4 @@
+import { normalizeAuthToken } from "./auth-token";
 import { fetchBackendWithTimeout } from "./backend-fetch";
 
 interface ProxyOptions {
@@ -31,46 +32,6 @@ const getForwardedHeaders = (request?: Request): Record<string, string> => {
   return forwardedHeaders;
 };
 
-const isInvalidTokenValue = (value: string): boolean => {
-  const lowered = value.toLowerCase();
-  return (
-    lowered === "undefined" ||
-    lowered === "null" ||
-    lowered === "[object object]"
-  );
-};
-
-const normalizeAuthorizationHeader = (token: unknown): string | null => {
-  if (typeof token !== "string") {
-    return null;
-  }
-
-  const trimmed = token.trim();
-  if (!trimmed || isInvalidTokenValue(trimmed)) {
-    return null;
-  }
-
-  const bearerMatch = /^bearer\s+(.+)$/i.exec(trimmed);
-  if (bearerMatch) {
-    const bearerToken = bearerMatch[1].trim();
-    if (
-      !bearerToken ||
-      /\s/.test(bearerToken) ||
-      isInvalidTokenValue(bearerToken)
-    ) {
-      return null;
-    }
-
-    return `Bearer ${bearerToken}`;
-  }
-
-  if (/\s/.test(trimmed)) {
-    return null;
-  }
-
-  return `Bearer ${trimmed}`;
-};
-
 export const proxyToBackend = async (
   path: string,
   { method, token, body, errorMessage, request }: ProxyOptions,
@@ -81,12 +42,12 @@ export const proxyToBackend = async (
   };
 
   if (token !== undefined && token !== null) {
-    const normalizedAuthHeader = normalizeAuthorizationHeader(token);
-    if (!normalizedAuthHeader) {
+    const normalizedToken = normalizeAuthToken(token);
+    if (!normalizedToken) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    headers["Authorization"] = normalizedAuthHeader;
+    headers["Authorization"] = `Bearer ${normalizedToken}`;
   }
 
   try {

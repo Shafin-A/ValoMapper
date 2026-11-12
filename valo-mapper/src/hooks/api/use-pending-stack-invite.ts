@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetchWithAuth, ApiError, DEFAULT_RETRY_CONFIG } from "@/lib/api";
 import { StackMember } from "@/lib/types";
@@ -7,7 +8,7 @@ export const usePendingStackInvites = (enabled: boolean) => {
   const { getIdToken } = useFirebaseAuth();
 
   return useQuery<StackMember[]>({
-    queryKey: ["stack-pending-invites"],
+    queryKey: queryKeys.stackPendingInvites,
     queryFn: async () => {
       try {
         return await apiFetchWithAuth<StackMember[]>(

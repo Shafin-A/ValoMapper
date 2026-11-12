@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { User } from "@/lib/types";
@@ -25,7 +26,7 @@ export const useCreateUser = () => {
         body: JSON.stringify({ firebaseUid, name, email }),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
     },
   });
 };

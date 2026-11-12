@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { apiFetchWithAuth, authQueryOptions } from "@/lib/api";
 import { User } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ export const useUser = () => {
   } = useFirebaseAuth();
 
   const { data, isLoading, isError, error, refetch } = useQuery<User>({
-    queryKey: ["user"],
+    queryKey: queryKeys.user,
     queryFn: () => apiFetchWithAuth<User>("/api/users/me", getIdToken),
     enabled: !!firebaseUser && !authLoading,
     ...authQueryOptions,

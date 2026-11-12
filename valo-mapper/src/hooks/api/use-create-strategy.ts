@@ -1,4 +1,5 @@
 "use client";
+import { queryKeys } from "@/lib/query-keys";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -25,7 +26,7 @@ export const useCreateStrategy = () => {
     onSuccess: (data) => {
       toast.success(`Strategy "${data.name}" created successfully!`);
       queryClient.invalidateQueries({
-        queryKey: ["folders-and-strategies"],
+        queryKey: queryKeys.folders,
       });
     },
     onError: (error) => {

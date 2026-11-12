@@ -1,4 +1,5 @@
 "use client";
+import { queryKeys } from "@/lib/query-keys";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -24,7 +25,7 @@ export const useCreateFolder = () => {
     onSuccess: (data) => {
       toast.success(`Folder "${data.name}" created successfully!`);
       queryClient.invalidateQueries({
-        queryKey: ["folders-and-strategies"],
+        queryKey: queryKeys.folders,
       });
     },
     onError: (error) => {

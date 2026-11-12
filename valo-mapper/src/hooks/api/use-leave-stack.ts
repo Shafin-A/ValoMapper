@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -14,9 +15,9 @@ export const useLeaveStack = () => {
       }),
     onSuccess: () => {
       toast.success("Left stack");
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      queryClient.invalidateQueries({ queryKey: ["stack-members"] });
-      queryClient.invalidateQueries({ queryKey: ["stack-pending-invites"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stackMembers });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stackPendingInvites });
     },
     onError: (error) => {
       toast.error(`Failed to leave stack: ${error.message}`);

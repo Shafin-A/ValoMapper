@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -29,7 +30,7 @@ export const useInviteStackMember = () => {
     },
     onSuccess: () => {
       toast.success("Stack invite sent");
-      queryClient.invalidateQueries({ queryKey: ["stack-members"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stackMembers });
     },
     onError: (error) => {
       toast.error(`Failed to invite stack member: ${error.message}`);

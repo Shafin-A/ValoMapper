@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -18,7 +19,7 @@ export const useDeleteStrategy = () => {
       }),
     onSuccess: () => {
       toast.success("Strategy deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ["folders-and-strategies"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.folders });
     },
     onError: (error) => {
       toast.error(`Failed to delete strategy: ${error.message}`);

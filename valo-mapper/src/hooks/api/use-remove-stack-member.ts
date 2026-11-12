@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -16,7 +17,7 @@ export const useRemoveStackMember = () => {
       ),
     onSuccess: () => {
       toast.success("Stack member removed");
-      queryClient.invalidateQueries({ queryKey: ["stack-members"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stackMembers });
     },
     onError: (error) => {
       toast.error(`Failed to remove stack member: ${error.message}`);

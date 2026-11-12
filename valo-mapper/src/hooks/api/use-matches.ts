@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { apiFetchWithAuth, authQueryOptions } from "@/lib/api";
 import { MatchPreviewsResponse } from "@/lib/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -21,7 +22,7 @@ export const useMatches = (enabled = true, limit = 10) => {
     isFetchingNextPage,
     isFetchNextPageError,
   } = useInfiniteQuery<MatchPreviewsResponse>({
-    queryKey: ["matches", limit],
+    queryKey: queryKeys.matches(limit),
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       apiFetchWithAuth<MatchPreviewsResponse>(

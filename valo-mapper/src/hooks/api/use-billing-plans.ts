@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch, DEFAULT_RETRY_CONFIG } from "@/lib/api";
 
@@ -19,7 +20,7 @@ export interface BillingPlansResponse {
 
 export const useBillingPlans = () => {
   return useQuery<BillingPlansResponse>({
-    queryKey: ["billing-plans"],
+    queryKey: queryKeys.billingPlans,
     queryFn: () => apiFetch<BillingPlansResponse>("/api/billing/plans"),
     staleTime: 1000 * 60 * 10,
     ...DEFAULT_RETRY_CONFIG,

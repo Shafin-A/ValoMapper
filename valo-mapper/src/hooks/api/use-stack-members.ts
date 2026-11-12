@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetchWithAuth, DEFAULT_RETRY_CONFIG } from "@/lib/api";
 import { StackMembersResponse } from "@/lib/types";
@@ -7,7 +8,7 @@ export const useStackMembers = (enabled: boolean) => {
   const { getIdToken } = useFirebaseAuth();
 
   return useQuery<StackMembersResponse>({
-    queryKey: ["stack-members"],
+    queryKey: queryKeys.stackMembers,
     queryFn: () =>
       apiFetchWithAuth<StackMembersResponse>(
         "/api/billing/stack/members",

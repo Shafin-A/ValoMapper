@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -43,7 +44,7 @@ export const useUpdateStrategy = () => {
     },
     onSuccess: (data) => {
       toast.success(`Strategy "${data.name}" updated successfully!`);
-      queryClient.invalidateQueries({ queryKey: ["folders-and-strategies"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.folders });
     },
     onError: (error) => {
       toast.error(`Failed to update strategy: ${error.message}`);

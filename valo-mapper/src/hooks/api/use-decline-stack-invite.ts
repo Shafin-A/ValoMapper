@@ -1,3 +1,4 @@
+import { queryKeys } from "@/lib/query-keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
@@ -18,9 +19,9 @@ export const useDeclineStackInvite = () => {
       ),
     onSuccess: () => {
       toast.success("Stack invite declined");
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      queryClient.invalidateQueries({ queryKey: ["stack-members"] });
-      queryClient.invalidateQueries({ queryKey: ["stack-pending-invites"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stackMembers });
+      queryClient.invalidateQueries({ queryKey: queryKeys.stackPendingInvites });
     },
     onError: (error) => {
       toast.error(`Failed to decline stack invite: ${error.message}`);
