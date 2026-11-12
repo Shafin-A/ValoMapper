@@ -14,7 +14,7 @@ import { TextEditor } from "@/components/canvas/text-editor";
 import { RichText } from "@/components/canvas/rich-text";
 import Konva from "konva";
 import { RefObject, memo, useCallback, useState } from "react";
-import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
 import {
   TEXT_MIN_HEIGHT,
   TEXT_PLACEHOLDER_COLOR,

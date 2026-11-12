@@ -10,7 +10,7 @@ import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useCommitCount } from "@/lib/perf-beacon";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { useImageTransform } from "@/hooks/canvas";
-import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
 import Konva from "konva";
 import { RefObject, memo } from "react";
 import { Group, Image, Rect, Text, Transformer } from "react-konva";

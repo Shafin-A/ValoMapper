@@ -1,10 +1,7 @@
 import { CanvasIcon, CanvasIconProps } from "@/components/canvas-icons";
 import { drawLifetimeRing } from "@/components/canvas-icons/lifetime-ring";
 import { useCanvasView } from "@/contexts/canvas-context";
-import {
-  handleMouseOutDefaultCursor,
-  handleMouseOverGrabCursor,
-} from "@/lib/utils";
+import { handleMouseOutDefaultCursor, handleMouseOverGrabCursor } from "@/lib/konva-drag";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useEffect, useRef } from "react";

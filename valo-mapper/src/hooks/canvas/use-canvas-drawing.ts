@@ -3,8 +3,8 @@ import type { CanvasEntitiesSnapshot } from "@/contexts/canvas-entity-contexts";
 import {
   doesEraserIntersect,
   getIntersectingLines,
-  getNextId,
-} from "@/lib/utils";
+} from "@/lib/geometry";
+import { getNextId } from "@/lib/utils";
 import Konva from "konva";
 import { Vector2d } from "konva/lib/types";
 import {

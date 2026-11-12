@@ -3,10 +3,7 @@ import {
   useCanvasEntityActions,
   useCanvasView,
 } from "@/contexts/canvas-context";
-import {
-  handleMouseOutDefaultCursor,
-  handleMouseOverGrabCursor,
-} from "@/lib/utils";
+import { handleMouseOutDefaultCursor, handleMouseOverGrabCursor } from "@/lib/konva-drag";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useRef, useState, useCallback, useEffect } from "react";

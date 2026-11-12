@@ -3,10 +3,7 @@ import {
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
-import {
-  handleMouseOutDefaultCursor,
-  handleMouseOverGrabCursor,
-} from "@/lib/utils";
+import { handleMouseOutDefaultCursor, handleMouseOverGrabCursor } from "@/lib/konva-drag";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useCallback, useEffect, useRef, useState } from "react";

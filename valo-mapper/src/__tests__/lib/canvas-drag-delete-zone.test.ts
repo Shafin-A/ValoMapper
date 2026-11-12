@@ -1,5 +1,5 @@
 import type Konva from "konva";
-import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
 
 const mockIsMobileLayout = jest.fn(() => true);
 

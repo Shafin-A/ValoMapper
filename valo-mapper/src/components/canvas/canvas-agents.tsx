@@ -21,7 +21,8 @@ import {
   getToolIconAttachmentPosition,
   syncAttachedToolIconNodePositions,
 } from "@/lib/tool-icon";
-import { getAgentImgSrc, handleDragEnd, handleDragMove } from "@/lib/utils";
+import { getAgentImgSrc } from "@/lib/utils";
+import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
 import { useCommitCount } from "@/lib/perf-beacon";
 import type { AgentCanvas, IconSettings } from "@/lib/types";
 import Konva from "konva";

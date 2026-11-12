@@ -6,7 +6,7 @@ import {
 import {
   handleMouseOutDefaultCursor,
   handleMouseOverGrabCursor,
-} from "@/lib/utils";
+} from "@/lib/konva-drag";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { useRef, useState, useCallback, useEffect } from "react";

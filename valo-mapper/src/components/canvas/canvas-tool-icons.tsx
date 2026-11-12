@@ -19,7 +19,7 @@ import {
   findToolIconAttachmentTarget,
   getToolIconAttachmentPosition,
 } from "@/lib/tool-icon";
-import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
 import { useCommitCount } from "@/lib/perf-beacon";
 import type { ToolIconCanvas } from "@/lib/types";
 import {

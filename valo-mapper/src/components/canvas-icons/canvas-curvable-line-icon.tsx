@@ -3,7 +3,7 @@ import {
   useCanvasEntityActions,
   useCanvasView,
 } from "@/contexts/canvas-context";
-import { handleMouseOutDefaultCursor } from "@/lib/utils";
+import { handleMouseOutDefaultCursor } from "@/lib/konva-drag";
 import Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";

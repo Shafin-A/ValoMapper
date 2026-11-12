@@ -24,7 +24,7 @@ import {
   isVisionConeAction,
   syncAttachedVisionConeNodePositions,
 } from "@/lib/vision-cone-utils";
-import { handleDragEnd, handleDragMove } from "@/lib/utils";
+import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
 import { useCommitCount } from "@/lib/perf-beacon";
 import type { AbilityCanvas, IconSettings } from "@/lib/types";
 import Konva from "konva";

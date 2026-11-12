@@ -2,16 +2,23 @@ import { renderHook, act } from "@testing-library/react";
 import { useCanvasDrawing } from "@/hooks/canvas/use-canvas-drawing";
 import type { DrawLine } from "@/lib/types";
 import {
-  getNextId,
-  getIntersectingLines,
   doesEraserIntersect,
-} from "@/lib/utils";
+  getIntersectingLines,
+} from "@/lib/geometry";
+import { getNextId } from "@/lib/utils";
 
 jest.mock("@/lib/utils", () => {
   const actual = jest.requireActual("@/lib/utils");
   return {
     ...actual,
     getNextId: jest.fn(() => "tool-id"),
+  };
+});
+
+jest.mock("@/lib/geometry", () => {
+  const actual = jest.requireActual("@/lib/geometry");
+  return {
+    ...actual,
     getIntersectingLines: jest.fn(() => []),
     doesEraserIntersect: jest.fn(() => false),
   };
