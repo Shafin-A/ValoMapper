@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HelpTab } from "@/components/help/help-tab";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 jest.mock("@/components/legal/privacy-policy", () => ({
   PrivacyPolicy: () => (
@@ -17,6 +18,12 @@ jest.mock("@/components/legal/terms-of-service", () => ({
 jest.mock("@/components/help/shortcuts", () => ({
   Shortcuts: () => <div data-testid="shortcuts">Shortcuts Content</div>,
 }));
+
+jest.mock("@/hooks/use-mobile", () => ({
+  useIsMobile: jest.fn(() => false),
+}));
+
+const mockUseIsMobile = jest.mocked(useIsMobile);
 
 describe("HelpTab", () => {
   it("should render all tab triggers", () => {
@@ -151,6 +158,15 @@ describe("HelpTab", () => {
     const { container } = render(<HelpTab />);
 
     const tabsRoot = container.querySelector('[data-orientation="vertical"]');
+    expect(tabsRoot).toBeInTheDocument();
+  });
+
+  it("should render tabs in horizontal orientation on mobile", () => {
+    mockUseIsMobile.mockReturnValueOnce(true);
+
+    const { container } = render(<HelpTab />);
+
+    const tabsRoot = container.querySelector('[data-orientation="horizontal"]');
     expect(tabsRoot).toBeInTheDocument();
   });
 

@@ -156,8 +156,8 @@ export const SiteHeader = ({
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-none w-[90vw] sm:max-w-4xl">
-              <DialogHeader>
+            <DialogContent className="flex h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none flex-col overflow-hidden p-4 sm:h-[min(640px,90dvh)] sm:w-[90vw] sm:max-w-4xl sm:p-6">
+              <DialogHeader className="shrink-0 pr-8 text-left">
                 <DialogTitle>Help</DialogTitle>
                 <DialogDescription>
                   Find help for different sections.
