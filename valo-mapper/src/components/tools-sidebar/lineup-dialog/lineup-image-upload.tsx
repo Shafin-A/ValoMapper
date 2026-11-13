@@ -97,6 +97,7 @@ export const LineupImageUpload = ({
         type="file"
         accept={IMAGE_UPLOAD_ACCEPT_ATTR}
         multiple
+        aria-label="Upload lineup images"
         onChange={handleFileChange}
         className="hidden"
       />
@@ -118,6 +119,7 @@ export const LineupImageUpload = ({
                         variant="secondary"
                         size="icon"
                         className="absolute top-2 left-2 h-6 w-6"
+                        aria-label={`View lineup image ${index + 1} fullscreen`}
                         onClick={() => onImageExpand(index)}
                       >
                         <Expand className="h-4 w-4" />
@@ -126,6 +128,7 @@ export const LineupImageUpload = ({
                         variant="destructive"
                         size="icon"
                         className="absolute top-2 right-2 h-6 w-6"
+                        aria-label={`Remove lineup image ${index + 1}`}
                         onClick={() => onImageRemove(index)}
                       >
                         <X className="h-4 w-4" />

@@ -85,6 +85,7 @@ export const ColorPickerButton = ({
           <input
             type="color"
             value={value}
+            aria-label={`${label} custom color`}
             onChange={(event) => onChange(event.target.value)}
             className="h-7 w-10 cursor-pointer rounded border border-zinc-600 bg-transparent p-0"
           />

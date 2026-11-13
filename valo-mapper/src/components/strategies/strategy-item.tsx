@@ -11,29 +11,30 @@ import { cn } from "@/lib/cn";
 import { getRelativeTime } from "@/lib/format";
 import { FolderInput, FolderPen, MoreVertical, Trash2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { DeleteDialog } from "./delete-dialog";
 import MoveStrategyDialogContent from "./move-strategy-dialog-content";
 
 interface StrategyItemProps {
+  href: string;
   strategyId: string;
   name: string;
   selectedMapId: string;
   updatedAt: Date;
   currentLocationId: string;
-  onClick?: () => void;
   onRename?: (newName: string) => void;
   onDelete?: () => void;
   className?: string;
 }
 
 export const StrategyItem = ({
+  href,
   strategyId,
   name,
   selectedMapId,
   updatedAt,
   currentLocationId,
-  onClick,
   onRename,
   onDelete,
   className,
@@ -48,17 +49,18 @@ export const StrategyItem = ({
 
   return (
     <div
-      onClick={(e) => {
-        e.stopPropagation();
-        if (!openRenameDialog && !openDeleteDialog && !openMoveDialog)
-          onClick?.();
-      }}
       className={cn(
         "relative flex flex-col w-56 rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900 transition-all cursor-pointer group select-none",
         className,
       )}
     >
-      <div className="relative h-32 w-full bg-zinc-950">
+      <Link
+        href={href}
+        aria-label={`Open strategy ${name}`}
+        className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+      />
+
+      <div className="pointer-events-none relative h-32 w-full bg-zinc-950">
         <Image
           src={imageUrl}
           alt={mapId ?? "Map preview"}
@@ -75,7 +77,8 @@ export const StrategyItem = ({
               <Button
                 variant="ghost"
                 onClick={(e) => e.stopPropagation()}
-                className="absolute top-2 right-2 rounded-full"
+                aria-label="Strategy actions"
+                className="pointer-events-auto absolute top-2 right-2 rounded-full"
               >
                 <MoreVertical size={16} />
               </Button>
@@ -158,7 +161,7 @@ export const StrategyItem = ({
         />
       </div>
 
-      <div className="flex flex-col gap-1 px-3 py-3">
+      <div className="pointer-events-none flex flex-col gap-1 px-3 py-3">
         <p className="text-white font-medium truncate">{name}</p>
         <p className="text-white font-medium truncate capitalize">{mapId}</p>
         <p className="text-xs text-zinc-400">

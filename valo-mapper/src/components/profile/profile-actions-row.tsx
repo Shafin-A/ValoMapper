@@ -42,7 +42,12 @@ export const ProfileActionsRow = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button onClick={onLogout} variant="outline" size="icon">
+                <Button
+                  onClick={onLogout}
+                  variant="outline"
+                  size="icon"
+                  aria-label="Log out"
+                >
                   <LogOut className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>

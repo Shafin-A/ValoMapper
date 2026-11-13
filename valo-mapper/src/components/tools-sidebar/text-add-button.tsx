@@ -69,6 +69,7 @@ export const TextAddButton = React.forwardRef<
       ref={ref}
       variant="ghost"
       size="lg"
+      aria-label="Add text"
       onClick={handleClick}
       {...props}
     >

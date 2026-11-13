@@ -153,6 +153,7 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetAgents}
+                aria-label="Delete agents"
                 className="w-full"
               >
                 <Users />
@@ -167,6 +168,7 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetAbilities}
+                aria-label="Delete abilities"
                 className="w-full"
               >
                 <Swords />
@@ -181,6 +183,7 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetDrawings}
+                aria-label="Delete drawings"
                 className="w-full"
               >
                 <Pencil />
@@ -195,6 +198,7 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetTexts}
+                aria-label="Delete texts"
                 className="w-full"
               >
                 <ALargeSmall />
@@ -209,6 +213,7 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetImages}
+                aria-label="Delete images"
                 className="w-full"
               >
                 <ImageIcon />
@@ -223,6 +228,7 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetLineups}
+                aria-label="Delete lineups"
                 className="w-full"
               >
                 <MapPinned />

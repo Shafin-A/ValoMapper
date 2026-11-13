@@ -86,7 +86,9 @@ export const ForgotPasswordForm = ({
                 </Button>
 
                 {error && (
-                  <div className="text-sm text-destructive">{error}</div>
+                  <div role="alert" className="text-sm text-destructive">
+                    {error}
+                  </div>
                 )}
                 {success && (
                   <div className="text-sm text-accent">

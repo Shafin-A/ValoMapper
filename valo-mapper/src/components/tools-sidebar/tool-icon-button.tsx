@@ -23,6 +23,7 @@ export const ToolIconButton = forwardRef<
       ref={ref}
       size="icon"
       variant="ghost"
+      aria-label={name}
       aria-pressed={selected}
       className={cn(
         "overflow-hidden relative flex items-center justify-center w-full aspect-square",

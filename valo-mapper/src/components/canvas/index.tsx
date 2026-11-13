@@ -278,6 +278,8 @@ export const MapStage = memo(
 
     return (
       <div
+        role="region"
+        aria-label="Tactical map canvas"
         className={canvasBackgroundClassName}
         style={{
           position: "relative",

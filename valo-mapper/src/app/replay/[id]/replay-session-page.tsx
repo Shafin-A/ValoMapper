@@ -23,8 +23,13 @@ const ReplaySessionPlayer = lazy(() =>
 );
 
 const ReplayPlayerFallback = () => (
-  <div className="flex min-h-screen items-center justify-center">
+  <div
+    role="status"
+    aria-live="polite"
+    className="flex min-h-screen items-center justify-center"
+  >
     <Loader2 className="h-10 w-10 animate-spin text-primary" />
+    <span className="sr-only">Loading replay player</span>
   </div>
 );
 

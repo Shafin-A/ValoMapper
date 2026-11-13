@@ -69,7 +69,14 @@ export const ReplayLoadingOverlay = ({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div
+              role="progressbar"
+              aria-label={progress?.label ?? "Loading replay"}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={isIndeterminate ? undefined : displayedPercent}
+              className="space-y-2"
+            >
               <div className="h-2 overflow-hidden rounded-full bg-neutral-800">
                 {isEstimating ? (
                   <div

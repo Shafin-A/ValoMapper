@@ -235,6 +235,7 @@ export const ReplayFileDropzone = ({
         ref={inputRef}
         type="file"
         accept={REPLAY_FILE_EXTENSION}
+        aria-label="Upload a VALORANT replay file"
         className="hidden"
         onChange={handleInputChange}
         disabled={disabled}

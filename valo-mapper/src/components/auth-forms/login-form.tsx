@@ -165,7 +165,9 @@ export const LoginForm = ({
                 </Button>
 
                 {error && (
-                  <div className="text-sm text-destructive">{error}</div>
+                  <div role="alert" className="text-sm text-destructive">
+                    {error}
+                  </div>
                 )}
 
                 <FieldDescription className="text-center">

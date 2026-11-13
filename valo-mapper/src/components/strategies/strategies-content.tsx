@@ -12,7 +12,6 @@ import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
 import { StrategyData } from "@/lib/types";
 import { convertFolderOrStrategyId } from "@/lib/strategy-tree";
 import { FolderOpen } from "lucide-react";
-import Link from "next/link";
 import { FolderCard } from "./folder-card";
 import { StrategyItem } from "./strategy-item";
 
@@ -72,34 +71,28 @@ export const StrategiesContent = ({
                 }
               />
             ) : (
-              <Link key={item.id} href={`/${item.lobbyCode}`}>
-                <StrategyItem
-                  strategyId={item.id}
-                  name={item.name}
-                  selectedMapId={item.selectedMapId ?? ""}
-                  updatedAt={
-                    item.updatedAt ? new Date(item.updatedAt) : new Date()
-                  }
-                  currentLocationId={currentLocationId}
-                  onRename={(newName) =>
-                    updateStrategy({
-                      strategyId: convertFolderOrStrategyId(
-                        item.id,
-                        "strategy",
-                      ),
-                      name: newName,
-                    })
-                  }
-                  onDelete={() =>
-                    deleteStrategy({
-                      strategyId: convertFolderOrStrategyId(
-                        item.id,
-                        "strategy",
-                      ),
-                    })
-                  }
-                />
-              </Link>
+              <StrategyItem
+                key={item.id}
+                href={`/${item.lobbyCode}`}
+                strategyId={item.id}
+                name={item.name}
+                selectedMapId={item.selectedMapId ?? ""}
+                updatedAt={
+                  item.updatedAt ? new Date(item.updatedAt) : new Date()
+                }
+                currentLocationId={currentLocationId}
+                onRename={(newName) =>
+                  updateStrategy({
+                    strategyId: convertFolderOrStrategyId(item.id, "strategy"),
+                    name: newName,
+                  })
+                }
+                onDelete={() =>
+                  deleteStrategy({
+                    strategyId: convertFolderOrStrategyId(item.id, "strategy"),
+                  })
+                }
+              />
             ),
           )}
         </div>

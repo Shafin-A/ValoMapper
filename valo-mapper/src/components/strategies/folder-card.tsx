@@ -42,16 +42,13 @@ export const FolderCard = ({
 
   return (
     <div
-      onClick={(e) => {
-        e.stopPropagation();
-        if (!openRenameDialog && !openDeleteDialog) onClick?.();
-      }}
       className={cn(
         "relative w-56 h-56 cursor-pointer select-none transition-transform duration-200",
         className,
       )}
     >
       <svg
+        aria-hidden
         className="absolute inset-0 w-full h-full text-zinc-900 fill-zinc-900"
         viewBox="0 0 224 224"
         preserveAspectRatio="none"
@@ -59,7 +56,14 @@ export const FolderCard = ({
         <path d="M 0,16 Q 0,0 16,0 L 80,0 L 95,40 L 208,40 Q 224,40 224,56 L 224,208 Q 224,224 208,224 L 16,224 Q 0,224 0,208 Z" />
       </svg>
 
-      <div className="absolute inset-0 flex flex-col justify-between p-3">
+      <button
+        type="button"
+        aria-label={`Open folder ${name}`}
+        onClick={() => onClick?.()}
+        className="absolute inset-0 z-0 w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+      />
+
+      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-3">
         <Dialog open={openRenameDialog} onOpenChange={setOpenRenameDialog}>
           {actionsDisabled ? (
             <Tooltip>
@@ -67,7 +71,8 @@ export const FolderCard = ({
                 <Button
                   variant="ghost"
                   onClick={(e) => e.stopPropagation()}
-                  className="self-end mt-10 rounded-full"
+                  aria-label="Folder actions"
+                  className="pointer-events-auto self-end mt-10 rounded-full"
                 >
                   <MoreVertical size={18} />
                 </Button>
@@ -80,7 +85,8 @@ export const FolderCard = ({
                 <Button
                   variant="ghost"
                   onClick={(e) => e.stopPropagation()}
-                  className="self-end mt-10 rounded-full"
+                  aria-label="Folder actions"
+                  className="pointer-events-auto self-end mt-10 rounded-full"
                 >
                   <MoreVertical size={18} />
                 </Button>

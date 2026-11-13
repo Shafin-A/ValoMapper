@@ -148,6 +148,7 @@ export const ImageUploadButton = React.forwardRef<
         ref={fileInputRef}
         type="file"
         accept={IMAGE_UPLOAD_ACCEPT_ATTR}
+        aria-label="Upload image"
         onChange={handleFileChange}
         style={{ display: "none" }}
       />
@@ -155,6 +156,7 @@ export const ImageUploadButton = React.forwardRef<
         ref={ref}
         variant="ghost"
         size="lg"
+        aria-label={isUploading ? "Uploading image" : "Upload image"}
         onClick={handleClick}
         disabled={isUploading || props.disabled}
         {...props}

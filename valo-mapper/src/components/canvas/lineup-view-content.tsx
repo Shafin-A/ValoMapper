@@ -55,6 +55,7 @@ export const LineupViewContent = ({
                         variant="secondary"
                         size="icon"
                         className="absolute top-2 left-2 h-6 w-6"
+                        aria-label={`View lineup image ${index + 1} fullscreen`}
                         onClick={() => onOpenFullscreen(index)}
                       >
                         <Expand className="h-4 w-4" />
@@ -119,6 +120,7 @@ export const LineupViewContent = ({
           <input
             type="color"
             value={lineColor}
+            aria-label="Line color"
             className="h-6 w-6 rounded"
             disabled
           />

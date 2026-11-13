@@ -39,7 +39,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       <div className="flex p-1">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button onClick={onReset} variant="ghost">
+            <Button
+              onClick={onReset}
+              variant="ghost"
+              size="icon"
+              aria-label="Reset settings"
+            >
               <RefreshCw className="h-4 w-4" />
             </Button>
           </TooltipTrigger>

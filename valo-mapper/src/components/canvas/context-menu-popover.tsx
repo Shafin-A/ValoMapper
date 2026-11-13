@@ -449,7 +449,12 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
             enabled={allowTooltips}
             content={`Duplicate ${selectionLabel}`}
           >
-            <Button variant="ghost" size="sm" onClick={onDuplicate}>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={`Duplicate ${selectionLabel}`}
+              onClick={onDuplicate}
+            >
               <Copy />
             </Button>
           </ConditionalTooltip>
@@ -475,7 +480,20 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
                         : "Make Ally"
                   }
                 >
-                  <Button variant="ghost" size="sm" onClick={onToggleAlly}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={
+                      isMultiSelection
+                        ? snapshotIsAlly.current
+                          ? "Make all enemy"
+                          : "Make all ally"
+                        : snapshotIsAlly.current
+                          ? "Make enemy"
+                          : "Make ally"
+                    }
+                    onClick={onToggleAlly}
+                  >
                     {snapshotIsAlly.current ? <HeartCrack /> : <Heart />}
                   </Button>
                 </ConditionalTooltip>
@@ -502,6 +520,15 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
                       <Button
                         variant="ghost"
                         size="sm"
+                        aria-label={
+                          isMultiSelection
+                            ? snapshotIsGray.current
+                              ? "Revive all agents"
+                              : "Kill all agents"
+                            : snapshotIsGray.current
+                              ? "Revive agent"
+                              : "Kill agent"
+                        }
                         onClick={() => onToggleAgentDeadRef.current?.()}
                       >
                         {snapshotIsGray.current ? <Cross /> : <Skull />}
@@ -526,6 +553,9 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={
+                    isMultiSelection ? "Swap all abilities" : "Swap ability"
+                  }
                   onClick={() => onSwapAbilityRef.current?.()}
                 >
                   <RefreshCw />
@@ -556,6 +586,15 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={
+                    isMultiSelection
+                      ? snapshotAbilityIconOnly.current
+                        ? "Show all ability shapes"
+                        : "Hide all ability shapes"
+                      : snapshotAbilityIconOnly.current
+                        ? "Show ability shapes"
+                        : "Hide ability shapes"
+                  }
                   onClick={() => onToggleAbilityIconOnlyRef.current?.()}
                 >
                   <span className="relative inline-flex items-center justify-center w-4 h-4 overflow-visible">
@@ -591,6 +630,15 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={
+                    isMultiSelection
+                      ? snapshotAbilityShowOuterCircle.current
+                        ? "Hide all ability ranges"
+                        : "Show all ability ranges"
+                      : snapshotAbilityShowOuterCircle.current
+                        ? "Hide ability range"
+                        : "Show ability range"
+                  }
                   onClick={() => onToggleAbilityOuterCircleRef.current?.()}
                 >
                   <span className="relative inline-flex items-center justify-center size-4 overflow-visible">
@@ -620,6 +668,11 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={
+                    isMultiSelection
+                      ? "Remove all vision cones"
+                      : "Remove vision cone"
+                  }
                   onClick={() => onRemoveAttachedVisionConeRef.current?.()}
                 >
                   <span className="relative inline-flex items-center justify-center size-4 overflow-visible">
@@ -647,6 +700,11 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={
+                    isMultiSelection
+                      ? "Detach all vision cones"
+                      : "Detach vision cone"
+                  }
                   onClick={() => onDetachVisionConeRef.current?.()}
                 >
                   <Minus />
@@ -664,7 +722,12 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
             enabled={allowTooltips}
             content={`Delete ${selectionLabel}`}
           >
-            <Button variant="destructiveGhost" size="sm" onClick={onDelete}>
+            <Button
+              variant="destructiveGhost"
+              size="sm"
+              aria-label={`Delete ${selectionLabel}`}
+              onClick={onDelete}
+            >
               <Trash2 />
             </Button>
           </ConditionalTooltip>
