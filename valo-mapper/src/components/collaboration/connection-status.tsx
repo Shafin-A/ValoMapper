@@ -1,6 +1,9 @@
 "use client";
 
-import { useWebSocket } from "@/contexts/websocket-context";
+import {
+  useWebSocketStatus,
+  useWebSocketUsers,
+} from "@/contexts/websocket-presence-context";
 import { UserPresence, WSConnectionStatus } from "@/lib/websocket-types";
 import { cn } from "@/lib/cn";
 import {
@@ -38,7 +41,8 @@ const STATUS_CONFIG: Record<
 };
 
 export const ConnectionStatus = () => {
-  const { status, users } = useWebSocket();
+  const status = useWebSocketStatus();
+  const users = useWebSocketUsers();
   const config = STATUS_CONFIG[status];
   const Icon = config.icon;
 
@@ -95,7 +99,7 @@ const UserBadge = ({ user }: { user: UserPresence }) => {
 };
 
 export const UserAvatars = () => {
-  const { users } = useWebSocket();
+  const users = useWebSocketUsers();
 
   if (users.length === 0) {
     return null;

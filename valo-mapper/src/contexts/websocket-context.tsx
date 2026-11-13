@@ -32,6 +32,7 @@ import {
   useCanvasView,
 } from "./canvas-context";
 import { RemoteCursorsProvider } from "./cursor-context";
+import { WebSocketPresenceProvider } from "./websocket-presence-context";
 
 interface WebSocketContextType
   extends ReturnType<typeof createCanvasBroadcasters> {
@@ -197,11 +198,15 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     [status, users, sendCursorPosition, broadcasters, broadcastStateSync],
   );
 
+  const presenceValue = useMemo(() => ({ status, users }), [status, users]);
+
   return (
     <WebSocketContext.Provider value={value}>
-      <RemoteCursorsProvider cursors={cursors}>
-        {children}
-      </RemoteCursorsProvider>
+      <WebSocketPresenceProvider value={presenceValue}>
+        <RemoteCursorsProvider cursors={cursors}>
+          {children}
+        </RemoteCursorsProvider>
+      </WebSocketPresenceProvider>
     </WebSocketContext.Provider>
   );
 };
@@ -212,9 +217,4 @@ export const useWebSocket = () => {
     throw new Error("useWebSocket must be used within a WebSocketProvider");
   }
   return context;
-};
-
-export const useWebSocketUsers = (): UserPresence[] => {
-  const context = useContext(WebSocketContext);
-  return context?.users ?? [];
 };

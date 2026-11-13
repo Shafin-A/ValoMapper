@@ -10,7 +10,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
-import { ConnectionStatus, UserAvatars } from "@/components/collaboration";
+import {
+  ConnectionStatus,
+  UserAvatars,
+} from "@/components/collaboration/connection-status";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +34,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { useWebSocketUsers } from "@/contexts/websocket-context";
+import { useWebSocketUsers } from "@/contexts/websocket-presence-context";
 import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

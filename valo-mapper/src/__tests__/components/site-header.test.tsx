@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useUser } from "@/hooks/api/use-user";
 import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
-import { useWebSocketUsers } from "@/contexts/websocket-context";
+import { useWebSocketUsers } from "@/contexts/websocket-presence-context";
 import { usePathname } from "next/navigation";
 import { User } from "@/lib/types";
 
@@ -14,7 +14,7 @@ jest.mock("@/hooks/api/use-user");
 jest.mock("@/hooks/api/use-pending-stack-invite", () => ({
   usePendingStackInvites: jest.fn(),
 }));
-jest.mock("@/contexts/websocket-context", () => ({
+jest.mock("@/contexts/websocket-presence-context", () => ({
   useWebSocketUsers: jest.fn(),
 }));
 
