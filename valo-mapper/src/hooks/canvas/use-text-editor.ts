@@ -1,5 +1,5 @@
 import {
-  useCanvasEntities,
+  useCanvasTexts,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
@@ -37,7 +37,7 @@ const heightForText = (
 };
 
 export const useTextEditing = () => {
-  const { textsOnCanvas, setTextsOnCanvas } = useCanvasEntities();
+  const { textsOnCanvas, setTextsOnCanvas } = useCanvasTexts();
   const { setEditingTextId } = useCanvasUi();
   const { notifyTextUpdated } = useCollaborativeCanvas();
 
@@ -71,7 +71,7 @@ export const useTextEditing = () => {
 export const useTextEditor = (
   transformerRefs: RefObject<Map<string, Konva.Transformer>>,
 ) => {
-  const { textsOnCanvas, setTextsOnCanvas } = useCanvasEntities();
+  const { textsOnCanvas, setTextsOnCanvas } = useCanvasTexts();
   const { isDrawMode, setEditingTextId } = useCanvasUi();
   const { notifyTextUpdated } = useCollaborativeCanvas();
   const { handleTextChange, handleTextEditComplete } = useTextEditing();

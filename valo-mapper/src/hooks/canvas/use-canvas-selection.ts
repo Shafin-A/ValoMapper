@@ -1,4 +1,7 @@
-import { useCanvasActions, useCanvasUi } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasSelectionState,
+} from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
   type CanvasItemCollections,
@@ -40,7 +43,7 @@ export const useCanvasSelection = ({
   enabled,
   onRightClick,
 }: UseCanvasSelectionOptions) => {
-  const { setSelectedCanvasItems } = useCanvasUi();
+  const { setSelectedCanvasItems } = useCanvasSelectionState();
   const { getRegisteredNode, getLatestEntities } = useCanvasActions();
   const { agentsSettings, abilitiesSettings } = useSettings();
 

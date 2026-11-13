@@ -1,5 +1,5 @@
 import {
-  useCanvasEntities,
+  useCanvasImages,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
@@ -9,7 +9,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useImageTransform = () => {
-  const { imagesOnCanvas, setImagesOnCanvas } = useCanvasEntities();
+  const { imagesOnCanvas, setImagesOnCanvas } = useCanvasImages();
   const { editingTextId } = useCanvasUi();
   const { notifyImageMoved } = useCollaborativeCanvas();
 

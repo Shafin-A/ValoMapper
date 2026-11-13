@@ -94,8 +94,6 @@ interface CanvasUiContextType {
   setSelectedCanvasIcon: Dispatch<
     SetStateAction<Agent | AbilityIconItem | ToolIconCanvas | null>
   >;
-  selectedCanvasItems: CanvasSelectionItem[];
-  setSelectedCanvasItems: Dispatch<SetStateAction<CanvasSelectionItem[]>>;
   isSidebarDragActive: boolean;
   setIsSidebarDragActive: Dispatch<SetStateAction<boolean>>;
   isAlly: boolean;
@@ -109,6 +107,11 @@ interface CanvasUiContextType {
   setIsDeleteSettingsOpen: Dispatch<SetStateAction<boolean>>;
   editingTextId: string | null;
   setEditingTextId: Dispatch<SetStateAction<string | null>>;
+}
+
+interface CanvasSelectionContextType {
+  selectedCanvasItems: CanvasSelectionItem[];
+  setSelectedCanvasItems: Dispatch<SetStateAction<CanvasSelectionItem[]>>;
 }
 
 interface CanvasScaleContextType {
@@ -179,6 +182,7 @@ export interface CanvasContextType
   extends CanvasEntitiesContextValue,
     CanvasViewContextType,
     CanvasUiContextType,
+    CanvasSelectionContextType,
     CanvasPhaseContextType,
     CanvasHistoryContextType,
     CanvasActionsContextType {}
@@ -192,6 +196,9 @@ const CanvasViewContext = createContext<CanvasViewContextType | undefined>(
 const CanvasUiContext = createContext<CanvasUiContextType | undefined>(
   undefined,
 );
+const CanvasSelectionContext = createContext<
+  CanvasSelectionContextType | undefined
+>(undefined);
 const CanvasScaleContext = createContext<CanvasScaleContextType | undefined>(
   undefined,
 );
@@ -433,8 +440,6 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
     () => ({
       selectedCanvasIcon: canvasState.selectedCanvasIcon,
       setSelectedCanvasIcon: canvasState.setSelectedCanvasIcon,
-      selectedCanvasItems: canvasState.selectedCanvasItems,
-      setSelectedCanvasItems: canvasState.setSelectedCanvasItems,
       isSidebarDragActive: canvasState.isSidebarDragActive,
       setIsSidebarDragActive: canvasState.setIsSidebarDragActive,
       isAlly: canvasState.isAlly,
@@ -452,8 +457,6 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
     [
       canvasState.selectedCanvasIcon,
       canvasState.setSelectedCanvasIcon,
-      canvasState.selectedCanvasItems,
-      canvasState.setSelectedCanvasItems,
       canvasState.isSidebarDragActive,
       canvasState.setIsSidebarDragActive,
       canvasState.isAlly,
@@ -468,6 +471,14 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       canvasState.editingTextId,
       canvasState.setEditingTextId,
     ],
+  );
+
+  const selectionValue = useMemo<CanvasSelectionContextType>(
+    () => ({
+      selectedCanvasItems: canvasState.selectedCanvasItems,
+      setSelectedCanvasItems: canvasState.setSelectedCanvasItems,
+    }),
+    [canvasState.selectedCanvasItems, canvasState.setSelectedCanvasItems],
   );
 
   const scaleValue = useMemo<CanvasScaleContextType>(
@@ -571,23 +582,25 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
         <CanvasViewContext.Provider value={viewValue}>
           <CanvasPhaseContext.Provider value={phaseValue}>
             <CanvasUiContext.Provider value={uiValue}>
-              <CanvasScaleContext.Provider value={scaleValue}>
-                <CanvasEntityActionsContext.Provider value={entityActionsValue}>
-                  <CanvasEntityProviders
-                    agents={agentsValue}
-                    abilities={abilitiesValue}
-                    drawLines={drawLinesValue}
-                    connectingLines={connectingLinesValue}
-                    texts={textsValue}
-                    images={imagesValue}
-                    toolIcons={toolIconsValue}
-                  >
-                    <HoveredElementProvider>
-                      <DrawingPreviewProvider>{children}</DrawingPreviewProvider>
-                    </HoveredElementProvider>
-                  </CanvasEntityProviders>
-                </CanvasEntityActionsContext.Provider>
-              </CanvasScaleContext.Provider>
+              <CanvasSelectionContext.Provider value={selectionValue}>
+                <CanvasScaleContext.Provider value={scaleValue}>
+                  <CanvasEntityActionsContext.Provider value={entityActionsValue}>
+                    <CanvasEntityProviders
+                      agents={agentsValue}
+                      abilities={abilitiesValue}
+                      drawLines={drawLinesValue}
+                      connectingLines={connectingLinesValue}
+                      texts={textsValue}
+                      images={imagesValue}
+                      toolIcons={toolIconsValue}
+                    >
+                      <HoveredElementProvider>
+                        <DrawingPreviewProvider>{children}</DrawingPreviewProvider>
+                      </HoveredElementProvider>
+                    </CanvasEntityProviders>
+                  </CanvasEntityActionsContext.Provider>
+                </CanvasScaleContext.Provider>
+              </CanvasSelectionContext.Provider>
             </CanvasUiContext.Provider>
           </CanvasPhaseContext.Provider>
         </CanvasViewContext.Provider>
@@ -616,6 +629,9 @@ export const useCanvasView = () =>
 export const useCanvasUi = () =>
   useRequiredContext(CanvasUiContext, "useCanvasUi");
 
+export const useCanvasSelectionState = () =>
+  useRequiredContext(CanvasSelectionContext, "useCanvasSelectionState");
+
 export const useCanvasScale = () =>
   useRequiredContext(CanvasScaleContext, "useCanvasScale");
 
@@ -643,6 +659,7 @@ export const useCanvas = (): CanvasContextType => {
   const entities = useCanvasEntities();
   const view = useCanvasView();
   const ui = useCanvasUi();
+  const selection = useCanvasSelectionState();
   const phase = useCanvasPhase();
   const history = useCanvasHistory();
   const actions = useCanvasActions();
@@ -652,10 +669,11 @@ export const useCanvas = (): CanvasContextType => {
       ...entities,
       ...view,
       ...ui,
+      ...selection,
       ...phase,
       ...history,
       ...actions,
     }),
-    [entities, view, ui, phase, history, actions],
+    [entities, view, ui, selection, phase, history, actions],
   );
 };

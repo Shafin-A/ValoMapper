@@ -4,9 +4,9 @@ import {
   useCanvasAgents,
   useCanvasImages,
   useCanvasScale,
+  useCanvasSelectionState,
   useCanvasTexts,
   useCanvasToolIcons,
-  useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
@@ -38,7 +38,7 @@ export const CanvasSelectionOverlay = memo(function CanvasSelectionOverlay({
   const { textsOnCanvas } = useCanvasTexts();
   const { imagesOnCanvas } = useCanvasImages();
   const { toolIconsOnCanvas } = useCanvasToolIcons();
-  const { selectedCanvasItems } = useCanvasUi();
+  const { selectedCanvasItems } = useCanvasSelectionState();
   const { currentStageScale } = useCanvasScale();
   const { getRegisteredNode } = useCanvasActions();
   const { agentsSettings, abilitiesSettings } = useSettings();

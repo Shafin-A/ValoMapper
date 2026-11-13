@@ -6,6 +6,7 @@ import {
   useCanvas,
   useCanvasActions,
   useCanvasEntityActions,
+  useCanvasSelectionState,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
@@ -31,6 +32,7 @@ jest.mock("@/contexts/canvas-context", () => ({
   useCanvas: jest.fn(),
   useCanvasActions: jest.fn(),
   useCanvasEntityActions: jest.fn(),
+  useCanvasSelectionState: jest.fn(),
   useCanvasUi: jest.fn(),
 }));
 
@@ -63,6 +65,10 @@ const mockUseCanvasActions = useCanvasActions as jest.MockedFunction<
 const mockUseCanvasEntityActions =
   useCanvasEntityActions as jest.MockedFunction<typeof useCanvasEntityActions>;
 const mockUseCanvasUi = useCanvasUi as jest.MockedFunction<typeof useCanvasUi>;
+const mockUseCanvasSelectionState =
+  useCanvasSelectionState as jest.MockedFunction<
+    typeof useCanvasSelectionState
+  >;
 const mockUseSettings = useSettings as jest.MockedFunction<typeof useSettings>;
 const mockUseCanvasZoom = useCanvasZoom as jest.MockedFunction<
   typeof useCanvasZoom
@@ -193,6 +199,7 @@ describe("useCanvasEvents", () => {
 
     mockUseCanvas.mockReturnValue(createCanvasContext());
     mockUseCanvasUi.mockImplementation(() => mockUseCanvas());
+    mockUseCanvasSelectionState.mockImplementation(() => mockUseCanvas());
     mockUseCanvasEntityActions.mockImplementation(() => mockUseCanvas());
     mockUseCanvasActions.mockImplementation(() => ({
       setCurrentStageScale: jest.fn(),

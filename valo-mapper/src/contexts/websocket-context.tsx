@@ -46,6 +46,10 @@ const WebSocketContext = createContext<WebSocketContextType | undefined>(
   undefined,
 );
 
+const WebSocketCursorContext = createContext<
+  ((x: number, y: number) => void) | undefined
+>(undefined);
+
 export const WebSocketProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
@@ -202,11 +206,13 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
 
   return (
     <WebSocketContext.Provider value={value}>
-      <WebSocketPresenceProvider value={presenceValue}>
-        <RemoteCursorsProvider cursors={cursors}>
-          {children}
-        </RemoteCursorsProvider>
-      </WebSocketPresenceProvider>
+      <WebSocketCursorContext.Provider value={sendCursorPosition}>
+        <WebSocketPresenceProvider value={presenceValue}>
+          <RemoteCursorsProvider cursors={cursors}>
+            {children}
+          </RemoteCursorsProvider>
+        </WebSocketPresenceProvider>
+      </WebSocketCursorContext.Provider>
     </WebSocketContext.Provider>
   );
 };
@@ -215,6 +221,16 @@ export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
   if (context === undefined) {
     throw new Error("useWebSocket must be used within a WebSocketProvider");
+  }
+  return context;
+};
+
+export const useSendCursorPosition = () => {
+  const context = useContext(WebSocketCursorContext);
+  if (context === undefined) {
+    throw new Error(
+      "useSendCursorPosition must be used within a WebSocketProvider",
+    );
   }
   return context;
 };

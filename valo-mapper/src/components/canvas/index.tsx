@@ -3,7 +3,7 @@ import "@/lib/konva-config";
 import { RemoteCursors } from "@/components/collaboration";
 import { useCanvasEntities, useCanvasUi, useCanvasView } from "@/contexts/canvas-context";
 import { useCommitCount } from "@/lib/perf-beacon";
-import { useWebSocket } from "@/contexts/websocket-context";
+import { useSendCursorPosition } from "@/contexts/websocket-context";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
 import { Vector2d } from "konva/lib/types";
@@ -150,7 +150,7 @@ export const MapStage = memo(
     const { isDrawMode } = useCanvasUi();
     const { canvasBackground } = useCanvasView();
 
-    const { sendCursorPosition, status: wsStatus } = useWebSocket();
+    const sendCursorPosition = useSendCursorPosition();
 
     const stageRef = useRef<KonvaStage | null>(null);
     const [fullscreenImageSrc, setFullscreenImageSrc] = useState<string | null>(
@@ -202,7 +202,7 @@ export const MapStage = memo(
     const handleMouseMoveWithCursor = useCallback(() => {
       handleStageMouseMove();
 
-      if (wsStatus === "connected" && stageRef.current) {
+      if (stageRef.current) {
         const pointer = stageRef.current.getPointerPosition();
         if (pointer) {
           const stagePos = stageRef.current.position();
@@ -212,7 +212,7 @@ export const MapStage = memo(
           sendCursorPosition(x, y);
         }
       }
-    }, [handleStageMouseMove, wsStatus, sendCursorPosition]);
+    }, [handleStageMouseMove, sendCursorPosition]);
 
     useEffect(() => {
       if (forwardedRef) {

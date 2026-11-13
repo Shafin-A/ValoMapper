@@ -1,14 +1,14 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useImageTransform } from "@/hooks/canvas/use-image-transform";
 import {
-  useCanvasEntities,
+  useCanvasImages,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import type { ImageCanvas } from "@/lib/types";
 
 jest.mock("@/contexts/canvas-context", () => ({
-  useCanvasEntities: jest.fn(),
+  useCanvasImages: jest.fn(),
   useCanvasUi: jest.fn(),
 }));
 
@@ -36,7 +36,7 @@ describe("useImageTransform", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useCanvasEntities as jest.Mock).mockReturnValue({
+    (useCanvasImages as jest.Mock).mockReturnValue({
       imagesOnCanvas: [imageCanvas],
       setImagesOnCanvas,
     });

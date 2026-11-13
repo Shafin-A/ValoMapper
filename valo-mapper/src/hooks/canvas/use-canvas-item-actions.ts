@@ -1,7 +1,7 @@
 import {
   useCanvasActions,
   useCanvasEntityActions,
-  useCanvasUi,
+  useCanvasSelectionState,
 } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
@@ -42,7 +42,7 @@ export const useCanvasItemActions = () => {
     setToolIconsOnCanvas,
     setConnectingLines,
   } = useCanvasEntityActions();
-  const { setSelectedCanvasItems } = useCanvasUi();
+  const { setSelectedCanvasItems } = useCanvasSelectionState();
   const { agentsSettings, abilitiesSettings } = useSettings();
   const {
     notifyAgentMoved,

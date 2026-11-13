@@ -1,6 +1,7 @@
 import {
   useCanvasActions,
   useCanvasEntityActions,
+  useCanvasSelectionState,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useSetCurrentStroke } from "@/contexts/drawing-preview-context";
@@ -60,8 +61,6 @@ export const useCanvasEvents = (
   const {
     selectedCanvasIcon,
     setSelectedCanvasIcon,
-    selectedCanvasItems,
-    setSelectedCanvasItems,
     isSidebarDragActive,
     setIsSidebarDragActive,
     isDrawMode,
@@ -69,6 +68,8 @@ export const useCanvasEvents = (
     isDrawing,
     tool,
   } = useCanvasUi();
+  const { selectedCanvasItems, setSelectedCanvasItems } =
+    useCanvasSelectionState();
   const {
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,

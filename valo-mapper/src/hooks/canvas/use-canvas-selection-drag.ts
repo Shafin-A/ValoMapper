@@ -1,4 +1,7 @@
-import { useCanvasActions, useCanvasUi } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasSelectionState,
+} from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
 import { useCanvasItemActions, type CanvasItemMove } from "@/hooks/canvas/use-canvas-item-actions";
 import {
@@ -36,7 +39,7 @@ export const useCanvasSelectionDrag = ({
   outlineGroupRef,
   deleteGroupRef,
 }: UseCanvasSelectionDragOptions = {}): SelectionDragController => {
-  const { selectedCanvasItems } = useCanvasUi();
+  const { selectedCanvasItems } = useCanvasSelectionState();
   const { getRegisteredNode, getLatestEntities } = useCanvasActions();
   const { agentsSettings } = useSettings();
   const { deleteItems, moveItems } = useCanvasItemActions();
