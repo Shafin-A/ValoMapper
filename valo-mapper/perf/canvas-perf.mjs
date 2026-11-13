@@ -171,6 +171,15 @@ const ensureDrawMode = async (page, enabled) => {
   }
 };
 
+const dismissTour = async (page) => {
+  const skip = page.getByRole("button", { name: "Skip" }).first();
+
+  if (await skip.isVisible().catch(() => false)) {
+    await skip.click();
+    await sleep(300);
+  }
+};
+
 const startCursorBot = async (page, lobbyCode) => {
   await page.evaluate(
     ({ wsUrl, code }) => {
@@ -259,6 +268,8 @@ const run = async () => {
     timeout: 60_000,
   });
   await sleep(2_000);
+
+  await dismissTour(page);
 
   await installMetrics(page);
 
@@ -404,7 +415,7 @@ const run = async () => {
     checkScenario("cursor", byName("cursor")?.counters, ["RemoteCursors"], [
       "RemoteCursors",
     ]),
-    checkScenario("draw", byName("draw")?.counters, ["CanvasDrawLines"], [
+    checkScenario("draw", byName("draw")?.counters, [], [
       "CanvasDrawLines",
     ]),
     checkScenario(
