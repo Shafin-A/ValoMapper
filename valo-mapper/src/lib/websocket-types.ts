@@ -98,11 +98,6 @@ export type ImageMoveMessageData = {
   image: ImagePositionData;
 };
 
-export type LobbyUpdatedData = {
-  reason: string;
-  username: string;
-};
-
 export type ToolIconMessageData = {
   toolIcon: ToolIconCanvas;
 };

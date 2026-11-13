@@ -3,8 +3,6 @@ import type { AbilityAction } from "./ability";
 import type { AgentRole } from "./agent";
 import type { MapOption, MapSide } from "./map";
 
-export type SyncStatus = "idle" | "unsynced" | "syncing" | "synced" | "error";
-
 export type BaseCanvasItem = {
   id: string;
   x: number;
