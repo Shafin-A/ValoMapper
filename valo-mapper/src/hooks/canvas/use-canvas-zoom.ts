@@ -29,6 +29,7 @@ export const useCanvasZoom = (
   const pinchInitialScaleRef = useRef<number | null>(null);
   const pinchCenterRef = useRef<Vector2d | null>(null);
   const deleteGroupRef = useRef<Konva.Group | null>(null);
+  const containerWidthRef = useRef<number | null>(null);
 
   const handleDragMove = useCallback(() => {
     const deleteGroup = deleteGroupRef.current;
@@ -37,9 +38,13 @@ export const useCanvasZoom = (
     const stage = stageRef.current;
     if (!stage) return;
 
-    const container = stage.container();
-    const host = container.parentElement as HTMLElement | null;
-    const containerWidth = host?.offsetWidth ?? container.offsetWidth;
+    let containerWidth = containerWidthRef.current;
+    if (containerWidth === null) {
+      const container = stage.container();
+      const host = container.parentElement as HTMLElement | null;
+      containerWidth = host?.offsetWidth ?? container.offsetWidth;
+      containerWidthRef.current = containerWidth;
+    }
 
     const SMALL_SCREEN_BREAKPOINT = 768;
     const isSmallScreen =
@@ -303,20 +308,50 @@ export const useCanvasZoom = (
   );
 
   useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const container = stage.container();
+    const host = container.parentElement as HTMLElement | null;
+
+    const updateContainerWidth = () => {
+      const width = host?.offsetWidth ?? container.offsetWidth;
+      if (width > 0) {
+        containerWidthRef.current = width;
+      }
+    };
+
     const updateDeleteZonePosition = () => {
+      updateContainerWidth();
       handleDragMove();
     };
 
+    updateDeleteZonePosition();
     const rafId = window.requestAnimationFrame(updateDeleteZonePosition);
+
+    let resizeObserver: ResizeObserver | null = null;
+    const resizeTarget =
+      host instanceof Element
+        ? host
+        : container instanceof Element
+          ? container
+          : null;
+
+    if (typeof ResizeObserver !== "undefined" && resizeTarget) {
+      resizeObserver = new ResizeObserver(updateDeleteZonePosition);
+      resizeObserver.observe(resizeTarget);
+    }
+
     window.addEventListener("resize", updateDeleteZonePosition);
     window.addEventListener("orientationchange", updateDeleteZonePosition);
 
     return () => {
       window.cancelAnimationFrame(rafId);
+      resizeObserver?.disconnect();
       window.removeEventListener("resize", updateDeleteZonePosition);
       window.removeEventListener("orientationchange", updateDeleteZonePosition);
     };
-  }, [handleDragMove]);
+  }, [handleDragMove, stageRef]);
 
   return {
     deleteGroupRef,

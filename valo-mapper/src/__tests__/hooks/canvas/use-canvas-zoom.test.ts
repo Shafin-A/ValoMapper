@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { useCanvasZoom } from "@/hooks/canvas/use-canvas-zoom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { KonvaEventObject } from "konva/lib/Node";
@@ -161,6 +161,33 @@ describe("useCanvasZoom", () => {
       y: 24,
     });
     expect(deleteGroup.scale).toHaveBeenCalledWith({ x: 1, y: 1 });
+  });
+
+  it("refreshes the cached container width on resize", () => {
+    const stage = createStageMock(1, { x: 0, y: 0 });
+    const stageRef: RefObject<Stage | null> = {
+      current: stage as unknown as Stage,
+    };
+
+    const { result } = renderHook(() => useCanvasZoom(stageRef, 1, false));
+
+    const deleteGroup = {
+      position: jest.fn(),
+      scale: jest.fn(),
+    } as Partial<Konva.Group>;
+    result.current.deleteGroupRef.current = deleteGroup as Konva.Group;
+
+    result.current.handleDragMove();
+    expect(deleteGroup.position).toHaveBeenLastCalledWith({ x: 560, y: 20 });
+
+    stage.container().parentElement!.offsetWidth = 390;
+
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    result.current.handleDragMove();
+    expect(deleteGroup.position).toHaveBeenLastCalledWith({ x: 282, y: 24 });
   });
 
   it("zooms with the wheel, clamps scale, and repositions", () => {
