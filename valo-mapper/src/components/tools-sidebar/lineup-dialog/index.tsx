@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AGENTS } from "@/lib/consts";
-import { getNextId } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
 import {
   useCanvasEntityActions,
   useCanvasUi,

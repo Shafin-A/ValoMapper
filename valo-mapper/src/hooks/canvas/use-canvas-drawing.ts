@@ -4,7 +4,7 @@ import {
   doesEraserIntersect,
   getIntersectingLines,
 } from "@/lib/geometry";
-import { getNextId } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
 import Konva from "konva";
 import { Vector2d } from "konva/lib/types";
 import {

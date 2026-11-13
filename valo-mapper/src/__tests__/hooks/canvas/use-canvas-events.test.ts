@@ -9,7 +9,7 @@ import {
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
-import { getNextId } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
 import { useCanvasEvents } from "@/hooks/canvas/use-canvas-events";
 import { useCanvasContextMenu } from "@/hooks/canvas/use-canvas-context-menu";
 import { useCanvasDrawing } from "@/hooks/canvas/use-canvas-drawing";
@@ -49,11 +49,12 @@ jest.mock("@/hooks/canvas/use-canvas-context-menu");
 
 jest.mock("@/lib/utils", () => {
   const actual = jest.requireActual("@/lib/utils");
-  return {
-    ...actual,
-    getNextId: jest.fn(() => "agent-new"),
-  };
+  return { ...actual };
 });
+
+jest.mock("@/lib/ids", () => ({
+  getNextId: jest.fn(() => "agent-new"),
+}));
 
 const mockUseCanvas = useCanvas as jest.MockedFunction<typeof useCanvas>;
 const mockUseCanvasActions = useCanvasActions as jest.MockedFunction<

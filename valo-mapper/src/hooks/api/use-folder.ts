@@ -5,7 +5,7 @@ import { apiFetchWithAuth, authQueryOptions } from "@/lib/api";
 import { Folder, Strategy } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
-import { buildTree } from "@/lib/utils";
+import { buildTree } from "@/lib/strategy-tree";
 
 export const useFolders = () => {
   const {

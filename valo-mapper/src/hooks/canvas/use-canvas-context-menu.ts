@@ -19,7 +19,7 @@ import {
   getContextMenuCapabilities,
   resolveCanvasItemTarget,
 } from "@/lib/canvas-selection";
-import { getNextId } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
 import {
   canAttachVisionCone,
   findVisionConeAttachmentHost,

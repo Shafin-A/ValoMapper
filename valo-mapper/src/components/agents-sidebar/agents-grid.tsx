@@ -19,7 +19,7 @@ import {
 import { useSettings } from "@/contexts/settings-context";
 import { AGENTS, TEMP_DRAG_ID } from "@/lib/consts";
 import { Agent, AgentRole } from "@/lib/types";
-import { getAgentImgSrc } from "@/lib/utils";
+import { getAgentImgSrc } from "@/lib/assets";
 import { EllipsisVertical, Users } from "lucide-react";
 import Image from "next/image";
 

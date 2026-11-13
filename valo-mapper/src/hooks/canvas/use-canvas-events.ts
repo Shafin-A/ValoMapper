@@ -17,7 +17,8 @@ import {
   getToolIconAttachmentPosition,
 } from "@/lib/tool-icon";
 import { TEMP_DRAG_ID } from "@/lib/consts";
-import { getNextId, isAgent } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
+import { isAgent } from "@/lib/utils";
 import {
   clearCanvasItemTapSuppression,
   markCanvasItemTapSuppressed,

@@ -3,7 +3,7 @@ import {
   STRATEGY_CLEANUP_GRACE_PERIOD_DAYS,
 } from "@/lib/consts";
 import { StrategyData } from "@/lib/types";
-import { convertFolderOrStrategyId } from "@/lib/utils";
+import { convertFolderOrStrategyId } from "@/lib/strategy-tree";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 

@@ -6,7 +6,7 @@ import {
   IMAGE_UPLOAD_ACCEPT_ATTR,
   MAP_SIZE,
 } from "@/lib/consts";
-import { getNextId } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
 import { Vector2d } from "konva/lib/types";
 import { toast } from "sonner";
 import React, { useCallback, useRef, useState } from "react";

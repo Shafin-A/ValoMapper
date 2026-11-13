@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AGENTS, AGENT_ICON_CONFIGS } from "@/lib/consts";
 import { getAbilityVariants } from "@/lib/consts/configs/agent-icon/consts";
-import { getAgentImgSrc } from "@/lib/utils";
+import { getAgentImgSrc } from "@/lib/assets";
 import Image from "next/image";
 import { LineupImageUpload } from "./lineup-image-upload";
 

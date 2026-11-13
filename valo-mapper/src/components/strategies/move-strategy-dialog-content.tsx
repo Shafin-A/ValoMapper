@@ -14,7 +14,7 @@ import {
   buildLocationPath,
   convertFolderOrStrategyId,
   getFolderOrStrategyId,
-} from "@/lib/utils";
+} from "@/lib/strategy-tree";
 import { FolderTreePicker } from "./folder-tree-picker";
 import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
 

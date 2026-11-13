@@ -22,7 +22,7 @@ import { VIRTUAL_HEIGHT, VIRTUAL_WIDTH } from "@/lib/consts/misc/consts";
 import { getCanvasFitScale } from "@/lib/canvas-scale";
 import { preloadImages, preloadImagesWithTimeout } from "@/lib/image-preload";
 import { shouldWarmAllAssets } from "@/lib/network-policy";
-import { getAgentImgSrc } from "@/lib/utils";
+import { getAgentImgSrc } from "@/lib/assets";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";

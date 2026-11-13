@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Expand } from "lucide-react";
 import Image from "next/image";
-import { ensureAbsoluteUrl } from "@/lib/utils";
+import { ensureAbsoluteUrl } from "@/lib/url";
 
 interface LineupViewContentProps {
   images: string[];

@@ -6,7 +6,7 @@ import {
 } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { MAP_SIZE } from "@/lib/consts";
-import { getNextId } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
 import { Vector2d } from "konva/lib/types";
 import type { TextCanvas } from "@/lib/types";
 import React, { useCallback } from "react";

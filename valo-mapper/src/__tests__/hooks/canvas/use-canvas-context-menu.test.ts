@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { useCanvasContextMenu } from "@/hooks/canvas/use-canvas-context-menu";
-import { getNextId } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
 import type { Stage } from "konva/lib/Stage";
 import type { KonvaEventObject } from "konva/lib/Node";
 import type {
@@ -10,13 +10,9 @@ import type {
   ToolIconCanvas,
 } from "@/lib/types";
 
-jest.mock("@/lib/utils", () => {
-  const actual = jest.requireActual("@/lib/utils");
-  return {
-    ...actual,
-    getNextId: jest.fn(() => "new-id"),
-  };
-});
+jest.mock("@/lib/ids", () => ({
+  getNextId: jest.fn(() => "new-id"),
+}));
 
 const mockGetNextId = getNextId as jest.MockedFunction<typeof getNextId>;
 

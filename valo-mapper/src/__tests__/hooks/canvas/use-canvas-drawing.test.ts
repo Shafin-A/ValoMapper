@@ -5,15 +5,11 @@ import {
   doesEraserIntersect,
   getIntersectingLines,
 } from "@/lib/geometry";
-import { getNextId } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
 
-jest.mock("@/lib/utils", () => {
-  const actual = jest.requireActual("@/lib/utils");
-  return {
-    ...actual,
-    getNextId: jest.fn(() => "tool-id"),
-  };
-});
+jest.mock("@/lib/ids", () => ({
+  getNextId: jest.fn(() => "tool-id"),
+}));
 
 jest.mock("@/lib/geometry", () => {
   const actual = jest.requireActual("@/lib/geometry");

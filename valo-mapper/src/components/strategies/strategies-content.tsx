@@ -10,7 +10,7 @@ import { useDeleteStrategy } from "@/hooks/api/use-delete-strategy";
 import { useUpdateFolder } from "@/hooks/api/use-update-folder";
 import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
 import { StrategyData } from "@/lib/types";
-import { convertFolderOrStrategyId } from "@/lib/utils";
+import { convertFolderOrStrategyId } from "@/lib/strategy-tree";
 import { FolderOpen } from "lucide-react";
 import Link from "next/link";
 import { FolderCard } from "./folder-card";

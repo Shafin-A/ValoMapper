@@ -22,7 +22,7 @@ import {
   buildLocationPath,
   convertFolderOrStrategyId,
   getFolderOrStrategyId,
-} from "@/lib/utils";
+} from "@/lib/strategy-tree";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import Link from "next/link";
 import { FREE_STRATEGY_LIMIT } from "@/lib/consts";

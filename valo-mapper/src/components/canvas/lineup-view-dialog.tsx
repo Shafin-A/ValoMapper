@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useCanvasEntityActions } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
-import { getYoutubeEmbedUrl } from "@/lib/utils";
+import { getYoutubeEmbedUrl } from "@/lib/url";
 import { LineupViewContent } from "./lineup-view-content";
 import { LineupEditContent } from "./lineup-edit-content";
 

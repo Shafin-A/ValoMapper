@@ -19,7 +19,7 @@ import { StrategyData } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Suspense, useState } from "react";
-import { convertFolderOrStrategyId } from "@/lib/utils";
+import { convertFolderOrStrategyId } from "@/lib/strategy-tree";
 
 const countStrategies = (items: StrategyData[]): number => {
   return items.reduce((total, item) => {

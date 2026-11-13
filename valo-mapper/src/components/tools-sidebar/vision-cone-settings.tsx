@@ -12,7 +12,7 @@ import {
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { ABILITY_LOOKUP } from "@/lib/consts/configs/agent-icon/consts";
 import { MAP_SIZE, TEMP_DRAG_ID, VISION_CONE_ITEMS } from "@/lib/consts";
-import { getNextId } from "@/lib/utils";
+import { getNextId } from "@/lib/ids";
 
 export const VisionConeSettings = ({
   mapPosition,

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Loader2 } from "lucide-react";
 import { StrategyData } from "@/lib/types";
-import { buildLocationPath } from "@/lib/utils";
+import { buildLocationPath } from "@/lib/strategy-tree";
 import { TreeView } from "./tree-view";
 
 const renderBreadcrumbs = (parts: Array<{ id: string; name: string }>) => {

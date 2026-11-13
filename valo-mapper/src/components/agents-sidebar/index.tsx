@@ -49,7 +49,8 @@ import {
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
-import { getAgentImgSrc, isAgent } from "@/lib/utils";
+import { getAgentImgSrc } from "@/lib/assets";
+import { isAgent } from "@/lib/utils";
 import { Loader2, AlertCircle, X } from "lucide-react";
 import { Layer, Stage } from "react-konva";
 import { AbilityIcon, CanvasIcon } from "@/components/canvas-icons";

@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { capitalize } from "@/lib/utils";
+import { capitalize } from "@/lib/format";
 import { useEffect, useRef, useState } from "react";
 
 interface RenameDialogProps {
