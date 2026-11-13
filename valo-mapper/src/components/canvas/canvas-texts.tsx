@@ -2,11 +2,15 @@ import {
   useCanvasTexts,
   useCanvasUi,
 } from "@/contexts/canvas-context";
-import { useSetHoveredElementId } from "@/contexts/hover-context";
+import {
+  useHoveredElementId,
+  useSetHoveredElementId,
+} from "@/contexts/hover-context";
 import { useCommitCount } from "@/lib/perf-beacon";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import type { SelectionDragController } from "@/hooks/canvas/use-canvas-selection-drag";
 import { useTextEditor } from "@/hooks/canvas";
+import { useHasCoarsePointer } from "@/hooks/use-has-coarse-pointer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Group, Rect, Transformer } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
@@ -17,6 +21,7 @@ import { RefObject, memo, useCallback, useState } from "react";
 import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
 import {
   TEXT_MIN_HEIGHT,
+  TEXT_MIN_WIDTH,
   TEXT_PLACEHOLDER_COLOR,
   layoutRichText,
   resolveTextFontSize,
@@ -45,12 +50,14 @@ export const CanvasTexts = memo(function CanvasTexts({
   const { isDrawMode, editingTextId, selectedCanvasIcon } = useCanvasUi();
 
   const setHoveredElementId = useSetHoveredElementId();
+  const hoveredElementId = useHoveredElementId();
 
   const { notifyTextUpdated, notifyTextRemoved } = useCollaborativeCanvas();
 
   const [liveWidths, setLiveWidths] = useState<Record<string, number>>({});
 
   const isMobile = useIsMobile();
+  const hasCoarsePointer = useHasCoarsePointer();
   const {
     textRefs,
     attachTransformerToText,
@@ -180,7 +187,8 @@ export const CanvasTexts = memo(function CanvasTexts({
               onClose={handleTextEditComplete}
             />
           )
-        ) : !selectionDrag.isMultiSelected(textItem.id) ? (
+        ) : !selectionDrag.isMultiSelected(textItem.id) &&
+          (hasCoarsePointer || hoveredElementId === textItem.id) ? (
           <Transformer
             ref={(node) => {
               if (node) {
@@ -225,9 +233,14 @@ export const CanvasTexts = memo(function CanvasTexts({
                 return oldBox;
               }
 
+              const absoluteScale =
+                textNode?.getAbsoluteScale().x ??
+                stageRef.current?.scaleX() ??
+                1;
+
               return {
                 ...newBox,
-                width: Math.max(100, newBox.width),
+                width: Math.max(TEXT_MIN_WIDTH * absoluteScale, newBox.width),
               };
             }}
           />

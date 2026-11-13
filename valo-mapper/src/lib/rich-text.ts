@@ -7,6 +7,7 @@ export const TEXT_FONT_FAMILY = "Arial";
 export const TEXT_LINE_HEIGHT = 1;
 export const TEXT_PADDING = 10;
 export const TEXT_MIN_HEIGHT = 60;
+export const TEXT_MIN_WIDTH = 100;
 export const TEXT_FONT_SIZE_OPTIONS = [12, 14, 16, 18, 20, 24, 28, 32, 40];
 
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{3}$|^#[0-9a-f]{6}$/;
