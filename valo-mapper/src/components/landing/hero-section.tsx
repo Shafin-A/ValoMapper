@@ -19,7 +19,11 @@ export const HeroSection = ({
   };
 
   return (
-    <main className="container mx-auto px-8 py-32 flex flex-col items-center text-center justify-center min-h-screen">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="container mx-auto px-8 py-32 flex flex-col items-center text-center justify-center min-h-screen"
+    >
       <div className="relative mx-auto max-w-[90vw]">
         <div className="absolute -left-8 md:-left-16 top-0 text-4xl md:text-6xl text-primary/30 font-mono">
           [

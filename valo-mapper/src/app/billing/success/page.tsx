@@ -34,7 +34,11 @@ const BillingSuccessPage = async ({
   const returnLabel = getBillingSuccessReturnLabel(returnToPath);
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="flex min-h-svh w-full items-center justify-center p-6 md:p-10"
+    >
       <div className="w-full max-w-md rounded-xl border bg-card p-8 text-center text-card-foreground shadow-sm space-y-6">
         <div className="flex justify-center">
           <CheckCircle2 className="h-16 w-16 text-primary" />
@@ -58,7 +62,7 @@ const BillingSuccessPage = async ({
           <Link href={returnToPath}>{returnLabel}</Link>
         </Button>
       </div>
-    </div>
+    </main>
   );
 };
 

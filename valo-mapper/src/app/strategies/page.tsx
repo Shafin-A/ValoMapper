@@ -115,7 +115,12 @@ const MyStrategiesPage = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="min-h-screen flex items-center justify-center"
+      >
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
           <p className="text-muted-foreground font-medium">Loading...</p>
@@ -126,7 +131,12 @@ const MyStrategiesPage = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="min-h-screen flex items-center justify-center px-4"
+      >
         <div className="max-w-md space-y-4">
           <BackToHomeButton />
           <Alert variant="destructive">
@@ -149,7 +159,12 @@ const MyStrategiesPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="min-h-screen flex items-center justify-center"
+      >
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
           <p className="text-muted-foreground font-medium">
@@ -162,7 +177,12 @@ const MyStrategiesPage = () => {
 
   if (isError) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="min-h-screen flex items-center justify-center px-4"
+      >
         <div className="max-w-md space-y-4">
           <BackToHomeButton />
           <Alert variant="destructive">
@@ -182,7 +202,12 @@ const MyStrategiesPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-[1600px] mx-auto px-8 py-8">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="max-w-[1600px] mx-auto px-8 py-8"
+      >
         <Suspense fallback={<StrategiesSkeleton />}>
           <StrategiesHeader
             navigationPath={navigationPath}

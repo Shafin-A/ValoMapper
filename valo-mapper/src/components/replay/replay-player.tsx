@@ -315,7 +315,12 @@ export const ReplayPlayer = ({
         }}
       />
 
-      <div className="flex h-[calc(100svh-1px-var(--header-height))] overflow-hidden">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="flex h-[calc(100svh-1px-var(--header-height))] overflow-hidden"
+      >
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="min-h-0 flex-1" ref={stageContainerRef}>
             {isScaleReady ? (

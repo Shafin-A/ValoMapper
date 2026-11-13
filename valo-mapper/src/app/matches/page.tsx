@@ -45,7 +45,12 @@ const MatchesPage = () => {
 
   if (isPageLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="min-h-screen flex items-center justify-center"
+      >
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
           <p className="text-muted-foreground font-medium">Loading...</p>
@@ -56,7 +61,12 @@ const MatchesPage = () => {
 
   if (isMatchesLoading && canLoadMatches && matches.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="min-h-screen flex items-center justify-center"
+      >
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
           <p className="text-muted-foreground font-medium">
@@ -69,7 +79,12 @@ const MatchesPage = () => {
 
   if (isMatchesError && canLoadMatches && matches.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="min-h-screen flex items-center justify-center px-4"
+      >
         <div className="max-w-md space-y-4 w-full">
           <BackToHomeButton />
           <Alert variant="destructive">
@@ -88,7 +103,12 @@ const MatchesPage = () => {
 
   return (
     <div className="min-h-screen py-8 px-4">
-      <div className="mx-auto w-full max-w-[1260px] px-3 sm:px-4">
+      <div
+        id="main-content"
+        role="main"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-[1260px] px-3 sm:px-4"
+      >
         <BackToHomeButton className="mb-4" />
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white">My Matches</h1>

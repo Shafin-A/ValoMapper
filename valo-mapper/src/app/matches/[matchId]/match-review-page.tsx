@@ -559,7 +559,12 @@ const MatchReviewPage = () => {
       />
 
       <Suspense fallback={<MatchReviewLoadingSkeleton />}>
-        <div className="flex h-[calc(100svh-1px-var(--header-height))] flex-col overflow-hidden">
+        <div
+          id="main-content"
+          role="main"
+          tabIndex={-1}
+          className="flex h-[calc(100svh-1px-var(--header-height))] flex-col overflow-hidden"
+        >
           <div className="min-h-0 flex-1" ref={divRef}>
             {!isScaleReady ? (
               <MatchReviewLoadingSkeleton />

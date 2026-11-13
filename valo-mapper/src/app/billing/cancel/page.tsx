@@ -34,7 +34,11 @@ const BillingCancelPage = async ({ searchParams }: BillingCancelPageProps) => {
     secondaryHref === "/" ? "Back to Home" : "My Strategies";
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="flex min-h-svh w-full items-center justify-center p-6 md:p-10"
+    >
       <div className="w-full max-w-md rounded-xl border bg-card p-8 text-center text-card-foreground shadow-sm space-y-6">
         <div className="flex justify-center">
           <XCircle className="h-16 w-16 text-muted-foreground" />
@@ -55,7 +59,7 @@ const BillingCancelPage = async ({ searchParams }: BillingCancelPageProps) => {
           </Button>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
