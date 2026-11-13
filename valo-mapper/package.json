@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "analyze": "next analyze",
     "start": "next start",
     "lint": "eslint .",
     "build:demo-replay": "node scripts/build-demo-replay.mjs",
