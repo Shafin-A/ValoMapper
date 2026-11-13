@@ -473,7 +473,7 @@ describe("useCanvasDrawing", () => {
     expect(updateArg[0]).toMatchObject({ traversalTime: "knife-walk" });
   });
 
-  it("updates the preview stroke points while drawing", () => {
+  it("updates the preview stroke points while drawing a traversal stroke", () => {
     const positions = [
       { x: 0, y: 0 },
       { x: 60, y: 80 },
@@ -534,6 +534,52 @@ describe("useCanvasDrawing", () => {
       points: positions,
       traversalTime: "knife-walk",
     });
+  });
+
+  it("does not update preview state on every move without a traversal label", () => {
+    const positions = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+      { x: 20, y: 20 },
+      { x: 30, y: 30 },
+    ];
+    const getWorldPointerPosition = jest
+      .fn()
+      .mockReturnValueOnce(positions[0])
+      .mockReturnValueOnce(positions[1])
+      .mockReturnValueOnce(positions[2])
+      .mockReturnValueOnce(positions[3]);
+    const isDrawing = { current: false };
+    const setCurrentStroke = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasDrawing(
+        getWorldPointerPosition,
+        isDrawing,
+        "pencil",
+        {
+          size: 2,
+          color: "#000",
+          isDashed: false,
+          isArrowHead: false,
+          shape: "freehand" as const,
+          opacity: 1,
+        },
+        { size: 5, mode: "pixel" },
+        [],
+        jest.fn(),
+        setCurrentStroke,
+      ),
+    );
+
+    act(() => {
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+      result.current.handleDrawing();
+    });
+
+    expect(setCurrentStroke).toHaveBeenCalledTimes(1);
   });
 
   it("ignores traversal time for rectangle strokes", () => {

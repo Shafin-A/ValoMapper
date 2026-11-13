@@ -149,14 +149,16 @@ export const useCanvasDrawing = (
           currentLineRef.current.getLayer()?.batchDraw();
         }
 
-        setCurrentStroke((currentStroke) =>
-          currentStroke
-            ? {
-                ...currentStroke,
-                points: previewPoints,
-              }
-            : currentStroke,
-        );
+        if (getTraversalTimeForShape(tool, drawSettings) !== null) {
+          setCurrentStroke((currentStroke) =>
+            currentStroke
+              ? {
+                  ...currentStroke,
+                  points: previewPoints,
+                }
+              : currentStroke,
+          );
+        }
       }
     }
   }, [
