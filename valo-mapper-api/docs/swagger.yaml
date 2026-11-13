@@ -58,6 +58,11 @@ definitions:
       parentFolderId:
         type: integer
     type: object
+  handlers.CreateLobbyRequest:
+    properties:
+      canvasState:
+        $ref: '#/definitions/models.FullCanvasState'
+    type: object
   handlers.CreateStrategyRequest:
     properties:
       folderId:
@@ -1547,7 +1552,16 @@ paths:
       - images
   /api/lobbies:
     post:
-      description: Creates a new lobby initialized with default map and empty phases.
+      consumes:
+      - application/json
+      description: Creates a new lobby initialized with default map and empty phases,
+        or with a supplied canvas snapshot.
+      parameters:
+      - description: Optional initial canvas state
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/handlers.CreateLobbyRequest'
       produces:
       - application/json
       responses:
@@ -1555,6 +1569,10 @@ paths:
           description: Created
           schema:
             $ref: '#/definitions/models.Lobby'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:

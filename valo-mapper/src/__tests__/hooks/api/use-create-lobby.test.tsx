@@ -112,27 +112,16 @@ describe("useCreateLobby", () => {
     mockUseRouter.mockReturnValue({
       push,
     } as unknown as ReturnType<typeof useRouter>);
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: jest.fn().mockResolvedValue({
-          lobbyCode: "EFGH",
-          createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-01-01T00:00:00Z",
-          canvasState: null,
-        }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: jest.fn().mockResolvedValue({
-          lobbyCode: "EFGH",
-          createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-01-01T00:00:00Z",
-          canvasState,
-        }),
-      });
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({
+        lobbyCode: "EFGH",
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+        canvasState,
+      }),
+    });
 
     const { result } = renderHook(() => useCreateLobby(), {
       wrapper: createWrapper(),
@@ -149,15 +138,9 @@ describe("useCreateLobby", () => {
       });
     });
 
-    expect(global.fetch).toHaveBeenCalledTimes(2);
-    expect(global.fetch).toHaveBeenNthCalledWith(1, "/api/lobbies", {
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledWith("/api/lobbies", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    expect(global.fetch).toHaveBeenNthCalledWith(2, "/api/lobbies/EFGH", {
-      method: "PATCH",
       body: JSON.stringify({ canvasState }),
       headers: {
         "Content-Type": "application/json",

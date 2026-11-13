@@ -1044,7 +1044,10 @@ const docTemplate = `{
         },
         "/api/lobbies": {
             "post": {
-                "description": "Creates a new lobby initialized with default map and empty phases.",
+                "description": "Creates a new lobby initialized with default map and empty phases, or with a supplied canvas snapshot.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1052,11 +1055,27 @@ const docTemplate = `{
                     "lobbies"
                 ],
                 "summary": "Create lobby",
+                "parameters": [
+                    {
+                        "description": "Optional initial canvas state",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateLobbyRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/models.Lobby"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "500": {
@@ -2041,6 +2060,14 @@ const docTemplate = `{
                 },
                 "parentFolderId": {
                     "type": "integer"
+                }
+            }
+        },
+        "handlers.CreateLobbyRequest": {
+            "type": "object",
+            "properties": {
+                "canvasState": {
+                    "$ref": "#/definitions/models.FullCanvasState"
                 }
             }
         },

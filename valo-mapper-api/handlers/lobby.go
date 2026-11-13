@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"valo-mapper-api/middleware"
@@ -17,16 +18,39 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type CreateLobbyRequest struct {
+	CanvasState *models.FullCanvasState `json:"canvasState"`
+}
+
 // CreateLobby godoc
 // @Summary Create lobby
-// @Description Creates a new lobby initialized with default map and empty phases.
+// @Description Creates a new lobby initialized with default map and empty phases, or with a supplied canvas snapshot.
 // @Tags lobbies
+// @Accept json
 // @Produce json
+// @Param request body CreateLobbyRequest false "Optional initial canvas state"
 // @Success 201 {object} models.Lobby
+// @Failure 400 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /api/lobbies [post]
 func CreateLobby(w http.ResponseWriter, r *http.Request) {
 	var err error
+
+	r.Body = http.MaxBytesReader(w, r.Body, 4<<20) // 4 MB
+	body, readErr := io.ReadAll(r.Body)
+	if readErr != nil {
+		utils.SendJSONError(w, utils.NewBadRequest("Unable to read request body"), middleware.GetRequestID(r))
+		return
+	}
+	defer func() { _ = r.Body.Close() }()
+
+	var request CreateLobbyRequest
+	if len(strings.TrimSpace(string(body))) > 0 {
+		if err := json.Unmarshal(body, &request); err != nil {
+			utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
+			return
+		}
+	}
 
 	defaultMap, err := models.GetMapById(models.DefaultMapID)
 	if err != nil {
@@ -47,15 +71,28 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	initialState := &models.FullCanvasState{
+		SelectedMap:       *defaultMap,
+		MapSide:           "defense",
+		CurrentPhaseIndex: 0,
+		EditedPhases:      []int{0},
+		Phases:            emptyPhases,
+	}
+
+	if request.CanvasState != nil {
+		mapDetails, mapErr := models.GetMapById(request.CanvasState.SelectedMap.ID)
+		if mapErr != nil || mapDetails == nil {
+			utils.SendJSONError(w, utils.NewBadRequest("Invalid map for initial canvas state"), middleware.GetRequestID(r))
+			return
+		}
+
+		request.CanvasState.SelectedMap = *mapDetails
+		initialState = request.CanvasState
+	}
+
 	lobby := &models.Lobby{
-		CreatedAt: time.Now(),
-		CanvasState: &models.FullCanvasState{
-			SelectedMap:       *defaultMap,
-			MapSide:           "defense",
-			CurrentPhaseIndex: 0,
-			EditedPhases:      []int{0},
-			Phases:            emptyPhases,
-		},
+		CreatedAt:   time.Now(),
+		CanvasState: initialState,
 	}
 
 	maxRetries := 5
@@ -72,6 +109,14 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		}
 		if i == maxRetries-1 {
 			utils.SendJSONError(w, utils.NewInternal("Unable to create lobby: max retries exceeded", err), middleware.GetRequestID(r))
+			return
+		}
+	}
+
+	if request.CanvasState != nil {
+		if err := models.SaveCanvasState(lobby.Code, *request.CanvasState); err != nil {
+			_ = models.DeleteLobby(lobby.Code)
+			utils.SendJSONError(w, utils.NewInternal("Unable to seed initial canvas state", err), middleware.GetRequestID(r))
 			return
 		}
 	}

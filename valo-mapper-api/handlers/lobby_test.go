@@ -72,6 +72,57 @@ func TestCreateLobby(t *testing.T) {
 		assert.Equal(t, "defense", lobby.CanvasState.MapSide)
 		assert.Equal(t, 0, lobby.CanvasState.CurrentPhaseIndex)
 	})
+
+	t.Run("seeds the lobby with an initial canvas state", func(t *testing.T) {
+		initialState := models.FullCanvasState{
+			SelectedMap:       models.MapOption{ID: models.DefaultMapID, Text: "Default Map"},
+			MapSide:           "attack",
+			CurrentPhaseIndex: 0,
+			EditedPhases:      []int{0},
+			Phases: []models.PhaseState{
+				{
+					AgentsOnCanvas: []models.CanvasAgent{
+						{ID: "agent-1", AgentName: "Jett", X: 10, Y: 20, IsAlly: true},
+					},
+					AbilitiesOnCanvas: []models.CanvasAbility{},
+					DrawLines:         []models.CanvasDrawLine{},
+					ConnectingLines:   []models.CanvasConnectingLine{},
+					TextsOnCanvas:     []models.CanvasText{},
+					ImagesOnCanvas:    []models.CanvasImage{},
+					ToolIconsOnCanvas: []models.CanvasToolIcon{},
+				},
+			},
+		}
+
+		payload, err := json.Marshal(CreateLobbyRequest{CanvasState: &initialState})
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/lobbies", strings.NewReader(string(payload)))
+		w := httptest.NewRecorder()
+
+		CreateLobby(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+
+		var lobby models.Lobby
+		testutils.ParseJSONResponse(t, w, &lobby)
+
+		phases, err := models.GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		require.NotEmpty(t, phases)
+		require.Len(t, phases[0].AgentsOnCanvas, 1)
+		assert.Equal(t, "agent-1", phases[0].AgentsOnCanvas[0].ID)
+		assert.Equal(t, "attack", lobby.CanvasState.MapSide)
+	})
+}
+
+func TestCreateLobbyRejectsInvalidBody(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/api/lobbies", strings.NewReader("not json"))
+	w := httptest.NewRecorder()
+
+	CreateLobby(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestGetLobby(t *testing.T) {

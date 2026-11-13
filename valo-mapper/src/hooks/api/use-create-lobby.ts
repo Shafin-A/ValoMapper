@@ -17,16 +17,16 @@ export const useCreateLobby = () => {
 
   return useMutation({
     mutationFn: async (options?: CreateLobbyOptions) => {
-      const lobby = await apiFetch<Lobby>("/api/lobbies", { method: "POST" });
-
-      if (options?.initialCanvasState) {
-        await apiFetch<Lobby>(`/api/lobbies/${lobby.lobbyCode}`, {
-          method: "PATCH",
-          body: JSON.stringify({ canvasState: options.initialCanvasState }),
-        });
-      }
-
-      return lobby;
+      return apiFetch<Lobby>("/api/lobbies", {
+        method: "POST",
+        ...(options?.initialCanvasState
+          ? {
+              body: JSON.stringify({
+                canvasState: options.initialCanvasState,
+              }),
+            }
+          : {}),
+      });
     },
     onSuccess: (data, options) => {
       setPendingLobbyToast(options?.pendingToast ?? { type: "created" });

@@ -40,6 +40,19 @@ func (l *Lobby) Save() error {
 	})
 }
 
+func DeleteLobby(code string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Exec(ctx, "DELETE FROM lobbies WHERE code = $1", code)
+	return err
+}
+
 func (l *Lobby) saveInternal(ctx context.Context) error {
 	conn, err := db.GetDB()
 	if err != nil {

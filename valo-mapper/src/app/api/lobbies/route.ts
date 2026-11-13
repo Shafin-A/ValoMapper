@@ -11,19 +11,21 @@ const shouldRetryCreateLobby = (response: Response): boolean =>
   response.status === 500 || response.status === 503;
 
 export const POST = async (request: Request) => {
-  const firstResponse = await proxyToBackend("/lobbies", {
-    method: "POST",
-    errorMessage: "Failed to create lobby",
-    request,
-  });
+  const body = await request.json().catch(() => undefined);
 
-  if (shouldRetryCreateLobby(firstResponse)) {
-    await wait(COLD_START_RETRY_DELAY_MS);
-    return proxyToBackend("/lobbies", {
+  const createLobby = () =>
+    proxyToBackend("/lobbies", {
       method: "POST",
+      ...(body !== undefined ? { body } : {}),
       errorMessage: "Failed to create lobby",
       request,
     });
+
+  const firstResponse = await createLobby();
+
+  if (shouldRetryCreateLobby(firstResponse)) {
+    await wait(COLD_START_RETRY_DELAY_MS);
+    return createLobby();
   }
 
   return firstResponse;
