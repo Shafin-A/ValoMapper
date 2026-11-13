@@ -109,6 +109,11 @@
   color: var(--primary-foreground);
 }
 
+#main-content:focus,
+#main-content:focus-visible {
+  outline: none !important;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

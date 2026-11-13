@@ -281,6 +281,17 @@ export const MapStage = memo(
         role="region"
         aria-label="Tactical map canvas"
         className={canvasBackgroundClassName}
+        onPointerDown={() => {
+          requestAnimationFrame(() => {
+            const activeElement = document.activeElement;
+            if (
+              activeElement instanceof HTMLElement &&
+              activeElement.id === "main-content"
+            ) {
+              activeElement.blur();
+            }
+          });
+        }}
         style={{
           position: "relative",
           width: "100%",

@@ -296,6 +296,14 @@ export const useKeyboardShortcuts = (
       try {
         if (isInputElement(e.target as HTMLElement)) return;
 
+        const activeElement = document.activeElement;
+        if (
+          activeElement instanceof HTMLElement &&
+          activeElement.id === "main-content"
+        ) {
+          activeElement.blur();
+        }
+
         const ctx = contextRef.current;
         const key = e.key.toLowerCase();
         const isModifier = e.ctrlKey || e.metaKey;
