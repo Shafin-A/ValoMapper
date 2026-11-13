@@ -1,24 +1,21 @@
 "use client";
 
 import { SiteHeader } from "@/components/layout/site-header";
-import {
-  ReplayFileDropzone,
-  ReplayLoadingOverlay,
-} from "@/components/replay";
+import { ReplayFileDropzone } from "@/components/replay/replay-file-dropzone";
+import { ReplayLoadingOverlay } from "@/components/replay/replay-loading-overlay";
 import { Button } from "@/components/ui/button";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import {
   DEMO_REPLAY_ID,
-  getReplayDataSource,
   saveReplaySession,
-} from "@/lib/replay";
+} from "@/lib/replay/session-store";
 import type {
   ReplayLoadOptions,
   ReplayLoadProgress,
   ReplayMatch,
 } from "@/lib/replay/types";
-import { ArrowLeft, PlayCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { getReplayDataSource } from "@/lib/replay/vrf-source";
+import { ArrowLeft, PlayCircle } from "lucide-react";import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type ReplayLoader = (options: ReplayLoadOptions) => Promise<ReplayMatch>;

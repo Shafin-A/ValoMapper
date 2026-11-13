@@ -30,7 +30,7 @@ import {
   buildReplayInitialState,
   buildReplaySnapshotState,
   getReplayMapOption,
-} from "@/lib/replay";
+} from "@/lib/replay/snapshot";
 import type { ReplayClock } from "@/lib/replay/clock";
 import { getReplayFrameAtTime } from "@/lib/replay/frames";
 import type { ReplayMatch } from "@/lib/replay/types";

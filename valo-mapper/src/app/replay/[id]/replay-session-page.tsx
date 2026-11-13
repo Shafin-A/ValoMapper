@@ -1,13 +1,32 @@
 "use client";
 
-import { ReplayLoadingOverlay, ReplayPlayer } from "@/components/replay";
-import { getReplaySession } from "@/lib/replay";
+import { ReplayLoadingOverlay } from "@/components/replay/replay-loading-overlay";
+import { getReplaySession } from "@/lib/replay/session-store";
 import type {
   ReplayLoadProgress,
   ReplayMatch,
 } from "@/lib/replay/types";
+import { Loader2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
+const ReplaySessionPlayer = lazy(() =>
+  import("./replay-session-player").then((module) => ({
+    default: module.ReplaySessionPlayer,
+  })),
+);
+
+const ReplayPlayerFallback = () => (
+  <div className="flex min-h-screen items-center justify-center">
+    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+  </div>
+);
 
 export const ReplaySessionPage = () => {
   const params = useParams();
@@ -64,7 +83,11 @@ export const ReplaySessionPage = () => {
   }, [loadReplay]);
 
   if (match) {
-    return <ReplayPlayer match={match} replayId={replayId} />;
+    return (
+      <Suspense fallback={<ReplayPlayerFallback />}>
+        <ReplaySessionPlayer match={match} replayId={replayId} />
+      </Suspense>
+    );
   }
 
   if (isLoading || error) {
