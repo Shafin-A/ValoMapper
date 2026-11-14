@@ -18,7 +18,7 @@ import (
 const integrationTestDBLockKey int64 = 4891375021
 
 // SetupTestDB creates a connection to the test database
-func SetupTestDB(t *testing.T) *pgxpool.Pool {
+func SetupTestDB(t testing.TB) *pgxpool.Pool {
 	t.Helper()
 
 	if testing.Short() {
@@ -113,7 +113,7 @@ func SetupTestDB(t *testing.T) *pgxpool.Pool {
 }
 
 // CleanupTestDB cleans up the test database connection
-func CleanupTestDB(t *testing.T, pool *pgxpool.Pool) {
+func CleanupTestDB(t testing.TB, pool *pgxpool.Pool) {
 	t.Helper()
 	if pool != nil {
 		pool.Close()
@@ -122,7 +122,7 @@ func CleanupTestDB(t *testing.T, pool *pgxpool.Pool) {
 }
 
 // TruncateTables removes all data from specified tables
-func TruncateTables(t *testing.T, pool *pgxpool.Pool, tables ...string) {
+func TruncateTables(t testing.TB, pool *pgxpool.Pool, tables ...string) {
 	t.Helper()
 
 	ctx := context.Background()

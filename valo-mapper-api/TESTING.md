@@ -72,6 +72,20 @@ go test ./middleware
 go test -v ./...
 ```
 
+### Run Benchmarks
+
+Hot-path benchmarks need the test database. They seed and truncate their own
+fixtures, so run them on their own:
+
+```bash
+go test -run '^$' -bench . -benchmem ./models ./services
+```
+
+- `BenchmarkGetAllCanvasPhases` - loads a lobby with ~300 canvas rows.
+- `BenchmarkApplyCanvasPatch20` - applies a realistic 20-entry patch batch.
+- `BenchmarkGetStrategies50` - lists 50 saved strategies (guards against the
+  list path loading full canvas state again).
+
 ### Run Integration Tests Only
 
 ```bash

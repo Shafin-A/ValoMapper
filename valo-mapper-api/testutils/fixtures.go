@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 	"valo-mapper-api/models"
@@ -15,7 +16,7 @@ func strPtr(s string) *string {
 }
 
 // CreateTestUser creates a test user in the database
-func CreateTestUser(t *testing.T, pool *pgxpool.Pool, firebaseUID string) *models.User {
+func CreateTestUser(t testing.TB, pool *pgxpool.Pool, firebaseUID string) *models.User {
 	t.Helper()
 
 	user := &models.User{
@@ -42,12 +43,12 @@ func CreateTestUser(t *testing.T, pool *pgxpool.Pool, firebaseUID string) *model
 }
 
 // CreateTestLobby creates a test lobby in the database
-func CreateTestLobby(t *testing.T, pool *pgxpool.Pool) *models.Lobby {
+func CreateTestLobby(t testing.TB, pool *pgxpool.Pool) *models.Lobby {
 	return CreateTestLobbyWithCode(t, pool, models.GenerateLobbyCode())
 }
 
 // CreateTestLobbyWithCode creates a test lobby with a specific code in the database
-func CreateTestLobbyWithCode(t *testing.T, pool *pgxpool.Pool, code string) *models.Lobby {
+func CreateTestLobbyWithCode(t testing.TB, pool *pgxpool.Pool, code string) *models.Lobby {
 	t.Helper()
 
 	lobby := &models.Lobby{
@@ -111,7 +112,7 @@ func CreateTestLobbyWithCode(t *testing.T, pool *pgxpool.Pool, code string) *mod
 }
 
 // CreateTestStrategy creates a test strategy in the database
-func CreateTestStrategy(t *testing.T, pool *pgxpool.Pool, userID int, lobbyCode string) *models.Strategy {
+func CreateTestStrategy(t testing.TB, pool *pgxpool.Pool, userID int, lobbyCode string) *models.Strategy {
 	t.Helper()
 
 	strategy := &models.Strategy{
@@ -136,8 +137,98 @@ func CreateTestStrategy(t *testing.T, pool *pgxpool.Pool, userID int, lobbyCode 
 	return strategy
 }
 
+// BuildCanvasState returns a deterministic canvas snapshot for benchmarks.
+func BuildCanvasState(mapID string, populatedPhases, perType int) *models.FullCanvasState {
+	const totalPhases = 10
+
+	phases := make([]models.PhaseState, totalPhases)
+	for i := range phases {
+		phases[i] = models.PhaseState{
+			AgentsOnCanvas:    []models.CanvasAgent{},
+			AbilitiesOnCanvas: []models.CanvasAbility{},
+			DrawLines:         []models.CanvasDrawLine{},
+			ConnectingLines:   []models.CanvasConnectingLine{},
+			TextsOnCanvas:     []models.CanvasText{},
+			ImagesOnCanvas:    []models.CanvasImage{},
+			ToolIconsOnCanvas: []models.CanvasToolIcon{},
+		}
+	}
+
+	if populatedPhases > totalPhases {
+		populatedPhases = totalPhases
+	}
+
+	for phase := 0; phase < populatedPhases; phase++ {
+		for i := 0; i < perType; i++ {
+			x := float64(10 + i*5)
+			y := float64(20 + i*5)
+
+			phases[phase].AgentsOnCanvas = append(phases[phase].AgentsOnCanvas, models.CanvasAgent{
+				ID:        fmt.Sprintf("bench-agent-%d-%d", phase, i),
+				AgentName: "Jett",
+				IsAlly:    true,
+				X:         x,
+				Y:         y,
+			})
+			phases[phase].AbilitiesOnCanvas = append(phases[phase].AbilitiesOnCanvas, models.CanvasAbility{
+				ID:              fmt.Sprintf("bench-ability-%d-%d", phase, i),
+				AgentName:       "Jett",
+				Action:          "dash",
+				X:               x,
+				Y:               y,
+				CurrentPath:     []models.Position{{X: x, Y: y}},
+				CurrentRotation: 45,
+				CurrentLength:   120,
+				IsAlly:          true,
+			})
+			phases[phase].DrawLines = append(phases[phase].DrawLines, models.CanvasDrawLine{
+				ID:          fmt.Sprintf("bench-line-%d-%d", phase, i),
+				Tool:        "pen",
+				Points:      []models.Position{{X: x, Y: y}, {X: x + 20, Y: y + 20}},
+				Color:       "#FF0000",
+				Size:        2,
+				IsArrowHead: true,
+				Opacity:     1,
+			})
+			phases[phase].TextsOnCanvas = append(phases[phase].TextsOnCanvas, models.CanvasText{
+				ID:       fmt.Sprintf("bench-text-%d-%d", phase, i),
+				Text:     "bench",
+				FontSize: 16,
+				X:        x,
+				Y:        y,
+				Width:    100,
+				Height:   30,
+			})
+			phases[phase].ImagesOnCanvas = append(phases[phase].ImagesOnCanvas, models.CanvasImage{
+				ID:     fmt.Sprintf("bench-image-%d-%d", phase, i),
+				Src:    "images/bench.png",
+				X:      x,
+				Y:      y,
+				Width:  64,
+				Height: 64,
+			})
+			phases[phase].ToolIconsOnCanvas = append(phases[phase].ToolIconsOnCanvas, models.CanvasToolIcon{
+				ID:     fmt.Sprintf("bench-icon-%d-%d", phase, i),
+				Name:   "smoke",
+				X:      x,
+				Y:      y,
+				Width:  32,
+				Height: 32,
+			})
+		}
+	}
+
+	return &models.FullCanvasState{
+		SelectedMap:       models.MapOption{ID: mapID, Text: "Benchmark Map", TextColor: "text-white"},
+		MapSide:           "defense",
+		CurrentPhaseIndex: 0,
+		EditedPhases:      []int{0},
+		Phases:            phases,
+	}
+}
+
 // CreateTestFolder creates a test folder in the database
-func CreateTestFolder(t *testing.T, pool *pgxpool.Pool, userID int, name string) *models.Folder {
+func CreateTestFolder(t testing.TB, pool *pgxpool.Pool, userID int, name string) *models.Folder {
 	t.Helper()
 
 	folder := &models.Folder{
