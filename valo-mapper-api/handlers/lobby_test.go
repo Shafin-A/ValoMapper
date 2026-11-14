@@ -300,4 +300,22 @@ func TestUpdateLobby(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
+
+	t.Run("rejects invalid map", func(t *testing.T) {
+		updateReq := UpdateLobbyRequest{
+			CanvasState: &models.FullCanvasState{
+				SelectedMap: models.MapOption{ID: "missing-map", Text: "Missing"},
+				Phases:      make([]models.PhaseState, 10),
+			},
+		}
+
+		body, err := json.Marshal(updateReq)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPatch, "/api/lobbies/"+testLobby.Code, strings.NewReader(string(body)))
+		req.Header.Set("Content-Type", "application/json")
+		w := executeUpdateLobbyRequest(req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
 }

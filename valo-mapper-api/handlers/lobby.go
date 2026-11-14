@@ -195,55 +195,30 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingLobby, err := models.GetLobbyMetaByCode(code)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
-		return
-	}
-	if existingLobby == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
+	if _, err := models.GetMapById(req.CanvasState.SelectedMap.ID); err != nil {
+		utils.SendJSONError(w, utils.NewBadRequest("Invalid map"), middleware.GetRequestID(r))
 		return
 	}
 
 	if err := models.SaveCanvasState(code, *req.CanvasState); err != nil {
-		if errors.Is(err, models.ErrInvalidPatch) {
+		switch {
+		case errors.Is(err, models.ErrLobbyNotFound):
+			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
+		case errors.Is(err, models.ErrInvalidPatch):
 			utils.SendJSONError(w, utils.NewBadRequest("Invalid canvas state"), middleware.GetRequestID(r))
-			return
+		default:
+			utils.SendJSONError(w, utils.NewInternal("Unable to save canvas state", err), middleware.GetRequestID(r))
 		}
-		utils.SendJSONError(w, utils.NewInternal("Unable to save canvas state", err), middleware.GetRequestID(r))
 		return
 	}
 
-	mapDetails, err := models.GetMapById(req.CanvasState.SelectedMap.ID)
+	lobby, err := models.GetLobbyByCode(code)
 	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve map details", err), middleware.GetRequestID(r))
+		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
 		return
 	}
-
-	phases, err := models.GetAllCanvasPhases(code)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve canvas phases", err), middleware.GetRequestID(r))
-		return
-	}
-
-	state := &models.FullCanvasState{
-		SelectedMap:       *mapDetails,
-		MapSide:           req.CanvasState.MapSide,
-		CurrentPhaseIndex: req.CanvasState.CurrentPhaseIndex,
-		EditedPhases:      req.CanvasState.EditedPhases,
-		Phases:            phases,
-		AgentsSettings:    req.CanvasState.AgentsSettings,
-		AbilitiesSettings: req.CanvasState.AbilitiesSettings,
-	}
-
-	lobby := &models.Lobby{
-		Code:        code,
-		CreatedAt:   existingLobby.CreatedAt,
-		CanvasState: state,
-	}
-
-	if err := lobby.Save(); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to update lobby", err), middleware.GetRequestID(r))
+	if lobby == nil {
+		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 		return
 	}
 

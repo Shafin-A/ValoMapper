@@ -262,6 +262,12 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Len(t, phases[0].AgentsOnCanvas, 1)
 		assert.Equal(t, "a1", phases[0].AgentsOnCanvas[0].ID)
 		assert.True(t, phases[0].AgentsOnCanvas[0].IsGray)
+
+		reloaded, err := GetLobbyByCode(lobby.Code)
+		require.NoError(t, err)
+		require.NotNil(t, reloaded)
+		assert.Equal(t, mapID, reloaded.SelectedMapId)
+		assert.Equal(t, "defend", reloaded.CanvasState.MapSide)
 	})
 
 	t.Run("rejects invalid image source in SaveCanvasState", func(t *testing.T) {

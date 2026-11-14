@@ -477,9 +477,12 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	// Prevent race conditions from concurrent lobby updates.
-	// Use NOWAIT to fail fast if another writer has the lobby lock.
-	if _, err = tx.Exec(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE NOWAIT", lobbyCode); err != nil {
+	// Fail fast if another writer holds the lobby lock.
+	var lobbyExists int
+	if err = tx.QueryRow(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE NOWAIT", lobbyCode).Scan(&lobbyExists); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrLobbyNotFound
+		}
 		return err
 	}
 
@@ -701,7 +704,38 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		}
 	}
 
+	agentsJSON, err := marshalIconSettings(state.AgentsSettings)
+	if err != nil {
+		return err
+	}
+	abilitiesJSON, err := marshalIconSettings(state.AbilitiesSettings)
+	if err != nil {
+		return err
+	}
+
+	if _, err = tx.Exec(ctx, `
+		UPDATE lobbies
+		SET selected_map_id = COALESCE(NULLIF($1, ''), selected_map_id),
+		    map_side = COALESCE(NULLIF($2, ''), map_side),
+		    current_phase_index = $3,
+		    edited_phases = $4,
+		    agents_settings = $5,
+		    abilities_settings = $6,
+		    updated_at = NOW()
+		WHERE code = $7`,
+		state.SelectedMap.ID, state.MapSide, state.CurrentPhaseIndex,
+		state.EditedPhases, agentsJSON, abilitiesJSON, lobbyCode); err != nil {
+		return err
+	}
+
 	return tx.Commit(ctx)
+}
+
+func marshalIconSettings(settings *IconSettings) ([]byte, error) {
+	if settings == nil {
+		return nil, nil
+	}
+	return json.Marshal(settings)
 }
 
 func ApplyCanvasPatch(ctx context.Context, lobbyCode string, patch CanvasPatch) (retErr error) {
