@@ -11,6 +11,8 @@ import (
 	"valo-mapper-api/utils"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type CreateFolderRequest struct {
@@ -65,7 +67,14 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 			utils.SendJSONError(w, utils.NewBadRequest("Folder name is required"), middleware.GetRequestID(r))
 			return
 		}
-		utils.SendJSONError(w, utils.NewBadRequest(err.Error()), middleware.GetRequestID(r))
+
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			utils.SendJSONError(w, utils.NewConflict("Folder name already exists", err), middleware.GetRequestID(r))
+			return
+		}
+
+		utils.SendJSONError(w, utils.NewInternal("Unable to create folder", err), middleware.GetRequestID(r))
 		return
 	}
 

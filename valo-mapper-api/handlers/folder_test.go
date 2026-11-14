@@ -116,6 +116,29 @@ func TestCreateFolder(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
+	t.Run("rejects duplicate folder name", func(t *testing.T) {
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return &auth.UserRecord{
+				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
+				EmailVerified: true,
+			}, nil
+		}
+
+		parent := testutils.CreateTestFolder(t, pool, testUser.ID, "Duplicate Parent")
+		reqBody := CreateFolderRequest{Name: "Duplicate Folder", ParentFolderID: &parent.ID}
+		first := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
+		CreateFolder(httptest.NewRecorder(), first, mockAuth)
+
+		second := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
+		w := httptest.NewRecorder()
+		CreateFolder(w, second, mockAuth)
+
+		assert.Equal(t, http.StatusConflict, w.Code)
+	})
+
 	t.Run("rejects users without active subscription", func(t *testing.T) {
 		freeUser := testutils.CreateTestUser(t, pool, "firebase-uid-folder-free-user")
 
