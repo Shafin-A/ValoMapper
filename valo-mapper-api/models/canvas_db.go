@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 	"valo-mapper-api/db"
@@ -578,31 +579,6 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		}
 	}
 
-	// ---- INSERT DATA ----
-	// Deduplicate row inserts in case the client has repeated elements in the snapshot.
-	dedupeRows := func(rows [][]any, keyIndices []int) [][]any {
-		seen := make(map[string]struct{}, len(rows))
-		filtered := make([][]any, 0, len(rows))
-
-		for _, row := range rows {
-			keyParts := make([]string, 0, len(keyIndices))
-			for _, idx := range keyIndices {
-				if idx < 0 || idx >= len(row) {
-					keyParts = append(keyParts, "")
-					continue
-				}
-				keyParts = append(keyParts, fmt.Sprintf("%v", row[idx]))
-			}
-			key := strings.Join(keyParts, "\x00")
-			if _, exists := seen[key]; exists {
-				continue
-			}
-			seen[key] = struct{}{}
-			filtered = append(filtered, row)
-		}
-		return filtered
-	}
-
 	if len(agentRows) > 0 {
 		agentRows = dedupeRows(agentRows, []int{0, 1, 7})
 		_, err = tx.CopyFrom(
@@ -726,6 +702,44 @@ func marshalIconSettings(settings *IconSettings) ([]byte, error) {
 		return nil, nil
 	}
 	return json.Marshal(settings)
+}
+
+func dedupeRows(rows [][]any, keyIndices []int) [][]any {
+	seen := make(map[string]struct{}, len(rows))
+	filtered := make([][]any, 0, len(rows))
+
+	for _, row := range rows {
+		keyParts := make([]string, 0, len(keyIndices))
+		for _, idx := range keyIndices {
+			if idx < 0 || idx >= len(row) {
+				keyParts = append(keyParts, "")
+				continue
+			}
+			keyParts = append(keyParts, rowKeyPart(row[idx]))
+		}
+
+		key := strings.Join(keyParts, "\x00")
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		filtered = append(filtered, row)
+	}
+
+	return filtered
+}
+
+func rowKeyPart(value any) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case int:
+		return strconv.Itoa(v)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
 
 func ApplyCanvasPatch(ctx context.Context, lobbyCode string, patch CanvasPatch) (retErr error) {

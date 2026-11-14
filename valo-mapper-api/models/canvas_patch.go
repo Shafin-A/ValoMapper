@@ -161,18 +161,28 @@ func applyEntityPatch(ctx context.Context, tx pgx.Tx, lobbyCode string, entry Ca
 	return err
 }
 
+func isEntityPatchEntity(entity string) bool {
+	_, ok := entityPatchDefinitions[strings.ToLower(entity)]
+	return ok
+}
+
 func decodePatchPayload[T any](entry CanvasPatchEntry) (T, error) {
 	var value T
-	if entry.Payload == nil {
-		return value, nil
+
+	raw := entry.RawPayload
+	if len(raw) == 0 {
+		if entry.Payload == nil {
+			return value, nil
+		}
+
+		payloadJSON, err := json.Marshal(entry.Payload)
+		if err != nil {
+			return value, err
+		}
+		raw = payloadJSON
 	}
 
-	payloadJSON, err := json.Marshal(entry.Payload)
-	if err != nil {
-		return value, err
-	}
-
-	if err := json.Unmarshal(payloadJSON, &value); err != nil {
+	if err := json.Unmarshal(raw, &value); err != nil {
 		return value, invalidPatchError("invalid payload: %v", err)
 	}
 

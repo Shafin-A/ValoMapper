@@ -1,5 +1,7 @@
 package models
 
+import "encoding/json"
+
 type FullCanvasState struct {
 	SelectedMap       MapOption     `json:"selectedMap"`
 	MapSide           string        `json:"mapSide"`
@@ -144,11 +146,44 @@ type CanvasToolIcon struct {
 }
 
 type CanvasPatchEntry struct {
-	Entity     string         `json:"entity"`
-	Action     string         `json:"action"`
-	PhaseIndex int            `json:"phaseIndex"`
-	ID         string         `json:"id,omitempty"`
-	Payload    map[string]any `json:"payload,omitempty"`
+	Entity     string          `json:"entity"`
+	Action     string          `json:"action"`
+	PhaseIndex int             `json:"phaseIndex"`
+	ID         string          `json:"id,omitempty"`
+	Payload    map[string]any  `json:"payload,omitempty"`
+	RawPayload json.RawMessage `json:"-"`
+}
+
+func (e *CanvasPatchEntry) UnmarshalJSON(data []byte) error {
+	var wire struct {
+		Entity     string          `json:"entity"`
+		Action     string          `json:"action"`
+		PhaseIndex int             `json:"phaseIndex"`
+		ID         string          `json:"id,omitempty"`
+		Payload    json.RawMessage `json:"payload,omitempty"`
+	}
+
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
+	}
+
+	e.Entity = wire.Entity
+	e.Action = wire.Action
+	e.PhaseIndex = wire.PhaseIndex
+	e.ID = wire.ID
+	e.RawPayload = wire.Payload
+	e.Payload = nil
+
+	if !isEntityPatchEntity(e.Entity) {
+		e.RawPayload = nil
+		if len(wire.Payload) > 0 {
+			if err := json.Unmarshal(wire.Payload, &e.Payload); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 type CanvasPatch struct {
