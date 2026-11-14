@@ -48,6 +48,25 @@ func TestParseBuild(t *testing.T) {
 	}
 }
 
+func TestAgentRoleByName(t *testing.T) {
+	if role := AgentRoleByName("Jett"); role != "Duelist" {
+		t.Errorf("AgentRoleByName(Jett) = %q, want Duelist", role)
+	}
+	if role := AgentRoleByName("KAY/O"); role != "Initiator" {
+		t.Errorf("AgentRoleByName(KAY/O) = %q, want Initiator", role)
+	}
+	if role := AgentRoleByName("Unknown Agent"); role != "" {
+		t.Errorf("AgentRoleByName(Unknown Agent) = %q, want empty", role)
+	}
+}
+
+func TestAgentByUUID(t *testing.T) {
+	agent, ok := AgentByUUID("ADD6443A-41BD-E414-F6AD-E58D267F4E95")
+	if !ok || agent.Name != "Jett" || agent.Role != "Duelist" {
+		t.Fatalf("AgentByUUID = %+v/%v", agent, ok)
+	}
+}
+
 func TestAgentName(t *testing.T) {
 	name, ok := AgentName("ADD6443A-41BD-E414-F6AD-E58D267F4E95")
 	if !ok || name != "Jett" {

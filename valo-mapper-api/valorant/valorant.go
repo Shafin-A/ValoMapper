@@ -35,40 +35,54 @@ var MapsByCodename = map[string]Map{
 	"plummet":  {ID: "summit", Name: "Summit", Codename: "Plummet"},
 }
 
-// AgentNames maps the Riot agent UUID to the display name used by the
-// frontend's AGENT_ICON_CONFIGS. UUIDs are compared case-insensitively.
-var AgentNames = map[string]string{
-	"41fb69c1-4189-7b37-f117-bcaf1e96f1bf": "Astra",
-	"5f8d3a7f-467b-97f3-062c-13acf203c006": "Breach",
-	"9f0d8ba9-4140-b941-57d3-a7ad57c6b417": "Brimstone",
-	"22697a3d-45bf-8dd7-4fec-84a9e28c69d7": "Chamber",
-	"1dbf2edd-4729-0984-3115-daa5eed44993": "Clove",
-	"117ed9e3-49f3-6512-3ccf-0cada7e3823b": "Cypher",
-	"cc8b64c8-4b25-4ff9-6e7f-37b4da43d235": "Deadlock",
-	"dade69b4-4f5a-8528-247b-219e5a1facd6": "Fade",
-	"e370fa57-4757-3604-3648-499e1f642d3f": "Gekko",
-	"95b78ed7-4637-86d9-7e41-71ba8c293152": "Harbor",
-	"ddd5a15c-4fbe-42fa-3789-11a55ca5ee04": "Hush",
-	"0e38b510-41a8-5780-5e8f-568b2a4f2d6c": "Iso",
-	"add6443a-41bd-e414-f6ad-e58d267f4e95": "Jett",
-	"601dbbe7-43ce-be57-2a40-4abd24953621": "KAY/O",
-	"1e58de9c-4950-5125-93e9-a0aee9f98746": "Killjoy",
-	"7c8a4701-4de6-9355-b254-e09bc2a34b72": "Miks",
-	"bb2a4828-46eb-8cd1-e765-15848195d751": "Neon",
-	"8e253930-4c05-31dd-1b6c-968525494517": "Omen",
-	"eb93336a-449b-9c1b-0a54-a891f7921d69": "Phoenix",
-	"f94c3b30-42be-e959-889c-5aa313dba261": "Raze",
-	"a3bfb853-43b2-7238-a4f1-ad90e9e46bcc": "Reyna",
-	"569fdd95-4d10-43ab-ca70-79becc718b46": "Sage",
-	"6f2a04ca-43e0-be17-7f36-b3908627744d": "Skye",
-	"320b2a48-4d9b-a075-30f1-1f93a9b638fa": "Sova",
-	"b444168c-4e35-8076-db47-ef9bf368f384": "Tejo",
-	"92eeef5d-43b5-1d4a-8d03-b3927a09034b": "Veto",
-	"707eab51-4836-f488-046a-cda6bf494859": "Viper",
-	"efba5359-4016-a1e5-7626-b1ae76895940": "Vyse",
-	"df1cb487-4902-002e-5c17-d28e83e78588": "Waylay",
-	"7f94d92c-4234-0a36-9646-3a87eb8b5c89": "Yoru",
+// Agent is the shared display identity of a VALORANT agent.
+type Agent struct {
+	Name string
+	Role string
 }
+
+// AgentsByUUID maps the Riot agent UUID to its display data. UUIDs are
+// compared case-insensitively.
+var AgentsByUUID = map[string]Agent{
+	"41fb69c1-4189-7b37-f117-bcaf1e96f1bf": {Name: "Astra", Role: "Controller"},
+	"5f8d3a7f-467b-97f3-062c-13acf203c006": {Name: "Breach", Role: "Initiator"},
+	"9f0d8ba9-4140-b941-57d3-a7ad57c6b417": {Name: "Brimstone", Role: "Controller"},
+	"22697a3d-45bf-8dd7-4fec-84a9e28c69d7": {Name: "Chamber", Role: "Sentinel"},
+	"1dbf2edd-4729-0984-3115-daa5eed44993": {Name: "Clove", Role: "Controller"},
+	"117ed9e3-49f3-6512-3ccf-0cada7e3823b": {Name: "Cypher", Role: "Sentinel"},
+	"cc8b64c8-4b25-4ff9-6e7f-37b4da43d235": {Name: "Deadlock", Role: "Sentinel"},
+	"dade69b4-4f5a-8528-247b-219e5a1facd6": {Name: "Fade", Role: "Initiator"},
+	"e370fa57-4757-3604-3648-499e1f642d3f": {Name: "Gekko", Role: "Initiator"},
+	"95b78ed7-4637-86d9-7e41-71ba8c293152": {Name: "Harbor", Role: "Controller"},
+	"ddd5a15c-4fbe-42fa-3789-11a55ca5ee04": {Name: "Hush", Role: "Duelist"},
+	"0e38b510-41a8-5780-5e8f-568b2a4f2d6c": {Name: "Iso", Role: "Duelist"},
+	"add6443a-41bd-e414-f6ad-e58d267f4e95": {Name: "Jett", Role: "Duelist"},
+	"601dbbe7-43ce-be57-2a40-4abd24953621": {Name: "KAY/O", Role: "Initiator"},
+	"1e58de9c-4950-5125-93e9-a0aee9f98746": {Name: "Killjoy", Role: "Sentinel"},
+	"7c8a4701-4de6-9355-b254-e09bc2a34b72": {Name: "Miks", Role: "Controller"},
+	"bb2a4828-46eb-8cd1-e765-15848195d751": {Name: "Neon", Role: "Duelist"},
+	"8e253930-4c05-31dd-1b6c-968525494517": {Name: "Omen", Role: "Controller"},
+	"eb93336a-449b-9c1b-0a54-a891f7921d69": {Name: "Phoenix", Role: "Duelist"},
+	"f94c3b30-42be-e959-889c-5aa313dba261": {Name: "Raze", Role: "Duelist"},
+	"a3bfb853-43b2-7238-a4f1-ad90e9e46bcc": {Name: "Reyna", Role: "Duelist"},
+	"569fdd95-4d10-43ab-ca70-79becc718b46": {Name: "Sage", Role: "Sentinel"},
+	"6f2a04ca-43e0-be17-7f36-b3908627744d": {Name: "Skye", Role: "Initiator"},
+	"320b2a48-4d9b-a075-30f1-1f93a9b638fa": {Name: "Sova", Role: "Initiator"},
+	"b444168c-4e35-8076-db47-ef9bf368f384": {Name: "Tejo", Role: "Initiator"},
+	"92eeef5d-43b5-1d4a-8d03-b3927a09034b": {Name: "Veto", Role: "Sentinel"},
+	"707eab51-4836-f488-046a-cda6bf494859": {Name: "Viper", Role: "Controller"},
+	"efba5359-4016-a1e5-7626-b1ae76895940": {Name: "Vyse", Role: "Sentinel"},
+	"df1cb487-4902-002e-5c17-d28e83e78588": {Name: "Waylay", Role: "Duelist"},
+	"7f94d92c-4234-0a36-9646-3a87eb8b5c89": {Name: "Yoru", Role: "Duelist"},
+}
+
+var agentRolesByName = func() map[string]string {
+	roles := make(map[string]string, len(AgentsByUUID))
+	for _, agent := range AgentsByUUID {
+		roles[agent.Name] = agent.Role
+	}
+	return roles
+}()
 
 // SupportedBuilds is VRFKit v0.4.0's verified build set. A replay whose
 // release is not here is rejected with unsupported_build rather than guessed.
@@ -133,8 +147,17 @@ func ResolveMap(levelPath string) (Map, bool) {
 	return m, ok
 }
 
+func AgentByUUID(uuid string) (Agent, bool) {
+	agent, ok := AgentsByUUID[strings.ToLower(strings.TrimSpace(uuid))]
+	return agent, ok
+}
+
 // AgentName resolves an agent UUID, returning the display name.
 func AgentName(uuid string) (string, bool) {
-	name, ok := AgentNames[strings.ToLower(strings.TrimSpace(uuid))]
-	return name, ok
+	agent, ok := AgentByUUID(uuid)
+	return agent.Name, ok
+}
+
+func AgentRoleByName(name string) string {
+	return agentRolesByName[strings.TrimSpace(name)]
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 	"valo-mapper-api/db"
+	"valo-mapper-api/valorant"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -178,7 +179,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		if agentNote.Valid {
 			agent.Note = agentNote.String
 		}
-		agent.Role = agentRoleByName[agent.AgentName]
+		agent.Role = valorant.AgentRoleByName(agent.AgentName)
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AgentsOnCanvas = append(phases[phaseIndex].AgentsOnCanvas, agent)
 		} else {
