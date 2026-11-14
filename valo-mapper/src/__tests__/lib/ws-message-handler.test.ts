@@ -110,4 +110,27 @@ describe("createWSMessageHandler", () => {
     expect(deps.setMapSide).toHaveBeenCalledWith("attack");
     expect(deps.rotateCanvasItemsForSideSwap).toHaveBeenCalled();
   });
+
+  it("upserts the whole image on image_updated so notes sync", () => {
+    const { deps, handleMessage } = createHandler();
+    const updater = deps.setImagesOnCanvas as jest.Mock;
+    const image = {
+      id: "i1",
+      src: "image.png",
+      x: 1,
+      y: 2,
+      width: 3,
+      height: 4,
+      note: "A site default",
+    };
+
+    handleMessage({
+      type: WS_MESSAGE_TYPES.IMAGE_UPDATED,
+      phaseIndex: 0,
+      data: { image },
+    });
+
+    const next = updater.mock.calls[0][0]([]);
+    expect(next).toEqual([image]);
+  });
 });

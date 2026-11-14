@@ -142,6 +142,13 @@ export const createCanvasBroadcasters = (sendMessage: SendMessage) => ({
       phaseIndex,
     );
   },
+  broadcastImageUpdated: (image: ImageCanvas, phaseIndex: number) => {
+    sendMessage<ImageMessageData>(
+      WS_MESSAGE_TYPES.IMAGE_UPDATED,
+      { image },
+      phaseIndex,
+    );
+  },
   broadcastImageRemoved: (id: string, phaseIndex: number) => {
     sendMessage<RemoveElementData>(
       WS_MESSAGE_TYPES.IMAGE_REMOVED,

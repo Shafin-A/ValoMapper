@@ -189,6 +189,10 @@ export const createWSMessageHandler = ({
         ),
       );
     }),
+    [WS_MESSAGE_TYPES.IMAGE_UPDATED]: currentPhaseOnly((message) => {
+      const { image } = message.data as ImageMessageData;
+      setImagesOnCanvas((previous) => upsertById(previous, image));
+    }),
     [WS_MESSAGE_TYPES.IMAGE_REMOVED]: currentPhaseOnly((message) => {
       const { id } = message.data as RemoveElementData;
       setImagesOnCanvas((previous) =>

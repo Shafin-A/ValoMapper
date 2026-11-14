@@ -100,6 +100,7 @@ const useCollaborativeCanvasActions = () => {
     broadcastTextRemoved,
     broadcastImageAdded,
     broadcastImageMoved,
+    broadcastImageUpdated,
     broadcastImageRemoved,
     broadcastStateSync,
     broadcastToolIconAdded,
@@ -417,6 +418,19 @@ const useCollaborativeCanvasActions = () => {
     [broadcastImageMoved, currentPhaseIndex, notifyChange],
   );
 
+  const notifyImageUpdated = useCallback(
+    (image: ImageCanvas) => {
+      notifyChange({
+        entity: "image",
+        action: "update",
+        id: image.id,
+        payload: image,
+        broadcast: () => broadcastImageUpdated(image, currentPhaseIndex),
+      });
+    },
+    [broadcastImageUpdated, currentPhaseIndex, notifyChange],
+  );
+
   const notifyImageRemoved = useCallback(
     (id: string) => {
       notifyChange({
@@ -703,6 +717,7 @@ const useCollaborativeCanvasActions = () => {
       notifyTextRemoved,
       notifyImageAdded,
       notifyImageMoved,
+      notifyImageUpdated,
       notifyImageRemoved,
       notifyToolIconAdded,
       notifyToolIconMoved,
@@ -734,6 +749,7 @@ const useCollaborativeCanvasActions = () => {
       notifyTextRemoved,
       notifyImageAdded,
       notifyImageMoved,
+      notifyImageUpdated,
       notifyImageRemoved,
       notifyToolIconAdded,
       notifyToolIconMoved,

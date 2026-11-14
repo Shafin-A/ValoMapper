@@ -19,6 +19,7 @@ const (
 	MessageTypeTextRemoved       = "text_removed"
 	MessageTypeImageAdded        = "image_added"
 	MessageTypeImageMoved        = "image_moved"
+	MessageTypeImageUpdated      = "image_updated"
 	MessageTypeImageRemoved      = "image_removed"
 	MessageTypeImageSyncRequired = "image_sync_required"
 	MessageTypeToolIconAdded     = "tool_icon_added"

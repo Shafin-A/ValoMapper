@@ -30,6 +30,7 @@ export const WS_MESSAGE_TYPES = {
   TEXT_REMOVED: "text_removed",
   IMAGE_ADDED: "image_added",
   IMAGE_MOVED: "image_moved",
+  IMAGE_UPDATED: "image_updated",
   IMAGE_REMOVED: "image_removed",
   TOOL_ICON_ADDED: "tool_icon_added",
   TOOL_ICON_MOVED: "tool_icon_moved",
