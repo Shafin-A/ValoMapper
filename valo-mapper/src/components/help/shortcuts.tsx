@@ -24,6 +24,10 @@ export const Shortcuts = () => {
           description: "Delete Hovered Element",
         },
         {
+          keys: [["N"]],
+          description: "Add or Edit Note on Hovered Element",
+        },
+        {
           keys: [["R"]],
           description: "Recenter Canvas",
         },

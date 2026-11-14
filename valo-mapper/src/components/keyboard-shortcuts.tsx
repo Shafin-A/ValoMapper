@@ -6,6 +6,7 @@ import {
   useCanvasEntityActions,
   useCanvasHistory,
   useCanvasPhase,
+  useCanvasSelectionState,
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import {
@@ -25,9 +26,11 @@ export const KeyboardShortcuts = () => {
     setIsDrawMode,
     editingTextId,
     setEditingTextId,
+    setEditingNoteTarget,
     setIsDeleteSettingsOpen,
   } = useCanvasUi();
   const { phases, currentPhaseIndex, switchToPhase } = useCanvasPhase();
+  const { selectedCanvasItems } = useCanvasSelectionState();
   const {
     setImagesOnCanvas,
     setTextsOnCanvas,
@@ -67,6 +70,8 @@ export const KeyboardShortcuts = () => {
     notifyToolIconRemoved: collab.notifyToolIconRemoved,
     hoveredElementId,
     setHoveredElementId,
+    selectedCanvasItems,
+    setEditingNoteTarget,
     setImagesOnCanvas,
     setTextsOnCanvas,
     setAgentsOnCanvas,

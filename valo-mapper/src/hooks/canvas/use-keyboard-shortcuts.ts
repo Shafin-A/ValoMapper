@@ -4,6 +4,7 @@ import { useSettings } from "@/contexts/settings-context";
 import type {
   AbilityCanvas,
   AgentCanvas,
+  CanvasSelectionItem,
   ConnectingLine,
   ImageCanvas,
   PhaseState,
@@ -37,6 +38,8 @@ interface UseKeyboardShortcutsProps {
   notifyToolIconRemoved?: (id: string) => void;
   hoveredElementId: string | null;
   setHoveredElementId: Dispatch<SetStateAction<string | null>>;
+  selectedCanvasItems: CanvasSelectionItem[];
+  setEditingNoteTarget: Dispatch<SetStateAction<CanvasSelectionItem | null>>;
   setImagesOnCanvas: Dispatch<SetStateAction<ImageCanvas[]>>;
   setTextsOnCanvas: Dispatch<SetStateAction<TextCanvas[]>>;
   setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>;
@@ -224,6 +227,63 @@ const handleDeleteHoveredElement = (
   return true;
 };
 
+const resolveNoteTarget = (
+  ctx: ShortcutContext,
+  id: string,
+): CanvasSelectionItem | null => {
+  const phase = ctx.phases[ctx.currentPhaseIndex];
+  if (!phase) return null;
+
+  if (phase.agentsOnCanvas.some((agent) => agent.id === id)) {
+    return { id, type: "agent" };
+  }
+
+  const ability = phase.abilitiesOnCanvas.find(
+    (candidate) => candidate.id === id,
+  );
+  if (ability) {
+    return ability.attachedToId ? null : { id, type: "ability" };
+  }
+
+  if (phase.textsOnCanvas.some((text) => text.id === id)) {
+    return { id, type: "text" };
+  }
+
+  if (phase.imagesOnCanvas.some((image) => image.id === id)) {
+    return { id, type: "image" };
+  }
+
+  if (phase.toolIconsOnCanvas.some((toolIcon) => toolIcon.id === id)) {
+    return { id, type: "tool" };
+  }
+
+  return null;
+};
+
+const handleEditHoveredNote = (
+  ctx: ShortcutContext,
+  key: string,
+  e: KeyboardEvent,
+): boolean => {
+  if (key !== "n") return false;
+  if (ctx.isDrawMode || ctx.editingTextId) return false;
+
+  const hoveredTarget = ctx.hoveredElementId
+    ? resolveNoteTarget(ctx, ctx.hoveredElementId)
+    : null;
+  const selectedTarget =
+    ctx.selectedCanvasItems.length === 1
+      ? resolveNoteTarget(ctx, ctx.selectedCanvasItems[0].id)
+      : null;
+  const target = hoveredTarget ?? selectedTarget;
+
+  if (!target) return false;
+
+  ctx.setEditingNoteTarget(target);
+  e.preventDefault();
+  return true;
+};
+
 const handleRecenter = (
   ctx: ShortcutContext,
   key: string,
@@ -319,6 +379,9 @@ export const useKeyboardShortcuts = (
 
         // E: delete hovered element
         if (handleDeleteHoveredElement(ctx, key, e)) return;
+
+        // N: add or edit the hovered element's note
+        if (handleEditHoveredNote(ctx, key, e)) return;
 
         // R: recenter canvas
         if (handleRecenter(ctx, key, e)) return;
