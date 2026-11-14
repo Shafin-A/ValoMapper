@@ -115,29 +115,39 @@ func authenticateRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*
 		return nil, err
 	}
 
-	firebaseUser, firebaseErr := firebaseAuth.GetUser(context.Background(), token.UID)
-
 	user, err := models.GetUserByFirebaseUID(token.UID)
 	if err != nil {
 		return nil, errUnableToRetrieveUser
 	}
 
-	if user == nil {
-		user = buildUserFromFirebase(token.UID, firebaseUser)
-		if saveErr := user.Save(); saveErr != nil {
-			return nil, errUnableToRetrieveUser
-		}
+	if user != nil {
+		syncEmailVerified(r, user, token)
 		return user, nil
 	}
 
-	if firebaseErr == nil && firebaseUser != nil && firebaseUser.EmailVerified != user.EmailVerified {
-		user.EmailVerified = firebaseUser.EmailVerified
-		if updateErr := user.Update(); updateErr != nil {
-			slog.Error("failed to sync email_verified", "request_id", middleware.GetRequestID(r), "user_id", user.ID, "error", updateErr)
-		}
+	firebaseUser, firebaseErr := firebaseAuth.GetUser(context.Background(), token.UID)
+	if firebaseErr != nil {
+		firebaseUser = nil
+	}
+
+	user = buildUserFromFirebase(token.UID, firebaseUser)
+	if saveErr := user.Save(); saveErr != nil {
+		return nil, errUnableToRetrieveUser
 	}
 
 	return user, nil
+}
+
+func syncEmailVerified(r *http.Request, user *models.User, token *auth.Token) {
+	verified, ok := token.Claims["email_verified"].(bool)
+	if !ok || verified == user.EmailVerified {
+		return
+	}
+
+	user.EmailVerified = verified
+	if err := user.Update(); err != nil {
+		slog.Error("failed to sync email_verified", "request_id", middleware.GetRequestID(r), "user_id", user.ID, "error", err)
+	}
 }
 
 func authenticateOptionalRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*models.User, error) {

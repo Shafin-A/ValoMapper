@@ -11,6 +11,7 @@ import (
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestVerifyFirebaseToken(t *testing.T) {
@@ -166,4 +167,73 @@ func TestAuthenticateRequest_AutoProvisionsMissingUser(t *testing.T) {
 	if assert.NotNil(t, persistedUser) {
 		assert.Equal(t, firebaseUID, *persistedUser.FirebaseUID)
 	}
+}
+
+func TestAuthenticateRequest_UsesStoredUser(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+
+	const firebaseUID = "stored-firebase-user"
+
+	t.Run("skips Firebase lookup for existing user", func(t *testing.T) {
+		testutils.TruncateTables(t, pool, "users")
+		testutils.CreateTestUser(t, pool, firebaseUID)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/users/me", nil)
+		req.Header.Set("Authorization", "Bearer valid-token")
+
+		getUserCalled := false
+		mockAuth := &testutils.MockFirebaseAuth{}
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: firebaseUID}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			getUserCalled = true
+			return nil, errors.New("unexpected Firebase lookup")
+		}
+
+		user, err := authenticateRequest(req, mockAuth)
+
+		require.NoError(t, err)
+		require.NotNil(t, user)
+		assert.False(t, getUserCalled)
+		assert.Equal(t, firebaseUID, *user.FirebaseUID)
+	})
+
+	t.Run("syncs email verification from token claims", func(t *testing.T) {
+		testutils.TruncateTables(t, pool, "users")
+		user := testutils.CreateTestUser(t, pool, firebaseUID)
+		_, err := pool.Exec(context.Background(),
+			`UPDATE users SET email_verified = FALSE WHERE id = $1`, user.ID)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/users/me", nil)
+		req.Header.Set("Authorization", "Bearer valid-token")
+
+		mockAuth := &testutils.MockFirebaseAuth{}
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{
+				UID:    firebaseUID,
+				Claims: map[string]any{"email_verified": true},
+			}, nil
+		}
+		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+			return nil, errors.New("unexpected Firebase lookup")
+		}
+
+		authenticated, err := authenticateRequest(req, mockAuth)
+
+		require.NoError(t, err)
+		require.NotNil(t, authenticated)
+		assert.True(t, authenticated.EmailVerified)
+
+		persisted, err := models.GetUserByFirebaseUID(firebaseUID)
+		require.NoError(t, err)
+		require.NotNil(t, persisted)
+		assert.True(t, persisted.EmailVerified)
+	})
 }
