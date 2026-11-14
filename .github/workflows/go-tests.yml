@@ -63,16 +63,6 @@ jobs:
             sleep 2
           done
 
-      - name: Run database migrations
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: valomapper_test
-        run: |
-          go run db/migrations.go || echo "Migrations completed or skipped"
-
       - name: Run unit tests
         env:
           DB_HOST: localhost
@@ -92,6 +82,9 @@ jobs:
           DB_NAME: valomapper_test
           GOOGLE_APPLICATION_CREDENTIALS: '{"type":"service_account","project_id":"test"}'
         run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Run govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -117,7 +110,7 @@ jobs:
           cache-dependency-path: valo-mapper-api/go.sum
 
       - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
 
       - name: Run golangci-lint
         run: golangci-lint run --timeout=5m
@@ -137,7 +130,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.26"
           cache-dependency-path: valo-mapper-api/go.sum
 
       - name: Install swag CLI
