@@ -13,6 +13,13 @@ export const VIRTUAL_HEIGHT = 1440;
 
 export const CONTEXT_MENU_DUPLICATE_OFFSET = 40;
 
+export const NOTE_MAX_LENGTH = 500;
+/** Badge/card sizes are in canvas world units so they scale with zoom. */
+export const NOTE_BADGE_SIZE = 24;
+export const NOTE_PREVIEW_MAX_WIDTH = 360;
+export const NOTE_PREVIEW_MAX_LINES = 5;
+export const NOTE_PREVIEW_HIDE_DELAY_MS = 200;
+
 export const DISCORD_INVITE_URL = "https://discord.gg/Hpg2ftnhBV";
 
 export const FREE_STRATEGY_LIMIT = 1;

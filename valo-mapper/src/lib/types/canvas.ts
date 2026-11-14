@@ -7,6 +7,7 @@ export type BaseCanvasItem = {
   id: string;
   x: number;
   y: number;
+  note?: string;
 };
 
 export type CanvasItem = BaseCanvasItem & {
