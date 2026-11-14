@@ -58,25 +58,12 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	emptyPhases := make([]models.PhaseState, 10)
-	for i := range 10 {
-		emptyPhases[i] = models.PhaseState{
-			AgentsOnCanvas:    []models.CanvasAgent{},
-			AbilitiesOnCanvas: []models.CanvasAbility{},
-			DrawLines:         []models.CanvasDrawLine{},
-			ConnectingLines:   []models.CanvasConnectingLine{},
-			TextsOnCanvas:     []models.CanvasText{},
-			ImagesOnCanvas:    []models.CanvasImage{},
-			ToolIconsOnCanvas: []models.CanvasToolIcon{},
-		}
-	}
-
 	initialState := &models.FullCanvasState{
 		SelectedMap:       *defaultMap,
 		MapSide:           "defense",
 		CurrentPhaseIndex: 0,
 		EditedPhases:      []int{0},
-		Phases:            emptyPhases,
+		Phases:            models.NewEmptyPhaseStates(),
 	}
 
 	if request.CanvasState != nil {

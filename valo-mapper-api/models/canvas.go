@@ -20,6 +20,22 @@ type PhaseState struct {
 	ToolIconsOnCanvas []CanvasToolIcon       `json:"toolIconsOnCanvas"`
 }
 
+func NewEmptyPhaseStates() []PhaseState {
+	phases := make([]PhaseState, phaseCount)
+	for i := range phases {
+		phases[i] = PhaseState{
+			AgentsOnCanvas:    []CanvasAgent{},
+			AbilitiesOnCanvas: []CanvasAbility{},
+			DrawLines:         []CanvasDrawLine{},
+			ConnectingLines:   []CanvasConnectingLine{},
+			TextsOnCanvas:     []CanvasText{},
+			ImagesOnCanvas:    []CanvasImage{},
+			ToolIconsOnCanvas: []CanvasToolIcon{},
+		}
+	}
+	return phases
+}
+
 type MapOption struct {
 	ID        string `json:"id"`
 	Text      string `json:"text"`

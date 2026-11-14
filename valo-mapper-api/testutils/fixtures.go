@@ -63,19 +63,8 @@ func CreateTestLobbyWithCode(t testing.TB, pool *pgxpool.Pool, code string) *mod
 			MapSide:           "defense",
 			CurrentPhaseIndex: 0,
 			EditedPhases:      []int{0},
-			Phases:            make([]models.PhaseState, 10),
+			Phases:            models.NewEmptyPhaseStates(),
 		},
-	}
-
-	for i := range lobby.CanvasState.Phases {
-		lobby.CanvasState.Phases[i] = models.PhaseState{
-			AgentsOnCanvas:    []models.CanvasAgent{},
-			AbilitiesOnCanvas: []models.CanvasAbility{},
-			DrawLines:         []models.CanvasDrawLine{},
-			TextsOnCanvas:     []models.CanvasText{},
-			ImagesOnCanvas:    []models.CanvasImage{},
-			ToolIconsOnCanvas: []models.CanvasToolIcon{},
-		}
 	}
 
 	ctx := context.Background()
@@ -139,23 +128,10 @@ func CreateTestStrategy(t testing.TB, pool *pgxpool.Pool, userID int, lobbyCode 
 
 // BuildCanvasState returns a deterministic canvas snapshot for benchmarks.
 func BuildCanvasState(mapID string, populatedPhases, perType int) *models.FullCanvasState {
-	const totalPhases = 10
+	phases := models.NewEmptyPhaseStates()
 
-	phases := make([]models.PhaseState, totalPhases)
-	for i := range phases {
-		phases[i] = models.PhaseState{
-			AgentsOnCanvas:    []models.CanvasAgent{},
-			AbilitiesOnCanvas: []models.CanvasAbility{},
-			DrawLines:         []models.CanvasDrawLine{},
-			ConnectingLines:   []models.CanvasConnectingLine{},
-			TextsOnCanvas:     []models.CanvasText{},
-			ImagesOnCanvas:    []models.CanvasImage{},
-			ToolIconsOnCanvas: []models.CanvasToolIcon{},
-		}
-	}
-
-	if populatedPhases > totalPhases {
-		populatedPhases = totalPhases
+	if populatedPhases > len(phases) {
+		populatedPhases = len(phases)
 	}
 
 	for phase := 0; phase < populatedPhases; phase++ {

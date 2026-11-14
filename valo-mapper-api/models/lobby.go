@@ -147,24 +147,11 @@ func GetLobbyByCode(code string) (*Lobby, error) {
 		return nil, err
 	}
 
-	emptyPhases := make([]PhaseState, 10)
-	for i := range 10 {
-		emptyPhases[i] = PhaseState{
-			AgentsOnCanvas:    []CanvasAgent{},
-			AbilitiesOnCanvas: []CanvasAbility{},
-			DrawLines:         []CanvasDrawLine{},
-			ConnectingLines:   []CanvasConnectingLine{},
-			TextsOnCanvas:     []CanvasText{},
-			ImagesOnCanvas:    []CanvasImage{},
-			ToolIconsOnCanvas: []CanvasToolIcon{},
-		}
-	}
-
 	lobby := &Lobby{
 		CanvasState: &FullCanvasState{
 			SelectedMap:  MapOption{},
 			EditedPhases: []int{},
-			Phases:       emptyPhases,
+			Phases:       NewEmptyPhaseStates(),
 		},
 	}
 
@@ -237,19 +224,6 @@ func GetLobbiesByCodes(codes []string) ([]Lobby, error) {
 		return nil, err
 	}
 
-	emptyPhases := make([]PhaseState, 10)
-	for i := range 10 {
-		emptyPhases[i] = PhaseState{
-			AgentsOnCanvas:    []CanvasAgent{},
-			AbilitiesOnCanvas: []CanvasAbility{},
-			DrawLines:         []CanvasDrawLine{},
-			ConnectingLines:   []CanvasConnectingLine{},
-			TextsOnCanvas:     []CanvasText{},
-			ImagesOnCanvas:    []CanvasImage{},
-			ToolIconsOnCanvas: []CanvasToolIcon{},
-		}
-	}
-
 	rows, err := conn.Query(context.Background(),
 		`SELECT code, created_at, updated_at, selected_map_id, map_side, current_phase_index, edited_phases, agents_settings, abilities_settings 
 		FROM lobbies 
@@ -267,7 +241,7 @@ func GetLobbiesByCodes(codes []string) ([]Lobby, error) {
 			CanvasState: &FullCanvasState{
 				SelectedMap:  MapOption{},
 				EditedPhases: []int{},
-				Phases:       emptyPhases,
+				Phases:       NewEmptyPhaseStates(),
 			},
 		}
 

@@ -170,10 +170,14 @@ func GetStrategiesByUserID(userID int) ([]Strategy, error) {
 	}
 	defer rows.Close()
 
+	return scanStrategies(rows)
+}
+
+func scanStrategies(rows pgx.Rows) ([]Strategy, error) {
 	var strategies []Strategy
 	for rows.Next() {
 		var strategy Strategy
-		err := rows.Scan(
+		if err := rows.Scan(
 			&strategy.ID,
 			&strategy.UserID,
 			&strategy.FolderID,
@@ -181,12 +185,9 @@ func GetStrategiesByUserID(userID int) ([]Strategy, error) {
 			&strategy.Name,
 			&strategy.CreatedAt,
 			&strategy.UpdatedAt,
-		)
-
-		if err != nil {
+		); err != nil {
 			return nil, err
 		}
-
 		strategies = append(strategies, strategy)
 	}
 
@@ -214,29 +215,7 @@ func GetStrategiesByFolderID(userID int, folderID int) ([]Strategy, error) {
 	}
 	defer rows.Close()
 
-	var strategies []Strategy
-	for rows.Next() {
-		var strategy Strategy
-		err := rows.Scan(
-			&strategy.ID,
-			&strategy.UserID,
-			&strategy.FolderID,
-			&strategy.LobbyCode,
-			&strategy.Name,
-			&strategy.CreatedAt,
-			&strategy.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-		strategies = append(strategies, strategy)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return strategies, nil
+	return scanStrategies(rows)
 }
 
 func StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error) {

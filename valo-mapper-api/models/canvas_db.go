@@ -137,18 +137,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		return nil, err
 	}
 
-	phases := make([]PhaseState, phaseCount)
-	for i := range phaseCount {
-		phases[i] = PhaseState{
-			AgentsOnCanvas:    []CanvasAgent{},
-			AbilitiesOnCanvas: []CanvasAbility{},
-			DrawLines:         []CanvasDrawLine{},
-			ConnectingLines:   []CanvasConnectingLine{},
-			TextsOnCanvas:     []CanvasText{},
-			ImagesOnCanvas:    []CanvasImage{},
-			ToolIconsOnCanvas: []CanvasToolIcon{},
-		}
-	}
+	phases := NewEmptyPhaseStates()
 
 	ctx, cancel := context.WithTimeout(context.Background(), dbOperationTimeout)
 	defer cancel()

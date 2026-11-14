@@ -169,77 +169,14 @@ func (u *User) Delete() error {
 	return err
 }
 
-func (u *User) LoadByFirebaseUID() error {
-	conn, err := db.GetDB()
-	if err != nil {
-		return err
-	}
+const userSelectColumns = `id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed,
+	has_ever_personal_subscription, subscription_ended_at, subscription_trial_ends_at,
+	stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at,
+	created_at, updated_at, rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at`
 
-	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, has_ever_personal_subscription, subscription_ended_at, subscription_trial_ends_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
-		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
-		FROM users
-		WHERE firebase_uid = $1
-	`, u.FirebaseUID).Scan(
-		&u.ID,
-		&u.FirebaseUID,
-		&u.Email,
-		&u.EmailVerified,
-		&u.Name,
-		&u.TourCompleted,
-		&u.IsSubscribed,
-		&u.HasEverPersonalSubscription,
-		&u.SubscriptionEndedAt,
-		&u.SubscriptionTrialEndsAt,
-		&u.StripeCustomerID,
-		&u.StripeSubscriptionID,
-		&u.SubscriptionPlan,
-		&u.PremiumTrialClaimedAt,
-		&u.CreatedAt,
-		&u.UpdatedAt,
-		&u.RSOSubjectID,
-		&u.RSOAccessToken,
-		&u.RSORefreshToken,
-		&u.RSOIDToken,
-		&u.RSOLinkedAt,
-	)
-	if err != nil {
-		return err
-	}
-
-	u.capturePersonalBillingState()
-
-	return u.refreshEffectiveSubscriptionState()
-}
-
-func GetUserByFirebaseUID(uid string) (*User, error) {
-	user := &User{
-		FirebaseUID: strPtr(uid),
-	}
-
-	err := user.LoadByFirebaseUID()
-	if err == pgx.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-func GetUserByID(id int) (*User, error) {
-	conn, err := db.GetDB()
-	if err != nil {
-		return nil, err
-	}
-
+func scanUser(row pgx.Row) (*User, error) {
 	user := &User{}
-	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, has_ever_personal_subscription, subscription_ended_at, subscription_trial_ends_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
-		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
-		FROM users
-		WHERE id = $1
-	`, id).Scan(
+	err := row.Scan(
 		&user.ID,
 		&user.FirebaseUID,
 		&user.Email,
@@ -262,18 +199,58 @@ func GetUserByID(id int) (*User, error) {
 		&user.RSOIDToken,
 		&user.RSOLinkedAt,
 	)
-
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
+
 	user.capturePersonalBillingState()
 	if err := user.refreshEffectiveSubscriptionState(); err != nil {
 		return nil, err
 	}
+
 	return user, nil
+}
+
+func (u *User) LoadByFirebaseUID() error {
+	conn, err := db.GetDB()
+	if err != nil {
+		return err
+	}
+
+	loaded, err := scanUser(conn.QueryRow(context.Background(),
+		`SELECT `+userSelectColumns+` FROM users WHERE firebase_uid = $1`, u.FirebaseUID))
+	if err != nil {
+		return err
+	}
+	if loaded == nil {
+		return pgx.ErrNoRows
+	}
+
+	*u = *loaded
+	return nil
+}
+
+func GetUserByFirebaseUID(uid string) (*User, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	return scanUser(conn.QueryRow(context.Background(),
+		`SELECT `+userSelectColumns+` FROM users WHERE firebase_uid = $1`, uid))
+}
+
+func GetUserByID(id int) (*User, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	return scanUser(conn.QueryRow(context.Background(),
+		`SELECT `+userSelectColumns+` FROM users WHERE id = $1`, id))
 }
 
 // GetUserByRSOSubject returns the user associated with the given RSO subject ID.
@@ -283,47 +260,8 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 		return nil, err
 	}
 
-	user := &User{}
-	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, has_ever_personal_subscription, subscription_ended_at, subscription_trial_ends_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
-		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
-		FROM users
-		WHERE rso_subject_id = $1
-	`, subject).Scan(
-		&user.ID,
-		&user.FirebaseUID,
-		&user.Email,
-		&user.EmailVerified,
-		&user.Name,
-		&user.TourCompleted,
-		&user.IsSubscribed,
-		&user.HasEverPersonalSubscription,
-		&user.SubscriptionEndedAt,
-		&user.SubscriptionTrialEndsAt,
-		&user.StripeCustomerID,
-		&user.StripeSubscriptionID,
-		&user.SubscriptionPlan,
-		&user.PremiumTrialClaimedAt,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-		&user.RSOSubjectID,
-		&user.RSOAccessToken,
-		&user.RSORefreshToken,
-		&user.RSOIDToken,
-		&user.RSOLinkedAt,
-	)
-
-	if err == pgx.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	user.capturePersonalBillingState()
-	if err := user.refreshEffectiveSubscriptionState(); err != nil {
-		return nil, err
-	}
-	return user, nil
+	return scanUser(conn.QueryRow(context.Background(),
+		`SELECT `+userSelectColumns+` FROM users WHERE rso_subject_id = $1`, subject))
 }
 
 func GetUserByStripeSubscriptionID(stripeSubscriptionID string) (*User, error) {
@@ -332,47 +270,8 @@ func GetUserByStripeSubscriptionID(stripeSubscriptionID string) (*User, error) {
 		return nil, err
 	}
 
-	user := &User{}
-	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, has_ever_personal_subscription, subscription_ended_at, subscription_trial_ends_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
-		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
-		FROM users
-		WHERE stripe_subscription_id = $1
-	`, stripeSubscriptionID).Scan(
-		&user.ID,
-		&user.FirebaseUID,
-		&user.Email,
-		&user.EmailVerified,
-		&user.Name,
-		&user.TourCompleted,
-		&user.IsSubscribed,
-		&user.HasEverPersonalSubscription,
-		&user.SubscriptionEndedAt,
-		&user.SubscriptionTrialEndsAt,
-		&user.StripeCustomerID,
-		&user.StripeSubscriptionID,
-		&user.SubscriptionPlan,
-		&user.PremiumTrialClaimedAt,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-		&user.RSOSubjectID,
-		&user.RSOAccessToken,
-		&user.RSORefreshToken,
-		&user.RSOIDToken,
-		&user.RSOLinkedAt,
-	)
-
-	if err == pgx.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	user.capturePersonalBillingState()
-	if err := user.refreshEffectiveSubscriptionState(); err != nil {
-		return nil, err
-	}
-	return user, nil
+	return scanUser(conn.QueryRow(context.Background(),
+		`SELECT `+userSelectColumns+` FROM users WHERE stripe_subscription_id = $1`, stripeSubscriptionID))
 }
 
 func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
@@ -381,47 +280,8 @@ func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
 		return nil, err
 	}
 
-	user := &User{}
-	err = conn.QueryRow(context.Background(), `
-		SELECT id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed, has_ever_personal_subscription, subscription_ended_at, subscription_trial_ends_at, stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at, created_at, updated_at,
-		       rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at
-		FROM users
-		WHERE stripe_customer_id = $1
-	`, stripeCustomerID).Scan(
-		&user.ID,
-		&user.FirebaseUID,
-		&user.Email,
-		&user.EmailVerified,
-		&user.Name,
-		&user.TourCompleted,
-		&user.IsSubscribed,
-		&user.HasEverPersonalSubscription,
-		&user.SubscriptionEndedAt,
-		&user.SubscriptionTrialEndsAt,
-		&user.StripeCustomerID,
-		&user.StripeSubscriptionID,
-		&user.SubscriptionPlan,
-		&user.PremiumTrialClaimedAt,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-		&user.RSOSubjectID,
-		&user.RSOAccessToken,
-		&user.RSORefreshToken,
-		&user.RSOIDToken,
-		&user.RSOLinkedAt,
-	)
-
-	if err == pgx.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	user.capturePersonalBillingState()
-	if err := user.refreshEffectiveSubscriptionState(); err != nil {
-		return nil, err
-	}
-	return user, nil
+	return scanUser(conn.QueryRow(context.Background(),
+		`SELECT `+userSelectColumns+` FROM users WHERE stripe_customer_id = $1`, stripeCustomerID))
 }
 
 // CreateUserWithRSO creates a new user record with Firebase UID, RSO subject and optional profile data.
