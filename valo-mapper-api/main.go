@@ -136,7 +136,12 @@ func getSwaggerSchemesFromAllowedOrigins() []string {
 }
 
 func main() {
+	started := time.Now()
 	logger.Init()
+
+	markStartup := func(phase string) {
+		slog.Info("startup", "phase", phase, "elapsed_ms", time.Since(started).Milliseconds())
+	}
 
 	if err := godotenv.Load(); err != nil {
 		slog.Info("no .env file found, using environment variables")
@@ -173,6 +178,7 @@ func main() {
 		slog.Error("missing required environment variables", "vars", missingVars)
 		os.Exit(1)
 	}
+	markStartup("config_ready")
 
 	stripe.Key = strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
 
@@ -181,12 +187,14 @@ func main() {
 		os.Exit(1)
 	}
 	defer db.Close()
+	markStartup("db_ready")
 
 	firebaseAuth, err := firebase.InitFirebaseAuth()
 	if err != nil {
 		slog.Error("failed to initialize firebase", "error", err)
 		os.Exit(1)
 	}
+	markStartup("firebase_ready")
 
 	rsoclient := os.Getenv("RSO_CLIENT_ID")
 	rsosecret := os.Getenv("RSO_CLIENT_SECRET")
@@ -196,6 +204,7 @@ func main() {
 	if err := storage.InitTigris(); err != nil {
 		slog.Warn("tigris storage not initialized; image uploads unavailable", "error", err)
 	}
+	markStartup("storage_ready")
 
 	conn, err := db.GetDB()
 	if err != nil {
@@ -210,6 +219,8 @@ func main() {
 	go hub.Run()
 
 	replay.CleanStaleTempDirs(time.Hour)
+	markStartup("replay_cleanup")
+
 	replayService := replay.NewService(replay.Config{
 		VRFKitBin:       getEnvString("VRFKIT_BIN", "vrfkit"),
 		InspectTimeout:  getEnvDuration("REPLAY_INSPECT_TIMEOUT", 15*time.Second),
@@ -223,6 +234,7 @@ func main() {
 		MaxConcurrent:   getEnvInt("REPLAY_MAX_CONCURRENT", 1),
 		FrameHz:         getEnvInt("REPLAY_FRAME_HZ", 8),
 	})
+	markStartup("replay_ready")
 
 	r := mux.NewRouter()
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -233,6 +245,7 @@ func main() {
 	})
 	routes.SetupRoutes(r, firebaseAuth, hub, replayService, os.Getenv("INTERNAL_API_KEY"))
 	r.PathPrefix("/swagger/").Handler(middleware.SwaggerBasicAuth(httpSwagger.WrapHandler))
+	markStartup("routes_ready")
 
 	rateLimitRPS := getEnvFloat("RATE_LIMIT_RPS", 20)
 	rateLimitBurst := getEnvInt("RATE_LIMIT_BURST", 60)
@@ -258,8 +271,10 @@ func main() {
 	})
 	handler = c.Handler(handler)
 	handler = middleware.AccessLogMiddleware(handler)
+	handler = middleware.FirstRequestLogger(started)(handler)
 	handler = middleware.RequestIDMiddleware(handler)
 	handler = middleware.SecurityHeadersMiddleware(handler)
+	markStartup("middleware_ready")
 
 	srv := &http.Server{
 		Addr:              ":8080",
@@ -269,6 +284,8 @@ func main() {
 		WriteTimeout:      15 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
+
+	markStartup("listening")
 
 	go func() {
 		slog.Info("server running", "addr", ":8080")

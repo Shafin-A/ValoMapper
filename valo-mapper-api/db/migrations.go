@@ -3,6 +3,7 @@ package db
 import (
 	"embed"
 	"log/slog"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
@@ -12,6 +13,8 @@ import (
 var migrationsFS embed.FS
 
 func RunMigrations(databaseURL string) error {
+	started := time.Now()
+
 	source, err := iofs.New(migrationsFS, "migrations")
 	if err != nil {
 		return err
@@ -27,6 +30,6 @@ func RunMigrations(databaseURL string) error {
 		return err
 	}
 
-	slog.Info("database migrations completed")
+	slog.Info("database migrations completed", "duration_ms", time.Since(started).Milliseconds())
 	return nil
 }
