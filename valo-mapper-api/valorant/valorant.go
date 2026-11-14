@@ -1,7 +1,5 @@
-// Package valorant holds the small, stable lookup tables shared by the replay
-// normaliser: VALORANT map codenames, agent UUIDs and the builds VRFKit
-// supports. Keeping them out of replay/ makes the tables reusable and easy to
-// test without a Parquet export.
+// Package valorant holds the shared VALORANT lookup tables: map codenames,
+// agent UUIDs, and the builds VRFKit supports.
 package valorant
 
 import (

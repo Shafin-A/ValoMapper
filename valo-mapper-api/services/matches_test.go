@@ -953,7 +953,7 @@ func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 	}
 }
 
-func TestToMapName_HardcodedMapUrlMappings(t *testing.T) {
+func TestToMapName_RiotMapPaths(t *testing.T) {
 	tests := []struct {
 		mapID    string
 		expected string
@@ -962,6 +962,9 @@ func TestToMapName_HardcodedMapUrlMappings(t *testing.T) {
 		{"/Game/Maps/Bonsai/Bonsai", "Split"},
 		{"/Game/Maps/Canyon/Canyon", "Fracture"},
 		{"/Game/Maps/Duality/Duality", "Bind"},
+		{"Jam", "Lotus"},
+		{"/Game/Maps/Jam/Jam.Jam", "Lotus"},
+		{"/game/maps/jam/jam", "Lotus"},
 	}
 
 	for _, test := range tests {
@@ -1040,6 +1043,7 @@ func TestToAgentName_KnownAgentUUIDMappings(t *testing.T) {
 		expected string
 	}{
 		{"add6443a-41bd-e414-f6ad-e58d267f4e95", "Jett"},
+		{"ADD6443A-41BD-E414-F6AD-E58D267F4E95", "Jett"},
 		{"9f0d8ba9-4140-b941-57d3-a7ad57c6b417", "Brimstone"},
 		{"601dbbe7-43ce-be57-2a40-4abd24953621", "KAY/O"},
 		{"ddd5a15c-4fbe-42fa-3789-11a55ca5ee04", "Hush"},
