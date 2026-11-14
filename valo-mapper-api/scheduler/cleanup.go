@@ -96,17 +96,18 @@ func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupSched
 func (cs *CleanupScheduler) Start() {
 	slog.Info("cleanup scheduler started", "interval", cs.interval)
 
-	cs.runCleanup()
-
 	ticker := time.NewTicker(cs.interval)
 
 	go func() {
+		defer ticker.Stop()
+
+		cs.runCleanup()
+
 		for {
 			select {
 			case <-ticker.C:
 				cs.runCleanup()
 			case <-cs.stopChan:
-				ticker.Stop()
 				slog.Info("cleanup scheduler stopped")
 				return
 			}
@@ -121,46 +122,48 @@ func (cs *CleanupScheduler) Stop() {
 }
 
 func (cs *CleanupScheduler) runCleanup() {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	run := func(name string, timeout time.Duration, cleanup func(context.Context) (int64, error)) {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		deleted, err := cleanup(ctx)
+		if err != nil {
+			slog.Error(name+" cleanup failed", "error", err)
+			return
+		}
+
+		slog.Info(name+" cleanup completed", "deleted", deleted)
+	}
+
+	run("lobby", 30*time.Second, func(ctx context.Context) (int64, error) {
+		tag, err := cs.db.Exec(ctx, cs.cleanupQuery)
+		if err != nil {
+			return 0, err
+		}
+		return tag.RowsAffected(), nil
+	})
+
+	run("subscription", 30*time.Second, func(ctx context.Context) (int64, error) {
+		tag, err := cs.db.Exec(ctx, cs.subscriptionCleanupQuery)
+		if err != nil {
+			return 0, err
+		}
+		return tag.RowsAffected(), nil
+	})
+
+	run("dead registration", 30*time.Second, cs.runDeadRegistrationCleanup)
+
+	run("webhook events", 30*time.Second, func(ctx context.Context) (int64, error) {
+		tag, err := cs.db.Exec(ctx, cs.webhookEventsCleanupQuery)
+		if err != nil {
+			return 0, err
+		}
+		return tag.RowsAffected(), nil
+	})
+
+	imageCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-
-	slog.Info("running cleanup for lobbies")
-
-	cmdTag, err := cs.db.Exec(ctx, cs.cleanupQuery)
-	if err != nil {
-		slog.Error("lobby cleanup failed", "error", err)
-		return
-	}
-	slog.Info("lobby cleanup completed", "deleted", cmdTag.RowsAffected())
-
-	slog.Info("running cleanup for downgraded user strategies")
-
-	cmdTag, err = cs.db.Exec(ctx, cs.subscriptionCleanupQuery)
-	if err != nil {
-		slog.Error("subscription cleanup failed", "error", err)
-		return
-	}
-	slog.Info("subscription cleanup completed", "deleted", cmdTag.RowsAffected())
-
-	slog.Info("running cleanup for dead registrations")
-
-	deletedRows, err := cs.runDeadRegistrationCleanup(ctx)
-	if err != nil {
-		slog.Error("dead registration cleanup failed", "error", err)
-		return
-	}
-	slog.Info("dead registration cleanup completed", "deleted", deletedRows)
-
-	slog.Info("running cleanup for stale stripe webhook events")
-
-	cmdTag, err = cs.db.Exec(ctx, cs.webhookEventsCleanupQuery)
-	if err != nil {
-		slog.Error("webhook events cleanup failed", "error", err)
-		return
-	}
-	slog.Info("webhook events cleanup completed", "deleted", cmdTag.RowsAffected())
-
-	cs.runImageObjectCleanup(ctx)
+	cs.runImageObjectCleanup(imageCtx)
 }
 
 func (cs *CleanupScheduler) runDeadRegistrationCleanup(ctx context.Context) (int64, error) {
