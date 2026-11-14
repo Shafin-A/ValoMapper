@@ -149,14 +149,6 @@ func GetLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	phases, err := models.GetAllCanvasPhases(code)
-	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve canvas phases", err), middleware.GetRequestID(r))
-		return
-	}
-
-	lobby.CanvasState.Phases = phases
-
 	utils.SendJSON(w, http.StatusOK, lobby, middleware.GetRequestID(r))
 }
 
