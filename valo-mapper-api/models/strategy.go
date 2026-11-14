@@ -190,6 +190,10 @@ func GetStrategiesByUserID(userID int) ([]Strategy, error) {
 		strategies = append(strategies, strategy)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return strategies, nil
 }
 
@@ -226,6 +230,10 @@ func GetStrategiesByFolderID(userID int, folderID int) ([]Strategy, error) {
 			return nil, err
 		}
 		strategies = append(strategies, strategy)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return strategies, nil

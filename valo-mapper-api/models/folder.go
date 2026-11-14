@@ -129,5 +129,9 @@ func GetFoldersByUserID(userID int) ([]Folder, error) {
 		folders = append(folders, folder)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return folders, nil
 }
