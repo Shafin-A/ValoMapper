@@ -92,19 +92,28 @@ func (c *Client) ReadPump() {
 				continue
 			}
 
-			c.hub.broadcast <- &LobbyMessage{
-				LobbyCode: c.lobbyCode,
-				Message:   msgBytes,
-				Sender:    c,
+			if !c.broadcast(msgBytes) {
+				return
 			}
 			continue
 		}
 
-		c.hub.broadcast <- &LobbyMessage{
-			LobbyCode: c.lobbyCode,
-			Message:   message,
-			Sender:    c,
+		if !c.broadcast(message) {
+			return
 		}
+	}
+}
+
+func (c *Client) broadcast(message []byte) bool {
+	select {
+	case c.hub.broadcast <- &LobbyMessage{
+		LobbyCode: c.lobbyCode,
+		Message:   message,
+		Sender:    c,
+	}:
+		return true
+	case <-c.hub.stop:
+		return false
 	}
 }
 

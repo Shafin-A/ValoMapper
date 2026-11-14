@@ -33,6 +33,12 @@ func TestHub_Stop(t *testing.T) {
 	}
 }
 
+func TestHub_StopIsIdempotent(t *testing.T) {
+	hub := NewHub()
+	hub.Stop()
+	hub.Stop()
+}
+
 func TestHub_RegisterClient(t *testing.T) {
 	hub := NewHub()
 	go hub.Run()

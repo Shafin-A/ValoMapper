@@ -16,7 +16,8 @@ type Hub struct {
 
 	broadcast chan *LobbyMessage
 
-	stop chan struct{}
+	stop     chan struct{}
+	stopOnce sync.Once
 
 	mu sync.RWMutex
 
@@ -41,7 +42,9 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Stop() {
-	close(h.stop)
+	h.stopOnce.Do(func() {
+		close(h.stop)
+	})
 }
 
 // HubStats holds a snapshot of the hub's current connection state.
@@ -121,11 +124,7 @@ func (h *Hub) Run() {
 				select {
 				case client.send <- lobbyMsg.Message:
 				default:
-					h.mu.Lock()
-					delete(h.lobbies[lobbyMsg.LobbyCode], client)
-					close(client.send)
-					h.mu.Unlock()
-					h.dropsTotal.Add(1)
+					h.dropClient(lobbyMsg.LobbyCode, client)
 				}
 			}
 		}
@@ -162,14 +161,35 @@ func (h *Hub) broadcastUserList(lobbyCode string) {
 		return
 	}
 
-	h.mu.RLock()
 	for client := range clients {
 		select {
 		case client.send <- msgBytes:
 		default:
+			h.dropClient(lobbyCode, client)
 		}
 	}
-	h.mu.RUnlock()
+}
+
+func (h *Hub) dropClient(lobbyCode string, client *Client) {
+	h.mu.Lock()
+	clients, ok := h.lobbies[lobbyCode]
+	if !ok {
+		h.mu.Unlock()
+		return
+	}
+	if _, ok := clients[client]; !ok {
+		h.mu.Unlock()
+		return
+	}
+
+	delete(clients, client)
+	close(client.send)
+	if len(clients) == 0 {
+		delete(h.lobbies, lobbyCode)
+	}
+	h.mu.Unlock()
+
+	h.dropsTotal.Add(1)
 }
 
 func (h *Hub) GetLobbyClients(lobbyCode string) int {
