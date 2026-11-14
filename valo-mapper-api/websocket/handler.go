@@ -3,24 +3,48 @@ package websocket
 import (
 	"log/slog"
 	"net/http"
-	"slices"
+	"strings"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
+var (
+	allowedOriginsMu sync.RWMutex
+	allowedOrigins   = map[string]struct{}{
+		"https://valomapper.com":     {},
+		"https://www.valomapper.com": {},
+		"http://localhost:3000":      {},
+		"http://localhost:3001":      {},
+	}
+)
+
+func ConfigureAllowedOrigins(origins []string) {
+	next := make(map[string]struct{}, len(origins))
+	for _, origin := range origins {
+		if trimmed := strings.TrimSpace(origin); trimmed != "" {
+			next[trimmed] = struct{}{}
+		}
+	}
+
+	allowedOriginsMu.Lock()
+	allowedOrigins = next
+	allowedOriginsMu.Unlock()
+}
+
+func isAllowedOrigin(origin string) bool {
+	allowedOriginsMu.RLock()
+	_, ok := allowedOrigins[origin]
+	allowedOriginsMu.RUnlock()
+	return ok
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		origin := r.Header.Get("Origin")
-		allowedOrigins := []string{
-			"https://valomapper.com",
-			"http://localhost:3000",
-			"http://localhost:3001",
-		}
-
-		return slices.Contains(allowedOrigins, origin)
+		return isAllowedOrigin(r.Header.Get("Origin"))
 	},
 }
 

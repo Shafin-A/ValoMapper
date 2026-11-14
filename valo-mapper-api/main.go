@@ -240,6 +240,7 @@ func main() {
 	if origin := os.Getenv("ALLOWED_ORIGINS"); origin != "" {
 		allowedOrigins = strings.Split(origin, ",")
 	}
+	websocket.ConfigureAllowedOrigins(allowedOrigins)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   allowedOrigins,
