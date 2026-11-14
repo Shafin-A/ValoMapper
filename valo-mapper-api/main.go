@@ -26,6 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
+	"github.com/stripe/stripe-go/v82"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"golang.org/x/time/rate"
 )
@@ -171,6 +172,8 @@ func main() {
 		slog.Error("missing required environment variables", "vars", missingVars)
 		os.Exit(1)
 	}
+
+	stripe.Key = strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
 
 	if err := db.InitDB(); err != nil {
 		slog.Error("failed to initialize database", "error", err)

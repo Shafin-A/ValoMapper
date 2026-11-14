@@ -41,7 +41,6 @@ func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth 
 		return
 	}
 
-	stripe.Key = stripeSecretKey
 	billingService := services.NewBillingService(services.BillingServiceDependencies{
 		CreateStripeCheckoutSessionFn: createStripeCheckoutSessionFn,
 		FindStripePriceForPlanFn: func(plan services.CheckoutPlan) (*stripe.Price, error) {

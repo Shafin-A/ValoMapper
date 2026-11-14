@@ -8,8 +8,6 @@ import (
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/services"
 	"valo-mapper-api/utils"
-
-	"github.com/stripe/stripe-go/v82"
 )
 
 // CancelSubscription godoc
@@ -44,7 +42,6 @@ func CancelSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 		return
 	}
 
-	stripe.Key = stripeSecretKey
 	billingServiceDeps := services.BillingServiceDependencies{
 		UpdateStripeSubscriptionFn: updateStripeSubscriptionFn,
 		GetStripeSubscriptionFn:    getStripeSubscriptionFn,
@@ -103,7 +100,6 @@ func ResumeSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 		return
 	}
 
-	stripe.Key = stripeSecretKey
 	billingServiceDeps := services.BillingServiceDependencies{
 		UpdateStripeSubscriptionFn: updateStripeSubscriptionFn,
 		GetStripeSubscriptionFn:    getStripeSubscriptionFn,

@@ -31,7 +31,6 @@ func GetBillingPlans(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stripe.Key = stripeSecretKey
 	billingService := services.NewBillingService(services.BillingServiceDependencies{
 		FindStripePriceForPlanFn: func(plan services.CheckoutPlan) (*stripe.Price, error) {
 			return findStripePriceForPlanFn(plan)

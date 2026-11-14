@@ -13,7 +13,6 @@ import (
 	"valo-mapper-api/utils"
 
 	"github.com/gorilla/mux"
-	"github.com/stripe/stripe-go/v82"
 )
 
 // GetStackMembers godoc
@@ -240,7 +239,6 @@ func AcceptStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 			return
 		}
 
-		stripe.Key = stripeSecretKey
 		billingService := services.NewBillingService(services.BillingServiceDependencies{
 			UpdateStripeSubscriptionFn: updateStripeSubscriptionFn,
 			GetStripeSubscriptionFn:    getStripeSubscriptionFn,
