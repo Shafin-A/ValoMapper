@@ -13,21 +13,10 @@ func RegisterUserRoutes(r *mux.Router, firebaseAuth *auth.Client, internalAPIKey
 	users := r.PathPrefix("/api/users").Subrouter()
 	authClient := handlers.NewFirebaseAuthClient(firebaseAuth)
 
-	users.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
-		handlers.CreateUser(w, r, authClient)
-	}).Methods("POST")
-
-	users.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetUser(w, r, authClient)
-	}).Methods("GET")
-
-	users.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
-		handlers.UpdateUser(w, r, authClient)
-	}).Methods("PUT")
-
-	users.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
-		handlers.DeleteUser(w, r, authClient)
-	}).Methods("DELETE")
+	users.Handle("", authenticated(authClient, handlers.CreateUser)).Methods("POST")
+	users.Handle("/me", authenticated(authClient, handlers.GetUser)).Methods("GET")
+	users.Handle("/me", authenticated(authClient, handlers.UpdateUser)).Methods("PUT")
+	users.Handle("/me", authenticated(authClient, handlers.DeleteUser)).Methods("DELETE")
 
 	subscriptionHandler := middleware.InternalAPIKeyMiddleware(internalAPIKey)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handlers.UpdateUserSubscription(w, r, authClient)

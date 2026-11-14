@@ -169,6 +169,66 @@ func TestAuthenticateRequest_AutoProvisionsMissingUser(t *testing.T) {
 	}
 }
 
+func TestAuthMiddleware(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	pool := testutils.SetupTestDB(t)
+	defer testutils.CleanupTestDB(t, pool)
+	testutils.TruncateTables(t, pool, "users")
+
+	const firebaseUID = "middleware-user"
+	user := testutils.CreateTestUser(t, pool, firebaseUID)
+
+	mockAuth := &testutils.MockFirebaseAuth{}
+	mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+		return &auth.Token{UID: firebaseUID}, nil
+	}
+	mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
+		return nil, errors.New("unexpected Firebase lookup")
+	}
+
+	var contextUser *models.User
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		contextUser = UserFromContext(r.Context())
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	t.Run("stores the authenticated user in the request context", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/users/me", nil)
+		req.Header.Set("Authorization", "Bearer valid-token")
+		w := httptest.NewRecorder()
+
+		RequireAuth(mockAuth)(next).ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNoContent, w.Code)
+		if assert.NotNil(t, contextUser) {
+			assert.Equal(t, user.ID, contextUser.ID)
+		}
+	})
+
+	t.Run("rejects missing credentials", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/users/me", nil)
+		w := httptest.NewRecorder()
+
+		RequireAuth(mockAuth)(next).ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("optional auth passes anonymous requests through", func(t *testing.T) {
+		contextUser = nil
+		req := httptest.NewRequest(http.MethodGet, "/api/matches/abc/summary", nil)
+		w := httptest.NewRecorder()
+
+		OptionalAuth(mockAuth)(next).ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNoContent, w.Code)
+		assert.Nil(t, contextUser)
+	})
+}
+
 func TestAuthenticateRequest_UsesStoredUser(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")

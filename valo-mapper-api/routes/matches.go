@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"net/http"
 	"valo-mapper-api/handlers"
 
 	"firebase.google.com/go/v4/auth"
@@ -15,11 +14,6 @@ func RegisterMatchRoutes(r *mux.Router, firebaseAuth *auth.Client) {
 		MatchService: nil,
 	})
 
-	matches.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
-		matchHandler.GetMatches(w, r, authClient)
-	}).Methods("GET")
-
-	matches.HandleFunc("/{matchId}/summary", func(w http.ResponseWriter, r *http.Request) {
-		matchHandler.GetMatchSummary(w, r, authClient)
-	}).Methods("GET")
+	matches.Handle("", authenticated(authClient, matchHandler.GetMatches)).Methods("GET")
+	matches.Handle("/{matchId}/summary", optionalAuth(authClient, matchHandler.GetMatchSummary)).Methods("GET")
 }

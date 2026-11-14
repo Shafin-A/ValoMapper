@@ -9,6 +9,7 @@ import (
 
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
+	"valo-mapper-api/utils"
 
 	"firebase.google.com/go/v4/auth"
 )
@@ -18,6 +19,55 @@ var (
 	errInvalidOrExpiredToken      = errors.New("invalid or expired token")
 	errUnableToRetrieveUser       = errors.New("unable to retrieve user profile")
 )
+
+type userContextKey struct{}
+
+func UserFromContext(ctx context.Context) *models.User {
+	user, _ := ctx.Value(userContextKey{}).(*models.User)
+	return user
+}
+
+func RequireAuth(firebaseAuth FirebaseAuthInterface) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			user, err := authenticateRequest(r, firebaseAuth)
+			if err != nil {
+				writeAuthError(w, r, err)
+				return
+			}
+
+			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userContextKey{}, user)))
+		})
+	}
+}
+
+func OptionalAuth(firebaseAuth FirebaseAuthInterface) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.TrimSpace(r.Header.Get("Authorization")) == "" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			user, err := authenticateRequest(r, firebaseAuth)
+			if err != nil {
+				writeAuthError(w, r, err)
+				return
+			}
+
+			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userContextKey{}, user)))
+		})
+	}
+}
+
+func writeAuthError(w http.ResponseWriter, r *http.Request, err error) {
+	if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
+		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
+		return
+	}
+
+	utils.SendJSONError(w, utils.NewInternal("Unable to load authenticated user", err), middleware.GetRequestID(r))
+}
 
 type FirebaseAuthInterface interface {
 	VerifyIDToken(ctx context.Context, idToken string) (*auth.Token, error)
@@ -110,6 +160,10 @@ func buildUserFromFirebase(uid string, firebaseUser *auth.UserRecord) *models.Us
 }
 
 func authenticateRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*models.User, error) {
+	if user := UserFromContext(r.Context()); user != nil {
+		return user, nil
+	}
+
 	token, err := VerifyFirebaseToken(r, firebaseAuth)
 	if err != nil {
 		return nil, err
@@ -151,6 +205,10 @@ func syncEmailVerified(r *http.Request, user *models.User, token *auth.Token) {
 }
 
 func authenticateOptionalRequest(r *http.Request, firebaseAuth FirebaseAuthInterface) (*models.User, error) {
+	if user := UserFromContext(r.Context()); user != nil {
+		return user, nil
+	}
+
 	authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 	if authHeader == "" {
 		return nil, nil
