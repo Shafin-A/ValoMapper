@@ -46,72 +46,37 @@ import (
 // @name X-Internal-API-Key
 // @description Internal service API key.
 
-func getEnvInt(name string, defaultValue int) int {
+func getEnvValue[T any](name string, defaultValue T, parse func(string) (T, error), valid func(T) bool) T {
 	rawValue := strings.TrimSpace(os.Getenv(name))
 	if rawValue == "" {
 		return defaultValue
 	}
 
-	parsedValue, err := strconv.Atoi(rawValue)
-	if err != nil {
+	parsedValue, err := parse(rawValue)
+	if err != nil || (valid != nil && !valid(parsedValue)) {
 		slog.Warn("invalid env var value, using default", "name", name, "value", rawValue, "default", defaultValue)
 		return defaultValue
 	}
 
-	if parsedValue <= 0 {
-		slog.Warn("non-positive env var value, using default", "name", name, "value", rawValue, "default", defaultValue)
-		return defaultValue
-	}
-
 	return parsedValue
+}
+
+func getEnvInt(name string, defaultValue int) int {
+	return getEnvValue(name, defaultValue, strconv.Atoi, func(value int) bool { return value > 0 })
 }
 
 func getEnvFloat(name string, defaultValue float64) float64 {
-	rawValue := strings.TrimSpace(os.Getenv(name))
-	if rawValue == "" {
-		return defaultValue
-	}
-
-	parsedValue, err := strconv.ParseFloat(rawValue, 64)
-	if err != nil {
-		slog.Warn("invalid env var value, using default", "name", name, "value", rawValue, "default", defaultValue)
-		return defaultValue
-	}
-
-	if parsedValue <= 0 {
-		slog.Warn("non-positive env var value, using default", "name", name, "value", rawValue, "default", defaultValue)
-		return defaultValue
-	}
-
-	return parsedValue
+	return getEnvValue(name, defaultValue, func(raw string) (float64, error) {
+		return strconv.ParseFloat(raw, 64)
+	}, func(value float64) bool { return value > 0 })
 }
 
 func getEnvString(name, defaultValue string) string {
-	rawValue := strings.TrimSpace(os.Getenv(name))
-	if rawValue == "" {
-		return defaultValue
-	}
-	return rawValue
+	return getEnvValue(name, defaultValue, func(raw string) (string, error) { return raw, nil }, nil)
 }
 
 func getEnvDuration(name string, defaultValue time.Duration) time.Duration {
-	rawValue := strings.TrimSpace(os.Getenv(name))
-	if rawValue == "" {
-		return defaultValue
-	}
-
-	parsedValue, err := time.ParseDuration(rawValue)
-	if err != nil {
-		slog.Warn("invalid duration env var, using default", "name", name, "value", rawValue, "default", defaultValue)
-		return defaultValue
-	}
-
-	if parsedValue <= 0 {
-		slog.Warn("non-positive duration env var, using default", "name", name, "value", rawValue, "default", defaultValue)
-		return defaultValue
-	}
-
-	return parsedValue
+	return getEnvValue(name, defaultValue, time.ParseDuration, func(value time.Duration) bool { return value > 0 })
 }
 
 func getSwaggerSchemesFromAllowedOrigins() []string {
