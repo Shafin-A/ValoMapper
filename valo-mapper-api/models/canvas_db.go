@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -19,6 +20,8 @@ const (
 	phaseCount         = 10
 	dbOperationTimeout = 10 * time.Second
 )
+
+var ErrLobbyNotFound = errors.New("lobby not found")
 
 var allowedImageExtensions = map[string]struct{}{
 	".jpg":  {},
@@ -711,8 +714,12 @@ func ApplyCanvasPatch(lobbyCode string, patch CanvasPatch) (retErr error) {
 		}
 	}()
 
-	// Lock lobby row to avoid race with full SaveCanvasState path.
-	if _, err = tx.Exec(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE", lobbyCode); err != nil {
+	// The row lock also verifies the lobby exists.
+	var lobbyExists int
+	if err = tx.QueryRow(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE", lobbyCode).Scan(&lobbyExists); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrLobbyNotFound
+		}
 		return err
 	}
 

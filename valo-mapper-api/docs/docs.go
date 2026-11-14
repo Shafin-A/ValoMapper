@@ -1223,10 +1223,10 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "204": {
+                        "description": "No Content",
                         "schema": {
-                            "$ref": "#/definitions/models.Lobby"
+                            "type": "string"
                         }
                     },
                     "400": {

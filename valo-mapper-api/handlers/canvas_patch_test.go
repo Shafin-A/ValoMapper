@@ -78,10 +78,13 @@ func TestApplyCanvasPatch(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		w := executeCanvasPatchRequest(req)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		var returnedLobby models.Lobby
-		testutils.ParseJSONResponse(t, w, &returnedLobby)
-		assert.Equal(t, lobby.Code, returnedLobby.Code)
+		assert.Equal(t, http.StatusNoContent, w.Code)
+		assert.Empty(t, w.Body.String())
+
+		phases, err := models.GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		require.NotEmpty(t, phases[0].AgentsOnCanvas)
+		assert.Equal(t, "a1", phases[0].AgentsOnCanvas[0].ID)
 	})
 
 	t.Run("persists agent dead state through patch updates", func(t *testing.T) {
@@ -106,7 +109,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		w := executeCanvasPatchRequest(req)
 
-		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusNoContent, w.Code)
 
 		phases, err := models.GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
@@ -133,7 +136,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 		addReq := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(addBody)))
 		addReq.Header.Set("Content-Type", "application/json")
 		addW := executeCanvasPatchRequest(addReq)
-		assert.Equal(t, http.StatusOK, addW.Code)
+		assert.Equal(t, http.StatusNoContent, addW.Code)
 
 		// Move image without src payload
 		updatePayload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{Entity: "image", Action: "update", PhaseIndex: 0, ID: "img1", Payload: map[string]any{"id": "img1", "x": 200, "y": 220, "width": 150, "height": 150}}}}
@@ -143,7 +146,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 		updateReq := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(updateBody)))
 		updateReq.Header.Set("Content-Type", "application/json")
 		updateW := executeCanvasPatchRequest(updateReq)
-		assert.Equal(t, http.StatusOK, updateW.Code)
+		assert.Equal(t, http.StatusNoContent, updateW.Code)
 
 		phases, err := models.GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
@@ -164,7 +167,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(body)))
 		req.Header.Set("Content-Type", "application/json")
 		w := executeCanvasPatchRequest(req)
-		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusNoContent, w.Code)
 
 		removalPayload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{Entity: "drawline", Action: "remove", PhaseIndex: 0, ID: "line1"}}}
 		removalBody, err := json.Marshal(removalPayload)
@@ -173,7 +176,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 		removalReq := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(removalBody)))
 		removalReq.Header.Set("Content-Type", "application/json")
 		removalW := executeCanvasPatchRequest(removalReq)
-		assert.Equal(t, http.StatusOK, removalW.Code)
+		assert.Equal(t, http.StatusNoContent, removalW.Code)
 
 		phases, err := models.GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -20,7 +21,7 @@ import (
 // @Produce json
 // @Param code path string true "Lobby code"
 // @Param request body models.CanvasPatch true "Canvas patch request"
-// @Success 200 {object} models.Lobby
+// @Success 204 {string} string "No Content"
 // @Failure 400 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
@@ -48,33 +49,18 @@ func ApplyCanvasPatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingLobby, err := models.GetLobbyByCode(code)
-	if err != nil {
-		canvasPatchErrors.Add(1)
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
-		return
-	}
-	if existingLobby == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
-		return
-	}
-
 	if err := models.ApplyCanvasPatch(code, patch); err != nil {
+		if errors.Is(err, models.ErrLobbyNotFound) {
+			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
+			return
+		}
+
 		canvasPatchErrors.Add(1)
 		utils.SendJSONError(w, utils.NewInternal("Unable to apply canvas patch", err), middleware.GetRequestID(r))
 		return
 	}
 
-	updatedLobby, err := models.GetLobbyByCode(code)
-	if err != nil {
-		canvasPatchErrors.Add(1)
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby after patch", err), middleware.GetRequestID(r))
-		return
-	}
-	if updatedLobby == nil {
-		utils.SendJSONError(w, utils.NewNotFound("Lobby not found after patch"), middleware.GetRequestID(r))
-		return
-	}
-
-	utils.SendJSON(w, http.StatusOK, updatedLobby, middleware.GetRequestID(r))
+	// Callers already applied this patch optimistically; avoid re-reading the canvas.
+	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
+	w.WriteHeader(http.StatusNoContent)
 }
