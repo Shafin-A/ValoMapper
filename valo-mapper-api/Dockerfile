@@ -54,7 +54,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY --from=gobuild /app/main .
-COPY --from=gobuild /app/db/migrations ./db/migrations
 COPY --from=vrfkit /src/target/release/vrfkit /usr/local/bin/vrfkit
 
 ENV VRFKIT_BIN=/usr/local/bin/vrfkit
