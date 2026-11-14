@@ -704,7 +704,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			{Entity: "agent", Action: "upsert", PhaseIndex: 0, ID: "a1", Payload: map[string]any{"id": "a1", "name": "Jett", "role": "Duelist", "x": 100, "y": 200, "isAlly": true}},
 		}}
 
-		err := ApplyCanvasPatch(lobby.Code, patch)
+		err := ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -714,7 +714,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 		assert.Equal(t, "Jett", phases[0].AgentsOnCanvas[0].AgentName)
 
 		patch = CanvasPatch{Entries: []CanvasPatchEntry{{Entity: "agent", Action: "remove", PhaseIndex: 0, ID: "a1"}}}
-		err = ApplyCanvasPatch(lobby.Code, patch)
+		err = ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.NoError(t, err)
 
 		phases, err = GetAllCanvasPhases(lobby.Code)
@@ -737,7 +737,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			},
 		}}}
 
-		err := ApplyCanvasPatch(lobby.Code, patch)
+		err := ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -756,7 +756,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			{Entity: "text", Action: "upsert", PhaseIndex: 2, ID: "note-text", Payload: map[string]any{"id": "note-text", "text": "Label", "x": 10, "y": 10, "width": 100, "height": 40, "note": "Rotate after plant"}},
 		}}
 
-		err := ApplyCanvasPatch(lobby.Code, patch)
+		err := ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -769,7 +769,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 		clearedPatch := CanvasPatch{Entries: []CanvasPatchEntry{
 			{Entity: "agent", Action: "upsert", PhaseIndex: 2, ID: "note-agent", Payload: map[string]any{"id": "note-agent", "name": "Jett", "role": "Duelist", "x": 10, "y": 20, "isAlly": true}},
 		}}
-		err = ApplyCanvasPatch(lobby.Code, clearedPatch)
+		err = ApplyCanvasPatch(context.Background(), lobby.Code, clearedPatch)
 		require.NoError(t, err)
 
 		phases, err = GetAllCanvasPhases(lobby.Code)
@@ -782,7 +782,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			Entity: "image", Action: "upsert", PhaseIndex: 0, ID: "img1", Payload: map[string]any{"id": "img1", "src": "javascript:alert(1)", "x": 0, "y": 0, "width": 10, "height": 10},
 		}}}
 
-		err := ApplyCanvasPatch(lobby.Code, patch)
+		err := ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid image source")
 	})
@@ -792,7 +792,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			Entity: "connectingline", Action: "upsert", PhaseIndex: 0, ID: "cl1", Payload: map[string]any{"id": "cl1", "fromId": "a", "toId": "b", "strokeColor": "#FFFFFF", "strokeWidth": 1, "uploadedImages": []string{"data:image/png;base64,abcd"}},
 		}}}
 
-		err := ApplyCanvasPatch(lobby.Code, patch)
+		err := ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid uploaded image source")
 	})
@@ -802,7 +802,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			Entity: "connectingline", Action: "upsert", PhaseIndex: 0, ID: "cl2", Payload: map[string]any{"id": "cl2", "fromId": "a", "toId": "b", "strokeColor": "#FFFFFF", "strokeWidth": 1, "youtubeLink": "javascript:alert(1)"},
 		}}}
 
-		err := ApplyCanvasPatch(lobby.Code, patch)
+		err := ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid link")
 	})
@@ -817,7 +817,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			{Entity: "phase", Action: "update", PhaseIndex: 3, Payload: map[string]any{"phaseIndex": 3}},
 		}}
 
-		err = ApplyCanvasPatch(lobby.Code, patch)
+		err = ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.NoError(t, err)
 
 		updatedLobby, err := GetLobbyByCode(lobby.Code)
@@ -835,18 +835,18 @@ func TestApplyCanvasPatch(t *testing.T) {
 			{Entity: "side", Action: "update", PhaseIndex: 0, Payload: map[string]any{"mapSide": "attack"}},
 			{Entity: "phase", Action: "update", PhaseIndex: 1},
 		}}
-		err := ApplyCanvasPatch(lobby.Code, setupPatch)
+		err := ApplyCanvasPatch(context.Background(), lobby.Code, setupPatch)
 		require.NoError(t, err)
 
 		patch := CanvasPatch{Entries: []CanvasPatchEntry{
 			{Entity: "agent", Action: "upsert", PhaseIndex: 0, ID: "a1", Payload: map[string]any{"id": "a1", "name": "Jett", "role": "Duelist", "x": 100, "y": 200, "isAlly": true}},
 			{Entity: "agent", Action: "upsert", PhaseIndex: 1, ID: "a2", Payload: map[string]any{"id": "a2", "name": "Sova", "role": "Initiator", "x": 150, "y": 250, "isAlly": true}},
 		}}
-		err = ApplyCanvasPatch(lobby.Code, patch)
+		err = ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.NoError(t, err)
 
 		clearPatch := CanvasPatch{Entries: []CanvasPatchEntry{{Entity: "canvas", Action: "clear", PhaseIndex: 1}}}
-		err = ApplyCanvasPatch(lobby.Code, clearPatch)
+		err = ApplyCanvasPatch(context.Background(), lobby.Code, clearPatch)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -881,7 +881,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			{Entity: "canvas", Action: "reset", PhaseIndex: 0, Payload: map[string]any{"resetAll": true}},
 		}}
 
-		err = ApplyCanvasPatch(lobby.Code, patch)
+		err = ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -904,7 +904,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			{Entity: "abilities_settings", Action: "update", PhaseIndex: 0, Payload: map[string]any{"abilitiesSettings": map[string]any{"scale": 33, "borderOpacity": 0.7, "borderWidth": 8, "radius": 15, "allyColor": "#778899", "enemyColor": "#aabbcc"}}},
 		}}
 
-		err := ApplyCanvasPatch(lobby.Code, patch)
+		err := ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.NoError(t, err)
 
 		updatedLobby, err := GetLobbyByCode(lobby.Code)
@@ -933,7 +933,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			}},
 		}}
 
-		err := ApplyCanvasPatch(lobby.Code, patch)
+		err := ApplyCanvasPatch(context.Background(), lobby.Code, patch)
 		require.NoError(t, err)
 
 		phases, err := GetAllCanvasPhases(lobby.Code)
@@ -979,7 +979,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			}},
 		}}
 
-		err := ApplyCanvasPatch(sortLobby.Code, addPatch)
+		err := ApplyCanvasPatch(context.Background(), sortLobby.Code, addPatch)
 		require.NoError(t, err)
 
 		// Simulate dragging ab-first (moves it to front — sort_order bumped via nextval)
@@ -991,7 +991,7 @@ func TestApplyCanvasPatch(t *testing.T) {
 			}},
 		}}
 
-		err = ApplyCanvasPatch(sortLobby.Code, movePatch)
+		err = ApplyCanvasPatch(context.Background(), sortLobby.Code, movePatch)
 		require.NoError(t, err)
 
 		// Reload and verify ab-first is now last (highest sort_order = rendered on top)

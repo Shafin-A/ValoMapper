@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"context"
 	"testing"
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
@@ -53,7 +54,7 @@ func BenchmarkApplyCanvasPatch20(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		if err := models.ApplyCanvasPatch(lobby.Code, patch); err != nil {
+		if err := models.ApplyCanvasPatch(context.Background(), lobby.Code, patch); err != nil {
 			b.Fatalf("ApplyCanvasPatch: %v", err)
 		}
 	}

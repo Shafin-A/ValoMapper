@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -67,6 +68,50 @@ func TestApplyCanvasPatch(t *testing.T) {
 		w := executeCanvasPatchRequest(req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("rejects invalid phase index", func(t *testing.T) {
+		payload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{Entity: "agent", Action: "upsert", PhaseIndex: 10, ID: "a1", Payload: map[string]any{"id": "a1"}}}}
+		body, err := json.Marshal(payload)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(body)))
+		req.Header.Set("Content-Type", "application/json")
+		w := executeCanvasPatchRequest(req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("rejects unsupported entity", func(t *testing.T) {
+		payload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{Entity: "unknown", Action: "upsert", PhaseIndex: 0, ID: "x1"}}}
+		body, err := json.Marshal(payload)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(body)))
+		req.Header.Set("Content-Type", "application/json")
+		w := executeCanvasPatchRequest(req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("rejects too many entries", func(t *testing.T) {
+		entries := make([]models.CanvasPatchEntry, maxCanvasPatchEntries+1)
+		for i := range entries {
+			id := fmt.Sprintf("agent-%d", i)
+			entries[i] = models.CanvasPatchEntry{
+				Entity: "agent", Action: "upsert", PhaseIndex: 0, ID: id,
+				Payload: map[string]any{"id": id},
+			}
+		}
+
+		body, err := json.Marshal(models.CanvasPatch{Entries: entries})
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/lobbies/"+lobby.Code+"/canvas-patches", strings.NewReader(string(body)))
+		req.Header.Set("Content-Type", "application/json")
+		w := executeCanvasPatchRequest(req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
 	t.Run("applies patch for existing lobby", func(t *testing.T) {

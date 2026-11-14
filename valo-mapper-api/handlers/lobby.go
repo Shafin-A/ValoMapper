@@ -116,6 +116,10 @@ func CreateLobby(w http.ResponseWriter, r *http.Request) {
 	if request.CanvasState != nil {
 		if err := models.SaveCanvasState(lobby.Code, *request.CanvasState); err != nil {
 			_ = models.DeleteLobby(lobby.Code)
+			if errors.Is(err, models.ErrInvalidPatch) {
+				utils.SendJSONError(w, utils.NewBadRequest("Invalid canvas state"), middleware.GetRequestID(r))
+				return
+			}
 			utils.SendJSONError(w, utils.NewInternal("Unable to seed initial canvas state", err), middleware.GetRequestID(r))
 			return
 		}
@@ -202,6 +206,10 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := models.SaveCanvasState(code, *req.CanvasState); err != nil {
+		if errors.Is(err, models.ErrInvalidPatch) {
+			utils.SendJSONError(w, utils.NewBadRequest("Invalid canvas state"), middleware.GetRequestID(r))
+			return
+		}
 		utils.SendJSONError(w, utils.NewInternal("Unable to save canvas state", err), middleware.GetRequestID(r))
 		return
 	}

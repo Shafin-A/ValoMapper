@@ -21,7 +21,14 @@ const (
 	dbOperationTimeout = 10 * time.Second
 )
 
-var ErrLobbyNotFound = errors.New("lobby not found")
+var (
+	ErrLobbyNotFound = errors.New("lobby not found")
+	ErrInvalidPatch  = errors.New("invalid canvas patch")
+)
+
+func invalidPatchError(format string, args ...any) error {
+	return fmt.Errorf("%w: %s", ErrInvalidPatch, fmt.Sprintf(format, args...))
+}
 
 var allowedImageExtensions = map[string]struct{}{
 	".jpg":  {},
@@ -425,22 +432,26 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 }
 
 func validateCanvasState(state FullCanvasState) error {
+	if len(state.Phases) > phaseCount {
+		return invalidPatchError("canvas state has %d phases (max %d)", len(state.Phases), phaseCount)
+	}
+
 	for _, phase := range state.Phases {
 		for _, i := range phase.ImagesOnCanvas {
 			if i.Src != "" && !isAllowedImageSource(i.Src) {
-				return fmt.Errorf("invalid image source in canvas state: %s", i.Src)
+				return invalidPatchError("invalid image source in canvas state: %s", i.Src)
 			}
 		}
 
 		for _, cl := range phase.ConnectingLines {
 			for _, img := range cl.UploadedImages {
 				if img != "" && !isAllowedImageSource(img) {
-					return fmt.Errorf("invalid uploaded image source in connecting line canvas state: %s", img)
+					return invalidPatchError("invalid uploaded image source in connecting line canvas state: %s", img)
 				}
 			}
 
 			if cl.YoutubeLink != "" && !isAllowedLink(cl.YoutubeLink) {
-				return fmt.Errorf("invalid link in connecting line canvas state: %s", cl.YoutubeLink)
+				return invalidPatchError("invalid link in connecting line canvas state: %s", cl.YoutubeLink)
 			}
 		}
 	}
@@ -693,13 +704,15 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	return tx.Commit(ctx)
 }
 
-func ApplyCanvasPatch(lobbyCode string, patch CanvasPatch) (retErr error) {
+func ApplyCanvasPatch(ctx context.Context, lobbyCode string, patch CanvasPatch) (retErr error) {
 	conn, err := db.GetDB()
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, dbOperationTimeout)
+	defer cancel()
+
 	tx, err := conn.Begin(ctx)
 	if err != nil {
 		return err
@@ -709,6 +722,13 @@ func ApplyCanvasPatch(lobbyCode string, patch CanvasPatch) (retErr error) {
 			_ = tx.Rollback(ctx)
 		}
 	}()
+
+	if _, err = tx.Exec(ctx, "SET LOCAL lock_timeout = '5s'"); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, "SET LOCAL statement_timeout = '10s'"); err != nil {
+		return err
+	}
 
 	// The row lock also verifies the lobby exists.
 	var lobbyExists int
@@ -739,7 +759,16 @@ func setLobbyUpdatedAt(tx pgx.Tx, lobbyCode string) error {
 }
 
 func applyPatchEntry(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
-	switch strings.ToLower(entry.Entity) {
+	entity := strings.ToLower(entry.Entity)
+
+	switch entity {
+	case "agent", "ability", "drawline", "connectingline", "text", "image", "toolicon":
+		if entry.PhaseIndex < 0 || entry.PhaseIndex >= phaseCount {
+			return invalidPatchError("invalid phase index: %d", entry.PhaseIndex)
+		}
+	}
+
+	switch entity {
 	case "agent":
 		return applyAgentPatch(tx, lobbyCode, entry)
 	case "ability":
@@ -769,14 +798,14 @@ func applyPatchEntry(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 	case "abilities_settings":
 		return applyAbilitiesSettingsPatch(tx, lobbyCode, entry)
 	default:
-		return fmt.Errorf("unsupported canvas entity: %s", entry.Entity)
+		return invalidPatchError("unsupported canvas entity: %s", entry.Entity)
 	}
 }
 
 func applyAgentPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
 		if entry.ID == "" {
-			return fmt.Errorf("missing id for agent remove")
+			return invalidPatchError("missing id for agent remove")
 		}
 		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_agents WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
 		return err
@@ -789,7 +818,7 @@ func applyAgentPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 			return err
 		}
 		if err := json.Unmarshal(payloadJSON, &p); err != nil {
-			return err
+			return invalidPatchError("invalid payload: %v", err)
 		}
 	}
 
@@ -797,7 +826,7 @@ func applyAgentPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 		p.ID = entry.ID
 	}
 	if p.ID == "" {
-		return fmt.Errorf("missing id for agent upsert")
+		return invalidPatchError("missing id for agent upsert")
 	}
 
 	_, err := tx.Exec(context.Background(), `
@@ -813,7 +842,7 @@ func applyAgentPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
 		if entry.ID == "" {
-			return fmt.Errorf("missing id for ability remove")
+			return invalidPatchError("missing id for ability remove")
 		}
 		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_abilities WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
 		return err
@@ -826,7 +855,7 @@ func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 			return err
 		}
 		if err := json.Unmarshal(payloadJSON, &p); err != nil {
-			return err
+			return invalidPatchError("invalid payload: %v", err)
 		}
 	}
 
@@ -834,7 +863,7 @@ func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 		p.ID = entry.ID
 	}
 	if p.ID == "" {
-		return fmt.Errorf("missing id for ability upsert")
+		return invalidPatchError("missing id for ability upsert")
 	}
 
 	pathArray := make([]float64, 0)
@@ -857,7 +886,7 @@ func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 func applyDrawLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
 		if entry.ID == "" {
-			return fmt.Errorf("missing id for draw line remove")
+			return invalidPatchError("missing id for draw line remove")
 		}
 		_, err := tx.Exec(context.Background(), `DELETE FROM canvas_draw_lines WHERE (id = $1 OR id LIKE $1 || '-chunk-%') AND lobby_code = $2 AND phase_index = $3`, entry.ID, lobbyCode, entry.PhaseIndex)
 		return err
@@ -870,7 +899,7 @@ func applyDrawLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 			return err
 		}
 		if err := json.Unmarshal(payloadJSON, &p); err != nil {
-			return err
+			return invalidPatchError("invalid payload: %v", err)
 		}
 	}
 
@@ -878,7 +907,7 @@ func applyDrawLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 		p.ID = entry.ID
 	}
 	if p.ID == "" {
-		return fmt.Errorf("missing id for draw line upsert")
+		return invalidPatchError("missing id for draw line upsert")
 	}
 
 	pointsArray := make([]float64, 0)
@@ -900,7 +929,7 @@ func applyDrawLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 func applyConnectingLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
 		if entry.ID == "" {
-			return fmt.Errorf("missing id for connecting line remove")
+			return invalidPatchError("missing id for connecting line remove")
 		}
 		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_connecting_lines WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
 		return err
@@ -913,7 +942,7 @@ func applyConnectingLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntr
 			return err
 		}
 		if err := json.Unmarshal(payloadJSON, &p); err != nil {
-			return err
+			return invalidPatchError("invalid payload: %v", err)
 		}
 	}
 
@@ -921,17 +950,17 @@ func applyConnectingLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntr
 		p.ID = entry.ID
 	}
 	if p.ID == "" {
-		return fmt.Errorf("missing id for connecting line upsert")
+		return invalidPatchError("missing id for connecting line upsert")
 	}
 
 	for _, img := range p.UploadedImages {
 		if img != "" && !isAllowedImageSource(img) {
-			return fmt.Errorf("invalid uploaded image source in connecting line: %s", img)
+			return invalidPatchError("invalid uploaded image source in connecting line: %s", img)
 		}
 	}
 
 	if p.YoutubeLink != "" && !isAllowedLink(p.YoutubeLink) {
-		return fmt.Errorf("invalid link in connecting line: %s", p.YoutubeLink)
+		return invalidPatchError("invalid link in connecting line: %s", p.YoutubeLink)
 	}
 
 	_, err := tx.Exec(context.Background(), `
@@ -948,7 +977,7 @@ func applyConnectingLinePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntr
 func applyTextPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
 		if entry.ID == "" {
-			return fmt.Errorf("missing id for text remove")
+			return invalidPatchError("missing id for text remove")
 		}
 		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_texts WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
 		return err
@@ -961,7 +990,7 @@ func applyTextPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 			return err
 		}
 		if err := json.Unmarshal(payloadJSON, &p); err != nil {
-			return err
+			return invalidPatchError("invalid payload: %v", err)
 		}
 	}
 
@@ -969,7 +998,7 @@ func applyTextPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 		p.ID = entry.ID
 	}
 	if p.ID == "" {
-		return fmt.Errorf("missing id for text upsert")
+		return invalidPatchError("missing id for text upsert")
 	}
 
 	var spansJSON any
@@ -999,7 +1028,7 @@ func applyTextPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 func applyImagePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
 		if entry.ID == "" {
-			return fmt.Errorf("missing id for image remove")
+			return invalidPatchError("missing id for image remove")
 		}
 		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_images WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
 		return err
@@ -1012,7 +1041,7 @@ func applyImagePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 			return err
 		}
 		if err := json.Unmarshal(payloadJSON, &p); err != nil {
-			return err
+			return invalidPatchError("invalid payload: %v", err)
 		}
 	}
 
@@ -1020,7 +1049,7 @@ func applyImagePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 		p.ID = entry.ID
 	}
 	if p.ID == "" {
-		return fmt.Errorf("missing id for image upsert")
+		return invalidPatchError("missing id for image upsert")
 	}
 
 	if p.Src == "" {
@@ -1035,7 +1064,7 @@ func applyImagePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 	}
 
 	if p.Src != "" && !isAllowedImageSource(p.Src) {
-		return fmt.Errorf("invalid image source: %s", p.Src)
+		return invalidPatchError("invalid image source: %s", p.Src)
 	}
 
 	_, err := tx.Exec(context.Background(), `
@@ -1051,7 +1080,7 @@ func applyImagePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 func applyToolIconPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if strings.EqualFold(entry.Action, "remove") || strings.EqualFold(entry.Action, "delete") {
 		if entry.ID == "" {
-			return fmt.Errorf("missing id for tool icon remove")
+			return invalidPatchError("missing id for tool icon remove")
 		}
 		_, err := tx.Exec(context.Background(), "DELETE FROM canvas_tool_icons WHERE id = $1 AND lobby_code = $2 AND phase_index = $3", entry.ID, lobbyCode, entry.PhaseIndex)
 		return err
@@ -1064,7 +1093,7 @@ func applyToolIconPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 			return err
 		}
 		if err := json.Unmarshal(payloadJSON, &p); err != nil {
-			return err
+			return invalidPatchError("invalid payload: %v", err)
 		}
 	}
 
@@ -1072,7 +1101,7 @@ func applyToolIconPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 		p.ID = entry.ID
 	}
 	if p.ID == "" {
-		return fmt.Errorf("missing id for tool icon upsert")
+		return invalidPatchError("missing id for tool icon upsert")
 	}
 
 	_, err := tx.Exec(context.Background(), `
@@ -1087,20 +1116,20 @@ func applyToolIconPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 
 func applyMapPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") && !strings.EqualFold(entry.Action, "change") {
-		return fmt.Errorf("invalid action for map patch: %s", entry.Action)
+		return invalidPatchError("invalid action for map patch: %s", entry.Action)
 	}
 
 	if entry.Payload == nil {
-		return fmt.Errorf("payload required for map patch")
+		return invalidPatchError("payload required for map patch")
 	}
 
 	idRaw, ok := entry.Payload["id"]
 	if !ok {
-		return fmt.Errorf("map patch payload missing id")
+		return invalidPatchError("map patch payload missing id")
 	}
 	id, ok := idRaw.(string)
 	if !ok || id == "" {
-		return fmt.Errorf("invalid map id in payload")
+		return invalidPatchError("invalid map id in payload")
 	}
 
 	// validate map exists.
@@ -1109,7 +1138,7 @@ func applyMapPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("map id not found: %s", id)
+		return invalidPatchError("map id not found: %s", id)
 	}
 
 	_, err := tx.Exec(context.Background(), "UPDATE lobbies SET selected_map_id = $1 WHERE code = $2", id, lobbyCode)
@@ -1118,7 +1147,7 @@ func applyMapPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 
 func applyMapSidePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
-		return fmt.Errorf("invalid action for side patch: %s", entry.Action)
+		return invalidPatchError("invalid action for side patch: %s", entry.Action)
 	}
 
 	var mapSide string
@@ -1137,12 +1166,12 @@ func applyMapSidePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 	}
 
 	if mapSide == "" {
-		return fmt.Errorf("map side is required")
+		return invalidPatchError("map side is required")
 	}
 
 	allowed := map[string]struct{}{"attack": {}, "defense": {}, "defend": {}}
 	if _, ok := allowed[strings.ToLower(mapSide)]; !ok {
-		return fmt.Errorf("invalid map side: %s", mapSide)
+		return invalidPatchError("invalid map side: %s", mapSide)
 	}
 
 	// standardize to canonical value
@@ -1156,7 +1185,7 @@ func applyMapSidePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 
 func applyPhasePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
-		return fmt.Errorf("invalid action for phase patch: %s", entry.Action)
+		return invalidPatchError("invalid action for phase patch: %s", entry.Action)
 	}
 
 	phaseIndex := entry.PhaseIndex
@@ -1169,7 +1198,7 @@ func applyPhasePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 	}
 
 	if phaseIndex < 0 || phaseIndex >= phaseCount {
-		return fmt.Errorf("invalid phase index: %d", phaseIndex)
+		return invalidPatchError("invalid phase index: %d", phaseIndex)
 	}
 
 	_, err := tx.Exec(context.Background(), `
@@ -1180,7 +1209,7 @@ func applyPhasePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 
 func applyEditedPhasesPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
-		return fmt.Errorf("invalid action for edited_phases patch: %s", entry.Action)
+		return invalidPatchError("invalid action for edited_phases patch: %s", entry.Action)
 	}
 
 	edited, ok := entry.Payload["editedPhases"]
@@ -1188,7 +1217,7 @@ func applyEditedPhasesPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry)
 		edited, ok = entry.Payload["edited_phases"]
 	}
 	if !ok {
-		return fmt.Errorf("editedPhases payload is required")
+		return invalidPatchError("editedPhases payload is required")
 	}
 
 	var phases []int
@@ -1203,12 +1232,12 @@ func applyEditedPhasesPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry)
 	case []int:
 		phases = v
 	default:
-		return fmt.Errorf("invalid editedPhases type")
+		return invalidPatchError("invalid editedPhases type")
 	}
 
 	for _, p := range phases {
 		if p < 0 || p >= phaseCount {
-			return fmt.Errorf("invalid edited phase index: %d", p)
+			return invalidPatchError("invalid edited phase index: %d", p)
 		}
 	}
 
@@ -1220,7 +1249,7 @@ func applyEditedPhasesPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry)
 
 func applyCanvasClearPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if !strings.EqualFold(entry.Action, "clear") && !strings.EqualFold(entry.Action, "reset") {
-		return fmt.Errorf("invalid action for canvas patch: %s", entry.Action)
+		return invalidPatchError("invalid action for canvas patch: %s", entry.Action)
 	}
 
 	resetAll := false
@@ -1263,7 +1292,7 @@ func applyCanvasClearPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) 
 
 	phaseIndex := entry.PhaseIndex
 	if phaseIndex < 0 || phaseIndex >= phaseCount {
-		return fmt.Errorf("invalid phase index for canvas clear: %d", phaseIndex)
+		return invalidPatchError("invalid phase index for canvas clear: %d", phaseIndex)
 	}
 
 	for _, table := range canvasTables {
@@ -1299,16 +1328,16 @@ func applyCanvasClearPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) 
 
 func applyAgentsSettingsPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
-		return fmt.Errorf("invalid action for agents_settings patch: %s", entry.Action)
+		return invalidPatchError("invalid action for agents_settings patch: %s", entry.Action)
 	}
 
 	if entry.Payload == nil {
-		return fmt.Errorf("payload required for agents_settings patch")
+		return invalidPatchError("payload required for agents_settings patch")
 	}
 
 	data, ok := entry.Payload["agentsSettings"]
 	if !ok {
-		return fmt.Errorf("agentsSettings payload is required")
+		return invalidPatchError("agentsSettings payload is required")
 	}
 
 	payloadJSON, err := json.Marshal(data)
@@ -1318,7 +1347,7 @@ func applyAgentsSettingsPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntr
 
 	var settings IconSettings
 	if err := json.Unmarshal(payloadJSON, &settings); err != nil {
-		return err
+		return invalidPatchError("invalid payload: %v", err)
 	}
 
 	settingsJSON, err := json.Marshal(settings)
@@ -1332,16 +1361,16 @@ func applyAgentsSettingsPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntr
 
 func applyAbilitiesSettingsPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	if !strings.EqualFold(entry.Action, "update") && !strings.EqualFold(entry.Action, "set") {
-		return fmt.Errorf("invalid action for abilities_settings patch: %s", entry.Action)
+		return invalidPatchError("invalid action for abilities_settings patch: %s", entry.Action)
 	}
 
 	if entry.Payload == nil {
-		return fmt.Errorf("payload required for abilities_settings patch")
+		return invalidPatchError("payload required for abilities_settings patch")
 	}
 
 	data, ok := entry.Payload["abilitiesSettings"]
 	if !ok {
-		return fmt.Errorf("abilitiesSettings payload is required")
+		return invalidPatchError("abilitiesSettings payload is required")
 	}
 
 	payloadJSON, err := json.Marshal(data)
@@ -1351,7 +1380,7 @@ func applyAbilitiesSettingsPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchE
 
 	var settings IconSettings
 	if err := json.Unmarshal(payloadJSON, &settings); err != nil {
-		return err
+		return invalidPatchError("invalid payload: %v", err)
 	}
 
 	settingsJSON, err := json.Marshal(settings)

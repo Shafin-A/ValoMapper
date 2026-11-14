@@ -13,6 +13,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const maxCanvasPatchEntries = 100
+
 // ApplyCanvasPatch godoc
 // @Summary Apply incremental canvas patch updates
 // @Description Applies a batch of canvas patch entries (entity/action/data) for the lobby
@@ -49,14 +51,21 @@ func ApplyCanvasPatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := models.ApplyCanvasPatch(code, patch); err != nil {
-		if errors.Is(err, models.ErrLobbyNotFound) {
-			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
-			return
-		}
+	if len(patch.Entries) > maxCanvasPatchEntries {
+		utils.SendJSONError(w, utils.NewBadRequest("Too many patch entries"), middleware.GetRequestID(r))
+		return
+	}
 
-		canvasPatchErrors.Add(1)
-		utils.SendJSONError(w, utils.NewInternal("Unable to apply canvas patch", err), middleware.GetRequestID(r))
+	if err := models.ApplyCanvasPatch(r.Context(), code, patch); err != nil {
+		switch {
+		case errors.Is(err, models.ErrLobbyNotFound):
+			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
+		case errors.Is(err, models.ErrInvalidPatch):
+			utils.SendJSONError(w, utils.NewBadRequest("Invalid canvas patch"), middleware.GetRequestID(r))
+		default:
+			canvasPatchErrors.Add(1)
+			utils.SendJSONError(w, utils.NewInternal("Unable to apply canvas patch", err), middleware.GetRequestID(r))
+		}
 		return
 	}
 
