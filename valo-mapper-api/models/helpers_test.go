@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -50,17 +49,7 @@ func setupTestDB(t *testing.T) *pgxpool.Pool {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// URL-encode the password to handle special characters
-	password := url.QueryEscape(os.Getenv("DB_PASSWORD"))
-
-	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		os.Getenv("DB_USER"),
-		password,
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		testDBName,
-	)
+	connStr := db.ConnectionString()
 
 	config, err := pgxpool.ParseConfig(connStr)
 	if err != nil {

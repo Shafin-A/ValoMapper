@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -33,16 +35,7 @@ func InitDB() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	password := url.QueryEscape(os.Getenv("DB_PASSWORD"))
-
-	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		os.Getenv("DB_USER"),
-		password,
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
+	connStr := ConnectionString()
 
 	config, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
@@ -82,6 +75,23 @@ func InitDB() error {
 
 	slog.Info("database initialized")
 	return nil
+}
+
+func ConnectionString() string {
+	sslMode := strings.TrimSpace(os.Getenv("DB_SSLMODE"))
+	if sslMode == "" {
+		sslMode = "disable"
+	}
+
+	u := &url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD")),
+		Host:     net.JoinHostPort(os.Getenv("DB_HOST"), os.Getenv("DB_PORT")),
+		Path:     "/" + os.Getenv("DB_NAME"),
+		RawQuery: url.Values{"sslmode": {sslMode}}.Encode(),
+	}
+
+	return u.String()
 }
 
 func Close() {
