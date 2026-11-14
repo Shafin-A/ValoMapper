@@ -25,6 +25,9 @@ const (
 	matchPreviewCacheTTL     = 30 * time.Second
 	matchSummaryCacheTTL     = 5 * time.Minute
 	riotHTTPTimeout          = 10 * time.Second
+
+	matchPreviewCacheMaxEntries = 500
+	matchSummaryCacheMaxEntries = 100
 )
 
 var (
@@ -540,11 +543,33 @@ func (s *MatchService) setCachedMatchPreviewPage(puuid string, start, limit int,
 		s.matchPreviewCacheMu.Unlock()
 		return
 	}
+	now := s.timeNow()
 	s.matchPreviewCache[cacheKey] = matchPreviewCacheEntry{
 		page:      cloneMatchPreviewPage(page),
-		expiresAt: s.timeNow().Add(matchPreviewCacheTTL),
+		expiresAt: now.Add(matchPreviewCacheTTL),
 	}
+	s.pruneMatchPreviewCacheLocked(now)
 	s.matchPreviewCacheMu.Unlock()
+}
+
+func (s *MatchService) pruneMatchPreviewCacheLocked(now time.Time) {
+	for key, entry := range s.matchPreviewCache {
+		if !entry.expiresAt.After(now) {
+			delete(s.matchPreviewCache, key)
+		}
+	}
+
+	for len(s.matchPreviewCache) > matchPreviewCacheMaxEntries {
+		var oldestKey string
+		var oldestExpiry time.Time
+		for key, entry := range s.matchPreviewCache {
+			if oldestKey == "" || entry.expiresAt.Before(oldestExpiry) {
+				oldestKey = key
+				oldestExpiry = entry.expiresAt
+			}
+		}
+		delete(s.matchPreviewCache, oldestKey)
+	}
 }
 
 func cloneMatchSummary(summary *MatchSummaryResponse) *MatchSummaryResponse {
@@ -661,11 +686,33 @@ func (s *MatchService) setCachedMatchSummary(matchID string, includeReplayTeleme
 		return
 	}
 
+	now := s.timeNow()
 	s.matchSummaryCache[cacheKey] = matchSummaryCacheEntry{
 		summary:   cloneMatchSummary(summary),
-		expiresAt: s.timeNow().Add(matchSummaryCacheTTL),
+		expiresAt: now.Add(matchSummaryCacheTTL),
 	}
+	s.pruneMatchSummaryCacheLocked(now)
 	s.matchSummaryCacheMu.Unlock()
+}
+
+func (s *MatchService) pruneMatchSummaryCacheLocked(now time.Time) {
+	for key, entry := range s.matchSummaryCache {
+		if !entry.expiresAt.After(now) {
+			delete(s.matchSummaryCache, key)
+		}
+	}
+
+	for len(s.matchSummaryCache) > matchSummaryCacheMaxEntries {
+		var oldestKey string
+		var oldestExpiry time.Time
+		for key, entry := range s.matchSummaryCache {
+			if oldestKey == "" || entry.expiresAt.Before(oldestExpiry) {
+				oldestKey = key
+				oldestExpiry = entry.expiresAt
+			}
+		}
+		delete(s.matchSummaryCache, oldestKey)
+	}
 }
 
 func buildViewerContext(summary *MatchSummaryResponse, requesterPUUID string) *ViewerContext {

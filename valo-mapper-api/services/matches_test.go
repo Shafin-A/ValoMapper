@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -950,6 +951,30 @@ func TestBuildRoundSummariesFromRoundResultsPayload(t *testing.T) {
 	}
 	if summariesWithoutTelemetry[0].EventLog[2].DefuseLocation != nil || len(summariesWithoutTelemetry[0].EventLog[2].DefusePlayerLocations) != 0 {
 		t.Fatalf("expected defuse telemetry to be omitted without replay flag, got %+v", summariesWithoutTelemetry[0].EventLog[2])
+	}
+}
+
+func TestMatchCachesAreBounded(t *testing.T) {
+	now := time.Now()
+	service := &MatchService{
+		matchPreviewCache: make(map[string]matchPreviewCacheEntry),
+		matchSummaryCache: make(map[string]matchSummaryCacheEntry),
+		now:               func() time.Time { return now },
+	}
+
+	for i := 0; i <= matchPreviewCacheMaxEntries; i++ {
+		service.setCachedMatchPreviewPage(fmt.Sprintf("puuid-%d", i), 0, 10, &MatchPreviewPage{})
+	}
+	if got := len(service.matchPreviewCache); got > matchPreviewCacheMaxEntries {
+		t.Fatalf("preview cache has %d entries, max %d", got, matchPreviewCacheMaxEntries)
+	}
+
+	for i := 0; i <= matchSummaryCacheMaxEntries; i++ {
+		matchID := fmt.Sprintf("match-%d", i)
+		service.setCachedMatchSummary(matchID, false, &MatchSummaryResponse{MatchID: matchID})
+	}
+	if got := len(service.matchSummaryCache); got > matchSummaryCacheMaxEntries {
+		t.Fatalf("summary cache has %d entries, max %d", got, matchSummaryCacheMaxEntries)
 	}
 }
 
