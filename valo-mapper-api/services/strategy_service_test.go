@@ -12,7 +12,7 @@ import (
 )
 
 type mockStrategyRepo struct {
-	getLobbyByCodeFn               func(code string) (*models.Lobby, error)
+	getLobbyMetaByCodeFn           func(code string) (*models.LobbyMeta, error)
 	strategyExistsByUserAndLobbyFn func(userID int, lobbyCode string) (bool, error)
 	countStrategiesByUserIDFn      func(userID int) (int, error)
 	getStrategySummariesFn         func(userID int, folderID *int) ([]models.StrategySummary, error)
@@ -22,11 +22,11 @@ type mockStrategyRepo struct {
 	deleteStrategyFn               func(s *models.Strategy) error
 }
 
-func (m *mockStrategyRepo) GetLobbyByCode(code string) (*models.Lobby, error) {
-	if m.getLobbyByCodeFn == nil {
+func (m *mockStrategyRepo) GetLobbyMetaByCode(code string) (*models.LobbyMeta, error) {
+	if m.getLobbyMetaByCodeFn == nil {
 		return nil, nil
 	}
-	return m.getLobbyByCodeFn(code)
+	return m.getLobbyMetaByCodeFn(code)
 }
 func (m *mockStrategyRepo) StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error) {
 	if m.strategyExistsByUserAndLobbyFn == nil {
@@ -76,9 +76,9 @@ func newStrategyService(repo StrategyRepository) *StrategyService {
 }
 
 func TestStrategyService_CreateStrategy(t *testing.T) {
-	testLobby := &models.Lobby{
+	testLobby := &models.LobbyMeta{
 		Code:          "AAAAA",
-		SelectedMapId: "ascent",
+		SelectedMapID: "ascent",
 		UpdatedAt:     time.Now(),
 	}
 
@@ -92,7 +92,7 @@ func TestStrategyService_CreateStrategy(t *testing.T) {
 
 	t.Run("returns error when lobby not found", func(t *testing.T) {
 		repo := &mockStrategyRepo{
-			getLobbyByCodeFn: func(code string) (*models.Lobby, error) { return nil, nil },
+			getLobbyMetaByCodeFn: func(code string) (*models.LobbyMeta, error) { return nil, nil },
 		}
 		svc := newStrategyService(repo)
 
@@ -103,7 +103,7 @@ func TestStrategyService_CreateStrategy(t *testing.T) {
 
 	t.Run("returns error when free user is at the strategy limit", func(t *testing.T) {
 		repo := &mockStrategyRepo{
-			getLobbyByCodeFn:          func(code string) (*models.Lobby, error) { return testLobby, nil },
+			getLobbyMetaByCodeFn:      func(code string) (*models.LobbyMeta, error) { return testLobby, nil },
 			countStrategiesByUserIDFn: func(userID int) (int, error) { return FreeStrategyLimit, nil },
 		}
 		svc := newStrategyService(repo)
@@ -118,8 +118,8 @@ func TestStrategyService_CreateStrategy(t *testing.T) {
 
 	t.Run("subscribed user bypasses free tier limit", func(t *testing.T) {
 		repo := &mockStrategyRepo{
-			getLobbyByCodeFn: func(code string) (*models.Lobby, error) { return testLobby, nil },
-			saveStrategyFn:   func(s *models.Strategy) error { return nil },
+			getLobbyMetaByCodeFn: func(code string) (*models.LobbyMeta, error) { return testLobby, nil },
+			saveStrategyFn:       func(s *models.Strategy) error { return nil },
 		}
 		svc := newStrategyService(repo)
 
@@ -134,7 +134,7 @@ func TestStrategyService_CreateStrategy(t *testing.T) {
 
 	t.Run("returns error on duplicate lobby code for same user", func(t *testing.T) {
 		repo := &mockStrategyRepo{
-			getLobbyByCodeFn:          func(code string) (*models.Lobby, error) { return testLobby, nil },
+			getLobbyMetaByCodeFn:      func(code string) (*models.LobbyMeta, error) { return testLobby, nil },
 			countStrategiesByUserIDFn: func(userID int) (int, error) { return 0, nil },
 			saveStrategyFn: func(s *models.Strategy) error {
 				return &pgconn.PgError{Code: pgerrcode.UniqueViolation}

@@ -110,6 +110,37 @@ func (l *Lobby) saveInternal(ctx context.Context) error {
 	return err
 }
 
+// LobbyMeta is the lightweight lobby projection for metadata-only callers.
+type LobbyMeta struct {
+	Code          string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	SelectedMapID string
+}
+
+func GetLobbyMetaByCode(code string) (*LobbyMeta, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	meta := &LobbyMeta{}
+	err = conn.QueryRow(context.Background(), `
+		SELECT code, created_at, updated_at, COALESCE(selected_map_id, '')
+		FROM lobbies
+		WHERE code = $1`,
+		code).Scan(&meta.Code, &meta.CreatedAt, &meta.UpdatedAt, &meta.SelectedMapID)
+
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return meta, nil
+}
+
 func GetLobbyByCode(code string) (*Lobby, error) {
 	conn, err := db.GetDB()
 	if err != nil {

@@ -22,7 +22,7 @@ var (
 
 // StrategyRepository abstracts persistence operations for StrategyService.
 type StrategyRepository interface {
-	GetLobbyByCode(code string) (*models.Lobby, error)
+	GetLobbyMetaByCode(code string) (*models.LobbyMeta, error)
 	StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error)
 	CountStrategiesByUserID(userID int) (int, error)
 	GetStrategySummariesByUserID(userID int, folderID *int) ([]models.StrategySummary, error)
@@ -34,8 +34,8 @@ type StrategyRepository interface {
 
 type defaultStrategyRepository struct{}
 
-func (r *defaultStrategyRepository) GetLobbyByCode(code string) (*models.Lobby, error) {
-	return models.GetLobbyByCode(code)
+func (r *defaultStrategyRepository) GetLobbyMetaByCode(code string) (*models.LobbyMeta, error) {
+	return models.GetLobbyMetaByCode(code)
 }
 func (r *defaultStrategyRepository) StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error) {
 	return models.StrategyExistsByUserAndLobby(userID, lobbyCode)
@@ -104,7 +104,7 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 		return nil, ErrStrategyNameRequired
 	}
 
-	lobby, err := ss.repo.GetLobbyByCode(req.LobbyCode)
+	lobby, err := ss.repo.GetLobbyMetaByCode(req.LobbyCode)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 		UserID:        strategy.UserID,
 		FolderID:      strategy.FolderID,
 		Name:          strategy.Name,
-		SelectedMapID: lobby.SelectedMapId,
+		SelectedMapID: lobby.SelectedMapID,
 		LobbyCode:     lobby.Code,
 		UpdatedAt:     lobby.UpdatedAt,
 	}, nil
@@ -212,8 +212,7 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 		return nil, err
 	}
 
-	// Fetch lobby to build response
-	lobby, err := ss.repo.GetLobbyByCode(strategy.LobbyCode)
+	lobby, err := ss.repo.GetLobbyMetaByCode(strategy.LobbyCode)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +225,7 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 		UserID:        strategy.UserID,
 		FolderID:      strategy.FolderID,
 		Name:          strategy.Name,
-		SelectedMapID: lobby.SelectedMapId,
+		SelectedMapID: lobby.SelectedMapID,
 		LobbyCode:     lobby.Code,
 		UpdatedAt:     lobby.UpdatedAt,
 	}, nil

@@ -344,6 +344,37 @@ func TestGetLobbyByCode(t *testing.T) {
 	})
 }
 
+func TestGetLobbyMetaByCode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	pool := setupTestDB(t)
+	defer cleanupTestDB(t, pool)
+
+	t.Run("returns metadata without loading canvas state", func(t *testing.T) {
+		truncateTables(t, pool, "lobbies", "maps")
+
+		createTestLobby(t, pool, "META01")
+
+		meta, err := GetLobbyMetaByCode("META01")
+		require.NoError(t, err)
+		require.NotNil(t, meta)
+		assert.Equal(t, "META01", meta.Code)
+		assert.Equal(t, "ascent", meta.SelectedMapID)
+		assert.False(t, meta.CreatedAt.IsZero())
+		assert.False(t, meta.UpdatedAt.IsZero())
+	})
+
+	t.Run("returns nil for non-existent lobby", func(t *testing.T) {
+		truncateTables(t, pool, "lobbies")
+
+		meta, err := GetLobbyMetaByCode("NONEXIST")
+		require.NoError(t, err)
+		assert.Nil(t, meta)
+	})
+}
+
 func TestGetLobbiesByCodes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test")

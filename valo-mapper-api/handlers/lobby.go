@@ -191,7 +191,7 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingLobby, err := models.GetLobbyByCode(code)
+	existingLobby, err := models.GetLobbyMetaByCode(code)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby", err), middleware.GetRequestID(r))
 		return
