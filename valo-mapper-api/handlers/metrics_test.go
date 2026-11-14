@@ -11,8 +11,6 @@ import (
 )
 
 func TestHandleMetricsIncludesReplayCounters(t *testing.T) {
-	t.Setenv("INTERNAL_API_KEY", "test-key")
-
 	parser := &fakeReplayParser{metrics: replay.Metrics{
 		ParsesStarted:   2,
 		ParsesSucceeded: 1,
@@ -23,7 +21,6 @@ func TestHandleMetricsIncludesReplayCounters(t *testing.T) {
 		RateLimited:     2,
 	}}
 	request := httptest.NewRequest(http.MethodGet, "/metrics", nil)
-	request.Header.Set("X-Internal-API-Key", "test-key")
 	recorder := httptest.NewRecorder()
 
 	HandleMetrics(websocket.NewHub(), parser)(recorder, request)

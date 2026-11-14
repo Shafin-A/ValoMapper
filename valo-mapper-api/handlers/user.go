@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"net/http"
-	"os"
 
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/services"
@@ -207,18 +205,6 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Security InternalAPIKey
 // @Router /api/users/subscription [patch]
 func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAuthInterface) {
-	configuredKey := os.Getenv("INTERNAL_API_KEY")
-	if configuredKey == "" {
-		utils.SendJSONError(w, utils.NewInternal("Internal API key is not configured", nil), middleware.GetRequestID(r))
-		return
-	}
-
-	providedKey := r.Header.Get("X-Internal-API-Key")
-	if subtle.ConstantTimeCompare([]byte(providedKey), []byte(configuredKey)) != 1 {
-		utils.SendJSONError(w, utils.NewForbidden("Forbidden"), middleware.GetRequestID(r))
-		return
-	}
-
 	var req UpdateUserSubscriptionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))

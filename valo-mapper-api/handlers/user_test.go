@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 	"valo-mapper-api/models"
@@ -446,17 +445,6 @@ func TestUpdateUserSubscription(t *testing.T) {
 
 	testutils.TruncateTables(t, pool, "users")
 
-	const internalKey = "test-internal-key"
-	originalKey, hadOriginal := os.LookupEnv("INTERNAL_API_KEY")
-	_ = os.Setenv("INTERNAL_API_KEY", internalKey)
-	defer func() {
-		if hadOriginal {
-			_ = os.Setenv("INTERNAL_API_KEY", originalKey)
-			return
-		}
-		_ = os.Unsetenv("INTERNAL_API_KEY")
-	}()
-
 	mockAuth := &testutils.MockFirebaseAuth{}
 
 	t.Run("downgrades user and sets subscription ended timestamp", func(t *testing.T) {
@@ -470,7 +458,6 @@ func TestUpdateUserSubscription(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", reqBody, "")
-		req.Header.Set("X-Internal-API-Key", internalKey)
 		w := httptest.NewRecorder()
 
 		UpdateUserSubscription(w, req, mockAuth)
@@ -495,7 +482,6 @@ func TestUpdateUserSubscription(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", reqBody, "")
-		req.Header.Set("X-Internal-API-Key", internalKey)
 		w := httptest.NewRecorder()
 
 		UpdateUserSubscription(w, req, mockAuth)
@@ -509,21 +495,6 @@ func TestUpdateUserSubscription(t *testing.T) {
 		assert.Nil(t, user.SubscriptionEndedAt)
 	})
 
-	t.Run("rejects missing internal api key", func(t *testing.T) {
-		testUser := testutils.CreateTestUser(t, pool, "firebase-sub-uid-3")
-		reqBody := UpdateUserSubscriptionRequest{
-			UserID:       &testUser.ID,
-			IsSubscribed: ptrBool(false),
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", reqBody, "")
-		w := httptest.NewRecorder()
-
-		UpdateUserSubscription(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusForbidden, w.Code)
-	})
-
 	t.Run("rejects request without isSubscribed", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-sub-uid-4")
 		reqBody := UpdateUserSubscriptionRequest{
@@ -531,7 +502,6 @@ func TestUpdateUserSubscription(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", reqBody, "")
-		req.Header.Set("X-Internal-API-Key", internalKey)
 		w := httptest.NewRecorder()
 
 		UpdateUserSubscription(w, req, mockAuth)
@@ -548,7 +518,6 @@ func TestUpdateUserSubscription(t *testing.T) {
 		}
 
 		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", reqBody, "")
-		req.Header.Set("X-Internal-API-Key", internalKey)
 		w := httptest.NewRecorder()
 
 		UpdateUserSubscription(w, req, mockAuth)

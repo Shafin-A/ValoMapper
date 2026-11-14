@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"crypto/subtle"
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"valo-mapper-api/middleware"
 	"valo-mapper-api/models"
@@ -27,18 +25,6 @@ type adminLobbiesResponse struct {
 // @Security InternalAPIKey
 // @Router /admin/lobbies [get]
 func HandleAdminLobbies(w http.ResponseWriter, r *http.Request) {
-	configuredKey := os.Getenv("INTERNAL_API_KEY")
-	if configuredKey == "" {
-		utils.SendJSONError(w, utils.NewInternal("Internal API key is not configured", nil), middleware.GetRequestID(r))
-		return
-	}
-
-	providedKey := r.Header.Get("X-Internal-API-Key")
-	if subtle.ConstantTimeCompare([]byte(providedKey), []byte(configuredKey)) != 1 {
-		utils.SendJSONError(w, utils.NewForbidden("Forbidden"), middleware.GetRequestID(r))
-		return
-	}
-
 	codes, err := models.ListLobbyCodes()
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve lobby codes", err), middleware.GetRequestID(r))

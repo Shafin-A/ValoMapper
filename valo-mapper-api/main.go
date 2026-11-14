@@ -224,7 +224,7 @@ func main() {
 	})
 
 	r := mux.NewRouter()
-	routes.SetupRoutes(r, firebaseAuth, hub, replayService)
+	routes.SetupRoutes(r, firebaseAuth, hub, replayService, os.Getenv("INTERNAL_API_KEY"))
 	r.PathPrefix("/swagger/").Handler(middleware.SwaggerBasicAuth(httpSwagger.WrapHandler))
 
 	rateLimitRPS := getEnvFloat("RATE_LIMIT_RPS", 20)
