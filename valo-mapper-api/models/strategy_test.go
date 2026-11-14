@@ -421,6 +421,59 @@ func TestGetStrategiesByFolderID(t *testing.T) {
 	})
 }
 
+func TestGetStrategySummariesByUserID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	pool := setupTestDB(t)
+	defer cleanupTestDB(t, pool)
+
+	t.Run("joins lobby metadata and filters by folder", func(t *testing.T) {
+		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
+
+		user := createTestUser(t, pool, "summary-user")
+		folder := &Folder{UserID: user.ID, Name: "Summary Folder"}
+		require.NoError(t, folder.Save())
+
+		lobbyOne := createTestLobby(t, pool, "SUMM01")
+		lobbyTwo := createTestLobby(t, pool, "SUMM02")
+
+		strategyOne := &Strategy{UserID: user.ID, LobbyCode: lobbyOne.Code, Name: "One"}
+		require.NoError(t, strategyOne.Save())
+
+		strategyTwo := &Strategy{UserID: user.ID, LobbyCode: lobbyTwo.Code, Name: "Two", FolderID: &folder.ID}
+		require.NoError(t, strategyTwo.Save())
+
+		summaries, err := GetStrategySummariesByUserID(user.ID, nil)
+		require.NoError(t, err)
+		require.Len(t, summaries, 2)
+
+		byID := make(map[int]StrategySummary, len(summaries))
+		for _, summary := range summaries {
+			byID[summary.ID] = summary
+		}
+
+		first, ok := byID[strategyOne.ID]
+		require.True(t, ok)
+		assert.Equal(t, "One", first.Name)
+		assert.Equal(t, lobbyOne.Code, first.LobbyCode)
+		assert.Equal(t, "ascent", first.SelectedMapID)
+		assert.Nil(t, first.FolderID)
+		assert.False(t, first.UpdatedAt.IsZero())
+
+		second, ok := byID[strategyTwo.ID]
+		require.True(t, ok)
+		require.NotNil(t, second.FolderID)
+		assert.Equal(t, folder.ID, *second.FolderID)
+
+		inFolder, err := GetStrategySummariesByUserID(user.ID, &folder.ID)
+		require.NoError(t, err)
+		require.Len(t, inFolder, 1)
+		assert.Equal(t, strategyTwo.ID, inFolder[0].ID)
+	})
+}
+
 func TestCountStrategiesByUserID(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test")

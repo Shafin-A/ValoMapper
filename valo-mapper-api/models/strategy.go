@@ -18,6 +18,16 @@ type Strategy struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+type StrategySummary struct {
+	ID            int
+	UserID        int
+	FolderID      *int
+	Name          string
+	LobbyCode     string
+	SelectedMapID string
+	UpdatedAt     time.Time
+}
+
 func (s *Strategy) Save() error {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -88,6 +98,58 @@ func GetStrategyByID(id int) (*Strategy, error) {
 	}
 
 	return strategy, nil
+}
+
+// GetStrategySummariesByUserID returns strategy metadata without loading canvas state.
+func GetStrategySummariesByUserID(userID int, folderID *int) ([]StrategySummary, error) {
+	conn, err := db.GetDB()
+	if err != nil {
+		return nil, err
+	}
+
+	query := `
+		SELECT s.id, s.user_id, s.folder_id, s.name, s.lobby_code,
+		       COALESCE(l.selected_map_id, ''), l.updated_at
+		FROM strategies s
+		JOIN lobbies l ON l.code = s.lobby_code
+		WHERE s.user_id = $1`
+	args := []any{userID}
+
+	if folderID != nil {
+		query += " AND s.folder_id = $2"
+		args = append(args, *folderID)
+	}
+
+	query += " ORDER BY s.created_at DESC"
+
+	rows, err := conn.Query(context.Background(), query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	summaries := make([]StrategySummary, 0)
+	for rows.Next() {
+		var summary StrategySummary
+		if err := rows.Scan(
+			&summary.ID,
+			&summary.UserID,
+			&summary.FolderID,
+			&summary.Name,
+			&summary.LobbyCode,
+			&summary.SelectedMapID,
+			&summary.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		summaries = append(summaries, summary)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return summaries, nil
 }
 
 func GetStrategiesByUserID(userID int) ([]Strategy, error) {

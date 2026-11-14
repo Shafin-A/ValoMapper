@@ -25,9 +25,7 @@ type StrategyRepository interface {
 	GetLobbyByCode(code string) (*models.Lobby, error)
 	StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error)
 	CountStrategiesByUserID(userID int) (int, error)
-	GetStrategiesByUserID(userID int) ([]models.Strategy, error)
-	GetStrategiesByFolderID(userID, folderID int) ([]models.Strategy, error)
-	GetLobbiesByCodes(codes []string) ([]models.Lobby, error)
+	GetStrategySummariesByUserID(userID int, folderID *int) ([]models.StrategySummary, error)
 	GetStrategyByID(id int) (*models.Strategy, error)
 	SaveStrategy(s *models.Strategy) error
 	UpdateStrategy(s *models.Strategy) error
@@ -45,14 +43,8 @@ func (r *defaultStrategyRepository) StrategyExistsByUserAndLobby(userID int, lob
 func (r *defaultStrategyRepository) CountStrategiesByUserID(userID int) (int, error) {
 	return models.CountStrategiesByUserID(userID)
 }
-func (r *defaultStrategyRepository) GetStrategiesByUserID(userID int) ([]models.Strategy, error) {
-	return models.GetStrategiesByUserID(userID)
-}
-func (r *defaultStrategyRepository) GetStrategiesByFolderID(userID, folderID int) ([]models.Strategy, error) {
-	return models.GetStrategiesByFolderID(userID, folderID)
-}
-func (r *defaultStrategyRepository) GetLobbiesByCodes(codes []string) ([]models.Lobby, error) {
-	return models.GetLobbiesByCodes(codes)
+func (r *defaultStrategyRepository) GetStrategySummariesByUserID(userID int, folderID *int) ([]models.StrategySummary, error) {
+	return models.GetStrategySummariesByUserID(userID, folderID)
 }
 func (r *defaultStrategyRepository) GetStrategyByID(id int) (*models.Strategy, error) {
 	return models.GetStrategyByID(id)
@@ -167,55 +159,21 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 
 // GetStrategies retrieves strategies for a user, optionally filtered by folder
 func (ss *StrategyService) GetStrategies(userID int, folderID *int) ([]*StrategyResponse, error) {
-	var strategies []models.Strategy
-	var err error
-
-	if folderID != nil {
-		strategies, err = ss.repo.GetStrategiesByFolderID(userID, *folderID)
-	} else {
-		strategies, err = ss.repo.GetStrategiesByUserID(userID)
-	}
-
+	summaries, err := ss.repo.GetStrategySummariesByUserID(userID, folderID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(strategies) == 0 {
-		return []*StrategyResponse{}, nil
-	}
-
-	// Fetch all lobbies
-	lobbyCodes := make([]string, 0, len(strategies))
-	for _, s := range strategies {
-		lobbyCodes = append(lobbyCodes, s.LobbyCode)
-	}
-
-	lobbies, err := ss.repo.GetLobbiesByCodes(lobbyCodes)
-	if err != nil {
-		return nil, err
-	}
-
-	// Build lobby map for efficient lookup
-	lobbyMap := make(map[string]*models.Lobby)
-	for i := range lobbies {
-		lobbyMap[lobbies[i].Code] = &lobbies[i]
-	}
-
-	// Build response DTOs, skipping strategies with missing lobbies
-	responses := make([]*StrategyResponse, 0, len(strategies))
-	for _, s := range strategies {
-		lobby, exists := lobbyMap[s.LobbyCode]
-		if !exists || lobby == nil {
-			continue
-		}
+	responses := make([]*StrategyResponse, 0, len(summaries))
+	for _, summary := range summaries {
 		responses = append(responses, &StrategyResponse{
-			ID:            s.ID,
-			UserID:        s.UserID,
-			FolderID:      s.FolderID,
-			Name:          s.Name,
-			SelectedMapID: lobby.SelectedMapId,
-			LobbyCode:     lobby.Code,
-			UpdatedAt:     lobby.UpdatedAt,
+			ID:            summary.ID,
+			UserID:        summary.UserID,
+			FolderID:      summary.FolderID,
+			Name:          summary.Name,
+			SelectedMapID: summary.SelectedMapID,
+			LobbyCode:     summary.LobbyCode,
+			UpdatedAt:     summary.UpdatedAt,
 		})
 	}
 

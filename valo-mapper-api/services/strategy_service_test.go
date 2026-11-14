@@ -15,9 +15,7 @@ type mockStrategyRepo struct {
 	getLobbyByCodeFn               func(code string) (*models.Lobby, error)
 	strategyExistsByUserAndLobbyFn func(userID int, lobbyCode string) (bool, error)
 	countStrategiesByUserIDFn      func(userID int) (int, error)
-	getStrategiesByUserIDFn        func(userID int) ([]models.Strategy, error)
-	getStrategiesByFolderIDFn      func(userID, folderID int) ([]models.Strategy, error)
-	getLobbiesByCodesFn            func(codes []string) ([]models.Lobby, error)
+	getStrategySummariesFn         func(userID int, folderID *int) ([]models.StrategySummary, error)
 	getStrategyByIDFn              func(id int) (*models.Strategy, error)
 	saveStrategyFn                 func(s *models.Strategy) error
 	updateStrategyFn               func(s *models.Strategy) error
@@ -42,23 +40,11 @@ func (m *mockStrategyRepo) CountStrategiesByUserID(userID int) (int, error) {
 	}
 	return m.countStrategiesByUserIDFn(userID)
 }
-func (m *mockStrategyRepo) GetStrategiesByUserID(userID int) ([]models.Strategy, error) {
-	if m.getStrategiesByUserIDFn == nil {
+func (m *mockStrategyRepo) GetStrategySummariesByUserID(userID int, folderID *int) ([]models.StrategySummary, error) {
+	if m.getStrategySummariesFn == nil {
 		return nil, nil
 	}
-	return m.getStrategiesByUserIDFn(userID)
-}
-func (m *mockStrategyRepo) GetStrategiesByFolderID(userID, folderID int) ([]models.Strategy, error) {
-	if m.getStrategiesByFolderIDFn == nil {
-		return nil, nil
-	}
-	return m.getStrategiesByFolderIDFn(userID, folderID)
-}
-func (m *mockStrategyRepo) GetLobbiesByCodes(codes []string) ([]models.Lobby, error) {
-	if m.getLobbiesByCodesFn == nil {
-		return nil, nil
-	}
-	return m.getLobbiesByCodesFn(codes)
+	return m.getStrategySummariesFn(userID, folderID)
 }
 func (m *mockStrategyRepo) GetStrategyByID(id int) (*models.Strategy, error) {
 	if m.getStrategyByIDFn == nil {
@@ -168,8 +154,8 @@ func TestStrategyService_CreateStrategy(t *testing.T) {
 func TestStrategyService_GetStrategies(t *testing.T) {
 	t.Run("returns empty non-nil slice when user has no strategies", func(t *testing.T) {
 		repo := &mockStrategyRepo{
-			getStrategiesByUserIDFn: func(userID int) ([]models.Strategy, error) {
-				return []models.Strategy{}, nil
+			getStrategySummariesFn: func(userID int, folderID *int) ([]models.StrategySummary, error) {
+				return []models.StrategySummary{}, nil
 			},
 		}
 		svc := newStrategyService(repo)
@@ -181,20 +167,14 @@ func TestStrategyService_GetStrategies(t *testing.T) {
 		assert.Empty(t, result)
 	})
 
-	t.Run("skips strategies whose lobby no longer exists", func(t *testing.T) {
+	t.Run("maps joined summaries to responses", func(t *testing.T) {
 		now := time.Now()
+		folderID := 7
 		repo := &mockStrategyRepo{
-			getStrategiesByUserIDFn: func(userID int) ([]models.Strategy, error) {
-				return []models.Strategy{
-					{ID: 1, LobbyCode: "AAA"},
-					{ID: 2, LobbyCode: "BBB"}, // this lobby will be missing
-					{ID: 3, LobbyCode: "CCC"},
-				}, nil
-			},
-			getLobbiesByCodesFn: func(codes []string) ([]models.Lobby, error) {
-				return []models.Lobby{
-					{Code: "AAA", SelectedMapId: "ascent", UpdatedAt: now},
-					{Code: "CCC", SelectedMapId: "bind", UpdatedAt: now},
+			getStrategySummariesFn: func(userID int, filter *int) ([]models.StrategySummary, error) {
+				return []models.StrategySummary{
+					{ID: 1, UserID: 1, Name: "First", LobbyCode: "AAA", SelectedMapID: "ascent", UpdatedAt: now},
+					{ID: 2, UserID: 1, FolderID: &folderID, Name: "Second", LobbyCode: "CCC", SelectedMapID: "bind", UpdatedAt: now},
 				}, nil
 			},
 		}
@@ -205,6 +185,28 @@ func TestStrategyService_GetStrategies(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, results, 2)
 		assert.Equal(t, "AAA", results[0].LobbyCode)
+		assert.Equal(t, "ascent", results[0].SelectedMapID)
 		assert.Equal(t, "CCC", results[1].LobbyCode)
+		assert.Equal(t, "bind", results[1].SelectedMapID)
+		assert.Equal(t, folderID, *results[1].FolderID)
+		assert.Equal(t, now, results[1].UpdatedAt)
+	})
+
+	t.Run("passes folder filter to repository", func(t *testing.T) {
+		folderID := 42
+		var received *int
+		repo := &mockStrategyRepo{
+			getStrategySummariesFn: func(userID int, filter *int) ([]models.StrategySummary, error) {
+				received = filter
+				return nil, nil
+			},
+		}
+		svc := newStrategyService(repo)
+
+		_, err := svc.GetStrategies(1, &folderID)
+
+		require.NoError(t, err)
+		require.NotNil(t, received)
+		assert.Equal(t, folderID, *received)
 	})
 }
