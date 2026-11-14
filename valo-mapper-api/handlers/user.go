@@ -64,19 +64,13 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		utils.SendJSONError(w, utils.NewForbidden("User ID mismatch"), middleware.GetRequestID(r))
 		return
 	}
-
-	userService := services.NewUserService(services.UserServiceDependencies{})
 	user, err := userService.CreateUser(services.CreateUserRequest{
 		FirebaseUID: req.FirebaseUID,
 		Name:        req.Name,
 		Email:       req.Email,
 	})
 	if err != nil {
-		if errors.Is(err, services.ErrUserAlreadyExists) {
-			utils.SendJSONError(w, utils.NewConflict("User already exists", err), middleware.GetRequestID(r))
-			return
-		}
-		utils.SendJSONError(w, utils.NewInternal("Unable to create user", err), middleware.GetRequestID(r))
+		sendServiceError(w, r, err, "Unable to create user")
 		return
 	}
 
@@ -104,8 +98,6 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthIn
 		utils.SendJSONError(w, utils.NewInternal("Unable to load authenticated user", err), middleware.GetRequestID(r))
 		return
 	}
-
-	userService := services.NewUserService(services.UserServiceDependencies{})
 	userService.EnrichUserBillingState(user)
 
 	utils.SendJSON(w, http.StatusOK, user, middleware.GetRequestID(r))
@@ -142,13 +134,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		return
 	}
 	defer func() { _ = r.Body.Close() }()
-
-	userService := services.NewUserService(services.UserServiceDependencies{})
 	if err := userService.UpdateUser(user, services.UpdateUserRequest{
 		Name:          req.Name,
 		TourCompleted: req.TourCompleted,
 	}); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to update user", err), middleware.GetRequestID(r))
+		sendServiceError(w, r, err, "Unable to update user")
 		return
 	}
 
@@ -177,10 +167,8 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		utils.SendJSONError(w, utils.NewInternal("Unable to load authenticated user", err), middleware.GetRequestID(r))
 		return
 	}
-
-	userService := services.NewUserService(services.UserServiceDependencies{})
 	if err := userService.DeleteUser(user, firebaseAuth); err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to delete user", err), middleware.GetRequestID(r))
+		sendServiceError(w, r, err, "Unable to delete user")
 		return
 	}
 
@@ -223,19 +211,13 @@ func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAu
 		utils.SendJSONError(w, utils.NewBadRequest("Provide exactly one identifier: userId or firebaseUid"), middleware.GetRequestID(r))
 		return
 	}
-
-	userService := services.NewUserService(services.UserServiceDependencies{})
 	user, err := userService.UpdateUserSubscription(services.UpdateUserSubscriptionRequest{
 		UserID:       req.UserID,
 		FirebaseUID:  req.FirebaseUID,
 		IsSubscribed: *req.IsSubscribed,
 	})
 	if err != nil {
-		if errors.Is(err, services.ErrUserNotFound) {
-			utils.SendJSONError(w, utils.NewNotFound("User not found"), middleware.GetRequestID(r))
-			return
-		}
-		utils.SendJSONError(w, utils.NewInternal("Unable to update subscription", err), middleware.GetRequestID(r))
+		sendServiceError(w, r, err, "Unable to update subscription")
 		return
 	}
 

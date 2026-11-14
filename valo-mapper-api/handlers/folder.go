@@ -52,29 +52,18 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		return
 	}
 	defer func() { _ = r.Body.Close() }()
-
-	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	folder, err := folderService.CreateFolder(user, services.CreateFolderRequest{
 		Name:           req.Name,
 		ParentFolderID: req.ParentFolderID,
 	})
 	if err != nil {
-		if errors.Is(err, services.ErrFolderSubscriptionRequired) {
-			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
-			return
-		}
-		if errors.Is(err, services.ErrFolderNameRequired) {
-			utils.SendJSONError(w, utils.NewBadRequest("Folder name is required"), middleware.GetRequestID(r))
-			return
-		}
-
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 			utils.SendJSONError(w, utils.NewConflict("Folder name already exists", err), middleware.GetRequestID(r))
 			return
 		}
 
-		utils.SendJSONError(w, utils.NewInternal("Unable to create folder", err), middleware.GetRequestID(r))
+		sendServiceError(w, r, err, "Unable to create folder")
 		return
 	}
 
@@ -97,8 +86,6 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
 	}
-
-	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	folders, err := folderService.GetFolders(user.ID)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve folders", err), middleware.GetRequestID(r))
@@ -143,26 +130,12 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		return
 	}
 	defer func() { _ = r.Body.Close() }()
-
-	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	folder, err := folderService.UpdateFolder(user, id, services.UpdateFolderRequest{
 		Name:           req.Name,
 		ParentFolderID: req.ParentFolderID,
 	})
 	if err != nil {
-		if errors.Is(err, services.ErrFolderSubscriptionRequired) {
-			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
-			return
-		}
-		if errors.Is(err, services.ErrFolderNotFound) {
-			utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
-			return
-		}
-		if errors.Is(err, services.ErrFolderAccessDenied) {
-			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
-			return
-		}
-		utils.SendJSONError(w, utils.NewInternal("Unable to update folder", err), middleware.GetRequestID(r))
+		sendServiceError(w, r, err, "Unable to update folder")
 		return
 	}
 
@@ -194,22 +167,8 @@ func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid folder ID"), middleware.GetRequestID(r))
 		return
 	}
-
-	folderService := services.NewFolderService(services.FolderServiceDependencies{})
 	if err := folderService.DeleteFolder(user, id); err != nil {
-		if errors.Is(err, services.ErrFolderSubscriptionRequired) {
-			utils.SendJSONError(w, utils.NewForbidden("Active subscription required to manage folders"), middleware.GetRequestID(r))
-			return
-		}
-		if errors.Is(err, services.ErrFolderNotFound) {
-			utils.SendJSONError(w, utils.NewNotFound("Folder not found"), middleware.GetRequestID(r))
-			return
-		}
-		if errors.Is(err, services.ErrFolderAccessDenied) {
-			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this folder"), middleware.GetRequestID(r))
-			return
-		}
-		utils.SendJSONError(w, utils.NewInternal("Unable to delete folder", err), middleware.GetRequestID(r))
+		sendServiceError(w, r, err, "Unable to delete folder")
 		return
 	}
 

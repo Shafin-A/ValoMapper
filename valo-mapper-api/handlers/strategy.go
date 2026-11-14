@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -77,34 +76,14 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		return
 	}
 	defer func() { _ = r.Body.Close() }()
-
-	strategyService := services.NewStrategyService(services.StrategyServiceDependencies{})
 	response, err := strategyService.CreateStrategy(user, services.CreateStrategyRequest{
 		FolderID:  req.FolderID,
 		LobbyCode: req.LobbyCode,
 		Name:      req.Name,
 	})
 	if err != nil {
-		switch {
-		case errors.Is(err, services.ErrLobbyCodeRequired):
-			utils.SendJSONError(w, utils.NewBadRequest("Lobby code is required"), middleware.GetRequestID(r))
-			return
-		case errors.Is(err, services.ErrStrategyNameRequired):
-			utils.SendJSONError(w, utils.NewBadRequest("Strategy name is required"), middleware.GetRequestID(r))
-			return
-		case errors.Is(err, services.ErrStrategyLobbyNotFound):
-			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
-			return
-		case errors.Is(err, services.ErrStrategyFreePlanLimit):
-			utils.SendJSONError(w, utils.NewForbidden("Free plan limit reached (1 saved strategy). Upgrade to ValoMapper Premium for unlimited saves."), middleware.GetRequestID(r))
-			return
-		case errors.Is(err, services.ErrStrategyAlreadySaved):
-			utils.SendJSONError(w, utils.NewConflict("You have already saved this lobby", err), middleware.GetRequestID(r))
-			return
-		default:
-			utils.SendJSONError(w, utils.NewInternal("Unable to create strategy", err), middleware.GetRequestID(r))
-			return
-		}
+		sendServiceError(w, r, err, "Unable to create strategy")
+		return
 	}
 
 	utils.SendJSON(w, http.StatusCreated, newStrategyResponseFromService(response), middleware.GetRequestID(r))
@@ -139,11 +118,9 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth Firebase
 		}
 		folderID = &id
 	}
-
-	strategyService := services.NewStrategyService(services.StrategyServiceDependencies{})
 	strategies, err := strategyService.GetStrategies(user.ID, folderID)
 	if err != nil {
-		utils.SendJSONError(w, utils.NewInternal("Unable to retrieve strategies", err), middleware.GetRequestID(r))
+		sendServiceError(w, r, err, "Unable to retrieve strategies")
 		return
 	}
 
@@ -211,28 +188,14 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		}
 		req.FolderID = folderID
 	}
-
-	strategyService := services.NewStrategyService(services.StrategyServiceDependencies{})
 	response, err := strategyService.UpdateStrategy(user, id, services.UpdateStrategyRequest{
 		FolderID:    req.FolderID,
 		HasFolderID: req.HasFolderID,
 		Name:        req.Name,
 	})
 	if err != nil {
-		switch {
-		case errors.Is(err, services.ErrStrategyNotFound):
-			utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
-			return
-		case errors.Is(err, services.ErrStrategyAccessDenied):
-			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
-			return
-		case errors.Is(err, services.ErrStrategyLobbyNotFound):
-			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
-			return
-		default:
-			utils.SendJSONError(w, utils.NewInternal("Unable to update strategy", err), middleware.GetRequestID(r))
-			return
-		}
+		sendServiceError(w, r, err, "Unable to update strategy")
+		return
 	}
 
 	utils.SendJSON(w, http.StatusOK, newStrategyResponseFromService(response), middleware.GetRequestID(r))
@@ -263,20 +226,9 @@ func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid strategy ID"), middleware.GetRequestID(r))
 		return
 	}
-
-	strategyService := services.NewStrategyService(services.StrategyServiceDependencies{})
 	if err := strategyService.DeleteStrategy(user, id); err != nil {
-		switch {
-		case errors.Is(err, services.ErrStrategyNotFound):
-			utils.SendJSONError(w, utils.NewNotFound("Strategy not found"), middleware.GetRequestID(r))
-			return
-		case errors.Is(err, services.ErrStrategyAccessDenied):
-			utils.SendJSONError(w, utils.NewForbidden("You do not have access to this strategy"), middleware.GetRequestID(r))
-			return
-		default:
-			utils.SendJSONError(w, utils.NewInternal("Unable to delete strategy", err), middleware.GetRequestID(r))
-			return
-		}
+		sendServiceError(w, r, err, "Unable to delete strategy")
+		return
 	}
 
 	w.Header().Set("X-Request-ID", middleware.GetRequestID(r))
