@@ -6,8 +6,11 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 )
+
+const slowRequestLogThreshold = 250 * time.Millisecond
 
 type statusRecorder struct {
 	http.ResponseWriter
@@ -55,11 +58,6 @@ func (r *statusRecorder) Push(target string, opts *http.PushOptions) error {
 
 func AccessLogMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/health" {
-			next.ServeHTTP(w, r)
-			return
-		}
-
 		started := time.Now()
 		recorder := &statusRecorder{ResponseWriter: w}
 		next.ServeHTTP(recorder, r)
@@ -68,12 +66,31 @@ func AccessLogMiddleware(next http.Handler) http.Handler {
 			recorder.status = http.StatusOK
 		}
 
+		elapsed := time.Since(started)
+		if !shouldLogRequest(r.URL.Path, recorder.status, elapsed) {
+			return
+		}
+
 		slog.Info("request",
 			"method", r.Method,
 			"path", r.URL.Path,
 			"status", recorder.status,
-			"duration_ms", time.Since(started).Milliseconds(),
+			"duration_ms", elapsed.Milliseconds(),
 			"request_id", GetRequestID(r),
 		)
 	})
+}
+
+func shouldLogRequest(path string, status int, elapsed time.Duration) bool {
+	if path == "/health" {
+		return false
+	}
+
+	isCanvasPatch := strings.HasPrefix(path, "/api/lobbies/") &&
+		strings.HasSuffix(path, "/canvas-patches")
+	if isCanvasPatch && status < http.StatusBadRequest && elapsed < slowRequestLogThreshold {
+		return false
+	}
+
+	return true
 }

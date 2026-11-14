@@ -242,7 +242,6 @@ func main() {
 	var handler http.Handler = r
 	handler = middleware.BodyLimitMiddleware(handler)
 	handler = middleware.RateLimitMiddleware(rateLimiter)(handler)
-	handler = middleware.RequestIDMiddleware(handler)
 
 	allowedOrigins := []string{"http://localhost:3000"}
 	if origin := os.Getenv("ALLOWED_ORIGINS"); origin != "" {
@@ -259,6 +258,7 @@ func main() {
 	})
 	handler = c.Handler(handler)
 	handler = middleware.AccessLogMiddleware(handler)
+	handler = middleware.RequestIDMiddleware(handler)
 	handler = middleware.SecurityHeadersMiddleware(handler)
 
 	srv := &http.Server{
