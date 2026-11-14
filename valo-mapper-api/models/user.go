@@ -38,9 +38,6 @@ type User struct {
 	PremiumTrialEligible            bool       `json:"premiumTrialEligible"`
 	PremiumTrialDaysLeft            *int       `json:"premiumTrialDaysLeft,omitempty"`
 	RSOSubjectID                    *string    `json:"rsoSubjectId,omitempty"`
-	RSOAccessToken                  *string    `json:"-"`
-	RSORefreshToken                 *string    `json:"-"`
-	RSOIDToken                      *string    `json:"-"`
 	RSOLinkedAt                     *time.Time `json:"rsoLinkedAt,omitempty"`
 }
 
@@ -172,7 +169,7 @@ func (u *User) Delete() error {
 const userSelectColumns = `id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed,
 	has_ever_personal_subscription, subscription_ended_at, subscription_trial_ends_at,
 	stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at,
-	created_at, updated_at, rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at`
+	created_at, updated_at, rso_subject_id, rso_linked_at`
 
 func scanUser(row pgx.Row) (*User, error) {
 	user := &User{}
@@ -194,9 +191,6 @@ func scanUser(row pgx.Row) (*User, error) {
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.RSOSubjectID,
-		&user.RSOAccessToken,
-		&user.RSORefreshToken,
-		&user.RSOIDToken,
 		&user.RSOLinkedAt,
 	)
 	if err == pgx.ErrNoRows {
@@ -285,26 +279,23 @@ func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
 }
 
 // CreateUserWithRSO creates a new user record with Firebase UID, RSO subject and optional profile data.
-func CreateUserWithRSO(firebaseUID, subjectID string, name *string, accessToken, refreshToken, idToken string) (*User, error) {
+func CreateUserWithRSO(firebaseUID, subjectID string, name *string) (*User, error) {
 	conn, err := db.GetDB()
 	if err != nil {
 		return nil, err
 	}
 
 	u := &User{
-		FirebaseUID:     &firebaseUID,
-		Name:            name,
-		RSOSubjectID:    &subjectID,
-		RSOAccessToken:  &accessToken,
-		RSORefreshToken: &refreshToken,
-		RSOIDToken:      &idToken,
+		FirebaseUID:  &firebaseUID,
+		Name:         name,
+		RSOSubjectID: &subjectID,
 	}
 
 	err = conn.QueryRow(context.Background(), `
-		INSERT INTO users (firebase_uid, name, rso_subject_id, rso_access_token, rso_refresh_token, rso_id_token, rso_linked_at, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), NOW())
+		INSERT INTO users (firebase_uid, name, rso_subject_id, rso_linked_at, created_at, updated_at)
+		VALUES ($1, $2, $3, NOW(), NOW(), NOW())
 		RETURNING id, created_at, updated_at
-	`, firebaseUID, name, subjectID, accessToken, refreshToken, idToken).Scan(&u.ID, &u.CreatedAt, &u.UpdatedAt)
+	`, firebaseUID, name, subjectID).Scan(&u.ID, &u.CreatedAt, &u.UpdatedAt)
 
 	return u, err
 }
@@ -346,28 +337,6 @@ func (u *User) SetFirebaseUID(firebaseUID string) error {
 
 	if err == nil {
 		u.FirebaseUID = &firebaseUID
-	}
-
-	return err
-}
-
-// UpdateRSOTokens updates the access and refresh tokens for an RSO account
-func (u *User) UpdateRSOTokens(accessToken, refreshToken string) error {
-	conn, err := db.GetDB()
-	if err != nil {
-		return err
-	}
-
-	err = conn.QueryRow(context.Background(), `
-		UPDATE users
-		SET rso_access_token = $1, rso_refresh_token = $2, updated_at = NOW()
-		WHERE firebase_uid = $3
-		RETURNING updated_at
-	`, accessToken, refreshToken, u.FirebaseUID).Scan(&u.UpdatedAt)
-
-	if err == nil {
-		u.RSOAccessToken = &accessToken
-		u.RSORefreshToken = &refreshToken
 	}
 
 	return err

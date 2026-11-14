@@ -390,7 +390,7 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 	}
 
 	if user == nil {
-		user, err = models.CreateUserWithRSO(firebaseUID, hashedSub, namePtr, tokens.AccessToken, tokens.RefreshToken, tokens.IDToken)
+		user, err = models.CreateUserWithRSO(firebaseUID, hashedSub, namePtr)
 		if err != nil {
 			utils.SendJSONError(w, utils.NewInternal("Failed to create RSO user", err), middleware.GetRequestID(r))
 			return
@@ -406,7 +406,6 @@ func HandleRSOCallback(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 				return
 			}
 		}
-		_ = user.UpdateRSOTokens(tokens.AccessToken, tokens.RefreshToken)
 	}
 
 	utils.SendJSON(w, http.StatusOK, map[string]any{
