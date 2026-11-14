@@ -230,7 +230,6 @@ func main() {
 	slog.Info("rate limiter configured", "rps", rateLimitRPS, "burst", rateLimitBurst)
 
 	var handler http.Handler = r
-	handler = middleware.DBHealthMiddleware(handler)
 	handler = middleware.RateLimitMiddleware(rateLimiter)(handler)
 	handler = middleware.RequestIDMiddleware(handler)
 
