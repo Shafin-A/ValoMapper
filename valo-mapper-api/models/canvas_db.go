@@ -464,11 +464,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback(ctx)
-		}
-	}()
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Prevent race conditions from concurrent lobby updates.
 	// Use NOWAIT to fail fast if another writer has the lobby lock.
