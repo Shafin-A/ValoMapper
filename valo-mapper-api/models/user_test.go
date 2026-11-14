@@ -1,7 +1,9 @@
 package models
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -269,4 +271,57 @@ func TestGetUserByFirebaseUID(t *testing.T) {
 		require.NoError(t, err)
 		assert.Nil(t, user)
 	})
+}
+
+func TestGetUserByFirebaseUID_StackAccess(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	pool := setupTestDB(t)
+	defer cleanupTestDB(t, pool)
+	truncateTables(t, pool, "stack_members", "users")
+
+	owner := &User{
+		FirebaseUID:   strPtr("stack-owner"),
+		Email:         strPtr("owner@example.com"),
+		EmailVerified: true,
+	}
+	require.NoError(t, owner.Save())
+
+	member := &User{
+		FirebaseUID:   strPtr("stack-member"),
+		Email:         strPtr("member@example.com"),
+		EmailVerified: true,
+	}
+	require.NoError(t, member.Save())
+
+	endedAt := time.Now().Add(30 * 24 * time.Hour).UTC()
+	_, err := pool.Exec(context.Background(), `
+		UPDATE users
+		SET is_subscribed = TRUE,
+		    subscription_plan = 'stack',
+		    subscription_ended_at = $2
+		WHERE id = $1`,
+		owner.ID, endedAt)
+	require.NoError(t, err)
+
+	joinedAt := time.Now().Add(-time.Hour).UTC()
+	_, err = pool.Exec(context.Background(), `
+		INSERT INTO stack_members (owner_user_id, member_user_id, status, joined_at)
+		VALUES ($1, $2, 'active', $3)`,
+		owner.ID, member.ID, joinedAt)
+	require.NoError(t, err)
+
+	loaded, err := GetUserByFirebaseUID("stack-member")
+	require.NoError(t, err)
+	require.NotNil(t, loaded)
+
+	assert.True(t, loaded.IsSubscribed)
+	require.NotNil(t, loaded.SubscriptionPlan)
+	assert.Equal(t, "stack", *loaded.SubscriptionPlan)
+	require.NotNil(t, loaded.SubscriptionStartedAt)
+	assert.WithinDuration(t, joinedAt, *loaded.SubscriptionStartedAt, time.Second)
+	require.NotNil(t, loaded.SubscriptionEndedAt)
+	assert.WithinDuration(t, endedAt, *loaded.SubscriptionEndedAt, time.Second)
 }

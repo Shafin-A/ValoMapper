@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"database/sql"
 	"time"
 	"valo-mapper-api/db"
 
@@ -64,14 +65,12 @@ func (u *User) capturePersonalBillingState() {
 	u.PersonalSubscriptionPlan = u.SubscriptionPlan
 }
 
-func (u *User) refreshEffectiveSubscriptionState() error {
+func (u *User) applyEffectiveSubscriptionState(
+	hasStackAccess bool,
+	stackSubscriptionEndedAt, stackSubscriptionStartedAt *time.Time,
+) {
 	if u == nil {
-		return nil
-	}
-
-	hasStackAccess, stackSubscriptionEndedAt, stackSubscriptionStartedAt, err := GetActiveStackAccessState(u.ID)
-	if err != nil {
-		return err
+		return
 	}
 
 	personalIsSubscribed := u.PersonalIsSubscribed
@@ -110,7 +109,19 @@ func (u *User) refreshEffectiveSubscriptionState() error {
 		u.SubscriptionTrialEndsAt = nil
 		u.SubscriptionPlan = u.PersonalSubscriptionPlan
 	}
+}
 
+func (u *User) refreshEffectiveSubscriptionState() error {
+	if u == nil {
+		return nil
+	}
+
+	hasStackAccess, stackSubscriptionEndedAt, stackSubscriptionStartedAt, err := GetActiveStackAccessState(u.ID)
+	if err != nil {
+		return err
+	}
+
+	u.applyEffectiveSubscriptionState(hasStackAccess, stackSubscriptionEndedAt, stackSubscriptionStartedAt)
 	return nil
 }
 
@@ -166,12 +177,26 @@ func (u *User) Delete() error {
 	return err
 }
 
-const userSelectColumns = `id, firebase_uid, email, email_verified, name, tour_completed, is_subscribed,
-	has_ever_personal_subscription, subscription_ended_at, subscription_trial_ends_at,
-	stripe_customer_id, stripe_subscription_id, subscription_plan, premium_trial_claimed_at,
-	created_at, updated_at, rso_subject_id, rso_linked_at`
+const userSelectColumns = `u.id, u.firebase_uid, u.email, u.email_verified, u.name, u.tour_completed, u.is_subscribed,
+	u.has_ever_personal_subscription, u.subscription_ended_at, u.subscription_trial_ends_at,
+	u.stripe_customer_id, u.stripe_subscription_id, u.subscription_plan, u.premium_trial_claimed_at,
+	u.created_at, u.updated_at, u.rso_subject_id, u.rso_linked_at,
+	stack_owner.is_subscribed, stack_owner.subscription_plan, stack_owner.subscription_ended_at, stack_member.joined_at`
+
+const userSelectFrom = `
+	FROM users u
+	LEFT JOIN stack_members stack_member
+		ON stack_member.member_user_id = u.id AND stack_member.status = 'active'
+	LEFT JOIN users stack_owner ON stack_owner.id = stack_member.owner_user_id`
 
 func scanUser(row pgx.Row) (*User, error) {
+	var (
+		stackOwnerIsSubscribed sql.NullBool
+		stackOwnerPlan         sql.NullString
+		stackOwnerEndedAt      sql.NullTime
+		stackJoinedAt          sql.NullTime
+	)
+
 	user := &User{}
 	err := row.Scan(
 		&user.ID,
@@ -192,6 +217,10 @@ func scanUser(row pgx.Row) (*User, error) {
 		&user.UpdatedAt,
 		&user.RSOSubjectID,
 		&user.RSOLinkedAt,
+		&stackOwnerIsSubscribed,
+		&stackOwnerPlan,
+		&stackOwnerEndedAt,
+		&stackJoinedAt,
 	)
 	if err == pgx.ErrNoRows {
 		return nil, nil
@@ -200,10 +229,23 @@ func scanUser(row pgx.Row) (*User, error) {
 		return nil, err
 	}
 
-	user.capturePersonalBillingState()
-	if err := user.refreshEffectiveSubscriptionState(); err != nil {
-		return nil, err
+	hasStackAccess := stackOwnerIsSubscribed.Valid && stackOwnerIsSubscribed.Bool &&
+		stackOwnerPlan.Valid && stackOwnerPlan.String == "stack"
+
+	var stackEndedAt *time.Time
+	if stackOwnerEndedAt.Valid {
+		value := stackOwnerEndedAt.Time
+		stackEndedAt = &value
 	}
+
+	var stackStartedAt *time.Time
+	if stackJoinedAt.Valid {
+		value := stackJoinedAt.Time
+		stackStartedAt = &value
+	}
+
+	user.capturePersonalBillingState()
+	user.applyEffectiveSubscriptionState(hasStackAccess, stackEndedAt, stackStartedAt)
 
 	return user, nil
 }
@@ -215,7 +257,7 @@ func (u *User) LoadByFirebaseUID() error {
 	}
 
 	loaded, err := scanUser(conn.QueryRow(context.Background(),
-		`SELECT `+userSelectColumns+` FROM users WHERE firebase_uid = $1`, u.FirebaseUID))
+		`SELECT `+userSelectColumns+userSelectFrom+` WHERE u.firebase_uid = $1`, u.FirebaseUID))
 	if err != nil {
 		return err
 	}
@@ -234,7 +276,7 @@ func GetUserByFirebaseUID(uid string) (*User, error) {
 	}
 
 	return scanUser(conn.QueryRow(context.Background(),
-		`SELECT `+userSelectColumns+` FROM users WHERE firebase_uid = $1`, uid))
+		`SELECT `+userSelectColumns+userSelectFrom+` WHERE u.firebase_uid = $1`, uid))
 }
 
 func GetUserByID(id int) (*User, error) {
@@ -244,7 +286,7 @@ func GetUserByID(id int) (*User, error) {
 	}
 
 	return scanUser(conn.QueryRow(context.Background(),
-		`SELECT `+userSelectColumns+` FROM users WHERE id = $1`, id))
+		`SELECT `+userSelectColumns+userSelectFrom+` WHERE u.id = $1`, id))
 }
 
 // GetUserByRSOSubject returns the user associated with the given RSO subject ID.
@@ -255,7 +297,7 @@ func GetUserByRSOSubject(subject string) (*User, error) {
 	}
 
 	return scanUser(conn.QueryRow(context.Background(),
-		`SELECT `+userSelectColumns+` FROM users WHERE rso_subject_id = $1`, subject))
+		`SELECT `+userSelectColumns+userSelectFrom+` WHERE u.rso_subject_id = $1`, subject))
 }
 
 func GetUserByStripeSubscriptionID(stripeSubscriptionID string) (*User, error) {
@@ -265,7 +307,7 @@ func GetUserByStripeSubscriptionID(stripeSubscriptionID string) (*User, error) {
 	}
 
 	return scanUser(conn.QueryRow(context.Background(),
-		`SELECT `+userSelectColumns+` FROM users WHERE stripe_subscription_id = $1`, stripeSubscriptionID))
+		`SELECT `+userSelectColumns+userSelectFrom+` WHERE u.stripe_subscription_id = $1`, stripeSubscriptionID))
 }
 
 func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
@@ -275,7 +317,7 @@ func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
 	}
 
 	return scanUser(conn.QueryRow(context.Background(),
-		`SELECT `+userSelectColumns+` FROM users WHERE stripe_customer_id = $1`, stripeCustomerID))
+		`SELECT `+userSelectColumns+userSelectFrom+` WHERE u.stripe_customer_id = $1`, stripeCustomerID))
 }
 
 // CreateUserWithRSO creates a new user record with Firebase UID, RSO subject and optional profile data.
