@@ -1,0 +1,5 @@
+ALTER TABLE canvas_agents DROP COLUMN IF EXISTS note;
+ALTER TABLE canvas_abilities DROP COLUMN IF EXISTS note;
+ALTER TABLE canvas_texts DROP COLUMN IF EXISTS note;
+ALTER TABLE canvas_images DROP COLUMN IF EXISTS note;
+ALTER TABLE canvas_tool_icons DROP COLUMN IF EXISTS note;

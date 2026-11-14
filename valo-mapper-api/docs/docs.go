@@ -2483,6 +2483,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "showOuterCircle": {
                     "type": "boolean"
                 },
@@ -2507,6 +2510,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "note": {
                     "type": "string"
                 },
                 "role": {
@@ -2599,6 +2605,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "src": {
                     "type": "string"
                 },
@@ -2657,6 +2666,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "spans": {
                     "type": "array",
                     "items": {
@@ -2710,6 +2722,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "note": {
                     "type": "string"
                 },
                 "width": {

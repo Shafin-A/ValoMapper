@@ -750,6 +750,33 @@ func TestApplyCanvasPatch(t *testing.T) {
 		assert.Equal(t, "#ff4655", phases[0].TextsOnCanvas[0].Spans[1].Color)
 	})
 
+	t.Run("persists notes on canvas entities via patch", func(t *testing.T) {
+		patch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "agent", Action: "upsert", PhaseIndex: 2, ID: "note-agent", Payload: map[string]any{"id": "note-agent", "name": "Jett", "role": "Duelist", "x": 10, "y": 20, "isAlly": true, "note": "Hold A main"}},
+			{Entity: "text", Action: "upsert", PhaseIndex: 2, ID: "note-text", Payload: map[string]any{"id": "note-text", "text": "Label", "x": 10, "y": 10, "width": 100, "height": 40, "note": "Rotate after plant"}},
+		}}
+
+		err := ApplyCanvasPatch(lobby.Code, patch)
+		require.NoError(t, err)
+
+		phases, err := GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		require.Len(t, phases[2].AgentsOnCanvas, 1)
+		require.Len(t, phases[2].TextsOnCanvas, 1)
+		assert.Equal(t, "Hold A main", phases[2].AgentsOnCanvas[0].Note)
+		assert.Equal(t, "Rotate after plant", phases[2].TextsOnCanvas[0].Note)
+
+		clearedPatch := CanvasPatch{Entries: []CanvasPatchEntry{
+			{Entity: "agent", Action: "upsert", PhaseIndex: 2, ID: "note-agent", Payload: map[string]any{"id": "note-agent", "name": "Jett", "role": "Duelist", "x": 10, "y": 20, "isAlly": true}},
+		}}
+		err = ApplyCanvasPatch(lobby.Code, clearedPatch)
+		require.NoError(t, err)
+
+		phases, err = GetAllCanvasPhases(lobby.Code)
+		require.NoError(t, err)
+		assert.Empty(t, phases[2].AgentsOnCanvas[0].Note)
+	})
+
 	t.Run("rejects invalid image source in image patch", func(t *testing.T) {
 		patch := CanvasPatch{Entries: []CanvasPatchEntry{{
 			Entity: "image", Action: "upsert", PhaseIndex: 0, ID: "img1", Payload: map[string]any{"id": "img1", "src": "javascript:alert(1)", "x": 0, "y": 0, "width": 10, "height": 10},

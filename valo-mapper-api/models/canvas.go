@@ -43,6 +43,7 @@ type CanvasAgent struct {
 	IsGray    bool    `json:"isGray"`
 	X         float64 `json:"x"`
 	Y         float64 `json:"y"`
+	Note      string  `json:"note,omitempty"`
 }
 
 var agentRoleByName = map[string]string{
@@ -91,6 +92,7 @@ type CanvasAbility struct {
 	IsAlly          bool       `json:"isAlly"`
 	IconOnly        bool       `json:"iconOnly"`
 	ShowOuterCircle bool       `json:"showOuterCircle"`
+	Note            string     `json:"note,omitempty"`
 }
 
 type CanvasDrawLine struct {
@@ -126,6 +128,7 @@ type CanvasText struct {
 	Y        float64          `json:"y"`
 	Width    float64          `json:"width"`
 	Height   float64          `json:"height"`
+	Note     string           `json:"note,omitempty"`
 }
 
 type CanvasTextSpan struct {
@@ -143,6 +146,7 @@ type CanvasImage struct {
 	Y      float64 `json:"y"`
 	Width  float64 `json:"width"`
 	Height float64 `json:"height"`
+	Note   string  `json:"note,omitempty"`
 }
 
 type CanvasToolIcon struct {
@@ -153,6 +157,7 @@ type CanvasToolIcon struct {
 	Width        float64 `json:"width"`
 	Height       float64 `json:"height"`
 	AttachedToID string  `json:"attachedToId,omitempty"`
+	Note         string  `json:"note,omitempty"`
 }
 
 type CanvasPatchEntry struct {

@@ -2479,6 +2479,9 @@
                 "name": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "showOuterCircle": {
                     "type": "boolean"
                 },
@@ -2503,6 +2506,9 @@
                     "type": "boolean"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "note": {
                     "type": "string"
                 },
                 "role": {
@@ -2595,6 +2601,9 @@
                 "id": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "src": {
                     "type": "string"
                 },
@@ -2653,6 +2662,9 @@
                 "id": {
                     "type": "string"
                 },
+                "note": {
+                    "type": "string"
+                },
                 "spans": {
                     "type": "array",
                     "items": {
@@ -2706,6 +2718,9 @@
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "note": {
                     "type": "string"
                 },
                 "width": {

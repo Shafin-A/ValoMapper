@@ -155,7 +155,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- AGENTS ----
 	rows, err := tx.Query(ctx, `
-		SELECT id, name, is_ally, is_gray, x, y, phase_index 
+		SELECT id, name, is_ally, is_gray, x, y, note, phase_index
 		FROM canvas_agents 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index`, lobbyCode)
@@ -166,13 +166,18 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var agent CanvasAgent
 		var phaseIndex int
 		var agentName sql.NullString
-		if err := rows.Scan(&agent.ID, &agentName, &agent.IsAlly, &agent.IsGray, &agent.X, &agent.Y, &phaseIndex); err != nil {
+		var agentNote sql.NullString
+		if err := rows.Scan(&agent.ID, &agentName, &agent.IsAlly, &agent.IsGray, &agent.X, &agent.Y, &agentNote, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
 		agent.AgentName = ""
 		if agentName.Valid {
 			agent.AgentName = agentName.String
+		}
+		agent.Note = ""
+		if agentNote.Valid {
+			agent.Note = agentNote.String
 		}
 		agent.Role = agentRoleByName[agent.AgentName]
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
@@ -188,7 +193,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- ABILITIES ----
 	rows, err = tx.Query(ctx, `
-		SELECT id, name, action, x, y, attached_to_id, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, phase_index 
+		SELECT id, name, action, x, y, attached_to_id, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, note, phase_index
 		FROM canvas_abilities 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index, sort_order`, lobbyCode)
@@ -200,9 +205,10 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var phaseIndex int
 		var abilityName sql.NullString
 		var attachedToID sql.NullString
+		var abilityNote sql.NullString
 		var pathArray []float64
 		if err := rows.Scan(&ability.ID, &abilityName, &ability.Action, &ability.X, &ability.Y,
-			&attachedToID, &pathArray, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &ability.ShowOuterCircle, &phaseIndex); err != nil {
+			&attachedToID, &pathArray, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &ability.ShowOuterCircle, &abilityNote, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -217,6 +223,10 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		ability.AttachedToID = ""
 		if attachedToID.Valid {
 			ability.AttachedToID = attachedToID.String
+		}
+		ability.Note = ""
+		if abilityNote.Valid {
+			ability.Note = abilityNote.String
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].AbilitiesOnCanvas = append(phases[phaseIndex].AbilitiesOnCanvas, ability)
@@ -263,7 +273,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- TEXTS ----
 	rows, err = tx.Query(ctx, `
-		SELECT id, text, spans, font_size, x, y, width, height, phase_index
+		SELECT id, text, spans, font_size, x, y, width, height, note, phase_index
 		FROM canvas_texts
 		WHERE lobby_code = $1
 		ORDER BY phase_index`, lobbyCode)
@@ -274,8 +284,9 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var text CanvasText
 		var spansJSON []byte
 		var fontSize sql.NullFloat64
+		var textNote sql.NullString
 		var phaseIndex int
-		if err := rows.Scan(&text.ID, &text.Text, &spansJSON, &fontSize, &text.X, &text.Y, &text.Width, &text.Height, &phaseIndex); err != nil {
+		if err := rows.Scan(&text.ID, &text.Text, &spansJSON, &fontSize, &text.X, &text.Y, &text.Width, &text.Height, &textNote, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -287,6 +298,10 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		}
 		if fontSize.Valid {
 			text.FontSize = fontSize.Float64
+		}
+		text.Note = ""
+		if textNote.Valid {
+			text.Note = textNote.String
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].TextsOnCanvas = append(phases[phaseIndex].TextsOnCanvas, text)
@@ -301,7 +316,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- IMAGES ----
 	rows, err = tx.Query(ctx, `
-		SELECT id, src, x, y, width, height, phase_index 
+		SELECT id, src, x, y, width, height, note, phase_index
 		FROM canvas_images 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index`, lobbyCode)
@@ -310,10 +325,15 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 	}
 	for rows.Next() {
 		var image CanvasImage
+		var imageNote sql.NullString
 		var phaseIndex int
-		if err := rows.Scan(&image.ID, &image.Src, &image.X, &image.Y, &image.Width, &image.Height, &phaseIndex); err != nil {
+		if err := rows.Scan(&image.ID, &image.Src, &image.X, &image.Y, &image.Width, &image.Height, &imageNote, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
+		}
+		image.Note = ""
+		if imageNote.Valid {
+			image.Note = imageNote.String
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].ImagesOnCanvas = append(phases[phaseIndex].ImagesOnCanvas, image)
@@ -328,7 +348,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 
 	// ---- TOOL ICONS ----
 	rows, err = tx.Query(ctx, `
-		SELECT id, name, x, y, width, height, attached_to_id, phase_index 
+		SELECT id, name, x, y, width, height, attached_to_id, note, phase_index
 		FROM canvas_tool_icons 
 		WHERE lobby_code = $1 
 		ORDER BY phase_index`, lobbyCode)
@@ -340,7 +360,8 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var phaseIndex int
 		var iconName sql.NullString
 		var attachedToID sql.NullString
-		if err := rows.Scan(&icon.ID, &iconName, &icon.X, &icon.Y, &icon.Width, &icon.Height, &attachedToID, &phaseIndex); err != nil {
+		var iconNote sql.NullString
+		if err := rows.Scan(&icon.ID, &iconName, &icon.X, &icon.Y, &icon.Width, &icon.Height, &attachedToID, &iconNote, &phaseIndex); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -351,6 +372,10 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		icon.AttachedToID = ""
 		if attachedToID.Valid {
 			icon.AttachedToID = attachedToID.String
+		}
+		icon.Note = ""
+		if iconNote.Valid {
+			icon.Note = iconNote.String
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].ToolIconsOnCanvas = append(phases[phaseIndex].ToolIconsOnCanvas, icon)
@@ -477,7 +502,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		// Agents
 		for _, a := range phase.AgentsOnCanvas {
 			agentRows = append(agentRows, []any{
-				a.ID, lobbyCode, a.AgentName, a.X, a.Y, a.IsAlly, a.IsGray, phaseIndex,
+				a.ID, lobbyCode, a.AgentName, a.X, a.Y, a.IsAlly, a.IsGray, phaseIndex, a.Note,
 			})
 		}
 
@@ -489,7 +514,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 			}
 			abilityRows = append(abilityRows, []any{
 				ab.ID, lobbyCode, ab.AgentName, ab.Action, ab.X, ab.Y,
-				ab.AttachedToID, pathArray, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, ab.ShowOuterCircle, phaseIndex,
+				ab.AttachedToID, pathArray, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, ab.ShowOuterCircle, phaseIndex, ab.Note,
 			})
 		}
 
@@ -523,21 +548,21 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 
 			textRows = append(textRows, []any{
 				t.ID, lobbyCode, t.Text, t.X, t.Y, t.Width, t.Height, phaseIndex,
-				spansJSON, fontSize,
+				spansJSON, fontSize, t.Note,
 			})
 		}
 
 		// Images
 		for _, i := range phase.ImagesOnCanvas {
 			imageRows = append(imageRows, []any{
-				i.ID, lobbyCode, i.Src, i.X, i.Y, i.Width, i.Height, phaseIndex,
+				i.ID, lobbyCode, i.Src, i.X, i.Y, i.Width, i.Height, phaseIndex, i.Note,
 			})
 		}
 
 		// Tool Icons
 		for _, ic := range phase.ToolIconsOnCanvas {
 			iconRows = append(iconRows, []any{
-				ic.ID, lobbyCode, ic.Name, ic.X, ic.Y, ic.Width, ic.Height, ic.AttachedToID, phaseIndex,
+				ic.ID, lobbyCode, ic.Name, ic.X, ic.Y, ic.Width, ic.Height, ic.AttachedToID, phaseIndex, ic.Note,
 			})
 		}
 
@@ -580,7 +605,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_agents"},
-			[]string{"id", "lobby_code", "name", "x", "y", "is_ally", "is_gray", "phase_index"},
+			[]string{"id", "lobby_code", "name", "x", "y", "is_ally", "is_gray", "phase_index", "note"},
 			pgx.CopyFromRows(agentRows),
 		)
 		if err != nil {
@@ -593,7 +618,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_abilities"},
-			[]string{"id", "lobby_code", "name", "action", "x", "y", "attached_to_id", "current_path", "current_rotation", "current_length", "is_ally", "icon_only", "show_outer_circle", "phase_index"},
+			[]string{"id", "lobby_code", "name", "action", "x", "y", "attached_to_id", "current_path", "current_rotation", "current_length", "is_ally", "icon_only", "show_outer_circle", "phase_index", "note"},
 			pgx.CopyFromRows(abilityRows),
 		)
 		if err != nil {
@@ -619,7 +644,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_texts"},
-			[]string{"id", "lobby_code", "text", "x", "y", "width", "height", "phase_index", "spans", "font_size"},
+			[]string{"id", "lobby_code", "text", "x", "y", "width", "height", "phase_index", "spans", "font_size", "note"},
 			pgx.CopyFromRows(textRows),
 		)
 		if err != nil {
@@ -632,7 +657,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_images"},
-			[]string{"id", "lobby_code", "src", "x", "y", "width", "height", "phase_index"},
+			[]string{"id", "lobby_code", "src", "x", "y", "width", "height", "phase_index", "note"},
 			pgx.CopyFromRows(imageRows),
 		)
 		if err != nil {
@@ -645,7 +670,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		_, err = tx.CopyFrom(
 			ctx,
 			pgx.Identifier{"canvas_tool_icons"},
-			[]string{"id", "lobby_code", "name", "x", "y", "width", "height", "attached_to_id", "phase_index"},
+			[]string{"id", "lobby_code", "name", "x", "y", "width", "height", "attached_to_id", "phase_index", "note"},
 			pgx.CopyFromRows(iconRows),
 		)
 		if err != nil {
@@ -773,11 +798,12 @@ func applyAgentPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_agents (id, lobby_code, phase_index, name, x, y, is_ally, is_gray)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO canvas_agents (id, lobby_code, phase_index, name, x, y, is_ally, is_gray, note)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
-		SET name = EXCLUDED.name, x = EXCLUDED.x, y = EXCLUDED.y, is_ally = EXCLUDED.is_ally, is_gray = EXCLUDED.is_gray`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.X, p.Y, p.IsAlly, p.IsGray)
+		SET name = EXCLUDED.name, x = EXCLUDED.x, y = EXCLUDED.y, is_ally = EXCLUDED.is_ally, is_gray = EXCLUDED.is_gray,
+		    note = EXCLUDED.note`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.X, p.Y, p.IsAlly, p.IsGray, p.Note)
 	return err
 }
 
@@ -814,14 +840,14 @@ func applyAbilityPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) erro
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_abilities (id, lobby_code, phase_index, name, action, x, y, attached_to_id, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		INSERT INTO canvas_abilities (id, lobby_code, phase_index, name, action, x, y, attached_to_id, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, note)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
 		SET name = EXCLUDED.name, action = EXCLUDED.action, x = EXCLUDED.x, y = EXCLUDED.y,
 		    attached_to_id = EXCLUDED.attached_to_id, current_path = EXCLUDED.current_path, current_rotation = EXCLUDED.current_rotation, current_length = EXCLUDED.current_length,
-		    is_ally = EXCLUDED.is_ally, icon_only = EXCLUDED.icon_only, show_outer_circle = EXCLUDED.show_outer_circle,
+		    is_ally = EXCLUDED.is_ally, icon_only = EXCLUDED.icon_only, show_outer_circle = EXCLUDED.show_outer_circle, note = EXCLUDED.note,
 		    sort_order = nextval('canvas_abilities_sort_order_seq')`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Action, p.X, p.Y, p.AttachedToID, pathArray, p.CurrentRotation, p.CurrentLength, p.IsAlly, p.IconOnly, p.ShowOuterCircle)
+		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Action, p.X, p.Y, p.AttachedToID, pathArray, p.CurrentRotation, p.CurrentLength, p.IsAlly, p.IconOnly, p.ShowOuterCircle, p.Note)
 	return err
 }
 
@@ -958,12 +984,12 @@ func applyTextPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error {
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_texts (id, lobby_code, phase_index, text, x, y, width, height, spans, font_size)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO canvas_texts (id, lobby_code, phase_index, text, x, y, width, height, spans, font_size, note)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
 		SET text = EXCLUDED.text, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height,
-		    spans = EXCLUDED.spans, font_size = EXCLUDED.font_size`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.Text, p.X, p.Y, p.Width, p.Height, spansJSON, fontSize)
+		    spans = EXCLUDED.spans, font_size = EXCLUDED.font_size, note = EXCLUDED.note`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Text, p.X, p.Y, p.Width, p.Height, spansJSON, fontSize, p.Note)
 	return err
 }
 
@@ -1010,11 +1036,12 @@ func applyImagePatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) error 
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_images (id, lobby_code, phase_index, src, x, y, width, height)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO canvas_images (id, lobby_code, phase_index, src, x, y, width, height, note)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
-		SET src = EXCLUDED.src, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.Src, p.X, p.Y, p.Width, p.Height)
+		SET src = EXCLUDED.src, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height,
+		    note = EXCLUDED.note`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Src, p.X, p.Y, p.Width, p.Height, p.Note)
 	return err
 }
 
@@ -1046,11 +1073,12 @@ func applyToolIconPatch(tx pgx.Tx, lobbyCode string, entry CanvasPatchEntry) err
 	}
 
 	_, err := tx.Exec(context.Background(), `
-		INSERT INTO canvas_tool_icons (id, lobby_code, phase_index, name, x, y, width, height, attached_to_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO canvas_tool_icons (id, lobby_code, phase_index, name, x, y, width, height, attached_to_id, note)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		ON CONFLICT (id, lobby_code, phase_index) DO UPDATE
-		SET name = EXCLUDED.name, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height, attached_to_id = EXCLUDED.attached_to_id`,
-		p.ID, lobbyCode, entry.PhaseIndex, p.Name, p.X, p.Y, p.Width, p.Height, p.AttachedToID)
+		SET name = EXCLUDED.name, x = EXCLUDED.x, y = EXCLUDED.y, width = EXCLUDED.width, height = EXCLUDED.height, attached_to_id = EXCLUDED.attached_to_id,
+		    note = EXCLUDED.note`,
+		p.ID, lobbyCode, entry.PhaseIndex, p.Name, p.X, p.Y, p.Width, p.Height, p.AttachedToID, p.Note)
 	return err
 }
 
