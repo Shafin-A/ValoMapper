@@ -10,11 +10,13 @@ import (
 
 func TestGetIP(t *testing.T) {
 	tests := []struct {
-		name          string
-		xForwardedFor string
-		xRealIP       string
-		remoteAddr    string
-		expectedIP    string
+		name           string
+		cfConnectingIP string
+		flyClientIP    string
+		xForwardedFor  string
+		xRealIP        string
+		remoteAddr     string
+		expectedIP     string
 	}{
 		{
 			name:          "X-Forwarded-For with single IP",
@@ -22,9 +24,9 @@ func TestGetIP(t *testing.T) {
 			expectedIP:    "192.168.1.1",
 		},
 		{
-			name:          "X-Forwarded-For with multiple IPs",
+			name:          "X-Forwarded-For uses the last hop",
 			xForwardedFor: "192.168.1.1, 10.0.0.1, 172.16.0.1",
-			expectedIP:    "192.168.1.1",
+			expectedIP:    "172.16.0.1",
 		},
 		{
 			name:       "X-Real-IP only",
@@ -32,14 +34,14 @@ func TestGetIP(t *testing.T) {
 			expectedIP: "10.0.0.5",
 		},
 		{
-			name:       "CF-Connecting-IP fallback",
-			xRealIP:    "",
-			expectedIP: "203.0.113.10",
+			name:           "CF-Connecting-IP",
+			cfConnectingIP: "203.0.113.10",
+			expectedIP:     "203.0.113.10",
 		},
 		{
-			name:       "Fly-Client-IP fallback",
-			xRealIP:    "",
-			expectedIP: "198.51.100.22",
+			name:        "Fly-Client-IP",
+			flyClientIP: "198.51.100.22",
+			expectedIP:  "198.51.100.22",
 		},
 		{
 			name:       "RemoteAddr fallback",
@@ -52,22 +54,28 @@ func TestGetIP(t *testing.T) {
 			xRealIP:       "10.0.0.5",
 			expectedIP:    "192.168.1.1",
 		},
+		{
+			name:           "platform headers take precedence over X-Forwarded-For",
+			cfConnectingIP: "203.0.113.10",
+			xForwardedFor:  "192.168.1.1",
+			expectedIP:     "203.0.113.10",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "/", nil)
+			if tt.cfConnectingIP != "" {
+				req.Header.Set("CF-Connecting-IP", tt.cfConnectingIP)
+			}
+			if tt.flyClientIP != "" {
+				req.Header.Set("Fly-Client-IP", tt.flyClientIP)
+			}
 			if tt.xForwardedFor != "" {
 				req.Header.Set("X-Forwarded-For", tt.xForwardedFor)
 			}
 			if tt.xRealIP != "" {
 				req.Header.Set("X-Real-IP", tt.xRealIP)
-			}
-			if tt.name == "CF-Connecting-IP fallback" {
-				req.Header.Set("CF-Connecting-IP", "203.0.113.10")
-			}
-			if tt.name == "Fly-Client-IP fallback" {
-				req.Header.Set("Fly-Client-IP", "198.51.100.22")
 			}
 			if tt.remoteAddr != "" {
 				req.RemoteAddr = tt.remoteAddr

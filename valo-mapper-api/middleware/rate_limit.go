@@ -98,17 +98,6 @@ func getIP(r *http.Request) string {
 		return trimmed
 	}
 
-	forwarded := r.Header.Get("X-Forwarded-For")
-
-	if forwarded != "" {
-		parts := strings.Split(forwarded, ",")
-		if len(parts) > 0 {
-			if parsed := parseCandidateIP(parts[0]); parsed != "" {
-				return parsed
-			}
-		}
-	}
-
 	cfConnectingIP := parseCandidateIP(r.Header.Get("CF-Connecting-IP"))
 	if cfConnectingIP != "" {
 		return cfConnectingIP
@@ -117,6 +106,14 @@ func getIP(r *http.Request) string {
 	flyClientIP := parseCandidateIP(r.Header.Get("Fly-Client-IP"))
 	if flyClientIP != "" {
 		return flyClientIP
+	}
+
+	forwarded := r.Header.Get("X-Forwarded-For")
+	if forwarded != "" {
+		parts := strings.Split(forwarded, ",")
+		if parsed := parseCandidateIP(parts[len(parts)-1]); parsed != "" {
+			return parsed
+		}
 	}
 
 	realIP := r.Header.Get("X-Real-IP")
