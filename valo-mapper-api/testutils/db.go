@@ -10,6 +10,7 @@ import (
 	"time"
 	"valo-mapper-api/db"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -18,6 +19,15 @@ const integrationTestDBLockKey int64 = 4891375021
 
 // SetupTestDB creates a connection to the test database
 func SetupTestDB(t testing.TB) *pgxpool.Pool {
+	return setupTestDB(t, nil)
+}
+
+// SetupTestDBWithTracer creates a test database pool with a pgx query tracer.
+func SetupTestDBWithTracer(t testing.TB, tracer pgx.QueryTracer) *pgxpool.Pool {
+	return setupTestDB(t, tracer)
+}
+
+func setupTestDB(t testing.TB, tracer pgx.QueryTracer) *pgxpool.Pool {
 	t.Helper()
 
 	if testing.Short() {
@@ -63,6 +73,9 @@ func SetupTestDB(t testing.TB) *pgxpool.Pool {
 
 	config.MaxConns = 5
 	config.MinConns = 1
+	if tracer != nil {
+		config.ConnConfig.Tracer = tracer
+	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
