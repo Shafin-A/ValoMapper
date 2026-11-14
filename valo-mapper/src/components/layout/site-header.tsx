@@ -1,6 +1,11 @@
 "use client";
 
-import { CircleQuestionMark, SidebarIcon, UserRound } from "lucide-react";
+import {
+  CircleQuestionMark,
+  SidebarIcon,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DiscordIcon } from "@/components/shared/discord-icon";
@@ -125,6 +130,20 @@ export const SiteHeader = ({
               Replays
             </Link>
           </Button>
+
+          <Link
+            href="/whats-new"
+            aria-label="What's New"
+            aria-current={pathname === "/whats-new" ? "page" : undefined}
+            className={cn(
+              buttonVariants({ variant: "ghost" }),
+              "h-10 px-2 text-sm font-medium sm:h-8 sm:px-2.5",
+              pathname === "/whats-new" ? "text-white" : "text-white/70",
+            )}
+          >
+            <Sparkles className="size-4 sm:hidden" aria-hidden />
+            <span className="hidden sm:inline">What&apos;s New</span>
+          </Link>
 
           <Tooltip>
             <TooltipTrigger asChild>
