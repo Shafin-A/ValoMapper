@@ -19,6 +19,7 @@ import (
 	"valo-mapper-api/routes"
 	"valo-mapper-api/scheduler"
 	"valo-mapper-api/storage"
+	"valo-mapper-api/utils"
 	"valo-mapper-api/websocket"
 
 	"valo-mapper-api/docs"
@@ -224,6 +225,12 @@ func main() {
 	})
 
 	r := mux.NewRouter()
+	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		utils.SendJSONError(w, utils.NewNotFound("Not found"), middleware.GetRequestID(r))
+	})
+	r.MethodNotAllowedHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		utils.SendJSONError(w, &utils.HTTPError{Status: http.StatusMethodNotAllowed, Message: "Method not allowed"}, middleware.GetRequestID(r))
+	})
 	routes.SetupRoutes(r, firebaseAuth, hub, replayService, os.Getenv("INTERNAL_API_KEY"))
 	r.PathPrefix("/swagger/").Handler(middleware.SwaggerBasicAuth(httpSwagger.WrapHandler))
 
@@ -251,6 +258,7 @@ func main() {
 		AllowCredentials: true,
 	})
 	handler = c.Handler(handler)
+	handler = middleware.AccessLogMiddleware(handler)
 	handler = middleware.SecurityHeadersMiddleware(handler)
 
 	srv := &http.Server{
