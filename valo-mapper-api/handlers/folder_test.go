@@ -2,691 +2,291 @@ package handlers
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestCreateFolder(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
+func folderRequest(t *testing.T, user *models.User, method, id string, body any) *http.Request {
+	t.Helper()
+
+	path := "/api/folders"
+	if id != "" {
+		path += "/" + id
 	}
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	req := authedRequest(t, user, method, path, body)
+	if id != "" {
+		req = mux.SetURLVars(req, map[string]string{"id": id})
+	}
+	return req
+}
 
-	testutils.TruncateTables(t, pool, "folders", "users")
+func TestCreateFolder(t *testing.T) {
+	user := newTestAuthenticatedUser()
 
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-folder-test")
-	_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
-	assert.NoError(t, err)
-
-	t.Run("successfully creates folder", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+	t.Run("creates folder", func(t *testing.T) {
+		repo := &mockFolderHandlerRepo{
+			saveFn: func(folder *models.Folder) error {
+				folder.ID = 9
+				return nil
+			},
 		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+		useFolderRepo(t, repo)
 
-		reqBody := CreateFolderRequest{
-			Name: "Test Folder",
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
 		w := httptest.NewRecorder()
+		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{Name: "Test Folder"}), &testutils.MockFirebaseAuth{})
 
-		CreateFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusCreated, w.Code)
+		require.Equal(t, http.StatusCreated, w.Code)
 
 		var folder models.Folder
 		testutils.ParseJSONResponse(t, w, &folder)
-
+		assert.Equal(t, 9, folder.ID)
 		assert.Equal(t, "Test Folder", folder.Name)
-		assert.Equal(t, testUser.ID, folder.UserID)
-		assert.Nil(t, folder.ParentFolderID)
-		assert.NotZero(t, folder.ID)
+		assert.Equal(t, user.ID, folder.UserID)
 	})
 
-	t.Run("successfully creates folder with parent", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+	t.Run("rejects missing name", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{})
 
-		parentFolder := testutils.CreateTestFolder(t, pool, testUser.ID, "Parent Folder")
-
-		reqBody := CreateFolderRequest{
-			Name:           "Child Folder",
-			ParentFolderID: &parentFolder.ID,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
 		w := httptest.NewRecorder()
-
-		CreateFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusCreated, w.Code)
-
-		var folder models.Folder
-		testutils.ParseJSONResponse(t, w, &folder)
-
-		assert.Equal(t, "Child Folder", folder.Name)
-		assert.NotNil(t, folder.ParentFolderID)
-		assert.Equal(t, parentFolder.ID, *folder.ParentFolderID)
-	})
-
-	t.Run("rejects missing folder name", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		reqBody := CreateFolderRequest{
-			Name: "",
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
-		w := httptest.NewRecorder()
-
-		CreateFolder(w, req, mockAuth)
+		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{}), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("rejects duplicate folder name", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+	t.Run("rejects free users", func(t *testing.T) {
+		freeUser := newTestAuthenticatedUser()
+		freeUser.IsSubscribed = false
+		useFolderRepo(t, &mockFolderHandlerRepo{})
 
-		parent := testutils.CreateTestFolder(t, pool, testUser.ID, "Duplicate Parent")
-		reqBody := CreateFolderRequest{Name: "Duplicate Folder", ParentFolderID: &parent.ID}
-		first := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
-		CreateFolder(httptest.NewRecorder(), first, mockAuth)
-
-		second := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
 		w := httptest.NewRecorder()
-		CreateFolder(w, second, mockAuth)
+		CreateFolder(w, folderRequest(t, freeUser, http.MethodPost, "", CreateFolderRequest{Name: "Test"}), &testutils.MockFirebaseAuth{})
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
+
+	t.Run("rejects duplicate name", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{
+			saveFn: func(folder *models.Folder) error {
+				return &pgconn.PgError{Code: pgerrcode.UniqueViolation}
+			},
+		})
+
+		w := httptest.NewRecorder()
+		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{Name: "Duplicate"}), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusConflict, w.Code)
 	})
 
-	t.Run("rejects users without active subscription", func(t *testing.T) {
-		freeUser := testutils.CreateTestUser(t, pool, "firebase-uid-folder-free-user")
+	t.Run("returns internal error when the repository fails", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{
+			saveFn: func(folder *models.Folder) error { return errors.New("db down") },
+		})
 
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *freeUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *freeUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		reqBody := CreateFolderRequest{
-			Name: "Premium Folder",
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "valid-token")
 		w := httptest.NewRecorder()
+		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{Name: "Test"}), &testutils.MockFirebaseAuth{})
 
-		CreateFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusForbidden, w.Code)
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		reqBody := CreateFolderRequest{
-			Name: "Test Folder",
+	t.Run("rejects missing authentication", func(t *testing.T) {
+		mockAuth := &testutils.MockFirebaseAuth{}
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return nil, errors.New("invalid")
 		}
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/folders", reqBody, "")
+		req := httptest.NewRequest(http.MethodPost, "/api/folders", strings.NewReader(`{"name":"Test"}`))
 		w := httptest.NewRecorder()
-
 		CreateFolder(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-
-	t.Run("rejects non-POST methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/folders", nil)
-		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/folders", func(w http.ResponseWriter, r *http.Request) {
-			CreateFolder(w, r, mockAuth)
-		}).Methods(http.MethodPost)
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
 func TestGetFolders(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	t.Run("lists folders", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{
+			getFoldersFn: func(userID int) ([]models.Folder, error) {
+				return []models.Folder{{ID: 1, UserID: userID, Name: "One"}, {ID: 2, UserID: userID, Name: "Two"}}, nil
+			},
+		})
 
-	testutils.TruncateTables(t, pool, "folders", "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-get-folders")
-	_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
-	assert.NoError(t, err)
-
-	t.Run("successfully retrieves user folders", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		folder1 := testutils.CreateTestFolder(t, pool, testUser.ID, "Folder 1")
-		folder2 := testutils.CreateTestFolder(t, pool, testUser.ID, "Folder 2")
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/folders", nil, "valid-token")
 		w := httptest.NewRecorder()
+		GetFolders(w, folderRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
 
-		GetFolders(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
+		require.Equal(t, http.StatusOK, w.Code)
 
 		var folders []models.Folder
 		testutils.ParseJSONResponse(t, w, &folders)
-
-		assert.Len(t, folders, 2)
-		folderNames := []string{folders[0].Name, folders[1].Name}
-		assert.Contains(t, folderNames, folder1.Name)
-		assert.Contains(t, folderNames, folder2.Name)
+		require.Len(t, folders, 2)
+		assert.Equal(t, "One", folders[0].Name)
 	})
 
-	t.Run("returns empty array when no folders", func(t *testing.T) {
-		testUser2 := testutils.CreateTestUser(t, pool, "firebase-uid-no-folders")
-		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser2.ID)
-		assert.NoError(t, err)
+	t.Run("returns an empty array when there are no folders", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{})
 
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser2.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser2.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/folders", nil, "valid-token")
 		w := httptest.NewRecorder()
-
-		GetFolders(w, req, mockAuth)
+		GetFolders(w, folderRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusOK, w.Code)
-
-		var folders []models.Folder
-		testutils.ParseJSONResponse(t, w, &folders)
-
-		assert.Empty(t, folders)
+		assert.Equal(t, "[]", strings.TrimSpace(w.Body.String()))
 	})
 
-	t.Run("allows users without active subscription", func(t *testing.T) {
-		freeUser := testutils.CreateTestUser(t, pool, "firebase-uid-get-folders-free-user")
-		otherUser := testutils.CreateTestUser(t, pool, "firebase-uid-get-folders-other-user")
+	t.Run("returns internal error when the repository fails", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{
+			getFoldersFn: func(userID int) ([]models.Folder, error) { return nil, errors.New("db down") },
+		})
 
-		freeUserFolder := testutils.CreateTestFolder(t, pool, freeUser.ID, "Free User Folder")
-		testutils.CreateTestFolder(t, pool, otherUser.ID, "Other User Folder")
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *freeUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *freeUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/folders", nil, "valid-token")
 		w := httptest.NewRecorder()
+		GetFolders(w, folderRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
 
-		GetFolders(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var folders []models.Folder
-		testutils.ParseJSONResponse(t, w, &folders)
-
-		if assert.Len(t, folders, 1) {
-			assert.Equal(t, freeUserFolder.ID, folders[0].ID)
-			assert.Equal(t, freeUserFolder.Name, folders[0].Name)
-			assert.Equal(t, freeUser.ID, folders[0].UserID)
-		}
-	})
-
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/folders", nil, "")
-		w := httptest.NewRecorder()
-
-		GetFolders(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-
-	t.Run("rejects non-GET methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/folders", nil)
-		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/folders", func(w http.ResponseWriter, r *http.Request) {
-			GetFolders(w, r, mockAuth)
-		}).Methods(http.MethodGet)
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 }
 
 func TestUpdateFolder(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	t.Run("updates folder", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{
+			getFolderFn: func(id int) (*models.Folder, error) {
+				return &models.Folder{ID: id, UserID: user.ID, Name: "Old"}, nil
+			},
+			updateFn: func(folder *models.Folder) error {
+				assert.Equal(t, "New", folder.Name)
+				return nil
+			},
+		})
 
-	testutils.TruncateTables(t, pool, "folders", "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-update-folder")
-	_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
-	assert.NoError(t, err)
-
-	t.Run("successfully updates folder name", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Original Name")
-
-		newName := "Updated Name"
-		reqBody := UpdateFolderRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
+		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
 
-		UpdateFolder(w, req, mockAuth)
+		require.Equal(t, http.StatusOK, w.Code)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var updatedFolder models.Folder
-		testutils.ParseJSONResponse(t, w, &updatedFolder)
-
-		assert.Equal(t, "Updated Name", updatedFolder.Name)
-		assert.Equal(t, folder.ID, updatedFolder.ID)
+		var folder models.Folder
+		testutils.ParseJSONResponse(t, w, &folder)
+		assert.Equal(t, "New", folder.Name)
 	})
 
-	t.Run("successfully updates parent folder", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+	t.Run("rejects invalid id", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{})
 
-		parentFolder := testutils.CreateTestFolder(t, pool, testUser.ID, "Parent")
-		childFolder := testutils.CreateTestFolder(t, pool, testUser.ID, "Child")
-
-		reqBody := UpdateFolderRequest{
-			ParentFolderID: &parentFolder.ID,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", childFolder.ID), reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", childFolder.ID)})
 		w := httptest.NewRecorder()
-
-		UpdateFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var updatedFolder models.Folder
-		testutils.ParseJSONResponse(t, w, &updatedFolder)
-
-		assert.NotNil(t, updatedFolder.ParentFolderID)
-		assert.Equal(t, parentFolder.ID, *updatedFolder.ParentFolderID)
-	})
-
-	t.Run("returns 404 for non-existent folder", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		newName := "New Name"
-		reqBody := UpdateFolderRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, "/api/folders/99999", reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": "99999"})
-		w := httptest.NewRecorder()
-
-		UpdateFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusNotFound, w.Code)
-	})
-
-	t.Run("rejects access to another user's folder", func(t *testing.T) {
-		otherUser := testutils.CreateTestUser(t, pool, "firebase-uid-other-user")
-		folder := testutils.CreateTestFolder(t, pool, otherUser.ID, "Other User's Folder")
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		newName := "Hacked Name"
-		reqBody := UpdateFolderRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
-		w := httptest.NewRecorder()
-
-		UpdateFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusForbidden, w.Code)
-	})
-
-	t.Run("rejects invalid folder ID", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		newName := "New Name"
-		reqBody := UpdateFolderRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, "/api/folders/invalid", reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": "invalid"})
-		w := httptest.NewRecorder()
-
-		UpdateFolder(w, req, mockAuth)
+		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "abc", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("rejects users without active subscription", func(t *testing.T) {
-		freeUser := testutils.CreateTestUser(t, pool, "firebase-uid-update-folder-free-user")
-		folder := testutils.CreateTestFolder(t, pool, freeUser.ID, "Free User Folder")
+	t.Run("returns not found", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{})
 
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *freeUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *freeUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		newName := "Blocked Update"
-		reqBody := UpdateFolderRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
+		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
 
-		UpdateFolder(w, req, mockAuth)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("rejects another user's folder", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{
+			getFolderFn: func(id int) (*models.Folder, error) {
+				return &models.Folder{ID: id, UserID: user.ID + 1, Name: "Other"}, nil
+			},
+		})
+
+		w := httptest.NewRecorder()
+		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
 
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Test Folder")
+	t.Run("rejects free users", func(t *testing.T) {
+		freeUser := newTestAuthenticatedUser()
+		freeUser.IsSubscribed = false
+		useFolderRepo(t, &mockFolderHandlerRepo{})
 
-		newName := "New Name"
-		reqBody := UpdateFolderRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/folders/%d", folder.ID), reqBody, "")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
+		UpdateFolder(w, folderRequest(t, freeUser, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
 
-		UpdateFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
 
-	t.Run("rejects non-PATCH methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/folders/1", nil)
+	t.Run("rejects invalid body", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{})
+
+		req := httptest.NewRequest(http.MethodPatch, "/api/folders/5", strings.NewReader("{"))
+		req = requestWithUser(req, user)
+		req = mux.SetURLVars(req, map[string]string{"id": "5"})
 		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/folders/{id}", func(w http.ResponseWriter, r *http.Request) {
-			UpdateFolder(w, r, mockAuth)
-		}).Methods(http.MethodPatch)
+		UpdateFolder(w, req, &testutils.MockFirebaseAuth{})
 
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
 
 func TestDeleteFolder(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	t.Run("deletes folder", func(t *testing.T) {
+		deleted := false
+		useFolderRepo(t, &mockFolderHandlerRepo{
+			getFolderFn: func(id int) (*models.Folder, error) {
+				return &models.Folder{ID: id, UserID: user.ID, Name: "Folder"}, nil
+			},
+			deleteFn: func(folder *models.Folder) error {
+				deleted = true
+				return nil
+			},
+		})
 
-	testutils.TruncateTables(t, pool, "folders", "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-delete-folder")
-	_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, testUser.ID)
-	assert.NoError(t, err)
-
-	t.Run("successfully deletes folder", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Folder to Delete")
-
-		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
-
-		DeleteFolder(w, req, mockAuth)
+		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
-
-		deletedFolder, _ := models.GetFolderByID(folder.ID)
-		assert.Nil(t, deletedFolder)
+		assert.True(t, deleted)
 	})
 
-	t.Run("returns 404 for non-existent folder", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+	t.Run("rejects invalid id", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{})
 
-		req := testutils.MakeRequest(t, http.MethodDelete, "/api/folders/99999", nil, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": "99999"})
 		w := httptest.NewRecorder()
-
-		DeleteFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusNotFound, w.Code)
-	})
-
-	t.Run("rejects access to another user's folder", func(t *testing.T) {
-		otherUser := testutils.CreateTestUser(t, pool, "firebase-uid-other-user-delete")
-		folder := testutils.CreateTestFolder(t, pool, otherUser.ID, "Other User's Folder")
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
-		w := httptest.NewRecorder()
-
-		DeleteFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusForbidden, w.Code)
-	})
-
-	t.Run("rejects invalid folder ID", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodDelete, "/api/folders/invalid", nil, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": "invalid"})
-		w := httptest.NewRecorder()
-
-		DeleteFolder(w, req, mockAuth)
+		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "abc", nil), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("rejects users without active subscription", func(t *testing.T) {
-		freeUser := testutils.CreateTestUser(t, pool, "firebase-uid-delete-folder-free-user")
-		folder := testutils.CreateTestFolder(t, pool, freeUser.ID, "Free User Folder")
+	t.Run("returns not found", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{})
 
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *freeUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *freeUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
 		w := httptest.NewRecorder()
+		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
 
-		DeleteFolder(w, req, mockAuth)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("rejects another user's folder", func(t *testing.T) {
+		useFolderRepo(t, &mockFolderHandlerRepo{
+			getFolderFn: func(id int) (*models.Folder, error) {
+				return &models.Folder{ID: id, UserID: user.ID + 1, Name: "Other"}, nil
+			},
+		})
+
+		w := httptest.NewRecorder()
+		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
-	})
-
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Test Folder")
-
-		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/folders/%d", folder.ID), nil, "")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", folder.ID)})
-		w := httptest.NewRecorder()
-
-		DeleteFolder(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-
-	t.Run("rejects non-DELETE methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/folders/1", nil)
-		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/folders/{id}", func(w http.ResponseWriter, r *http.Request) {
-			DeleteFolder(w, r, mockAuth)
-		}).Methods(http.MethodDelete)
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }

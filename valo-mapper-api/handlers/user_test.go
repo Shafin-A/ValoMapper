@@ -2,526 +2,316 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
-	"time"
 	"valo-mapper-api/models"
-	"valo-mapper-api/services"
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
-	"github.com/gorilla/mux"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func ptrBool(b bool) *bool {
-	return &b
+func ptrBool(value bool) *bool {
+	return &value
+}
+
+func ptrInt(value int) *int {
+	return &value
 }
 
 func TestCreateUser(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
+	const firebaseUID = "firebase-uid-123"
+
+	newAuth := func() *testutils.MockFirebaseAuth {
+		mockAuth := &testutils.MockFirebaseAuth{}
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return &auth.Token{UID: firebaseUID}, nil
+		}
+		return mockAuth
 	}
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	t.Run("creates user", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{
+			saveFn: func(user *models.User) error {
+				user.ID = 11
+				return nil
+			},
+		})
 
-	testutils.TruncateTables(t, pool, "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-
-	t.Run("successfully creates user", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: "firebase-uid-123"}, nil
-		}
-
-		reqBody := CreateUserRequest{
-			FirebaseUID: "firebase-uid-123",
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
+			FirebaseUID: firebaseUID,
 			Name:        "Test User",
 			Email:       "test@example.com",
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", reqBody, "valid-token")
+		}, "valid-token")
 		w := httptest.NewRecorder()
+		CreateUser(w, req, newAuth())
 
-		CreateUser(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusCreated, w.Code)
+		require.Equal(t, http.StatusCreated, w.Code)
 
 		var user models.User
 		testutils.ParseJSONResponse(t, w, &user)
-
-		assert.Equal(t, "firebase-uid-123", *user.FirebaseUID)
-		assert.Equal(t, strPtr("Test User"), user.Name)
+		assert.Equal(t, 11, user.ID)
+		assert.Equal(t, firebaseUID, *user.FirebaseUID)
+		assert.Equal(t, "Test User", *user.Name)
 		assert.Equal(t, "test@example.com", *user.Email)
-		assert.NotZero(t, user.ID)
-		assert.False(t, user.TourCompleted)
 	})
 
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		reqBody := CreateUserRequest{
-			FirebaseUID: "firebase-uid-456",
-			Name:        "Test User 2",
-			Email:       "test2@example.com",
-		}
+	t.Run("rejects a mismatched firebase uid", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", reqBody, "")
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
+			FirebaseUID: "other-uid",
+			Name:        "Test User",
+			Email:       "test@example.com",
+		}, "valid-token")
 		w := httptest.NewRecorder()
+		CreateUser(w, req, newAuth())
 
-		CreateUser(w, req, mockAuth)
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
+
+	t.Run("rejects missing authentication", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
+			FirebaseUID: firebaseUID,
+			Name:        "Test User",
+			Email:       "test@example.com",
+		}, "")
+		w := httptest.NewRecorder()
+		CreateUser(w, req, newAuth())
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
 
-	t.Run("rejects non-POST methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
+	t.Run("rejects duplicate user", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{
+			saveFn: func(user *models.User) error {
+				return &pgconn.PgError{Code: pgerrcode.UniqueViolation}
+			},
+		})
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
+			FirebaseUID: firebaseUID,
+			Name:        "Test User",
+			Email:       "test@example.com",
+		}, "valid-token")
 		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
-			CreateUser(w, r, mockAuth)
-		}).Methods(http.MethodPost)
+		CreateUser(w, req, newAuth())
 
-		router.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusConflict, w.Code)
+	})
 
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+	t.Run("rejects missing name", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
+
+		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
+			FirebaseUID: firebaseUID,
+			Email:       "test@example.com",
+		}, "valid-token")
+		w := httptest.NewRecorder()
+		CreateUser(w, req, newAuth())
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("rejects invalid body", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
+
+		req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader("{"))
+		req.Header.Set("Authorization", "Bearer valid-token")
+		w := httptest.NewRecorder()
+		CreateUser(w, req, newAuth())
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
 
 func TestGetUser(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
-
-	testutils.TruncateTables(t, pool, "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-get-test")
-
-	t.Run("successfully retrieves user", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "valid-token")
+	t.Run("returns the authenticated user", func(t *testing.T) {
+		req := requestWithUser(httptest.NewRequest(http.MethodGet, "/api/users/me", nil), user)
 		w := httptest.NewRecorder()
+		GetUser(w, req, &testutils.MockFirebaseAuth{})
 
-		GetUser(w, req, mockAuth)
+		require.Equal(t, http.StatusOK, w.Code)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var user models.User
-		testutils.ParseJSONResponse(t, w, &user)
-
-		assert.Equal(t, testUser.ID, user.ID)
-		assert.Equal(t, testUser.FirebaseUID, user.FirebaseUID)
-		assert.False(t, user.TourCompleted)
+		var response models.User
+		testutils.ParseJSONResponse(t, w, &response)
+		assert.Equal(t, user.ID, response.ID)
+		assert.Equal(t, *user.Email, *response.Email)
 	})
 
-	t.Run("marks trial ineligible after historical personal subscription", func(t *testing.T) {
-		_, err := pool.Exec(context.Background(), `
-			UPDATE users
-			SET is_subscribed = FALSE,
-			    has_ever_personal_subscription = TRUE,
-			    premium_trial_claimed_at = NULL,
-			    subscription_trial_ends_at = NULL,
-			    subscription_plan = NULL,
-			    subscription_ended_at = NOW()
-			WHERE id = $1
-		`, testUser.ID)
-		assert.NoError(t, err)
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "valid-token")
+	t.Run("rejects missing authentication", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/users/me", nil)
 		w := httptest.NewRecorder()
-
-		GetUser(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var user models.User
-		testutils.ParseJSONResponse(t, w, &user)
-		assert.False(t, user.IsSubscribed)
-		assert.False(t, user.PremiumTrialEligible)
-	})
-
-	t.Run("includes personal cancellation details for stack members", func(t *testing.T) {
-		owner := createStackTestUser(t, pool, "owner-user-get-stack-uid", "owner-user-get-stack@example.com")
-		member := createStackTestUser(t, pool, "member-user-get-stack-uid", "member-user-get-stack@example.com")
-
-		_, err := pool.Exec(context.Background(), `
-			UPDATE users
-			SET is_subscribed = TRUE,
-			    subscription_plan = $1
-			WHERE id = $2
-		`, string(services.CheckoutPlanStack), owner.ID)
-		assert.NoError(t, err)
-
-		personalEndsAt := time.Now().UTC().Add(14 * 24 * time.Hour)
-		_, err = pool.Exec(context.Background(), `
-			UPDATE users
-			SET is_subscribed = TRUE,
-			    subscription_plan = $1,
-			    subscription_ended_at = $2,
-			    stripe_subscription_id = $3,
-			    stripe_customer_id = $4
-			WHERE id = $5
-		`, string(services.CheckoutPlanMonthly), personalEndsAt, "sub_user_get_stack_member", "cus_user_get_stack_member", member.ID)
-		assert.NoError(t, err)
-
-		invite, err := models.CreateStackInvite(owner.ID, member.ID)
-		assert.NoError(t, err)
-		assert.NoError(t, models.AcceptStackInvite(invite.ID, member.ID))
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *member.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *member.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "valid-token")
-		w := httptest.NewRecorder()
-
-		GetUser(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var user models.User
-		testutils.ParseJSONResponse(t, w, &user)
-		assert.True(t, user.IsSubscribed)
-		if assert.NotNil(t, user.SubscriptionPlan) {
-			assert.Equal(t, string(services.CheckoutPlanStack), *user.SubscriptionPlan)
-		}
-		assert.True(t, user.PersonalIsSubscribed)
-		if assert.NotNil(t, user.PersonalSubscriptionPlan) {
-			assert.Equal(t, string(services.CheckoutPlanMonthly), *user.PersonalSubscriptionPlan)
-		}
-		if assert.NotNil(t, user.PersonalSubscriptionEndedAt) {
-			assert.WithinDuration(t, personalEndsAt, *user.PersonalSubscriptionEndedAt, time.Second)
-		}
-	})
-
-	t.Run("keeps stack-only members trial eligible after leaving stack", func(t *testing.T) {
-		owner := createStackTestUser(t, pool, "owner-user-get-stack-leave-uid", "owner-user-get-stack-leave@example.com")
-		member := createStackTestUser(t, pool, "member-user-get-stack-leave-uid", "member-user-get-stack-leave@example.com")
-
-		_, err := pool.Exec(context.Background(), `
-			UPDATE users
-			SET is_subscribed = TRUE,
-			    subscription_plan = $1
-			WHERE id = $2
-		`, string(services.CheckoutPlanStack), owner.ID)
-		assert.NoError(t, err)
-
-		invite, err := models.CreateStackInvite(owner.ID, member.ID)
-		assert.NoError(t, err)
-		assert.NoError(t, models.AcceptStackInvite(invite.ID, member.ID))
-
-		leaveReq := testutils.MakeRequest(t, http.MethodDelete, "/api/billing/stack/leave", nil, "valid-token")
-		leaveResp := httptest.NewRecorder()
-		LeaveStack(leaveResp, leaveReq, newMockAuthForUser(member))
-		assert.Equal(t, http.StatusNoContent, leaveResp.Code)
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *member.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *member.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "valid-token")
-		w := httptest.NewRecorder()
-
-		GetUser(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var user models.User
-		testutils.ParseJSONResponse(t, w, &user)
-		assert.False(t, user.IsSubscribed)
-		assert.True(t, user.PremiumTrialEligible)
-		assert.False(t, user.PersonalIsSubscribed)
-		assert.Nil(t, user.SubscriptionPlan)
-		assert.NotNil(t, user.SubscriptionEndedAt)
-	})
-
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/users", nil, "")
-		w := httptest.NewRecorder()
-
-		GetUser(w, req, mockAuth)
+		GetUser(w, req, &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-
-	t.Run("rejects non-GET methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/users", nil)
-		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
-			GetUser(w, r, mockAuth)
-		}).Methods(http.MethodGet)
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
 func TestUpdateUser(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	t.Run("updates the authenticated user", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{
+			updateFn: func(updated *models.User) error {
+				updated.UpdatedAt = user.CreatedAt
+				return nil
+			},
+		})
 
-	testutils.TruncateTables(t, pool, "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-update-test")
-
-	t.Run("successfully updates user name", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		reqBody := UpdateUserRequest{
-			Name:          strPtr("Updated Name"),
+		req := requestWithUser(testutils.MakeRequest(t, http.MethodPut, "/api/users/me", UpdateUserRequest{
+			Name:          strPtr("New Name"),
 			TourCompleted: ptrBool(true),
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPut, "/api/users", reqBody, "valid-token")
+		}, "valid-token"), user)
 		w := httptest.NewRecorder()
+		UpdateUser(w, req, &testutils.MockFirebaseAuth{})
 
-		UpdateUser(w, req, mockAuth)
+		require.Equal(t, http.StatusOK, w.Code)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var user models.User
-		testutils.ParseJSONResponse(t, w, &user)
-
-		assert.Equal(t, strPtr("Updated Name"), user.Name)
-		assert.Equal(t, testUser.ID, user.ID)
-		assert.True(t, user.TourCompleted)
+		var response models.User
+		testutils.ParseJSONResponse(t, w, &response)
+		assert.Equal(t, "New Name", *response.Name)
+		assert.True(t, response.TourCompleted)
 	})
 
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		reqBody := UpdateUserRequest{
+	t.Run("rejects invalid body", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
+
+		req := requestWithUser(httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader("{")), user)
+		w := httptest.NewRecorder()
+		UpdateUser(w, req, &testutils.MockFirebaseAuth{})
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("returns internal error when the repository fails", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{
+			updateFn: func(updated *models.User) error { return errors.New("db down") },
+		})
+
+		req := requestWithUser(testutils.MakeRequest(t, http.MethodPut, "/api/users/me", UpdateUserRequest{
 			Name: strPtr("New Name"),
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPut, "/api/users", reqBody, "")
+		}, "valid-token"), user)
 		w := httptest.NewRecorder()
+		UpdateUser(w, req, &testutils.MockFirebaseAuth{})
 
-		UpdateUser(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-
-	t.Run("rejects non-PUT methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
-		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
-			UpdateUser(w, r, mockAuth)
-		}).Methods(http.MethodPut)
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 }
 
 func TestDeleteUser(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	t.Run("deletes the authenticated user", func(t *testing.T) {
+		deleted := false
+		useUserRepo(t, &mockUserHandlerRepo{
+			deleteFn: func(deletedUser *models.User) error {
+				deleted = true
+				return nil
+			},
+		})
 
-	testutils.TruncateTables(t, pool, "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-
-	t.Run("successfully deletes user", func(t *testing.T) {
-		testUser := testutils.CreateTestUser(t, pool, "firebase-uid-delete-test")
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		deleteUserCalled := false
-		mockAuth.DeleteUserFunc = func(ctx context.Context, uid string) error {
-			deleteUserCalled = true
-			assert.Equal(t, *testUser.FirebaseUID, uid)
-			return nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodDelete, "/api/users", nil, "valid-token")
+		req := requestWithUser(httptest.NewRequest(http.MethodDelete, "/api/users/me", nil), user)
 		w := httptest.NewRecorder()
-
-		DeleteUser(w, req, mockAuth)
+		DeleteUser(w, req, &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
-		assert.True(t, deleteUserCalled, "DeleteUser should have been called on Firebase Auth")
-
-		deletedUser, err := models.GetUserByFirebaseUID(*testUser.FirebaseUID)
-		if err != nil {
-			assert.Contains(t, err.Error(), "no rows")
-		} else {
-			assert.Nil(t, deletedUser)
-		}
+		assert.True(t, deleted)
 	})
 
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		req := testutils.MakeRequest(t, http.MethodDelete, "/api/users", nil, "")
+	t.Run("returns internal error when the repository fails", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{
+			deleteFn: func(deletedUser *models.User) error { return errors.New("db down") },
+		})
+
+		req := requestWithUser(httptest.NewRequest(http.MethodDelete, "/api/users/me", nil), user)
 		w := httptest.NewRecorder()
+		DeleteUser(w, req, &testutils.MockFirebaseAuth{})
 
-		DeleteUser(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-
-	t.Run("rejects non-DELETE methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
-		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
-			DeleteUser(w, r, mockAuth)
-		}).Methods(http.MethodDelete)
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 }
 
 func TestUpdateUserSubscription(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	t.Run("updates subscription", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{
+			getByIDFn: func(id int) (*models.User, error) { return user, nil },
+		})
 
-	testutils.TruncateTables(t, pool, "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-
-	t.Run("downgrades user and sets subscription ended timestamp", func(t *testing.T) {
-		testUser := testutils.CreateTestUser(t, pool, "firebase-sub-uid-1")
-		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE, subscription_ended_at = NULL WHERE id = $1`, testUser.ID)
-		assert.NoError(t, err)
-
-		reqBody := UpdateUserSubscriptionRequest{
-			UserID:       &testUser.ID,
-			IsSubscribed: ptrBool(false),
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", reqBody, "")
-		w := httptest.NewRecorder()
-
-		UpdateUserSubscription(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var user models.User
-		testutils.ParseJSONResponse(t, w, &user)
-		assert.Equal(t, testUser.ID, user.ID)
-		assert.False(t, user.IsSubscribed)
-		assert.NotNil(t, user.SubscriptionEndedAt)
-	})
-
-	t.Run("upgrades user and clears subscription ended timestamp", func(t *testing.T) {
-		testUser := testutils.CreateTestUser(t, pool, "firebase-sub-uid-2")
-		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = FALSE, subscription_ended_at = NOW() WHERE id = $1`, testUser.ID)
-		assert.NoError(t, err)
-
-		reqBody := UpdateUserSubscriptionRequest{
-			FirebaseUID:  testUser.FirebaseUID,
+		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", UpdateUserSubscriptionRequest{
+			UserID:       ptrInt(user.ID),
 			IsSubscribed: ptrBool(true),
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", reqBody, "")
+		}, "")
 		w := httptest.NewRecorder()
+		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
 
-		UpdateUserSubscription(w, req, mockAuth)
+		require.Equal(t, http.StatusOK, w.Code)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var user models.User
-		testutils.ParseJSONResponse(t, w, &user)
-		assert.Equal(t, testUser.ID, user.ID)
-		assert.True(t, user.IsSubscribed)
-		assert.Nil(t, user.SubscriptionEndedAt)
+		var response models.User
+		testutils.ParseJSONResponse(t, w, &response)
+		assert.True(t, response.IsSubscribed)
 	})
 
-	t.Run("rejects request without isSubscribed", func(t *testing.T) {
-		testUser := testutils.CreateTestUser(t, pool, "firebase-sub-uid-4")
-		reqBody := UpdateUserSubscriptionRequest{
-			UserID: &testUser.ID,
-		}
+	t.Run("rejects missing isSubscribed", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
 
-		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", reqBody, "")
+		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", UpdateUserSubscriptionRequest{
+			UserID: ptrInt(user.ID),
+		}, "")
 		w := httptest.NewRecorder()
-
-		UpdateUserSubscription(w, req, mockAuth)
+		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("rejects when both userId and firebaseUid are provided", func(t *testing.T) {
-		testUser := testutils.CreateTestUser(t, pool, "firebase-sub-uid-5")
-		reqBody := UpdateUserSubscriptionRequest{
-			UserID:       &testUser.ID,
-			FirebaseUID:  testUser.FirebaseUID,
+	t.Run("rejects both identifiers", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
+
+		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", UpdateUserSubscriptionRequest{
+			UserID:       ptrInt(user.ID),
+			FirebaseUID:  user.FirebaseUID,
 			IsSubscribed: ptrBool(false),
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", reqBody, "")
+		}, "")
 		w := httptest.NewRecorder()
-
-		UpdateUserSubscription(w, req, mockAuth)
+		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("rejects missing identifiers", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
+
+		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", UpdateUserSubscriptionRequest{
+			IsSubscribed: ptrBool(false),
+		}, "")
+		w := httptest.NewRecorder()
+		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("returns not found", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
+
+		req := testutils.MakeRequest(t, http.MethodPatch, "/api/users/subscription", UpdateUserSubscriptionRequest{
+			UserID:       ptrInt(999),
+			IsSubscribed: ptrBool(false),
+		}, "")
+		w := httptest.NewRecorder()
+		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }

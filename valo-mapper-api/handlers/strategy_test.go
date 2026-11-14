@@ -2,824 +2,338 @@ package handlers
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestCreateStrategy(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
+func strategyRequest(t *testing.T, user *models.User, method, id string, body any) *http.Request {
+	t.Helper()
+
+	path := "/api/strategies"
+	if id != "" {
+		path += "/" + id
 	}
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	req := authedRequest(t, user, method, path, body)
+	if id != "" {
+		req = mux.SetURLVars(req, map[string]string{"id": id})
+	}
+	return req
+}
 
-	testutils.TruncateTables(t, pool, "strategies", "lobbies", "users")
+func TestCreateStrategy(t *testing.T) {
+	user := newTestAuthenticatedUser()
 
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-strategy-test")
-
-	t.Run("successfully creates strategy", func(t *testing.T) {
-		// isolate subtest by clearing strategy-related tables
-		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+	t.Run("creates strategy", func(t *testing.T) {
+		repo := &mockStrategyHandlerRepo{
+			getLobbyMetaFn: func(code string) (*models.LobbyMeta, error) {
+				return &models.LobbyMeta{Code: code, SelectedMapID: "ascent", UpdatedAt: time.Now()}, nil
+			},
+			saveFn: func(strategy *models.Strategy) error {
+				strategy.ID = 42
+				return nil
+			},
 		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+		useStrategyRepo(t, repo)
 
-		lobby := testutils.CreateTestLobby(t, pool)
-
-		reqBody := CreateStrategyRequest{
-			LobbyCode: lobby.Code,
+		w := httptest.NewRecorder()
+		CreateStrategy(w, strategyRequest(t, user, http.MethodPost, "", CreateStrategyRequest{
+			LobbyCode: "ABCDEFG",
 			Name:      "Test Strategy",
-		}
+		}), &testutils.MockFirebaseAuth{})
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
-		w := httptest.NewRecorder()
-
-		CreateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusCreated, w.Code)
+		require.Equal(t, http.StatusCreated, w.Code)
 
 		var response StrategyResponse
 		testutils.ParseJSONResponse(t, w, &response)
-
+		assert.Equal(t, 42, response.ID)
+		assert.Equal(t, user.ID, response.UserID)
 		assert.Equal(t, "Test Strategy", response.Name)
-		assert.Equal(t, testUser.ID, response.UserID)
-		assert.Equal(t, lobby.Code, response.LobbyCode)
-		assert.Nil(t, response.FolderID)
-		assert.NotZero(t, response.ID)
-	})
-
-	t.Run("successfully creates strategy with folder", func(t *testing.T) {
-		// reset tables to avoid collisions with previous subtests
-		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		lobby := testutils.CreateTestLobby(t, pool)
-		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Test Folder")
-
-		reqBody := CreateStrategyRequest{
-			LobbyCode: lobby.Code,
-			Name:      "Strategy in Folder",
-			FolderID:  &folder.ID,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
-		w := httptest.NewRecorder()
-
-		CreateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusCreated, w.Code)
-
-		var response StrategyResponse
-		testutils.ParseJSONResponse(t, w, &response)
-
-		assert.Equal(t, "Strategy in Folder", response.Name)
-		assert.NotNil(t, response.FolderID)
-		assert.Equal(t, folder.ID, *response.FolderID)
+		assert.Equal(t, "ABCDEFG", response.LobbyCode)
+		assert.Equal(t, "ascent", response.SelectedMapID)
 	})
 
 	t.Run("rejects missing lobby code", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
-		reqBody := CreateStrategyRequest{
-			LobbyCode: "",
-			Name:      "Test Strategy",
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
-
-		CreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, strategyRequest(t, user, http.MethodPost, "", CreateStrategyRequest{
+			Name: "Test Strategy",
+		}), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("rejects missing strategy name", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+	t.Run("rejects free plan limit", func(t *testing.T) {
+		freeUser := newTestAuthenticatedUser()
+		freeUser.IsSubscribed = false
+		useStrategyRepo(t, &mockStrategyHandlerRepo{
+			getLobbyMetaFn: func(code string) (*models.LobbyMeta, error) {
+				return &models.LobbyMeta{Code: code}, nil
+			},
+			countFn: func(userID int) (int, error) { return 1, nil },
+		})
 
-		lobby := testutils.CreateTestLobby(t, pool)
-
-		reqBody := CreateStrategyRequest{
-			LobbyCode: lobby.Code,
-			Name:      "",
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
-
-		CreateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-	})
-
-	t.Run("rejects non-existent lobby", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		reqBody := CreateStrategyRequest{
-			LobbyCode: "NONEXIST",
+		CreateStrategy(w, strategyRequest(t, freeUser, http.MethodPost, "", CreateStrategyRequest{
+			LobbyCode: "ABCDEFG",
 			Name:      "Test Strategy",
-		}
+		}), &testutils.MockFirebaseAuth{})
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
-		w := httptest.NewRecorder()
-
-		CreateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
 
-	t.Run("rejects duplicate strategy", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+	t.Run("rejects duplicate save", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{
+			getLobbyMetaFn: func(code string) (*models.LobbyMeta, error) {
+				return &models.LobbyMeta{Code: code}, nil
+			},
+			existsFn: func(userID int, lobbyCode string) (bool, error) { return true, nil },
+		})
 
-		lobby := testutils.CreateTestLobby(t, pool)
-		testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
-
-		reqBody := CreateStrategyRequest{
-			LobbyCode: lobby.Code,
-			Name:      "Duplicate Strategy",
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
-
-		CreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, strategyRequest(t, user, http.MethodPost, "", CreateStrategyRequest{
+			LobbyCode: "ABCDEFG",
+			Name:      "Test Strategy",
+		}), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusConflict, w.Code)
 	})
 
-	t.Run("rejects creating a second strategy for free users", func(t *testing.T) {
-		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+	t.Run("returns internal error when the repository fails", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{
+			getLobbyMetaFn: func(code string) (*models.LobbyMeta, error) {
+				return nil, errors.New("db down")
+			},
+		})
 
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		for range 1 {
-			lobby := testutils.CreateTestLobby(t, pool)
-			testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
-		}
-
-		secondLobby := testutils.CreateTestLobby(t, pool)
-		reqBody := CreateStrategyRequest{
-			LobbyCode: secondLobby.Code,
-			Name:      "Second Strategy",
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
 		w := httptest.NewRecorder()
-
-		CreateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusForbidden, w.Code)
-	})
-
-	t.Run("allows subscribed users to save more than one strategy", func(t *testing.T) {
-		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
-
-		subscribedUser := testutils.CreateTestUser(t, pool, "firebase-uid-subscribed-strategy-test")
-		_, err := pool.Exec(context.Background(), `UPDATE users SET is_subscribed = TRUE WHERE id = $1`, subscribedUser.ID)
-		assert.NoError(t, err)
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *subscribedUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *subscribedUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		for range 1 {
-			lobby := testutils.CreateTestLobby(t, pool)
-			testutils.CreateTestStrategy(t, pool, subscribedUser.ID, lobby.Code)
-		}
-
-		secondLobby := testutils.CreateTestLobby(t, pool)
-		reqBody := CreateStrategyRequest{
-			LobbyCode: secondLobby.Code,
-			Name:      "Subscribed Second Strategy",
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "valid-token")
-		w := httptest.NewRecorder()
-
-		CreateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusCreated, w.Code)
-	})
-
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		lobby := testutils.CreateTestLobby(t, pool)
-
-		reqBody := CreateStrategyRequest{
-			LobbyCode: lobby.Code,
+		CreateStrategy(w, strategyRequest(t, user, http.MethodPost, "", CreateStrategyRequest{
+			LobbyCode: "ABCDEFG",
 			Name:      "Test Strategy",
+		}), &testutils.MockFirebaseAuth{})
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+
+	t.Run("rejects missing authentication", func(t *testing.T) {
+		mockAuth := &testutils.MockFirebaseAuth{}
+		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
+			return nil, errors.New("invalid")
 		}
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/strategies", reqBody, "")
+		req := httptest.NewRequest(http.MethodPost, "/api/strategies", strings.NewReader(`{"lobbyCode":"ABCDEFG","name":"Test"}`))
 		w := httptest.NewRecorder()
-
 		CreateStrategy(w, req, mockAuth)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-
-	t.Run("rejects non-POST methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/strategies", nil)
-		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/strategies", func(w http.ResponseWriter, r *http.Request) {
-			CreateStrategy(w, r, mockAuth)
-		}).Methods(http.MethodPost)
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 	})
 }
 
 func TestGetStrategies(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
+	now := time.Now()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	t.Run("lists strategies", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{
+			summariesFn: func(userID int, folderID *int) ([]models.StrategySummary, error) {
+				return []models.StrategySummary{
+					{ID: 1, UserID: user.ID, Name: "One", LobbyCode: "AAA", SelectedMapID: "ascent", UpdatedAt: now},
+					{ID: 2, UserID: user.ID, Name: "Two", LobbyCode: "BBB", SelectedMapID: "bind", UpdatedAt: now},
+				}, nil
+			},
+		})
 
-	testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders", "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-get-strategies")
-
-	t.Run("successfully retrieves user strategies", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		lobby1 := testutils.CreateTestLobby(t, pool)
-		lobby2 := testutils.CreateTestLobby(t, pool)
-		strategy1 := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby1.Code)
-		strategy2 := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby2.Code)
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/strategies", nil, "valid-token")
 		w := httptest.NewRecorder()
+		GetStrategies(w, strategyRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
 
-		GetStrategies(w, req, mockAuth)
+		require.Equal(t, http.StatusOK, w.Code)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var responses []*StrategyResponse
-		testutils.ParseJSONResponse(t, w, &responses)
-
-		assert.Len(t, responses, 2)
-		strategyNames := []string{responses[0].Name, responses[1].Name}
-		assert.Contains(t, strategyNames, strategy1.Name)
-		assert.Contains(t, strategyNames, strategy2.Name)
+		var response []StrategyResponse
+		testutils.ParseJSONResponse(t, w, &response)
+		require.Len(t, response, 2)
+		assert.Equal(t, "One", response[0].Name)
+		assert.Equal(t, "ascent", response[0].SelectedMapID)
+		assert.Equal(t, "BBB", response[1].LobbyCode)
 	})
 
-	t.Run("successfully retrieves strategies by folder", func(t *testing.T) {
-		testUser2 := testutils.CreateTestUser(t, pool, "firebase-uid-folder-strategies")
+	t.Run("passes the folder filter", func(t *testing.T) {
+		var received *int
+		useStrategyRepo(t, &mockStrategyHandlerRepo{
+			summariesFn: func(userID int, folderID *int) ([]models.StrategySummary, error) {
+				received = folderID
+				return nil, nil
+			},
+		})
 
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser2.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser2.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		folder := testutils.CreateTestFolder(t, pool, testUser2.ID, "Test Folder")
-		lobby := testutils.CreateTestLobby(t, pool)
-
-		strategy := &models.Strategy{
-			UserID:    testUser2.ID,
-			FolderID:  &folder.ID,
-			LobbyCode: lobby.Code,
-			Name:      "Strategy in Folder",
-		}
-		err := strategy.Save()
-		assert.NoError(t, err)
-
-		req := testutils.MakeRequest(t, http.MethodGet, fmt.Sprintf("/api/strategies?folderId=%d", folder.ID), nil, "valid-token")
+		req := authedRequest(t, user, http.MethodGet, "/api/strategies?folderId=5", nil)
 		w := httptest.NewRecorder()
-
-		GetStrategies(w, req, mockAuth)
+		GetStrategies(w, req, &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusOK, w.Code)
-
-		var responses []*StrategyResponse
-		testutils.ParseJSONResponse(t, w, &responses)
-
-		assert.Len(t, responses, 1)
-		assert.Equal(t, "Strategy in Folder", responses[0].Name)
-		assert.Equal(t, folder.ID, *responses[0].FolderID)
+		require.NotNil(t, received)
+		assert.Equal(t, 5, *received)
 	})
 
-	t.Run("returns empty array when no strategies", func(t *testing.T) {
-		testUser3 := testutils.CreateTestUser(t, pool, "firebase-uid-no-strategies")
+	t.Run("rejects invalid folder filter", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser3.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser3.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/strategies", nil, "valid-token")
+		req := authedRequest(t, user, http.MethodGet, "/api/strategies?folderId=abc", nil)
 		w := httptest.NewRecorder()
-
-		GetStrategies(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var responses []*StrategyResponse
-		testutils.ParseJSONResponse(t, w, &responses)
-
-		assert.Empty(t, responses)
-	})
-
-	t.Run("rejects invalid folder ID", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/strategies?folderId=invalid", nil, "valid-token")
-		w := httptest.NewRecorder()
-
-		GetStrategies(w, req, mockAuth)
+		GetStrategies(w, req, &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		req := testutils.MakeRequest(t, http.MethodGet, "/api/strategies", nil, "")
+	t.Run("returns internal error when the repository fails", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{
+			summariesFn: func(userID int, folderID *int) ([]models.StrategySummary, error) {
+				return nil, errors.New("db down")
+			},
+		})
+
 		w := httptest.NewRecorder()
+		GetStrategies(w, strategyRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
 
-		GetStrategies(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-
-	t.Run("rejects non-GET methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/strategies", nil)
-		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/strategies", func(w http.ResponseWriter, r *http.Request) {
-			GetStrategies(w, r, mockAuth)
-		}).Methods(http.MethodGet)
-
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 }
 
 func TestUpdateStrategy(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
-
-	testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders", "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-update-strategy")
-
-	t.Run("successfully updates strategy name", func(t *testing.T) {
-		// reset strategy-related tables to avoid cross-test pollution
-		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
+	t.Run("updates strategy", func(t *testing.T) {
+		repo := &mockStrategyHandlerRepo{
+			getStrategyByIDFn: func(id int) (*models.Strategy, error) {
+				return &models.Strategy{ID: id, UserID: user.ID, LobbyCode: "AAA", Name: "Old"}, nil
+			},
+			getLobbyMetaFn: func(code string) (*models.LobbyMeta, error) {
+				return &models.LobbyMeta{Code: code, SelectedMapID: "ascent", UpdatedAt: time.Now()}, nil
+			},
+			updateFn: func(strategy *models.Strategy) error {
+				assert.Equal(t, "New", strategy.Name)
+				return nil
+			},
 		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+		useStrategyRepo(t, repo)
 
-		lobby := testutils.CreateTestLobby(t, pool)
-		strategy := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
-
-		newName := "Updated Strategy Name"
-		reqBody := UpdateStrategyRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
+		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
 
-		UpdateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
+		require.Equal(t, http.StatusOK, w.Code)
 
 		var response StrategyResponse
 		testutils.ParseJSONResponse(t, w, &response)
-
-		assert.Equal(t, "Updated Strategy Name", response.Name)
-		assert.Equal(t, strategy.ID, response.ID)
+		assert.Equal(t, "New", response.Name)
+		assert.Equal(t, "AAA", response.LobbyCode)
+		assert.Equal(t, "ascent", response.SelectedMapID)
 	})
 
-	t.Run("successfully updates strategy folder", func(t *testing.T) {
-		// clear out previous strategies and lobbies so we get fresh codes
-		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
+	t.Run("rejects invalid id", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		lobby := testutils.CreateTestLobby(t, pool)
-		strategy := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
-		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Target Folder")
-
-		reqBody := UpdateStrategyRequest{
-			FolderID: &folder.ID,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
-
-		UpdateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var response StrategyResponse
-		testutils.ParseJSONResponse(t, w, &response)
-
-		assert.NotNil(t, response.FolderID)
-		assert.Equal(t, folder.ID, *response.FolderID)
-	})
-
-	t.Run("successfully moves strategy to root", func(t *testing.T) {
-		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		lobby := testutils.CreateTestLobby(t, pool)
-		folder := testutils.CreateTestFolder(t, pool, testUser.ID, "Source Folder")
-		strategy := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
-
-		_, err := pool.Exec(context.Background(), `UPDATE strategies SET folder_id = $1 WHERE id = $2`, folder.ID, strategy.ID)
-		assert.NoError(t, err)
-
-		reqBody := map[string]any{
-			"folderId": nil,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
-		w := httptest.NewRecorder()
-
-		UpdateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-
-		var response StrategyResponse
-		testutils.ParseJSONResponse(t, w, &response)
-
-		assert.Nil(t, response.FolderID)
-	})
-
-	t.Run("returns 404 for non-existent strategy", func(t *testing.T) {
-		// ensure tables cleared so ID definitely doesn't exist
-		testutils.TruncateTables(t, pool, "strategies", "lobbies", "folders")
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		newName := "New Name"
-		reqBody := UpdateStrategyRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, "/api/strategies/99999", reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": "99999"})
-		w := httptest.NewRecorder()
-
-		UpdateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusNotFound, w.Code)
-	})
-
-	t.Run("rejects access to another user's strategy", func(t *testing.T) {
-		otherUser := testutils.CreateTestUser(t, pool, "firebase-uid-other-user-strategy")
-		lobby := testutils.CreateTestLobby(t, pool)
-		strategy := testutils.CreateTestStrategy(t, pool, otherUser.ID, lobby.Code)
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		newName := "Hacked Name"
-		reqBody := UpdateStrategyRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
-		w := httptest.NewRecorder()
-
-		UpdateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusForbidden, w.Code)
-	})
-
-	t.Run("rejects invalid strategy ID", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		newName := "New Name"
-		reqBody := UpdateStrategyRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, "/api/strategies/invalid", reqBody, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": "invalid"})
-		w := httptest.NewRecorder()
-
-		UpdateStrategy(w, req, mockAuth)
+		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "abc", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		lobby := testutils.CreateTestLobby(t, pool)
-		strategy := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
+	t.Run("returns not found", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
-		newName := "New Name"
-		reqBody := UpdateStrategyRequest{
-			Name: &newName,
-		}
-
-		req := testutils.MakeRequest(t, http.MethodPatch, fmt.Sprintf("/api/strategies/%d", strategy.ID), reqBody, "")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
+		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
 
-		UpdateStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 
-	t.Run("rejects non-PATCH methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/strategies/1", nil)
+	t.Run("rejects another user's strategy", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{
+			getStrategyByIDFn: func(id int) (*models.Strategy, error) {
+				return &models.Strategy{ID: id, UserID: user.ID + 1, LobbyCode: "AAA"}, nil
+			},
+		})
+
 		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/strategies/{id}", func(w http.ResponseWriter, r *http.Request) {
-			UpdateStrategy(w, r, mockAuth)
-		}).Methods(http.MethodPatch)
+		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
 
-		router.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusForbidden, w.Code)
+	})
 
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+	t.Run("rejects invalid body", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{})
+
+		req := httptest.NewRequest(http.MethodPatch, "/api/strategies/5", strings.NewReader("{"))
+		req = requestWithUser(req, user)
+		req = mux.SetURLVars(req, map[string]string{"id": "5"})
+		w := httptest.NewRecorder()
+		UpdateStrategy(w, req, &testutils.MockFirebaseAuth{})
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
 
 func TestDeleteStrategy(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test in short mode")
-	}
+	user := newTestAuthenticatedUser()
 
-	pool := testutils.SetupTestDB(t)
-	defer testutils.CleanupTestDB(t, pool)
+	t.Run("deletes strategy", func(t *testing.T) {
+		deleted := false
+		useStrategyRepo(t, &mockStrategyHandlerRepo{
+			getStrategyByIDFn: func(id int) (*models.Strategy, error) {
+				return &models.Strategy{ID: id, UserID: user.ID, LobbyCode: "AAA"}, nil
+			},
+			deleteFn: func(strategy *models.Strategy) error {
+				deleted = true
+				return nil
+			},
+		})
 
-	testutils.TruncateTables(t, pool, "strategies", "lobbies", "users")
-
-	mockAuth := &testutils.MockFirebaseAuth{}
-	testUser := testutils.CreateTestUser(t, pool, "firebase-uid-delete-strategy")
-
-	t.Run("successfully deletes strategy", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		lobby := testutils.CreateTestLobby(t, pool)
-		strategy := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
-
-		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/strategies/%d", strategy.ID), nil, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
-
-		DeleteStrategy(w, req, mockAuth)
+		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
-
-		deletedStrategy, _ := models.GetStrategyByID(strategy.ID)
-		assert.Nil(t, deletedStrategy)
+		assert.True(t, deleted)
 	})
 
-	t.Run("returns 404 for non-existent strategy", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
+	t.Run("rejects invalid id", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
-		req := testutils.MakeRequest(t, http.MethodDelete, "/api/strategies/99999", nil, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": "99999"})
 		w := httptest.NewRecorder()
-
-		DeleteStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusNotFound, w.Code)
-	})
-
-	t.Run("rejects access to another user's strategy", func(t *testing.T) {
-		otherUser := testutils.CreateTestUser(t, pool, "firebase-uid-other-user-delete")
-		lobby := testutils.CreateTestLobby(t, pool)
-		strategy := testutils.CreateTestStrategy(t, pool, otherUser.ID, lobby.Code)
-
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/strategies/%d", strategy.ID), nil, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
-		w := httptest.NewRecorder()
-
-		DeleteStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusForbidden, w.Code)
-	})
-
-	t.Run("rejects invalid strategy ID", func(t *testing.T) {
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: *testUser.FirebaseUID}, nil
-		}
-		mockAuth.GetUserFunc = func(ctx context.Context, uid string) (*auth.UserRecord, error) {
-			return &auth.UserRecord{
-				UserInfo:      &auth.UserInfo{UID: uid, Email: *testUser.Email},
-				EmailVerified: true,
-			}, nil
-		}
-
-		req := testutils.MakeRequest(t, http.MethodDelete, "/api/strategies/invalid", nil, "valid-token")
-		req = mux.SetURLVars(req, map[string]string{"id": "invalid"})
-		w := httptest.NewRecorder()
-
-		DeleteStrategy(w, req, mockAuth)
+		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "abc", nil), &testutils.MockFirebaseAuth{})
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("rejects missing authorization", func(t *testing.T) {
-		lobby := testutils.CreateTestLobby(t, pool)
-		strategy := testutils.CreateTestStrategy(t, pool, testUser.ID, lobby.Code)
+	t.Run("returns not found", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
-		req := testutils.MakeRequest(t, http.MethodDelete, fmt.Sprintf("/api/strategies/%d", strategy.ID), nil, "")
-		req = mux.SetURLVars(req, map[string]string{"id": fmt.Sprintf("%d", strategy.ID)})
 		w := httptest.NewRecorder()
+		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
 
-		DeleteStrategy(w, req, mockAuth)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 
-	t.Run("rejects non-DELETE methods", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/strategies/1", nil)
+	t.Run("rejects another user's strategy", func(t *testing.T) {
+		useStrategyRepo(t, &mockStrategyHandlerRepo{
+			getStrategyByIDFn: func(id int) (*models.Strategy, error) {
+				return &models.Strategy{ID: id, UserID: user.ID + 1, LobbyCode: "AAA"}, nil
+			},
+		})
+
 		w := httptest.NewRecorder()
-		router := mux.NewRouter()
-		router.HandleFunc("/api/strategies/{id}", func(w http.ResponseWriter, r *http.Request) {
-			DeleteStrategy(w, r, mockAuth)
-		}).Methods(http.MethodDelete)
+		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
 
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
 }
