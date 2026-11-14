@@ -1,10 +1,13 @@
 import {
   filterExistingSelection,
+  findCanvasItemInstanceById,
   getContextMenuCapabilities,
   getSelectableCanvasItems,
   isRectFullyInside,
   normalizeRect,
+  resolveCanvasItemTarget,
 } from "@/lib/canvas-selection";
+import type Konva from "konva";
 import type {
   AbilityCanvas,
   AgentCanvas,
@@ -415,5 +418,89 @@ describe("canvas-selection helpers", () => {
       getContextMenuCapabilities(hostWithoutCone, collections)
         .canRemoveAttachedVisionCone,
     ).toBe(false);
+  });
+
+  it("only enables note editing for a single free-standing item", () => {
+    const collections = {
+      agentsOnCanvas: [createAgent("agent-1"), createAgent("agent-2")],
+      abilitiesOnCanvas: [
+        createAbility("cone-attached", { attachedToId: "agent-1" }),
+      ],
+      textsOnCanvas: [createText("text-1")],
+      imagesOnCanvas: [createImage("image-1")],
+      toolIconsOnCanvas: [createToolIcon("tool-1")],
+    };
+
+    const plainAgent: CanvasItemInstance[] = [
+      { type: "agent", item: createAgent("agent-1") },
+    ];
+    const notedAgent: CanvasItemInstance[] = [
+      { type: "agent", item: createAgent("agent-2", { note: "  flank  " }) },
+    ];
+    const attachedCone: CanvasItemInstance[] = [
+      {
+        type: "ability",
+        item: createAbility("cone-attached", { attachedToId: "agent-1" }),
+      },
+    ];
+
+    expect(getContextMenuCapabilities(plainAgent, collections)).toMatchObject({
+      canEditNote: true,
+      hasNote: false,
+    });
+    expect(getContextMenuCapabilities(notedAgent, collections)).toMatchObject({
+      canEditNote: true,
+      hasNote: true,
+    });
+    expect(
+      getContextMenuCapabilities([...plainAgent, ...notedAgent], collections)
+        .canEditNote,
+    ).toBe(false);
+    expect(
+      getContextMenuCapabilities(attachedCone, collections).canEditNote,
+    ).toBe(false);
+  });
+
+  it("finds a canvas item instance by id across collections", () => {
+    const collections = {
+      agentsOnCanvas: [createAgent("agent-1")],
+      abilitiesOnCanvas: [],
+      textsOnCanvas: [createText("text-1")],
+      imagesOnCanvas: [],
+      toolIconsOnCanvas: [],
+    };
+
+    expect(findCanvasItemInstanceById(collections, "agent-1")?.type).toBe(
+      "agent",
+    );
+    expect(findCanvasItemInstanceById(collections, "text-1")?.type).toBe(
+      "text",
+    );
+    expect(findCanvasItemInstanceById(collections, "missing")).toBeNull();
+  });
+
+  it("resolves note badge nodes through their target attributes", () => {
+    const collections = {
+      agentsOnCanvas: [createAgent("agent-1")],
+      abilitiesOnCanvas: [],
+      textsOnCanvas: [],
+      imagesOnCanvas: [],
+      toolIconsOnCanvas: [],
+    };
+
+    const badge = {
+      getAttr: (name: string) => {
+        if (name === "noteTargetId") return "agent-1";
+        if (name === "noteTargetType") return "agent";
+        return undefined;
+      },
+      id: () => "",
+      getParent: () => null,
+    } as unknown as Konva.Node;
+
+    expect(resolveCanvasItemTarget(badge, collections)).toEqual({
+      id: "agent-1",
+      type: "agent",
+    });
   });
 });

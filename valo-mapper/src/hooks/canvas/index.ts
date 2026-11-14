@@ -17,6 +17,7 @@ export { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 export { useCanvasEvents } from "./use-canvas-events";
 export { usePositionScaling } from "./use-position-scaling";
 export { useTextEditor } from "./use-text-editor";
+export { useNoteEditor } from "./use-note-editor";
 
 // Phase management
 export { usePhaseManager } from "./use-phase-manager";

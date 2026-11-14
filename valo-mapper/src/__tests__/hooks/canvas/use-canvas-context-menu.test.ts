@@ -2083,4 +2083,48 @@ describe("useCanvasContextMenu", () => {
       "miks_stun",
     ]);
   });
+
+  it("invokes the note editor for the context menu anchor", () => {
+    const stageRef = { current: createStageMock() as unknown as Stage };
+    const agents: AgentCanvas[] = [
+      { id: "a1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
+    ];
+    const onEditNote = jest.fn();
+
+    const { result } = renderHook(() =>
+      useCanvasContextMenu(
+        stageRef,
+        agents,
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        [],
+        jest.fn(),
+        undefined,
+        onEditNote,
+      ),
+    );
+
+    act(() => {
+      result.current.handleContextMenu({
+        evt: { preventDefault: jest.fn() },
+        target: { id: () => "a1" },
+      } as unknown as KonvaEventObject<PointerEvent>);
+    });
+
+    act(() => {
+      result.current.handleEditNote();
+    });
+
+    expect(onEditNote).toHaveBeenCalledWith({ id: "a1", type: "agent" });
+    expect(result.current.contextMenu.open).toBe(false);
+  });
 });

@@ -2,6 +2,7 @@ import {
   useCanvasImages,
   useCanvasUi,
 } from "@/contexts/canvas-context";
+import { NoteBadge } from "@/components/canvas/note-badge";
 import {
   useHoveredElementId,
   useSetHoveredElementId,
@@ -236,6 +237,14 @@ export const CanvasImages = memo(function CanvasImages({
               }}
             />
           )}
+        {imageItem.note?.trim() ? (
+          <NoteBadge
+            itemId={imageItem.id}
+            itemType="image"
+            x={imageItem.width}
+            y={0}
+          />
+        ) : null}
       </Group>
     );
   });

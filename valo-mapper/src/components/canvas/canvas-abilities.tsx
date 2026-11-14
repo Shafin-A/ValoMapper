@@ -1,4 +1,5 @@
 import { AbilityIcon } from "@/components/canvas-icons";
+import { NoteBadge } from "@/components/canvas/note-badge";
 import {
   useCanvasAbilities,
   useCanvasActions,
@@ -115,6 +116,14 @@ const AbilityNode = memo(function AbilityNode({
         unregisterNode={unregisterNode}
         onInteractionEnd={(data) => onInteractionEnd(ability, data)}
       />
+      {ability.note?.trim() ? (
+        <NoteBadge
+          itemId={ability.id}
+          itemType="ability"
+          x={x + abilitiesSettings.scale / 2}
+          y={y - abilitiesSettings.scale / 2}
+        />
+      ) : null}
     </Group>
   );
 });

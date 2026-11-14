@@ -35,6 +35,8 @@ export const useCanvasUiState = ({
 }: UseCanvasUIOptions = {}) => {
   const [isAlly, setIsAlly] = useState(true);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [editingNoteTarget, setEditingNoteTarget] =
+    useState<CanvasSelectionItem | null>(null);
 
   const [selectedMap, setSelectedMap] = useState<MapOption>(initialSelectedMap);
   const [mapSide, setMapSide] = useState<MapSide>(initialMapSide);
@@ -74,18 +76,23 @@ export const useCanvasUiState = ({
     CanvasSelectionItem[]
   >([]);
   const [isSidebarDragActive, setIsSidebarDragActive] = useState(false);
+  const [isDraggingCanvasItem, setIsDraggingCanvasItem] = useState(false);
   const [currentStageScale, setCurrentStageScale] = useState(1);
 
   const resetEdits = useCallback(() => {
     setEditingTextId(null);
+    setEditingNoteTarget(null);
     setSelectedCanvasIcon(null);
     setSelectedCanvasItems([]);
     setIsSidebarDragActive(false);
+    setIsDraggingCanvasItem(false);
   }, [
     setEditingTextId,
+    setEditingNoteTarget,
     setSelectedCanvasIcon,
     setSelectedCanvasItems,
     setIsSidebarDragActive,
+    setIsDraggingCanvasItem,
   ]);
 
   return {
@@ -93,6 +100,8 @@ export const useCanvasUiState = ({
     setIsAlly,
     editingTextId,
     setEditingTextId,
+    editingNoteTarget,
+    setEditingNoteTarget,
     selectedMap,
     setSelectedMap,
     mapSide,
@@ -118,6 +127,8 @@ export const useCanvasUiState = ({
     setSelectedCanvasItems,
     isSidebarDragActive,
     setIsSidebarDragActive,
+    isDraggingCanvasItem,
+    setIsDraggingCanvasItem,
     currentStageScale,
     setCurrentStageScale,
     resetEdits,

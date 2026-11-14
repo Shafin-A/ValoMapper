@@ -65,6 +65,7 @@ export const useCanvasEvents = (
     setIsSidebarDragActive,
     isDrawMode,
     editingTextId,
+    setEditingNoteTarget,
     isDrawing,
     tool,
   } = useCanvasUi();
@@ -243,6 +244,7 @@ export const useCanvasEvents = (
     handlePopoverOpenChange,
     handleDuplicate,
     handleDelete,
+    handleEditNote,
     handleToggleAlly,
     handleToggleAgentDead,
     handleSwapAbility,
@@ -268,6 +270,7 @@ export const useCanvasEvents = (
     selectedCanvasItems,
     setSelectedCanvasItems,
     getLatestEntities,
+    setEditingNoteTarget,
   );
 
   const getCollections = useCallback((): CanvasItemCollections => {
@@ -938,6 +941,7 @@ export const useCanvasEvents = (
     handlePopoverOpenChange,
     handleDuplicate,
     handleDelete,
+    handleEditNote,
     handleToggleAlly,
     handleToggleAgentDead,
     handleSwapAbility,

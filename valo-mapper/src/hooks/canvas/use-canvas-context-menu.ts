@@ -88,6 +88,7 @@ export const useCanvasContextMenu = (
   selectedCanvasItems: CanvasSelectionItem[],
   setSelectedCanvasItems: Dispatch<SetStateAction<CanvasSelectionItem[]>>,
   getLatestEntities?: () => CanvasEntitiesSnapshot,
+  onEditNote?: (target: CanvasSelectionItem) => void,
 ) => {
   const {
     notifyAgentAdded,
@@ -647,6 +648,16 @@ export const useCanvasContextMenu = (
     closeContextMenu();
   }, [contextMenu, closeContextMenu, deleteTargetItems]);
 
+  const handleEditNote = useCallback(() => {
+    if (!contextMenu.open) return;
+
+    onEditNote?.({
+      id: contextMenu.anchorId,
+      type: contextMenu.anchorType,
+    });
+    closeContextMenu();
+  }, [closeContextMenu, contextMenu, onEditNote]);
+
   const getAnchorEntry = useCallback(() => {
     return getCanvasItemInstance(getCollections(), {
       id: contextMenu.anchorId,
@@ -992,6 +1003,7 @@ export const useCanvasContextMenu = (
     handlePopoverOpenChange,
     handleDuplicate,
     handleDelete,
+    handleEditNote,
     handleToggleAlly,
     handleToggleAgentDead,
     handleSwapAbility,

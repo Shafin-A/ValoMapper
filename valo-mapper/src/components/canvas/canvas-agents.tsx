@@ -1,4 +1,5 @@
 import { CanvasIcon } from "@/components/canvas-icons";
+import { NoteBadge } from "@/components/canvas/note-badge";
 import {
   useCanvasAbilities,
   useCanvasActions,
@@ -91,6 +92,14 @@ const AgentNode = memo(function AgentNode({
         registerNode={registerNode}
         unregisterNode={unregisterNode}
       />
+      {agent.note?.trim() ? (
+        <NoteBadge
+          itemId={agent.id}
+          itemType="agent"
+          x={agent.x - agentsSettings.scale / 2}
+          y={agent.y - agentsSettings.scale / 2}
+        />
+      ) : null}
     </Group>
   );
 });

@@ -53,6 +53,8 @@ export type ContextMenuCapabilities = {
   canToggleAbilityOuterCircle: boolean;
   canRemoveAttachedVisionCone: boolean;
   canDetachVisionCone: boolean;
+  canEditNote: boolean;
+  hasNote: boolean;
 };
 
 export const normalizeRect = (
@@ -119,6 +121,16 @@ export const resolveCanvasItemTarget = (
   let targetNode: Konva.Node | null = target;
 
   while (targetNode) {
+    const noteTargetId = targetNode.getAttr?.("noteTargetId");
+    const noteTargetType = targetNode.getAttr?.("noteTargetType");
+
+    if (
+      typeof noteTargetId === "string" &&
+      typeof noteTargetType === "string"
+    ) {
+      return { id: noteTargetId, type: noteTargetType as ItemType };
+    }
+
     const id =
       typeof targetNode.id === "function" ? targetNode.id() : "";
     if (id) {
@@ -179,6 +191,15 @@ export const filterExistingSelection = (
   selection: CanvasSelectionItem[],
 ): CanvasSelectionItem[] =>
   selection.filter((entry) => getCanvasItemInstance(collections, entry) !== null);
+
+export const findCanvasItemInstanceById = (
+  collections: CanvasItemCollections,
+  id: string,
+): CanvasItemInstance | null => {
+  const type = getCanvasItemTypeById(id, collections);
+
+  return type ? getCanvasItemInstance(collections, { id, type }) : null;
+};
 
 const getTextWorldRect = (text: TextCanvas): CanvasRect => {
   const fontSize = resolveTextFontSize(text.fontSize);
@@ -276,8 +297,20 @@ export const getContextMenuCapabilities = (
       canToggleAbilityOuterCircle: false,
       canRemoveAttachedVisionCone: false,
       canDetachVisionCone: false,
+      canEditNote: false,
+      hasNote: false,
     };
   }
+
+  const singleTarget = targets.length === 1 ? targets[0] : null;
+  const canEditNote =
+    singleTarget !== null &&
+    !(
+      singleTarget.type === "ability" &&
+      isVisionConeAction(singleTarget.item.action) &&
+      Boolean(singleTarget.item.attachedToId)
+    );
+  const hasNote = canEditNote && Boolean(singleTarget?.item.note?.trim());
 
   const allAgentsOrAbilities = targets.every(
     (entry) => entry.type === "agent" || entry.type === "ability",
@@ -363,5 +396,7 @@ export const getContextMenuCapabilities = (
     canToggleAbilityOuterCircle,
     canRemoveAttachedVisionCone,
     canDetachVisionCone,
+    canEditNote,
+    hasNote,
   };
 };

@@ -20,7 +20,7 @@ export const RemoteCursors = memo(function RemoteCursors({
   const cursorArray = useMemo(() => Array.from(cursors.values()), [cursors]);
 
   return (
-    <Group>
+    <Group listening={false}>
       {cursorArray.map((cursor) => (
         <RemoteCursor key={cursor.userId} cursor={cursor} scale={scale} />
       ))}

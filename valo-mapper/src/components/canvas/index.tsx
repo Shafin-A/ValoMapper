@@ -1,11 +1,17 @@
 import { ContextMenuPopover } from "@/components/canvas/context-menu-popover";
 import "@/lib/konva-config";
 import { RemoteCursors } from "@/components/collaboration";
-import { useCanvasEntities, useCanvasUi, useCanvasView } from "@/contexts/canvas-context";
+import {
+  useCanvasActions,
+  useCanvasEntities,
+  useCanvasUi,
+  useCanvasView,
+} from "@/contexts/canvas-context";
 import { useCommitCount } from "@/lib/perf-beacon";
 import { useSendCursorPosition } from "@/contexts/websocket-context";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
+import type { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
 import {
   useEffect,
@@ -27,6 +33,8 @@ import { CanvasTexts } from "./canvas-texts";
 import { CanvasImages } from "./canvas-images";
 import { CanvasMapBackground } from "./canvas-map-background";
 import { CanvasDrawLines } from "./canvas-draw-lines";
+import { CanvasNotePreview } from "./canvas-note-preview";
+import { NoteEditorDialog } from "./note-editor-dialog";
 import { CanvasSelectionOverlay } from "./canvas-selection-overlay";
 import { DeleteZone } from "./delete-zone";
 import { CanvasToolIcons } from "./canvas-tool-icons";
@@ -64,6 +72,7 @@ interface CanvasContextMenuProps {
   contextMenu: CanvasContextMenuData;
   onOpenChange: (open: boolean) => void;
   onDuplicate: () => void;
+  onEditNote?: () => void;
   onToggleAlly?: () => void;
   onToggleAgentDead?: () => void;
   onSwapAbility?: () => void;
@@ -78,6 +87,7 @@ const CanvasContextMenu = memo(function CanvasContextMenu({
   contextMenu,
   onOpenChange,
   onDuplicate,
+  onEditNote,
   onToggleAlly,
   onToggleAgentDead,
   onSwapAbility,
@@ -119,6 +129,7 @@ const CanvasContextMenu = memo(function CanvasContextMenu({
       currentItem={currentItem}
       onOpenChange={onOpenChange}
       onDuplicate={onDuplicate}
+      onEditNote={onEditNote}
       onToggleAlly={onToggleAlly}
       onToggleAgentDead={onToggleAgentDead}
       onSwapAbility={onSwapAbility}
@@ -147,7 +158,8 @@ export const MapStage = memo(
     useCommitCount("MapStage");
 
     const isMobile = useIsMobile();
-    const { isDrawMode } = useCanvasUi();
+    const { isDrawMode, setIsDraggingCanvasItem } = useCanvasUi();
+    const { setCurrentStageScale } = useCanvasActions();
     const { canvasBackground } = useCanvasView();
 
     const sendCursorPosition = useSendCursorPosition();
@@ -178,6 +190,7 @@ export const MapStage = memo(
       handleStageMouseMove,
       handleContextMenu,
       handleDelete,
+      handleEditNote,
       handleDuplicate,
       handleToggleAlly,
       handleToggleAgentDead,
@@ -214,6 +227,26 @@ export const MapStage = memo(
       }
     }, [handleStageMouseMove, sendCursorPosition]);
 
+    const handleItemDragStart = useCallback(
+      (event: KonvaEventObject<DragEvent>) => {
+        const stage = event.target.getStage();
+        if (stage && event.target !== stage) {
+          setIsDraggingCanvasItem(true);
+        }
+      },
+      [setIsDraggingCanvasItem],
+    );
+
+    const handleItemDragEnd = useCallback(
+      (event: KonvaEventObject<DragEvent>) => {
+        const stage = event.target.getStage();
+        if (stage && event.target !== stage) {
+          setIsDraggingCanvasItem(false);
+        }
+      },
+      [setIsDraggingCanvasItem],
+    );
+
     useEffect(() => {
       if (forwardedRef) {
         if (typeof forwardedRef === "function") {
@@ -244,6 +277,25 @@ export const MapStage = memo(
 
       handleDragMove();
     }, [width, height, scale, handleDragMove]);
+
+    useEffect(() => {
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      // Sync the UI scale for every zoom path, not just the wrapped handlers.
+      const syncStageScale = () => {
+        setCurrentStageScale(stage.scaleX());
+      };
+
+      syncStageScale();
+      stage.on("scaleXChange.canvasScaleSync", syncStageScale);
+      stage.on("scaleYChange.canvasScaleSync", syncStageScale);
+
+      return () => {
+        stage.off("scaleXChange.canvasScaleSync", syncStageScale);
+        stage.off("scaleYChange.canvasScaleSync", syncStageScale);
+      };
+    }, [setCurrentStageScale]);
 
     useEffect(() => {
       handleDragMove();
@@ -310,7 +362,9 @@ export const MapStage = memo(
           ref={stageRef}
           onWheel={handleWheel}
           draggable={!isDrawMode}
+          onDragStart={handleItemDragStart}
           onDragMove={handleDragMove}
+          onDragEnd={handleItemDragEnd}
           onMouseMove={handleMouseMoveWithCursor}
           onMouseEnter={handleStageMouseEnter}
           onMouseDown={handleStageMouseDown}
@@ -374,12 +428,15 @@ export const MapStage = memo(
             outlineGroupRef={selectionOutlineGroupRef}
             scale={scale}
           />
-          <Layer isListening={false}>
+          <Layer>
             <RemoteCursors scale={scale} />
+            <CanvasNotePreview />
           </Layer>
         </Stage>
 
         <MobileTextEditorHost />
+
+        <NoteEditorDialog />
 
         {isMobile && (
           <div className="absolute bottom-3 right-3 z-20 flex flex-col gap-0.5 rounded-lg border bg-background/90 p-1 shadow-md backdrop-blur">
@@ -417,6 +474,9 @@ export const MapStage = memo(
           contextMenu={contextMenu}
           onOpenChange={handlePopoverOpenChange}
           onDuplicate={handleDuplicate}
+          onEditNote={
+            contextMenu.capabilities.canEditNote ? handleEditNote : undefined
+          }
           onToggleAlly={
             contextMenu.capabilities.canToggleAlly
               ? handleToggleAlly

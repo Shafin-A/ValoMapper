@@ -16,6 +16,7 @@ import { Group, Rect, Transformer } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { TextEditor } from "@/components/canvas/text-editor";
 import { RichText } from "@/components/canvas/rich-text";
+import { NoteBadge } from "@/components/canvas/note-badge";
 import Konva from "konva";
 import { RefObject, memo, useCallback, useState } from "react";
 import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
@@ -243,6 +244,14 @@ export const CanvasTexts = memo(function CanvasTexts({
                 width: Math.max(TEXT_MIN_WIDTH * absoluteScale, newBox.width),
               };
             }}
+          />
+        ) : null}
+        {!isEditing && textItem.note?.trim() ? (
+          <NoteBadge
+            itemId={textItem.id}
+            itemType="text"
+            x={boxWidth}
+            y={0}
           />
         ) : null}
       </Group>

@@ -21,6 +21,8 @@ import {
   Eye,
   Heart,
   HeartCrack,
+  MessageSquare,
+  MessageSquarePlus,
   Minus,
   RefreshCw,
   Shapes,
@@ -54,6 +56,7 @@ interface ContextMenuPopoverProps {
     | null;
   onOpenChange: (open: boolean) => void;
   onDuplicate: () => void;
+  onEditNote?: () => void;
   onToggleAlly?: () => void;
   onToggleAgentDead?: () => void;
   onSwapAbility?: () => void;
@@ -118,6 +121,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
   currentItem,
   onOpenChange,
   onDuplicate,
+  onEditNote,
   onToggleAlly,
   onToggleAgentDead,
   onSwapAbility,
@@ -135,6 +139,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
   const snapshotItem = useRef(currentItem);
   const snapshotIsAlly = useRef(false);
   const snapshotIsGray = useRef(false);
+  const snapshotHasNote = useRef(false);
   const snapshotHasAgentDeadToggle = useRef(false);
   const snapshotHasSwap = useRef(false);
   const snapshotHasIconOnly = useRef(false);
@@ -154,6 +159,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
   const pendingSnapshot = useRef({
     itemType,
     currentItem,
+    onEditNote,
     onToggleAgentDead,
     onSwapAbility,
     onToggleAbilityIconOnly,
@@ -164,6 +170,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
   pendingSnapshot.current = {
     itemType,
     currentItem,
+    onEditNote,
     onToggleAgentDead,
     onSwapAbility,
     onToggleAbilityIconOnly,
@@ -185,6 +192,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
     const {
       itemType,
       currentItem,
+      onEditNote,
       onToggleAgentDead,
       onSwapAbility,
       onToggleAbilityIconOnly,
@@ -229,6 +237,8 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
         : false;
     snapshotHasAgentDeadToggle.current =
       itemType === "agent" && Boolean(onToggleAgentDead);
+    snapshotHasNote.current =
+      Boolean(onEditNote) && Boolean(currentItem?.note?.trim());
     snapshotHasSwap.current = Boolean(onSwapAbility);
     snapshotHasIconOnly.current =
       Boolean(onToggleAbilityIconOnly) && !isIconAbility;
@@ -284,6 +294,19 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
     icon: <Copy className="size-5" />,
     onClick: onDuplicate,
   });
+
+  if (onEditNote) {
+    mobileActions.push({
+      key: "note",
+      label: currentItem?.note?.trim() ? "Edit note" : "Add note",
+      icon: currentItem?.note?.trim() ? (
+        <MessageSquare className="size-5" />
+      ) : (
+        <MessageSquarePlus className="size-5" />
+      ),
+      onClick: onEditNote,
+    });
+  }
 
   if (
     onToggleAlly &&
@@ -463,6 +486,35 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
             orientation="vertical"
             className="data-[orientation=vertical]:h-6"
           />
+
+          {onEditNote && (
+            <>
+              <ConditionalTooltip
+                enabled={allowTooltips}
+                content={snapshotHasNote.current ? "Edit Note" : "Add Note"}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={
+                    snapshotHasNote.current ? "Edit note" : "Add note"
+                  }
+                  onClick={onEditNote}
+                >
+                  {snapshotHasNote.current ? (
+                    <MessageSquare />
+                  ) : (
+                    <MessageSquarePlus />
+                  )}
+                </Button>
+              </ConditionalTooltip>
+
+              <Separator
+                orientation="vertical"
+                className="data-[orientation=vertical]:h-6"
+              />
+            </>
+          )}
 
           {onToggleAlly &&
             snapshotItem.current &&

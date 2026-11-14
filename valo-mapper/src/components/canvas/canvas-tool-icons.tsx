@@ -1,4 +1,5 @@
 import { CanvasIcon } from "@/components/canvas-icons";
+import { NoteBadge } from "@/components/canvas/note-badge";
 import {
   useCanvasAbilities,
   useCanvasActions,
@@ -97,6 +98,14 @@ const ToolIconNode = memo(function ToolIconNode({
         unregisterNode={unregisterNode}
         hasShadow={true}
       />
+      {toolIcon.note?.trim() ? (
+        <NoteBadge
+          itemId={toolIcon.id}
+          itemType="tool"
+          x={toolIcon.x + toolIcon.width / 2}
+          y={toolIcon.y - toolIcon.height / 2}
+        />
+      ) : null}
     </Group>
   );
 });

@@ -96,6 +96,8 @@ interface CanvasUiContextType {
   >;
   isSidebarDragActive: boolean;
   setIsSidebarDragActive: Dispatch<SetStateAction<boolean>>;
+  isDraggingCanvasItem: boolean;
+  setIsDraggingCanvasItem: Dispatch<SetStateAction<boolean>>;
   isAlly: boolean;
   setIsAlly: Dispatch<SetStateAction<boolean>>;
   tool: Tool;
@@ -107,6 +109,8 @@ interface CanvasUiContextType {
   setIsDeleteSettingsOpen: Dispatch<SetStateAction<boolean>>;
   editingTextId: string | null;
   setEditingTextId: Dispatch<SetStateAction<string | null>>;
+  editingNoteTarget: CanvasSelectionItem | null;
+  setEditingNoteTarget: Dispatch<SetStateAction<CanvasSelectionItem | null>>;
 }
 
 interface CanvasSelectionContextType {
@@ -271,6 +275,7 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
 
   const {
     setSelectedCanvasItems,
+    setEditingNoteTarget,
     agentsOnCanvas,
     abilitiesOnCanvas,
     textsOnCanvas,
@@ -285,12 +290,14 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
 
   useEffect(() => {
     setSelectedCanvasItems([]);
+    setEditingNoteTarget(null);
   }, [
     currentPhaseIndex,
     selectedMap.id,
     mapSide,
     isDrawMode,
     setSelectedCanvasItems,
+    setEditingNoteTarget,
   ]);
 
   useEffect(() => {
@@ -442,6 +449,8 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       setSelectedCanvasIcon: canvasState.setSelectedCanvasIcon,
       isSidebarDragActive: canvasState.isSidebarDragActive,
       setIsSidebarDragActive: canvasState.setIsSidebarDragActive,
+      isDraggingCanvasItem: canvasState.isDraggingCanvasItem,
+      setIsDraggingCanvasItem: canvasState.setIsDraggingCanvasItem,
       isAlly: canvasState.isAlly,
       setIsAlly: canvasState.setIsAlly,
       tool: canvasState.tool,
@@ -453,12 +462,16 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       setIsDeleteSettingsOpen: canvasState.setIsDeleteSettingsOpen,
       editingTextId: canvasState.editingTextId,
       setEditingTextId: canvasState.setEditingTextId,
+      editingNoteTarget: canvasState.editingNoteTarget,
+      setEditingNoteTarget: canvasState.setEditingNoteTarget,
     }),
     [
       canvasState.selectedCanvasIcon,
       canvasState.setSelectedCanvasIcon,
       canvasState.isSidebarDragActive,
       canvasState.setIsSidebarDragActive,
+      canvasState.isDraggingCanvasItem,
+      canvasState.setIsDraggingCanvasItem,
       canvasState.isAlly,
       canvasState.setIsAlly,
       canvasState.tool,
@@ -470,6 +483,8 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       canvasState.setIsDeleteSettingsOpen,
       canvasState.editingTextId,
       canvasState.setEditingTextId,
+      canvasState.editingNoteTarget,
+      canvasState.setEditingNoteTarget,
     ],
   );
 
