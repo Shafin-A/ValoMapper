@@ -70,6 +70,37 @@ func TestRequestIDMiddleware(t *testing.T) {
 		assert.Len(t, requestIDs, 10)
 	})
 
+	t.Run("honors a valid incoming request ID", func(t *testing.T) {
+		var capturedRequestID string
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			capturedRequestID = GetRequestID(r)
+			w.WriteHeader(http.StatusOK)
+		})
+
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("X-Request-ID", "bff-request_123.abc")
+		w := httptest.NewRecorder()
+
+		RequestIDMiddleware(handler).ServeHTTP(w, req)
+
+		assert.Equal(t, "bff-request_123.abc", capturedRequestID)
+		assert.Equal(t, "bff-request_123.abc", w.Header().Get("X-Request-ID"))
+	})
+
+	t.Run("replaces an invalid incoming request ID", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req.Header.Set("X-Request-ID", "not valid\r\nlog")
+		w := httptest.NewRecorder()
+
+		RequestIDMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})).ServeHTTP(w, req)
+
+		requestID := w.Header().Get("X-Request-ID")
+		assert.NotEqual(t, "not valid\r\nlog", requestID)
+		assert.Len(t, requestID, 36)
+	})
+
 	t.Run("calls next handler", func(t *testing.T) {
 		handlerCalled := false
 
