@@ -81,6 +81,14 @@ fixtures, so run them on their own:
 go test -run '^$' -bench . -benchmem ./models ./services
 ```
 
+Or use the wrapper:
+
+```bash
+make bench
+# Windows PowerShell:
+.\scripts\bench.ps1
+```
+
 - `BenchmarkGetAllCanvasPhases` - loads a lobby with ~300 canvas rows.
 - `BenchmarkApplyCanvasPatch20` - applies a realistic 20-entry patch batch.
 - `BenchmarkGetStrategies50` - lists 50 saved strategies (guards against the
