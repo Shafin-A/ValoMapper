@@ -316,4 +316,31 @@ func TestUpdateLobby(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
+
+	t.Run("returns a conflict while another writer holds the lobby lock", func(t *testing.T) {
+		updateReq := UpdateLobbyRequest{
+			CanvasState: &models.FullCanvasState{
+				SelectedMap: models.MapOption{ID: "ascent", Text: "Ascent"},
+				Phases:      make([]models.PhaseState, 10),
+			},
+		}
+
+		body, err := json.Marshal(updateReq)
+		require.NoError(t, err)
+
+		lockedTx, err := pool.Begin(context.Background())
+		require.NoError(t, err)
+		defer func() { _ = lockedTx.Rollback(context.Background()) }()
+
+		_, err = lockedTx.Exec(context.Background(),
+			"SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE", testLobby.Code)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPatch, "/api/lobbies/"+testLobby.Code, strings.NewReader(string(body)))
+		req.Header.Set("Content-Type", "application/json")
+		w := executeUpdateLobbyRequest(req)
+
+		assert.Equal(t, http.StatusConflict, w.Code)
+		assert.NotEmpty(t, w.Header().Get("Retry-After"))
+	})
 }

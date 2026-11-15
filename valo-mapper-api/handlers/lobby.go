@@ -193,6 +193,12 @@ func UpdateLobby(w http.ResponseWriter, r *http.Request) {
 			utils.SendJSONError(w, utils.NewNotFound("Lobby not found"), middleware.GetRequestID(r))
 		case errors.Is(err, models.ErrInvalidPatch):
 			utils.SendJSONError(w, utils.NewBadRequest("Invalid canvas state"), middleware.GetRequestID(r))
+		case errors.Is(err, models.ErrLobbyBusy):
+			utils.SendJSONError(w, &utils.HTTPError{
+				Status:     http.StatusConflict,
+				Message:    "The canvas is being saved by another request. Please retry.",
+				RetryAfter: time.Second,
+			}, middleware.GetRequestID(r))
 		default:
 			utils.SendJSONError(w, utils.NewInternal("Unable to save canvas state", err), middleware.GetRequestID(r))
 		}

@@ -15,7 +15,9 @@ import (
 	"valo-mapper-api/db"
 	"valo-mapper-api/valorant"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const (
@@ -26,10 +28,16 @@ const (
 var (
 	ErrLobbyNotFound = errors.New("lobby not found")
 	ErrInvalidPatch  = errors.New("invalid canvas patch")
+	ErrLobbyBusy     = errors.New("lobby is locked by a concurrent write")
 )
 
 func invalidPatchError(format string, args ...any) error {
 	return fmt.Errorf("%w: %s", ErrInvalidPatch, fmt.Sprintf(format, args...))
+}
+
+func isLockNotAvailable(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == pgerrcode.LockNotAvailable
 }
 
 var allowedImageExtensions = map[string]struct{}{
@@ -461,11 +469,19 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	// Fail fast if another writer holds the lobby lock.
+	// Wait briefly for a concurrent patch instead of failing outright: undo is
+	// interactive, so a stuck lock is reported as a retryable conflict.
+	if _, err = tx.Exec(ctx, "SET LOCAL lock_timeout = '2s'"); err != nil {
+		return err
+	}
+
 	var lobbyExists int
-	if err = tx.QueryRow(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE NOWAIT", lobbyCode).Scan(&lobbyExists); err != nil {
+	if err = tx.QueryRow(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE", lobbyCode).Scan(&lobbyExists); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrLobbyNotFound
+		}
+		if isLockNotAvailable(err) {
+			return ErrLobbyBusy
 		}
 		return err
 	}

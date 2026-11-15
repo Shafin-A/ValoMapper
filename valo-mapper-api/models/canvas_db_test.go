@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -988,4 +991,51 @@ func TestApplyCanvasPatch(t *testing.T) {
 		assert.Equal(t, 50.0, phases[0].AbilitiesOnCanvas[2].X)
 		assert.Equal(t, 50.0, phases[0].AbilitiesOnCanvas[2].Y)
 	})
+}
+
+func TestIsLockNotAvailable(t *testing.T) {
+	require.False(t, isLockNotAvailable(context.Canceled))
+	require.True(t, isLockNotAvailable(&pgconn.PgError{Code: pgerrcode.LockNotAvailable}))
+}
+
+func TestSaveCanvasStateWaitsForLobbyLock(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test")
+	}
+
+	pool := setupTestDB(t)
+	defer cleanupTestDB(t, pool)
+
+	lobby, mapID := createCanvasTestLobby(t, pool)
+	state := FullCanvasState{
+		SelectedMap: MapOption{ID: mapID},
+		Phases:      NewEmptyPhaseStates(),
+	}
+
+	ctx := context.Background()
+	lockedTx, err := pool.Begin(ctx)
+	require.NoError(t, err)
+	_, err = lockedTx.Exec(ctx, "SELECT 1 FROM lobbies WHERE code = $1 FOR UPDATE", lobby.Code)
+	require.NoError(t, err)
+
+	done := make(chan error, 1)
+	go func() {
+		done <- SaveCanvasState(lobby.Code, state)
+	}()
+
+	select {
+	case err := <-done:
+		_ = lockedTx.Rollback(ctx)
+		t.Fatalf("SaveCanvasState did not wait for the lobby lock: %v", err)
+	case <-time.After(200 * time.Millisecond):
+	}
+
+	require.NoError(t, lockedTx.Rollback(ctx))
+
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("SaveCanvasState did not complete after the lobby lock was released")
+	}
 }
