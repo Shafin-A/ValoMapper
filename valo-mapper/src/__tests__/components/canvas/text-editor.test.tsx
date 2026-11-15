@@ -67,7 +67,6 @@ describe("TextEditor", () => {
     fireEvent.input(editor);
     expect(editor.textContent).toBe("start typed");
 
-    // Simulate a remote update while still editing.
     rerender(
       <TextEditor
         spans={[{ text: "remote", bold: true }]}

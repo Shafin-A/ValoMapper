@@ -3,7 +3,6 @@ import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 
 interface CenteredPageShellProps {
   children: ReactNode;
-  /** Max-width utility for the centered content column. */
   maxWidth?: string;
 }
 

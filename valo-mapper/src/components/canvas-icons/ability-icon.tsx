@@ -302,133 +302,105 @@ const ABILITY_RENDERERS: Record<
 > = {
   icon: (props) => <CanvasIcon {...props} />,
 
-  // Astra
   astra_ult: renderLineAbility,
   astra_stun: renderCircleAbility,
   astra_suck: renderCircleAbility,
   astra_smoke: renderCircleAbility,
 
-  // Breach
   breach_aftershock: renderLineAbility,
   breach_stun: renderAdjustableLineAbility,
   breach_ult: renderLineAbility,
 
-  // Brimstone
   brim_smoke: renderCircleAbility,
   brim_stim: renderCircleAbility,
   brim_molly: renderCircleAbility,
   brim_ult: renderCircleAbility,
 
-  // Chamber
   chamber_trip: renderCircleAbility,
   chamber_tp: renderCircleAbility,
 
-  // Clove
   clove_meddle: renderCircleAbility,
   clove_smoke: renderCircleAbility,
 
-  // Cypher
   cypher_cage: renderCircleAbility,
   cypher_trip: renderAdjustableLineAbility,
 
-  // Deadlock
   deadlock_net: renderCircleAbility,
   deadlock_trip: renderLineAbility,
   deadlock_wall: renderXLineAbility,
 
-  // Fade
   fade_eye: renderCircleAbility,
   fade_seize: renderCircleAbility,
   fade_ult: renderLineAbility,
 
-  // Gekko
   gekko_molly: renderCircleAbility,
 
-  // Harbor
   harbor_blind: renderCircleAbility,
   harbor_cove: renderCircleAbility,
   harbor_wall: renderCurvableLineAbility,
   harbor_ult: renderLineAbility,
 
-  // Hush
   hush_suck: renderCircleAbility,
   hush_ult: renderCircleAbility,
 
-  // Iso
   iso_wall: renderLineAbility,
   iso_vuln: renderLineAbility,
   iso_ult: renderLineAbility,
 
-  // Jett
   jett_smoke: renderCircleAbility,
 
-  // KAY/O
   kayo_molly: renderCircleAbility,
   kayo_knife: renderCircleAbility,
   kayo_ult: renderCircleAbility,
 
-  // Killjoy
   kj_alarmbot: renderCircleAbility,
   kj_molly: renderCircleAbility,
   kj_turret: renderArcAbility,
   kj_ult: renderCircleAbility,
 
-  // Miks
   miks_heal: renderCircleAbility,
   miks_stun: renderCircleAbility,
   miks_smoke: renderCircleAbility,
   miks_ult: renderArcAbility,
 
-  // Neon
   neon_stun: renderCircleAbility,
   neon_wall: renderDoubleLineAbility,
 
-  // Omen
   omen_blind: renderLineAbility,
   omen_smoke: renderCircleAbility,
 
-  // Phoenix
   phoenix_molly: renderCircleAbility,
   phoenix_wall: renderCurvableLineAbility,
 
-  // Sage
   sage_wall: renderLineAbility,
 
-  // Skye
   skye_heal: renderCircleAbility,
 
-  // Sova
   sova_shock_dart: renderCircleAbility,
   sova_dart: renderCircleAbility,
   sova_ult: renderLineAbility,
 
-  // Tejo
   tejo_drone: renderCircleAbility,
   tejo_stun: renderCircleAbility,
   tejo_ult: renderLineAbility,
   tejo_missile: renderCircleAbility,
 
-  //Veto
   veto_teleport: renderCircleAbility,
   veto_molly: renderCircleAbility,
   veto_interceptor: renderCircleAbility,
 
-  // Viper
   viper_molly: renderCircleAbility,
   viper_pit: renderCircleAbility,
   viper_smoke: renderCircleAbility,
   viper_wall: renderLineAbility,
 
-  // Vyse
   vyse_slow: renderCircleAbility,
   vyse_wall: renderLineAbility,
   vyse_ult: renderCircleAbility,
 
-  // Waylay
   waylay_slow: renderCircleAbility,
   waylay_ult: renderLineAbility,
 
-  // Vision Cones
   vision_cone_30: renderArcAbility,
   vision_cone_60: renderArcAbility,
   vision_cone_90: renderArcAbility,

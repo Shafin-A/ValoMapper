@@ -85,7 +85,7 @@ export type AbilityIconItem = {
   /** Replay-only shape override; the lobby keeps `action`. */
   replayAction?: AbilityAction;
   slot: string;
-  /** Max charges available at the start of a round, when the ability uses charges. */
+  /** Max charges at round start, when the ability uses charges. */
   charges?: number;
 };
 

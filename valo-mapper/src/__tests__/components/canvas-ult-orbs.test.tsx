@@ -201,7 +201,7 @@ describe("CanvasUltOrbs", () => {
       const circles = container.querySelectorAll(
         '[data-testid="konva-circle"]',
       );
-      expect(circles.length).toBe(4); // 2 orbs × 2 circles each
+      expect(circles.length).toBe(4);
     });
 
     it("should handle maps with single orb", () => {
@@ -218,7 +218,7 @@ describe("CanvasUltOrbs", () => {
       const circles = container.querySelectorAll(
         '[data-testid="konva-circle"]',
       );
-      expect(circles.length).toBe(2); // 1 orb × 2 circles
+      expect(circles.length).toBe(2);
     });
   });
 });

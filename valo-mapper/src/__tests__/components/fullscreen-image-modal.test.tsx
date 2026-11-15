@@ -50,7 +50,6 @@ describe("FullscreenImageModal", () => {
     }
     expect(zoomIn).toBeDisabled();
 
-    // After reset, zoom in should be enabled again
     fireEvent.click(zoomReset);
     expect(zoomIn).not.toBeDisabled();
     expect(zoomOut).not.toBeDisabled();
@@ -62,7 +61,6 @@ describe("FullscreenImageModal", () => {
     const image = screen.getByRole("img", { name: /fullscreen view/i });
     const imageWrapper = image.parentElement as HTMLElement;
 
-    // Wheel zoom in
     fireEvent.wheel(imageWrapper, { deltaY: -100, clientX: 50, clientY: 50 });
     expect(imageWrapper.style.transform).toContain("scale(");
 
@@ -90,7 +88,6 @@ describe("FullscreenImageModal", () => {
     fireEvent.click(screen.getByTestId("zoom-in"));
     expect(imageWrapper2.style.transform).not.toBe(initialTransform2);
 
-    // Start pan drag at base zoom
     fireEvent.pointerDown(imageWrapper, {
       clientX: 100,
       clientY: 100,

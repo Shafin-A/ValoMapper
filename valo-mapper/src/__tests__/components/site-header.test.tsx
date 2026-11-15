@@ -8,7 +8,6 @@ import { useWebSocketUsers } from "@/contexts/websocket-presence-context";
 import { usePathname } from "next/navigation";
 import { User } from "@/lib/types";
 
-// Mock the hooks
 jest.mock("@/hooks/use-firebase-auth");
 jest.mock("@/hooks/api/use-user");
 jest.mock("@/hooks/api/use-pending-stack-invite", () => ({

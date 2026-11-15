@@ -113,9 +113,8 @@ export const ReplayCanvasLayer = ({
             return null;
           }
 
-          // Position still comes from the interpolated frame. Liveness comes from
-          // the round-scoped scan-back so a body's last pose cannot keep a vision
-          // cone after death.
+          // Position comes from the interpolated frame, but liveness uses the
+          // round-scoped scan-back so a corpse's last pose cannot keep a vision cone.
           const alive = isAlive(player.puuid);
           if (!alive) {
             return null;

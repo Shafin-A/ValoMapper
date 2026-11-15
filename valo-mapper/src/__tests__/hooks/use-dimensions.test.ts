@@ -52,7 +52,6 @@ describe("useDimensions", () => {
       return useDimensions(ref);
     });
 
-    // Initial state: both current and previous start at the same value
     expect(result.current.dimensions).toEqual({
       width: 800,
       height: 600,

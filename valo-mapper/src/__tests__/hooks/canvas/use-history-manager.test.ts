@@ -161,7 +161,6 @@ describe("useHistoryManager", () => {
       result.current.redo();
     });
 
-    // Should have called applyState (redo applies the next state in history)
     expect(applyState).toHaveBeenCalled();
     const appliedState = applyState.mock.calls[0][0];
     expect(appliedState).toBeDefined();

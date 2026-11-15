@@ -241,7 +241,6 @@ export const CanvasCurvableLineIcon = ({
           const currentTotalDistance = calculatePathDistance(proposedPath);
 
           if (currentTotalDistance >= maxDistance) {
-            // Clamp directly to max distance
             const remaining = maxDistance - calculatePathDistance(newPath);
             const direction = Math.atan2(
               localY - lastPoint.y,

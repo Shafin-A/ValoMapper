@@ -132,7 +132,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
   onDelete,
 }: ContextMenuPopoverProps) {
   const isMobile = useIsMobile();
-  // Tooltip opens on its own after opening popover for some reason so need to delay it
+  // Tooltips auto-open when the popover mounts; delay enabling them.
   const [allowTooltips, setAllowTooltips] = useState(false);
 
   const snapshotItemType = useRef(itemType);

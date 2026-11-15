@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { LineupViewContent } from "@/components/canvas/lineup-view-content";
 
-// Mock carousel components
 jest.mock("@/components/ui/carousel", () => ({
   Carousel: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="carousel">{children}</div>

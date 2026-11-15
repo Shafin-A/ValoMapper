@@ -31,10 +31,7 @@ export const useReplayPlayback = ({
 }: {
   durationMs: number;
   resetKey: string | number;
-  /**
-   * Where playback begins and where it resets to. Seeking is still allowed
-   * across the whole round.
-   */
+  /** Start/reset position; seeking is still allowed across the whole round. */
   startTimeMs?: number;
 }) => {
   const start = clamp(startTimeMs, 0, durationMs);

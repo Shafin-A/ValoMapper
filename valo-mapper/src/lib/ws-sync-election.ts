@@ -2,7 +2,7 @@ import type { UserPresence } from "@/lib/websocket-types";
 
 /**
  * Picks one already-present client to broadcast FULL_SYNC on join. All clients
- * see the same user list, so the lowest id is a deterministic election.
+ * see the same user list, so the lowest id is deterministic.
  */
 export const electFullSyncSender = (
   users: UserPresence[],

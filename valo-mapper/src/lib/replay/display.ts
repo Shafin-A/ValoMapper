@@ -98,7 +98,6 @@ const REPLAY_UTILITY_ABILITY_ICONS = new Map<string, ReplayUtilityAbilityIcon>(
     ]),
 );
 
-/** Returns the existing ValoMapper ability artwork for a replay utility. */
 export const getReplayUtilityAbilityIcon = (
   abilityId?: string,
 ): ReplayUtilityAbilityIcon | null =>
@@ -300,9 +299,8 @@ export const getWeaponImageSrc = (weaponId?: string) => {
 };
 
 /**
- * Riot weapon UUIDs the replay parser emits, mapped to the lobby tool icon
- * name. Keep this aligned with the server's weaponUUIDByFolder table and its
- * melee id.
+ * Riot weapon UUIDs mapped to lobby tool icon names. Keep aligned with the
+ * server's weaponUUIDByFolder table and its melee id.
  */
 const REPLAY_WEAPON_NAME_BY_ID: Record<string, string> = {
   "29A0CFAB-485B-F5D5-779A-B59F85E204A8": "classic",
@@ -339,7 +337,6 @@ const WEAPON_DIMENSIONS_BY_NAME = new Map(
 
 export type ReplayWeaponIcon = Pick<ToolIconCanvas, "name" | "width" | "height">;
 
-/** The lobby tool icon for a player's equipped weapon, if the replay knows it. */
 export const getReplayWeaponIcon = (
   weaponId?: string,
 ): ReplayWeaponIcon | null => {
@@ -398,11 +395,9 @@ export const getPlayerHpBarColor = (hp: number, alive: boolean) => {
 };
 
 /**
- * State shown for a player at the current scrub position. A missing sample
- * means the round has no data for that player yet, not that they are dead, so
- * the round-stats fallback fills credits, weapon and armour and assumes a full
- * health bar. Samples that do exist are used as-is: an absent weapon or armour
- * id means the player has no known item, not that the round stats apply.
+ * A missing sample means the round has no data for that player yet, not that
+ * they are dead: fall back to round stats and assume full health. Existing
+ * samples are used as-is, so an absent item id means the player has none.
  */
 export const getReplayPlayerState = (
   player: ReplayFramePlayer | null,
@@ -433,19 +428,16 @@ const REPLAY_ARMOR_BY_ID: Record<
   string,
   { label: string; value: number; src: string }
 > = {
-  // Heavy Armor
   "822bcab2-40a2-324e-c137-e09195ad7692": {
     label: "Heavy Shield",
     value: 50,
     src: "/tools/heavy_shield.webp",
   },
-  // Light Armor
   "4dec83d5-4902-9ab3-bed6-a7a390761157": {
     label: "Light Shield",
     value: 25,
     src: "/tools/light_shield.webp",
   },
-  // Regen Shield
   "b1b9086d-41bd-a516-5d29-e3b34a6f1644": {
     label: "Regen Shield",
     value: 25,

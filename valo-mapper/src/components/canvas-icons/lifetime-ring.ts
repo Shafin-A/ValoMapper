@@ -24,10 +24,7 @@ type LifetimeRingOptions = {
   outlineWidth?: number;
 };
 
-/**
- * Draws a clockwise lifetime ring. The elapsed fraction is transparent and
- * the leading edge fades softly into the remaining arc.
- */
+/** Draws a clockwise lifetime ring; the leading edge fades into the remaining arc. */
 export const drawLifetimeRing = (
   context: LifetimeRingContext,
   {

@@ -368,7 +368,6 @@ export const useKeyboardShortcuts = (
         const key = e.key.toLowerCase();
         const isModifier = e.ctrlKey || e.metaKey;
 
-        // Ctrl/Cmd + key
         if (isModifier && handleModifierShortcuts(ctx, key, e)) return;
 
         // Shift + W: toggle eraser mode

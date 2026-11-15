@@ -5,10 +5,8 @@ import type {
 } from "./types";
 
 /**
- * Longest gap between two movement samples the player will interpolate across.
- * A longer gap means the stream lost the player (death, off-map, reconnect), so
- * the pose is shown at the sample and the player is hidden until the next one
- * instead of sliding across the map.
+ * A longer gap means the stream lost the player (death, off-map, reconnect),
+ * so the pose is shown at the sample instead of sliding across the map.
  */
 export const REPLAY_MAX_INTERPOLATION_GAP_MS = 500;
 
@@ -41,9 +39,8 @@ export const getReplayFrameAtTime = (
 
   const clampedTime = clamp(timeMs, 0, round.durationMs);
 
-  // Before the round's first frame no player has a sample yet. Returning the
-  // first frame here would draw everyone at their first pose, so the timeline is
-  // empty until movement starts.
+  // Before the first frame nobody has a sample; returning it would draw
+  // everyone at their first pose.
   if (clampedTime < frames[0].timeMs) {
     return { timeMs: clampedTime, players: [], spike: null };
   }
@@ -175,8 +172,7 @@ const getPlayerFrameIndexes = (round: ReplayRound) => {
 /**
  * Latest state sample for a player at or before `timeMs`, scoped to one round.
  * A dead player stops appearing in movement frames, so their last sample must
- * be looked up by time rather than by frame membership. Returns `null` when the
- * player has no sample in this round at all.
+ * be looked up by time rather than by frame membership.
  */
 export const getReplayPlayerStateAtTime = (
   round: ReplayRound,

@@ -57,10 +57,7 @@ interface MapStageProps {
   height: number;
   scale: number;
   mapPosition: Vector2d;
-  /**
-   * Read-only entities rendered underneath user drawings. Used by the replay
-   * player so playback never mutates the canvas history.
-   */
+  /** Read-only entities under user drawings; replay playback never mutates history. */
   replayOverlay?: ReactNode;
   /** Disable marquee multi-select on read-only canvases such as replay. */
   enableMultiSelect?: boolean;

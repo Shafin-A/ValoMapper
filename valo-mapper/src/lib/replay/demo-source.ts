@@ -173,7 +173,6 @@ const loadDemoReplay = async (
   return readDemoReplay(options);
 };
 
-/** Loads the baked demo replay asset. */
 export class DemoReplayDataSource implements ReplayDataSource {
   async load(file: File): Promise<ReplayMatch> {
     validateReplayFile(file);

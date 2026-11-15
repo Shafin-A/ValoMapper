@@ -182,7 +182,6 @@ describe("useLineupForm", () => {
       result.current.debouncedSetLineColor("#ff0000");
     });
 
-    // Color should not update immediately due to debounce
     expect(result.current.lineColor).toBe("#ffffff");
 
     act(() => {
@@ -205,7 +204,6 @@ describe("useLineupForm", () => {
       jest.runAllTimers();
     });
 
-    // Only the last color should be applied
     expect(result.current.lineColor).toBe("#0000ff");
   });
 

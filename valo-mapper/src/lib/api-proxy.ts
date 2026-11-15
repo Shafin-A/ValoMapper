@@ -69,7 +69,7 @@ export const proxyToBackend = async (
           errorMsg = errorData.error;
         }
       } catch {
-        // fall back to generic error message
+        // Ignore malformed error payloads.
       }
       return Response.json(
         { error: errorMsg },

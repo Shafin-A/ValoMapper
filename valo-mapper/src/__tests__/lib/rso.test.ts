@@ -83,7 +83,6 @@ describe("RSO helpers", () => {
   test("generateRSOAuthLink uses API callback by default", () => {
     const link = generateRSOAuthLink("my-client");
     expect(link).toContain("https://auth.riotgames.com/authorize");
-    // redirect uri should be encoded and include the api path
     expect(link).toMatch(/redirect_uri=.*%2Fapi%2Fauth%2Frso%2Fcallback/);
     expect(link).toMatch(/client_id=my-client/);
     expect(link).toMatch(/prompt=login/);

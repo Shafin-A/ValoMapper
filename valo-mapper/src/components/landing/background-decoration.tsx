@@ -51,7 +51,6 @@ export const BackgroundDecoration = () => {
       aria-hidden
       className="landing-decor pointer-events-none absolute inset-0 select-none overflow-hidden"
     >
-      {/* Faint Ascent minimap anchoring the composition */}
       <div
         className="absolute left-1/2 top-1/2 w-[92vw] max-w-[760px] opacity-[0.08]"
         style={{
@@ -73,7 +72,6 @@ export const BackgroundDecoration = () => {
         />
       </div>
 
-      {/* Soft brand glow behind the hero copy */}
       <div
         className="absolute left-1/2 top-1/2 aspect-square w-[120vw] max-w-[1100px] -translate-x-1/2 -translate-y-1/2 blur-2xl"
         style={{
@@ -82,7 +80,6 @@ export const BackgroundDecoration = () => {
         }}
       />
 
-      {/* Vandal sweeping in from the top left */}
       <FloatingAsset
         src="/tools/vandal.webp"
         width={420}
@@ -93,7 +90,6 @@ export const BackgroundDecoration = () => {
         flipX
       />
 
-      {/* Phantom sweeping in from the bottom right */}
       <FloatingAsset
         src="/tools/phantom.webp"
         width={508}
@@ -104,7 +100,6 @@ export const BackgroundDecoration = () => {
         animationDelay="-4s"
       />
 
-      {/* Operator sweeping in from the top right */}
       <FloatingAsset
         src="/tools/operator.webp"
         width={504}
@@ -115,7 +110,6 @@ export const BackgroundDecoration = () => {
         animationDelay="-2s"
       />
 
-      {/* The Spike, gently rocking with a pulsing green charge */}
       <div
         className="absolute bottom-[12%] left-[6%] w-[12vw] max-w-[104px] opacity-25 will-change-transform sm:bottom-[16%] sm:left-[8%]"
         style={{ animation: "spike-rock 6s ease-in-out infinite" }}

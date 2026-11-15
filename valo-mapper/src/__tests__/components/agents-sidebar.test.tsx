@@ -259,17 +259,14 @@ describe("AgentAbilities", () => {
       />,
     );
 
-    // default shows M-Pulse Concuss
     expect(
       screen.getByRole("img", { name: "M-Pulse Concuss" }),
     ).toBeInTheDocument();
 
-    // press swap
     await user.click(
       screen.getByRole("button", { name: /swap to m-pulse heal/i }),
     );
 
-    // re-render with updated resolve
     rerender(
       <AgentAbilities
         {...defaultProps}
@@ -279,12 +276,10 @@ describe("AgentAbilities", () => {
       />,
     );
 
-    // now shows M-Pulse Heal
     expect(
       screen.getByRole("img", { name: "M-Pulse Heal" }),
     ).toBeInTheDocument();
 
-    // clicking places M-Pulse Heal
     await user.click(screen.getByRole("img", { name: "M-Pulse Heal" }));
 
     expect(onAbilitySwap).toHaveBeenCalledWith(

@@ -28,7 +28,6 @@ export const RenameDialog = ({
     setName(currentName);
   }, [currentName]);
 
-  // Focus input when dialog content is mounted
   useEffect(() => {
     const timer = setTimeout(() => {
       inputRef.current?.focus();

@@ -1,16 +1,13 @@
-// Canvas interaction hooks
 export { useCanvasContextMenu } from "./use-canvas-context-menu";
 export { useCanvasDrawing } from "./use-canvas-drawing";
 export { useCanvasSelection } from "./use-canvas-selection";
 export { useCanvasSelectionDrag } from "./use-canvas-selection-drag";
 export { useCanvasZoom } from "./use-canvas-zoom";
 
-// Canvas state management
 export { useCanvasItems } from "./use-canvas-items";
 export { useCanvasState } from "./use-canvas-state";
 export { useCanvasUiState } from "./use-canvas-ui-state";
 
-// Canvas utilities
 export { useHistoryManager } from "./use-history-manager";
 export { useImageTransform } from "./use-image-transform";
 export { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
@@ -19,6 +16,5 @@ export { usePositionScaling } from "./use-position-scaling";
 export { useTextEditor } from "./use-text-editor";
 export { useNoteEditor } from "./use-note-editor";
 
-// Phase management
 export { usePhaseManager } from "./use-phase-manager";
 export { usePhaseTransitions } from "./use-phase-transitions";

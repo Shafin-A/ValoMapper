@@ -69,7 +69,7 @@ export const TourProviderWrapper = ({
         }}
         padding={{ mask: 10, popover: [10, 10] }}
         onClickMask={() => {
-          // Disable closing on mask click
+          // Keep the tour open: reactour closes on mask click by default.
         }}
       >
         <TourContentWrapper>{children}</TourContentWrapper>

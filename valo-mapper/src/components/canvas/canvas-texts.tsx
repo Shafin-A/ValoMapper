@@ -122,7 +122,6 @@ export const CanvasTexts = memo(function CanvasTexts({
         y={textItem.y}
         onTap={() => handleTextClick(textItem.id)}
         onClick={(e: KonvaEventObject<MouseEvent>) => {
-          // Only handle left clicks
           if (e.evt.button === 0) {
             handleTextClick(textItem.id);
           }

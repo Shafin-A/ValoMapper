@@ -7,7 +7,6 @@ type NoteAnchorSettings = {
   abilitiesSettings: IconSettings;
 };
 
-// An empty or whitespace-only note is treated as no note at all.
 export const normalizeNote = (value: string): string | undefined => {
   const trimmed = value.trim();
 

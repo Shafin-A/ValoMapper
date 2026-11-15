@@ -29,9 +29,7 @@ export const POST = async (request: Request): Promise<Response> => {
         if (err?.error && typeof err.error === "string") {
           errorMsg = err.error;
         }
-      } catch {
-        // fall back to generic message
-      }
+      } catch {}
       return Response.json(
         { error: errorMsg },
         { status: backendResponse.status },

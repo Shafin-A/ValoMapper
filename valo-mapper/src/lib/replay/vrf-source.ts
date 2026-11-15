@@ -188,7 +188,7 @@ export class VrfReplayDataSource implements ReplayDataSource {
 
       xhr.upload.onprogress = (event) => {
         // Some browsers omit the upload total; the file size is still a
-        // reliable denominator, so keep showing a real percentage.
+        // reliable denominator.
         const total =
           event.lengthComputable && event.total > 0 ? event.total : file.size;
         if (total <= 0) {
@@ -224,8 +224,7 @@ export class VrfReplayDataSource implements ReplayDataSource {
       xhr.onerror = () => {
         finish(() => {
           // Some browsers report a reset upload as onerror even though the
-          // parser already sent a JSON error. Prefer that response when it is
-          // available so rate-limit/busy messages are not lost.
+          // parser already sent a JSON error; prefer that response.
           if (xhr.status >= 400) {
             reject(new Error(friendlyError(xhr.status, parseJSON(xhr.responseText))));
             return;

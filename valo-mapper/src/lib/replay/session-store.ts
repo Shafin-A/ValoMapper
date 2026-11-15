@@ -9,7 +9,7 @@ const memoryStore = new Map<string, ReplayMatch>();
 
 const createReplayId = () => {
   // `crypto.randomUUID` is only available in secure contexts (HTTPS or
-  // localhost), so it can be undefined when the app is served over plain HTTP.
+  // localhost), so it can be undefined over plain HTTP.
   if (
     typeof crypto !== "undefined" &&
     typeof crypto.randomUUID === "function"

@@ -31,19 +31,19 @@ const getRectEdges = (p1: Vector2d, p2: Vector2d): [Vector2d, Vector2d][] => {
     [
       { x: minX, y: minY },
       { x: maxX, y: minY },
-    ], // top
+    ],
     [
       { x: maxX, y: minY },
       { x: maxX, y: maxY },
-    ], // right
+    ],
     [
       { x: maxX, y: maxY },
       { x: minX, y: maxY },
-    ], // bottom
+    ],
     [
       { x: minX, y: maxY },
       { x: minX, y: minY },
-    ], // left
+    ],
   ];
 };
 

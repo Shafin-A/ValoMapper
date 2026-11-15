@@ -155,8 +155,6 @@ describe("CanvasSpawnBarriers", () => {
       );
 
       const lines = container.querySelectorAll('[data-testid="konva-line"]');
-      // In the mock DOM, strokeWidth becomes a prop, not an attribute
-      // So we check the underlying props instead
       expect(lines).toHaveLength(2);
     });
   });

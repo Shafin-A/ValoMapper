@@ -1,16 +1,14 @@
 import type { ReplayMatch } from "./types";
 
 /**
- * IndexedDB is the primary reload path for parsed replays. A real match is
- * 20–40 MB of JSON, which sessionStorage cannot hold, so a quota failure here
- * must degrade gracefully instead of losing the current session.
+ * IndexedDB is the primary reload path: a real match is 20–40 MB of JSON,
+ * which sessionStorage cannot hold. Quota failures degrade gracefully.
  */
 const DB_NAME = "valomapper-replays";
 const DB_VERSION = 2;
 const REPLAYS_STORE = "replays";
 const META_STORE = "meta";
 
-/** Keep the newest few matches; older ones are pruned before a write. */
 export const MAX_STORED_REPLAYS = 3;
 export const MAX_STORED_BYTES = 96 * 1024 * 1024;
 
@@ -52,9 +50,8 @@ const openDatabase = () => {
     request.onupgradeneeded = () => {
       const database = request.result;
 
-      // Recreating both stores drops every older record. A previous schema
-      // cannot be upgraded in place, and serving its frames would show stale
-      // player state until the next parse.
+      // Recreating both stores drops every older record: a previous schema
+      // cannot be upgraded in place and would serve stale player state.
       for (const storeName of Array.from(database.objectStoreNames)) {
         database.deleteObjectStore(storeName);
       }
@@ -112,7 +109,6 @@ export const listReplayMeta = async (): Promise<StoredReplayMeta[]> => {
   }
 };
 
-/** Delete the oldest stored matches until the policy fits. */
 export const pruneReplays = async () => {
   const entries = await listReplayMeta();
   let totalBytes = entries.reduce((sum, entry) => sum + entry.bytes, 0);
@@ -153,8 +149,8 @@ const writeReplay = async (
 };
 
 /**
- * Store a parsed match. On a quota failure the oldest entry is dropped and the
- * write is retried once; if it still fails the caller keeps its memory copy.
+ * On a quota failure the oldest entry is dropped and the write is retried once;
+ * if it still fails the caller keeps its memory copy.
  */
 export const putReplay = async (
   replayId: string,

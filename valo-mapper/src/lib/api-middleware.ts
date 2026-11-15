@@ -1,41 +1,3 @@
-/**
- * Authentication middleware for Next.js API routes
- * Consolidates repeated authorization header validation across all protected endpoints
- */
-
-/**
- * Wraps a Next.js API route handler to require authentication
- * Validates that the Authorization header is present before calling the handler
- * Supports both static routes and dynamic routes with params
- *
- * @param handler - The actual route handler that receives the auth header
- * @returns A wrapped handler that validates auth before proceeding
- *
- * @example
- * // Static route:
- * export const GET = withAuthRequired(async (request, authHeader) => {
- *   return proxyToBackend("/strategies", {
- *     method: "GET",
- *     token: authHeader,
- *   });
- * });
- *
- * // Dynamic route (Next.js context style):
- * export const DELETE = withAuthRequired(
- *   async (
- *     request: NextRequest,
- *     context: { params: Promise<{ strategyId: string }> },
- *     authHeader: string
- *   ) => {
- *     const { strategyId } = await context.params;
- *     return proxyToBackend(`/strategies/${strategyId}`, {
- *       method: "DELETE",
- *       token: authHeader,
- *     });
- *   }
- * );
- */
-
 type StaticAuthHandler = (
   request: Request,
   authHeader: string,
@@ -84,17 +46,14 @@ const normalizeAuthHeader = (authHeader: string | null): string | null => {
   return `Bearer ${trimmed}`;
 };
 
-// Overload for static routes
 export function withAuthRequired(
   handler: StaticAuthHandler,
 ): (request: Request) => Promise<Response>;
 
-// Overload for dynamic routes with Next.js context
 export function withAuthRequired<T extends Record<string, string>>(
   handler: DynamicAuthHandler<T>,
 ): (request: Request, context: { params: Promise<T> }) => Promise<Response>;
 
-// Implementation
 export function withAuthRequired<
   T extends Record<string, string> = Record<string, string>,
 >(handler: StaticAuthHandler | DynamicAuthHandler<T>) {

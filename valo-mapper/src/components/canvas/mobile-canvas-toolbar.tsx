@@ -31,9 +31,6 @@ interface MobileCanvasToolbarProps {
   onOpenAgents: () => void;
 }
 
-/**
- * Persistent mobile-only toolbar for the actions used most while editing.
- */
 export const MobileCanvasToolbar = ({
   onOpenTools,
   onOpenAgents,

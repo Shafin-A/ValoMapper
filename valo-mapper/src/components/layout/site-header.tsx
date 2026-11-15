@@ -50,7 +50,6 @@ import { DISCORD_INVITE_URL } from "@/lib/consts";
 interface SiteHeaderProps {
   setLeftSidebarOpen: Dispatch<SetStateAction<boolean>>;
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
-  /** Hide the canvas sidebar toggles on pages without sidebars. */
   showSidebarToggles?: boolean;
 }
 

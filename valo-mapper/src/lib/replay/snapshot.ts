@@ -93,9 +93,8 @@ export const getReplayMapPosition = () => ({
 export const REPLAY_MAP_ICON_MARGIN = 24;
 
 /**
- * True when a canvas point lands on the rendered map image. Used to hide actors
- * whose world position is outside the playable map (the Iso kill-contract arena
- * and out-of-bounds spawns) rather than freezing or drawing them off-map.
+ * True when a canvas point lands on the rendered map image. Hides actors whose
+ * world position is outside the playable map (Iso arena, out-of-bounds spawns).
  */
 export const isReplayPointOnMap = ({
   point,

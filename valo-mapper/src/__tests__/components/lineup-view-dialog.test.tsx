@@ -204,16 +204,12 @@ describe("LineupViewDialog", () => {
   it("should revert changes when Cancel is clicked in edit mode", () => {
     render(<LineupViewDialog {...defaultProps} />);
 
-    // Enter edit mode
     fireEvent.click(screen.getByRole("button", { name: /edit/i }));
 
-    // Make changes
     fireEvent.click(screen.getByTestId("change-notes"));
 
-    // Cancel
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
-    // Should be back in view mode with original notes
     expect(screen.getByTestId("lineup-view-content")).toBeInTheDocument();
     expect(screen.getByTestId("view-notes")).toHaveTextContent("Test notes");
   });
@@ -221,17 +217,13 @@ describe("LineupViewDialog", () => {
   it("should save changes and update connectingLines when Save is clicked", () => {
     render(<LineupViewDialog {...defaultProps} />);
 
-    // Enter edit mode
     fireEvent.click(screen.getByRole("button", { name: /edit/i }));
 
-    // Make changes
     fireEvent.click(screen.getByTestId("change-notes"));
 
-    // Save
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
     expect(mockSetConnectingLines).toHaveBeenCalled();
-    // Should be back in view mode
     expect(screen.getByTestId("lineup-view-content")).toBeInTheDocument();
   });
 
@@ -245,7 +237,6 @@ describe("LineupViewDialog", () => {
 
     render(<LineupViewDialog {...defaultProps} line={emptyLine} />);
 
-    // Enter edit mode
     fireEvent.click(screen.getByRole("button", { name: /edit/i }));
 
     expect(screen.getByRole("button", { name: /save/i })).toBeDisabled();
@@ -262,11 +253,9 @@ describe("LineupViewDialog", () => {
   it("should close fullscreen viewer when close is triggered", () => {
     render(<LineupViewDialog {...defaultProps} />);
 
-    // Open fullscreen
     fireEvent.click(screen.getByTestId("open-fullscreen"));
     expect(screen.getByTestId("fullscreen-viewer")).toBeInTheDocument();
 
-    // Close fullscreen
     fireEvent.click(screen.getByTestId("close-fullscreen"));
     expect(screen.queryByTestId("fullscreen-viewer")).not.toBeInTheDocument();
   });
@@ -283,7 +272,6 @@ describe("LineupViewDialog", () => {
     const onClose = jest.fn();
     render(<LineupViewDialog {...defaultProps} onClose={onClose} />);
 
-    // Find and click the close button (X button in dialog)
     const closeButton = screen.getByRole("button", { name: /close/i });
     fireEvent.click(closeButton);
 
@@ -293,17 +281,13 @@ describe("LineupViewDialog", () => {
   it("should reset to view mode when dialog is closed and reopened", () => {
     const { rerender } = render(<LineupViewDialog {...defaultProps} />);
 
-    // Enter edit mode
     fireEvent.click(screen.getByRole("button", { name: /edit/i }));
     expect(screen.getByTestId("lineup-edit-content")).toBeInTheDocument();
 
-    // Close dialog
     rerender(<LineupViewDialog {...defaultProps} isOpen={false} />);
 
-    // Reopen dialog
     rerender(<LineupViewDialog {...defaultProps} isOpen={true} />);
 
-    // Should be back in view mode
     expect(screen.getByTestId("lineup-view-content")).toBeInTheDocument();
   });
 
@@ -329,13 +313,10 @@ describe("LineupViewDialog", () => {
   it("should add images in edit mode", () => {
     render(<LineupViewDialog {...defaultProps} />);
 
-    // Enter edit mode
     fireEvent.click(screen.getByRole("button", { name: /edit/i }));
 
-    // Initial count
     expect(screen.getByTestId("edit-image-count")).toHaveTextContent("2");
 
-    // Add image
     fireEvent.click(screen.getByTestId("add-images"));
 
     expect(screen.getByTestId("edit-image-count")).toHaveTextContent("3");
@@ -344,13 +325,10 @@ describe("LineupViewDialog", () => {
   it("should remove images in edit mode", () => {
     render(<LineupViewDialog {...defaultProps} />);
 
-    // Enter edit mode
     fireEvent.click(screen.getByRole("button", { name: /edit/i }));
 
-    // Initial count
     expect(screen.getByTestId("edit-image-count")).toHaveTextContent("2");
 
-    // Remove image
     fireEvent.click(screen.getByTestId("remove-image"));
 
     expect(screen.getByTestId("edit-image-count")).toHaveTextContent("1");
@@ -359,10 +337,8 @@ describe("LineupViewDialog", () => {
   it("should update youtube link in edit mode", () => {
     render(<LineupViewDialog {...defaultProps} />);
 
-    // Enter edit mode
     fireEvent.click(screen.getByRole("button", { name: /edit/i }));
 
-    // Change youtube link
     fireEvent.click(screen.getByTestId("change-youtube"));
 
     expect(screen.getByTestId("edit-youtube")).toHaveTextContent(
