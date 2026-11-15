@@ -63,8 +63,8 @@ func newStrategyResponseFromService(strategy *services.StrategyResponse) *Strate
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/strategies [post]
-func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func CreateStrategy(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
@@ -101,8 +101,8 @@ func CreateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/strategies [get]
-func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func GetStrategies(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
@@ -148,8 +148,8 @@ func GetStrategies(w http.ResponseWriter, r *http.Request, firebaseAuth Firebase
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/strategies/{id} [patch]
-func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func UpdateStrategy(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
@@ -214,8 +214,8 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth Firebas
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/strategies/{id} [delete]
-func DeleteStrategy(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func DeleteStrategy(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return

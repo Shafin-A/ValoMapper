@@ -26,10 +26,10 @@ import (
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/stack/members [get]
-func GetStackMembers(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func GetStackMembers(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return
@@ -81,10 +81,10 @@ func GetStackMembers(w http.ResponseWriter, r *http.Request, firebaseAuth Fireba
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/stack/invite [post]
-func InviteStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func InviteStackMember(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return
@@ -142,10 +142,10 @@ func InviteStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/stack/members/{id} [delete]
-func RemoveStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func RemoveStackMember(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return
@@ -186,10 +186,10 @@ func RemoveStackMember(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/stack/accept/{id} [post]
-func AcceptStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func AcceptStackInvite(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return
@@ -259,10 +259,10 @@ func AcceptStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/stack/leave [delete]
-func LeaveStack(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func LeaveStack(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return
@@ -292,10 +292,10 @@ func LeaveStack(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/stack/decline/{id} [post]
-func DeclineStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func DeclineStackInvite(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return
@@ -332,10 +332,10 @@ func DeclineStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/stack/pending-invites [get]
-func GetPendingStackInvites(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func GetPendingStackInvites(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return

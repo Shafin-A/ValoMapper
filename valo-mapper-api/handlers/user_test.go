@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +9,6 @@ import (
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
-	"firebase.google.com/go/v4/auth"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
@@ -28,12 +26,10 @@ func ptrInt(value int) *int {
 func TestCreateUser(t *testing.T) {
 	const firebaseUID = "firebase-uid-123"
 
-	newAuth := func() *testutils.MockFirebaseAuth {
-		mockAuth := &testutils.MockFirebaseAuth{}
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return &auth.Token{UID: firebaseUID}, nil
-		}
-		return mockAuth
+	contextUser := func(uid string) *models.User {
+		user := newTestAuthenticatedUser()
+		user.FirebaseUID = strPtr(uid)
+		return user
 	}
 
 	t.Run("creates user", func(t *testing.T) {
@@ -44,13 +40,13 @@ func TestCreateUser(t *testing.T) {
 			},
 		})
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
+		req := requestWithUser(testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
 			FirebaseUID: firebaseUID,
 			Name:        "Test User",
 			Email:       "test@example.com",
-		}, "valid-token")
+		}, "valid-token"), contextUser(firebaseUID))
 		w := httptest.NewRecorder()
-		CreateUser(w, req, newAuth())
+		CreateUser(w, req)
 
 		require.Equal(t, http.StatusCreated, w.Code)
 
@@ -65,13 +61,13 @@ func TestCreateUser(t *testing.T) {
 	t.Run("rejects a mismatched firebase uid", func(t *testing.T) {
 		useUserRepo(t, &mockUserHandlerRepo{})
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
+		req := requestWithUser(testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
 			FirebaseUID: "other-uid",
 			Name:        "Test User",
 			Email:       "test@example.com",
-		}, "valid-token")
+		}, "valid-token"), contextUser(firebaseUID))
 		w := httptest.NewRecorder()
-		CreateUser(w, req, newAuth())
+		CreateUser(w, req)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -85,7 +81,7 @@ func TestCreateUser(t *testing.T) {
 			Email:       "test@example.com",
 		}, "")
 		w := httptest.NewRecorder()
-		CreateUser(w, req, newAuth())
+		CreateUser(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -97,13 +93,13 @@ func TestCreateUser(t *testing.T) {
 			},
 		})
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
+		req := requestWithUser(testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
 			FirebaseUID: firebaseUID,
 			Name:        "Test User",
 			Email:       "test@example.com",
-		}, "valid-token")
+		}, "valid-token"), contextUser(firebaseUID))
 		w := httptest.NewRecorder()
-		CreateUser(w, req, newAuth())
+		CreateUser(w, req)
 
 		assert.Equal(t, http.StatusConflict, w.Code)
 	})
@@ -111,12 +107,12 @@ func TestCreateUser(t *testing.T) {
 	t.Run("rejects missing name", func(t *testing.T) {
 		useUserRepo(t, &mockUserHandlerRepo{})
 
-		req := testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
+		req := requestWithUser(testutils.MakeRequest(t, http.MethodPost, "/api/users", CreateUserRequest{
 			FirebaseUID: firebaseUID,
 			Email:       "test@example.com",
-		}, "valid-token")
+		}, "valid-token"), contextUser(firebaseUID))
 		w := httptest.NewRecorder()
-		CreateUser(w, req, newAuth())
+		CreateUser(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -124,10 +120,9 @@ func TestCreateUser(t *testing.T) {
 	t.Run("rejects invalid body", func(t *testing.T) {
 		useUserRepo(t, &mockUserHandlerRepo{})
 
-		req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader("{"))
-		req.Header.Set("Authorization", "Bearer valid-token")
+		req := requestWithUser(httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader("{")), contextUser(firebaseUID))
 		w := httptest.NewRecorder()
-		CreateUser(w, req, newAuth())
+		CreateUser(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -139,7 +134,7 @@ func TestGetUser(t *testing.T) {
 	t.Run("returns the authenticated user", func(t *testing.T) {
 		req := requestWithUser(httptest.NewRequest(http.MethodGet, "/api/users/me", nil), user)
 		w := httptest.NewRecorder()
-		GetUser(w, req, &testutils.MockFirebaseAuth{})
+		GetUser(w, req)
 
 		require.Equal(t, http.StatusOK, w.Code)
 
@@ -152,7 +147,7 @@ func TestGetUser(t *testing.T) {
 	t.Run("rejects missing authentication", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/users/me", nil)
 		w := httptest.NewRecorder()
-		GetUser(w, req, &testutils.MockFirebaseAuth{})
+		GetUser(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -174,7 +169,7 @@ func TestUpdateUser(t *testing.T) {
 			TourCompleted: ptrBool(true),
 		}, "valid-token"), user)
 		w := httptest.NewRecorder()
-		UpdateUser(w, req, &testutils.MockFirebaseAuth{})
+		UpdateUser(w, req)
 
 		require.Equal(t, http.StatusOK, w.Code)
 
@@ -189,7 +184,7 @@ func TestUpdateUser(t *testing.T) {
 
 		req := requestWithUser(httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader("{")), user)
 		w := httptest.NewRecorder()
-		UpdateUser(w, req, &testutils.MockFirebaseAuth{})
+		UpdateUser(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -203,7 +198,7 @@ func TestUpdateUser(t *testing.T) {
 			Name: strPtr("New Name"),
 		}, "valid-token"), user)
 		w := httptest.NewRecorder()
-		UpdateUser(w, req, &testutils.MockFirebaseAuth{})
+		UpdateUser(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
@@ -211,6 +206,7 @@ func TestUpdateUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 	user := newTestAuthenticatedUser()
+	useFirebaseAuth(t, &testutils.MockFirebaseAuth{})
 
 	t.Run("deletes the authenticated user", func(t *testing.T) {
 		deleted := false
@@ -223,7 +219,7 @@ func TestDeleteUser(t *testing.T) {
 
 		req := requestWithUser(httptest.NewRequest(http.MethodDelete, "/api/users/me", nil), user)
 		w := httptest.NewRecorder()
-		DeleteUser(w, req, &testutils.MockFirebaseAuth{})
+		DeleteUser(w, req)
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
 		assert.True(t, deleted)
@@ -236,7 +232,7 @@ func TestDeleteUser(t *testing.T) {
 
 		req := requestWithUser(httptest.NewRequest(http.MethodDelete, "/api/users/me", nil), user)
 		w := httptest.NewRecorder()
-		DeleteUser(w, req, &testutils.MockFirebaseAuth{})
+		DeleteUser(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
@@ -255,7 +251,7 @@ func TestUpdateUserSubscription(t *testing.T) {
 			IsSubscribed: ptrBool(true),
 		}, "")
 		w := httptest.NewRecorder()
-		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
+		UpdateUserSubscription(w, req)
 
 		require.Equal(t, http.StatusOK, w.Code)
 
@@ -271,7 +267,7 @@ func TestUpdateUserSubscription(t *testing.T) {
 			UserID: ptrInt(user.ID),
 		}, "")
 		w := httptest.NewRecorder()
-		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
+		UpdateUserSubscription(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -285,7 +281,7 @@ func TestUpdateUserSubscription(t *testing.T) {
 			IsSubscribed: ptrBool(false),
 		}, "")
 		w := httptest.NewRecorder()
-		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
+		UpdateUserSubscription(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -297,7 +293,7 @@ func TestUpdateUserSubscription(t *testing.T) {
 			IsSubscribed: ptrBool(false),
 		}, "")
 		w := httptest.NewRecorder()
-		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
+		UpdateUserSubscription(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -310,7 +306,7 @@ func TestUpdateUserSubscription(t *testing.T) {
 			IsSubscribed: ptrBool(false),
 		}, "")
 		w := httptest.NewRecorder()
-		UpdateUserSubscription(w, req, &testutils.MockFirebaseAuth{})
+		UpdateUserSubscription(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})

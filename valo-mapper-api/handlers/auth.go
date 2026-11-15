@@ -22,9 +22,35 @@ var (
 
 type userContextKey struct{}
 
+var firebaseAuthClient FirebaseAuthInterface
+
+func ConfigureFirebaseAuth(client FirebaseAuthInterface) {
+	firebaseAuthClient = client
+}
+
 func UserFromContext(ctx context.Context) *models.User {
 	user, _ := ctx.Value(userContextKey{}).(*models.User)
 	return user
+}
+
+func currentUser(r *http.Request) (*models.User, error) {
+	if user := UserFromContext(r.Context()); user != nil {
+		return user, nil
+	}
+	if firebaseAuthClient == nil {
+		return nil, errMissingAuthorizationHeader
+	}
+	return authenticateRequest(r, firebaseAuthClient)
+}
+
+func currentOptionalUser(r *http.Request) (*models.User, error) {
+	if user := UserFromContext(r.Context()); user != nil {
+		return user, nil
+	}
+	if firebaseAuthClient == nil {
+		return nil, nil
+	}
+	return authenticateOptionalRequest(r, firebaseAuthClient)
 }
 
 func RequireAuth(firebaseAuth FirebaseAuthInterface) func(http.Handler) http.Handler {

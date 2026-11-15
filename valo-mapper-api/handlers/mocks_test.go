@@ -55,6 +55,13 @@ func useUserRepo(t *testing.T, repo services.UserRepository) {
 	t.Cleanup(func() { userService = original })
 }
 
+func useFirebaseAuth(t *testing.T, client FirebaseAuthInterface) {
+	t.Helper()
+	original := firebaseAuthClient
+	firebaseAuthClient = client
+	t.Cleanup(func() { firebaseAuthClient = original })
+}
+
 type mockStrategyHandlerRepo struct {
 	getLobbyMetaFn    func(code string) (*models.LobbyMeta, error)
 	existsFn          func(userID int, lobbyCode string) (bool, error)

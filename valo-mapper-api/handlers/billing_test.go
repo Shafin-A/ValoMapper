@@ -89,6 +89,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 	}()
 
 	mockAuth := &testutils.MockFirebaseAuth{}
+	useFirebaseAuth(t, mockAuth)
 
 	t.Run("creates checkout session with subscription metadata", func(t *testing.T) {
 		testUser := testutils.CreateTestUser(t, pool, "firebase-checkout-uid-1")
@@ -129,7 +130,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		}, "valid-token")
 		w := httptest.NewRecorder()
 
-		CreateCheckoutSession(w, req, mockAuth)
+		CreateCheckoutSession(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -194,7 +195,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		}, "valid-token")
 		w := httptest.NewRecorder()
 
-		CreateCheckoutSession(w, req, mockAuth)
+		CreateCheckoutSession(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		if assert.NotNil(t, capturedParams) {
@@ -254,7 +255,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 			}, "valid-token")
 			w := httptest.NewRecorder()
 
-			CreateCheckoutSession(w, req, mockAuth)
+			CreateCheckoutSession(w, req)
 			assert.Equal(t, http.StatusOK, w.Code)
 		}
 
@@ -300,7 +301,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		}, "valid-token")
 		w := httptest.NewRecorder()
 
-		CreateCheckoutSession(w, req, mockAuth)
+		CreateCheckoutSession(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -333,7 +334,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		}, "valid-token")
 		w := httptest.NewRecorder()
 
-		CreateCheckoutSession(w, req, mockAuth)
+		CreateCheckoutSession(w, req)
 
 		assert.Equal(t, http.StatusConflict, w.Code)
 	})
@@ -384,7 +385,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		}, "valid-token")
 		w := httptest.NewRecorder()
 
-		CreateCheckoutSession(w, req, mockAuth)
+		CreateCheckoutSession(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, 1, checkoutCreateCalls)
@@ -445,7 +446,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		}, "valid-token")
 		w := httptest.NewRecorder()
 
-		CreateCheckoutSession(w, req, mockAuth)
+		CreateCheckoutSession(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, 2, createCalls)
@@ -495,7 +496,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		}, "valid-token")
 		w := httptest.NewRecorder()
 
-		CreateCheckoutSession(w, req, mockAuth)
+		CreateCheckoutSession(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		if assert.NotNil(t, capturedParams) {
@@ -512,7 +513,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", nil, "")
 		w := httptest.NewRecorder()
 
-		CreateCheckoutSession(w, req, mockAuth)
+		CreateCheckoutSession(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -535,7 +536,7 @@ func TestCreateCheckoutSession(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/checkout-session", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		CreateCheckoutSession(w, req, mockAuth)
+		CreateCheckoutSession(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		_ = os.Setenv("STRIPE_SECRET_KEY", "sk_test_checkout")
@@ -686,6 +687,7 @@ func TestCancelSubscription(t *testing.T) {
 	testutils.TruncateTables(t, pool, "users")
 
 	mockAuth := &testutils.MockFirebaseAuth{}
+	useFirebaseAuth(t, mockAuth)
 	originalUpdateFn := updateStripeSubscriptionFn
 	originalGetSubscriptionFn := getStripeSubscriptionFn
 	originalFindSubscriptionFn := findCancelableStripeSubscriptionIDForUserFn
@@ -741,7 +743,7 @@ func TestCancelSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		CancelSubscription(w, req, mockAuth)
+		CancelSubscription(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -765,7 +767,7 @@ func TestCancelSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "")
 		w := httptest.NewRecorder()
 
-		CancelSubscription(w, req, mockAuth)
+		CancelSubscription(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -786,7 +788,7 @@ func TestCancelSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		CancelSubscription(w, req, mockAuth)
+		CancelSubscription(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -819,7 +821,7 @@ func TestCancelSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		CancelSubscription(w, req, mockAuth)
+		CancelSubscription(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
@@ -869,7 +871,7 @@ func TestCancelSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		CancelSubscription(w, req, mockAuth)
+		CancelSubscription(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
@@ -904,7 +906,7 @@ func TestCancelSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/cancel-subscription", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		CancelSubscription(w, req, mockAuth)
+		CancelSubscription(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -921,6 +923,7 @@ func TestResumeSubscription(t *testing.T) {
 	testutils.TruncateTables(t, pool, "users")
 
 	mockAuth := &testutils.MockFirebaseAuth{}
+	useFirebaseAuth(t, mockAuth)
 	originalUpdateFn := updateStripeSubscriptionFn
 	originalGetSubscriptionFn := getStripeSubscriptionFn
 	originalFindScheduledFn := findScheduledCancellationSubscriptionIDForUserFn
@@ -976,7 +979,7 @@ func TestResumeSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/resume-subscription", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		ResumeSubscription(w, req, mockAuth)
+		ResumeSubscription(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -998,7 +1001,7 @@ func TestResumeSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/resume-subscription", nil, "")
 		w := httptest.NewRecorder()
 
-		ResumeSubscription(w, req, mockAuth)
+		ResumeSubscription(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -1035,7 +1038,7 @@ func TestResumeSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/resume-subscription", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		ResumeSubscription(w, req, mockAuth)
+		ResumeSubscription(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -1080,7 +1083,7 @@ func TestResumeSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/resume-subscription", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		ResumeSubscription(w, req, mockAuth)
+		ResumeSubscription(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
@@ -1116,7 +1119,7 @@ func TestResumeSubscription(t *testing.T) {
 		req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/resume-subscription", nil, "valid-token")
 		w := httptest.NewRecorder()
 
-		ResumeSubscription(w, req, mockAuth)
+		ResumeSubscription(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})

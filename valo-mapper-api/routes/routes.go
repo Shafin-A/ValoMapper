@@ -9,6 +9,8 @@ import (
 )
 
 func SetupRoutes(r *mux.Router, firebaseAuth *auth.Client, hub *websocket.Hub, replayParser handlers.ReplayParser, internalAPIKey string) {
+	handlers.ConfigureFirebaseAuth(handlers.NewFirebaseAuthClient(firebaseAuth))
+
 	RegisterHealthRoutes(r)
 	RegisterMetricsRoutes(r, hub, replayParser, internalAPIKey)
 	RegisterAdminRoutes(r, internalAPIKey)

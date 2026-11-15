@@ -46,8 +46,8 @@ func strPtr(s string) *string {
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/users [post]
-func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	token, err := VerifyFirebaseToken(r, firebaseAuth)
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+	current, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Invalid or missing authentication"), middleware.GetRequestID(r))
 		return
@@ -60,7 +60,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 	}
 	defer func() { _ = r.Body.Close() }()
 
-	if token.UID != req.FirebaseUID {
+	if current.FirebaseUID == nil || *current.FirebaseUID != req.FirebaseUID {
 		utils.SendJSONError(w, utils.NewForbidden("User ID mismatch"), middleware.GetRequestID(r))
 		return
 	}
@@ -87,8 +87,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/users/me [get]
-func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
 			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
@@ -116,8 +116,8 @@ func GetUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthIn
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/users/me [put]
-func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
 			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
@@ -156,8 +156,8 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/users/me [delete]
-func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
 			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
@@ -167,7 +167,11 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 		utils.SendJSONError(w, utils.NewInternal("Unable to load authenticated user", err), middleware.GetRequestID(r))
 		return
 	}
-	if err := userService.DeleteUser(user, firebaseAuth); err != nil {
+	if firebaseAuthClient == nil {
+		utils.SendJSONError(w, utils.NewInternal("Firebase auth is not configured", nil), middleware.GetRequestID(r))
+		return
+	}
+	if err := userService.DeleteUser(user, firebaseAuthClient); err != nil {
 		sendServiceError(w, r, err, "Unable to delete user")
 		return
 	}
@@ -192,7 +196,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Failure 500 {object} ErrorResponse
 // @Security InternalAPIKey
 // @Router /api/users/subscription [patch]
-func UpdateUserSubscription(w http.ResponseWriter, r *http.Request, _ FirebaseAuthInterface) {
+func UpdateUserSubscription(w http.ResponseWriter, r *http.Request) {
 	var req UpdateUserSubscriptionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))

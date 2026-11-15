@@ -18,8 +18,6 @@ func RegisterUserRoutes(r *mux.Router, firebaseAuth *auth.Client, internalAPIKey
 	users.Handle("/me", authenticated(authClient, handlers.UpdateUser)).Methods("PUT")
 	users.Handle("/me", authenticated(authClient, handlers.DeleteUser)).Methods("DELETE")
 
-	subscriptionHandler := middleware.InternalAPIKeyMiddleware(internalAPIKey)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handlers.UpdateUserSubscription(w, r, authClient)
-	}))
+	subscriptionHandler := middleware.InternalAPIKeyMiddleware(internalAPIKey)(http.HandlerFunc(handlers.UpdateUserSubscription))
 	users.Handle("/subscription", subscriptionHandler).Methods("PATCH")
 }

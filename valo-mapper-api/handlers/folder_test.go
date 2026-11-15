@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +9,6 @@ import (
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
-	"firebase.google.com/go/v4/auth"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -46,7 +44,7 @@ func TestCreateFolder(t *testing.T) {
 		useFolderRepo(t, repo)
 
 		w := httptest.NewRecorder()
-		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{Name: "Test Folder"}), &testutils.MockFirebaseAuth{})
+		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{Name: "Test Folder"}))
 
 		require.Equal(t, http.StatusCreated, w.Code)
 
@@ -61,7 +59,7 @@ func TestCreateFolder(t *testing.T) {
 		useFolderRepo(t, &mockFolderHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{}), &testutils.MockFirebaseAuth{})
+		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{}))
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -72,7 +70,7 @@ func TestCreateFolder(t *testing.T) {
 		useFolderRepo(t, &mockFolderHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		CreateFolder(w, folderRequest(t, freeUser, http.MethodPost, "", CreateFolderRequest{Name: "Test"}), &testutils.MockFirebaseAuth{})
+		CreateFolder(w, folderRequest(t, freeUser, http.MethodPost, "", CreateFolderRequest{Name: "Test"}))
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -85,7 +83,7 @@ func TestCreateFolder(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{Name: "Duplicate"}), &testutils.MockFirebaseAuth{})
+		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{Name: "Duplicate"}))
 
 		assert.Equal(t, http.StatusConflict, w.Code)
 	})
@@ -96,20 +94,15 @@ func TestCreateFolder(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{Name: "Test"}), &testutils.MockFirebaseAuth{})
+		CreateFolder(w, folderRequest(t, user, http.MethodPost, "", CreateFolderRequest{Name: "Test"}))
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 
 	t.Run("rejects missing authentication", func(t *testing.T) {
-		mockAuth := &testutils.MockFirebaseAuth{}
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return nil, errors.New("invalid")
-		}
-
 		req := httptest.NewRequest(http.MethodPost, "/api/folders", strings.NewReader(`{"name":"Test"}`))
 		w := httptest.NewRecorder()
-		CreateFolder(w, req, mockAuth)
+		CreateFolder(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -126,7 +119,7 @@ func TestGetFolders(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		GetFolders(w, folderRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
+		GetFolders(w, folderRequest(t, user, http.MethodGet, "", nil))
 
 		require.Equal(t, http.StatusOK, w.Code)
 
@@ -140,7 +133,7 @@ func TestGetFolders(t *testing.T) {
 		useFolderRepo(t, &mockFolderHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		GetFolders(w, folderRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
+		GetFolders(w, folderRequest(t, user, http.MethodGet, "", nil))
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "[]", strings.TrimSpace(w.Body.String()))
@@ -152,7 +145,7 @@ func TestGetFolders(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		GetFolders(w, folderRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
+		GetFolders(w, folderRequest(t, user, http.MethodGet, "", nil))
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
@@ -173,7 +166,7 @@ func TestUpdateFolder(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
+		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}))
 
 		require.Equal(t, http.StatusOK, w.Code)
 
@@ -186,7 +179,7 @@ func TestUpdateFolder(t *testing.T) {
 		useFolderRepo(t, &mockFolderHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "abc", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
+		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "abc", map[string]any{"name": "New"}))
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -195,7 +188,7 @@ func TestUpdateFolder(t *testing.T) {
 		useFolderRepo(t, &mockFolderHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
+		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}))
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -208,7 +201,7 @@ func TestUpdateFolder(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
+		UpdateFolder(w, folderRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}))
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -219,7 +212,7 @@ func TestUpdateFolder(t *testing.T) {
 		useFolderRepo(t, &mockFolderHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		UpdateFolder(w, folderRequest(t, freeUser, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
+		UpdateFolder(w, folderRequest(t, freeUser, http.MethodPatch, "5", map[string]any{"name": "New"}))
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -231,7 +224,7 @@ func TestUpdateFolder(t *testing.T) {
 		req = requestWithUser(req, user)
 		req = mux.SetURLVars(req, map[string]string{"id": "5"})
 		w := httptest.NewRecorder()
-		UpdateFolder(w, req, &testutils.MockFirebaseAuth{})
+		UpdateFolder(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -253,7 +246,7 @@ func TestDeleteFolder(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
+		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "5", nil))
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
 		assert.True(t, deleted)
@@ -263,7 +256,7 @@ func TestDeleteFolder(t *testing.T) {
 		useFolderRepo(t, &mockFolderHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "abc", nil), &testutils.MockFirebaseAuth{})
+		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "abc", nil))
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -272,7 +265,7 @@ func TestDeleteFolder(t *testing.T) {
 		useFolderRepo(t, &mockFolderHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
+		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "5", nil))
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -285,7 +278,7 @@ func TestDeleteFolder(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
+		DeleteFolder(w, folderRequest(t, user, http.MethodDelete, "5", nil))
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})

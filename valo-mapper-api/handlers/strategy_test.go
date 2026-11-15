@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -11,7 +10,6 @@ import (
 	"valo-mapper-api/models"
 	"valo-mapper-api/testutils"
 
-	"firebase.google.com/go/v4/auth"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,7 +49,7 @@ func TestCreateStrategy(t *testing.T) {
 		CreateStrategy(w, strategyRequest(t, user, http.MethodPost, "", CreateStrategyRequest{
 			LobbyCode: "ABCDEFG",
 			Name:      "Test Strategy",
-		}), &testutils.MockFirebaseAuth{})
+		}))
 
 		require.Equal(t, http.StatusCreated, w.Code)
 
@@ -70,7 +68,7 @@ func TestCreateStrategy(t *testing.T) {
 		w := httptest.NewRecorder()
 		CreateStrategy(w, strategyRequest(t, user, http.MethodPost, "", CreateStrategyRequest{
 			Name: "Test Strategy",
-		}), &testutils.MockFirebaseAuth{})
+		}))
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -89,7 +87,7 @@ func TestCreateStrategy(t *testing.T) {
 		CreateStrategy(w, strategyRequest(t, freeUser, http.MethodPost, "", CreateStrategyRequest{
 			LobbyCode: "ABCDEFG",
 			Name:      "Test Strategy",
-		}), &testutils.MockFirebaseAuth{})
+		}))
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -106,7 +104,7 @@ func TestCreateStrategy(t *testing.T) {
 		CreateStrategy(w, strategyRequest(t, user, http.MethodPost, "", CreateStrategyRequest{
 			LobbyCode: "ABCDEFG",
 			Name:      "Test Strategy",
-		}), &testutils.MockFirebaseAuth{})
+		}))
 
 		assert.Equal(t, http.StatusConflict, w.Code)
 	})
@@ -122,20 +120,15 @@ func TestCreateStrategy(t *testing.T) {
 		CreateStrategy(w, strategyRequest(t, user, http.MethodPost, "", CreateStrategyRequest{
 			LobbyCode: "ABCDEFG",
 			Name:      "Test Strategy",
-		}), &testutils.MockFirebaseAuth{})
+		}))
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 
 	t.Run("rejects missing authentication", func(t *testing.T) {
-		mockAuth := &testutils.MockFirebaseAuth{}
-		mockAuth.VerifyTokenFunc = func(ctx context.Context, idToken string) (*auth.Token, error) {
-			return nil, errors.New("invalid")
-		}
-
 		req := httptest.NewRequest(http.MethodPost, "/api/strategies", strings.NewReader(`{"lobbyCode":"ABCDEFG","name":"Test"}`))
 		w := httptest.NewRecorder()
-		CreateStrategy(w, req, mockAuth)
+		CreateStrategy(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
@@ -156,7 +149,7 @@ func TestGetStrategies(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		GetStrategies(w, strategyRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
+		GetStrategies(w, strategyRequest(t, user, http.MethodGet, "", nil))
 
 		require.Equal(t, http.StatusOK, w.Code)
 
@@ -179,7 +172,7 @@ func TestGetStrategies(t *testing.T) {
 
 		req := authedRequest(t, user, http.MethodGet, "/api/strategies?folderId=5", nil)
 		w := httptest.NewRecorder()
-		GetStrategies(w, req, &testutils.MockFirebaseAuth{})
+		GetStrategies(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		require.NotNil(t, received)
@@ -191,7 +184,7 @@ func TestGetStrategies(t *testing.T) {
 
 		req := authedRequest(t, user, http.MethodGet, "/api/strategies?folderId=abc", nil)
 		w := httptest.NewRecorder()
-		GetStrategies(w, req, &testutils.MockFirebaseAuth{})
+		GetStrategies(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -204,7 +197,7 @@ func TestGetStrategies(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		GetStrategies(w, strategyRequest(t, user, http.MethodGet, "", nil), &testutils.MockFirebaseAuth{})
+		GetStrategies(w, strategyRequest(t, user, http.MethodGet, "", nil))
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
@@ -229,7 +222,7 @@ func TestUpdateStrategy(t *testing.T) {
 		useStrategyRepo(t, repo)
 
 		w := httptest.NewRecorder()
-		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
+		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}))
 
 		require.Equal(t, http.StatusOK, w.Code)
 
@@ -244,7 +237,7 @@ func TestUpdateStrategy(t *testing.T) {
 		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "abc", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
+		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "abc", map[string]any{"name": "New"}))
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -253,7 +246,7 @@ func TestUpdateStrategy(t *testing.T) {
 		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
+		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}))
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -266,7 +259,7 @@ func TestUpdateStrategy(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}), &testutils.MockFirebaseAuth{})
+		UpdateStrategy(w, strategyRequest(t, user, http.MethodPatch, "5", map[string]any{"name": "New"}))
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})
@@ -278,7 +271,7 @@ func TestUpdateStrategy(t *testing.T) {
 		req = requestWithUser(req, user)
 		req = mux.SetURLVars(req, map[string]string{"id": "5"})
 		w := httptest.NewRecorder()
-		UpdateStrategy(w, req, &testutils.MockFirebaseAuth{})
+		UpdateStrategy(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -300,7 +293,7 @@ func TestDeleteStrategy(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
+		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "5", nil))
 
 		assert.Equal(t, http.StatusNoContent, w.Code)
 		assert.True(t, deleted)
@@ -310,7 +303,7 @@ func TestDeleteStrategy(t *testing.T) {
 		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "abc", nil), &testutils.MockFirebaseAuth{})
+		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "abc", nil))
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
@@ -319,7 +312,7 @@ func TestDeleteStrategy(t *testing.T) {
 		useStrategyRepo(t, &mockStrategyHandlerRepo{})
 
 		w := httptest.NewRecorder()
-		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
+		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "5", nil))
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
@@ -332,7 +325,7 @@ func TestDeleteStrategy(t *testing.T) {
 		})
 
 		w := httptest.NewRecorder()
-		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "5", nil), &testutils.MockFirebaseAuth{})
+		DeleteStrategy(w, strategyRequest(t, user, http.MethodDelete, "5", nil))
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 	})

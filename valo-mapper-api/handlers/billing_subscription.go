@@ -22,10 +22,10 @@ import (
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/cancel-subscription [post]
-func CancelSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func CancelSubscription(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return
@@ -80,10 +80,10 @@ func CancelSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth Fir
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/resume-subscription [post]
-func ResumeSubscription(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func ResumeSubscription(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return

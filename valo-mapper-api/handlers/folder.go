@@ -39,8 +39,8 @@ type UpdateFolderRequest struct {
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/folders [post]
-func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func CreateFolder(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
@@ -80,8 +80,8 @@ func CreateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/folders [get]
-func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func GetFolders(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
@@ -111,8 +111,8 @@ func GetFolders(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAut
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/folders/{id} [patch]
-func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func UpdateFolder(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return
@@ -155,8 +155,8 @@ func UpdateFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseA
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/folders/{id} [delete]
-func DeleteFolder(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
-	user, err := authenticateRequest(r, firebaseAuth)
+func DeleteFolder(w http.ResponseWriter, r *http.Request) {
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), middleware.GetRequestID(r))
 		return

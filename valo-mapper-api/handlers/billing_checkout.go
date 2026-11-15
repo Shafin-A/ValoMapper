@@ -26,10 +26,10 @@ import (
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/billing/checkout-session [post]
-func CreateCheckoutSession(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
 		return

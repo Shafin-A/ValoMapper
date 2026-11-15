@@ -40,13 +40,14 @@ func TestInviteStackMember_CreatesInvite(t *testing.T) {
 	require.NoError(t, err)
 
 	mockAuth := newMockAuthForUser(owner)
+	useFirebaseAuth(t, mockAuth)
 
 	req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/invite", map[string]string{
 		"firebaseUid": *member.FirebaseUID,
 	}, "valid-token")
 	w := httptest.NewRecorder()
 
-	InviteStackMember(w, req, mockAuth)
+	InviteStackMember(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
 
@@ -77,13 +78,14 @@ func TestInviteStackMember_RejectsTargetWhoOwnsStackPlan(t *testing.T) {
 	require.NoError(t, err)
 
 	mockAuth := newMockAuthForUser(inviter)
+	useFirebaseAuth(t, mockAuth)
 
 	req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/invite", map[string]string{
 		"firebaseUid": *targetOwner.FirebaseUID,
 	}, "valid-token")
 	w := httptest.NewRecorder()
 
-	InviteStackMember(w, req, mockAuth)
+	InviteStackMember(w, req)
 
 	assert.Equal(t, http.StatusConflict, w.Code)
 
@@ -125,11 +127,12 @@ func TestGetStackMembers_AllowsActiveStackMemberViewOnly(t *testing.T) {
 	require.NoError(t, models.AcceptStackInvite(invite.ID, member.ID))
 
 	mockAuth := newMockAuthForUser(member)
+	useFirebaseAuth(t, mockAuth)
 
 	req := testutils.MakeRequest(t, http.MethodGet, "/api/billing/stack/members", nil, "valid-token")
 	w := httptest.NewRecorder()
 
-	GetStackMembers(w, req, mockAuth)
+	GetStackMembers(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -163,12 +166,13 @@ func TestAcceptStackInvite_ActivatesMembership(t *testing.T) {
 	require.NoError(t, err)
 
 	mockAuth := newMockAuthForUser(member)
+	useFirebaseAuth(t, mockAuth)
 
 	req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/accept/"+strconv.Itoa(invite.ID), nil, "valid-token")
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(invite.ID)})
 	w := httptest.NewRecorder()
 
-	AcceptStackInvite(w, req, mockAuth)
+	AcceptStackInvite(w, req)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
 
@@ -261,11 +265,12 @@ func TestAcceptStackInvite_SchedulesPersonalSubscriptionCancellation(t *testing.
 	}
 
 	mockAuth := newMockAuthForUser(member)
+	useFirebaseAuth(t, mockAuth)
 	req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/accept/"+strconv.Itoa(invite.ID), nil, "valid-token")
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(invite.ID)})
 	w := httptest.NewRecorder()
 
-	AcceptStackInvite(w, req, mockAuth)
+	AcceptStackInvite(w, req)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
 	assert.True(t, cancelScheduled)
@@ -368,11 +373,12 @@ func TestAcceptStackInvite_PrioritizesStackOverPersonalTrial(t *testing.T) {
 	}
 
 	mockAuth := newMockAuthForUser(member)
+	useFirebaseAuth(t, mockAuth)
 	req := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/accept/"+strconv.Itoa(invite.ID), nil, "valid-token")
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(invite.ID)})
 	w := httptest.NewRecorder()
 
-	AcceptStackInvite(w, req, mockAuth)
+	AcceptStackInvite(w, req)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
 
@@ -417,14 +423,16 @@ func TestInviteStackMember_AllowsMultiplePendingInvitesAcrossOwners(t *testing.T
 		"firebaseUid": *member.FirebaseUID,
 	}, "valid-token")
 	wA := httptest.NewRecorder()
-	InviteStackMember(wA, reqA, newMockAuthForUser(ownerA))
+	useFirebaseAuth(t, newMockAuthForUser(ownerA))
+	InviteStackMember(wA, reqA)
 	assert.Equal(t, http.StatusCreated, wA.Code)
 
 	reqB := testutils.MakeRequest(t, http.MethodPost, "/api/billing/stack/invite", map[string]string{
 		"firebaseUid": *member.FirebaseUID,
 	}, "valid-token")
 	wB := httptest.NewRecorder()
-	InviteStackMember(wB, reqB, newMockAuthForUser(ownerB))
+	useFirebaseAuth(t, newMockAuthForUser(ownerB))
+	InviteStackMember(wB, reqB)
 	assert.Equal(t, http.StatusCreated, wB.Code)
 
 	pendingInvites, err := models.GetPendingStackInvitesByMemberUserID(member.ID)
@@ -461,7 +469,8 @@ func TestAcceptStackInvite_ClearsOtherPendingInvitesForMember(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(inviteA.ID)})
 	w := httptest.NewRecorder()
 
-	AcceptStackInvite(w, req, newMockAuthForUser(member))
+	useFirebaseAuth(t, newMockAuthForUser(member))
+	AcceptStackInvite(w, req)
 	assert.Equal(t, http.StatusNoContent, w.Code)
 
 	acceptedInvite, err := models.GetStackMemberByID(inviteA.ID)
@@ -507,7 +516,8 @@ func TestDeclineStackInvite_RemovesOnlySelectedInvite(t *testing.T) {
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(inviteA.ID)})
 	w := httptest.NewRecorder()
 
-	DeclineStackInvite(w, req, newMockAuthForUser(member))
+	useFirebaseAuth(t, newMockAuthForUser(member))
+	DeclineStackInvite(w, req)
 	assert.Equal(t, http.StatusNoContent, w.Code)
 
 	declinedInvite, err := models.GetStackMemberByID(inviteA.ID)
@@ -604,7 +614,8 @@ func TestLeaveStack_StartsAndResetsGraceWindowForStackOnlyMember(t *testing.T) {
 	req := testutils.MakeRequest(t, http.MethodDelete, "/api/billing/stack/leave", nil, "valid-token")
 	w := httptest.NewRecorder()
 
-	LeaveStack(w, req, newMockAuthForUser(member))
+	useFirebaseAuth(t, newMockAuthForUser(member))
+	LeaveStack(w, req)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
 
@@ -664,7 +675,8 @@ func TestRemoveStackMember_StartsAndResetsGraceWindowForStackOnlyMember(t *testi
 	req = mux.SetURLVars(req, map[string]string{"id": strconv.Itoa(membership.ID)})
 	w := httptest.NewRecorder()
 
-	RemoveStackMember(w, req, newMockAuthForUser(owner))
+	useFirebaseAuth(t, newMockAuthForUser(owner))
+	RemoveStackMember(w, req)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
 

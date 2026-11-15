@@ -46,10 +46,10 @@ func NewMatchHandler(deps MatchHandlerDependencies) *MatchHandler {
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/matches [get]
-func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateRequest(r, firebaseAuth)
+	user, err := currentUser(r)
 	if err != nil {
 		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
 			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
@@ -116,10 +116,10 @@ func (h *MatchHandler) GetMatches(w http.ResponseWriter, r *http.Request, fireba
 // @Failure 500 {object} ErrorResponse
 // @Security BearerAuth
 // @Router /api/matches/{matchId}/summary [get]
-func (h *MatchHandler) GetMatchSummary(w http.ResponseWriter, r *http.Request, firebaseAuth FirebaseAuthInterface) {
+func (h *MatchHandler) GetMatchSummary(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
-	user, err := authenticateOptionalRequest(r, firebaseAuth)
+	user, err := currentOptionalUser(r)
 	if err != nil {
 		if errors.Is(err, errMissingAuthorizationHeader) || errors.Is(err, errInvalidOrExpiredToken) {
 			utils.SendJSONError(w, utils.NewUnauthorized("Authentication failed"), requestID)
