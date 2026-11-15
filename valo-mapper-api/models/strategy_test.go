@@ -275,152 +275,6 @@ func TestGetStrategyByID(t *testing.T) {
 	})
 }
 
-func TestGetStrategiesByUserID(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test")
-	}
-
-	pool := setupTestDB(t)
-	defer cleanupTestDB(t, pool)
-
-	t.Run("returns all strategies for user", func(t *testing.T) {
-		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
-
-		user := createTestUser(t, pool, "list-user")
-
-		for i := 1; i <= 3; i++ {
-			lobbyCode := "LIST" + string(rune('0'+i))
-			createTestLobby(t, pool, lobbyCode)
-			strategy := &Strategy{
-				UserID:    user.ID,
-				LobbyCode: lobbyCode,
-				Name:      "Strategy " + string(rune('0'+i)),
-			}
-			err := strategy.Save()
-			require.NoError(t, err)
-		}
-
-		strategies, err := GetStrategiesByUserID(user.ID)
-		require.NoError(t, err)
-		assert.Len(t, strategies, 3)
-
-		for i := 0; i < len(strategies)-1; i++ {
-			assert.True(t, strategies[i].CreatedAt.After(strategies[i+1].CreatedAt) ||
-				strategies[i].CreatedAt.Equal(strategies[i+1].CreatedAt))
-		}
-	})
-
-	t.Run("returns empty slice when user has no strategies", func(t *testing.T) {
-		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
-
-		user := createTestUser(t, pool, "empty-user")
-
-		strategies, err := GetStrategiesByUserID(user.ID)
-		require.NoError(t, err)
-		assert.Empty(t, strategies)
-	})
-
-	t.Run("does not return other users' strategies", func(t *testing.T) {
-		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
-
-		user1 := createTestUser(t, pool, "user1")
-		user2 := createTestUser(t, pool, "user2")
-		lobby1 := createTestLobby(t, pool, "USER1")
-		lobby2 := createTestLobby(t, pool, "USER2")
-
-		strategy1 := &Strategy{
-			UserID:    user1.ID,
-			LobbyCode: lobby1.Code,
-			Name:      "User 1 Strategy",
-		}
-		err := strategy1.Save()
-		require.NoError(t, err)
-
-		strategy2 := &Strategy{
-			UserID:    user2.ID,
-			LobbyCode: lobby2.Code,
-			Name:      "User 2 Strategy",
-		}
-		err = strategy2.Save()
-		require.NoError(t, err)
-
-		strategies, err := GetStrategiesByUserID(user1.ID)
-		require.NoError(t, err)
-		assert.Len(t, strategies, 1)
-		assert.Equal(t, "User 1 Strategy", strategies[0].Name)
-	})
-}
-
-func TestGetStrategiesByFolderID(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Skipping integration test")
-	}
-
-	pool := setupTestDB(t)
-	defer cleanupTestDB(t, pool)
-
-	t.Run("returns strategies in folder", func(t *testing.T) {
-		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
-
-		user := createTestUser(t, pool, "folder-user")
-
-		folder := &Folder{
-			UserID: user.ID,
-			Name:   "Test Folder",
-		}
-		err := folder.Save()
-		require.NoError(t, err)
-
-		for i := 1; i <= 2; i++ {
-			lobbyCode := "FOLDER" + string(rune('0'+i))
-			createTestLobby(t, pool, lobbyCode)
-			strategy := &Strategy{
-				UserID:    user.ID,
-				LobbyCode: lobbyCode,
-				Name:      "Folder Strategy " + string(rune('0'+i)),
-				FolderID:  &folder.ID,
-			}
-			err := strategy.Save()
-			require.NoError(t, err)
-		}
-
-		lobbyOutside := createTestLobby(t, pool, "OUTSIDE")
-		strategyOutside := &Strategy{
-			UserID:    user.ID,
-			LobbyCode: lobbyOutside.Code,
-			Name:      "Outside Folder",
-		}
-		err = strategyOutside.Save()
-		require.NoError(t, err)
-
-		strategies, err := GetStrategiesByFolderID(user.ID, folder.ID)
-		require.NoError(t, err)
-		assert.Len(t, strategies, 2)
-
-		for _, s := range strategies {
-			assert.NotNil(t, s.FolderID)
-			assert.Equal(t, folder.ID, *s.FolderID)
-		}
-	})
-
-	t.Run("returns empty slice for empty folder", func(t *testing.T) {
-		truncateTables(t, pool, "strategies", "folders", "lobbies", "maps", "users")
-
-		user := createTestUser(t, pool, "empty-folder-user")
-
-		folder := &Folder{
-			UserID: user.ID,
-			Name:   "Empty Folder",
-		}
-		err := folder.Save()
-		require.NoError(t, err)
-
-		strategies, err := GetStrategiesByFolderID(user.ID, folder.ID)
-		require.NoError(t, err)
-		assert.Empty(t, strategies)
-	})
-}
-
 func TestGetStrategySummariesByUserID(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test")
@@ -545,7 +399,7 @@ func TestDeleteExcessStrategiesForUser(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(2), deleted)
 
-		remaining, err := GetStrategiesByUserID(user.ID)
+		remaining, err := GetStrategySummariesByUserID(user.ID, nil)
 		require.NoError(t, err)
 		assert.Len(t, remaining, 3)
 
@@ -581,7 +435,7 @@ func TestDeleteExcessStrategiesForUser(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, int64(0), deleted)
 
-		remaining, err := GetStrategiesByUserID(user.ID)
+		remaining, err := GetStrategySummariesByUserID(user.ID, nil)
 		require.NoError(t, err)
 		assert.Len(t, remaining, 3)
 	})
