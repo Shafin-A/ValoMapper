@@ -47,7 +47,6 @@ func TestGetAllCanvasPhases(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, phases, 10)
 
-		// Each phase should have empty arrays
 		for i, phase := range phases {
 			assert.Empty(t, phase.AgentsOnCanvas, "phase %d should have no agents", i)
 			assert.Empty(t, phase.AbilitiesOnCanvas, "phase %d should have no abilities", i)
@@ -62,14 +61,12 @@ func TestGetAllCanvasPhases(t *testing.T) {
 	t.Run("returns phases with saved canvas data", func(t *testing.T) {
 		lobby, mapID := createCanvasTestLobby(t, pool)
 
-		// Create canvas state with data in phases 0 and 1
 		canvasState := FullCanvasState{
 			SelectedMap: MapOption{ID: mapID},
 			MapSide:     "attack",
 			Phases:      make([]PhaseState, 10),
 		}
 
-		// Add items to phase 0
 		canvasState.Phases[0] = PhaseState{
 			AgentsOnCanvas: []CanvasAgent{
 				{ID: "agent1", AgentName: "Jett", Role: "Duelist", IsAlly: true, X: 100, Y: 200},
@@ -122,14 +119,12 @@ func TestGetAllCanvasPhases(t *testing.T) {
 			},
 		}
 
-		// Add items to phase 1
 		canvasState.Phases[1] = PhaseState{
 			AgentsOnCanvas: []CanvasAgent{
 				{ID: "agent3", AgentName: "Omen", Role: "Controller", IsAlly: false, X: 200, Y: 300},
 			},
 		}
 
-		// Initialize other phases
 		for i := 2; i < 10; i++ {
 			canvasState.Phases[i] = PhaseState{
 				AgentsOnCanvas:    []CanvasAgent{},
@@ -142,16 +137,13 @@ func TestGetAllCanvasPhases(t *testing.T) {
 			}
 		}
 
-		// Save canvas state
 		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
-		// Retrieve phases
 		phases, err := GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
 		assert.Len(t, phases, 10)
 
-		// Verify phase 0
 		assert.Len(t, phases[0].AgentsOnCanvas, 2)
 		assert.Equal(t, "agent1", phases[0].AgentsOnCanvas[0].ID)
 		assert.Equal(t, "Jett", phases[0].AgentsOnCanvas[0].AgentName)
@@ -197,7 +189,6 @@ func TestGetAllCanvasPhases(t *testing.T) {
 		}
 		assert.Equal(t, "Omen", phases[1].AgentsOnCanvas[0].AgentName)
 
-		// Verify other phases are empty
 		for i := 2; i < 10; i++ {
 			assert.Empty(t, phases[i].AgentsOnCanvas, "phase %d should have no agents", i)
 			assert.Empty(t, phases[i].AbilitiesOnCanvas, "phase %d should have no abilities", i)
@@ -227,7 +218,6 @@ func TestSaveCanvasState(t *testing.T) {
 	t.Run("saves canvas state successfully", func(t *testing.T) {
 		lobby, mapID := createCanvasTestLobby(t, pool)
 
-		// Create canvas state
 		canvasState := FullCanvasState{
 			SelectedMap: MapOption{ID: mapID},
 			MapSide:     "defend",
@@ -252,11 +242,9 @@ func TestSaveCanvasState(t *testing.T) {
 			}
 		}
 
-		// Save
 		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
-		// Verify
 		phases, err := GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
 		assert.Len(t, phases[0].AgentsOnCanvas, 1)
@@ -287,7 +275,6 @@ func TestSaveCanvasState(t *testing.T) {
 	t.Run("updates existing canvas state", func(t *testing.T) {
 		lobby, _ := createCanvasTestLobby(t, pool)
 
-		// First save
 		canvasState := FullCanvasState{
 			Phases: make([]PhaseState, 10),
 		}
@@ -311,7 +298,6 @@ func TestSaveCanvasState(t *testing.T) {
 		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
-		// Update with new data
 		canvasState.Phases[0] = PhaseState{
 			AgentsOnCanvas: []CanvasAgent{
 				{ID: "new1", AgentName: "Agent2", Role: "Role2", X: 10, Y: 20},
@@ -322,7 +308,6 @@ func TestSaveCanvasState(t *testing.T) {
 		err = SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
-		// Verify old data is replaced
 		phases, err := GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
 		assert.Len(t, phases[0].AgentsOnCanvas, 2)
@@ -488,7 +473,6 @@ func TestSaveCanvasState(t *testing.T) {
 			Phases: make([]PhaseState, 10),
 		}
 
-		// Phase 0: agents and texts
 		canvasState.Phases[0] = PhaseState{
 			AgentsOnCanvas: []CanvasAgent{
 				{ID: "a1", AgentName: "Jett", Role: "Duelist", X: 10, Y: 20},
@@ -498,7 +482,6 @@ func TestSaveCanvasState(t *testing.T) {
 			},
 		}
 
-		// Phase 2: images and tool icons
 		canvasState.Phases[2] = PhaseState{
 			ImagesOnCanvas: []CanvasImage{
 				{ID: "i1", Src: "test.png", X: 50, Y: 60, Width: 100, Height: 100},
@@ -508,7 +491,6 @@ func TestSaveCanvasState(t *testing.T) {
 			},
 		}
 
-		// Initialize remaining phases
 		for i := 1; i < 10; i++ {
 			if i != 2 {
 				canvasState.Phases[i] = PhaseState{
@@ -529,18 +511,15 @@ func TestSaveCanvasState(t *testing.T) {
 		phases, err := GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
 
-		// Verify phase 0
 		assert.Len(t, phases[0].AgentsOnCanvas, 1)
 		assert.Len(t, phases[0].TextsOnCanvas, 1)
 		assert.Empty(t, phases[0].ImagesOnCanvas)
 
-		// Verify phase 2
 		assert.Empty(t, phases[2].AgentsOnCanvas)
 		assert.Len(t, phases[2].ImagesOnCanvas, 1)
 		assert.Len(t, phases[2].ToolIconsOnCanvas, 1)
 		assert.Equal(t, "agent-1", phases[2].ToolIconsOnCanvas[0].AttachedToID)
 
-		// Verify phase 1 is empty
 		assert.Empty(t, phases[1].AgentsOnCanvas)
 		assert.Empty(t, phases[1].ImagesOnCanvas)
 	})
@@ -595,7 +574,6 @@ func TestSaveCanvasState(t *testing.T) {
 
 		assert.Len(t, phases[0].ConnectingLines, 2)
 
-		// Verify first connecting line with all fields
 		cl1 := phases[0].ConnectingLines[0]
 		assert.Equal(t, "cl1", cl1.ID)
 		assert.Equal(t, "agent-1", cl1.FromID)
@@ -608,7 +586,6 @@ func TestSaveCanvasState(t *testing.T) {
 		assert.Equal(t, "https://www.youtube.com/watch?v=abc123", cl1.YoutubeLink)
 		assert.Equal(t, "Lineup for B site from spawn", cl1.Notes)
 
-		// Verify second connecting line without optional fields
 		cl2 := phases[0].ConnectingLines[1]
 		assert.Equal(t, "cl2", cl2.ID)
 		assert.Equal(t, "agent-2", cl2.FromID)
@@ -621,7 +598,6 @@ func TestSaveCanvasState(t *testing.T) {
 	t.Run("updates connecting lines correctly", func(t *testing.T) {
 		lobby, _ := createCanvasTestLobby(t, pool)
 
-		// First save with one connecting line
 		canvasState := FullCanvasState{
 			Phases: make([]PhaseState, 10),
 		}
@@ -652,7 +628,6 @@ func TestSaveCanvasState(t *testing.T) {
 		err := SaveCanvasState(lobby.Code, canvasState)
 		require.NoError(t, err)
 
-		// Update with new connecting line
 		canvasState.Phases[0] = PhaseState{
 			ConnectingLines: []CanvasConnectingLine{
 				{
@@ -674,7 +649,6 @@ func TestSaveCanvasState(t *testing.T) {
 		phases, err := GetAllCanvasPhases(lobby.Code)
 		require.NoError(t, err)
 
-		// Should only have the new connecting line
 		assert.Len(t, phases[0].ConnectingLines, 1)
 		assert.Equal(t, "cl-new", phases[0].ConnectingLines[0].ID)
 		assert.Equal(t, "new-from", phases[0].ConnectingLines[0].FromID)
@@ -864,7 +838,6 @@ func TestApplyCanvasPatch(t *testing.T) {
 		updatedLobby, err := GetLobbyByCode(lobby.Code)
 		require.NoError(t, err)
 		require.NotNil(t, updatedLobby)
-		// map and side should remain unchanged by a phase-specific clear
 		assert.Equal(t, "bind", updatedLobby.SelectedMapId)
 		assert.Equal(t, "attack", updatedLobby.CanvasState.MapSide)
 
@@ -875,7 +848,6 @@ func TestApplyCanvasPatch(t *testing.T) {
 	})
 
 	t.Run("full clear via patch resetAll true", func(t *testing.T) {
-		// insert some data across phases + set map/side
 		_, err := pool.Exec(context.Background(), `INSERT INTO maps (id, text) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING`, "bind", "Bind")
 		require.NoError(t, err)
 
@@ -966,7 +938,6 @@ func TestApplyCanvasPatch(t *testing.T) {
 	t.Run("ability moved to front persists sort order after reload", func(t *testing.T) {
 		sortLobby, _ := createCanvasTestLobby(t, pool)
 
-		// Add three abilities in order: ab-first, ab-second, ab-third
 		addPatch := CanvasPatch{Entries: []CanvasPatchEntry{
 			{Entity: "ability", Action: "add", PhaseIndex: 0, ID: "ab-first", Payload: map[string]any{
 				"id": "ab-first", "name": "Jett", "action": "jett_dash", "x": 10.0, "y": 10.0,
@@ -1014,7 +985,6 @@ func TestApplyCanvasPatch(t *testing.T) {
 		assert.Equal(t, "ab-third", ids[1], "ab-third should be second")
 		assert.Equal(t, "ab-first", ids[2], "ab-first should be last (highest sort_order, rendered on top)")
 
-		// Also verify the updated position was persisted
 		assert.Equal(t, 50.0, phases[0].AbilitiesOnCanvas[2].X)
 		assert.Equal(t, 50.0, phases[0].AbilitiesOnCanvas[2].Y)
 	})

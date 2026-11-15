@@ -20,7 +20,6 @@ var (
 	ErrStackForbidden         = errors.New("forbidden")
 )
 
-// StackRepository abstracts persistence operations for StackService.
 type StackRepository interface {
 	GetActiveStackMemberByMemberUserID(userID int) (*models.StackMember, error)
 	GetUserByFirebaseUID(uid string) (*models.User, error)
@@ -75,17 +74,14 @@ func (r *defaultStackRepository) GetPendingStackInvitesByMemberUserID(memberID i
 	return models.GetPendingStackInvitesByMemberUserID(memberID)
 }
 
-// StackServiceDependencies holds injectable dependencies for StackService.
 type StackServiceDependencies struct {
 	Repo StackRepository
 }
 
-// StackService handles stack member management and stack-related operations
 type StackService struct {
 	repo StackRepository
 }
 
-// NewStackService creates a new StackService
 func NewStackService(deps StackServiceDependencies) *StackService {
 	repo := deps.Repo
 	if repo == nil {
@@ -95,17 +91,13 @@ func NewStackService(deps StackServiceDependencies) *StackService {
 }
 
 const (
-	// StackMaxMembers is the maximum number of members per stack
 	StackMaxMembers = 6
 )
 
-// IsStackOwner checks if a user is a stack owner
 func (ss *StackService) IsStackOwner(user *models.User) bool {
 	return user != nil && user.HasActivePersonalPlan(string(CheckoutPlanStack))
 }
 
-// GetStackViewContext returns the ownerUserID and canManage flag for the user's stack context
-// Returns the owner's ID, whether current user can manage,  and any errors
 func (ss *StackService) GetStackViewContext(user *models.User) (int, bool, error) {
 	if user == nil {
 		return 0, false, ErrNotInStack
@@ -126,12 +118,10 @@ func (ss *StackService) GetStackViewContext(user *models.User) (int, bool, error
 	return membership.OwnerUserID, false, nil
 }
 
-// InviteStackMemberRequest wraps stack invite input
 type InviteStackMemberRequest struct {
 	FirebaseUID string
 }
 
-// InviteStackMember invites a user to join a stack
 func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMemberRequest) (*models.StackMember, error) {
 	if !ss.IsStackOwner(owner) {
 		return nil, ErrNotStackOwner
@@ -193,7 +183,6 @@ func (ss *StackService) InviteStackMember(owner *models.User, req InviteStackMem
 	return invite, nil
 }
 
-// RemoveStackMember removes a stack member or invite
 func (ss *StackService) RemoveStackMember(owner *models.User, memberID int) error {
 	if !ss.IsStackOwner(owner) {
 		return ErrNotStackOwner
@@ -209,7 +198,6 @@ func (ss *StackService) RemoveStackMember(owner *models.User, memberID int) erro
 	return nil
 }
 
-// AcceptStackInvite accepts a stack invite for a member
 func (ss *StackService) AcceptStackInvite(member *models.User, inviteID int) error {
 	invite, err := ss.repo.GetStackMemberByID(inviteID)
 	if err != nil {
@@ -235,7 +223,6 @@ func (ss *StackService) AcceptStackInvite(member *models.User, inviteID int) err
 	return nil
 }
 
-// DeclineStackInvite declines a stack invite for a member
 func (ss *StackService) DeclineStackInvite(member *models.User, inviteID int) error {
 	invite, err := ss.repo.GetStackMemberByID(inviteID)
 	if err != nil {
@@ -258,7 +245,6 @@ func (ss *StackService) DeclineStackInvite(member *models.User, inviteID int) er
 	return nil
 }
 
-// LeaveStack removes the current user from their active stack
 func (ss *StackService) LeaveStack(member *models.User) error {
 	membership, err := ss.repo.GetActiveStackMemberByMemberUserID(member.ID)
 	if err != nil {
@@ -271,12 +257,10 @@ func (ss *StackService) LeaveStack(member *models.User) error {
 	return ss.repo.LeaveStack(member.ID)
 }
 
-// GetStackMembers retrieves the members of a stack
 func (ss *StackService) GetStackMembers(ownerID int) ([]models.StackMember, error) {
 	return ss.repo.GetStackMembersForOwner(ownerID)
 }
 
-// GetPendingInvites retrieves pending stack invites for a user
 func (ss *StackService) GetPendingInvites(memberID int) ([]models.StackMember, error) {
 	invites, err := ss.repo.GetPendingStackInvitesByMemberUserID(memberID)
 	if err != nil {

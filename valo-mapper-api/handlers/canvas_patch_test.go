@@ -173,7 +173,6 @@ func TestApplyCanvasPatch(t *testing.T) {
 	})
 
 	t.Run("preserves image src after update without src", func(t *testing.T) {
-		// Add an image anchor with src
 		addPayload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{Entity: "image", Action: "add", PhaseIndex: 0, ID: "img1", Payload: map[string]any{"id": "img1", "src": "https://example.com/pic.png", "x": 100, "y": 100, "width": 150, "height": 150}}}}
 		addBody, err := json.Marshal(addPayload)
 		require.NoError(t, err)
@@ -183,7 +182,6 @@ func TestApplyCanvasPatch(t *testing.T) {
 		addW := executeCanvasPatchRequest(addReq)
 		assert.Equal(t, http.StatusNoContent, addW.Code)
 
-		// Move image without src payload
 		updatePayload := models.CanvasPatch{Entries: []models.CanvasPatchEntry{{Entity: "image", Action: "update", PhaseIndex: 0, ID: "img1", Payload: map[string]any{"id": "img1", "x": 200, "y": 220, "width": 150, "height": 150}}}}
 		updateBody, err := json.Marshal(updatePayload)
 		require.NoError(t, err)

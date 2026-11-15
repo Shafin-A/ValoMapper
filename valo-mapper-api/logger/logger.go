@@ -5,8 +5,7 @@ import (
 	"os"
 )
 
-// Init configures the global slog default logger.
-// Set LOG_FORMAT=text for human-readable output (local dev); JSON is the default (production).
+// Set LOG_FORMAT=text for human-readable output (local dev); JSON is the default.
 func Init() {
 	opts := &slog.HandlerOptions{Level: slog.LevelInfo}
 

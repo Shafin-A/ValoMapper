@@ -17,8 +17,8 @@ const (
 	overhealDamageSection = "OverhealDamageSection"
 )
 
-// Armour classes are stable build paths; points are the class maximum the item
-// is bought with, and the id is the existing UI id from mock-seed.ts.
+// Armour classes are stable build paths; points is the class maximum and id is
+// the existing UI id.
 const (
 	heavyArmorClass  = "/Game/Gear/HeavyArmorItem.HeavyArmorItem_C"
 	lightArmorClass  = "/Game/Gear/LightArmorItem.LightArmorItem_C"
@@ -37,8 +37,7 @@ var armourClasses = map[string]armourClass{
 }
 
 // stateSample is one subject's complete state at TimeMS. It is an internal
-// snapshot, not a wire frame: the wire frame is built by sampling the timeline
-// at a movement sample's absolute time.
+// snapshot, not a wire frame.
 type stateSample struct {
 	TimeMS       uint32
 	HP           int
@@ -50,8 +49,6 @@ type stateSample struct {
 	HealthTimeMS uint32
 }
 
-// stateScan is the per-subject state timelines plus the counters the parse log
-// reports.
 type stateScan struct {
 	Timelines map[string][]stateSample
 	Paths     map[uint32]string
@@ -120,16 +117,12 @@ type stateScan struct {
 	Kills  []killDataSample
 }
 
-// incomingWrite is one damage event against a player, kept in absolute time so
-// it can be attributed to the round it landed in.
 type incomingWrite struct {
 	Subject string
 	TimeMS  uint32
 	Damage  float64
 }
 
-// stateWrite is a field row the state builder consumes later: its actor, time,
-// packet and integer value.
 type stateWrite struct {
 	TimeMS   uint32
 	PacketID uint32
@@ -154,7 +147,6 @@ type damageHitKey struct {
 	PacketID uint32
 }
 
-// damageHitWrite is one damage call while its params are still net GUIDs.
 type damageHitWrite struct {
 	Damage      float64
 	HasDamage   bool
@@ -165,7 +157,6 @@ type damageHitWrite struct {
 	DamageType  uint32
 }
 
-// hitSample is a damage call after both players and its source resolved.
 type hitSample struct {
 	TimeMS         uint32
 	ShooterSubject string
@@ -215,7 +206,6 @@ type fieldStateRows struct {
 	// including abilities that are never bought in the match.
 	ChargeActors map[uint32]struct{}
 
-	// Ultimate points and the active flag live on the player state actor.
 	UltimatePoints []ultimatePointWrite
 	UltimateActive []ultimateActiveWrite
 
@@ -234,8 +224,6 @@ type killDataWrite struct {
 	DamageType        uint32
 }
 
-// killDataSample is a KillData element after refs have been resolved to
-// subjects and class names. The event log uses it to name the kill source.
 type killDataSample struct {
 	TimeMS        uint32
 	KillerSubject string
@@ -296,7 +284,6 @@ func stateFieldCandidate(name string) bool {
 		strings.Contains(name, "AbilityCastsThisRound[")
 }
 
-// collectStateField folds the state rows into the existing scanFields pass.
 func (s *fieldScan) collectStateField(row *fieldRow, name string) {
 	isEquipment := strings.Contains(row.GroupPath, "EquipmentChargeComponent")
 	isSignature := strings.Contains(row.GroupPath, "SignatureAbilityResourceComponent")
@@ -435,9 +422,8 @@ func (s *fieldScan) collectStateField(row *fieldRow, name string) {
 	}
 }
 
-// collectDamageHitField folds one RPC param into its damage call. Only the
-// params a tracer needs are kept; the LifeChangeEvents children are consumed by
-// collectStateField's earlier branch.
+// collectDamageHitField folds one RPC param into its damage call; only the params
+// a tracer needs are kept.
 func (s *fieldScan) collectDamageHitField(row *fieldRow, name string) {
 	dot := strings.IndexByte(name, '.')
 	if dot < 0 || dot == len(name)-1 {
@@ -640,7 +626,6 @@ func (v *stateActorView) activePawn(index *playerIndex, subject string, timeMS u
 	return pawn, ok, ambiguous
 }
 
-// pawnActiveAt reports whether a pawn's interval is known and covers timeMS.
 func (v *stateActorView) pawnActiveAt(pawn uint32, timeMS uint32) (active bool, known bool) {
 	if v == nil {
 		return false, false

@@ -12,8 +12,8 @@ import (
 const parquetBatchSize = 8192
 
 // fieldRow projects only the sparse columns the normaliser reads. The parquet
-// tags must match vrfkit's fields schema exactly; nullable columns are pointers
-// so a missing value is distinguishable from zero.
+// tags must match vrfkit's schema exactly; nullable columns are pointers so a
+// missing value is distinguishable from zero.
 type fieldRow struct {
 	TimeMS             uint32   `parquet:"time_ms"`
 	PacketID           uint32   `parquet:"packet_id"`
@@ -33,8 +33,8 @@ type fieldRow struct {
 	RawBits  []byte `parquet:"raw_bits,optional"`
 }
 
-// movementRow is one decoded pose. Only the columns needed for round-start
-// frames and the transform plausibility gate are projected.
+// movementRow is one decoded pose, projected to the columns needed for
+// round-start frames and the transform plausibility gate.
 type movementRow struct {
 	TimeMS           uint32  `parquet:"time_ms"`
 	CharacterNetGUID uint32  `parquet:"character_net_guid"`
@@ -45,7 +45,6 @@ type movementRow struct {
 	Pitch            float32 `parquet:"pitch"`
 }
 
-// eventRow projects the server event timeline.
 type eventRow struct {
 	Group string  `parquet:"group"`
 	Time1 uint32  `parquet:"time1"`

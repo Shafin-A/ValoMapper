@@ -154,7 +154,6 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		_ = tx.Rollback(ctx) // no-op after commit; harmless on read-only tx
 	}()
 
-	// ---- AGENTS ----
 	rows, err := tx.Query(ctx, `
 		SELECT id, name, is_ally, is_gray, x, y, note, phase_index
 		FROM canvas_agents 
@@ -192,7 +191,6 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		return nil, err
 	}
 
-	// ---- ABILITIES ----
 	rows, err = tx.Query(ctx, `
 		SELECT id, name, action, x, y, attached_to_id, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, note, phase_index
 		FROM canvas_abilities 
@@ -240,7 +238,6 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		return nil, err
 	}
 
-	// ---- DRAW LINES ----
 	rows, err = tx.Query(ctx, `
 		SELECT id, tool, points, color, size, is_dashed, is_arrow_head, shape, opacity, traversal_time, phase_index 
 		FROM canvas_draw_lines 
@@ -272,7 +269,6 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		return nil, err
 	}
 
-	// ---- TEXTS ----
 	rows, err = tx.Query(ctx, `
 		SELECT id, text, spans, font_size, x, y, width, height, note, phase_index
 		FROM canvas_texts
@@ -315,7 +311,6 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		return nil, err
 	}
 
-	// ---- IMAGES ----
 	rows, err = tx.Query(ctx, `
 		SELECT id, src, x, y, width, height, note, phase_index
 		FROM canvas_images 
@@ -347,7 +342,6 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		return nil, err
 	}
 
-	// ---- TOOL ICONS ----
 	rows, err = tx.Query(ctx, `
 		SELECT id, name, x, y, width, height, attached_to_id, note, phase_index
 		FROM canvas_tool_icons 
@@ -387,7 +381,6 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		return nil, err
 	}
 
-	// ---- CONNECTING LINES ----
 	rows, err = tx.Query(ctx, `
 		SELECT id, from_id, to_id, stroke_color, stroke_width, uploaded_images, youtube_link, notes, phase_index 
 		FROM canvas_connecting_lines 
@@ -477,7 +470,6 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		return err
 	}
 
-	// Delete all previous data for this lobby
 	tables := []string{
 		"canvas_agents", "canvas_abilities", "canvas_draw_lines",
 		"canvas_texts", "canvas_images", "canvas_tool_icons", "canvas_connecting_lines",
@@ -490,7 +482,6 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		}
 	}
 
-	// --- Prepare slices for each table ---
 	var (
 		agentRows          [][]any
 		abilityRows        [][]any
@@ -502,15 +493,12 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 	)
 
 	for phaseIndex, phase := range state.Phases {
-
-		// Agents
 		for _, a := range phase.AgentsOnCanvas {
 			agentRows = append(agentRows, []any{
 				a.ID, lobbyCode, a.AgentName, a.X, a.Y, a.IsAlly, a.IsGray, phaseIndex, a.Note,
 			})
 		}
 
-		// Abilities
 		for _, ab := range phase.AbilitiesOnCanvas {
 			pathArray := make([]float64, 0)
 			for _, pt := range ab.CurrentPath {
@@ -522,7 +510,6 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 			})
 		}
 
-		// Draw lines
 		for _, l := range phase.DrawLines {
 			pointsArray := make([]float64, 0)
 			for _, p := range l.Points {
@@ -534,7 +521,6 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 			})
 		}
 
-		// Texts
 		for _, t := range phase.TextsOnCanvas {
 			var spansJSON any
 			if len(t.Spans) > 0 {
@@ -556,21 +542,18 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 			})
 		}
 
-		// Images
 		for _, i := range phase.ImagesOnCanvas {
 			imageRows = append(imageRows, []any{
 				i.ID, lobbyCode, i.Src, i.X, i.Y, i.Width, i.Height, phaseIndex, i.Note,
 			})
 		}
 
-		// Tool Icons
 		for _, ic := range phase.ToolIconsOnCanvas {
 			iconRows = append(iconRows, []any{
 				ic.ID, lobbyCode, ic.Name, ic.X, ic.Y, ic.Width, ic.Height, ic.AttachedToID, phaseIndex, ic.Note,
 			})
 		}
 
-		// Connecting Lines
 		for _, cl := range phase.ConnectingLines {
 			connectingLineRows = append(connectingLineRows, []any{
 				cl.ID, lobbyCode, cl.FromID, cl.ToID, cl.StrokeColor, cl.StrokeWidth,

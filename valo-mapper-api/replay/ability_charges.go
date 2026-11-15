@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// abilityChargeWrite is one replicated current-charge value on an ability item.
 type abilityChargeWrite struct {
 	TimeMS    uint32
 	PacketID  uint32
@@ -14,7 +13,6 @@ type abilityChargeWrite struct {
 	Signature bool
 }
 
-// abilityChargeSample is a resolved charge event for one player and slot.
 type abilityChargeSample struct {
 	Subject   string
 	Slot      string
@@ -27,8 +25,8 @@ type abilityChargeSample struct {
 }
 
 // abilityClassFolder returns the /Ability_*/ path component. It is a stable
-// per-agent ability key, but it is not always the input slot (Sova's Shock Bolt
-// lives under Ability_4 while Owl Drone lives under Ability_E).
+// per-agent ability key, but not always the input slot (Sova's Shock Bolt lives
+// under Ability_4 while Owl Drone lives under Ability_E).
 func abilityClassFolder(classPath string) (string, bool) {
 	for _, part := range strings.Split(classPath, "/") {
 		if strings.HasPrefix(part, "Ability_") && len(part) > len("Ability_") {
@@ -39,8 +37,7 @@ func abilityClassFolder(classPath string) (string, bool) {
 }
 
 // abilitySlotOverrides handles agents whose ability-item folders do not match
-// their input slots. Sova's folders are legacy-shuffled: Shock Bolt is under
-// Ability_4, Recon Bolt under Ability_Q and Owl Drone under Ability_E.
+// their input slots. Sova's folders are legacy-shuffled.
 var abilitySlotOverrides = map[string]map[string]string{
 	"Hunter": {
 		"Ability_4": "Ability1", // Shock Bolt (Q)
@@ -49,8 +46,7 @@ var abilitySlotOverrides = map[string]map[string]string{
 	},
 }
 
-// characterClassFolder returns the /Game/Characters/<Agent>/ component, which
-// is the internal agent name used by ability class paths.
+// characterClassFolder returns the /Game/Characters/<Agent>/ component.
 func characterClassFolder(classPath string) (string, bool) {
 	parts := strings.Split(classPath, "/")
 	for i, part := range parts {
@@ -61,12 +57,10 @@ func characterClassFolder(classPath string) (string, bool) {
 	return "", false
 }
 
-// abilitySlotFromClassName reads the slot letter from the ability class name.
-// Some agents use descriptive folders (Brimstone's Ability_MapTargetSmoke), so
-// the /Ability_*/ folder is not enough. Ability item classes are named
-// Ability_<Agent>_<SlotLetter>_* (Brimstone) or Ability_<SlotLetter>_<Agent>_*
-// (Fade); when the third token is not a slot letter this returns false and the
-// folder fallback is used.
+// abilitySlotFromClassName reads the slot letter from class names shaped
+// Ability_<Agent>_<Slot>_* (Brimstone) or Ability_<Slot>_<Agent>_* (Fade); it
+// returns false when the third token is not a slot letter, so the folder
+// fallback is used.
 func abilitySlotFromClassName(classPath string) (string, bool) {
 	base := classPath
 	if slash := strings.LastIndex(base, "/"); slash >= 0 {
@@ -97,8 +91,8 @@ func abilitySlotForLetter(letter string) (string, bool) {
 }
 
 // abilitySlotForClass maps an ability item class to its guessed wire slot. The
-// folder letter is only a guess; abilitySlotOverrides records known exceptions
-// and applyRoundStats learns anything else from charge decrements and casts.
+// folder letter is only a guess; overrides record exceptions and applyRoundStats
+// learns the rest from charge decrements and casts.
 func abilitySlotForClass(classPath string) (string, bool) {
 	folder, ok := abilityClassFolder(classPath)
 	if !ok {
@@ -171,8 +165,8 @@ func resolveAbilityChargeOwner(
 }
 
 // collectChargeFolders maps every EquipmentChargeComponent actor to its subject
-// and ability folder, including abilities that are never bought in the match.
-// The slot is only a guess; the learned cast mapping corrects it later.
+// and ability folder, including abilities never bought in the match. The slot is
+// only a guess; the learned cast mapping corrects it later.
 func collectChargeFolders(
 	actors map[uint32]struct{},
 	view *stateActorView,
@@ -212,13 +206,10 @@ func collectChargeFolders(
 }
 
 // abilityChargePointsForRound creates one round-relative charge timeline per
-// slot. Every known folder is seeded at time 0 with the last value carried into
-// the round, defaulting to zero, so an ability bought later in the buy phase
-// starts empty instead of appearing fully stocked.
-//
-// slots carries the learned folder -> wire slot mapping for this player. When
-// it is present, a folder without a mapping is omitted rather than guessed,
-// because the folder letter is wrong for agents like Sova.
+// slot, seeding every known folder at time 0 with the value carried into the
+// round (default zero) so a later buy starts empty rather than fully stocked.
+// When slots is present, a folder without a learned mapping is omitted, because
+// the folder letter is wrong for agents like Sova.
 func abilityChargePointsForRound(
 	samples []abilityChargeSample,
 	subject string,
@@ -311,8 +302,7 @@ func abilityChargePointsForRound(
 	return result
 }
 
-// buildAbilityChargeSamples resolves the raw current-charge writes collected in
-// the single fields pass into subject/slot events.
+// buildAbilityChargeSamples resolves raw charge writes into subject/slot events.
 func buildAbilityChargeSamples(
 	raw *fieldStateRows,
 	index *playerIndex,

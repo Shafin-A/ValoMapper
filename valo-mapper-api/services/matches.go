@@ -193,7 +193,6 @@ type MatchService struct {
 	now                 func() time.Time
 }
 
-// NewMatchService creates a MatchService with a default HTTP client.
 func NewMatchService() *MatchService {
 	return &MatchService{
 		httpClient:        &http.Client{Timeout: riotHTTPTimeout},
@@ -999,7 +998,6 @@ func toAgentName(agentID string) string {
 	return trimmed
 }
 
-// GetMatchSummary returns a match summary with round details and event logs fetched from Riot API.
 func (s *MatchService) GetMatchSummary(ctx context.Context, user *models.User, matchID string, includeReplayTelemetry bool) (*MatchSummaryResponse, error) {
 	matchID = strings.TrimSpace(matchID)
 	if matchID == "" {
@@ -1067,11 +1065,9 @@ func (s *MatchService) buildPlayerSummaries(match riotDetailedMatchDTO) []MatchP
 func (s *MatchService) buildRoundSummaries(match riotDetailedMatchDTO, includeReplayTelemetry bool) []RoundSummaryLite {
 	summaries := make([]RoundSummaryLite, 0, len(match.Rounds))
 
-	// Map to track cumulative scores
 	scores := map[string]int{"Red": 0, "Blue": 0}
 
 	for _, round := range match.Rounds {
-		// Update scores based on round result
 		if round.WinningTeam != "" {
 			scores[round.WinningTeam]++
 		}
@@ -1116,7 +1112,6 @@ func (s *MatchService) buildPlayerStats(round riotRoundDTO, allPlayers []riotPla
 			},
 		}
 
-		// Find player's team
 		for _, p := range allPlayers {
 			if p.PUUID == ps.PUUID {
 				if p.TeamID == "Blue" {
@@ -1138,7 +1133,6 @@ func (s *MatchService) buildPlayerStats(round riotRoundDTO, allPlayers []riotPla
 func (s *MatchService) buildEventLog(round riotRoundDTO, includeReplayTelemetry bool) []RoundEventLogEntry {
 	events := make([]RoundEventLogEntry, 0)
 
-	// Process kill events
 	for _, ps := range round.PlayersStats {
 		for _, kill := range ps.Kills {
 			damageType := strings.TrimSpace(kill.FinishingDamage.DamageType)
@@ -1160,7 +1154,6 @@ func (s *MatchService) buildEventLog(round riotRoundDTO, includeReplayTelemetry 
 		}
 	}
 
-	// Add spike events
 	if round.BombPlanter != nil && round.PlantRoundTime > 0 {
 		event := RoundEventLogEntry{
 			EventType:                 "spike_planted",

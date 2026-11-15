@@ -15,7 +15,6 @@ import (
 
 const integrationTestDBLockKey int64 = 4891375021
 
-// setupTestDB creates a connection to the test database
 func setupTestDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 
@@ -23,7 +22,6 @@ func setupTestDB(t *testing.T) *pgxpool.Pool {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	// Try to load .env.test from current directory or parent
 	_ = godotenv.Load(".env.test")
 	_ = godotenv.Load("../.env.test")
 
@@ -76,7 +74,6 @@ func setupTestDB(t *testing.T) *pgxpool.Pool {
 
 	db.DB = pool
 
-	// run migrations so schema is up-to-date
 	if orig, err := os.Getwd(); err == nil {
 		dir := orig
 		for i := 0; i < 5; i++ {
@@ -95,7 +92,6 @@ func setupTestDB(t *testing.T) *pgxpool.Pool {
 	return pool
 }
 
-// cleanupTestDB cleans up the test database connection
 func cleanupTestDB(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 	if pool != nil {
@@ -104,7 +100,6 @@ func cleanupTestDB(t *testing.T, pool *pgxpool.Pool) {
 	}
 }
 
-// truncateTables removes all data from specified tables
 func truncateTables(t *testing.T, pool *pgxpool.Pool, tables ...string) {
 	t.Helper()
 
@@ -146,12 +141,11 @@ func createTestUser(t *testing.T, pool *pgxpool.Pool, firebaseUID string) *User 
 	}
 }
 
-// createTestLobby creates a test lobby directly with SQL to avoid import cycles
-// Ensures the required map exists before creating the lobby
+// Direct SQL avoids an import cycle; the map row must exist first because
+// lobbies reference it.
 func createTestLobby(t *testing.T, pool *pgxpool.Pool, code string) *Lobby {
 	t.Helper()
 
-	// Ensure the map exists
 	_, err := pool.Exec(context.Background(),
 		`INSERT INTO maps (id, text) 
 		VALUES ('ascent', 'Ascent')

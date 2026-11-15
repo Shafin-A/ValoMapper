@@ -66,17 +66,14 @@ func TestFullCanvasStateSerialization(t *testing.T) {
 			},
 		}
 
-		// Serialize
 		jsonData, err := json.Marshal(state)
 		require.NoError(t, err)
 		assert.NotEmpty(t, jsonData)
 
-		// Deserialize
 		var decoded FullCanvasState
 		err = json.Unmarshal(jsonData, &decoded)
 		require.NoError(t, err)
 
-		// Verify
 		assert.Equal(t, state.SelectedMap.ID, decoded.SelectedMap.ID)
 		assert.Equal(t, state.MapSide, decoded.MapSide)
 		assert.Equal(t, state.CurrentPhaseIndex, decoded.CurrentPhaseIndex)
@@ -90,7 +87,6 @@ func TestFullCanvasStateSerialization(t *testing.T) {
 		state := FullCanvasState{
 			SelectedMap: MapOption{ID: "split"},
 			Phases:      []PhaseState{},
-			// AgentsSettings and AbilitiesSettings are nil
 		}
 
 		jsonData, err := json.Marshal(state)

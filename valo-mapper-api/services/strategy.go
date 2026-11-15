@@ -20,7 +20,6 @@ var (
 	ErrStrategyAccessDenied  = errors.New("you do not have access to this strategy")
 )
 
-// StrategyRepository abstracts persistence operations for StrategyService.
 type StrategyRepository interface {
 	GetLobbyMetaByCode(code string) (*models.LobbyMeta, error)
 	StrategyExistsByUserAndLobby(userID int, lobbyCode string) (bool, error)
@@ -53,17 +52,14 @@ func (r *defaultStrategyRepository) SaveStrategy(s *models.Strategy) error   { r
 func (r *defaultStrategyRepository) UpdateStrategy(s *models.Strategy) error { return s.Update() }
 func (r *defaultStrategyRepository) DeleteStrategy(s *models.Strategy) error { return s.Delete() }
 
-// StrategyServiceDependencies holds injectable dependencies for StrategyService.
 type StrategyServiceDependencies struct {
 	Repo StrategyRepository
 }
 
-// StrategyService handles strategy-related business logic
 type StrategyService struct {
 	repo StrategyRepository
 }
 
-// NewStrategyService creates a new StrategyService
 func NewStrategyService(deps StrategyServiceDependencies) *StrategyService {
 	repo := deps.Repo
 	if repo == nil {
@@ -73,18 +69,15 @@ func NewStrategyService(deps StrategyServiceDependencies) *StrategyService {
 }
 
 const (
-	// FreeStrategyLimit is the maximum strategies free-tier users can create
 	FreeStrategyLimit = 1
 )
 
-// CreateStrategyRequest wraps strategy creation input
 type CreateStrategyRequest struct {
 	FolderID  *int
 	LobbyCode string
 	Name      string
 }
 
-// StrategyResponse represents a strategy with its related lobby data
 type StrategyResponse struct {
 	ID            int
 	UserID        int
@@ -95,7 +88,6 @@ type StrategyResponse struct {
 	UpdatedAt     time.Time
 }
 
-// CreateStrategy creates a new strategy for a user
 func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyRequest) (*StrategyResponse, error) {
 	if req.LobbyCode == "" {
 		return nil, ErrLobbyCodeRequired
@@ -120,7 +112,6 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 		return nil, ErrStrategyAlreadySaved
 	}
 
-	// Check free-tier limit
 	if !user.IsSubscribed {
 		strategyCount, err := ss.repo.CountStrategiesByUserID(user.ID)
 		if err != nil {
@@ -157,7 +148,6 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 	}, nil
 }
 
-// GetStrategies retrieves strategies for a user, optionally filtered by folder
 func (ss *StrategyService) GetStrategies(userID int, folderID *int) ([]*StrategyResponse, error) {
 	summaries, err := ss.repo.GetStrategySummariesByUserID(userID, folderID)
 	if err != nil {
@@ -180,14 +170,12 @@ func (ss *StrategyService) GetStrategies(userID int, folderID *int) ([]*Strategy
 	return responses, nil
 }
 
-// UpdateStrategyRequest wraps strategy update input
 type UpdateStrategyRequest struct {
 	FolderID    *int
 	HasFolderID bool
 	Name        *string
 }
 
-// UpdateStrategy updates an existing strategy
 func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req UpdateStrategyRequest) (*StrategyResponse, error) {
 	strategy, err := ss.repo.GetStrategyByID(strategyID)
 	if err != nil {
@@ -231,7 +219,6 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 	}, nil
 }
 
-// DeleteStrategy deletes a strategy
 func (ss *StrategyService) DeleteStrategy(user *models.User, strategyID int) error {
 	strategy, err := ss.repo.GetStrategyByID(strategyID)
 	if err != nil {

@@ -54,7 +54,6 @@ func TestLobbySave(t *testing.T) {
 	t.Run("creates new lobby successfully", func(t *testing.T) {
 		truncateTables(t, pool, "lobbies", "maps")
 
-		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('ascent', 'Ascent')
@@ -78,7 +77,6 @@ func TestLobbySave(t *testing.T) {
 		err = lobby.Save()
 		require.NoError(t, err)
 
-		// Verify lobby was created
 		retrievedLobby, err := GetLobbyByCode(lobby.Code)
 		require.NoError(t, err)
 		require.NotNil(t, retrievedLobby)
@@ -90,14 +88,12 @@ func TestLobbySave(t *testing.T) {
 	t.Run("updates existing lobby", func(t *testing.T) {
 		truncateTables(t, pool, "lobbies", "maps")
 
-		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('bind', 'Bind')
 		`)
 		require.NoError(t, err)
 
-		// Create initial lobby
 		lobby := &Lobby{
 			Code:      GenerateLobbyCode(),
 			CreatedAt: time.Now(),
@@ -115,7 +111,6 @@ func TestLobbySave(t *testing.T) {
 		err = lobby.Save()
 		require.NoError(t, err)
 
-		// Update lobby
 		lobby.CanvasState.MapSide = "defend"
 		lobby.CanvasState.CurrentPhaseIndex = 3
 		lobby.CanvasState.EditedPhases = []int{0, 1, 2}
@@ -123,7 +118,6 @@ func TestLobbySave(t *testing.T) {
 		err = lobby.Save()
 		require.NoError(t, err)
 
-		// Verify updates
 		retrievedLobby, err := GetLobbyByCode(lobby.Code)
 		require.NoError(t, err)
 		require.NotNil(t, retrievedLobby)
@@ -135,7 +129,6 @@ func TestLobbySave(t *testing.T) {
 	t.Run("saves lobby with icon settings", func(t *testing.T) {
 		truncateTables(t, pool, "lobbies", "maps")
 
-		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('split', 'Split')
@@ -175,7 +168,6 @@ func TestLobbySave(t *testing.T) {
 		err = lobby.Save()
 		require.NoError(t, err)
 
-		// Verify icon settings were saved
 		retrievedLobby, err := GetLobbyByCode(lobby.Code)
 		require.NoError(t, err)
 		require.NotNil(t, retrievedLobby)
@@ -197,14 +189,12 @@ func TestGetLobbyByCode(t *testing.T) {
 	t.Run("retrieves existing lobby", func(t *testing.T) {
 		truncateTables(t, pool, "lobbies", "maps")
 
-		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('haven', 'Haven')
 		`)
 		require.NoError(t, err)
 
-		// Create lobby
 		code := GenerateLobbyCode()
 		lobby := &Lobby{
 			Code:      code,
@@ -223,7 +213,6 @@ func TestGetLobbyByCode(t *testing.T) {
 		err = lobby.Save()
 		require.NoError(t, err)
 
-		// Retrieve lobby
 		retrievedLobby, err := GetLobbyByCode(code)
 		require.NoError(t, err)
 		require.NotNil(t, retrievedLobby)
@@ -246,7 +235,6 @@ func TestGetLobbyByCode(t *testing.T) {
 	t.Run("retrieves lobby with icon settings", func(t *testing.T) {
 		truncateTables(t, pool, "lobbies", "maps")
 
-		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('breeze', 'Breeze')
@@ -289,7 +277,6 @@ func TestGetLobbyByCode(t *testing.T) {
 	t.Run("retrieves lobby with canvas phases", func(t *testing.T) {
 		truncateTables(t, pool, "canvas_agents", "lobbies", "maps")
 
-		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('icebox', 'Icebox')
@@ -313,7 +300,6 @@ func TestGetLobbyByCode(t *testing.T) {
 		err = lobby.Save()
 		require.NoError(t, err)
 
-		// Add some canvas data
 		canvasState := FullCanvasState{
 			Phases: make([]PhaseState, 10),
 		}
@@ -386,7 +372,6 @@ func TestGetLobbiesByCodes(t *testing.T) {
 	t.Run("retrieves multiple lobbies", func(t *testing.T) {
 		truncateTables(t, pool, "lobbies", "maps")
 
-		// Insert test maps
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('ascent', 'Ascent'),
@@ -394,7 +379,6 @@ func TestGetLobbiesByCodes(t *testing.T) {
 		`)
 		require.NoError(t, err)
 
-		// Create lobbies
 		code1 := GenerateLobbyCode()
 		lobby1 := &Lobby{
 			Code:      code1,
@@ -423,12 +407,10 @@ func TestGetLobbiesByCodes(t *testing.T) {
 		err = lobby2.Save()
 		require.NoError(t, err)
 
-		// Retrieve lobbies
 		lobbies, err := GetLobbiesByCodes([]string{code1, code2})
 		require.NoError(t, err)
 		assert.Len(t, lobbies, 2)
 
-		// Verify lobbies
 		codes := make(map[string]bool)
 		for _, lobby := range lobbies {
 			codes[lobby.Code] = true
@@ -446,14 +428,12 @@ func TestGetLobbiesByCodes(t *testing.T) {
 	t.Run("handles some non-existent codes", func(t *testing.T) {
 		truncateTables(t, pool, "lobbies", "maps")
 
-		// Insert a test map
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('split', 'Split')
 		`)
 		require.NoError(t, err)
 
-		// Create one lobby
 		code1 := GenerateLobbyCode()
 		lobby := &Lobby{
 			Code:      code1,
@@ -468,7 +448,6 @@ func TestGetLobbiesByCodes(t *testing.T) {
 		err = lobby.Save()
 		require.NoError(t, err)
 
-		// Retrieve with one valid and one invalid code
 		lobbies, err := GetLobbiesByCodes([]string{code1, "NONEXIST"})
 		require.NoError(t, err)
 		assert.Len(t, lobbies, 1)

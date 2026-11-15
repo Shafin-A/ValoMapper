@@ -13,8 +13,7 @@ type HTTPError struct {
 	Status  int
 	Message string
 	Err     error
-	// Code is an optional stable machine-readable code (for example a replay
-	// code). It is included in the JSON body only when set.
+	// Code is an optional stable machine-readable code, included in the JSON body when set.
 	Code string
 	// RetryAfter, when positive, is written as a Retry-After header.
 	RetryAfter time.Duration

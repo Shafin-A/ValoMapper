@@ -10,12 +10,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// strPtr is a helper function to convert a string to a *string
 func strPtr(s string) *string {
 	return &s
 }
 
-// CreateTestUser creates a test user in the database
 func CreateTestUser(t testing.TB, pool *pgxpool.Pool, firebaseUID string) *models.User {
 	t.Helper()
 
@@ -42,12 +40,10 @@ func CreateTestUser(t testing.TB, pool *pgxpool.Pool, firebaseUID string) *model
 	return user
 }
 
-// CreateTestLobby creates a test lobby in the database
 func CreateTestLobby(t testing.TB, pool *pgxpool.Pool) *models.Lobby {
 	return CreateTestLobbyWithCode(t, pool, models.GenerateLobbyCode())
 }
 
-// CreateTestLobbyWithCode creates a test lobby with a specific code in the database
 func CreateTestLobbyWithCode(t testing.TB, pool *pgxpool.Pool, code string) *models.Lobby {
 	t.Helper()
 
@@ -100,7 +96,6 @@ func CreateTestLobbyWithCode(t testing.TB, pool *pgxpool.Pool, code string) *mod
 	return lobby
 }
 
-// CreateTestStrategy creates a test strategy in the database
 func CreateTestStrategy(t testing.TB, pool *pgxpool.Pool, userID int, lobbyCode string) *models.Strategy {
 	t.Helper()
 
@@ -203,7 +198,6 @@ func BuildCanvasState(mapID string, populatedPhases, perType int) *models.FullCa
 	}
 }
 
-// CreateTestFolder creates a test folder in the database
 func CreateTestFolder(t testing.TB, pool *pgxpool.Pool, userID int, name string) *models.Folder {
 	t.Helper()
 

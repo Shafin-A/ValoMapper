@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// Metrics is a point-in-time snapshot of replay parsing and cache counters. It
-// is safe to serialize directly into the observability endpoint.
+// Metrics is a point-in-time snapshot of replay parsing and cache counters,
+// safe to serialize directly into the observability endpoint.
 type Metrics struct {
 	ParsesStarted   uint64            `json:"parses_started"`
 	ParsesSucceeded uint64            `json:"parses_succeeded"`
@@ -129,7 +129,6 @@ func (s *Service) Metrics() Metrics {
 	return s.metrics.snapshot(s.cache)
 }
 
-// RecordRateLimited counts a request rejected by the replay HTTP rate limiter.
 func (s *Service) RecordRateLimited() {
 	if s == nil {
 		return

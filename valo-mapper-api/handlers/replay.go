@@ -37,8 +37,7 @@ const (
 
 var replayMagic = []byte{0xDD, 0xEF, 0xF4, 0x43}
 
-// ReplayParser is the handler's view of replay.Service. Keeping it an interface
-// lets HTTP tests use a fake without VRFKit or Parquet.
+// ReplayParser is kept as an interface so HTTP tests can use a fake without VRFKit or Parquet.
 type ReplayParser interface {
 	Available() bool
 	MaxUploadBytes() int64
@@ -57,8 +56,7 @@ type ReplayHandler struct {
 
 type ReplayHandlerOption func(*ReplayHandler)
 
-// WithParseRate overrides the per-IP parse budget. Tests use a high rate; the
-// default is 3 parses per 10 minutes with a burst of 3.
+// WithParseRate overrides the per-IP parse budget (default 3 per 10 minutes, burst 3).
 func WithParseRate(limit rate.Limit, burst int) ReplayHandlerOption {
 	return func(h *ReplayHandler) {
 		if limit <= 0 || burst <= 0 {
@@ -80,8 +78,7 @@ func NewReplayHandler(parser ReplayParser, options ...ReplayHandlerOption) *Repl
 	return handler
 }
 
-// Post accepts exactly one multipart file part named "file" and streams it to a
-// temp file while hashing. VRFKit never sees the client filename.
+// Post streams the single "file" part to a temp file while hashing; VRFKit never sees the client filename.
 func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 
@@ -95,9 +92,8 @@ func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 	controller := http.NewResponseController(w)
 	_ = controller.SetReadDeadline(time.Now().Add(replayUploadReadDeadline))
 	_ = controller.SetWriteDeadline(time.Now().Add(replayUploadWriteDeadline))
-	// Early failures (parser unavailable, rate limited, bad multipart) still
-	// have a body in flight. Drain it before returning so the browser can read
-	// the JSON error instead of seeing a reset upload as a network failure.
+	// Early failures (parser unavailable, rate limited, bad multipart) still have a
+	// body in flight; drain it so the browser sees the JSON error, not a reset upload.
 	defer drainReplayBody(r, maxBytes)
 
 	if h.parser == nil || !h.parser.Available() {
@@ -185,8 +181,7 @@ func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 	writeReplayEnvelope(w, r, requestID, envelope, nil, time.Since(started).Milliseconds())
 }
 
-// Get is the reload fallback. It only reads the short-TTL LRU cache; it never
-// re-parses or touches disk.
+// Get only reads the short-TTL LRU cache; it never re-parses or touches disk.
 func (h *ReplayHandler) Get(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
 

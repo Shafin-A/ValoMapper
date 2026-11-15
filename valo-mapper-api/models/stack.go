@@ -37,7 +37,7 @@ type StackMember struct {
 	OwnerName   *string `json:"ownerName,omitempty"`
 }
 
-// GetStackMembersForOwner returns all stack members (pending and active) for the given owner.
+// GetStackMembersForOwner includes both pending and active members.
 func GetStackMembersForOwner(ownerUserID int) ([]StackMember, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -72,8 +72,7 @@ func GetStackMembersForOwner(ownerUserID int) ([]StackMember, error) {
 	return members, rows.Err()
 }
 
-// GetActiveStackMemberByMemberUserID returns the active stack membership record for a given member user ID,
-// or nil if the user is not currently active in a stack.
+// GetActiveStackMemberByMemberUserID returns nil when no active membership exists.
 func GetActiveStackMemberByMemberUserID(memberUserID int) (*StackMember, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -106,7 +105,6 @@ func GetStackMemberByMemberUserID(memberUserID int) (*StackMember, error) {
 	return GetActiveStackMemberByMemberUserID(memberUserID)
 }
 
-// GetPendingStackInvitesByMemberUserID returns all pending stack invites for a given member user ID.
 func GetPendingStackInvitesByMemberUserID(memberUserID int) ([]StackMember, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -141,8 +139,7 @@ func GetPendingStackInvitesByMemberUserID(memberUserID int) ([]StackMember, erro
 	return invites, rows.Err()
 }
 
-// GetPendingStackInviteByOwnerAndMember returns the pending invite for an owner/member pair,
-// or nil if none exists.
+// GetPendingStackInviteByOwnerAndMember returns nil when no pending invite exists.
 func GetPendingStackInviteByOwnerAndMember(ownerUserID, memberUserID int) (*StackMember, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -171,8 +168,7 @@ func GetPendingStackInviteByOwnerAndMember(ownerUserID, memberUserID int) (*Stac
 	return m, nil
 }
 
-// GetActiveStackAccessState reports whether a member currently has effective stack premium access.
-// Access is active only when the membership row is active and the owner has an active stack subscription.
+// GetActiveStackAccessState requires an active membership and an owner with an active stack subscription.
 func GetActiveStackAccessState(memberUserID int) (bool, *time.Time, *time.Time, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -205,7 +201,7 @@ func GetActiveStackAccessState(memberUserID int) (bool, *time.Time, *time.Time, 
 	return false, subscriptionEndedAt, joinedAt, nil
 }
 
-// GetActiveStackMemberCount returns the number of active (accepted) stack members for an owner.
+// GetActiveStackMemberCount counts active (accepted) members only.
 func GetActiveStackMemberCount(ownerUserID int) (int, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -220,7 +216,7 @@ func GetActiveStackMemberCount(ownerUserID int) (int, error) {
 	return count, err
 }
 
-// GetTotalStackMemberCount returns the total number of stack member records (all statuses) for an owner.
+// GetTotalStackMemberCount counts records of every status.
 func GetTotalStackMemberCount(ownerUserID int) (int, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -234,7 +230,6 @@ func GetTotalStackMemberCount(ownerUserID int) (int, error) {
 	return count, err
 }
 
-// CreateStackInvite creates a new pending stack invite from owner to member.
 func CreateStackInvite(ownerUserID, memberUserID int) (*StackMember, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -259,7 +254,6 @@ func CreateStackInvite(ownerUserID, memberUserID int) (*StackMember, error) {
 	return m, nil
 }
 
-// AcceptStackInvite transitions a pending invite to active.
 func AcceptStackInvite(inviteID, memberUserID int) error {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -318,7 +312,6 @@ func AcceptStackInvite(inviteID, memberUserID int) error {
 	return tx.Commit(ctx)
 }
 
-// RemoveStackMember removes a member from the stack by the owner.
 func RemoveStackMember(ownerUserID, stackMemberID int) error {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -363,7 +356,6 @@ func RemoveStackMember(ownerUserID, stackMemberID int) error {
 	return tx.Commit(ctx)
 }
 
-// LeaveStack removes the authenticated user from whatever stack they are a member of.
 func DeclineStackInvite(inviteID, memberUserID int) error {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -393,7 +385,6 @@ func DeclineStackInvite(inviteID, memberUserID int) error {
 	return tx.Commit(ctx)
 }
 
-// LeaveStack removes the authenticated user from their active stack membership.
 func LeaveStack(memberUserID int) error {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -434,7 +425,7 @@ func LeaveStack(memberUserID int) error {
 	return tx.Commit(ctx)
 }
 
-// GetStackMemberByID returns a stack_members row by its primary key, or nil if not found.
+// GetStackMemberByID returns nil when not found.
 func GetStackMemberByID(id int) (*StackMember, error) {
 	conn, err := db.GetDB()
 	if err != nil {

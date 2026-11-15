@@ -23,8 +23,8 @@ const (
 	defaultMaxConcurrent = 1
 )
 
-// Config is the replay service's deployment knobs. The zero value uses the
-// production defaults; tests override Exporter to avoid VRFKit.
+// Config is the replay service's deployment knobs; the zero value uses the
+// production defaults. Tests override Exporter to avoid VRFKit.
 type Config struct {
 	VRFKitBin       string
 	InspectTimeout  time.Duration
@@ -92,7 +92,6 @@ func NewService(config Config) *Service {
 	return service
 }
 
-// Available reports whether the configured decoder can be executed.
 func (s *Service) Available() bool {
 	if s == nil || s.exporter == nil {
 		return false

@@ -74,9 +74,8 @@ type teamPair struct {
 	Team    string
 }
 
-// scanFields reads fields.parquet once and collects the small set of values
-// the normaliser needs: phase writes, RoundResults, combat-report teams and the
-// plant/defuse RPC details.
+// scanFields reads fields.parquet once and collects the values the normaliser
+// needs: phase writes, RoundResults, combat-report teams and plant/defuse RPCs.
 func scanFields(exportDir string) (*fieldScan, error) {
 	scan := &fieldScan{
 		Results:           make(map[int]*resultWrite),
@@ -336,9 +335,6 @@ func splitParticipantName(name string) (string, string, bool) {
 	}
 }
 
-// collectTeamPair handles the actual ParticipantSubject/ParticipantTeamName
-// pairing. It is kept separate from collectTeam so the call site can match both
-// fields by interaction index.
 func (s *fieldScan) collectTeamPair(subject, team string) {
 	subject = normaliseUUID(subject)
 	team = normaliseTeam(team)
@@ -399,7 +395,6 @@ func normaliseTeam(value string) string {
 	}
 }
 
-// roundWindow is a played round before event logs and frames are attached.
 type roundWindow struct {
 	RoundNumber     int
 	StartMS         uint32
@@ -530,8 +525,8 @@ func buildRoundWindows(scan *fieldScan, starts []roundStartEvent, manifestDurati
 			warnings = append(warnings, "A round had no usable end phase; a one-second window was used.")
 		}
 
-		// roundStarted.word0 and RoundResults.RoundNumber are both zero-based;
-		// the wire ReplayMatch round number is one-based.
+		// roundStarted.word0 and RoundResults.RoundNumber are zero-based; the wire
+		// ReplayMatch round number is one-based.
 		number := nearestRoundNumber(starts, start)
 		if number < 0 || usedNumbers[number] {
 			number = index

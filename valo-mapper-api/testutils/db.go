@@ -17,12 +17,10 @@ import (
 
 const integrationTestDBLockKey int64 = 4891375021
 
-// SetupTestDB creates a connection to the test database
 func SetupTestDB(t testing.TB) *pgxpool.Pool {
 	return setupTestDB(t, nil)
 }
 
-// SetupTestDBWithTracer creates a test database pool with a pgx query tracer.
 func SetupTestDBWithTracer(t testing.TB, tracer pgx.QueryTracer) *pgxpool.Pool {
 	return setupTestDB(t, tracer)
 }
@@ -86,17 +84,15 @@ func setupTestDB(t testing.TB, tracer pgx.QueryTracer) *pgxpool.Pool {
 		t.Fatalf("Failed to ping test database: %v", err)
 	}
 
-	// Serialize DB-mutating integration tests across packages because they all
-	// share the same physical test database.
+	// Serialize DB-mutating integration tests across packages; they share one physical database.
 	if _, err := pool.Exec(context.Background(), `SELECT pg_advisory_lock($1)`, integrationTestDBLockKey); err != nil {
 		t.Fatalf("Failed to acquire integration test database lock: %v", err)
 	}
 
-	// set global for helper functions that use db.GetDB
+	// set global for helpers that call db.GetDB
 	db.DB = pool
 
 	if orig, err := os.Getwd(); err == nil {
-		// look for go.mod upwards to determine repo root
 		dir := orig
 		for range 5 {
 			if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
@@ -114,7 +110,6 @@ func setupTestDB(t testing.TB, tracer pgx.QueryTracer) *pgxpool.Pool {
 	return pool
 }
 
-// CleanupTestDB cleans up the test database connection
 func CleanupTestDB(t testing.TB, pool *pgxpool.Pool) {
 	t.Helper()
 	if pool != nil {
@@ -123,18 +118,13 @@ func CleanupTestDB(t testing.TB, pool *pgxpool.Pool) {
 	}
 }
 
-// TruncateTables removes all data from specified tables
 func TruncateTables(t testing.TB, pool *pgxpool.Pool, tables ...string) {
 	t.Helper()
 
 	ctx := context.Background()
-	// sort table names to make lock acquisition order deterministic across
-	// processes. Concurrent truncates on the same set of tables can deadlock if
-	// the orders differ, so this simple step ensures all callers use the same
-	// sequence regardless of how the slice was provided.
+	// Sort table names so concurrent truncates acquire locks in the same order and cannot deadlock.
 	sorted := make([]string, len(tables))
 	copy(sorted, tables)
-	// alphabetical sort is sufficient
 	sort.Strings(sorted)
 	for _, table := range sorted {
 		_, err := pool.Exec(ctx, fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table))

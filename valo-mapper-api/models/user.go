@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// ptr is a helper function to convert a string to a *string
 func strPtr(s string) *string {
 	return &s
 }
@@ -289,7 +288,6 @@ func GetUserByID(id int) (*User, error) {
 		`SELECT `+userSelectColumns+userSelectFrom+` WHERE u.id = $1`, id))
 }
 
-// GetUserByRSOSubject returns the user associated with the given RSO subject ID.
 func GetUserByRSOSubject(subject string) (*User, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -320,7 +318,7 @@ func GetUserByStripeCustomerID(stripeCustomerID string) (*User, error) {
 		`SELECT `+userSelectColumns+userSelectFrom+` WHERE u.stripe_customer_id = $1`, stripeCustomerID))
 }
 
-// CreateUserWithRSO creates a new user record with Firebase UID, RSO subject and optional profile data.
+// CreateUserWithRSO also stamps rso_linked_at.
 func CreateUserWithRSO(firebaseUID, subjectID string, name *string) (*User, error) {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -342,7 +340,6 @@ func CreateUserWithRSO(firebaseUID, subjectID string, name *string) (*User, erro
 	return u, err
 }
 
-// UpdateName updates a user's display name.
 func (u *User) UpdateName(name string) error {
 	conn, err := db.GetDB()
 	if err != nil {
@@ -363,7 +360,7 @@ func (u *User) UpdateName(name string) error {
 	return err
 }
 
-// SetFirebaseUID links a legacy RSO record with a Firebase UID for auth lookups.
+// SetFirebaseUID links a legacy RSO-only record to a Firebase UID for auth lookups.
 func (u *User) SetFirebaseUID(firebaseUID string) error {
 	conn, err := db.GetDB()
 	if err != nil {

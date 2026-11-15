@@ -9,9 +9,8 @@ const (
 )
 
 // applyPlantCreditBonuses inserts the team-wide plant bonus at the plant time.
-// The replay updates living players immediately but can delay a dead player's
-// money write until the next replication, so the sidebar would otherwise show
-// stale credits on the scoreboard.
+// The replay can delay a dead player's money write until the next replication,
+// so the scoreboard would otherwise show stale credits.
 func applyPlantCreditBonuses(
 	windows []roundWindow,
 	players []Player,

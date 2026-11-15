@@ -52,7 +52,6 @@ type BillingServiceDependencies struct {
 	FindScheduledCancellationSubscriptionIDForUserFn func(user *models.User) (string, error)
 }
 
-// BillingService centralizes Stripe and billing business logic.
 type BillingService struct {
 	createStripeCheckoutSessionFn                    func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error)
 	findStripePriceForPlanFn                         func(plan CheckoutPlan) (*stripe.Price, error)
@@ -113,7 +112,7 @@ type BillingPlansResponse struct {
 func (bs *BillingService) ParseCreateCheckoutSessionRequest(r *http.Request) (CreateCheckoutSessionRequest, error) {
 	request := CreateCheckoutSessionRequest{}
 
-	const maxCheckoutRequestSize = 4096 // 4 KB
+	const maxCheckoutRequestSize = 4096
 	lr := io.LimitReader(r.Body, maxCheckoutRequestSize+1)
 	body, err := io.ReadAll(lr)
 	if err != nil {

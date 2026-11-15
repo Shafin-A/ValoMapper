@@ -8,11 +8,9 @@ import (
 	"strings"
 )
 
-// Map is the ValoMapper identity of a VALORANT map.
 type Map struct {
 	// ID is the id used by getMapCallouts and match-history payloads.
-	ID string
-	// Name is the display name.
+	ID   string
 	Name string
 	// Codename is the Unreal map asset name (the last path segment).
 	Codename string
@@ -35,14 +33,12 @@ var MapsByCodename = map[string]Map{
 	"plummet":  {ID: "summit", Name: "Summit", Codename: "Plummet"},
 }
 
-// Agent is the shared display identity of a VALORANT agent.
 type Agent struct {
 	Name string
 	Role string
 }
 
-// AgentsByUUID maps the Riot agent UUID to its display data. UUIDs are
-// compared case-insensitively.
+// AgentsByUUID maps the Riot agent UUID to its display data; UUIDs compare case-insensitively.
 var AgentsByUUID = map[string]Agent{
 	"41fb69c1-4189-7b37-f117-bcaf1e96f1bf": {Name: "Astra", Role: "Controller"},
 	"5f8d3a7f-467b-97f3-062c-13acf203c006": {Name: "Breach", Role: "Initiator"},
@@ -127,7 +123,6 @@ func ParseBuild(branch string) (string, bool) {
 	return match[1], true
 }
 
-// IsSupportedBuild reports whether the release is in VRFKit's verified set.
 func IsSupportedBuild(release string) bool {
 	_, ok := SupportedBuilds[release]
 	return ok
@@ -152,7 +147,6 @@ func AgentByUUID(uuid string) (Agent, bool) {
 	return agent, ok
 }
 
-// AgentName resolves an agent UUID, returning the display name.
 func AgentName(uuid string) (string, bool) {
 	agent, ok := AgentByUUID(uuid)
 	return agent.Name, ok

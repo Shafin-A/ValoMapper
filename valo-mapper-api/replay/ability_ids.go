@@ -2,8 +2,8 @@ package replay
 
 import "strings"
 
-// Damage types the event log knows how to render. An unrecognised source stays
-// empty so the log falls back to the killer's agent icon instead of guessing.
+// An unrecognised damage source stays empty so the log falls back to the
+// killer's agent icon.
 const (
 	damageTypeWeapon  = "Weapon"
 	damageTypeAbility = "Ability"
@@ -12,11 +12,9 @@ const (
 	damageTypeBomb    = "Bomb"
 )
 
-// killstreamSources resolves a VRF server class to the Riot asset UUID whose
-// killstream image the browser player renders. Replays only carry the server
-// class (Ability_Clay_X_RocketLauncher_C), never the Riot asset id, so this is
-// a curated best-effort table keyed on class-name fragments. The first matching
-// fragment wins, so keep the specific ones first.
+// killstreamSources maps VRF server-class fragments to the Riot asset UUID the
+// player renders. Replays carry only the server class, so this is a curated
+// best-effort table; the first matching fragment wins, so keep specific ones first.
 var killstreamSources = []struct {
 	Fragment   string
 	DamageType string
@@ -43,17 +41,15 @@ var killstreamSources = []struct {
 	{"Knife", damageTypeMelee, "2F59173C-4BED-B6C3-2191-DEA9B58BE9C7"},
 }
 
-// killSource is the event log's rendering hint. The type picks the UI branch
-// and the item is the Riot UUID when the table knows the asset; for ordinary
-// guns the caller fills the item from the killer's sampled inventory.
+// killSource is a rendering hint: DamageItem is a Riot UUID when known, and for
+// ordinary guns the caller fills it from the killer's sampled inventory.
 type killSource struct {
 	DamageType string
 	DamageItem string
 }
 
-// resolveKillSource classifies a KillData weapon/damage class pair. Fall and
-// spike damage are recognised by the damage class, curated ability classes
-// supply their own image, and everything else that looks like a gun is Weapon.
+// resolveKillSource classifies a KillData weapon/damage class pair; fall and
+// spike damage are keyed on the damage class, and gun-like classes default to Weapon.
 func resolveKillSource(weaponClass, damageClass string) killSource {
 	lowerDamage := strings.ToLower(damageClass)
 	switch {

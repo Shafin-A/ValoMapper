@@ -21,9 +21,8 @@ const (
 )
 
 // addSyntheticSovaUltimates renders Hunter's Fury from the ability-cast record.
-// The replay does not contain a replicated beam actor for Sova's ultimate. The
-// LaserStateMachine does record each fire, including misses, so its
-// LSM_SyncRespondToFireState transitions are the preferred beam source.
+// The replay has no replicated beam actor; LaserStateMachine records each fire,
+// including misses.
 func addSyntheticSovaUltimates(
 	result [][]Utility,
 	windows []roundWindow,
@@ -156,10 +155,9 @@ func addSyntheticSovaUltimates(
 }
 
 // sovaStateBeamTimes counts LSM_ChargingBuffState transitions on the caster's
-// ultimate state machine. A charging transition happens for every beam fired,
-// whether or not the beam later produces a damage/kill effect. The
-// LSM_SyncRespondToFireState transition is not reliable: the second beam can
-// go straight from LaserActiveTimedState to ChargingBuffState.
+// ultimate state machine: one per beam fired, whether or not it deals damage.
+// LSM_SyncRespondToFireState is unreliable because the second beam can go
+// straight from LaserActiveTimedState to ChargingBuffState.
 func sovaStateBeamTimes(
 	states map[uint32][]abilityStateWrite,
 	owners map[uint32][]utilityOwnerWrite,

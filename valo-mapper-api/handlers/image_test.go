@@ -43,7 +43,6 @@ func (m *mockStorageClient) DeleteObjects(_ context.Context, _ []string) error {
 	return nil
 }
 
-// setMockStorage replaces DefaultClient for the duration of the test.
 func setMockStorage(t *testing.T, client storage.Client) {
 	t.Helper()
 	orig := storage.DefaultClient
@@ -51,7 +50,6 @@ func setMockStorage(t *testing.T, client storage.Client) {
 	t.Cleanup(func() { storage.DefaultClient = orig })
 }
 
-// buildImageBody creates a multipart/form-data body with file data under fieldName.
 func buildImageBody(t *testing.T, fieldName, filename string, data []byte) (*bytes.Buffer, string) {
 	t.Helper()
 	var buf bytes.Buffer
@@ -73,8 +71,6 @@ func buildImageBody(t *testing.T, fieldName, filename string, data []byte) (*byt
 func pngBytes() []byte {
 	return []byte("\x89PNG\r\n\x1a\n")
 }
-
-// ---- UploadImage tests ----
 
 func TestUploadImage_StorageNotConfigured(t *testing.T) {
 	setMockStorage(t, nil)
@@ -108,7 +104,6 @@ func TestUploadImage_FileTooLarge(t *testing.T) {
 func TestUploadImage_MissingImageField(t *testing.T) {
 	setMockStorage(t, &mockStorageClient{})
 
-	// Valid multipart form but without any "image" field.
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
 	_ = mw.Close()
@@ -184,8 +179,6 @@ func TestUploadImage_Success(t *testing.T) {
 		t.Errorf("storage key should end with '.png', got: %s", capturedKey)
 	}
 }
-
-// ---- GetImage tests ----
 
 func TestGetImage_StorageNotConfigured(t *testing.T) {
 	setMockStorage(t, nil)

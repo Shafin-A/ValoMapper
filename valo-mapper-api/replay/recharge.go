@@ -7,7 +7,6 @@ import "sort"
 // recharge from a buy-phase purchase or an ability recall.
 const minRechargeWindows = 2
 
-// rechargeCandidate is one observed depletion -> refill interval.
 type rechargeCandidate struct {
 	subject     string
 	folder      string
@@ -17,16 +16,13 @@ type rechargeCandidate struct {
 }
 
 // buildRechargeWindows derives cooldown windows from charge refills for
-// signature abilities that recharge over time, such as Sova's Recon Bolt,
-// Fade's Haunt and Omen's Dark Cover. Those abilities use
-// EquipmentChargeComponent rather than Comp_Ability_CooldownComponent.
+// signature abilities that recharge over time (Sova Recon Bolt, Fade Haunt, Omen
+// Dark Cover), which use EquipmentChargeComponent rather than a cooldown timer.
 //
-// Mid-round refills establish the nominal recharge interval. Every depletion
-// then gets that full interval, even if the observed refill happened earlier
-// at a round boundary, so a use near the end of a round still shows the real
-// timer. The observed refill is retained only to stop the window leaking into
-// a later round that started after the charge was already restored. Folders
-// with an authoritative cooldown-timer window are left to that source.
+// Mid-round refills establish the nominal interval; every depletion then gets
+// that full interval so a use near a round end still shows the real timer. The
+// observed refill only stops the window leaking into a later round. Folders with
+// an authoritative cooldown-timer window are left to that source.
 func buildRechargeWindows(
 	charges []abilityChargeSample,
 	windows []roundWindow,
@@ -118,9 +114,8 @@ func buildRechargeWindows(
 			continue
 		}
 
-		// Mid-round refills establish the nominal recharge interval. It is
-		// deliberately not derived from a short refill that happens at a round
-		// boundary, because the ability's timer is still the full duration.
+		// Mid-round refills set the nominal interval; a short round-boundary
+		// refill would understate the ability's full timer.
 		mid := make([]rechargeCandidate, 0, len(candidates))
 		for _, candidate := range candidates {
 			if candidate.afterBuyEnd {

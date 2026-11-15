@@ -103,7 +103,6 @@ func TestHub_BroadcastSkipsSender(t *testing.T) {
 	receiver := newTestClient("lobby1", "r1", "Receiver")
 	sender := newTestClient("lobby1", "s1", "Sender")
 
-	// Register receiver; drain the user_list it receives.
 	hub.register <- receiver
 	<-receiver.send // user_list: [receiver]
 
@@ -124,7 +123,6 @@ func TestHub_BroadcastSkipsSender(t *testing.T) {
 		t.Fatal("receiver did not get broadcast message within timeout")
 	}
 
-	// Sender must not receive its own message.
 	select {
 	case <-sender.send:
 		t.Fatal("sender received its own broadcast message")
@@ -189,7 +187,6 @@ func TestHub_BroadcastOnlyToSameLobby(t *testing.T) {
 		t.Fatal("inLobby client did not receive broadcast")
 	}
 
-	// otherLobby client must not receive the lobbyA broadcast.
 	select {
 	case <-otherLobby.send:
 		t.Fatal("otherLobby client received a message intended for lobbyA")

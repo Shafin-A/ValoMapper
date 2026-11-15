@@ -20,7 +20,6 @@ const (
 	maxProcessOutput      = 64 << 10
 )
 
-// InspectResult is the small subset of `vrfkit inspect` the service needs.
 type InspectResult struct {
 	Branch string
 	Build  string
@@ -28,15 +27,15 @@ type InspectResult struct {
 	Output string
 }
 
-// Exporter is the VRFKit seam. Tests substitute a fake that writes a synthetic
-// Parquet export, so the normaliser can be exercised without Rust or fixtures.
+// Exporter is the VRFKit seam; tests substitute a fake that writes a synthetic
+// Parquet export.
 type Exporter interface {
 	Inspect(ctx context.Context, filePath string) (InspectResult, error)
 	Export(ctx context.Context, filePath, exportDir string) error
 }
 
-// VRFKit runs the pinned CLI. Arguments are fixed; only paths vary, and no
-// shell is involved.
+// VRFKit runs the pinned CLI. Arguments are fixed and no shell is involved; only
+// paths vary.
 type VRFKit struct {
 	bin            string
 	inspectTimeout time.Duration
@@ -118,9 +117,8 @@ func (v *VRFKit) Export(ctx context.Context, filePath, exportDir string) error {
 	return nil
 }
 
-// classifyVRFKitError maps VRFKit's prose onto the stable HTTP codes. Raw
-// output is attached as the internal error for logs; the user-facing message is
-// always a fixed string.
+// classifyVRFKitError maps VRFKit's prose onto stable HTTP codes. Raw output is
+// attached to the internal error for logs; the user-facing message is fixed.
 func classifyVRFKitError(ctx context.Context, err error, output string) *Error {
 	if output != "" {
 		// Keep VRFKit's bounded, path-sanitised output on the internal error so
@@ -195,8 +193,8 @@ func sanitiseOutput(output string, paths ...string) string {
 	return trimmed
 }
 
-// limitedBuffer keeps at most limit bytes. VRFKit is trusted enough to run but
-// not trusted to keep its output bounded.
+// limitedBuffer keeps at most limit bytes; VRFKit is trusted to run but not to
+// keep its output bounded.
 type limitedBuffer struct {
 	buffer bytes.Buffer
 	limit  int

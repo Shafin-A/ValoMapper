@@ -1,15 +1,14 @@
 // Package replay turns a VRFKit Parquet export into the ReplayMatch JSON the
-// browser player consumes. It owns no HTTP and never exposes Parquet or VRFKit
-// details to the client.
+// browser player consumes.
 package replay
 
-// ParserVersion is part of the cache key, the X-Parser-Version response header
-// and the parse log. Bump the leading number whenever the normalised output can
-// change, even if VRFKit itself did not change.
+// ParserVersion is part of the cache key and the X-Parser-Version header. Bump
+// the leading number whenever the normalised output can change, even if VRFKit
+// itself did not change.
 const ParserVersion = "71+vrfkit.0.4.0"
 
-// Match mirrors ReplayMatch in the frontend. Field names and JSON tags are the
-// wire contract; do not rename them without a frontend change.
+// Match mirrors ReplayMatch in the frontend; field names and JSON tags are the
+// wire contract, so do not rename them without a frontend change.
 type Match struct {
 	MatchID     string   `json:"matchId"`
 	MapID       string   `json:"mapId"`
@@ -88,14 +87,11 @@ type Economy struct {
 	Remaining    int `json:"remaining"`
 }
 
-// AbilityChargePoint is the round-relative charge count for one slot at one
-// point in the round.
 type AbilityChargePoint struct {
 	TimeMS  int `json:"timeMs"`
 	Charges int `json:"charges"`
 }
 
-// UltimatePoint is the round-relative ultimate point count and active flag.
 type UltimatePoint struct {
 	TimeMS int  `json:"timeMs"`
 	Points int  `json:"points"`
@@ -103,16 +99,16 @@ type UltimatePoint struct {
 }
 
 // CooldownWindow is a round-relative signature-cooldown interval. Recharge
-// windows are derived from a used charge refilling rather than a timer
-// component, so the ability may still have another charge available.
+// windows come from a used charge refilling rather than a timer component, so the
+// ability may still have another charge available.
 type CooldownWindow struct {
 	StartTimeMS int  `json:"startTimeMs"`
 	EndTimeMS   int  `json:"endTimeMs"`
 	Recharge    bool `json:"recharge,omitempty"`
 }
 
-// Event is the union of the existing RoundEventLogEntry variants. EventType
-// selects which fields are present; empty optional fields are omitted.
+// Event is the union of the RoundEventLogEntry variants; EventType selects which
+// fields are present.
 type Event struct {
 	EventType                 string    `json:"eventType"`
 	TimeSinceRoundStartMillis int       `json:"timeSinceRoundStartMillis"`
@@ -188,8 +184,8 @@ type UtilityVisionSample struct {
 	Active bool    `json:"active"`
 }
 
-// UtilityWarnings are bounded per-replay counts; they never contain NetGUIDs
-// or raw actor class paths.
+// UtilityWarnings are bounded per-replay counts; they never contain NetGUIDs or
+// raw actor class paths.
 type UtilityWarnings struct {
 	UnknownActors      int `json:"unknownActors,omitempty"`
 	InvalidActors      int `json:"invalidActors,omitempty"`
@@ -203,8 +199,8 @@ type UtilityWarnings struct {
 	UnsupportedBuild   int `json:"unsupportedBuild,omitempty"`
 }
 
-// Hit is a gun damage event. The player draws a tracer from the shooter to the
-// victim just before TimeMS so the hit does not appear from nowhere.
+// Hit is a gun damage event; the player draws a tracer from shooter to victim
+// just before TimeMS so the hit does not appear from nowhere.
 type Hit struct {
 	TimeMS       int    `json:"timeMs"`
 	ShooterPuuid string `json:"shooterPuuid"`

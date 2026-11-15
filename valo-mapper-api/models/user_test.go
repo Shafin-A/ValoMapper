@@ -43,7 +43,6 @@ func TestUserSave(t *testing.T) {
 	t.Run("handles duplicate firebase_uid with ON CONFLICT", func(t *testing.T) {
 		truncateTables(t, pool, "users")
 
-		// Create first user
 		user1 := &User{
 			FirebaseUID:   strPtr("duplicate-uid"),
 			Email:         strPtr("first@example.com"),
@@ -54,7 +53,6 @@ func TestUserSave(t *testing.T) {
 		require.NoError(t, err)
 		firstID := user1.ID
 
-		// Try to create second user with same UID
 		user2 := &User{
 			FirebaseUID:   strPtr("duplicate-uid"),
 			Email:         strPtr("second@example.com"),
@@ -64,7 +62,6 @@ func TestUserSave(t *testing.T) {
 		err = user2.Save()
 		require.NoError(t, err)
 
-		// Should load existing user data
 		assert.Equal(t, firstID, user2.ID)
 		assert.Equal(t, "first@example.com", *user2.Email)
 		assert.Equal(t, strPtr("First User"), user2.Name)
@@ -98,7 +95,6 @@ func TestUserUpdate(t *testing.T) {
 	t.Run("updates user fields successfully", func(t *testing.T) {
 		truncateTables(t, pool, "users")
 
-		// Create user
 		user := &User{
 			FirebaseUID:   strPtr("update-test-uid"),
 			Email:         strPtr("old@example.com"),
@@ -111,7 +107,6 @@ func TestUserUpdate(t *testing.T) {
 
 		originalUpdatedAt := user.UpdatedAt
 
-		// Update user
 		user.Email = strPtr("new@example.com")
 		user.Name = strPtr("New Name")
 		user.EmailVerified = true
@@ -121,7 +116,6 @@ func TestUserUpdate(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, user.UpdatedAt.After(originalUpdatedAt))
 
-		// Verify changes persisted
 		loaded := &User{FirebaseUID: strPtr("update-test-uid")}
 		err = loaded.LoadByFirebaseUID()
 		require.NoError(t, err)
@@ -157,7 +151,6 @@ func TestUserDelete(t *testing.T) {
 	t.Run("deletes user successfully", func(t *testing.T) {
 		truncateTables(t, pool, "users")
 
-		// Create user
 		user := &User{
 			FirebaseUID:   strPtr("delete-test-uid"),
 			Email:         strPtr("delete@example.com"),
@@ -167,11 +160,9 @@ func TestUserDelete(t *testing.T) {
 		err := user.Save()
 		require.NoError(t, err)
 
-		// Delete user
 		err = user.Delete()
 		require.NoError(t, err)
 
-		// Verify user is gone
 		loaded := &User{FirebaseUID: strPtr("delete-test-uid")}
 		err = loaded.LoadByFirebaseUID()
 		assert.Error(t, err)
@@ -200,7 +191,6 @@ func TestUserLoadByFirebaseUID(t *testing.T) {
 	t.Run("loads existing user successfully", func(t *testing.T) {
 		truncateTables(t, pool, "users")
 
-		// Create user
 		created := &User{
 			FirebaseUID:   strPtr("load-test-uid"),
 			Email:         strPtr("load@example.com"),
@@ -210,7 +200,6 @@ func TestUserLoadByFirebaseUID(t *testing.T) {
 		err := created.Save()
 		require.NoError(t, err)
 
-		// Load user
 		loaded := &User{FirebaseUID: strPtr("load-test-uid")}
 		err = loaded.LoadByFirebaseUID()
 		require.NoError(t, err)
@@ -243,7 +232,6 @@ func TestGetUserByFirebaseUID(t *testing.T) {
 	t.Run("returns user when found", func(t *testing.T) {
 		truncateTables(t, pool, "users")
 
-		// Create user
 		created := &User{
 			FirebaseUID:   strPtr("get-test-uid"),
 			Email:         strPtr("get@example.com"),
@@ -253,7 +241,6 @@ func TestGetUserByFirebaseUID(t *testing.T) {
 		err := created.Save()
 		require.NoError(t, err)
 
-		// Get user
 		user, err := GetUserByFirebaseUID("get-test-uid")
 		require.NoError(t, err)
 		require.NotNil(t, user)

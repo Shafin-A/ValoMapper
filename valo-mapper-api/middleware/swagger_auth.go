@@ -8,9 +8,7 @@ import (
 
 const swaggerUsername = "swagger"
 
-// SwaggerBasicAuth wraps a handler with HTTP Basic Auth gated on the
-// SWAGGER_PASSWORD environment variable. If the variable is not set the
-// endpoint returns 404, so the docs are invisible to unauthenticated scanners.
+// SwaggerBasicAuth gates the docs behind Basic Auth and returns 404 when SWAGGER_PASSWORD is unset.
 func SwaggerBasicAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		password := os.Getenv("SWAGGER_PASSWORD")

@@ -14,10 +14,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// maxImageUploadBytes caps each upload at 5 MiB.
 const maxImageUploadBytes = 5 << 20
 
-// allowedImageTypes maps accepted MIME types to their file extension.
 var allowedImageTypes = map[string]string{
 	"image/jpeg": ".jpg",
 	"image/png":  ".png",
@@ -25,7 +23,6 @@ var allowedImageTypes = map[string]string{
 	"image/webp": ".webp",
 }
 
-// UploadImageResponse is the JSON body returned on a successful upload.
 type UploadImageResponse struct {
 	URL string `json:"url"`
 	Key string `json:"key"`

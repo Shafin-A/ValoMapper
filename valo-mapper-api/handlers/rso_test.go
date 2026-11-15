@@ -72,18 +72,15 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		return &RSOAccountResponse{PUUID: "puuid-login", GameName: "RiotTester", TagLine: "EUW"}, nil
 	}
 
-	// mock firebase auth implementation returning static token
 	mockAuth := &testutils.MockFirebaseAuth{}
 	mockAuth.CustomTokenFunc = func(ctx context.Context, uid string) (string, error) {
 		return "custom-123", nil
 	}
 
-	// ensure fresh database
 	pool := testutils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(t, pool)
 	testutils.TruncateTables(t, pool, "users")
 
-	// first login creates new user
 	{
 		body := RSORequest{Code: "code"}
 		buf, _ := json.Marshal(body)
@@ -112,7 +109,6 @@ func TestHandleRSOCallback_LoginFlow(t *testing.T) {
 		}
 	}
 
-	// now simulate login again with same subject to ensure no errors
 	{
 		body := RSORequest{Code: "code"}
 		buf, _ := json.Marshal(body)

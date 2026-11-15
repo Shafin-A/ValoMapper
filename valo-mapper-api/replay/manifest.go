@@ -10,8 +10,8 @@ import (
 	"valo-mapper-api/valorant"
 )
 
-// Manifest mirrors the subset of vrfkit's manifest.json the normaliser keeps.
-// Large members such as net_field_export_groups are deliberately not declared
+// Manifest mirrors the subset of vrfkit's manifest.json the normaliser keeps;
+// large members such as net_field_export_groups are deliberately not declared
 // so they are never decoded into memory.
 type Manifest struct {
 	ReplayBuild        string             `json:"replay_build"`
@@ -37,7 +37,6 @@ type ManifestPlayer struct {
 	CharacterNetGUIDs []uint32 `json:"character_net_guids"`
 }
 
-// ManifestQuality is vrfkit's completeness accounting.
 type ManifestQuality struct {
 	ContentBlocksLost     uint64 `json:"content_blocks_lost"`
 	MovementRows          uint64 `json:"movement_rows"`
@@ -46,7 +45,6 @@ type ManifestQuality struct {
 	EventPayloadUnknown   uint64 `json:"event_payload_unknown_groups"`
 }
 
-// levelPath returns the first level asset path, if any.
 func (m *Manifest) levelPath() string {
 	if len(m.LevelNamesAndTimes) == 0 {
 		return ""
@@ -54,7 +52,6 @@ func (m *Manifest) levelPath() string {
 	return m.LevelNamesAndTimes[0].Name
 }
 
-// readManifest loads manifest.json from an export directory.
 func readManifest(dir string) (*Manifest, error) {
 	data, err := os.ReadFile(filepath.Join(dir, "manifest.json"))
 	if err != nil {
@@ -69,9 +66,8 @@ func readManifest(dir string) (*Manifest, error) {
 }
 
 // loadoutAgents returns subject -> lower-case agent UUID from the
-// game_specific_data playerLoadouts document. Both the observed array shape
-// and a subject-keyed object are accepted; anything else is a warning, never a
-// guess.
+// game_specific_data playerLoadouts document. Both the observed array shape and
+// a subject-keyed object are accepted; anything else is a warning, never a guess.
 func loadoutAgents(gameSpecificData []string) (map[string]string, []string) {
 	agents := make(map[string]string)
 	var warnings []string
@@ -186,8 +182,7 @@ func normaliseUUID(value string) string {
 	return strings.ToLower(strings.TrimSpace(value))
 }
 
-// agentName resolves a loadout UUID, returning "Unknown" plus a warning when
-// the UUID is absent from the table.
+// agentName resolves a loadout UUID, returning "Unknown" when it is not in the table.
 func agentName(characterID string) (string, bool) {
 	if name, ok := valorant.AgentName(characterID); ok {
 		return name, true

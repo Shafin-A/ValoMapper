@@ -14,9 +14,8 @@ const (
 	bombEquippableClass = "BombEquippable"
 )
 
-// spikeCustodySpan is one round-relative custody interval. An empty Subject
-// means the write could not be resolved, so the frame carries no spike. Loose
-// spans carry the pickup actor's spawn position when it is known.
+// spikeCustodySpan is one round-relative custody interval. An empty Subject means
+// the write could not be resolved, so the frame carries no spike.
 type spikeCustodySpan struct {
 	StartMS     uint32
 	Subject     string
@@ -25,7 +24,6 @@ type spikeCustodySpan struct {
 	HasPosition bool
 }
 
-// spikeRound is everything needed to place the spike inside one round.
 type spikeRound struct {
 	Custody []spikeCustodySpan
 
@@ -41,8 +39,6 @@ type spikeRound struct {
 	HasDetonation bool
 }
 
-// spikeTimeline is the per-round spike state plus the counters logged with the
-// parse.
 type spikeTimeline struct {
 	Rounds []spikeRound
 
@@ -62,9 +58,9 @@ type spikeTimeline struct {
 	OutOfRound int
 }
 
-// buildSpikeTimeline turns the bomb equippable's ownership history and the
-// plant/defuse/detonation events into per-round custody and plant state. It
-// never guesses: a tie or an unresolved owner becomes a hidden span.
+// buildSpikeTimeline turns the bomb equippable's ownership history and
+// plant/defuse/detonation events into per-round custody and plant state. It never
+// guesses: a tie or an unresolved owner becomes a hidden span.
 func buildSpikeTimeline(
 	fields *fieldScan,
 	state *stateScan,
@@ -348,7 +344,6 @@ func isSpikePickupClass(class string) bool {
 		strings.Contains(class, "EquippablePickupProjectile")
 }
 
-// buildSpikePlants resolves the site and position for every plant event.
 func buildSpikePlants(fields *fieldScan, windows []roundWindow, events *eventScan, timeline *spikeTimeline, warnings *warningList) {
 	for _, plant := range events.Plants {
 		roundIndex, ok := roundIndexAt(windows, plant.TimeMS)
@@ -495,8 +490,8 @@ func siteName(ordinal int64) string {
 }
 
 // frameAt returns the spike state at one round-relative timestamp. Loose spans
-// use the pickup actor's recorded position. poseAt supplies the carrier's
-// current pose; a stale or missing pose hides a carried spike.
+// use the pickup actor's recorded position; a stale or missing carrier pose hides
+// a carried spike.
 func (t *spikeTimeline) frameAt(
 	roundIndex int,
 	timeMS uint32,

@@ -24,8 +24,8 @@ type rawSpike struct {
 	Order  int
 }
 
-// eventScan is the single pass over events.parquet. Round starts feed the round
-// windows; kills and spike events are attached to them after the windows exist.
+// eventScan is the single pass over events.parquet; kills and spike events are
+// attached to round windows after the windows exist.
 type eventScan struct {
 	Rows        int64
 	Starts      []roundStartEvent
@@ -107,8 +107,8 @@ func scanEvents(exportDir string) (*eventScan, error) {
 const killDataMatchWindowMS = 250
 
 // matchKillData finds the KillData snapshot for a death. The two streams name
-// players through different actor tables, so the comparison happens on the
-// resolved subjects. The closest snapshot in time wins.
+// players through different actor tables, so comparison happens on resolved
+// subjects; the closest snapshot in time wins.
 func matchKillData(
 	state *stateScan,
 	killerSubject string,
@@ -154,7 +154,6 @@ func normaliseEventGroup(group string) string {
 	return trimmed
 }
 
-// roundLog is the per-round event log plus the stats derived from it.
 type roundLog struct {
 	Events []Event
 	Hits   []Hit
@@ -162,8 +161,8 @@ type roundLog struct {
 }
 
 // buildRoundLogs attaches kills and spike events to their round windows. It is
-// deliberately conservative: an event whose actor cannot be resolved is
-// omitted with a warning rather than attributed to a guess.
+// deliberately conservative: an event whose actor cannot be resolved is omitted
+// with a warning rather than attributed to a guess.
 func buildRoundLogs(
 	windows []roundWindow,
 	players []Player,
@@ -353,7 +352,7 @@ func buildRoundLogs(
 	return logs
 }
 
-// roundIndexAt returns the window containing a global timestamp. Windows are
+// roundIndexAt returns the window containing a global timestamp; windows are
 // sorted by start and never overlap.
 func roundIndexAt(windows []roundWindow, timeMS uint32) (int, bool) {
 	index := sort.Search(len(windows), func(i int) bool {
@@ -381,7 +380,7 @@ func roundRelative(timeMS uint32, window *roundWindow) int {
 }
 
 // nearestRPC picks the write closest to the event time, breaking ties by the
-// earlier write. A write outside the match window is not used.
+// earlier write; a write outside the match window is not used.
 func nearestRPC(writes []rpcWrite, timeMS uint32) (rpcWrite, bool) {
 	best := rpcWrite{}
 	bestDelta := uint32(rpcMatchWindowMS + 1)

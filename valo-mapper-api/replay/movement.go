@@ -54,7 +54,6 @@ func binWidthMS(frameHz int) uint32 {
 	return uint32(math.Round(1000.0 / float64(frameHz)))
 }
 
-// movementSample is one decoded pose at its binned round-relative timestamp.
 type movementSample struct {
 	TimeMS uint32
 	X      float64
@@ -515,11 +514,10 @@ func insertKeyframes(samples []timelineSample, keyframes []uint32) []timelineSam
 	return out
 }
 
-// normaliseRoundStartPoses drops the pre-respawn poses that can arrive after
-// the round-start keyframe but before the engine moves the player to spawn.
-// The first pose after that jump is the player's real round-start pose, so it
-// is pinned to zero: otherwise the opening frame shows a handful of players at
-// their previous life's position while the rest have not spawned yet.
+// normaliseRoundStartPoses drops pre-respawn poses that can arrive after the
+// round-start keyframe but before the engine moves the player to spawn. The first
+// pose after that jump is pinned to zero so the opening frame does not show
+// players at their previous life's position.
 func normaliseRoundStartPoses(samples []timelineSample) []timelineSample {
 	if len(samples) == 0 {
 		return samples

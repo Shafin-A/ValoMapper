@@ -9,7 +9,6 @@ import (
 	"testing"
 )
 
-// MakeRequest creates an HTTP request for testing
 func MakeRequest(t *testing.T, method, path string, body any, authToken string) *http.Request {
 	t.Helper()
 
@@ -32,7 +31,6 @@ func MakeRequest(t *testing.T, method, path string, body any, authToken string) 
 	return req
 }
 
-// ParseJSONResponse parses the JSON response from a ResponseRecorder
 func ParseJSONResponse(t *testing.T, w *httptest.ResponseRecorder, v any) {
 	t.Helper()
 
@@ -41,7 +39,6 @@ func ParseJSONResponse(t *testing.T, w *httptest.ResponseRecorder, v any) {
 	}
 }
 
-// AssertStatusCode checks if the response has the expected status code
 func AssertStatusCode(t *testing.T, w *httptest.ResponseRecorder, expected int) {
 	t.Helper()
 
@@ -50,7 +47,6 @@ func AssertStatusCode(t *testing.T, w *httptest.ResponseRecorder, expected int) 
 	}
 }
 
-// AssertJSONContentType checks if the response has JSON content type
 func AssertJSONContentType(t *testing.T, w *httptest.ResponseRecorder) {
 	t.Helper()
 
@@ -60,7 +56,6 @@ func AssertJSONContentType(t *testing.T, w *httptest.ResponseRecorder) {
 	}
 }
 
-// ErrorResponse represents an error response from the API
 type ErrorResponse struct {
 	Error     string `json:"error"`
 	RequestID string `json:"requestId,omitempty"`

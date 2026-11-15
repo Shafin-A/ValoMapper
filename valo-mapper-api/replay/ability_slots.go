@@ -2,9 +2,9 @@ package replay
 
 import "sort"
 
-// maxAbilityCastMatchMS is how close a charge decrement or cooldown start may
-// be to a resolved cast before it is used as slot evidence. The two timestamps
-// match exactly in practice; the window only absorbs replication jitter.
+// maxAbilityCastMatchMS bounds how far a charge decrement or cooldown start may
+// be from a resolved cast. The two timestamps match exactly in practice; the
+// window only absorbs replication jitter.
 const maxAbilityCastMatchMS = 2000
 
 type abilityFolderKey struct {
@@ -18,15 +18,14 @@ type abilityActorKey struct {
 	actor   uint32
 }
 
-// learnAbilitySlots derives subject -> folder -> wire slot from charge
-// decrements and cooldown starts matched to resolved casts. The ability folder
-// is not a reliable input slot: Sova's Shock Bolt is /Ability_4/, Recon Bolt is
-// /Ability_Q/ and Owl Drone is /Ability_E/. Matching the ability's own events to
-// the cast record gives the real slot without an agent-specific table.
+// learnAbilitySlots derives subject -> folder -> wire slot by matching charge
+// decrements and cooldown starts to resolved casts. The ability folder is not a
+// reliable input slot (Sova: Shock Bolt is /Ability_4/, Recon Bolt /Ability_Q/,
+// Owl Drone /Ability_E/), and matching the ability's own events to the cast
+// record gives the real slot without an agent-specific table.
 //
-// Folders with no evidence keep their folder-letter guess, but only when that
-// slot is not already claimed by a learned folder. This keeps coverage for
-// buy-phase placements while never letting two folders write the same slot.
+// Folders with no evidence keep their folder-letter guess only when that slot is
+// not already claimed, so two folders never write the same slot.
 func learnAbilitySlots(
 	charges []abilityChargeSample,
 	cooldowns []cooldownWindow,
@@ -153,8 +152,8 @@ func learnAbilitySlots(
 	return learned
 }
 
-// voteForCast adds one vote for the wire slot whose cast is closest to at. A
-// tie between two slots is discarded because it proves nothing.
+// voteForCast adds one vote for the wire slot whose cast is closest to at; a tie
+// between two slots is discarded because it proves nothing.
 func voteForCast(
 	votes map[abilityFolderKey]map[string]int,
 	key abilityFolderKey,
@@ -196,7 +195,7 @@ func voteForCast(
 	votes[key][castSlotNames[bestSlot]]++
 }
 
-// sortCastTimes keeps the nearest-cast scan deterministic and cheap.
+// sortCastTimes keeps the nearest-cast scan deterministic.
 func sortCastTimes(casts map[string]map[int64][]uint32) {
 	for _, bySlot := range casts {
 		for slot := range bySlot {

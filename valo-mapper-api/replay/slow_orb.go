@@ -38,8 +38,8 @@ type slowOrbWindow struct {
 	hasNodes bool
 }
 
-// readSlowOrbShapes decodes Sage's cellular patch node grid into the same
-// polygon and boundary representation used by Viper's Pit.
+// readSlowOrbShapes decodes Sage's cellular patch node grid into the polygon and
+// boundary representation used by Viper's Pit.
 func readSlowOrbShapes(
 	exportDir string,
 	actors map[uint32]*utilityActor,
@@ -69,11 +69,11 @@ func fieldRowBool(row *fieldRow) bool {
 	return len(row.RawBits) > 0 && row.RawBits[0]&1 == 1
 }
 
-// NodeArray is a RepLayout dynamic array of PatchNode elements. Handles match
-// the ShooterGame.PatchNode declaration: 8/9/10 are floor, ceiling and
-// distance floats, 11 is a quantized normal, 12 is the edge bit, and 13 is the
-// status enum occupying the member's remaining bits. Statuses 2 and 3 are the
-// nodes with a valid floor; 0 is unused and 4 means no floor was found.
+// NodeArray is a RepLayout dynamic array of PatchNode elements. Handles match the
+// ShooterGame.PatchNode declaration: 8/9/10 are floor, ceiling and distance
+// floats, 11 is a quantized normal, 12 is the edge bit, and 13 is the status enum
+// in the member's remaining bits. Statuses 2 and 3 have a valid floor; 0 is unused
+// and 4 means no floor was found.
 func decodeSlowOrbNodes(raw []byte, bitCount int32) ([]slowOrbNode, error) {
 	bits, err := newGroundVolumeBits(raw, bitCount)
 	if err != nil {

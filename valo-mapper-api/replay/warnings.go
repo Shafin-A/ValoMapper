@@ -1,7 +1,6 @@
 package replay
 
-// warningList keeps decoded-output warnings bounded and de-duplicated. Warnings
-// never fail a parse; they are returned alongside the match.
+// warningList de-duplicates decoded-output warnings; they never fail a parse.
 type warningList struct {
 	list []string
 	seen map[string]struct{}

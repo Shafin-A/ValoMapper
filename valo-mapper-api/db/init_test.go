@@ -14,7 +14,6 @@ import (
 )
 
 func init() {
-	// Load .env.test file at package initialization
 	envTestPath := filepath.Join("..", ".env.test")
 	if _, err := os.Stat(envTestPath); err == nil {
 		_ = godotenv.Load(envTestPath)
@@ -60,7 +59,6 @@ func TestInitDB(t *testing.T) {
 	}()
 
 	t.Run("successfully initializes database with valid config", func(t *testing.T) {
-		// Set test environment variables - use values from .env.test if loaded, otherwise defaults
 		if os.Getenv("DB_HOST") == "" {
 			_ = os.Setenv("DB_HOST", "localhost")
 		}

@@ -2,13 +2,10 @@ package replay
 
 import "strings"
 
-// weaponUUIDByFolder maps the VRF class-path folder for a gun to the Riot
-// weapon UUID the browser player uses for its killstream image. The folder is
-// the wire truth: display names in the game's equippable table have drifted
-// between builds (13.06 calls Garland "Bandit"), so never key on them.
-//
-// Every folder below was observed in real exports and every UUID has a
-// valo-mapper/public/weapons/<UUID>_killstream.png asset.
+// weaponUUIDByFolder maps a gun's VRF class-path folder to the Riot weapon UUID
+// used for its killstream image. The folder is the wire truth: display names have
+// drifted between builds (13.06 calls Garland "Bandit"), so never key on them.
+// Each UUID has a valo-mapper/public/weapons/<UUID>_killstream.png asset.
 var weaponUUIDByFolder = map[string]string{
 	"Guns/Sidearms/BasePistol":       "29A0CFAB-485B-F5D5-779A-B59F85E204A8", // Classic
 	"Guns/Rifles/AK":                 "9C82E19D-4575-0200-1A81-3EACF00CF872", // Vandal
@@ -33,9 +30,9 @@ var weaponUUIDByFolder = map[string]string{
 }
 
 // gunDamageClasses are the bullet damage classes seen in real exports. Some
-// builds leave EquippableUsed empty, so the damage class has to name the
-// source; only these known classes are trusted, because ability ticks arrive
-// without an equippable too (DmgType_Phoenix_Q_Fire_Production_C).
+// builds leave EquippableUsed empty, so the damage class must name the source;
+// only these known classes are trusted because ability ticks also lack an
+// equippable (DmgType_Phoenix_Q_Fire_Production_C).
 var gunDamageClasses = map[string]struct{}{
 	"DmgType_AK_C":                  {},
 	"DmgType_ACR_C":                 {},
@@ -80,7 +77,7 @@ func isAbilityDamageClass(classPath string) bool {
 
 const gunClassPrefix = "/Game/Equippables/Guns/"
 
-// meleeClassPrefix is the folder every melee equippable lives in. Real exports
+// meleeClassPrefix is the folder every melee equippable lives in; real exports
 // only carry Ability_Melee_Base there, which is the knife.
 const meleeClassPrefix = "/Game/Equippables/Melee/"
 
@@ -96,8 +93,8 @@ func isMeleeEquippable(classPath string) bool {
 }
 
 // weaponFolder returns the "Guns/<category>/<folder>" key for a gun class path.
-// The second result is false for anything outside the Guns tree, which this
-// parser deliberately ignores (melee, spike, ability equippables and totems).
+// The second result is false for anything outside the Guns tree (melee, spike,
+// ability equippables and totems), which this parser deliberately ignores.
 func weaponFolder(classPath string) (string, bool) {
 	index := strings.Index(classPath, gunClassPrefix)
 	if index < 0 {

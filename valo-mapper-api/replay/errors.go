@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// Code is the stable machine-readable error code in a replay response. The
-// frontend maps on this value, never on the prose. Keep these names unchanged.
+// Code is the stable machine-readable error code; the frontend maps on this
+// value, never on the prose.
 type Code string
 
 const (
@@ -29,8 +29,8 @@ const (
 	CodeInternal            Code = "internal"
 )
 
-// Error is a replay-pipeline failure. Message is safe to return to the
-// browser; Err may contain internal details and is only logged.
+// Error is a replay-pipeline failure. Message is safe to return to the browser;
+// Err may contain internal details and is only logged.
 type Error struct {
 	Code       Code
 	Message    string
@@ -47,7 +47,7 @@ func (e *Error) Error() string {
 
 func (e *Error) Unwrap() error { return e.Err }
 
-// NewError builds a replay error. An empty message selects the default prose.
+// NewError builds a replay error; an empty message selects the default prose.
 func NewError(code Code, message string, err error) *Error {
 	if message == "" {
 		message = DefaultMessage(code)
@@ -55,7 +55,6 @@ func NewError(code Code, message string, err error) *Error {
 	return &Error{Code: code, Message: message, Err: err}
 }
 
-// DefaultMessage returns the user-facing prose for a code.
 func DefaultMessage(code Code) string {
 	switch code {
 	case CodeInvalidRequest:
@@ -91,7 +90,7 @@ func DefaultMessage(code Code) string {
 	}
 }
 
-// HTTPStatus maps a replay code to the HTTP status in the v1 contract.
+// HTTPStatus maps a replay code to its status in the v1 HTTP contract.
 func HTTPStatus(code Code) int {
 	switch code {
 	case CodeInvalidRequest, CodeNotAReplay:
@@ -112,7 +111,6 @@ func HTTPStatus(code Code) int {
 	}
 }
 
-// AsError extracts a replay Error from an error chain.
 func AsError(err error) (*Error, bool) {
 	var replayErr *Error
 	if errors.As(err, &replayErr) {

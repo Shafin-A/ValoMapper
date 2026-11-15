@@ -16,7 +16,6 @@ import (
 
 const defaultTigrisEndpoint = "https://fly.storage.tigris.dev"
 
-// TigrisClient wraps an S3-compatible client configured for Tigris.
 type TigrisClient struct {
 	s3       *s3.Client
 	bucket   string
@@ -31,20 +30,10 @@ type Client interface {
 	DeleteObjects(ctx context.Context, keys []string) error
 }
 
-// DefaultClient is the package-level Tigris client, set by InitTigris.
 var DefaultClient Client
 
-// InitTigris reads credentials from environment variables and initialises
-// DefaultClient.  The variables match exactly what `fly storage create` injects:
-//
-//	AWS_ACCESS_KEY_ID
-//	AWS_SECRET_ACCESS_KEY
-//	BUCKET_NAME
-//	AWS_ENDPOINT_URL_S3  (optional, defaults to https://fly.storage.tigris.dev)
-//	AWS_REGION           (optional, defaults to "auto")
-//
-// The application treats image storage as optional so that the server can still
-// start without Tigris configured (uploads will return 503).
+// InitTigris reads AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and BUCKET_NAME; storage is
+// optional, so the server still starts when they are unset (uploads then return 503).
 func InitTigris() error {
 	accessKeyID := os.Getenv("AWS_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
@@ -108,7 +97,6 @@ func (t *TigrisClient) UploadImage(ctx context.Context, key string, data io.Read
 	return fmt.Sprintf("%s/%s/%s", t.endpoint, t.bucket, key), nil
 }
 
-// GetImage fetches an image object from Tigris by key.
 func (t *TigrisClient) GetImage(ctx context.Context, key string) (io.ReadCloser, string, error) {
 	out, err := t.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(t.bucket),
@@ -121,7 +109,6 @@ func (t *TigrisClient) GetImage(ctx context.Context, key string) (io.ReadCloser,
 	return out.Body, aws.ToString(out.ContentType), nil
 }
 
-// ListObjectKeys returns object keys from the configured bucket for a prefix.
 func (t *TigrisClient) ListObjectKeys(ctx context.Context, prefix string) ([]string, error) {
 	paginator := s3.NewListObjectsV2Paginator(t.s3, &s3.ListObjectsV2Input{
 		Bucket: aws.String(t.bucket),
@@ -145,9 +132,7 @@ func (t *TigrisClient) ListObjectKeys(ctx context.Context, prefix string) ([]str
 	return keys, nil
 }
 
-// DeleteObjects removes up to 1000 keys in a single batch request.
-// Errors from individual key deletions are surfaced via the S3 Errors slice and
-// logged, but do not halt deletion of other keys.
+// DeleteObjects removes up to 1000 keys per S3 batch; per-key errors are logged, not returned.
 func (t *TigrisClient) DeleteObjects(ctx context.Context, keys []string) error {
 	if len(keys) == 0 {
 		return nil

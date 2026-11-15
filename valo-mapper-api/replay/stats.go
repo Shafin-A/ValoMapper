@@ -48,8 +48,6 @@ type castElement struct {
 	EffectTimes     []float64
 }
 
-// castIdentity is the dedupe key: one ability, cast once, at one offset into
-// the round.
 type castIdentity struct {
 	Subject string
 	Round   int
@@ -57,7 +55,6 @@ type castIdentity struct {
 	CastMS  int64
 }
 
-// castSlotKey collapses a player's repeated casts of one ability in one round.
 type castSlotKey struct {
 	Subject string
 	Round   int
@@ -113,7 +110,6 @@ func appendUniqueCastTime(times []float64, value float64) []float64 {
 	return append(times, value)
 }
 
-// collectCastField folds one cast member row into the element it belongs to.
 func (s *fieldScan) collectCastField(row *fieldRow, name string) {
 	if !strings.Contains(row.GroupPath, "Comp_AbilityStatisticsReplicator") {
 		return
@@ -336,8 +332,7 @@ func nearestCastRound(windows []roundWindow, timeMS uint32, castMS int64) (int, 
 }
 
 // applyRoundStats fills the per-round scoreboard stats from the state timelines
-// and the resolved casts. It runs after the event logs exist and before the
-// frames are built.
+// and resolved casts, after the event logs exist and before frames are built.
 func applyRoundStats(
 	windows []roundWindow,
 	players []Player,
@@ -389,9 +384,8 @@ func applyRoundStats(
 	}
 	sortCastTimes(castTimesBySubjectSlot)
 
-	// The folder letter is not always the input slot, so learn the real
-	// mapping from this player's casts before it is used for charges or
-	// cooldowns.
+	// The folder letter is not always the input slot, so learn the real mapping
+	// from this player's casts before it is used for charges or cooldowns.
 	abilitySlots := learnAbilitySlots(
 		state.AbilityCharges, state.Cooldowns, castTimesBySubjectSlot,
 	)

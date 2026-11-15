@@ -20,14 +20,12 @@ func TestGetMapById(t *testing.T) {
 	t.Run("retrieves map by id successfully", func(t *testing.T) {
 		truncateTables(t, pool, "maps")
 
-		// Insert test map
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('ascent', 'Ascent')
 		`)
 		require.NoError(t, err)
 
-		// Retrieve map
 		mapOption, err := GetMapById("ascent")
 		require.NoError(t, err)
 		require.NotNil(t, mapOption)
@@ -48,7 +46,6 @@ func TestGetMapById(t *testing.T) {
 	t.Run("retrieves different maps correctly", func(t *testing.T) {
 		truncateTables(t, pool, "maps")
 
-		// Insert multiple test maps
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES 
@@ -58,7 +55,6 @@ func TestGetMapById(t *testing.T) {
 		`)
 		require.NoError(t, err)
 
-		// Test bind
 		bindMap, err := GetMapById("bind")
 		require.NoError(t, err)
 		require.NotNil(t, bindMap)
@@ -66,14 +62,12 @@ func TestGetMapById(t *testing.T) {
 		assert.Equal(t, "Bind", bindMap.Text)
 		assert.Equal(t, "text-white", bindMap.TextColor)
 
-		// Test haven
 		havenMap, err := GetMapById("haven")
 		require.NoError(t, err)
 		require.NotNil(t, havenMap)
 		assert.Equal(t, "haven", havenMap.ID)
 		assert.Equal(t, "Haven", havenMap.Text)
 
-		// Test split
 		splitMap, err := GetMapById("split")
 		require.NoError(t, err)
 		require.NotNil(t, splitMap)
@@ -93,7 +87,6 @@ func TestGetMapById(t *testing.T) {
 	t.Run("handles special characters in map data", func(t *testing.T) {
 		truncateTables(t, pool, "maps")
 
-		// Insert map with special characters
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('test-map', 'Test & Map')
@@ -129,7 +122,6 @@ func TestGetMapById(t *testing.T) {
 	t.Run("case sensitive id lookup", func(t *testing.T) {
 		truncateTables(t, pool, "maps")
 
-		// Insert map with lowercase id
 		_, err := pool.Exec(context.Background(), `
 			INSERT INTO maps (id, text) 
 			VALUES ('icebox', 'Icebox')
@@ -141,7 +133,6 @@ func TestGetMapById(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, mapOption)
 
-		// Retrieve with correct case
 		mapOption, err = GetMapById("icebox")
 		require.NoError(t, err)
 		require.NotNil(t, mapOption)

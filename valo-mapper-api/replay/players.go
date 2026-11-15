@@ -7,9 +7,8 @@ import (
 	"sort"
 )
 
-// expectedPlayers is the competitive roster size. A replay with any other
-// number cannot establish a 5v5 match, so the normaliser rejects it instead of
-// inventing a side.
+// expectedPlayers is the competitive roster size; any other count cannot
+// establish a 5v5 match, so the normaliser rejects it instead of inventing a side.
 const expectedPlayers = 10
 
 // playerIndex joins the manifest's actor and pawn identifiers back to a
@@ -83,13 +82,13 @@ func (p *playerIndex) addPawn(pawn uint32, subject string) {
 	p.pawnsBySubject[subject] = append(p.pawnsBySubject[subject], pawn)
 }
 
-// pawnsForSubject returns the manifest pawns in the order the manifest listed
-// them. That order picks the survivor when two intervals overlap.
+// pawnsForSubject returns the manifest pawns in manifest order; that order picks
+// the survivor when two intervals overlap.
 func (p *playerIndex) pawnsForSubject(subject string) []uint32 {
 	return p.pawnsBySubject[subject]
 }
 
-// subjectForPawn resolves a character NetGUID. The second result is false when
+// subjectForPawn resolves a character NetGUID; the second result is false when
 // the GUID is unknown or ambiguous.
 func (p *playerIndex) subjectForPawn(pawn uint32) (string, bool) {
 	if _, ambiguous := p.ambiguousPawns[pawn]; ambiguous {
@@ -99,8 +98,8 @@ func (p *playerIndex) subjectForPawn(pawn uint32) (string, bool) {
 	return subject, ok
 }
 
-// subjectForActor resolves an actor NetGUID. The second result is false when
-// the GUID is unknown or ambiguous.
+// subjectForActor resolves an actor NetGUID; the second result is false when the
+// GUID is unknown or ambiguous.
 func (p *playerIndex) subjectForActor(actor uint32) (string, bool) {
 	if _, ambiguous := p.ambiguousActs[actor]; ambiguous {
 		return "", false
@@ -118,8 +117,8 @@ func (p *playerIndex) subjectForCharacter(guid uint32) (string, bool) {
 	return p.subjectForActor(guid)
 }
 
-// pseudonymousID is the browser-visible player id. It is stable for one subject
-// without exposing the account UUID.
+// pseudonymousID is the browser-visible player id: stable per subject without
+// exposing the account UUID.
 func pseudonymousID(subject string) string {
 	sum := sha256.Sum256([]byte(normaliseUUID(subject)))
 	return "vrf-" + hex.EncodeToString(sum[:])[:12]
@@ -170,8 +169,8 @@ func resolvePlayers(index *playerIndex, teams map[string]string, agents map[stri
 		puuidBySubject[subject] = pseudonymousID(subject)
 	}
 
-	// The VRF has no Riot IDs. Label players by agent, numbering duplicates
-	// ("Jett 1", "Jett 2") so the scoreboard stays unambiguous.
+	// The VRF has no Riot IDs, so label players by agent and number duplicates
+	// ("Jett 1", "Jett 2") to keep the scoreboard unambiguous.
 	nameCounts := make(map[string]int, len(players))
 	for _, player := range players {
 		nameCounts[player.CharacterName]++
@@ -187,8 +186,8 @@ func resolvePlayers(index *playerIndex, teams map[string]string, agents map[stri
 		}
 	}
 
-	// Deterministic output order: Red first, then Blue, then puuid. The
-	// scoreboard groups by team, so this only keeps ids stable run to run.
+	// Deterministic output order: Red, then Blue, then puuid. The scoreboard
+	// groups by team, so this only keeps ids stable run to run.
 	sort.SliceStable(players, func(i, j int) bool {
 		if players[i].TeamID != players[j].TeamID {
 			return players[i].TeamID == "Red"

@@ -96,7 +96,6 @@ func (m *mockStackRepo) GetPendingStackInvitesByMemberUserID(memberID int) ([]mo
 	return m.getPendingStackInvitesByMemberUserIDFn(memberID)
 }
 
-// stackOwnerUser returns a User whose plan qualifies them as a stack owner.
 func stackOwnerUser(id int) *models.User {
 	plan := string(CheckoutPlanStack)
 	return &models.User{
@@ -109,7 +108,6 @@ func stackOwnerUser(id int) *models.User {
 func TestStackService_InviteStackMember(t *testing.T) {
 	basicUser := func(id int) *models.User { return &models.User{ID: id} }
 
-	// repoForSuccess wires all repo calls needed for the happy path.
 	repoForSuccess := func() *mockStackRepo {
 		return &mockStackRepo{
 			getUserByFirebaseUIDFn: func(uid string) (*models.User, error) {

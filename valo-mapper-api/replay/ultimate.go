@@ -5,7 +5,6 @@ import (
 	"sort"
 )
 
-// ultimatePointWrite is one replicated current ultimate point count.
 type ultimatePointWrite struct {
 	TimeMS   uint32
 	PacketID uint32
@@ -13,7 +12,6 @@ type ultimatePointWrite struct {
 	Points   int
 }
 
-// ultimateActiveWrite is one replicated ultimate-active flag transition.
 type ultimateActiveWrite struct {
 	TimeMS   uint32
 	PacketID uint32
@@ -21,13 +19,12 @@ type ultimateActiveWrite struct {
 	Active   bool
 }
 
-// ultimateSample is a point or active event resolved to a player subject. The
-// two field streams are merged later so one wire timeline carries both values.
+// ultimateSample is a point or active event resolved to a player subject.
 type ultimateSample struct {
 	Subject  string
 	TimeMS   uint32
 	PacketID uint32
-	Kind     uint8 // 0 = points, 1 = active
+	Kind     uint8
 	Points   int
 	Active   bool
 }
@@ -46,7 +43,6 @@ const (
 	cooldownKindActive
 )
 
-// cooldownWrite is one replicated signature-cooldown member.
 type cooldownWrite struct {
 	TimeMS   uint32
 	PacketID uint32
@@ -56,7 +52,6 @@ type cooldownWrite struct {
 	Active   bool
 }
 
-// cooldownWindow is a resolved cooldown interval for one player and slot.
 type cooldownWindow struct {
 	Subject  string
 	Slot     string
@@ -70,7 +65,6 @@ type cooldownWindow struct {
 	RefillMS uint32
 }
 
-// buildUltimateSamples resolves ultimate point and active rows to subjects.
 func buildUltimateSamples(
 	points []ultimatePointWrite,
 	active []ultimateActiveWrite,
@@ -128,12 +122,9 @@ func buildUltimateSamples(
 }
 
 // ultimatePointsForRound merges point and active events into one round-relative
-// timeline. A write before the round start seeds the round at time 0; ultimate
-// points persist between rounds, so the seed matters.
-//
-// A player whose points never changed has no write at all, so time 0 is seeded
-// with zero. Without it the UI would fall back to "available" for players who
-// simply had not earned a point yet.
+// timeline. Points persist between rounds, so a write before the round start
+// seeds time 0; a player with no write at all is seeded with zero, otherwise the
+// UI would show "available" for someone who had not earned a point yet.
 func ultimatePointsForRound(
 	samples []ultimateSample,
 	subject string,
@@ -182,8 +173,8 @@ func ultimatePointsForRound(
 }
 
 // buildCooldownWindows resolves signature-cooldown rows into absolute intervals.
-// The replication time is used as the window start because StartTimeStamp is on
-// a game clock that does not share the replay's time base.
+// The replication time is the window start because StartTimeStamp uses a game
+// clock that does not share the replay's time base.
 func buildCooldownWindows(
 	writes []cooldownWrite,
 	index *playerIndex,
@@ -319,9 +310,8 @@ func cooldownDurationMS(seconds float64) uint32 {
 	return uint32(milliseconds)
 }
 
-// cooldownWindowsForRound clips leading and trailing parts of each interval to
-// the round and returns slot-keyed, round-relative windows. When slots carries
-// a learned folder -> wire slot mapping, unmapped folders are omitted.
+// cooldownWindowsForRound clips each interval to the round and returns slot-keyed,
+// round-relative windows; unmapped folders are omitted when slots is present.
 func cooldownWindowsForRound(
 	windows []cooldownWindow,
 	subject string,

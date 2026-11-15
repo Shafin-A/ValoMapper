@@ -22,7 +22,6 @@ var (
 	ErrUserNotFound            = errors.New("user not found")
 )
 
-// UserRepository abstracts persistence operations for UserService.
 type UserRepository interface {
 	GetUserByFirebaseUID(uid string) (*models.User, error)
 	GetUserByID(id int) (*models.User, error)
@@ -47,17 +46,14 @@ func (r *defaultUserRepository) UpdateSubscriptionStatus(u *models.User, isSubsc
 	return u.UpdateSubscriptionStatus(isSubscribed, subscriptionEndedAt)
 }
 
-// UserServiceDependencies holds injectable dependencies for UserService.
 type UserServiceDependencies struct {
 	Repo UserRepository
 }
 
-// UserService handles user-related business logic
 type UserService struct {
 	repo UserRepository
 }
 
-// NewUserService creates a new UserService
 func NewUserService(deps UserServiceDependencies) *UserService {
 	repo := deps.Repo
 	if repo == nil {
@@ -66,14 +62,12 @@ func NewUserService(deps UserServiceDependencies) *UserService {
 	return &UserService{repo: repo}
 }
 
-// CreateUserRequest wraps user creation input
 type CreateUserRequest struct {
 	FirebaseUID string
 	Name        string
 	Email       string
 }
 
-// CreateUser creates a new user profile
 func (us *UserService) CreateUser(req CreateUserRequest) (*models.User, error) {
 	if req.FirebaseUID == "" {
 		return nil, ErrUserFirebaseUIDRequired
@@ -104,13 +98,11 @@ func (us *UserService) CreateUser(req CreateUserRequest) (*models.User, error) {
 	return user, nil
 }
 
-// UpdateUserRequest wraps user update input
 type UpdateUserRequest struct {
 	Name          *string
 	TourCompleted *bool
 }
 
-// UpdateUser updates an existing user's profile
 func (us *UserService) UpdateUser(user *models.User, req UpdateUserRequest) error {
 	if req.Name != nil && *req.Name != "" {
 		user.Name = req.Name
@@ -123,7 +115,7 @@ func (us *UserService) UpdateUser(user *models.User, req UpdateUserRequest) erro
 	return us.repo.UpdateUser(user)
 }
 
-// EnrichUserBillingState adds trial eligibility and remaining days to user
+// EnrichUserBillingState sets PremiumTrialDaysLeft and trial eligibility.
 func (us *UserService) EnrichUserBillingState(user *models.User) {
 	if user == nil {
 		return
@@ -144,12 +136,10 @@ func (us *UserService) EnrichUserBillingState(user *models.User) {
 	user.PremiumTrialDaysLeft = &remainingDays
 }
 
-// strPtr is a helper function to convert a string to a *string
 func strPtr(s string) *string {
 	return &s
 }
 
-// DeleteUser deletes a user from the database and Firebase
 func (us *UserService) DeleteUser(user *models.User, firebaseAuth FirebaseUserDeleter) error {
 	if err := us.repo.DeleteUser(user); err != nil {
 		return err
@@ -166,14 +156,12 @@ func (us *UserService) DeleteUser(user *models.User, firebaseAuth FirebaseUserDe
 	return nil
 }
 
-// UpdateUserSubscriptionRequest wraps subscription update input
 type UpdateUserSubscriptionRequest struct {
 	UserID       *int
 	FirebaseUID  *string
 	IsSubscribed bool
 }
 
-// UpdateUserSubscription updates a user's subscription status
 func (us *UserService) UpdateUserSubscription(req UpdateUserSubscriptionRequest) (*models.User, error) {
 	var user *models.User
 	var err error

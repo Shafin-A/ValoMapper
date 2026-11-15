@@ -12,7 +12,6 @@ var (
 	ErrFolderAccessDenied         = errors.New("you do not have access to this folder")
 )
 
-// FolderRepository abstracts persistence operations for FolderService.
 type FolderRepository interface {
 	GetFoldersByUserID(userID int) ([]models.Folder, error)
 	GetFolderByID(folderID int) (*models.Folder, error)
@@ -33,17 +32,14 @@ func (r *defaultFolderRepository) SaveFolder(f *models.Folder) error   { return 
 func (r *defaultFolderRepository) UpdateFolder(f *models.Folder) error { return f.Update() }
 func (r *defaultFolderRepository) DeleteFolder(f *models.Folder) error { return f.Delete() }
 
-// FolderServiceDependencies holds injectable dependencies for FolderService.
 type FolderServiceDependencies struct {
 	Repo FolderRepository
 }
 
-// FolderService handles folder-related business logic
 type FolderService struct {
 	repo FolderRepository
 }
 
-// NewFolderService creates a new FolderService
 func NewFolderService(deps FolderServiceDependencies) *FolderService {
 	repo := deps.Repo
 	if repo == nil {
@@ -52,13 +48,11 @@ func NewFolderService(deps FolderServiceDependencies) *FolderService {
 	return &FolderService{repo: repo}
 }
 
-// CreateFolderRequest wraps folder creation input
 type CreateFolderRequest struct {
 	Name           string
 	ParentFolderID *int
 }
 
-// CreateFolder creates a new folder for a user
 func (fs *FolderService) CreateFolder(user *models.User, req CreateFolderRequest) (*models.Folder, error) {
 	if !user.IsSubscribed {
 		return nil, ErrFolderSubscriptionRequired
@@ -81,7 +75,6 @@ func (fs *FolderService) CreateFolder(user *models.User, req CreateFolderRequest
 	return folder, nil
 }
 
-// GetFolders retrieves all folders for a user
 func (fs *FolderService) GetFolders(userID int) ([]models.Folder, error) {
 	folders, err := fs.repo.GetFoldersByUserID(userID)
 	if err != nil {
@@ -95,13 +88,11 @@ func (fs *FolderService) GetFolders(userID int) ([]models.Folder, error) {
 	return folders, nil
 }
 
-// UpdateFolderRequest wraps folder update input
 type UpdateFolderRequest struct {
 	Name           *string
 	ParentFolderID *int
 }
 
-// UpdateFolder updates an existing folder
 func (fs *FolderService) UpdateFolder(user *models.User, folderID int, req UpdateFolderRequest) (*models.Folder, error) {
 	if !user.IsSubscribed {
 		return nil, ErrFolderSubscriptionRequired
@@ -133,7 +124,6 @@ func (fs *FolderService) UpdateFolder(user *models.User, folderID int, req Updat
 	return folder, nil
 }
 
-// DeleteFolder deletes a folder
 func (fs *FolderService) DeleteFolder(user *models.User, folderID int) error {
 	if !user.IsSubscribed {
 		return ErrFolderSubscriptionRequired

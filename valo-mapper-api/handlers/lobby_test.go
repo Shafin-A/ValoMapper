@@ -41,10 +41,8 @@ func TestCreateLobby(t *testing.T) {
 	pool := testutils.SetupTestDB(t)
 	defer testutils.CleanupTestDB(t, pool)
 
-	// Clean up
 	testutils.TruncateTables(t, pool, "lobbies", "maps")
 
-	// Create test map and lobby
 	_, err := pool.Exec(context.Background(),
 		`INSERT INTO maps (id, text) VALUES ($1, $2)
 		ON CONFLICT (id) DO NOTHING`,

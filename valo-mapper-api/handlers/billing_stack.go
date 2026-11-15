@@ -217,7 +217,6 @@ func AcceptStackInvite(w http.ResponseWriter, r *http.Request, firebaseAuth Fire
 		}
 	}
 
-	// Only handle subscription cancellation if user has an active personal subscription
 	if user.HasActivePersonalSubscription() && user.StripeSubscriptionID != nil && strings.TrimSpace(*user.StripeSubscriptionID) != "" {
 		stripeSecretKey := strings.TrimSpace(os.Getenv("STRIPE_SECRET_KEY"))
 		if stripeSecretKey == "" {
@@ -350,7 +349,6 @@ func GetPendingStackInvites(w http.ResponseWriter, r *http.Request, firebaseAuth
 	utils.SendJSON(w, http.StatusOK, invites, requestID)
 }
 
-// parseIDVar extracts a named path variable and converts it to int.
 func parseIDVar(r *http.Request, name string) (int, error) {
 	return strconv.Atoi(mux.Vars(r)[name])
 }

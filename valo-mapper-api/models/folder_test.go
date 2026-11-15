@@ -41,7 +41,6 @@ func TestFolderSave(t *testing.T) {
 
 		user := createTestUser(t, pool, "folder-user-2")
 
-		// Create parent folder
 		parent := &Folder{
 			UserID: user.ID,
 			Name:   "Parent Folder",
@@ -49,7 +48,6 @@ func TestFolderSave(t *testing.T) {
 		err := parent.Save()
 		require.NoError(t, err)
 
-		// Create child folder
 		child := &Folder{
 			UserID:         user.ID,
 			Name:           "Child Folder",
@@ -114,13 +112,11 @@ func TestFolderUpdate(t *testing.T) {
 
 		originalUpdatedAt := folder.UpdatedAt
 
-		// Update name
 		folder.Name = "Updated Name"
 		err = folder.Update()
 		require.NoError(t, err)
 		assert.True(t, folder.UpdatedAt.After(originalUpdatedAt))
 
-		// Verify changes persisted
 		loaded, err := GetFolderByID(folder.ID)
 		require.NoError(t, err)
 		require.NotNil(t, loaded)
@@ -132,7 +128,6 @@ func TestFolderUpdate(t *testing.T) {
 
 		user := createTestUser(t, pool, "parent-update-user")
 
-		// Create parent folders
 		parent1 := &Folder{
 			UserID: user.ID,
 			Name:   "Parent 1",
@@ -147,7 +142,6 @@ func TestFolderUpdate(t *testing.T) {
 		err = parent2.Save()
 		require.NoError(t, err)
 
-		// Create child with parent1
 		child := &Folder{
 			UserID:         user.ID,
 			Name:           "Child",
@@ -156,12 +150,10 @@ func TestFolderUpdate(t *testing.T) {
 		err = child.Save()
 		require.NoError(t, err)
 
-		// Update to parent2
 		child.ParentFolderID = &parent2.ID
 		err = child.Update()
 		require.NoError(t, err)
 
-		// Verify
 		loaded, err := GetFolderByID(child.ID)
 		require.NoError(t, err)
 		assert.NotNil(t, loaded.ParentFolderID)
@@ -188,12 +180,10 @@ func TestFolderUpdate(t *testing.T) {
 		err = child.Save()
 		require.NoError(t, err)
 
-		// Remove parent
 		child.ParentFolderID = nil
 		err = child.Update()
 		require.NoError(t, err)
 
-		// Verify
 		loaded, err := GetFolderByID(child.ID)
 		require.NoError(t, err)
 		assert.Nil(t, loaded.ParentFolderID)
@@ -232,11 +222,9 @@ func TestFolderDelete(t *testing.T) {
 		err := folder.Save()
 		require.NoError(t, err)
 
-		// Delete folder
 		err = folder.Delete()
 		require.NoError(t, err)
 
-		// Verify deleted
 		loaded, err := GetFolderByID(folder.ID)
 		require.NoError(t, err)
 		assert.Nil(t, loaded)
@@ -274,7 +262,6 @@ func TestGetFolderByID(t *testing.T) {
 		err := created.Save()
 		require.NoError(t, err)
 
-		// Get folder
 		folder, err := GetFolderByID(created.ID)
 		require.NoError(t, err)
 		require.NotNil(t, folder)
@@ -308,7 +295,6 @@ func TestGetFoldersByUserID(t *testing.T) {
 
 		user := createTestUser(t, pool, "list-user")
 
-		// Create multiple folders
 		names := []string{"Zebra", "Apple", "Mango"}
 		for _, name := range names {
 			folder := &Folder{
@@ -323,7 +309,6 @@ func TestGetFoldersByUserID(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, folders, 3)
 
-		// Verify ordered alphabetically by name
 		assert.Equal(t, "Apple", folders[0].Name)
 		assert.Equal(t, "Mango", folders[1].Name)
 		assert.Equal(t, "Zebra", folders[2].Name)
@@ -345,7 +330,6 @@ func TestGetFoldersByUserID(t *testing.T) {
 		user1 := createTestUser(t, pool, "user1")
 		user2 := createTestUser(t, pool, "user2")
 
-		// Create folders for both users
 		folder1 := &Folder{
 			UserID: user1.ID,
 			Name:   "User 1 Folder",
@@ -360,7 +344,6 @@ func TestGetFoldersByUserID(t *testing.T) {
 		err = folder2.Save()
 		require.NoError(t, err)
 
-		// Get folders for user1
 		folders, err := GetFoldersByUserID(user1.ID)
 		require.NoError(t, err)
 		assert.Len(t, folders, 1)
@@ -391,7 +374,6 @@ func TestGetFoldersByUserID(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, folders, 2)
 
-		// Find child folder
 		var childFolder *Folder
 		for i := range folders {
 			if folders[i].Name == "Child" {
@@ -419,7 +401,6 @@ func TestFolderHierarchy(t *testing.T) {
 
 		user := createTestUser(t, pool, "hierarchy-user")
 
-		// Create 3-level hierarchy
 		grandparent := &Folder{
 			UserID: user.ID,
 			Name:   "Grandparent",
@@ -443,7 +424,6 @@ func TestFolderHierarchy(t *testing.T) {
 		err = child.Save()
 		require.NoError(t, err)
 
-		// Verify relationships
 		loadedChild, err := GetFolderByID(child.ID)
 		require.NoError(t, err)
 		assert.Equal(t, parent.ID, *loadedChild.ParentFolderID)

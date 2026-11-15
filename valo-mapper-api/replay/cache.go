@@ -6,9 +6,8 @@ import (
 	"time"
 )
 
-// cache stores gzipped response bodies, never Go match structs. Responses are
-// tiny today, but caching the compressed bytes keeps the payload budget honest
-// as frames grow.
+// cacheEntry stores a gzipped response body; caching compressed bytes keeps the
+// payload budget honest as frames grow.
 type cacheEntry struct {
 	key       string
 	gz        []byte

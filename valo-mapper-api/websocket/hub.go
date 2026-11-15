@@ -47,7 +47,6 @@ func (h *Hub) Stop() {
 	})
 }
 
-// HubStats holds a snapshot of the hub's current connection state.
 type HubStats struct {
 	ActiveLobbies    int   `json:"active_lobbies"`
 	ConnectedClients int   `json:"connected_clients"`
@@ -55,7 +54,6 @@ type HubStats struct {
 	TotalDrops       int64 `json:"total_drops"`
 }
 
-// Stats returns a snapshot of the number of active lobbies and total connected clients.
 func (h *Hub) Stats() HubStats {
 	h.mu.RLock()
 	defer h.mu.RUnlock()

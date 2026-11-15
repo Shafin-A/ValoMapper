@@ -6,7 +6,6 @@ type FirebaseUserDeleter interface {
 	DeleteUser(ctx context.Context, uid string) error
 }
 
-// Checkout plan types
 type CheckoutPlan string
 
 const (
