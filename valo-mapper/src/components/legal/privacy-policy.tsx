@@ -2,7 +2,7 @@ export const PrivacyPolicy = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Nov 6th, 2026
+        <strong>Last Updated:</strong> Nov 15th, 2026
       </div>
 
       <p>
@@ -24,9 +24,8 @@ export const PrivacyPolicy = () => {
           RSO-linked gameplay data visible through ValoMapper. We will not
           display Riot account identifiers or RSO-linked match-history data for
           players who have not opted in. Replay playback is separate: it is
-          generated from a replay file you upload, uses pseudonymous
-          match-local labels, and does not display Riot IDs, PUUIDs, or subject
-          UUIDs.
+          generated from a replay file you upload, uses pseudonymous match-local
+          labels, and does not display Riot IDs, PUUIDs, or subject UUIDs.
         </p>
       </div>
 
@@ -63,8 +62,8 @@ export const PrivacyPolicy = () => {
 
           <p className="font-semibold mb-1">Replay Files</p>
           <p className="mb-2">
-            When you use the replay player, you upload a VALORANT replay file
-            (<code>.vrf</code>). A replay contains an opaque per-player subject
+            When you use the replay player, you upload a VALORANT replay file (
+            <code>.vrf</code>). A replay contains an opaque per-player subject
             UUID for each player in the match, along with agent, loadout and
             cosmetic selections, movement, combat and round events, and other
             game state. The subject UUID is not the public Riot ID or PUUID.
@@ -164,8 +163,8 @@ export const PrivacyPolicy = () => {
         <ul className="list-disc list-inside space-y-1 ml-4 mb-3">
           <li>Session management</li>
           <li>
-            A short-lived, essential OAuth state cookie used to protect Riot
-            Sign-On against CSRF during login
+            Short-lived, essential OAuth cookies used to protect Riot Sign-On
+            against CSRF during login
           </li>
           <li>
             Temporary notification messages (e.g., success toasts after actions)

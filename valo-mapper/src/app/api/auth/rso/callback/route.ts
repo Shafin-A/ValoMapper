@@ -1,5 +1,7 @@
 import {
   clearStateCookieHeader,
+  setCodeBindingCookie,
+  validateCodeBindingFromRequest,
   validateStateFromRequest,
 } from "../start/route";
 
@@ -37,16 +39,13 @@ export const GET = async (request: Request) => {
   responseForTests.redirectPath = redirectPath;
 
   clearStateCookieHeader(responseForTests);
+  if (validationResult.isValid && code) {
+    setCodeBindingCookie(responseForTests, code);
+  }
   return responseForTests;
 };
 
-export const POST = async (request: Request) => {
-  const body = await request.json();
-
-  if (!body) {
-    return Response.json({ error: "No request body" }, { status: 400 });
-  }
-
+const forwardCodeExchange = async (code: string): Promise<Response> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -56,7 +55,7 @@ export const POST = async (request: Request) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ code }),
       signal: controller.signal,
     });
 
@@ -79,4 +78,28 @@ export const POST = async (request: Request) => {
     }
     throw error;
   }
+};
+
+export const POST = async (request: Request) => {
+  let body: { code?: unknown } | null = null;
+  try {
+    body = (await request.json()) as { code?: unknown } | null;
+  } catch {
+    body = null;
+  }
+
+  const code = typeof body?.code === "string" ? body.code.trim() : "";
+
+  if (!code) {
+    return Response.json({ error: "No authorization code" }, { status: 400 });
+  }
+
+  if (!validateCodeBindingFromRequest(request, code)) {
+    return Response.json(
+      { error: "Riot sign-in expired. Please start the sign-in again." },
+      { status: 401 },
+    );
+  }
+
+  return forwardCodeExchange(code);
 };

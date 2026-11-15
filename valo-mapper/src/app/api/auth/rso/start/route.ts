@@ -1,8 +1,10 @@
-import { randomBytes, timingSafeEqual } from "crypto";
+import { createHash, randomBytes, timingSafeEqual } from "crypto";
 
 const RSO_AUTHORIZE_URL = "https://auth.riotgames.com/authorize";
 const STATE_COOKIE = "rso_oauth_state";
 const STATE_COOKIE_MAX_AGE_SECONDS = 10 * 60;
+const CODE_BINDING_COOKIE = "rso_code_binding";
+const CODE_BINDING_MAX_AGE_SECONDS = 5 * 60;
 
 interface OAuthStateCookie {
   nonce: string;
@@ -72,23 +74,38 @@ const clearStateCookie = (response: Response): void => {
   );
 };
 
-const setStateCookie = (
-  response: Response,
-  stateCookie: OAuthStateCookie,
-): void => {
+const buildSetCookie = (
+  name: string,
+  value: string,
+  maxAgeSeconds: number,
+): string => {
   const parts = [
-    `${STATE_COOKIE}=${encodeStateCookie(stateCookie)}`,
+    `${name}=${value}`,
     "Path=/api/auth/rso/callback",
     "HttpOnly",
     "SameSite=Lax",
-    `Max-Age=${STATE_COOKIE_MAX_AGE_SECONDS}`,
+    `Max-Age=${maxAgeSeconds}`,
   ];
 
   if (process.env.NODE_ENV === "production") {
     parts.push("Secure");
   }
 
-  response.headers.append("Set-Cookie", parts.join("; "));
+  return parts.join("; ");
+};
+
+const setStateCookie = (
+  response: Response,
+  stateCookie: OAuthStateCookie,
+): void => {
+  response.headers.append(
+    "Set-Cookie",
+    buildSetCookie(
+      STATE_COOKIE,
+      encodeStateCookie(stateCookie),
+      STATE_COOKIE_MAX_AGE_SECONDS,
+    ),
+  );
 };
 
 const buildAuthorizeURL = (
@@ -180,3 +197,41 @@ export const validateStateFromRequest = (
 };
 
 export const clearStateCookieHeader = clearStateCookie;
+
+const hashCode = (code: string): string =>
+  createHash("sha256").update(code, "utf8").digest("hex");
+
+// Binds a Riot authorization code to the browser that completed the state check,
+// so a bare /auth/rso-callback?code= link cannot exchange someone else's code.
+export const setCodeBindingCookie = (
+  response: Response,
+  code: string,
+): void => {
+  response.headers.append(
+    "Set-Cookie",
+    buildSetCookie(
+      CODE_BINDING_COOKIE,
+      hashCode(code),
+      CODE_BINDING_MAX_AGE_SECONDS,
+    ),
+  );
+};
+
+export const validateCodeBindingFromRequest = (
+  request: Request,
+  code: string,
+): boolean => {
+  const cookieValue = parseCookieValue(
+    request.headers.get("cookie") || "",
+    CODE_BINDING_COOKIE,
+  );
+
+  if (!cookieValue || !code) {
+    return false;
+  }
+
+  const expected = Buffer.from(cookieValue, "utf8");
+  const actual = Buffer.from(hashCode(code), "utf8");
+
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+};

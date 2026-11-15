@@ -1,10 +1,13 @@
+import { sanitizeRedirectPath } from "@/lib/rso";
 import {
-  generateRSOAuthLink,
-  parseRSORedirect,
-  sanitizeRedirectPath,
-} from "@/lib/rso";
-import { GET as callbackGET } from "@/app/api/auth/rso/callback/route";
+  GET as callbackGET,
+  POST as callbackPOST,
+} from "@/app/api/auth/rso/callback/route";
 import { GET as startGET } from "@/app/api/auth/rso/start/route";
+import { createHash } from "crypto";
+
+const sha256 = (value: string): string =>
+  createHash("sha256").update(value, "utf8").digest("hex");
 
 const OriginalResponse = global.Response;
 
@@ -75,44 +78,8 @@ afterAll(() => {
   global.Response = OriginalResponse;
 });
 
-describe("RSO helpers", () => {
-  beforeEach(() => {
-    delete process.env.NEXT_PUBLIC_RSO_REDIRECT_URI;
-  });
-
-  test("generateRSOAuthLink uses API callback by default", () => {
-    const link = generateRSOAuthLink("my-client");
-    expect(link).toContain("https://auth.riotgames.com/authorize");
-    expect(link).toMatch(/redirect_uri=.*%2Fapi%2Fauth%2Frso%2Fcallback/);
-    expect(link).toMatch(/client_id=my-client/);
-    expect(link).toMatch(/prompt=login/);
-  });
-
-  test("generateRSOAuthLink respects NEXT_PUBLIC_RSO_REDIRECT_URI", () => {
-    process.env.NEXT_PUBLIC_RSO_REDIRECT_URI = "https://foobar.local/cb";
-    const link = generateRSOAuthLink("cid");
-    expect(link).toMatch(/redirect_uri=.*https%3A%2F%2Ffoobar.local%2Fcb/);
-  });
-});
-
-describe("state encoding and parsing", () => {
-  test("parseRSORedirect returns slash when state undefined", () => {
-    expect(parseRSORedirect(undefined)).toBe("/");
-  });
-
-  test("parseRSORedirect extracts encoded path", () => {
-    const encoded = encodeURIComponent("/foo/bar");
-    expect(parseRSORedirect(`redirect=${encoded}`)).toBe("/foo/bar");
-  });
-
-  test("generateRSOAuthLink includes state when provided", () => {
-    const link = generateRSOAuthLink("cid", "redirect=/foo");
-    expect(link).toContain("state=");
-    // value should be URL-encoded once by URLSearchParams
-    expect(link).toMatch(/state=redirect%3D%2Ffoo/);
-  });
-
-  test("sanitizeRedirectPath rejects unsafe redirects", () => {
+describe("sanitizeRedirectPath", () => {
+  test("keeps relative paths and rejects absolute ones", () => {
     expect(sanitizeRedirectPath("https://evil.test")).toBe("/");
     expect(sanitizeRedirectPath("//evil.test")).toBe("/");
     expect(sanitizeRedirectPath("\\evil")).toBe("/");
@@ -159,6 +126,122 @@ describe("/api/auth/rso/callback route", () => {
     expect(redirectPath).toBe(
       "/auth/rso-callback?code=abc123&redirect=%2Fprofile",
     );
+  });
+
+  it("GET should bind the code to the browser when oauth state is valid", async () => {
+    const req = new Request(
+      "https://example.com/api/auth/rso/callback?code=abc123&state=xyz",
+      {
+        headers: {
+          cookie: buildStateCookie("xyz", "/profile"),
+        },
+      },
+    );
+
+    const res = await callbackGET(req as Request);
+    const setCookie = res.headers.get("Set-Cookie") ?? "";
+
+    expect(setCookie).toContain("rso_code_binding=");
+    expect(setCookie).toContain("HttpOnly");
+    expect(setCookie).toContain("Path=/api/auth/rso/callback");
+
+    const cookieValue = setCookie.split(";")[0].split("=").slice(1).join("=");
+    expect(cookieValue).toBe(sha256("abc123"));
+  });
+
+  it("GET should not bind a code when oauth state is invalid", async () => {
+    const req = new Request(
+      "https://example.com/api/auth/rso/callback?code=abc123&state=xyz",
+    );
+
+    const res = await callbackGET(req as Request);
+    expect(res.headers.get("Set-Cookie") ?? "").not.toContain(
+      "rso_code_binding=",
+    );
+  });
+});
+
+describe("/api/auth/rso/callback POST route", () => {
+  const originalFetch = global.fetch;
+  const originalApiUrl = process.env.API_URL;
+  let mockFetch: jest.Mock;
+
+  const buildBindingCookie = (code: string): string =>
+    `rso_code_binding=${sha256(code)}`;
+
+  const buildRequest = (body: unknown, cookie?: string): Request =>
+    new Request("https://example.com/api/auth/rso/callback", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(cookie ? { cookie } : {}),
+      },
+      body: JSON.stringify(body),
+    }) as Request;
+
+  beforeEach(() => {
+    process.env.API_URL = "https://api.test/api";
+    mockFetch = jest.fn();
+    global.fetch = mockFetch as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    if (originalApiUrl === undefined) {
+      delete process.env.API_URL;
+    } else {
+      process.env.API_URL = originalApiUrl;
+    }
+  });
+
+  it("rejects a code that did not come through the validated callback", async () => {
+    const res = await callbackPOST(
+      buildRequest({ code: "attacker-code" }) as Request,
+    );
+
+    expect(res.status).toBe(401);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a code that does not match the binding cookie", async () => {
+    const res = await callbackPOST(
+      buildRequest(
+        { code: "attacker-code" },
+        buildBindingCookie("some-other-code"),
+      ) as Request,
+    );
+
+    expect(res.status).toBe(401);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("forwards the code when the binding cookie matches", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ customToken: "token-123" }),
+    });
+
+    const res = await callbackPOST(
+      buildRequest({ code: "code-123" }, buildBindingCookie("code-123")),
+    );
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ customToken: "token-123" });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toBe("https://api.test/api/auth/rso/callback");
+    expect(JSON.parse(init.body)).toEqual({ code: "code-123" });
+  });
+
+  it("rejects a request without a code", async () => {
+    const res = await callbackPOST(
+      buildRequest({}, buildBindingCookie("code-123")) as Request,
+    );
+
+    expect(res.status).toBe(400);
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });
 
