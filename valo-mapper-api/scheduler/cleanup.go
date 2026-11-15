@@ -54,11 +54,10 @@ const deadRegistrationCleanupQuery = `
 
 func NewCleanupScheduler(db *pgxpool.Pool, interval time.Duration) *CleanupScheduler {
 	cleanupQuery := `
-		DELETE FROM lobbies
-		WHERE updated_at < NOW() - INTERVAL '12 hours'
-		AND code NOT IN (
-			SELECT DISTINCT lobby_code
-			FROM strategies
+		DELETE FROM lobbies l
+		WHERE l.updated_at < NOW() - INTERVAL '12 hours'
+		AND NOT EXISTS (
+			SELECT 1 FROM strategies s WHERE s.lobby_code = l.code
 		)`
 
 	subscriptionCleanupQuery := `
