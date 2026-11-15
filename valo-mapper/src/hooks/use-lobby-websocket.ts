@@ -16,6 +16,7 @@ interface UseLobbyWebSocketOptions {
   username?: string;
   color?: string;
   onMessage?: (message: WSMessage) => void;
+  onReconnect?: () => void;
   enabled?: boolean;
 }
 
@@ -37,6 +38,7 @@ export const useLobbyWebSocket = ({
   username = "Anonymous",
   color,
   onMessage,
+  onReconnect,
   enabled = true,
 }: UseLobbyWebSocketOptions): UseLobbyWebSocketReturn => {
   const [status, setStatus] = useState<WSConnectionStatus>("disconnected");
@@ -53,6 +55,9 @@ export const useLobbyWebSocket = ({
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastCursorSendRef = useRef(0);
   const onMessageRef = useRef(onMessage);
+  const onReconnectRef = useRef(onReconnect);
+  const hasConnectedRef = useRef(false);
+  const awaitingClientHelloRef = useRef(false);
 
   const pendingCursorsRef = useRef<Map<string, CursorMoveData>>(new Map());
   const cursorFrameRef = useRef<number | null>(null);
@@ -60,6 +65,10 @@ export const useLobbyWebSocket = ({
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
+
+  useEffect(() => {
+    onReconnectRef.current = onReconnect;
+  }, [onReconnect]);
 
   const flushPendingCursors = useCallback(() => {
     cursorFrameRef.current = null;
@@ -123,6 +132,12 @@ export const useLobbyWebSocket = ({
 
       setStatus("connected");
       reconnectAttemptRef.current = 0;
+
+      if (hasConnectedRef.current) {
+        awaitingClientHelloRef.current = true;
+      } else {
+        hasConnectedRef.current = true;
+      }
     };
 
     ws.onmessage = (event) => {
@@ -140,6 +155,11 @@ export const useLobbyWebSocket = ({
             const data = message.data as ClientHelloData;
             if (typeof data?.clientId === "string") {
               setClientId(data.clientId);
+
+              if (awaitingClientHelloRef.current) {
+                awaitingClientHelloRef.current = false;
+                onReconnectRef.current?.();
+              }
             }
             continue;
           }

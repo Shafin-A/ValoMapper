@@ -137,4 +137,49 @@ describe("useLobbyWebSocket", () => {
     expect(result.current.clientId).toBe("socket-1");
     expect(onMessage).not.toHaveBeenCalled();
   });
+
+  it("notifies once per reconnect after the client hello", () => {
+    const onReconnect = jest.fn();
+
+    const { rerender } = renderHook(
+      ({ username }) =>
+        useLobbyWebSocket({ lobbyCode: "ABCD", username, onReconnect }),
+      {
+        initialProps: { username: "Anonymous" },
+        reactStrictMode: false,
+      },
+    );
+
+    const hello = (clientId: string) => ({
+      data: JSON.stringify({ type: "client_hello", data: { clientId } }),
+    });
+
+    const firstSocket = MockWebSocket.instances[0];
+    act(() => {
+      firstSocket.emitOpen();
+    });
+    act(() => {
+      firstSocket.onmessage?.(hello("socket-1"));
+    });
+
+    expect(onReconnect).not.toHaveBeenCalled();
+
+    rerender({ username: "DesktopUser" });
+
+    const secondSocket = MockWebSocket.instances[1];
+    act(() => {
+      secondSocket.emitOpen();
+    });
+    act(() => {
+      secondSocket.onmessage?.(hello("socket-2"));
+    });
+
+    expect(onReconnect).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      secondSocket.onmessage?.(hello("socket-2"));
+    });
+
+    expect(onReconnect).toHaveBeenCalledTimes(1);
+  });
 });

@@ -156,6 +156,7 @@ interface CanvasActionsContextType {
   getLatestEntities: () => CanvasEntitiesSnapshot;
   enqueueCanvasPatchEntry: (entry: CanvasPatchEntry) => void;
   flushCanvasPatch: () => Promise<void>;
+  hasPendingCanvasPatches: () => boolean;
   setCurrentStageScale: Dispatch<SetStateAction<number>>;
   agentsSettings: IconSettings;
   abilitiesSettings: IconSettings;
@@ -552,6 +553,7 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       getLatestEntities: canvasState.getLatestEntities,
       enqueueCanvasPatchEntry: canvasState.enqueueCanvasPatchEntry,
       flushCanvasPatch: canvasState.flushCanvasPatch,
+      hasPendingCanvasPatches: canvasState.hasPendingCanvasPatches,
       setCurrentStageScale: canvasState.setCurrentStageScale,
       agentsSettings: canvasState.agentsSettings,
       abilitiesSettings: canvasState.abilitiesSettings,
@@ -577,6 +579,7 @@ export const CanvasProvider: FC<CanvasProviderProps> = ({
       canvasState.getLatestEntities,
       canvasState.enqueueCanvasPatchEntry,
       canvasState.flushCanvasPatch,
+      canvasState.hasPendingCanvasPatches,
       canvasState.setCurrentStageScale,
       canvasState.agentsSettings,
       canvasState.abilitiesSettings,

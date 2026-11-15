@@ -4,13 +4,17 @@ import { useUser } from "@/hooks/api/use-user";
 import { useUpdateLobby } from "@/hooks/api/use-update-lobby";
 import { useLobbyWebSocket } from "@/hooks/use-lobby-websocket";
 import { useSettings } from "@/contexts/settings-context";
+import { apiFetch } from "@/lib/api";
+import { fetchLobbyStateForResync } from "@/lib/reconnect-resync";
 import { createCanvasBroadcasters } from "@/lib/ws-broadcasts";
 import { createWSMessageHandler } from "@/lib/ws-message-handler";
 import { electFullSyncSender } from "@/lib/ws-sync-election";
+import type { Lobby } from "@/lib/types";
 import type {
   FullSyncData,
   UserPresence,
   WSConnectionStatus,
+  WSMessage,
 } from "@/lib/websocket-types";
 import { WS_MESSAGE_TYPES } from "@/lib/websocket-types";
 import { useParams } from "next/navigation";
@@ -34,8 +38,9 @@ import {
 import { RemoteCursorsProvider } from "./cursor-context";
 import { WebSocketPresenceProvider } from "./websocket-presence-context";
 
-interface WebSocketContextType
-  extends ReturnType<typeof createCanvasBroadcasters> {
+interface WebSocketContextType extends ReturnType<
+  typeof createCanvasBroadcasters
+> {
   status: WSConnectionStatus;
   users: UserPresence[];
   sendCursorPosition: (x: number, y: number) => void;
@@ -45,6 +50,8 @@ interface WebSocketContextType
 const WebSocketContext = createContext<WebSocketContextType | undefined>(
   undefined,
 );
+
+const FULL_SYNC_SUPPRESSION_MS = 3000;
 
 const WebSocketCursorContext = createContext<
   ((x: number, y: number) => void) | undefined
@@ -77,6 +84,7 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     getCurrentStateForSync,
     applyRemoteState,
     resetState,
+    hasPendingCanvasPatches,
   } = useCanvasActions();
 
   const { updateAgentsSettings, updateAbilitiesSettings } = useSettings();
@@ -127,11 +135,48 @@ export const WebSocketProvider: FC<{ children: ReactNode }> = ({
     ],
   );
 
+  const suppressFullSyncUntilRef = useRef(0);
+
+  const handleSocketMessage = useCallback(
+    (message: WSMessage) => {
+      const suppressed =
+        message.type === WS_MESSAGE_TYPES.FULL_SYNC &&
+        Date.now() < suppressFullSyncUntilRef.current;
+
+      if (!suppressed) {
+        handleMessage(message);
+      }
+    },
+    [handleMessage],
+  );
+
+  const reconcileAfterReconnect = useCallback(() => {
+    if (editingTextId) {
+      return;
+    }
+
+    void (async () => {
+      const state = await fetchLobbyStateForResync({
+        lobbyCode,
+        hasPendingCanvasPatches,
+        fetchLobby: (code) => apiFetch<Lobby>(`/api/lobbies/${code}`),
+      });
+
+      if (!state) {
+        return;
+      }
+
+      applyRemoteState(state);
+      suppressFullSyncUntilRef.current = Date.now() + FULL_SYNC_SUPPRESSION_MS;
+    })();
+  }, [applyRemoteState, editingTextId, hasPendingCanvasPatches, lobbyCode]);
+
   const { status, users, clientId, cursors, sendMessage, sendCursorPosition } =
     useLobbyWebSocket({
       lobbyCode,
       username: user?.name,
-      onMessage: handleMessage,
+      onMessage: handleSocketMessage,
+      onReconnect: reconcileAfterReconnect,
       enabled: !!lobbyCode,
     });
 

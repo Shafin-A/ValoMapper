@@ -763,5 +763,6 @@ export const useCanvasState = ({
     getLatestEntities,
     enqueueCanvasPatchEntry,
     flushCanvasPatch,
+    hasPendingCanvasPatches,
   };
 };
