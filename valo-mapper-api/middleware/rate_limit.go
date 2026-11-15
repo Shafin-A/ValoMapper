@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"valo-mapper-api/utils"
+
 	"golang.org/x/time/rate"
 )
 
@@ -152,6 +154,25 @@ func RateLimitMiddleware(limiter *IPRateLimiter) func(http.Handler) http.Handler
 			}
 
 			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// RouteRateLimitMiddleware applies an extra per-IP budget to one expensive route.
+func RouteRateLimitMiddleware(limiter *IPRateLimiter, message string, retryAfter time.Duration) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if limiter.GetLimiter(getIP(r)).Allow() {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			rateLimitRejections.Add(1)
+			utils.SendJSONError(w, &utils.HTTPError{
+				Status:     http.StatusTooManyRequests,
+				Message:    message,
+				RetryAfter: retryAfter,
+			}, GetRequestID(r))
 		})
 	}
 }

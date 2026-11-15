@@ -15,7 +15,11 @@ const FORWARDED_HEADER_NAMES = [
   "fly-client-ip",
 ];
 
-const getForwardedHeaders = (request?: Request): Record<string, string> => {
+// Per-IP limits on the API key on these headers; without them every caller
+// shares the Next.js server's IP.
+export const getForwardedHeaders = (
+  request?: Request,
+): Record<string, string> => {
   if (!request) {
     return {};
   }

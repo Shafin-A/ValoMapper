@@ -3,7 +3,9 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"golang.org/x/time/rate"
 )
@@ -86,6 +88,59 @@ func TestGetIP(t *testing.T) {
 				t.Errorf("expected IP %q, got %q", tt.expectedIP, ip)
 			}
 		})
+	}
+}
+
+func TestRouteRateLimitMiddleware(t *testing.T) {
+	limiter := NewIPRateLimiter(rate.Limit(1), 1)
+	const message = "Too many lobbies created."
+
+	nextCalls := 0
+	handler := RouteRateLimitMiddleware(limiter, message, 10*time.Second)(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			nextCalls++
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+
+	first := httptest.NewRequest("POST", "/api/lobbies", nil)
+	first.RemoteAddr = "192.168.1.1:1234"
+	firstRecorder := httptest.NewRecorder()
+	handler.ServeHTTP(firstRecorder, first)
+
+	if firstRecorder.Code != http.StatusOK {
+		t.Fatalf("first request expected status 200, got %d", firstRecorder.Code)
+	}
+
+	second := httptest.NewRequest("POST", "/api/lobbies", nil)
+	second.RemoteAddr = "192.168.1.1:1234"
+	secondRecorder := httptest.NewRecorder()
+	handler.ServeHTTP(secondRecorder, second)
+
+	if secondRecorder.Code != http.StatusTooManyRequests {
+		t.Fatalf("second request expected status 429, got %d", secondRecorder.Code)
+	}
+	if nextCalls != 1 {
+		t.Errorf("rejected request should not reach the handler, got %d calls", nextCalls)
+	}
+	if got := secondRecorder.Header().Get("Retry-After"); got != "10" {
+		t.Errorf("expected Retry-After 10, got %q", got)
+	}
+	if got := secondRecorder.Header().Get("Content-Type"); got != "application/json" {
+		t.Errorf("expected JSON error body, got content type %q", got)
+	}
+	if body := secondRecorder.Body.String(); !strings.Contains(body, message) {
+		t.Errorf("expected error message in body, got %s", body)
+	}
+
+	// The budget is per IP, so another caller is unaffected.
+	other := httptest.NewRequest("POST", "/api/lobbies", nil)
+	other.RemoteAddr = "192.168.1.2:1234"
+	otherRecorder := httptest.NewRecorder()
+	handler.ServeHTTP(otherRecorder, other)
+
+	if otherRecorder.Code != http.StatusOK {
+		t.Errorf("request from different IP expected status 200, got %d", otherRecorder.Code)
 	}
 }
 

@@ -1,3 +1,4 @@
+import { getForwardedHeaders } from "@/lib/api-proxy";
 import { fetchBackendWithTimeout } from "@/lib/backend-fetch";
 
 export const POST = async (request: Request): Promise<Response> => {
@@ -17,7 +18,10 @@ export const POST = async (request: Request): Promise<Response> => {
       "/api/images/upload",
       {
         method: "POST",
-        headers: { "Content-Type": contentType },
+        headers: {
+          "Content-Type": contentType,
+          ...getForwardedHeaders(request),
+        },
         body,
       },
     );
