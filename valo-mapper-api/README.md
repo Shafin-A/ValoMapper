@@ -16,6 +16,8 @@ Go REST API for ValoMapper, backed by PostgreSQL.
    DB_USER=postgres
    DB_PASSWORD=your_db_password
    DB_NAME=valo-mapper
+   # "disable" for local Postgres; use "require" or stricter for managed databases
+   DB_SSLMODE=disable
 
    # Raw Firebase service account JSON (single-line string)
    GOOGLE_APPLICATION_CREDENTIALS='{"type":"service_account",...}'

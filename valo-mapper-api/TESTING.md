@@ -156,7 +156,7 @@ Tests automatically run on GitHub Actions with a PostgreSQL service container. N
 ### Integration Tests
 
 - **Database**: Connection, queries, transactions
-- **Handlers**: Full request/response cycle with real database
+- **Handlers**: Full request/response cycle with real database (billing, stack, lobby, canvas, and auth suites; strategy, folder, and user handlers use mock repositories)
 - **Models**: CRUD operations (User, Strategy, Folder, Lobby, Canvas, Map)
   - Save/Create operations
   - Update operations
