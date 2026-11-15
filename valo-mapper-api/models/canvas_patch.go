@@ -161,6 +161,17 @@ func applyEntityPatch(ctx context.Context, tx pgx.Tx, lobbyCode string, entry Ca
 	return err
 }
 
+const maxPointsPerShape = 25000
+
+func flattenPositions(points []Position) []float64 {
+	flat := make([]float64, 0)
+	for _, point := range points {
+		flat = append(flat, point.X, point.Y)
+	}
+
+	return flat
+}
+
 func isEntityPatchEntity(entity string) bool {
 	_, ok := entityPatchDefinitions[strings.ToLower(entity)]
 	return ok
@@ -215,11 +226,11 @@ func abilityPatchValues(_ context.Context, _ pgx.Tx, lobbyCode string, entry Can
 	if p.ID == "" {
 		return nil, invalidPatchError("missing id for ability upsert")
 	}
-
-	pathArray := make([]float64, 0, len(p.CurrentPath)*2)
-	for _, point := range p.CurrentPath {
-		pathArray = append(pathArray, point.X, point.Y)
+	if len(p.CurrentPath) > maxPointsPerShape {
+		return nil, invalidPatchError("too many points: %d (max %d)", len(p.CurrentPath), maxPointsPerShape)
 	}
+
+	pathArray := flattenPositions(p.CurrentPath)
 
 	return []any{
 		p.ID, lobbyCode, entry.PhaseIndex, p.AgentName, p.Action, p.X, p.Y,
@@ -239,11 +250,11 @@ func drawLinePatchValues(_ context.Context, _ pgx.Tx, lobbyCode string, entry Ca
 	if p.ID == "" {
 		return nil, invalidPatchError("missing id for draw line upsert")
 	}
-
-	pointsArray := make([]float64, 0, len(p.Points)*2)
-	for _, point := range p.Points {
-		pointsArray = append(pointsArray, point.X, point.Y)
+	if len(p.Points) > maxPointsPerShape {
+		return nil, invalidPatchError("too many points: %d (max %d)", len(p.Points), maxPointsPerShape)
 	}
+
+	pointsArray := flattenPositions(p.Points)
 
 	return []any{
 		p.ID, lobbyCode, entry.PhaseIndex, p.Tool, pointsArray, p.Color, p.Size,

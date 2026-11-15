@@ -500,10 +500,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		}
 
 		for _, ab := range phase.AbilitiesOnCanvas {
-			pathArray := make([]float64, 0)
-			for _, pt := range ab.CurrentPath {
-				pathArray = append(pathArray, pt.X, pt.Y)
-			}
+			pathArray := flattenPositions(ab.CurrentPath)
 			abilityRows = append(abilityRows, []any{
 				ab.ID, lobbyCode, ab.AgentName, ab.Action, ab.X, ab.Y,
 				ab.AttachedToID, pathArray, ab.CurrentRotation, ab.CurrentLength, ab.IsAlly, ab.IconOnly, ab.ShowOuterCircle, phaseIndex, ab.Note,
@@ -511,10 +508,7 @@ func SaveCanvasState(lobbyCode string, state FullCanvasState) error {
 		}
 
 		for _, l := range phase.DrawLines {
-			pointsArray := make([]float64, 0)
-			for _, p := range l.Points {
-				pointsArray = append(pointsArray, p.X, p.Y)
-			}
+			pointsArray := flattenPositions(l.Points)
 			lineRows = append(lineRows, []any{
 				l.ID, lobbyCode, l.Tool, pointsArray, l.Color, l.Size,
 				l.IsDashed, l.IsArrowHead, l.Shape, l.Opacity, l.TraversalTime, phaseIndex,
