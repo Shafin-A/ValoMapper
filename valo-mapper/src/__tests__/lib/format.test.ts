@@ -5,6 +5,9 @@ const NOW = new Date("2026-06-15T12:00:00Z");
 const secondsAgo = (seconds: number) =>
   new Date(NOW.getTime() - seconds * 1000);
 
+const secondsFromNow = (seconds: number) =>
+  new Date(NOW.getTime() + seconds * 1000);
+
 describe("getRelativeTime", () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -18,6 +21,11 @@ describe("getRelativeTime", () => {
   it("returns now for timestamps less than a second old", () => {
     expect(getRelativeTime(NOW)).toBe("now");
     expect(getRelativeTime(secondsAgo(0.4))).toBe("now");
+  });
+
+  it("returns now for timestamps slightly ahead of the clock", () => {
+    expect(getRelativeTime(secondsFromNow(0.05))).toBe("now");
+    expect(getRelativeTime(secondsFromNow(0.999))).toBe("now");
   });
 
   it("formats recent timestamps in seconds", () => {
@@ -34,6 +42,22 @@ describe("getRelativeTime", () => {
     expect(getRelativeTime(secondsAgo(2 * 31536000))).toBe("2 years ago");
   });
 
+  it("formats future timestamps in the matching unit", () => {
+    expect(getRelativeTime(secondsFromNow(1))).toBe("in 1 second");
+    expect(getRelativeTime(secondsFromNow(60))).toBe("in 1 minute");
+    expect(getRelativeTime(secondsFromNow(3 * 3600))).toBe("in 3 hours");
+    expect(getRelativeTime(secondsFromNow(2 * 86400))).toBe("in 2 days");
+    expect(getRelativeTime(secondsFromNow(3 * 604800))).toBe("in 3 weeks");
+    expect(getRelativeTime(secondsFromNow(5 * 2592000))).toBe("in 5 months");
+    expect(getRelativeTime(secondsFromNow(2 * 31536000))).toBe("in 2 years");
+  });
+
+  it("keeps the magnitude symmetric for past and future timestamps", () => {
+    expect(getRelativeTime(secondsAgo(90))).toBe("1 minute ago");
+    expect(getRelativeTime(secondsFromNow(90))).toBe("in 1 minute");
+    expect(getRelativeTime(secondsAgo(1.5 * 31536000))).toBe("last year");
+    expect(getRelativeTime(secondsFromNow(1.5 * 31536000))).toBe("next year");
+  });
 });
 
 describe("capitalize", () => {

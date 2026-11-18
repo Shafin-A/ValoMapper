@@ -1,6 +1,7 @@
 export const getRelativeTime = (date: Date) => {
   const now = new Date();
-  const elapsed = (now.getTime() - date.getTime()) / 1000;
+
+  const secondsUntil = (date.getTime() - now.getTime()) / 1000;
 
   const intervals = [
     { label: "year", seconds: 31536000 },
@@ -15,9 +16,9 @@ export const getRelativeTime = (date: Date) => {
   const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
   for (const interval of intervals) {
-    const count = Math.floor(elapsed / interval.seconds);
-    if (count >= 1 || count <= -1) {
-      return rtf.format(-count, interval.label as Intl.RelativeTimeFormatUnit);
+    const count = Math.trunc(secondsUntil / interval.seconds);
+    if (count !== 0) {
+      return rtf.format(count, interval.label as Intl.RelativeTimeFormatUnit);
     }
   }
 
