@@ -43,6 +43,9 @@ func TestParseBuild(t *testing.T) {
 	if !IsSupportedBuild("13.09") {
 		t.Error("13.09 should be supported")
 	}
+	if !IsSupportedBuild("13.10") {
+		t.Error("13.10 should be supported")
+	}
 	if IsSupportedBuild("13.99") {
 		t.Error("13.99 should not be supported")
 	}

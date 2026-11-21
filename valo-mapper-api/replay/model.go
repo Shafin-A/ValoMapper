@@ -5,7 +5,7 @@ package replay
 // ParserVersion is part of the cache key and the X-Parser-Version header. Bump
 // the leading number whenever the normalised output can change, even if VRFKit
 // itself did not change.
-const ParserVersion = "71+vrfkit.0.4.0"
+const ParserVersion = "72+vrfkit.0.5.1"
 
 // Match mirrors ReplayMatch in the frontend; field names and JSON tags are the
 // wire contract, so do not rename them without a frontend change.
