@@ -41,11 +41,12 @@ import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useWebSocketUsers } from "@/contexts/websocket-presence-context";
 import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
+import { useHasCoarsePointer } from "@/hooks/use-has-coarse-pointer";
 import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, ReactElement, SetStateAction } from "react";
 import { HelpTab } from "@/components/help/help-tab";
 import { DISCORD_INVITE_URL } from "@/lib/consts";
 
@@ -54,6 +55,27 @@ interface SiteHeaderProps {
   setRightSidebarOpen: Dispatch<SetStateAction<boolean>>;
   showSidebarToggles?: boolean;
 }
+
+const HeaderIconTooltip = ({
+  label,
+  enabled,
+  children,
+}: {
+  label: string;
+  enabled: boolean;
+  children: ReactElement;
+}) => {
+  if (!enabled) return children;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={6}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
 
 export const SiteHeader = ({
   setLeftSidebarOpen,
@@ -64,6 +86,7 @@ export const SiteHeader = ({
   const { data: user, isLoading } = useUser();
   const t = useTranslations("nav");
   const pathname = usePathname();
+  const hasCoarsePointer = useHasCoarsePointer();
   const users = useWebSocketUsers();
   const isRSOUser = Boolean(user?.rsoSubjectId);
   const canCheckPendingInvite =
@@ -79,15 +102,20 @@ export const SiteHeader = ({
         <div className="flex h-full items-center gap-1 sm:gap-2">
           {showSidebarToggles && (
             <>
-              <Button
-                className="h-10 w-10 sm:h-8 sm:w-8"
-                variant="ghost"
-                size="icon"
-                aria-label={t("toggleLeftSidebar")}
-                onClick={() => setLeftSidebarOpen((prev) => !prev)}
+              <HeaderIconTooltip
+                label={t("toggleLeftSidebar")}
+                enabled={!hasCoarsePointer}
               >
-                <SidebarIcon />
-              </Button>
+                <Button
+                  className="h-10 w-10 sm:h-8 sm:w-8"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("toggleLeftSidebar")}
+                  onClick={() => setLeftSidebarOpen((prev) => !prev)}
+                >
+                  <SidebarIcon />
+                </Button>
+              </HeaderIconTooltip>
               <Separator
                 orientation="vertical"
                 className="mr-2 hidden h-4 sm:block"
@@ -153,38 +181,41 @@ export const SiteHeader = ({
 
           <LanguageSwitcher />
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href={DISCORD_INVITE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t("discordLabel")}
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "icon" }),
-                  "h-10 w-10 text-white/70 transition-colors hover:text-white sm:h-8 sm:w-8",
-                  showSidebarToggles && "hidden sm:inline-flex",
-                )}
-              >
-                <DiscordIcon className="size-4" />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {t("discordTooltip")}
-            </TooltipContent>
-          </Tooltip>
+          <HeaderIconTooltip
+            label={t("discordTooltip")}
+            enabled={!hasCoarsePointer}
+          >
+            <Link
+              href={DISCORD_INVITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("discordLabel")}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon" }),
+                "h-10 w-10 text-white/70 transition-colors hover:text-white sm:h-8 sm:w-8",
+                showSidebarToggles && "hidden sm:inline-flex",
+              )}
+            >
+              <DiscordIcon className="size-4" />
+            </Link>
+          </HeaderIconTooltip>
 
           <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                className="h-10 w-10 sm:h-8 sm:w-8"
-                variant="ghost"
-                size="icon"
-                aria-label={t("openHelp")}
-              >
-                <CircleQuestionMark />
-              </Button>
-            </DialogTrigger>
+            <HeaderIconTooltip
+              label={t("help")}
+              enabled={!hasCoarsePointer}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  className="h-10 w-10 sm:h-8 sm:w-8"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("openHelp")}
+                >
+                  <CircleQuestionMark />
+                </Button>
+              </DialogTrigger>
+            </HeaderIconTooltip>
 
             <DialogContent className="flex h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none flex-col overflow-hidden p-4 sm:h-[min(640px,90dvh)] sm:w-[90vw] sm:max-w-4xl sm:p-6">
               <DialogHeader className="shrink-0 pr-8 text-left">
@@ -197,16 +228,21 @@ export const SiteHeader = ({
           </Dialog>
 
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                className="h-10 w-10 sm:h-8 sm:w-8"
-                variant="ghost"
-                size="icon"
-                aria-label={t("accountMenu")}
-              >
-                <UserRound />
-              </Button>
-            </DropdownMenuTrigger>
+            <HeaderIconTooltip
+              label={t("accountMenu")}
+              enabled={!hasCoarsePointer}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className="h-10 w-10 sm:h-8 sm:w-8"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("accountMenu")}
+                >
+                  <UserRound />
+                </Button>
+              </DropdownMenuTrigger>
+            </HeaderIconTooltip>
             <DropdownMenuContent className="w-56" align="end">
               {isLoading || !user ? (
                 <DropdownMenuItem asChild>
@@ -258,15 +294,20 @@ export const SiteHeader = ({
                 orientation="vertical"
                 className="ml-2 hidden h-4 sm:block"
               />
-              <Button
-                className="h-10 w-10 sm:h-8 sm:w-8"
-                variant="ghost"
-                size="icon"
-                aria-label={t("toggleRightSidebar")}
-                onClick={() => setRightSidebarOpen((prev) => !prev)}
+              <HeaderIconTooltip
+                label={t("toggleRightSidebar")}
+                enabled={!hasCoarsePointer}
               >
-                <SidebarIcon className="rotate-180" />
-              </Button>
+                <Button
+                  className="h-10 w-10 sm:h-8 sm:w-8"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("toggleRightSidebar")}
+                  onClick={() => setRightSidebarOpen((prev) => !prev)}
+                >
+                  <SidebarIcon className="rotate-180" />
+                </Button>
+              </HeaderIconTooltip>
             </>
           )}
         </div>
