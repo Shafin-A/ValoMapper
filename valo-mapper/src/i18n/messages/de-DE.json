@@ -5,7 +5,8 @@
       "cancel": "Abbrechen",
       "close": "Schließen",
       "delete": "Löschen",
-      "retry": "Erneut versuchen"
+      "retry": "Erneut versuchen",
+      "edit": "Bearbeiten"
     },
     "loading": "Wird geladen…",
     "termsOfService": "Nutzungsbedingungen",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "Externe Links ausblenden",
     "supportOnKofi": "Auf Ko-fi unterstützen",
     "joinDiscord": "Tritt dem Discord bei",
-    "customColor": "Benutzerdefinierte Farbe"
+    "customColor": "Benutzerdefinierte Farbe",
+    "toggleSidebar": "Seitenleiste umschalten",
+    "previousSlide": "Vorherige Folie",
+    "nextSlide": "Nächste Folie",
+    "more": "Mehr",
+    "breadcrumb": "Navigationspfad",
+    "skipToContent": "Zum Hauptinhalt springen",
+    "theme": {
+      "toggle": "Thema umschalten",
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System"
+    },
+    "sidebar": "Seitenleiste",
+    "sidebarDescription": "Zeigt die mobile Seitenleiste an.",
+    "iconAlt": "{name}-Symbol",
+    "image": "Bild"
   },
   "auth": {
     "signInTitle": "Melde dich bei deinem Konto an",
@@ -243,7 +260,11 @@
     "saveTitle": "Speichere deine Strategie",
     "saveDescription": "Speichere deine Strategien, damit du jederzeit darauf zurückgreifen kannst. Halte alles mit Ordnern organisiert.\n\nZum Speichern von Strategien ist ein Konto erforderlich.",
     "iconsTitle": "Symbole",
-    "iconsDescription": "Füge Symbole wie den Spike oder Waffen hinzu.\n\nZiehe Symbole aus der Seitenleiste und lege sie wie Agenten und Fähigkeiten auf der Karte ab.\n\nDu kannst auch auf das Symbol klicken, um es auf der Karte zu platzieren."
+    "iconsDescription": "Füge Symbole wie den Spike oder Waffen hinzu.\n\nZiehe Symbole aus der Seitenleiste und lege sie wie Agenten und Fähigkeiten auf der Karte ab.\n\nDu kannst auch auf das Symbol klicken, um es auf der Karte zu platzieren.",
+    "skip": "Überspringen",
+    "previous": "Zurück",
+    "finish": "Fertigstellen",
+    "nextStep": "Weiter ({current} / {total})"
   },
   "matchDetails": {
     "loading": "Match-Zusammenfassung wird geladen…",
@@ -306,7 +327,8 @@
     "cancel": "Abbrechen",
     "creating": "Wird erstellt…",
     "copyToLobbyButton": "In die Lobby kopieren",
-    "preparing": "Review wird vorbereitet…"
+    "preparing": "Review wird vorbereitet…",
+    "eventLog": "Ereignisprotokoll"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "Abspielen/Pause",
       "seek": "Spulen",
       "speed": "Geschwindigkeit",
-      "timeline": "Replay-Zeitleiste"
+      "timeline": "Replay-Zeitleiste",
+      "spaceKey": "Leertaste",
+      "barrierDrop": "{time} — Barriere fällt",
+      "spikePlanted": "{time} — Spike platziert",
+      "spikeDefused": "{time} – Spike entschärft",
+      "spikeDetonated": "{time} – Spike explodierte",
+      "killEvent": "{time} – {killer} hat {victim} getötet",
+      "unknownPlayer": "Unbekannt"
     },
     "settings": {
       "label": "Replay-Einstellungen",
@@ -371,7 +400,18 @@
       "charges": "Ladungen",
       "used": "verbraucht",
       "available": "verfügbar",
-      "cooldown": "{seconds}s Abklingzeit"
+      "cooldown": "{seconds}s Abklingzeit",
+      "round": "Runde {round}",
+      "blueAttack": "Blauer Angriff",
+      "redAttack": "Roter Angriff",
+      "time": "Zeit",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, one {# Credit} other {# Credits}}",
+      "blueTeam": "Blaues Team",
+      "redTeam": "Rotes Team",
+      "health": "Leben",
+      "armorHealth": "{armor} + Leben",
+      "weapon": "Waffe"
     },
     "session": {
       "missingId": "Diesem Replay-Link fehlt eine ID.",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "Füge Notizen zu diesem Lineup hinzu…",
       "lineColor": "Linienfarbe",
       "cancel": "Abbrechen",
-      "confirm": "Bestätigen"
+      "confirm": "Bestätigen",
+      "editTitle": "Lineup bearbeiten",
+      "detailsTitle": "Lineup-Details",
+      "editDescription": "Lineup-Bilder, Videos und Notizen bearbeiten",
+      "viewDescription": "Lineup-Bilder, Videos und Notizen ansehen",
+      "imageAlt": "Lineup {index}",
+      "removeImage": "Lineup-Bild {index} entfernen"
     },
     "icons": {
       "title": "Symbole",
@@ -869,7 +915,8 @@
       "invalidFile": "Ungültige Bilddatei",
       "failed": "Bild konnte nicht hochgeladen werden",
       "uploadImage": "Bild hochladen",
-      "uploadingImage": "Bild wird hochgeladen…"
+      "uploadingImage": "Bild wird hochgeladen…",
+      "skippedFiles": "Einige Dateien wurden übersprungen. Zulässige Typen: JPEG, PNG, GIF, WEBP."
     },
     "textEditor": {
       "editText": "Text bearbeiten",
@@ -885,7 +932,8 @@
       "numberedList": "Nummerierte Liste",
       "textColor": "Textfarbe {color}",
       "customColor": "Benutzerdefinierte Textfarbe",
-      "fontSize": "Schriftgröße"
+      "fontSize": "Schriftgröße",
+      "clickToAdd": "Klicken Sie, um Text hinzuzufügen..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "Tippe einen Agenten oder eine Fähigkeit an, um sie auszuwählen, und tippe dann auf die Karte, um sie zu platzieren. Ziehe sie in den Papierkorb, um sie zu löschen. Ziehe mit zwei Fingern zusammen, um zu zoomen, und ziehe die Karte, um sie zu verschieben.",
     "sidebarHelpDesktop": "Wähle einen Agenten oder eine Fähigkeit und klicke dann auf die Karte, um sie zu platzieren, oder ziehe sie direkt auf die Karte. Drücke E, während du über ein Element auf der Karte fährst, um es zu löschen.",
     "agentsSettings": "Agenten-Einstellungen",
-    "abilitiesSettings": "Fähigkeiten-Einstellungen"
+    "abilitiesSettings": "Fähigkeiten-Einstellungen",
+    "loading": "Agenten werden geladen...",
+    "loadLobbyFailed": "Lobby konnte nicht geladen werden",
+    "tryAgainLater": "Bitte versuchen Sie es später noch einmal"
   },
   "tools": {
     "maps": "Karten",
@@ -1058,5 +1109,36 @@
     "attackSide": "Angriff",
     "defenseSide": "Verteidigung",
     "rotateMapSide": "Kartenseite wechseln"
+  },
+  "toasts": {
+    "failed": "Es ist ein Fehler aufgetreten: {error}",
+    "tryAgain": "Bitte versuchen Sie es erneut.",
+    "saved": "Gespeichert",
+    "created": "Erstellt",
+    "updated": "Aktualisiert",
+    "deleted": "Gelöscht",
+    "inviteSent": "Einladung gesendet",
+    "inviteAccepted": "Einladung angenommen",
+    "inviteDeclined": "Einladung abgelehnt",
+    "memberRemoved": "Mitglied entfernt",
+    "leftStack": "Stack verlassen",
+    "subscriptionCanceled": "Das Abonnement wird am Ende des Abrechnungszeitraums gekündigt",
+    "subscriptionResumed": "Das Abonnement verlängert sich normal",
+    "profileDataUnavailable": "Benutzerdaten sind nicht verfügbar",
+    "nameRequired": "Der Name darf nicht leer sein",
+    "uidRequired": "Geben Sie eine UID ein, um einzuladen",
+    "filesSkipped": "Einige Dateien wurden übersprungen. Zulässige Typen: JPEG, PNG, GIF, WEBP.",
+    "screenshotFailed": "Screenshot konnte nicht gespeichert werden",
+    "canvasPatchFailed": "Das Canvas-Update ist fehlgeschlagen",
+    "shortcutError": "Fehler bei der Tastenkombination",
+    "profileUpdated": "Profil aktualisiert",
+    "folderCreated": "Ordner „{name}“ erstellt",
+    "folderUpdated": "Ordner „{name}“ aktualisiert",
+    "folderDeleted": "Ordner gelöscht",
+    "strategyCreated": "Strategie „{name}“ erstellt",
+    "strategyUpdated": "Strategie „{name}“ aktualisiert",
+    "strategyDeleted": "Strategie gelöscht",
+    "userDeleted": "Benutzer gelöscht",
+    "screenshotSaved": "Screenshot gespeichert"
   }
 }

@@ -5,7 +5,8 @@
       "cancel": "Cancel",
       "close": "Close",
       "delete": "Delete",
-      "retry": "Try again"
+      "retry": "Try again",
+      "edit": "Edit"
     },
     "loading": "Loading...",
     "termsOfService": "Terms of Service",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "Hide external links",
     "supportOnKofi": "Support on Ko-fi",
     "joinDiscord": "Join the Discord",
-    "customColor": "Custom color"
+    "customColor": "Custom color",
+    "toggleSidebar": "Toggle Sidebar",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide",
+    "more": "More",
+    "breadcrumb": "Breadcrumb",
+    "skipToContent": "Skip to main content",
+    "theme": {
+      "toggle": "Toggle theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "sidebar": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "iconAlt": "{name} icon",
+    "image": "Image"
   },
   "auth": {
     "signInTitle": "Sign in to your account",
@@ -243,7 +260,11 @@
     "saveTitle": "Save Your Strategy",
     "saveDescription": "Save your strategies so you can come back to them anytime. Keep everything organized with folders.\n\nCreating an account is required to save strategies.",
     "iconsTitle": "Icons",
-    "iconsDescription": "Add icons such as the Spike or weapons.\n\nDrag icons from the sidebar and drop them onto the map like agents and abilities.\n\nYou can also click on the icon and it will be placed on the map."
+    "iconsDescription": "Add icons such as the Spike or weapons.\n\nDrag icons from the sidebar and drop them onto the map like agents and abilities.\n\nYou can also click on the icon and it will be placed on the map.",
+    "skip": "Skip",
+    "previous": "Previous",
+    "finish": "Finish",
+    "nextStep": "Next ({current} / {total})"
   },
   "matchDetails": {
     "loading": "Loading match summary...",
@@ -306,7 +327,8 @@
     "cancel": "Cancel",
     "creating": "Creating...",
     "copyToLobbyButton": "Copy to Lobby",
-    "preparing": "Preparing review..."
+    "preparing": "Preparing review...",
+    "eventLog": "Event Log"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "play / pause",
       "seek": "seek",
       "speed": "speed",
-      "timeline": "Replay timeline"
+      "timeline": "Replay timeline",
+      "spaceKey": "Space",
+      "barrierDrop": "{time} — Barrier drop",
+      "spikePlanted": "{time} — Spike planted",
+      "spikeDefused": "{time} — Spike defused",
+      "spikeDetonated": "{time} — Spike detonated",
+      "killEvent": "{time} — {killer} killed {victim}",
+      "unknownPlayer": "Unknown"
     },
     "settings": {
       "label": "Replay settings",
@@ -371,7 +400,18 @@
       "charges": "charges",
       "used": "used",
       "available": "available",
-      "cooldown": "{seconds}s cooldown"
+      "cooldown": "{seconds}s cooldown",
+      "round": "Round {round}",
+      "blueAttack": "Blue attack",
+      "redAttack": "Red attack",
+      "time": "Time",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, one {# credit} other {# credits}}",
+      "blueTeam": "Blue Team",
+      "redTeam": "Red Team",
+      "health": "Health",
+      "armorHealth": "{armor} + health",
+      "weapon": "Weapon"
     },
     "session": {
       "missingId": "This replay link is missing an id.",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "Add any notes about this lineup...",
       "lineColor": "Line Color",
       "cancel": "Cancel",
-      "confirm": "Confirm"
+      "confirm": "Confirm",
+      "editTitle": "Edit Lineup",
+      "detailsTitle": "Lineup Details",
+      "editDescription": "Edit lineup images, video, and notes",
+      "viewDescription": "View lineup images, video, and notes",
+      "imageAlt": "Lineup {index}",
+      "removeImage": "Remove lineup image {index}"
     },
     "icons": {
       "title": "Icons",
@@ -869,7 +915,8 @@
       "invalidFile": "Invalid image file",
       "failed": "Failed to upload image",
       "uploadImage": "Upload image",
-      "uploadingImage": "Uploading image"
+      "uploadingImage": "Uploading image",
+      "skippedFiles": "Some files were skipped. Allowed types: JPEG, PNG, GIF, WEBP."
     },
     "textEditor": {
       "editText": "Edit text",
@@ -885,7 +932,8 @@
       "numberedList": "Numbered list",
       "textColor": "Text color {color}",
       "customColor": "Custom text color",
-      "fontSize": "Font size"
+      "fontSize": "Font size",
+      "clickToAdd": "Click to add text..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "Tap an agent or ability to select it, then tap the map to place it. Drag it to the trash zone to delete it. Pinch to zoom and drag the map to pan.",
     "sidebarHelpDesktop": "Choose an agent or ability, then click the map to place it, or drag it directly onto the map. Press E while hovering one on the map to delete it.",
     "agentsSettings": "Agents Settings",
-    "abilitiesSettings": "Abilities Settings"
+    "abilitiesSettings": "Abilities Settings",
+    "loading": "Loading agents...",
+    "loadLobbyFailed": "Failed to load lobby",
+    "tryAgainLater": "Please try again later"
   },
   "tools": {
     "maps": "Maps",
@@ -1058,5 +1109,36 @@
     "attackSide": "Attack",
     "defenseSide": "Defense",
     "rotateMapSide": "Rotate map side"
+  },
+  "toasts": {
+    "failed": "Something went wrong: {error}",
+    "tryAgain": "Please try again.",
+    "saved": "Saved",
+    "created": "Created",
+    "updated": "Updated",
+    "deleted": "Deleted",
+    "inviteSent": "Invite sent",
+    "inviteAccepted": "Invite accepted",
+    "inviteDeclined": "Invite declined",
+    "memberRemoved": "Member removed",
+    "leftStack": "Left Stack",
+    "subscriptionCanceled": "Subscription will cancel at the end of the billing period",
+    "subscriptionResumed": "Subscription will renew normally",
+    "profileDataUnavailable": "User data is not available",
+    "nameRequired": "Name cannot be empty",
+    "uidRequired": "Enter a UID to invite",
+    "filesSkipped": "Some files were skipped. Allowed types: JPEG, PNG, GIF, WEBP.",
+    "screenshotFailed": "Failed to save screenshot",
+    "canvasPatchFailed": "Canvas update failed",
+    "shortcutError": "Keyboard shortcut error",
+    "profileUpdated": "Profile updated",
+    "folderCreated": "Folder \"{name}\" created",
+    "folderUpdated": "Folder \"{name}\" updated",
+    "folderDeleted": "Folder deleted",
+    "strategyCreated": "Strategy \"{name}\" created",
+    "strategyUpdated": "Strategy \"{name}\" updated",
+    "strategyDeleted": "Strategy deleted",
+    "userDeleted": "User deleted",
+    "screenshotSaved": "Screenshot saved"
   }
 }

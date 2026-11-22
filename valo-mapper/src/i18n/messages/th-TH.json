@@ -5,7 +5,8 @@
       "cancel": "ยกเลิก",
       "close": "ปิด",
       "delete": "ลบ",
-      "retry": "ลองอีกครั้ง"
+      "retry": "ลองอีกครั้ง",
+      "edit": "แก้ไข"
     },
     "loading": "กำลังโหลด...",
     "termsOfService": "ข้อกำหนดในการให้บริการ",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "ซ่อนลิงก์ภายนอก",
     "supportOnKofi": "สนับสนุนเราบน Ko-fi",
     "joinDiscord": "เข้าร่วม Discord",
-    "customColor": "สีที่กำหนดเอง"
+    "customColor": "สีที่กำหนดเอง",
+    "toggleSidebar": "สลับแถบด้านข้าง",
+    "previousSlide": "สไลด์ก่อนหน้า",
+    "nextSlide": "สไลด์ถัดไป",
+    "more": "มากกว่า",
+    "breadcrumb": "เส้นทางนำทาง",
+    "skipToContent": "ข้ามไปที่เนื้อหาหลัก",
+    "theme": {
+      "toggle": "สลับธีม",
+      "light": "สว่าง",
+      "dark": "มืด",
+      "system": "ระบบ"
+    },
+    "sidebar": "แถบด้านข้าง",
+    "sidebarDescription": "แสดงแถบด้านข้างบนมือถือ",
+    "iconAlt": "ไอคอน {name}",
+    "image": "ภาพ"
   },
   "auth": {
     "signInTitle": "ลงชื่อเข้าใช้บัญชีของคุณ",
@@ -243,7 +260,11 @@
     "saveTitle": "บันทึกกลยุทธ์ของคุณ",
     "saveDescription": "บันทึกกลยุทธ์ของคุณเพื่อให้คุณสามารถกลับมาใช้กลยุทธ์เหล่านั้นได้ตลอดเวลา จัดระเบียบทุกอย่างด้วยโฟลเดอร์\n\nจำเป็นต้องสร้างบัญชีเพื่อบันทึกกลยุทธ์",
     "iconsTitle": "ไอคอน",
-    "iconsDescription": "เพิ่มไอคอนอย่าง Spike หรืออาวุธ\n\nลากไอคอนจากแถบด้านข้างแล้ววางลงบนแผนที่เหมือนกับเอเจนต์และความสามารถ\n\nคุณยังคลิกที่ไอคอนแล้วไอคอนจะถูกวางบนแผนที่ได้ด้วย"
+    "iconsDescription": "เพิ่มไอคอนอย่าง Spike หรืออาวุธ\n\nลากไอคอนจากแถบด้านข้างแล้ววางลงบนแผนที่เหมือนกับเอเจนต์และความสามารถ\n\nคุณยังคลิกที่ไอคอนแล้วไอคอนจะถูกวางบนแผนที่ได้ด้วย",
+    "skip": "ข้าม",
+    "previous": "ก่อนหน้า",
+    "finish": "เสร็จสิ้น",
+    "nextStep": "ถัดไป ({current} / {total})"
   },
   "matchDetails": {
     "loading": "กำลังโหลดสรุปแมตช์...",
@@ -306,7 +327,8 @@
     "cancel": "ยกเลิก",
     "creating": "กำลังสร้าง...",
     "copyToLobbyButton": "คัดลอกไปที่ล็อบบี้",
-    "preparing": "กำลังเตรียมรีวิว..."
+    "preparing": "กำลังเตรียมรีวิว...",
+    "eventLog": "บันทึกเหตุการณ์"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "เล่น / หยุดชั่วคราว",
       "seek": "เลื่อนตำแหน่ง",
       "speed": "ความเร็ว",
-      "timeline": "ไทม์ไลน์รีเพลย์"
+      "timeline": "ไทม์ไลน์รีเพลย์",
+      "spaceKey": "สเปซบาร์",
+      "barrierDrop": "{time} — แนวกั้นลดลง",
+      "spikePlanted": "{time} — Spike ถูกวาง",
+      "spikeDefused": "{time} — Spike ถูกปลด",
+      "spikeDetonated": "{time} — Spike ระเบิด",
+      "killEvent": "{time} — {killer} ฆ่า {victim}",
+      "unknownPlayer": "ไม่ทราบ"
     },
     "settings": {
       "label": "การตั้งค่ารีเพลย์",
@@ -371,7 +400,18 @@
       "charges": "จำนวนชาร์จ",
       "used": "ใช้แล้ว",
       "available": "พร้อมใช้",
-      "cooldown": "คูลดาวน์ {seconds} วินาที"
+      "cooldown": "คูลดาวน์ {seconds} วินาที",
+      "round": "รอบ {round}",
+      "blueAttack": "ฝ่ายน้ำเงินบุก",
+      "redAttack": "ฝ่ายแดงบุก",
+      "time": "เวลา",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, one {# เครดิต} other {# เครดิต}}",
+      "blueTeam": "ทีมสีน้ำเงิน",
+      "redTeam": "ทีมสีแดง",
+      "health": "พลังชีวิต",
+      "armorHealth": "{armor} + พลังชีวิต",
+      "weapon": "อาวุธ"
     },
     "session": {
       "missingId": "ลิงก์รีเพลย์นี้ไม่มี id",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "เพิ่มโน้ตเกี่ยวกับ lineup นี้...",
       "lineColor": "สีของเส้น",
       "cancel": "ยกเลิก",
-      "confirm": "ยืนยัน"
+      "confirm": "ยืนยัน",
+      "editTitle": "แก้ไข lineup",
+      "detailsTitle": "รายละเอียด lineup",
+      "editDescription": "แก้ไขรูปภาพ วิดีโอ และโน้ตของ lineup",
+      "viewDescription": "ดูรูปภาพ วิดีโอ และโน้ตของ lineup",
+      "imageAlt": "lineup {index}",
+      "removeImage": "ลบรูปภาพ lineup {index}"
     },
     "icons": {
       "title": "ไอคอน",
@@ -869,7 +915,8 @@
       "invalidFile": "ไฟล์ภาพไม่ถูกต้อง",
       "failed": "อัปโหลดรูปภาพไม่สำเร็จ",
       "uploadImage": "อัปโหลดรูปภาพ",
-      "uploadingImage": "กำลังอัปโหลดรูปภาพ"
+      "uploadingImage": "กำลังอัปโหลดรูปภาพ",
+      "skippedFiles": "ไฟล์บางไฟล์ถูกข้าม ประเภทที่อนุญาต: JPEG, PNG, GIF, WEBP"
     },
     "textEditor": {
       "editText": "แก้ไขข้อความ",
@@ -885,7 +932,8 @@
       "numberedList": "รายการแบบตัวเลข",
       "textColor": "สีข้อความ {color}",
       "customColor": "สีข้อความที่กำหนดเอง",
-      "fontSize": "ขนาดตัวอักษร"
+      "fontSize": "ขนาดตัวอักษร",
+      "clickToAdd": "คลิกเพื่อเพิ่มข้อความ..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "แตะเอเจนต์หรือความสามารถเพื่อเลือก จากนั้นแตะแผนที่เพื่อวาง ลากไปยังถังขยะเพื่อลบ หยิกเพื่อซูมและลากแผนที่เพื่อเลื่อน",
     "sidebarHelpDesktop": "เลือกเอเจนต์หรือความสามารถ จากนั้นคลิกแผนที่เพื่อวาง หรือลากไปยังแผนที่โดยตรง กด E ขณะชี้เมาส์ที่รายการบนแผนที่เพื่อลบ",
     "agentsSettings": "การตั้งค่าเอเจนต์",
-    "abilitiesSettings": "การตั้งค่าความสามารถ"
+    "abilitiesSettings": "การตั้งค่าความสามารถ",
+    "loading": "กำลังโหลดเอเจนต์...",
+    "loadLobbyFailed": "โหลดล็อบบี้ไม่สำเร็จ",
+    "tryAgainLater": "โปรดลองอีกครั้งในภายหลัง"
   },
   "tools": {
     "maps": "แผนที่",
@@ -1058,5 +1109,36 @@
     "attackSide": "โจมตี",
     "defenseSide": "ป้องกัน",
     "rotateMapSide": "สลับฝั่งแผนที่"
+  },
+  "toasts": {
+    "failed": "มีข้อผิดพลาดเกิดขึ้น: {error}",
+    "tryAgain": "โปรดลองอีกครั้ง",
+    "saved": "บันทึกแล้ว",
+    "created": "สร้างแล้ว",
+    "updated": "อัปเดตแล้ว",
+    "deleted": "ลบแล้ว",
+    "inviteSent": "ส่งคำเชิญแล้ว",
+    "inviteAccepted": "ตอบรับคำเชิญแล้ว",
+    "inviteDeclined": "คำเชิญถูกปฏิเสธ",
+    "memberRemoved": "สมาชิกถูกลบออก",
+    "leftStack": "ออกจาก Stack แล้ว",
+    "subscriptionCanceled": "การสมัครสมาชิกจะถูกยกเลิกเมื่อสิ้นสุดระยะเวลาการเรียกเก็บเงิน",
+    "subscriptionResumed": "การสมัครสมาชิกจะต่ออายุได้ตามปกติ",
+    "profileDataUnavailable": "ไม่มีข้อมูลผู้ใช้",
+    "nameRequired": "ชื่อไม่สามารถเว้นว่างได้",
+    "uidRequired": "ป้อน UID ที่จะเชิญ",
+    "filesSkipped": "ไฟล์บางไฟล์ถูกข้าม ประเภทที่อนุญาต: JPEG, PNG, GIF, WEBP",
+    "screenshotFailed": "ไม่สามารถบันทึกภาพหน้าจอ",
+    "canvasPatchFailed": "การอัปเดต Canvas ล้มเหลว",
+    "shortcutError": "ข้อผิดพลาดแป้นพิมพ์ลัด",
+    "profileUpdated": "อัปเดตโปรไฟล์แล้ว",
+    "folderCreated": "สร้างโฟลเดอร์ \"{name}\" แล้ว",
+    "folderUpdated": "อัปเดตโฟลเดอร์ \"{name}\" แล้ว",
+    "folderDeleted": "ลบโฟลเดอร์แล้ว",
+    "strategyCreated": "สร้างกลยุทธ์ \"{name}\" แล้ว",
+    "strategyUpdated": "อัปเดตกลยุทธ์ \"{name}\" แล้ว",
+    "strategyDeleted": "ลบกลยุทธ์แล้ว",
+    "userDeleted": "ลบผู้ใช้แล้ว",
+    "screenshotSaved": "บันทึกภาพหน้าจอแล้ว"
   }
 }

@@ -5,7 +5,8 @@
       "cancel": "İptal",
       "close": "Kapat",
       "delete": "Sil",
-      "retry": "Tekrar dene"
+      "retry": "Tekrar dene",
+      "edit": "Düzenle"
     },
     "loading": "Yükleniyor...",
     "termsOfService": "Hizmet Şartları",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "Harici bağlantıları gizle",
     "supportOnKofi": "Ko-fi'da destek ol",
     "joinDiscord": "Discord'a katıl",
-    "customColor": "Özel renk"
+    "customColor": "Özel renk",
+    "toggleSidebar": "Kenar Çubuğunu Değiştir",
+    "previousSlide": "Önceki slayt",
+    "nextSlide": "Sonraki slayt",
+    "more": "Daha",
+    "breadcrumb": "Gezinti yolu",
+    "skipToContent": "Ana içeriğe atla",
+    "theme": {
+      "toggle": "Temayı değiştir",
+      "light": "Açık",
+      "dark": "Karanlık",
+      "system": "Sistem"
+    },
+    "sidebar": "Kenar çubuğu",
+    "sidebarDescription": "Mobil kenar çubuğunu görüntüler.",
+    "iconAlt": "{name} simgesi",
+    "image": "Resim"
   },
   "auth": {
     "signInTitle": "Hesabına giriş yap",
@@ -243,7 +260,11 @@
     "saveTitle": "Stratejini Kaydet",
     "saveDescription": "İstediğin zaman geri dönebilmek için stratejilerini kaydet. Her şeyi klasörlerle düzenli tut.\n\nStrateji kaydetmek için hesap oluşturman gerekir.",
     "iconsTitle": "Simgeler",
-    "iconsDescription": "Spike veya silahlar gibi simgeler ekle.\n\nSimgeleri kenar çubuğundan sürükle ve ajanlar ve yetenekler gibi haritaya bırak.\n\nSimgeye tıklayarak da haritaya yerleştirebilirsin."
+    "iconsDescription": "Spike veya silahlar gibi simgeler ekle.\n\nSimgeleri kenar çubuğundan sürükle ve ajanlar ve yetenekler gibi haritaya bırak.\n\nSimgeye tıklayarak da haritaya yerleştirebilirsin.",
+    "skip": "Atla",
+    "previous": "Geri",
+    "finish": "Bitir",
+    "nextStep": "Sonraki ({current} / {total})"
   },
   "matchDetails": {
     "loading": "Maç özeti yükleniyor...",
@@ -306,7 +327,8 @@
     "cancel": "İptal",
     "creating": "Oluşturuluyor...",
     "copyToLobbyButton": "Lobiye kopyala",
-    "preparing": "İnceleme hazırlanıyor..."
+    "preparing": "İnceleme hazırlanıyor...",
+    "eventLog": "Olay Günlüğü"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "oynat / duraklat",
       "seek": "ileri/geri sar",
       "speed": "hız",
-      "timeline": "Tekrar zaman çizelgesi"
+      "timeline": "Tekrar zaman çizelgesi",
+      "spaceKey": "Boşluk",
+      "barrierDrop": "{time} — Bariyer inme anı",
+      "spikePlanted": "{time} — Spike yerleştirildi",
+      "spikeDefused": "{time} — Spike etkisiz hale getirildi",
+      "spikeDetonated": "{time} — Spike patlatıldı",
+      "killEvent": "{time} — {killer}, {victim}'yi öldürdü",
+      "unknownPlayer": "Bilinmiyor"
     },
     "settings": {
       "label": "Tekrar ayarları",
@@ -371,7 +400,18 @@
       "charges": "kullanım",
       "used": "kullanıldı",
       "available": "mevcut",
-      "cooldown": "{seconds} sn bekleme süresi"
+      "cooldown": "{seconds} sn bekleme süresi",
+      "round": "Raund {round}",
+      "blueAttack": "Mavi saldırı",
+      "redAttack": "Kırmızı saldırı",
+      "time": "Zaman",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, one {# kredi} other {# kredi}}",
+      "blueTeam": "Mavi Takım",
+      "redTeam": "Kırmızı Takım",
+      "health": "Can",
+      "armorHealth": "{armor} + can",
+      "weapon": "Silah"
     },
     "session": {
       "missingId": "Bu tekrar bağlantısında bir kimlik eksik.",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "Bu lineup hakkında notlarını ekle...",
       "lineColor": "Çizgi Rengi",
       "cancel": "İptal",
-      "confirm": "Onayla"
+      "confirm": "Onayla",
+      "editTitle": "Lineup'ı Düzenle",
+      "detailsTitle": "Lineup Ayrıntıları",
+      "editDescription": "Lineup görsellerini, videolarını ve notlarını düzenle",
+      "viewDescription": "Lineup görsellerini, videolarını ve notlarını görüntüle",
+      "imageAlt": "Lineup {index}",
+      "removeImage": "Lineup görselini kaldır {index}"
     },
     "icons": {
       "title": "Simgeler",
@@ -869,7 +915,8 @@
       "invalidFile": "Geçersiz görsel dosyası",
       "failed": "Görsel yüklenemedi",
       "uploadImage": "Görsel yükle",
-      "uploadingImage": "Görsel yükleniyor"
+      "uploadingImage": "Görsel yükleniyor",
+      "skippedFiles": "Bazı dosyalar atlandı. İzin verilen türler: JPEG, PNG, GIF, WEBP."
     },
     "textEditor": {
       "editText": "Metni düzenle",
@@ -885,7 +932,8 @@
       "numberedList": "Numaralı liste",
       "textColor": "Metin rengi {color}",
       "customColor": "Özel metin rengi",
-      "fontSize": "Yazı tipi boyutu"
+      "fontSize": "Yazı tipi boyutu",
+      "clickToAdd": "Metin eklemek için tıklayın..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "Bir ajanı veya yeteneği seçmek için dokun, ardından yerleştirmek için haritaya dokun. Silmek için çöp kutusuna sürükle. Yakınlaştırmak için iki parmağınla sıkıştır ve haritayı kaydırmak için sürükle.",
     "sidebarHelpDesktop": "Bir ajan veya yetenek seç, ardından yerleştirmek için haritaya tıkla veya doğrudan haritaya sürükle. Haritadaki bir öğenin üzerine gelerek E tuşuna basıp silebilirsin.",
     "agentsSettings": "Ajan ayarları",
-    "abilitiesSettings": "Yetenek ayarları"
+    "abilitiesSettings": "Yetenek ayarları",
+    "loading": "Ajanlar yükleniyor...",
+    "loadLobbyFailed": "Lobi yüklenemedi",
+    "tryAgainLater": "Lütfen daha sonra tekrar deneyin"
   },
   "tools": {
     "maps": "Haritalar",
@@ -1058,5 +1109,36 @@
     "attackSide": "Saldırı",
     "defenseSide": "Savunma",
     "rotateMapSide": "Harita tarafını değiştir"
+  },
+  "toasts": {
+    "failed": "Bir şeyler ters gitti: {error}",
+    "tryAgain": "Lütfen tekrar deneyin.",
+    "saved": "Kaydedildi",
+    "created": "Oluşturuldu",
+    "updated": "Güncellendi",
+    "deleted": "Silindi",
+    "inviteSent": "Davet gönderildi",
+    "inviteAccepted": "Davet kabul edildi",
+    "inviteDeclined": "Davet reddedildi",
+    "memberRemoved": "Üye kaldırıldı",
+    "leftStack": "Stack'ten ayrıldın",
+    "subscriptionCanceled": "Abonelik fatura döneminin sonunda iptal edilecektir",
+    "subscriptionResumed": "Abonelik normal şekilde yenilenecek",
+    "profileDataUnavailable": "Kullanıcı verileri mevcut değil",
+    "nameRequired": "Ad boş olamaz",
+    "uidRequired": "Davet etmek için bir UID girin",
+    "filesSkipped": "Bazı dosyalar atlandı. İzin verilen türler: JPEG, PNG, GIF, WEBP.",
+    "screenshotFailed": "Ekran görüntüsü kaydedilemedi",
+    "canvasPatchFailed": "Tuval güncellemesi başarısız oldu",
+    "shortcutError": "Klavye kısayol hatası",
+    "profileUpdated": "Profil güncellendi",
+    "folderCreated": "\"{name}\" klasörü oluşturuldu",
+    "folderUpdated": "\"{name}\" klasörü güncellendi",
+    "folderDeleted": "Klasör silindi",
+    "strategyCreated": "Strateji \"{name}\" oluşturuldu",
+    "strategyUpdated": "Strateji \"{name}\" güncellendi",
+    "strategyDeleted": "Strateji silindi",
+    "userDeleted": "Kullanıcı silindi",
+    "screenshotSaved": "Ekran görüntüsü kaydedildi"
   }
 }

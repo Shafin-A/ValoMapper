@@ -5,7 +5,8 @@
       "cancel": "إلغاء",
       "close": "إغلاق",
       "delete": "حذف",
-      "retry": "إعادة المحاولة"
+      "retry": "إعادة المحاولة",
+      "edit": "تحرير"
     },
     "loading": "تحميل...",
     "termsOfService": "شروط الخدمة",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "إخفاء الروابط الخارجية",
     "supportOnKofi": "دعم على Ko-fi",
     "joinDiscord": "انضم إلى Discord",
-    "customColor": "لون مخصص"
+    "customColor": "لون مخصص",
+    "toggleSidebar": "تبديل الشريط الجانبي",
+    "previousSlide": "الشريحة السابقة",
+    "nextSlide": "الشريحة التالية",
+    "more": "أكثر",
+    "breadcrumb": "مسار التنقل",
+    "skipToContent": "انتقل إلى المحتوى الرئيسي",
+    "theme": {
+      "toggle": "تبديل المظهر",
+      "light": "فاتح",
+      "dark": "داكن",
+      "system": "النظام"
+    },
+    "sidebar": "الشريط الجانبي",
+    "sidebarDescription": "يعرض الشريط الجانبي للجوال.",
+    "iconAlt": "رمز {name}",
+    "image": "صورة"
   },
   "auth": {
     "signInTitle": "سجّل الدخول إلى حسابك",
@@ -243,7 +260,11 @@
     "saveTitle": "احفظ استراتيجيتك",
     "saveDescription": "احفظ استراتيجياتك لتتمكن من العودة إليها في أي وقت. حافظ على تنظيم كل شيء باستخدام المجلدات.\n\nإنشاء حساب مطلوب لحفظ الاستراتيجيات.",
     "iconsTitle": "الأيقونات",
-    "iconsDescription": "أضف أيقونات مثل Spike أو الأسلحة.\n\nاسحب الأيقونات من الشريط الجانبي وأفلتها على الخريطة مثل الوكلاء والقدرات.\n\nيمكنك أيضًا النقر على الأيقونة وستُوضع على الخريطة."
+    "iconsDescription": "أضف أيقونات مثل Spike أو الأسلحة.\n\nاسحب الأيقونات من الشريط الجانبي وأفلتها على الخريطة مثل الوكلاء والقدرات.\n\nيمكنك أيضًا النقر على الأيقونة وستُوضع على الخريطة.",
+    "skip": "تخطٍّ",
+    "previous": "السابق",
+    "finish": "إنهاء",
+    "nextStep": "التالي ({current} / {total})"
   },
   "matchDetails": {
     "loading": "جارٍ تحميل ملخص المباراة...",
@@ -306,7 +327,8 @@
     "cancel": "إلغاء",
     "creating": "جارٍ الإنشاء...",
     "copyToLobbyButton": "نسخ إلى الردهة",
-    "preparing": "جارٍ إعداد المراجعة..."
+    "preparing": "جارٍ إعداد المراجعة...",
+    "eventLog": "سجل الأحداث"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "تشغيل / إيقاف مؤقت",
       "seek": "الانتقال",
       "speed": "السرعة",
-      "timeline": "الجدول الزمني للإعادة"
+      "timeline": "الجدول الزمني للإعادة",
+      "spaceKey": "مسافة",
+      "barrierDrop": "{time} — هبوط الحاجز",
+      "spikePlanted": "{time} — تم زرع Spike",
+      "spikeDefused": "{time} — تم إبطال Spike",
+      "spikeDetonated": "{time} — انفجر Spike",
+      "killEvent": "{time} — قتل {killer} {victim}",
+      "unknownPlayer": "مجهول"
     },
     "settings": {
       "label": "إعدادات الإعادة",
@@ -371,7 +400,18 @@
       "charges": "شحنات",
       "used": "مستخدم",
       "available": "متاح",
-      "cooldown": "تبريد {seconds} ثانية"
+      "cooldown": "تبريد {seconds} ثانية",
+      "round": "جولة {round}",
+      "blueAttack": "هجوم الفريق الأزرق",
+      "redAttack": "هجوم الفريق الأحمر",
+      "time": "وقت",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, zero {# كريديت} one {# كريديت} two {# كريديت} few {# كريديت} many {# كريديت} other {# كريديت}}",
+      "blueTeam": "الفريق الأزرق",
+      "redTeam": "الفريق الأحمر",
+      "health": "نقاط الحياة",
+      "armorHealth": "{armor} + نقاط الحياة",
+      "weapon": "سلاح"
     },
     "session": {
       "missingId": "رابط الإعادة هذا يفتقد المعرّف.",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "أضف أي ملاحظات حول هذا Lineup...",
       "lineColor": "لون الخط",
       "cancel": "إلغاء",
-      "confirm": "تأكيد"
+      "confirm": "تأكيد",
+      "editTitle": "تحرير Lineup",
+      "detailsTitle": "تفاصيل Lineup",
+      "editDescription": "تحرير صور Lineup والفيديو والملاحظات",
+      "viewDescription": "عرض صور Lineup والفيديو والملاحظات",
+      "imageAlt": "Lineup {index}",
+      "removeImage": "إزالة صورة Lineup {index}"
     },
     "icons": {
       "title": "الأيقونات",
@@ -869,7 +915,8 @@
       "invalidFile": "ملف الصورة غير صالح",
       "failed": "تعذّر تحميل الصورة",
       "uploadImage": "تحميل الصورة",
-      "uploadingImage": "جارٍ تحميل الصورة"
+      "uploadingImage": "جارٍ تحميل الصورة",
+      "skippedFiles": "تم تخطي بعض الملفات. الأنواع المسموح بها: JPEG، PNG، GIF، WEBP."
     },
     "textEditor": {
       "editText": "تحرير النص",
@@ -885,7 +932,8 @@
       "numberedList": "قائمة مرقمة",
       "textColor": "لون النص {color}",
       "customColor": "لون النص المخصص",
-      "fontSize": "حجم الخط"
+      "fontSize": "حجم الخط",
+      "clickToAdd": "انقر لإضافة نص..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "اضغط على وكيل أو قدرة لتحديده، ثم اضغط على الخريطة لوضعه. اسحبه إلى سلة المهملات لحذفه. اضغط بإصبعين للتكبير واسحب الخريطة للتحريك.",
     "sidebarHelpDesktop": "اختر وكيلًا أو قدرة، ثم انقر على الخريطة لوضعها، أو اسحبها مباشرة إلى الخريطة. اضغط E أثناء تمرير المؤشر فوق عنصر على الخريطة لحذفه.",
     "agentsSettings": "إعدادات الوكلاء",
-    "abilitiesSettings": "إعدادات القدرات"
+    "abilitiesSettings": "إعدادات القدرات",
+    "loading": "جارٍ تحميل الوكلاء...",
+    "loadLobbyFailed": "فشل تحميل الردهة",
+    "tryAgainLater": "يرجى المحاولة مرة أخرى في وقت لاحق"
   },
   "tools": {
     "maps": "الخرائط",
@@ -1058,5 +1109,36 @@
     "attackSide": "هجوم",
     "defenseSide": "دفاع",
     "rotateMapSide": "تبديل جانب الخريطة"
+  },
+  "toasts": {
+    "failed": "حدث خطأ ما: {error}",
+    "tryAgain": "يرجى المحاولة مرة أخرى.",
+    "saved": "تم الحفظ",
+    "created": "تم الإنشاء",
+    "updated": "تم التحديث",
+    "deleted": "تم الحذف",
+    "inviteSent": "تم إرسال الدعوة",
+    "inviteAccepted": "تم قبول الدعوة",
+    "inviteDeclined": "تم رفض الدعوة",
+    "memberRemoved": "تمت إزالة العضو",
+    "leftStack": "تم مغادرة Stack",
+    "subscriptionCanceled": "سيتم إلغاء الاشتراك في نهاية فترة الفاتورة",
+    "subscriptionResumed": "سيتم تجديد الاشتراك بشكل طبيعي",
+    "profileDataUnavailable": "بيانات المستخدم غير متوفرة",
+    "nameRequired": "لا يمكن أن يكون الاسم فارغًا",
+    "uidRequired": "أدخل UID للدعوة",
+    "filesSkipped": "تم تخطي بعض الملفات. الأنواع المسموح بها: JPEG، PNG، GIF، WEBP.",
+    "screenshotFailed": "فشل حفظ لقطة الشاشة",
+    "canvasPatchFailed": "فشل تحديث اللوحة القماشية",
+    "shortcutError": "خطأ في اختصار لوحة المفاتيح",
+    "profileUpdated": "تم تحديث الملف الشخصي",
+    "folderCreated": "تم إنشاء المجلد \"{name}\".",
+    "folderUpdated": "تم تحديث المجلد \"{name}\".",
+    "folderDeleted": "تم حذف المجلد",
+    "strategyCreated": "تم إنشاء الإستراتيجية \"{name}\".",
+    "strategyUpdated": "تم تحديث الإستراتيجية \"{name}\".",
+    "strategyDeleted": "تم حذف الإستراتيجية",
+    "userDeleted": "تم حذف المستخدم",
+    "screenshotSaved": "تم حفظ لقطة الشاشة"
   }
 }

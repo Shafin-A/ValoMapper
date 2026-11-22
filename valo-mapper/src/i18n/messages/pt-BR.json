@@ -5,7 +5,8 @@
       "cancel": "Cancelar",
       "close": "Fechar",
       "delete": "Excluir",
-      "retry": "Tentar novamente"
+      "retry": "Tentar novamente",
+      "edit": "Editar"
     },
     "loading": "Carregando…",
     "termsOfService": "Termos de Serviço",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "Ocultar links externos",
     "supportOnKofi": "Apoiar no Ko-fi",
     "joinDiscord": "Junte-se ao Discord",
-    "customColor": "Cor personalizada"
+    "customColor": "Cor personalizada",
+    "toggleSidebar": "Alternar barra lateral",
+    "previousSlide": "Diapositivo anterior",
+    "nextSlide": "Próximo slide",
+    "more": "Mais",
+    "breadcrumb": "Trilha de navegação",
+    "skipToContent": "Pular para o conteúdo principal",
+    "theme": {
+      "toggle": "Alternar tema",
+      "light": "Claro",
+      "dark": "Escuro",
+      "system": "Sistema"
+    },
+    "sidebar": "Barra lateral",
+    "sidebarDescription": "Exibe a barra lateral móvel.",
+    "iconAlt": "Ícone {name}",
+    "image": "Imagem"
   },
   "auth": {
     "signInTitle": "Faça login na sua conta",
@@ -243,7 +260,11 @@
     "saveTitle": "Salve sua estratégia",
     "saveDescription": "Salve suas estratégias para que você possa voltar a elas a qualquer momento. Mantenha tudo organizado com pastas.\n\nA criação de uma conta é necessária para salvar estratégias.",
     "iconsTitle": "Ícones",
-    "iconsDescription": "Adicione ícones como Spike ou armas.\n\nArraste os ícones da barra lateral e solte-os no mapa como agentes e habilidades.\n\nVocê também pode clicar no ícone e ele será colocado no mapa."
+    "iconsDescription": "Adicione ícones como Spike ou armas.\n\nArraste os ícones da barra lateral e solte-os no mapa como agentes e habilidades.\n\nVocê também pode clicar no ícone e ele será colocado no mapa.",
+    "skip": "Pular",
+    "previous": "Anterior",
+    "finish": "Concluir",
+    "nextStep": "Próximo ({current} / {total})"
   },
   "matchDetails": {
     "loading": "Carregando resumo da partida…",
@@ -306,7 +327,8 @@
     "cancel": "Cancelar",
     "creating": "Criando…",
     "copyToLobbyButton": "Copiar para o lobby",
-    "preparing": "Preparando análise…"
+    "preparing": "Preparando análise…",
+    "eventLog": "Registro de eventos"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "Reproduzir/Pausar",
       "seek": "Buscar",
       "speed": "Velocidade",
-      "timeline": "Linha do tempo do replay"
+      "timeline": "Linha do tempo do replay",
+      "spaceKey": "Espaço",
+      "barrierDrop": "{time} — Queda de barreira",
+      "spikePlanted": "{time} — Spike plantado",
+      "spikeDefused": "{time} — Spike desarmado",
+      "spikeDetonated": "{time} — Spike detonado",
+      "killEvent": "{time} — {killer} matou {victim}",
+      "unknownPlayer": "Desconhecido"
     },
     "settings": {
       "label": "Configurações do replay",
@@ -371,7 +400,18 @@
       "charges": "cargas",
       "used": "usado",
       "available": "disponível",
-      "cooldown": "{seconds} s de recarga"
+      "cooldown": "{seconds} s de recarga",
+      "round": "Rodada {round}",
+      "blueAttack": "Ataque azul",
+      "redAttack": "Ataque vermelho",
+      "time": "Tempo",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, one {# crédito} other {# créditos}}",
+      "blueTeam": "Equipe Azul",
+      "redTeam": "Equipe Vermelha",
+      "health": "Vida",
+      "armorHealth": "{armor} + vida",
+      "weapon": "Arma"
     },
     "session": {
       "missingId": "Este link de replay está sem um ID.",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "Adicione quaisquer notas sobre este lineup…",
       "lineColor": "Cor da linha",
       "cancel": "Cancelar",
-      "confirm": "Confirmar"
+      "confirm": "Confirmar",
+      "editTitle": "Editar lineup",
+      "detailsTitle": "Detalhes do lineup",
+      "editDescription": "Edite imagens, vídeos e notas do lineup",
+      "viewDescription": "Veja imagens, vídeos e notas do lineup",
+      "imageAlt": "Lineup {index}",
+      "removeImage": "Remover imagem do lineup {index}"
     },
     "icons": {
       "title": "Ícones",
@@ -869,7 +915,8 @@
       "invalidFile": "Arquivo de imagem inválido",
       "failed": "Falha ao carregar a imagem",
       "uploadImage": "Carregar imagem",
-      "uploadingImage": "Enviando imagem…"
+      "uploadingImage": "Enviando imagem…",
+      "skippedFiles": "Alguns arquivos foram ignorados. Tipos permitidos: JPEG, PNG, GIF, WEBP."
     },
     "textEditor": {
       "editText": "Editar texto",
@@ -885,7 +932,8 @@
       "numberedList": "Lista numerada",
       "textColor": "Cor do texto {color}",
       "customColor": "Cor do texto personalizada",
-      "fontSize": "Tamanho da fonte"
+      "fontSize": "Tamanho da fonte",
+      "clickToAdd": "Clique para adicionar texto..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "Toque em um agente ou habilidade para selecioná-lo e depois toque no mapa para posicioná-lo. Arraste-o para a lixeira para excluí-lo. Faça o gesto de pinça para ampliar e arraste o mapa para deslocar.",
     "sidebarHelpDesktop": "Escolha um agente ou habilidade e clique no mapa para posicioná-lo, ou arraste-o diretamente para o mapa. Pressione E enquanto passa o cursor sobre um deles no mapa para excluí-lo.",
     "agentsSettings": "Configurações dos agentes",
-    "abilitiesSettings": "Configurações das habilidades"
+    "abilitiesSettings": "Configurações das habilidades",
+    "loading": "Carregando agentes...",
+    "loadLobbyFailed": "Falha ao carregar lobby",
+    "tryAgainLater": "Por favor, tente novamente mais tarde"
   },
   "tools": {
     "maps": "Mapas",
@@ -1058,5 +1109,36 @@
     "attackSide": "Ataque",
     "defenseSide": "Defesa",
     "rotateMapSide": "Trocar o lado do mapa"
+  },
+  "toasts": {
+    "failed": "Algo deu errado: {error}",
+    "tryAgain": "Por favor, tente novamente.",
+    "saved": "Salvo",
+    "created": "Criado",
+    "updated": "Atualizado",
+    "deleted": "Excluído",
+    "inviteSent": "Convite enviado",
+    "inviteAccepted": "Convite aceito",
+    "inviteDeclined": "Convite recusado",
+    "memberRemoved": "Membro removido",
+    "leftStack": "Você saiu do Stack",
+    "subscriptionCanceled": "A assinatura será cancelada no final do período de faturamento",
+    "subscriptionResumed": "A assinatura será renovada normalmente",
+    "profileDataUnavailable": "Os dados do usuário não estão disponíveis",
+    "nameRequired": "O nome não pode ficar vazio",
+    "uidRequired": "Insira um UID para convidar",
+    "filesSkipped": "Alguns arquivos foram ignorados. Tipos permitidos: JPEG, PNG, GIF, WEBP.",
+    "screenshotFailed": "Falha ao salvar a captura de tela",
+    "canvasPatchFailed": "Falha na atualização do canvas",
+    "shortcutError": "Erro de atalho de teclado",
+    "profileUpdated": "Perfil atualizado",
+    "folderCreated": "Pasta \"{name}\" criada",
+    "folderUpdated": "Pasta \"{name}\" atualizada",
+    "folderDeleted": "Pasta excluída",
+    "strategyCreated": "Estratégia \"{name}\" criada",
+    "strategyUpdated": "Estratégia \"{name}\" atualizada",
+    "strategyDeleted": "Estratégia excluída",
+    "userDeleted": "Usuário excluído",
+    "screenshotSaved": "Captura de tela salva"
   }
 }

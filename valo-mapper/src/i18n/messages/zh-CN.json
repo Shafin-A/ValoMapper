@@ -5,7 +5,8 @@
       "cancel": "取消",
       "close": "关闭",
       "delete": "删除",
-      "retry": "重试"
+      "retry": "重试",
+      "edit": "编辑"
     },
     "loading": "加载中...",
     "termsOfService": "服务条款",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "隐藏外部链接",
     "supportOnKofi": "在 Ko-fi 上支持我们",
     "joinDiscord": "加入 Discord",
-    "customColor": "自定义颜色"
+    "customColor": "自定义颜色",
+    "toggleSidebar": "切换侧边栏",
+    "previousSlide": "上一张幻灯片",
+    "nextSlide": "下一张幻灯片",
+    "more": "更多的",
+    "breadcrumb": "面包屑导航",
+    "skipToContent": "跳至主要内容",
+    "theme": {
+      "toggle": "切换主题",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "系统"
+    },
+    "sidebar": "侧边栏",
+    "sidebarDescription": "显示移动侧边栏。",
+    "iconAlt": "{name} 图标",
+    "image": "图像"
   },
   "auth": {
     "signInTitle": "登录你的账户",
@@ -243,7 +260,11 @@
     "saveTitle": "保存你的策略",
     "saveDescription": "保存策略，方便你随时回来继续。使用文件夹让一切井井有条。\n\n保存策略需要创建账户。",
     "iconsTitle": "图标",
-    "iconsDescription": "添加爆能器或武器等图标。\n\n像特工和技能一样，从侧边栏将图标拖放到地图上。\n\n你也可以点击图标，它会直接放到地图上。"
+    "iconsDescription": "添加爆能器或武器等图标。\n\n像特工和技能一样，从侧边栏将图标拖放到地图上。\n\n你也可以点击图标，它会直接放到地图上。",
+    "skip": "跳过",
+    "previous": "上一步",
+    "finish": "完成",
+    "nextStep": "下一步 ({current} / {total})"
   },
   "matchDetails": {
     "loading": "正在加载对局摘要...",
@@ -306,7 +327,8 @@
     "cancel": "取消",
     "creating": "创建中...",
     "copyToLobbyButton": "复制到大厅",
-    "preparing": "正在准备回顾..."
+    "preparing": "正在准备回顾...",
+    "eventLog": "事件日志"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "播放/暂停",
       "seek": "跳转",
       "speed": "速度",
-      "timeline": "回放时间线"
+      "timeline": "回放时间线",
+      "spaceKey": "空格",
+      "barrierDrop": "{time} — 屏障下降",
+      "spikePlanted": "{time} — 爆能器已放置",
+      "spikeDefused": "{time} — 爆能器已拆除",
+      "spikeDetonated": "{time} — 爆能器已引爆",
+      "killEvent": "{time} — {killer} 杀死了 {victim}",
+      "unknownPlayer": "未知"
     },
     "settings": {
       "label": "回放设置",
@@ -371,7 +400,18 @@
       "charges": "充能",
       "used": "已使用",
       "available": "可用",
-      "cooldown": "{seconds} 秒冷却"
+      "cooldown": "{seconds} 秒冷却",
+      "round": "第 {round} 回合",
+      "blueAttack": "蓝方进攻",
+      "redAttack": "红方进攻",
+      "time": "时间",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, one {# 信用点} other {# 信用点}}",
+      "blueTeam": "蓝队",
+      "redTeam": "红队",
+      "health": "生命值",
+      "armorHealth": "{armor} + 生命值",
+      "weapon": "武器"
     },
     "session": {
       "missingId": "此回放链接缺少 ID。",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "添加关于此点位的备注...",
       "lineColor": "线条颜色",
       "cancel": "取消",
-      "confirm": "确认"
+      "confirm": "确认",
+      "editTitle": "编辑点位",
+      "detailsTitle": "点位详情",
+      "editDescription": "编辑点位图片、视频和备注",
+      "viewDescription": "查看点位图片、视频和备注",
+      "imageAlt": "点位 {index}",
+      "removeImage": "删除点位图片 {index}"
     },
     "icons": {
       "title": "图标",
@@ -869,7 +915,8 @@
       "invalidFile": "图片文件无效",
       "failed": "图片上传失败",
       "uploadImage": "上传图片",
-      "uploadingImage": "正在上传图片"
+      "uploadingImage": "正在上传图片",
+      "skippedFiles": "一些文件被跳过。允许的类型：JPEG、PNG、GIF、WEBP。"
     },
     "textEditor": {
       "editText": "编辑文字",
@@ -885,7 +932,8 @@
       "numberedList": "编号列表",
       "textColor": "文字颜色 {color}",
       "customColor": "自定义文字颜色",
-      "fontSize": "字体大小"
+      "fontSize": "字体大小",
+      "clickToAdd": "单击以添加文本..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "点按特工或技能将其选中，然后点按地图放置。将其拖到垃圾桶即可删除。双指捏合以缩放，拖动地图以平移。",
     "sidebarHelpDesktop": "选择特工或技能，然后点击地图放置，或直接将其拖到地图上。将鼠标悬停在地图上的项目上并按 E 即可删除。",
     "agentsSettings": "特工设置",
-    "abilitiesSettings": "技能设置"
+    "abilitiesSettings": "技能设置",
+    "loading": "正在加载特工...",
+    "loadLobbyFailed": "加载大厅失败",
+    "tryAgainLater": "请稍后重试"
   },
   "tools": {
     "maps": "地图",
@@ -1058,5 +1109,36 @@
     "attackSide": "进攻",
     "defenseSide": "防守",
     "rotateMapSide": "切换地图阵营"
+  },
+  "toasts": {
+    "failed": "出了点问题：{error}",
+    "tryAgain": "请再试一次。",
+    "saved": "已保存",
+    "created": "已创建",
+    "updated": "已更新",
+    "deleted": "已删除",
+    "inviteSent": "邀请已发送",
+    "inviteAccepted": "已接受邀请",
+    "inviteDeclined": "邀请被拒绝",
+    "memberRemoved": "会员已删除",
+    "leftStack": "已离开 Stack",
+    "subscriptionCanceled": "订阅将在计费周期结束时取消",
+    "subscriptionResumed": "订阅将正常续订",
+    "profileDataUnavailable": "用户数据不可用",
+    "nameRequired": "名称不能为空",
+    "uidRequired": "输入要邀请的 UID",
+    "filesSkipped": "一些文件被跳过。允许的类型：JPEG、PNG、GIF、WEBP。",
+    "screenshotFailed": "保存截图失败",
+    "canvasPatchFailed": "画布更新失败",
+    "shortcutError": "键盘快捷键错误",
+    "profileUpdated": "个人资料已更新",
+    "folderCreated": "创建文件夹“{name}”",
+    "folderUpdated": "文件夹“{name}”已更新",
+    "folderDeleted": "文件夹已删除",
+    "strategyCreated": "创建策略“{name}”",
+    "strategyUpdated": "策略“{name}”已更新",
+    "strategyDeleted": "策略已删除",
+    "userDeleted": "用户已删除",
+    "screenshotSaved": "截图已保存"
   }
 }

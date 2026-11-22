@@ -5,7 +5,8 @@
       "cancel": "取消",
       "close": "關閉",
       "delete": "刪除",
-      "retry": "再試一次"
+      "retry": "再試一次",
+      "edit": "編輯"
     },
     "loading": "載入中...",
     "termsOfService": "服務條款",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "隱藏外部連結",
     "supportOnKofi": "在 Ko-fi 上贊助我們",
     "joinDiscord": "加入 Discord",
-    "customColor": "自訂顏色"
+    "customColor": "自訂顏色",
+    "toggleSidebar": "切換側邊欄",
+    "previousSlide": "上一張投影片",
+    "nextSlide": "下一張投影片",
+    "more": "更多的",
+    "breadcrumb": "麵包屑導覽",
+    "skipToContent": "跳至主要內容",
+    "theme": {
+      "toggle": "切換主題",
+      "light": "淺色",
+      "dark": "深色",
+      "system": "系統"
+    },
+    "sidebar": "側邊欄",
+    "sidebarDescription": "顯示移動側邊欄。",
+    "iconAlt": "{name} 圖標",
+    "image": "影像"
   },
   "auth": {
     "signInTitle": "登入你的帳號",
@@ -243,7 +260,11 @@
     "saveTitle": "儲存你的策略",
     "saveDescription": "儲存策略後，你隨時都能回來繼續編輯。使用資料夾讓一切井然有序。\n\n需要建立帳號才能儲存策略。",
     "iconsTitle": "圖示",
-    "iconsDescription": "加入爆能器或武器等圖示。\n\n從側邊欄將圖示拖曳到地圖上，就像特務和技能一樣。\n\n你也可以直接點選圖示，它會放置在地圖上。"
+    "iconsDescription": "加入爆能器或武器等圖示。\n\n從側邊欄將圖示拖曳到地圖上，就像特務和技能一樣。\n\n你也可以直接點選圖示，它會放置在地圖上。",
+    "skip": "跳過",
+    "previous": "上一步",
+    "finish": "完成",
+    "nextStep": "下一步 ({current} / {total})"
   },
   "matchDetails": {
     "loading": "正在載入對局摘要...",
@@ -306,7 +327,8 @@
     "cancel": "取消",
     "creating": "正在建立...",
     "copyToLobbyButton": "複製到大廳",
-    "preparing": "正在準備回顧..."
+    "preparing": "正在準備回顧...",
+    "eventLog": "事件日誌"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "播放/暫停",
       "seek": "跳轉",
       "speed": "速度",
-      "timeline": "回放時間軸"
+      "timeline": "回放時間軸",
+      "spaceKey": "空格",
+      "barrierDrop": "{time} — 屏障下降",
+      "spikePlanted": "{time} — 爆能器已放置",
+      "spikeDefused": "{time} — 爆能器已拆除",
+      "spikeDetonated": "{time} — 爆能器已引爆",
+      "killEvent": "{time} — {killer} 殺死了 {victim}",
+      "unknownPlayer": "未知"
     },
     "settings": {
       "label": "回放設定",
@@ -371,7 +400,18 @@
       "charges": "次數",
       "used": "已使用",
       "available": "可用",
-      "cooldown": "冷卻 {seconds} 秒"
+      "cooldown": "冷卻 {seconds} 秒",
+      "round": "第 {round} 回合",
+      "blueAttack": "藍方進攻",
+      "redAttack": "紅方進攻",
+      "time": "時間",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, one {# 信用點} other {# 信用點}}",
+      "blueTeam": "藍隊",
+      "redTeam": "紅隊",
+      "health": "生命值",
+      "armorHealth": "{armor} + 生命值",
+      "weapon": "武器"
     },
     "session": {
       "missingId": "此回放連結缺少 ID。",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "新增關於此陣容的任何筆記...",
       "lineColor": "線條顏色",
       "cancel": "取消",
-      "confirm": "確認"
+      "confirm": "確認",
+      "editTitle": "編輯陣容",
+      "detailsTitle": "陣容詳情",
+      "editDescription": "編輯陣容圖片、影片和筆記",
+      "viewDescription": "檢視陣容圖片、影片和筆記",
+      "imageAlt": "陣容 {index}",
+      "removeImage": "刪除陣容圖片 {index}"
     },
     "icons": {
       "title": "圖示",
@@ -869,7 +915,8 @@
       "invalidFile": "圖片檔案無效",
       "failed": "圖片上傳失敗",
       "uploadImage": "上傳圖片",
-      "uploadingImage": "正在上傳圖片"
+      "uploadingImage": "正在上傳圖片",
+      "skippedFiles": "一些文件被跳過。允許的類型：JPEG、PNG、GIF、WEBP。"
     },
     "textEditor": {
       "editText": "編輯文字",
@@ -885,7 +932,8 @@
       "numberedList": "編號清單",
       "textColor": "文字顏色 {color}",
       "customColor": "自訂文字顏色",
-      "fontSize": "字級"
+      "fontSize": "字級",
+      "clickToAdd": "點擊以新增文字..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "點按特務或技能將其選取，然後點按地圖放置。將其拖到垃圾桶即可刪除。雙指捏合以縮放，拖曳地圖以平移。",
     "sidebarHelpDesktop": "選擇特務或技能，然後點擊地圖放置，或直接將其拖曳到地圖上。將滑鼠游標移到地圖上的項目並按 E 即可刪除。",
     "agentsSettings": "特務設定",
-    "abilitiesSettings": "技能設定"
+    "abilitiesSettings": "技能設定",
+    "loading": "正在載入特務...",
+    "loadLobbyFailed": "加載大廳失敗",
+    "tryAgainLater": "請稍後重試"
   },
   "tools": {
     "maps": "地圖",
@@ -1058,5 +1109,36 @@
     "attackSide": "進攻",
     "defenseSide": "防守",
     "rotateMapSide": "切換地圖陣營"
+  },
+  "toasts": {
+    "failed": "出了點問題：{error}",
+    "tryAgain": "請再試一次。",
+    "saved": "已儲存",
+    "created": "已創建",
+    "updated": "已更新",
+    "deleted": "已刪除",
+    "inviteSent": "邀請已發送",
+    "inviteAccepted": "已接受邀請",
+    "inviteDeclined": "邀請被拒絕",
+    "memberRemoved": "會員已刪除",
+    "leftStack": "已離開 Stack",
+    "subscriptionCanceled": "訂閱將在計費週期結束時取消",
+    "subscriptionResumed": "訂閱將正常續訂",
+    "profileDataUnavailable": "用戶資料不可用",
+    "nameRequired": "名稱不能為空",
+    "uidRequired": "輸入要邀請的 UID",
+    "filesSkipped": "一些文件被跳過。允許的類型：JPEG、PNG、GIF、WEBP。",
+    "screenshotFailed": "保存截圖失敗",
+    "canvasPatchFailed": "畫布更新失敗",
+    "shortcutError": "鍵盤快速鍵錯誤",
+    "profileUpdated": "個人資料已更新",
+    "folderCreated": "建立資料夾“{name}”",
+    "folderUpdated": "資料夾「{name}」已更新",
+    "folderDeleted": "資料夾已刪除",
+    "strategyCreated": "建立策略“{name}”",
+    "strategyUpdated": "策略「{name}」已更新",
+    "strategyDeleted": "策略已刪除",
+    "userDeleted": "用戶已刪除",
+    "screenshotSaved": "截圖已儲存"
   }
 }

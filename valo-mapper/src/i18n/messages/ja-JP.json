@@ -5,7 +5,8 @@
       "cancel": "キャンセル",
       "close": "閉じる",
       "delete": "削除",
-      "retry": "再試行"
+      "retry": "再試行",
+      "edit": "編集"
     },
     "loading": "読み込み中...",
     "termsOfService": "利用規約",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "外部リンクを非表示",
     "supportOnKofi": "Ko-fi で支援する",
     "joinDiscord": "Discord に参加する",
-    "customColor": "カスタムカラー"
+    "customColor": "カスタムカラー",
+    "toggleSidebar": "サイドバーの切り替え",
+    "previousSlide": "前のスライド",
+    "nextSlide": "次のスライド",
+    "more": "もっと",
+    "breadcrumb": "ブレッドクラム",
+    "skipToContent": "メインコンテンツにスキップ",
+    "theme": {
+      "toggle": "テーマの切り替え",
+      "light": "ライト",
+      "dark": "ダーク",
+      "system": "システム"
+    },
+    "sidebar": "サイドバー",
+    "sidebarDescription": "モバイルサイドバーを表示します。",
+    "iconAlt": "{name}アイコン",
+    "image": "画像"
   },
   "auth": {
     "signInTitle": "アカウントにサインイン",
@@ -243,7 +260,11 @@
     "saveTitle": "戦略を保存",
     "saveDescription": "戦略を保存しておけば、いつでも戻ってくることができます。すべてをフォルダーで整理しましょう。\n\n戦略を保存するにはアカウントの作成が必要です。",
     "iconsTitle": "アイコン",
-    "iconsDescription": "スパイクや武器などのアイコンを追加できます。\n\nエージェントやアビリティと同様に、サイドバーからアイコンをドラッグしてマップ上にドロップします。\n\nアイコンをクリックしてマップ上に配置することもできます。"
+    "iconsDescription": "スパイクや武器などのアイコンを追加できます。\n\nエージェントやアビリティと同様に、サイドバーからアイコンをドラッグしてマップ上にドロップします。\n\nアイコンをクリックしてマップ上に配置することもできます。",
+    "skip": "スキップ",
+    "previous": "前へ",
+    "finish": "完了",
+    "nextStep": "次へ ({current} / {total})"
   },
   "matchDetails": {
     "loading": "試合概要を読み込み中...",
@@ -306,7 +327,8 @@
     "cancel": "キャンセル",
     "creating": "作成...",
     "copyToLobbyButton": "ロビーにコピー",
-    "preparing": "レビューを準備しています..."
+    "preparing": "レビューを準備しています...",
+    "eventLog": "イベントログ"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "再生/一時停止",
       "seek": "シーク",
       "speed": "再生速度",
-      "timeline": "リプレイ タイムライン"
+      "timeline": "リプレイ タイムライン",
+      "spaceKey": "スペース",
+      "barrierDrop": "{time} — バリアドロップ",
+      "spikePlanted": "{time} — スパイクが植えられました",
+      "spikeDefused": "{time} — スパイクの解除",
+      "spikeDetonated": "{time} — スパイクが爆発しました",
+      "killEvent": "{time} — {killer} が {victim} を殺害しました",
+      "unknownPlayer": "不明"
     },
     "settings": {
       "label": "リプレイ設定",
@@ -371,7 +400,18 @@
       "charges": "チャージ",
       "used": "使用済み",
       "available": "使用可能",
-      "cooldown": "クールダウン {seconds} 秒"
+      "cooldown": "クールダウン {seconds} 秒",
+      "round": "ラウンド {round}",
+      "blueAttack": "ブルー側の攻撃",
+      "redAttack": "レッド側の攻撃",
+      "time": "時間",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, one {# クレジット} other {# クレジット}}",
+      "blueTeam": "ブルーチーム",
+      "redTeam": "レッドチーム",
+      "health": "体力",
+      "armorHealth": "{armor} + 体力",
+      "weapon": "武器"
     },
     "session": {
       "missingId": "このリプレイ リンクには ID がありません。",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "このラインナップについてメモを入力...",
       "lineColor": "線の色",
       "cancel": "キャンセル",
-      "confirm": "確定"
+      "confirm": "確定",
+      "editTitle": "ラインナップの編集",
+      "detailsTitle": "ラインナップ詳細",
+      "editDescription": "ラインナップ画像、動画、メモを編集",
+      "viewDescription": "ラインナップの画像、動画、メモを見る",
+      "imageAlt": "ラインナップ {index}",
+      "removeImage": "ラインナップ画像 {index} を削除"
     },
     "icons": {
       "title": "アイコン",
@@ -869,7 +915,8 @@
       "invalidFile": "無効な画像ファイルです",
       "failed": "画像のアップロードに失敗しました",
       "uploadImage": "画像をアップロード",
-      "uploadingImage": "画像をアップロード中"
+      "uploadingImage": "画像をアップロード中",
+      "skippedFiles": "一部のファイルがスキップされました。使用できるタイプ: JPEG、PNG、GIF、WEBP。"
     },
     "textEditor": {
       "editText": "テキストを編集",
@@ -885,7 +932,8 @@
       "numberedList": "番号付きリスト",
       "textColor": "文字色 {color}",
       "customColor": "カスタム文字色",
-      "fontSize": "フォントサイズ"
+      "fontSize": "フォントサイズ",
+      "clickToAdd": "クリックしてテキストを追加..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "エージェントまたはアビリティをタップして選択し、マップをタップして配置します。ゴミ箱にドラッグすると削除できます。2本指でピンチしてズームし、マップをドラッグして移動します。",
     "sidebarHelpDesktop": "エージェントまたはアビリティを選び、マップをクリックして配置するか、マップに直接ドラッグします。マップ上の要素にカーソルを合わせて E を押すと削除できます。",
     "agentsSettings": "エージェント設定",
-    "abilitiesSettings": "アビリティ設定"
+    "abilitiesSettings": "アビリティ設定",
+    "loading": "エージェントを読み込み中...",
+    "loadLobbyFailed": "ロビーの読み込みに失敗しました",
+    "tryAgainLater": "後でもう一度試してください"
   },
   "tools": {
     "maps": "マップ",
@@ -1058,5 +1109,36 @@
     "attackSide": "攻撃",
     "defenseSide": "防御",
     "rotateMapSide": "マップのサイドを切り替える"
+  },
+  "toasts": {
+    "failed": "問題が発生しました: {error}",
+    "tryAgain": "もう一度試してください。",
+    "saved": "保存されました",
+    "created": "作成されました",
+    "updated": "更新されました",
+    "deleted": "削除されました",
+    "inviteSent": "招待状を送信しました",
+    "inviteAccepted": "招待が承認されました",
+    "inviteDeclined": "招待が拒否されました",
+    "memberRemoved": "メンバーが削除されました",
+    "leftStack": "スタックから退出しました",
+    "subscriptionCanceled": "サブスクリプションは請求期間の終了時にキャンセルされます",
+    "subscriptionResumed": "サブスクリプションは通常通り更新されます",
+    "profileDataUnavailable": "ユーザーデータが利用できません",
+    "nameRequired": "名前を空にすることはできません",
+    "uidRequired": "招待する UID を入力してください",
+    "filesSkipped": "一部のファイルがスキップされました。使用できるタイプ: JPEG、PNG、GIF、WEBP。",
+    "screenshotFailed": "スクリーンショットの保存に失敗しました",
+    "canvasPatchFailed": "キャンバスの更新に失敗しました",
+    "shortcutError": "キーボードショートカットエラー",
+    "profileUpdated": "プロフィールを更新しました",
+    "folderCreated": "フォルダー「{name}」が作成されました",
+    "folderUpdated": "フォルダー「{name}」が更新されました",
+    "folderDeleted": "フォルダが削除されました",
+    "strategyCreated": "戦略「{name}」が作成されました",
+    "strategyUpdated": "戦略「{name}」を更新しました",
+    "strategyDeleted": "戦略が削除されました",
+    "userDeleted": "ユーザーが削除されました",
+    "screenshotSaved": "スクリーンショットが保存されました"
   }
 }

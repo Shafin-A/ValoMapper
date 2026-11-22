@@ -5,7 +5,8 @@
       "cancel": "Hủy",
       "close": "Đóng",
       "delete": "Xóa",
-      "retry": "Thử lại"
+      "retry": "Thử lại",
+      "edit": "Chỉnh sửa"
     },
     "loading": "Đang tải...",
     "termsOfService": "Điều khoản dịch vụ",
@@ -16,7 +17,23 @@
     "hideExternalLinks": "Ẩn liên kết bên ngoài",
     "supportOnKofi": "Hỗ trợ trên Ko-fi",
     "joinDiscord": "Tham gia Discord",
-    "customColor": "Màu tùy chỉnh"
+    "customColor": "Màu tùy chỉnh",
+    "toggleSidebar": "Chuyển đổi thanh bên",
+    "previousSlide": "Trang trình bày trước",
+    "nextSlide": "Trang trình bày tiếp theo",
+    "more": "Hơn",
+    "breadcrumb": "Đường dẫn điều hướng",
+    "skipToContent": "Chuyển đến nội dung chính",
+    "theme": {
+      "toggle": "Chuyển đổi chủ đề",
+      "light": "Sáng",
+      "dark": "Tối",
+      "system": "Hệ thống"
+    },
+    "sidebar": "Thanh bên",
+    "sidebarDescription": "Hiển thị thanh bên di động.",
+    "iconAlt": "Biểu tượng {name}",
+    "image": "Hình ảnh"
   },
   "auth": {
     "signInTitle": "Đăng nhập vào tài khoản của bạn",
@@ -243,7 +260,11 @@
     "saveTitle": "Lưu chiến lược của bạn",
     "saveDescription": "Lưu chiến lược của bạn để có thể quay lại bất cứ lúc nào. Giữ mọi thứ ngăn nắp với các thư mục.\n\nBạn cần tạo tài khoản để lưu chiến lược.",
     "iconsTitle": "Biểu tượng",
-    "iconsDescription": "Thêm các biểu tượng như Spike hoặc vũ khí.\n\nKéo biểu tượng từ thanh bên và thả lên bản đồ như đặc vụ và kỹ năng.\n\nBạn cũng có thể nhấp vào biểu tượng để đặt nó lên bản đồ."
+    "iconsDescription": "Thêm các biểu tượng như Spike hoặc vũ khí.\n\nKéo biểu tượng từ thanh bên và thả lên bản đồ như đặc vụ và kỹ năng.\n\nBạn cũng có thể nhấp vào biểu tượng để đặt nó lên bản đồ.",
+    "skip": "Bỏ qua",
+    "previous": "Trước",
+    "finish": "Hoàn thành",
+    "nextStep": "Tiếp theo ({current} / {total})"
   },
   "matchDetails": {
     "loading": "Đang tải tóm tắt trận đấu...",
@@ -306,7 +327,8 @@
     "cancel": "Hủy",
     "creating": "Đang tạo...",
     "copyToLobbyButton": "Sao chép vào sảnh",
-    "preparing": "Đang chuẩn bị đánh giá..."
+    "preparing": "Đang chuẩn bị đánh giá...",
+    "eventLog": "Nhật ký sự kiện"
   },
   "replay": {
     "controls": {
@@ -315,7 +337,14 @@
       "spacePlayPause": "phát/tạm dừng",
       "seek": "Tua",
       "speed": "Tốc độ",
-      "timeline": "Dòng thời gian phát lại"
+      "timeline": "Dòng thời gian phát lại",
+      "spaceKey": "Dấu cách",
+      "barrierDrop": "{time} — Rào chắn hạ xuống",
+      "spikePlanted": "{time} — Spike đã được đặt",
+      "spikeDefused": "{time} — Đã gỡ bỏ Spike",
+      "spikeDetonated": "{time} - Spike phát nổ",
+      "killEvent": "{time} - {killer} đã giết {victim}",
+      "unknownPlayer": "Không xác định"
     },
     "settings": {
       "label": "Cài đặt phát lại",
@@ -371,7 +400,18 @@
       "charges": "lượt dùng",
       "used": "đã sử dụng",
       "available": "có sẵn",
-      "cooldown": "Hồi chiêu {seconds}s"
+      "cooldown": "Hồi chiêu {seconds}s",
+      "round": "Vòng {round}",
+      "blueAttack": "Phe xanh tấn công",
+      "redAttack": "Phe đỏ tấn công",
+      "time": "Thời gian",
+      "abilityTitle": "{name} ({key}) — {status}",
+      "credits": "{count, plural, one {# tín dụng} other {# tín dụng}}",
+      "blueTeam": "Đội xanh",
+      "redTeam": "Đội đỏ",
+      "health": "Máu",
+      "armorHealth": "{armor} + máu",
+      "weapon": "Vũ khí"
     },
     "session": {
       "missingId": "Liên kết phát lại này thiếu ID.",
@@ -851,7 +891,13 @@
       "notesPlaceholder": "Thêm ghi chú về lineup này...",
       "lineColor": "Màu đường",
       "cancel": "Hủy",
-      "confirm": "Xác nhận"
+      "confirm": "Xác nhận",
+      "editTitle": "Chỉnh sửa lineup",
+      "detailsTitle": "Chi tiết lineup",
+      "editDescription": "Chỉnh sửa hình ảnh, video và ghi chú của lineup",
+      "viewDescription": "Xem hình ảnh, video và ghi chú của lineup",
+      "imageAlt": "Lineup {index}",
+      "removeImage": "Xóa hình ảnh lineup {index}"
     },
     "icons": {
       "title": "Biểu tượng",
@@ -869,7 +915,8 @@
       "invalidFile": "Tệp hình ảnh không hợp lệ",
       "failed": "Không thể tải hình ảnh lên",
       "uploadImage": "Tải hình ảnh lên",
-      "uploadingImage": "Đang tải hình ảnh lên"
+      "uploadingImage": "Đang tải hình ảnh lên",
+      "skippedFiles": "Một số tập tin đã bị bỏ qua. Các loại được phép: JPEG, PNG, GIF, WEBP."
     },
     "textEditor": {
       "editText": "Chỉnh sửa văn bản",
@@ -885,7 +932,8 @@
       "numberedList": "Danh sách đánh số",
       "textColor": "Màu văn bản {color}",
       "customColor": "Màu văn bản tùy chỉnh",
-      "fontSize": "Cỡ chữ"
+      "fontSize": "Cỡ chữ",
+      "clickToAdd": "Bấm để thêm văn bản..."
     }
   },
   "help": {
@@ -948,7 +996,10 @@
     "sidebarHelpMobile": "Chạm vào đặc vụ hoặc kỹ năng để chọn, sau đó chạm vào bản đồ để đặt. Kéo vào thùng rác để xóa. Chụm hai ngón tay để thu phóng và kéo bản đồ để di chuyển.",
     "sidebarHelpDesktop": "Chọn một đặc vụ hoặc kỹ năng, sau đó nhấp vào bản đồ để đặt hoặc kéo trực tiếp vào bản đồ. Nhấn E khi di chuột qua một mục trên bản đồ để xóa.",
     "agentsSettings": "Cài đặt đặc vụ",
-    "abilitiesSettings": "Cài đặt kỹ năng"
+    "abilitiesSettings": "Cài đặt kỹ năng",
+    "loading": "Đang tải đặc vụ...",
+    "loadLobbyFailed": "Không tải được tiền sảnh",
+    "tryAgainLater": "Vui lòng thử lại sau"
   },
   "tools": {
     "maps": "Bản đồ",
@@ -1058,5 +1109,36 @@
     "attackSide": "Tấn công",
     "defenseSide": "Phòng thủ",
     "rotateMapSide": "Đổi phía bản đồ"
+  },
+  "toasts": {
+    "failed": "Đã xảy ra lỗi: {error}",
+    "tryAgain": "Vui lòng thử lại.",
+    "saved": "Đã lưu",
+    "created": "Đã tạo",
+    "updated": "Đã cập nhật",
+    "deleted": "Đã xóa",
+    "inviteSent": "Đã gửi lời mời",
+    "inviteAccepted": "Lời mời đã được chấp nhận",
+    "inviteDeclined": "Lời mời bị từ chối",
+    "memberRemoved": "Thành viên đã bị xóa",
+    "leftStack": "Đã rời Stack",
+    "subscriptionCanceled": "Đăng ký sẽ hủy vào cuối thời hạn thanh toán",
+    "subscriptionResumed": "Đăng ký sẽ gia hạn bình thường",
+    "profileDataUnavailable": "Dữ liệu người dùng không có sẵn",
+    "nameRequired": "Tên không thể trống",
+    "uidRequired": "Nhập UID để mời",
+    "filesSkipped": "Một số tập tin đã bị bỏ qua. Các loại được phép: JPEG, PNG, GIF, WEBP.",
+    "screenshotFailed": "Không lưu được ảnh chụp màn hình",
+    "canvasPatchFailed": "Cập nhật canvas không thành công",
+    "shortcutError": "Lỗi phím tắt",
+    "profileUpdated": "Đã cập nhật hồ sơ",
+    "folderCreated": "Đã tạo thư mục \"{name}\"",
+    "folderUpdated": "Đã cập nhật thư mục \"{name}\"",
+    "folderDeleted": "Đã xóa thư mục",
+    "strategyCreated": "Chiến lược \"{name}\" đã được tạo",
+    "strategyUpdated": "Chiến lược \"{name}\" được cập nhật",
+    "strategyDeleted": "Đã xóa chiến lược",
+    "userDeleted": "Người dùng đã xóa",
+    "screenshotSaved": "Đã lưu ảnh chụp màn hình"
   }
 }
