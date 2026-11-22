@@ -3,13 +3,17 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
 import {
-  getBillingCancelReturnLabel,
+  getBillingReturnDestination,
   normalizeBillingReturnPath,
 } from "@/lib/billing-return-path";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Subscription cancelled",
-  robots: { index: false, follow: false },
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations("billingPages");
+  return {
+    title: t("cancelMeta"),
+    robots: { index: false, follow: false },
+  };
 };
 
 type BillingCancelPageProps = {
@@ -28,10 +32,21 @@ const BillingCancelPage = async ({ searchParams }: BillingCancelPageProps) => {
     getSearchParamValue(resolvedSearchParams?.returnTo),
     "/",
   );
-  const returnLabel = getBillingCancelReturnLabel(returnToPath);
+  const t = await getTranslations("billingPages");
+  const destination = getBillingReturnDestination(returnToPath);
+  const returnLabel =
+    destination === "home"
+      ? t("cancelBackHome")
+      : destination === "strategies"
+        ? t("cancelBackStrategies")
+        : destination === "profile"
+          ? t("cancelBackProfile")
+          : destination === "strategy"
+            ? t("cancelBackStrategy")
+            : t("cancelBackPrevious");
   const secondaryHref = returnToPath === "/strategies" ? "/" : "/strategies";
   const secondaryLabel =
-    secondaryHref === "/" ? "Back to Home" : "My Strategies";
+    secondaryHref === "/" ? t("backHome") : t("backStrategies");
 
   return (
     <main
@@ -44,11 +59,8 @@ const BillingCancelPage = async ({ searchParams }: BillingCancelPageProps) => {
           <XCircle className="h-16 w-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Checkout Cancelled</h1>
-          <p className="text-foreground/80">
-            No charges were made. You can upgrade to ValoMapper Premium anytime
-            to unlock unlimited strategy saves.
-          </p>
+          <h1 className="text-3xl font-bold">{t("cancelTitle")}</h1>
+          <p className="text-foreground/80">{t("cancelDescription")}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button variant="outline" asChild>

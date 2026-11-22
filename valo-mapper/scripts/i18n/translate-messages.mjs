@@ -31,6 +31,7 @@ const ALL_LOCALES = [
 
 const args = process.argv.slice(2);
 const placeholdersOnly = args.includes("--placeholders-only");
+const missingOnly = args.includes("--missing-only");
 const requestedLocales = args.filter((arg) => !arg.startsWith("--"));
 const LOCALES = requestedLocales.length ? requestedLocales : ALL_LOCALES;
 const BATCH_SIZE = 16;
@@ -200,7 +201,90 @@ const main = async () => {
     }
   };
 
+  const collectMissingStrings = (source, target, result) => {
+    if (typeof source === "string") {
+      if (target == null || !String(target).trim()) result.add(source);
+      return;
+    }
+    if (Array.isArray(source)) {
+      source.forEach((entry, index) =>
+        collectMissingStrings(entry, target?.[index], result),
+      );
+      return;
+    }
+    if (source && typeof source === "object") {
+      Object.entries(source).forEach(([key, entry]) =>
+        collectMissingStrings(entry, target?.[key], result),
+      );
+    }
+  };
+
   for (const locale of LOCALES) {
+    if (missingOnly) {
+      const current = JSON.parse(
+        await readFile(path.join(MESSAGES_DIR, `${locale}.json`), "utf8"),
+      );
+      const sources = new Set();
+      collectMissingStrings(base, current, sources);
+
+      const tokenizedSources = [...sources].map((source) => ({
+        source,
+        ...tokenizeIcu(source),
+      }));
+      const translations = new Map();
+
+      for (let index = 0; index < tokenizedSources.length; index += BATCH_SIZE) {
+        const batch = tokenizedSources.slice(index, index + BATCH_SIZE);
+        const translated = await translateBatch(
+          batch.map((entry) => entry.tokenized),
+          locale,
+        );
+
+        batch.forEach((entry, batchIndex) => {
+          const value = translated[batchIndex];
+          translations.set(
+            entry.source,
+            typeof value === "string" && value.trim()
+              ? restoreIcu(value, entry.expressions)
+              : entry.source,
+          );
+        });
+        await sleep(700);
+      }
+
+      const applyMissing = (source, target) => {
+        if (typeof source === "string") {
+          if (target == null || !String(target).trim()) {
+            return translations.get(source) ?? source;
+          }
+          return target;
+        }
+        if (Array.isArray(source)) {
+          return source.map((entry, index) =>
+            applyMissing(entry, target?.[index]),
+          );
+        }
+        if (source && typeof source === "object") {
+          return Object.fromEntries(
+            Object.entries(source).map(([key, entry]) => [
+              key,
+              applyMissing(entry, target?.[key]),
+            ]),
+          );
+        }
+        return target;
+      };
+
+      const output = applyMissing(base, current);
+      await writeFile(
+        path.join(MESSAGES_DIR, `${locale}.json`),
+        `${JSON.stringify(output, null, 2)}\n`,
+        "utf8",
+      );
+      console.log(`[ok] ${locale}: ${tokenizedSources.length} missing strings`);
+      continue;
+    }
+
     if (placeholdersOnly) {
       const current = JSON.parse(
         await readFile(path.join(MESSAGES_DIR, `${locale}.json`), "utf8"),

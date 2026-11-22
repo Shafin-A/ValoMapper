@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
+import { useTranslations } from "next-intl";
 import { useReplayClockTime } from "@/hooks/use-replay-clock";
 import { formatReplayTime } from "@/lib/replay/display";
 import type { ReplayClock } from "@/lib/replay/clock";
@@ -86,6 +87,7 @@ const ReplayTimelineSlider = ({
   round: ReplayRound;
   onSeek: (timeMs: number) => void;
 }) => {
+  const t = useTranslations("replay.controls");
   const currentTimeMs = useReplayClockTime(clock);
 
   return (
@@ -95,7 +97,7 @@ const ReplayTimelineSlider = ({
       max={round.durationMs}
       step={100}
       onValueChange={([value]) => onSeek(value)}
-      aria-label="Replay timeline"
+      aria-label={t("timeline")}
       className="**:data-[slot=slider-thumb]:relative **:data-[slot=slider-thumb]:z-10"
     />
   );

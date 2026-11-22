@@ -22,15 +22,16 @@ import { Button } from "@/components/ui/button";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
 import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { cn } from "@/lib/cn";
+import { useTranslations } from "next-intl";
 
 const SECTION_LINKS = [
-  { id: "replay", label: "Replay" },
-  { id: "notes", label: "Notes" },
-  { id: "multi-select", label: "Multi-select" },
-  { id: "boards", label: "Boards" },
-  { id: "mobile", label: "Mobile" },
-  { id: "more", label: "More" },
-];
+  { id: "replay", key: "replay" },
+  { id: "notes", key: "notes" },
+  { id: "multi-select", key: "multiSelect" },
+  { id: "boards", key: "boards" },
+  { id: "mobile", key: "mobile" },
+  { id: "more", key: "more" },
+] as const;
 
 const NOTES_BULLETS = [
   "Add a note to any agent, ability, icon, text, or image to explain the plan or callout.",
@@ -175,6 +176,7 @@ const Shot = ({
 );
 
 export const WhatsNewPage = () => {
+  const t = useTranslations("whatsNew");
   const sidebarState = useSidebarState();
   const createLobbyMutation = useCreateLobby();
   const isStarting = createLobbyMutation.isPending;
@@ -198,11 +200,11 @@ export const WhatsNewPage = () => {
       {isStarting ? (
         <>
           <Loader2 className="animate-spin" aria-hidden />
-          Starting...
+          {t("starting")}
         </>
       ) : (
         <>
-          Start a board
+          {t("startBoard")}
           <ArrowRight aria-hidden />
         </>
       )}
@@ -228,34 +230,32 @@ export const WhatsNewPage = () => {
                 className="border-primary/30 bg-primary/10 text-primary"
               >
                 <Sparkles aria-hidden />
-                What&apos;s New
+                {t("badge")}
               </Badge>
 
               <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                What&apos;s new in{" "}
+                {t("titlePrefix")}{" "}
                 <span className="bg-linear-to-r from-foreground to-primary bg-clip-text text-transparent">
                   ValoMapper
                 </span>
               </h1>
 
               <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                Replays you can step through, notes on every callout, faster
-                board editing, and a mobile experience that finally feels
-                native.
+                {t("description")}
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button asChild size="lg">
                   <Link href="/replay">
                     <Play aria-hidden />
-                    Try Replays
+                    {t("tryReplays")}
                   </Link>
                 </Button>
                 {startBoardButton("outline")}
               </div>
 
               <nav
-                aria-label="What's new sections"
+                aria-label={t("sectionsAria")}
                 className="mt-10 flex flex-wrap gap-2"
               >
                 {SECTION_LINKS.map((section) => (
@@ -264,7 +264,7 @@ export const WhatsNewPage = () => {
                     href={`#${section.id}`}
                     className="rounded-full border border-border/70 bg-background/60 px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
                   >
-                    {section.label}
+                    {t(`sections.${section.key}` as never)}
                   </Link>
                 ))}
               </nav>

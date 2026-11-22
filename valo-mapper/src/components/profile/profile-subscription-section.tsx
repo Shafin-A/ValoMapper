@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ProfileSubscriptionSectionProps {
   hasValoMapperPremium: boolean;
@@ -50,11 +51,13 @@ export const ProfileSubscriptionSection = ({
   onResumeSubscription,
   onCancelSubscription,
 }: ProfileSubscriptionSectionProps) => {
+  const t = useTranslations("profile.subscription");
+
   return (
     <div className="space-y-2">
-      <div className="text-xs font-semibold">Subscription</div>
+      <div className="text-xs font-semibold">{t("title")}</div>
       <div className="flex items-center justify-between rounded-md border px-3 py-2">
-        <span className="text-sm">ValoMapper Premium</span>
+        <span className="text-sm">{t("premium")}</span>
         <span
           className={`text-xs font-semibold ${
             hasScheduledCancellation
@@ -79,7 +82,7 @@ export const ProfileSubscriptionSection = ({
         {hasValoMapperPremium ? (
           isStackPlan && isStackMembersLoading ? (
             <p className="text-xs text-muted-foreground">
-              Loading stack billing permissions...
+              {t("loadingPermissions")}
             </p>
           ) : isActiveStackMember ? (
             <AlertDialog>
@@ -88,21 +91,20 @@ export const ProfileSubscriptionSection = ({
                   {isLeavingStack && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Leave Stack
+                  {t("leaveStack")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Leave this stack?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("leaveStackTitle")}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    You will lose Premium Stack access immediately after leaving
-                    unless you have your own active personal subscription.
+                    {t("leaveStackDescription")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Stay in Stack</AlertDialogCancel>
+                  <AlertDialogCancel>{t("stayInStack")}</AlertDialogCancel>
                   <AlertDialogAction onClick={onLeaveActiveStack}>
-                    Leave Stack
+                    {t("leaveStack")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -117,7 +119,7 @@ export const ProfileSubscriptionSection = ({
               {isResumePending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Undo Cancellation
+              {t("undoCancel")}
             </Button>
           ) : (
             <AlertDialog>
@@ -130,25 +132,23 @@ export const ProfileSubscriptionSection = ({
                   {isCancelPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Cancel Subscription
+                  {t("cancelSubscription")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("cancelTitle")}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Your subscription will be set to cancel at the end of your
-                    current billing period. You will keep ValoMapper Premium
-                    access until then.
+                    {t("cancelDescription")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                  <AlertDialogCancel>{t("keepSubscription")}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={onCancelSubscription}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/70"
                   >
-                    Confirm Cancel
+                    {t("confirmCancel")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -157,7 +157,7 @@ export const ProfileSubscriptionSection = ({
         ) : (
           <CheckoutPlanDialog
             returnToPath={returnToPath}
-            trigger={<Button size="sm">Upgrade to Premium</Button>}
+            trigger={<Button size="sm">{t("upgrade")}</Button>}
           />
         )}
       </div>

@@ -21,7 +21,7 @@ const getPathname = (path: string): string => {
   return pathname || "/";
 };
 
-const getBillingReturnDestination = (
+export const getBillingReturnDestination = (
   returnToPath: string,
 ): BillingReturnDestination => {
   const pathname = getPathname(returnToPath);

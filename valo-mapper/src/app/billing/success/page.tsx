@@ -3,14 +3,18 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import {
-  getBillingSuccessReturnLabel,
+  getBillingReturnDestination,
   normalizeBillingReturnPath,
 } from "@/lib/billing-return-path";
 import { PREMIUM_TRIAL_DAYS } from "@/lib/consts";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Subscription confirmed",
-  robots: { index: false, follow: false },
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations("billingPages");
+  return {
+    title: t("successMeta"),
+    robots: { index: false, follow: false },
+  };
 };
 
 type BillingSuccessPageProps = {
@@ -31,7 +35,18 @@ const BillingSuccessPage = async ({
     getSearchParamValue(resolvedSearchParams?.returnTo),
     "/strategies",
   );
-  const returnLabel = getBillingSuccessReturnLabel(returnToPath);
+  const t = await getTranslations("billingPages");
+  const destination = getBillingReturnDestination(returnToPath);
+  const returnLabel =
+    destination === "home"
+      ? t("successBackHome")
+      : destination === "strategies"
+        ? t("successBackStrategies")
+        : destination === "profile"
+          ? t("successBackProfile")
+          : destination === "strategy"
+            ? t("successBackStrategy")
+            : t("successBackContinue");
 
   return (
     <main
@@ -44,19 +59,12 @@ const BillingSuccessPage = async ({
           <CheckCircle2 className="h-16 w-16 text-primary" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Welcome to ValoMapper Premium!</h1>
-          <p className="text-foreground/85">
-            Thanks for upgrading. Your ValoMapper Premium subscription is now
-            active.
-          </p>
+          <h1 className="text-3xl font-bold">{t("successTitle")}</h1>
+          <p className="text-foreground/85">{t("successDescription")}</p>
           <p className="text-sm text-foreground/70">
-            If you chose to start on trial, monthly billing begins automatically
-            after
-            {` ${PREMIUM_TRIAL_DAYS} days`}.
+            {t("successTrial", { days: PREMIUM_TRIAL_DAYS })}
           </p>
-          <p className="text-sm text-foreground/70">
-            It may take a moment for your account status to refresh.
-          </p>
+          <p className="text-sm text-foreground/70">{t("successRefresh")}</p>
         </div>
         <Button asChild>
           <Link href={returnToPath}>{returnLabel}</Link>

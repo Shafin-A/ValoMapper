@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StackMember, StackOwner } from "@/lib/types";
 import { Loader2, UserPlus, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ProfileStackMembersSectionProps {
   isStackPlan: boolean;
@@ -42,6 +43,8 @@ export const ProfileStackMembersSection = ({
   onInviteStackMember,
   onRemoveStackMember,
 }: ProfileStackMembersSectionProps) => {
+  const t = useTranslations("profile.stack");
+
   if (!isStackPlan) {
     return null;
   }
@@ -51,13 +54,13 @@ export const ProfileStackMembersSection = ({
       <div className="flex items-center gap-2">
         <Users className="h-4 w-4 text-primary" />
         <p className="text-sm font-medium">
-          Premium Stack Members ({stackSeatCount}/6)
+          {t("title", { count: stackSeatCount })}
         </p>
       </div>
 
       {canManageStack && (
         <div className="space-y-2">
-          <Label htmlFor="stack-invite-uid">Invite by UID</Label>
+          <Label htmlFor="stack-invite-uid">{t("inviteByUid")}</Label>
           <div className="flex gap-2">
             <Input
               id="stack-invite-uid"
@@ -65,7 +68,7 @@ export const ProfileStackMembersSection = ({
               onChange={(event) =>
                 onInviteFirebaseUidChange(event.target.value)
               }
-              placeholder="Enter UID"
+              placeholder={t("enterUid")}
               disabled={isInvitingStackMember}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
@@ -84,12 +87,10 @@ export const ProfileStackMembersSection = ({
               ) : (
                 <UserPlus className="mr-2 h-4 w-4" />
               )}
-              Invite
+              {t("invite")}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Add members with their UID.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("inviteHelp")}</p>
         </div>
       )}
 
@@ -100,19 +101,18 @@ export const ProfileStackMembersSection = ({
         </div>
       ) : stackMembersErrorMessage ? (
         <p className="text-xs text-destructive">
-          Failed to load stack members: {stackMembersErrorMessage}
+          {t("loadFailed", { error: stackMembersErrorMessage })}
         </p>
       ) : !stackOwner && stackMembers.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No stack members found.</p>
+        <p className="text-xs text-muted-foreground">{t("none")}</p>
       ) : (
         <div className="space-y-2">
           {stackOwner && (
             <div className="flex items-center justify-between rounded-md border px-3 py-2">
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">
-                  {stackOwnerDisplayName}
-                  {" (Owner)"}
-                  {stackOwner.userId === currentUserId ? " (You)" : ""}
+                  {stackOwnerDisplayName} ({t("owner")})
+                  {stackOwner.userId === currentUserId ? ` (${t("you")})` : ""}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {stackOwnerDisplayEmail}
@@ -121,7 +121,7 @@ export const ProfileStackMembersSection = ({
             </div>
           )}
           {stackMembers.map((member) => {
-            const displayName = member.memberName?.trim() || "Unnamed";
+            const displayName = member.memberName?.trim() || t("unnamed");
             const displayEmail = member.memberEmail?.trim() || "";
             const isCurrentUser = member.memberUserId === currentUserId;
 
@@ -133,14 +133,14 @@ export const ProfileStackMembersSection = ({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">
                     {displayName}
-                    {isCurrentUser ? " (You)" : ""}
+                    {isCurrentUser ? ` (${t("you")})` : ""}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
                     {displayEmail}
                   </p>
                   {member.status === "pending" && (
                     <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                      {member.status}
+                      {t("pending")}
                     </p>
                   )}
                 </div>
@@ -155,7 +155,7 @@ export const ProfileStackMembersSection = ({
                     {isRemovingStackMember && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Remove
+                    {t("remove")}
                   </Button>
                 )}
               </div>

@@ -39,6 +39,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 export const ProfileContent = () => {
   const t = useTranslations("profile");
+  const ts = useTranslations("profile.subscription");
   const format = useFormatter();
   const formatDate = (date: Date) =>
     format.dateTime(date, {
@@ -132,7 +133,9 @@ export const ProfileContent = () => {
   );
 
   const canManageStack = canManageStackFromApi && !hasSelfActiveStackMembership;
-  const stackRoleLabel = canManageStack ? "Stack Owner" : "Stack Member";
+  const stackRoleLabel = canManageStack
+    ? ts("stackOwner")
+    : ts("stackMember");
   const stackOwner = stackMembersData?.owner;
   const stackOwnerDisplayName =
     stackOwner?.name?.trim() ||
@@ -181,72 +184,67 @@ export const ProfileContent = () => {
 
   const subscriptionStartedText = subscriptionStartedAt
     ? isStackPlan && isActiveStackMember
-      ? `Stack membership started on ${formatDate(subscriptionStartedAt)}`
-      : `Subscribed on ${formatDate(subscriptionStartedAt)}`
+      ? ts("startedStack", { date: formatDate(subscriptionStartedAt) })
+      : ts("started", { date: formatDate(subscriptionStartedAt) })
     : undefined;
 
   const subscriptionLabel = (() => {
-    if (!hasValoMapperPremium) {
-      return "Free";
-    }
+    if (!hasValoMapperPremium) return ts("free");
 
     if (hasActivePremiumTrial) {
-      return `Trial (${premiumTrialDaysLeft} day${premiumTrialDaysLeft === 1 ? "" : "s"} left)`;
+      return premiumTrialDaysLeft === 1
+        ? ts("trialOne")
+        : ts("trialMany", { count: premiumTrialDaysLeft });
     }
 
     if (isStackPlan) {
-      return isStackMembersLoading ? "Stack (Loading...)" : stackRoleLabel;
+      return isStackMembersLoading ? ts("stackLoading") : stackRoleLabel;
     }
 
-    if (isYearlyPlan) {
-      return "Yearly";
-    }
-
-    if (isMonthlyPlan) {
-      return "Monthly";
-    }
-
-    return "Premium";
+    if (isYearlyPlan) return ts("yearly");
+    if (isMonthlyPlan) return ts("monthly");
+    return ts("premium");
   })();
 
   const subscriptionSummary = (() => {
-    if (!hasValoMapperPremium) {
-      return "You are currently on the free plan.";
-    }
+    if (!hasValoMapperPremium) return ts("summaryFree");
 
     if (hasScheduledCancellation && subscriptionEndsAt) {
-      return `${subscriptionLabel} access remains active until ${formatDate(subscriptionEndsAt)}.`;
+      return ts("summaryCancels", {
+        label: subscriptionLabel,
+        date: formatDate(subscriptionEndsAt),
+      });
     }
 
     if (hasActivePremiumTrial) {
-      return `You are currently on a Premium trial with ${premiumTrialDaysLeft} day${premiumTrialDaysLeft === 1 ? "" : "s"} remaining.`;
+      return premiumTrialDaysLeft === 1
+        ? ts("summaryTrialOne")
+        : ts("summaryTrialMany", { count: premiumTrialDaysLeft });
     }
 
     if (isStackPlan) {
       const stackSummary = canManageStack
-        ? "You are the stack owner for this Premium Stack plan."
-        : `You are covered under ${stackOwnerDisplayName}'s Premium Stack plan.`;
+        ? ts("summaryStackOwner")
+        : ts("summaryStackMember", { name: stackOwnerDisplayName });
 
       if (hasScheduledPersonalCancellation && personalSubscriptionEndsAt) {
-        return `${stackSummary} Your personal ${personalPlanLabel} subscription is scheduled to cancel on ${formatDate(personalSubscriptionEndsAt)}.`;
+        return ts("summaryPersonalCancel", {
+          summary: stackSummary,
+          plan: personalPlanLabel,
+          date: formatDate(personalSubscriptionEndsAt),
+        });
       }
 
       return stackSummary;
     }
 
-    if (isYearlyPlan) {
-      return "Your Yearly Premium subscription is active.";
-    }
-
-    if (isMonthlyPlan) {
-      return "Your Monthly Premium subscription is active.";
-    }
-
-    return "Your ValoMapper Premium subscription is active.";
+    if (isYearlyPlan) return ts("summaryYearly");
+    if (isMonthlyPlan) return ts("summaryMonthly");
+    return ts("summaryPremium");
   })();
 
   const subscriptionBadgeText = hasScheduledCancellation
-    ? `${subscriptionLabel} (Cancels at Period End)`
+    ? ts("badgeCancels", { label: subscriptionLabel })
     : subscriptionLabel;
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,15 +253,15 @@ export const ProfileContent = () => {
 
   const handleCopyFirebaseUid = async () => {
     if (!user.firebaseUid) {
-      toast.error("UID is unavailable");
+      toast.error(t("uidUnavailable"));
       return;
     }
 
     try {
       await navigator.clipboard.writeText(user.firebaseUid);
-      toast.success("UID copied");
+      toast.success(t("uidCopied"));
     } catch {
-      toast.error("Failed to copy UID");
+      toast.error(t("uidCopyFailed"));
     }
   };
 

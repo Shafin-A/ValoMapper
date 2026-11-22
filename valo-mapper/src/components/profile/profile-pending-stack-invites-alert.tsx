@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StackMember } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
 
 interface ProfilePendingStackInvitesAlertProps {
   pendingStackInvites?: StackMember[];
@@ -24,6 +25,9 @@ export const ProfilePendingStackInvitesAlert = ({
   onAcceptPendingInvite,
   onDeclinePendingInvite,
 }: ProfilePendingStackInvitesAlertProps) => {
+  const t = useTranslations("profile.pendingInvites");
+  const format = useFormatter();
+
   if (!isPendingStackInviteLoading && !hasPendingStackInvites) {
     return null;
   }
@@ -32,21 +36,17 @@ export const ProfilePendingStackInvitesAlert = ({
     <Alert className="border-amber-200 bg-stone-50 text-stone-900 shadow-sm dark:border-amber-900/70 dark:bg-zinc-900 dark:text-zinc-100">
       <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
       <AlertTitle>
-        Pending Stack Invite{(pendingStackInvites?.length ?? 0) > 1 ? "s" : ""}
+        {(pendingStackInvites?.length ?? 0) > 1
+          ? t("titleMany")
+          : t("titleOne")}
       </AlertTitle>
       <AlertDescription className="space-y-2 text-stone-700 dark:text-zinc-300">
         {isPendingStackInviteLoading ? (
-          <p className="text-xs">Checking for pending invites...</p>
+          <p className="text-xs">{t("checking")}</p>
         ) : (
           <>
-            <p className="text-xs">
-              You can accept any invite below to join that owner&apos;s Premium
-              Stack.
-            </p>
-            <p className="text-xs">
-              Accepting will activate stack membership and any personal paid
-              subscription will be scheduled to cancel at period end.
-            </p>
+            <p className="text-xs">{t("acceptHelp")}</p>
+            <p className="text-xs">{t("cancelHelp")}</p>
             <div className="space-y-2 pt-1">
               {(pendingStackInvites ?? []).map((invite) => {
                 const sentAt = invite.invitedAt
@@ -67,11 +67,12 @@ export const ProfilePendingStackInvitesAlert = ({
                     </p>
                     {sentAt && !Number.isNaN(sentAt.getTime()) && (
                       <p className="text-[11px] text-stone-600 dark:text-zinc-400">
-                        Invited{" "}
-                        {sentAt.toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
+                        {t("invited", {
+                          date: format.dateTime(sentAt, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }),
                         })}
                       </p>
                     )}
@@ -85,7 +86,7 @@ export const ProfilePendingStackInvitesAlert = ({
                         {isAcceptingStackInvite && (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}
-                        Accept Invite
+                        {t("accept")}
                       </Button>
                       <Button
                         type="button"
@@ -97,7 +98,7 @@ export const ProfilePendingStackInvitesAlert = ({
                         {isDecliningStackInvite && (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}
-                        Decline
+                        {t("decline")}
                       </Button>
                     </div>
                   </div>
