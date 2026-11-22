@@ -204,7 +204,8 @@
     "featureStackDescription": "Yalnızca Stack planında mevcut",
     "included": "Dahil",
     "notIncluded": "Dahil değil",
-    "compareHint": "Dahil olan özellikleri burada karşılaştır, ardından plan seçmek için aşağıdaki menüyü kullan."
+    "compareHint": "Dahil olan özellikleri burada karşılaştır, ardından plan seçmek için aşağıdaki menüyü kullan.",
+    "perYear": "{price}/yıl"
   },
   "onboarding": {
     "quickStart": "Mobil hızlı başlangıç",

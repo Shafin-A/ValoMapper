@@ -204,7 +204,8 @@
     "featureStackDescription": "Hanya tersedia di paket Stack",
     "included": "Termasuk",
     "notIncluded": "Tidak termasuk",
-    "compareHint": "Bandingkan fitur yang tersedia di sini, lalu gunakan pilihan di bawah untuk memilih paket."
+    "compareHint": "Bandingkan fitur yang tersedia di sini, lalu gunakan pilihan di bawah untuk memilih paket.",
+    "perYear": "{price}/thn"
   },
   "onboarding": {
     "quickStart": "Panduan cepat seluler",

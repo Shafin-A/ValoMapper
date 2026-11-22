@@ -204,7 +204,8 @@
     "featureStackDescription": "Nur im Stack-Plan verfügbar",
     "included": "Enthalten",
     "notIncluded": "Nicht enthalten",
-    "compareHint": "Vergleiche unten die enthaltenen Funktionen und wähle dann einen Plan aus."
+    "compareHint": "Vergleiche unten die enthaltenen Funktionen und wähle dann einen Plan aus.",
+    "perYear": "{price}/Jahr"
   },
   "onboarding": {
     "quickStart": "Mobiler Schnellstart",

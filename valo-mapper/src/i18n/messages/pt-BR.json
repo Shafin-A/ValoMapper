@@ -204,7 +204,8 @@
     "featureStackDescription": "Disponível apenas no plano Stack",
     "included": "Incluído",
     "notIncluded": "Não incluído",
-    "compareHint": "Compare os recursos incluídos aqui e use a seleção abaixo para escolher um plano."
+    "compareHint": "Compare os recursos incluídos aqui e use a seleção abaixo para escolher um plano.",
+    "perYear": "{price}/ano"
   },
   "onboarding": {
     "quickStart": "Início rápido no celular",

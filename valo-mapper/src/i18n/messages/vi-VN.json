@@ -204,7 +204,8 @@
     "featureStackDescription": "Chỉ có sẵn trên gói Stack",
     "included": "Bao gồm",
     "notIncluded": "Không bao gồm",
-    "compareHint": "So sánh các tính năng được bao gồm ở đây, sau đó sử dụng phần chọn bên dưới để chọn gói."
+    "compareHint": "So sánh các tính năng được bao gồm ở đây, sau đó sử dụng phần chọn bên dưới để chọn gói.",
+    "perYear": "{price}/năm"
   },
   "onboarding": {
     "quickStart": "Khởi động nhanh trên di động",

@@ -204,7 +204,8 @@
     "featureStackDescription": "Stack 플랜에서만 사용 가능",
     "included": "포함됨",
     "notIncluded": "포함되지 않음",
-    "compareHint": "포함된 기능을 비교한 뒤 아래에서 플랜을 선택하세요."
+    "compareHint": "포함된 기능을 비교한 뒤 아래에서 플랜을 선택하세요.",
+    "perYear": "{price}/년"
   },
   "onboarding": {
     "quickStart": "모바일 빠른 시작",

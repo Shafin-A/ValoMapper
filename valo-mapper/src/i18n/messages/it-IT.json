@@ -204,7 +204,8 @@
     "featureStackDescription": "Disponibile solo con il piano Stack",
     "included": "Incluso",
     "notIncluded": "Non incluso",
-    "compareHint": "Confronta qui le funzioni incluse, poi usa il selettore qui sotto per scegliere un piano."
+    "compareHint": "Confronta qui le funzioni incluse, poi usa il selettore qui sotto per scegliere un piano.",
+    "perYear": "{price}/anno"
   },
   "onboarding": {
     "quickStart": "Avvio rapido mobile",

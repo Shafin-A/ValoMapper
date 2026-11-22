@@ -204,7 +204,8 @@
     "featureStackDescription": "仅在 Stack 计划中提供",
     "included": "包含",
     "notIncluded": "不包含",
-    "compareHint": "在此比较包含的功能，然后使用下方的选择器选择计划。"
+    "compareHint": "在此比较包含的功能，然后使用下方的选择器选择计划。",
+    "perYear": "{price}/年"
   },
   "onboarding": {
     "quickStart": "移动端快速入门",

@@ -24,7 +24,7 @@ import { useBillingPlans } from "@/hooks/api/use-billing-plans";
 import { useUser } from "@/hooks/api/use-user";
 import { PlanComparisonTable } from "./plan-comparison-table";
 import { CheckoutPlanSelector } from "./checkout-plan-selector";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface CheckoutPlanDialogProps {
   returnToPath: string;
@@ -36,6 +36,7 @@ export const CheckoutPlanDialog = ({
   trigger,
 }: CheckoutPlanDialogProps) => {
   const t = useTranslations("billing");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(
     DEFAULT_CHECKOUT_PLAN,
@@ -80,16 +81,20 @@ export const CheckoutPlanDialog = ({
       intervalCount: number,
     ) => {
       const amount = unitAmount / 100;
-      const formattedAmount = new Intl.NumberFormat(undefined, {
+      const formattedAmount = new Intl.NumberFormat(locale, {
         style: "currency",
         currency: currency.toUpperCase(),
       }).format(amount);
 
-      if (intervalCount > 1) {
-        return `${formattedAmount}/${intervalCount} ${interval}s`;
+      if (intervalCount === 1 && interval === "month") {
+        return t("perMonth", { price: formattedAmount });
       }
 
-      return `${formattedAmount}/${interval}`;
+      if (intervalCount === 1 && interval === "year") {
+        return t("perYear", { price: formattedAmount });
+      }
+
+      return `${formattedAmount}/${intervalCount} ${interval}s`;
     };
 
     const planMap = {
@@ -115,7 +120,7 @@ export const CheckoutPlanDialog = ({
         currencyCode: livePlan.currency.toUpperCase(),
       };
     });
-  }, [billingPlans]);
+  }, [billingPlans, locale, t]);
 
   const selectedPlanOption = useMemo(() => {
     return (

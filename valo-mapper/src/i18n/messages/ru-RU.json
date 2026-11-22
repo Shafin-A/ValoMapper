@@ -204,7 +204,8 @@
     "featureStackDescription": "Доступно только на плане Stack",
     "included": "Включено",
     "notIncluded": "Не включено",
-    "compareHint": "Сравните возможности ниже и выберите план."
+    "compareHint": "Сравните возможности ниже и выберите план.",
+    "perYear": "{price}/год"
   },
   "onboarding": {
     "quickStart": "Быстрый старт на мобильном",

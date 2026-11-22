@@ -204,7 +204,8 @@
     "featureStackDescription": "僅限 Stack 方案",
     "included": "包含",
     "notIncluded": "不包含",
-    "compareHint": "在此比較各方案包含的功能，然後使用下方的選項選擇方案。"
+    "compareHint": "在此比較各方案包含的功能，然後使用下方的選項選擇方案。",
+    "perYear": "{price}/年"
   },
   "onboarding": {
     "quickStart": "行動版快速入門",

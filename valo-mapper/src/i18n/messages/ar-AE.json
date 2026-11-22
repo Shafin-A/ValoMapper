@@ -204,7 +204,8 @@
     "featureStackDescription": "متاح فقط في خطة Stack",
     "included": "متضمن",
     "notIncluded": "غير متضمن",
-    "compareHint": "قارن الميزات المتضمنة هنا، ثم استخدم القائمة أدناه لاختيار خطة."
+    "compareHint": "قارن الميزات المتضمنة هنا، ثم استخدم القائمة أدناه لاختيار خطة.",
+    "perYear": "{price}/سنة"
   },
   "onboarding": {
     "quickStart": "البدء السريع للجوال",

@@ -204,7 +204,8 @@
     "featureStackDescription": "Uniquement disponible sur le forfait Stack",
     "included": "Compris",
     "notIncluded": "Non inclus",
-    "compareHint": "Comparez les fonctionnalités incluses ici, puis utilisez la sélection ci-dessous pour choisir un forfait."
+    "compareHint": "Comparez les fonctionnalités incluses ici, puis utilisez la sélection ci-dessous pour choisir un forfait.",
+    "perYear": "{price}/an"
   },
   "onboarding": {
     "quickStart": "Démarrage rapide mobile",

@@ -204,7 +204,8 @@
     "featureStackDescription": "Only available on the Stack plan",
     "included": "Included",
     "notIncluded": "Not included",
-    "compareHint": "Compare included features here, then use the select below to choose a plan."
+    "compareHint": "Compare included features here, then use the select below to choose a plan.",
+    "perYear": "{price}/yr"
   },
   "onboarding": {
     "quickStart": "Mobile quick start",

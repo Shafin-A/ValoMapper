@@ -204,7 +204,8 @@
     "featureStackDescription": "スタックプランでのみ利用可能",
     "included": "含まれる",
     "notIncluded": "含まれない",
-    "compareHint": "ここで含まれる機能を比較し、下の選択肢からプランを選んでください。"
+    "compareHint": "ここで含まれる機能を比較し、下の選択肢からプランを選んでください。",
+    "perYear": "{price}/年"
   },
   "onboarding": {
     "quickStart": "モバイル クイックスタート",
