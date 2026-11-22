@@ -227,33 +227,105 @@ jest.mock("next-intl", () => {
       return replacement === undefined ? match : String(replacement);
     });
 
-  // Production formatting is handled by next-intl; this only covers test forms.
+  const findClosingBrace = (value: string, start: number): number => {
+    let depth = 0;
+    for (let index = start; index < value.length; index++) {
+      if (value[index] === "{") depth++;
+      else if (value[index] === "}") {
+        depth--;
+        if (depth === 0) return index;
+      }
+    }
+    return -1;
+  };
+
+  const parseIcUOptions = (value: string): Record<string, string> => {
+    const options: Record<string, string> = {};
+    let index = 0;
+    while (index < value.length) {
+      while (index < value.length && /\s/.test(value[index])) index++;
+      const selectorStart = index;
+      while (index < value.length && !/[\s{]/.test(value[index])) index++;
+      const selector = value.slice(selectorStart, index);
+      while (index < value.length && /\s/.test(value[index])) index++;
+      if (!selector || value[index] !== "{") break;
+      const end = findClosingBrace(value, index);
+      if (end === -1) break;
+      options[selector] = value.slice(index + 1, end);
+      index = end + 1;
+    }
+    return options;
+  };
+
+  const formatIcu = (
+    message: string,
+    values?: Record<string, unknown>,
+    locale = "en-US",
+  ): string => {
+    let result = "";
+    let index = 0;
+    while (index < message.length) {
+      const char = message[index];
+      if (char !== "{") {
+        result += char;
+        index++;
+        continue;
+      }
+      const end = findClosingBrace(message, index);
+      if (end === -1) {
+        result += message.slice(index);
+        break;
+      }
+      const token = message.slice(index + 1, end).trim();
+      const firstComma = token.indexOf(",");
+      if (firstComma === -1) {
+        const name = token;
+        result +=
+          values?.[name] === undefined ? `{${token}}` : String(values[name]);
+        index = end + 1;
+        continue;
+      }
+      const name = token.slice(0, firstComma).trim();
+      const rest = token.slice(firstComma + 1).trim();
+      const typeComma = rest.indexOf(",");
+      const type = (typeComma === -1 ? rest : rest.slice(0, typeComma)).trim();
+      if (type === "plural" || type === "selectordinal" || type === "select") {
+        const options = parseIcUOptions(rest.slice(typeComma + 1));
+        let branch: string | undefined;
+        if (type === "select") {
+          branch = options[String(values?.[name] ?? "")] ?? options.other;
+        } else {
+          const count = Number(values?.[name] ?? 0);
+          const category = new Intl.PluralRules(locale).select(count);
+          branch = options[category] ?? options.other;
+          if (branch != null) {
+            branch = formatIcu(branch, values, locale).replace(
+              /#/g,
+              String(count),
+            );
+          }
+        }
+        result += branch ?? `{${token}}`;
+      } else {
+        const value = values?.[name];
+        result += value === undefined ? `{${token}}` : String(value);
+      }
+      index = end + 1;
+    }
+    return result;
+  };
+
+  // Production formatting is handled by next-intl; this keeps the test
+  // formatter ICU-aware so plural messages behave like production.
   const formatMessage = (
     value: string,
     values?: Record<string, unknown>,
   ): string => {
-    const withPlurals = value.replace(
-      /\{(\w+),\s*plural,\s*([\s\S]*?)\}/g,
-      (match, key: string, body: string) => {
-        const count = Number(values?.[key] ?? 0);
-        const options = new Map<string, string>();
-        for (const option of body.matchAll(
-          /(zero|one|two|few|many|other)\s*\{([^{}]*)\}/g,
-        )) {
-          options.set(option[1], option[2]);
-        }
-
-        const branch =
-          count === 0 && options.has("zero")
-            ? options.get("zero")
-            : count === 1
-              ? options.get("one")
-              : options.get("other");
-        return (branch ?? match).replace(/#/g, String(count));
-      },
-    );
-
-    return interpolate(withPlurals, values);
+    try {
+      return formatIcu(value, values);
+    } catch {
+      return interpolate(value, values);
+    }
   };
 
   type Translator = ((key: string, values?: Record<string, unknown>) => string) & {

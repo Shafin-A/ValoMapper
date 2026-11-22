@@ -29,11 +29,78 @@ const flatten = (value, prefix = "", result = new Map()) => {
   return result;
 };
 
+const findClosingBrace = (value, start) => {
+  let depth = 0;
+  for (let index = start; index < value.length; index++) {
+    if (value[index] === "{") depth++;
+    else if (value[index] === "}") {
+      depth--;
+      if (depth === 0) return index;
+    }
+  }
+  return -1;
+};
+
+const parseOptions = (value) => {
+  const options = {};
+  let index = 0;
+  while (index < value.length) {
+    while (index < value.length && /\s/.test(value[index])) index++;
+    const selectorStart = index;
+    while (index < value.length && !/[\s{]/.test(value[index])) index++;
+    const selector = value.slice(selectorStart, index);
+    while (index < value.length && /\s/.test(value[index])) index++;
+    if (!selector || value[index] !== "{") break;
+    const end = findClosingBrace(value, index);
+    if (end === -1) break;
+    options[selector] = value.slice(index + 1, end);
+    index = end + 1;
+  }
+  return options;
+};
+
+const collectArguments = (message, found) => {
+  let index = 0;
+  while (index < message.length) {
+    if (message[index] !== "{") {
+      index++;
+      continue;
+    }
+
+    const end = findClosingBrace(message, index);
+    if (end === -1) break;
+
+    const token = message.slice(index + 1, end).trim();
+    const firstComma = token.indexOf(",");
+
+    if (firstComma === -1) {
+      if (/^[a-zA-Z_][\w]*$/.test(token)) found.add(token);
+    } else {
+      const name = token.slice(0, firstComma).trim();
+      if (/^[a-zA-Z_][\w]*$/.test(name)) found.add(name);
+
+      const rest = token.slice(firstComma + 1).trim();
+      const typeComma = rest.indexOf(",");
+      const type = (typeComma === -1 ? rest : rest.slice(0, typeComma)).trim();
+
+      if (
+        typeComma !== -1 &&
+        (type === "plural" || type === "selectordinal" || type === "select")
+      ) {
+        const options = parseOptions(rest.slice(typeComma + 1));
+        for (const branch of Object.values(options)) {
+          collectArguments(branch, found);
+        }
+      }
+    }
+
+    index = end + 1;
+  }
+};
+
 const placeholders = (message) => {
   const found = new Set();
-  for (const match of message.matchAll(/\{\s*([a-zA-Z_][\w]*)/g)) {
-    found.add(match[1]);
-  }
+  collectArguments(message, found);
   return [...found].sort();
 };
 
