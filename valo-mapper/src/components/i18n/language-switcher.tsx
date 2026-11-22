@@ -15,6 +15,13 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useHasCoarsePointer } from "@/hooks/use-has-coarse-pointer";
 import { setLocale } from "@/i18n/actions";
 import {
   isLaunchLocale,
@@ -41,6 +48,7 @@ export const LanguageSwitcher = ({
   const t = useTranslations("language");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const hasCoarsePointer = useHasCoarsePointer();
 
   const current = LOCALE_META[locale] ?? LOCALE_META["en-US"];
 
@@ -80,7 +88,6 @@ export const LanguageSwitcher = ({
         className={cn("h-10 w-10 sm:h-8 sm:w-8", className)}
         disabled={isPending}
         aria-label={t("label")}
-        title={t("label")}
       >
         {isPending ? (
           <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -92,28 +99,56 @@ export const LanguageSwitcher = ({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      {variant === "inline" || hasCoarsePointer ? (
+        <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      ) : (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side={side} sideOffset={6}>
+            {t("label")}
+          </TooltipContent>
+        </Tooltip>
+      )}
       <DropdownMenuContent
         align={align}
         side={side}
-        className="max-h-80 w-64 overflow-y-auto"
+        collisionPadding={8}
+        className="w-72 max-w-[calc(100vw-1rem)] overflow-hidden p-0"
       >
-        <DropdownMenuLabel>{t("label")}</DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={locale} onValueChange={handleValueChange}>
-          {LAUNCH_LOCALES.map((code) => (
-            <DropdownMenuRadioItem
-              key={code}
-              value={code}
-              lang={code}
-              className="gap-2"
+        <ScrollArea
+          type="auto"
+          className="w-full **:data-[slot=scroll-area-viewport]:overscroll-contain"
+          style={{
+            height:
+              "min(20rem, 60dvh, calc(var(--radix-dropdown-menu-content-available-height, 20rem) - 2px))",
+          }}
+        >
+          <div className="p-1 pr-6">
+            <DropdownMenuLabel>{t("label")}</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={locale}
+              onValueChange={handleValueChange}
             >
-              <span className="truncate">{LOCALE_META[code].nativeName}</span>
-              <DropdownMenuShortcut>
-                {LOCALE_META[code].englishName}
-              </DropdownMenuShortcut>
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
+              {LAUNCH_LOCALES.map((code) => (
+                <DropdownMenuRadioItem
+                  key={code}
+                  value={code}
+                  lang={code}
+                  className="gap-2"
+                >
+                  <span className="truncate">
+                    {LOCALE_META[code].nativeName}
+                  </span>
+                  <DropdownMenuShortcut>
+                    {LOCALE_META[code].englishName}
+                  </DropdownMenuShortcut>
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </div>
+        </ScrollArea>
       </DropdownMenuContent>
     </DropdownMenu>
   );
