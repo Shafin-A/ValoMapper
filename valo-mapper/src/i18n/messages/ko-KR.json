@@ -328,7 +328,8 @@
     "creating": "만드는 중...",
     "copyToLobbyButton": "로비에 복사",
     "preparing": "리뷰 준비 중...",
-    "eventLog": "이벤트 로그"
+    "eventLog": "이벤트 로그",
+    "metaTitle": "매치 리뷰"
   },
   "replay": {
     "controls": {

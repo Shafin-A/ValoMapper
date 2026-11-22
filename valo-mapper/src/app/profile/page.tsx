@@ -1,12 +1,17 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CenteredPageShell } from "@/components/shared/centered-page-shell";
 import { ProfileContent } from "@/components/profile/profile-content";
 
-export const metadata: Metadata = {
-  title: "My Profile",
-  robots: { index: false, follow: false },
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations("nav");
+
+  return {
+    title: t("myProfile"),
+    robots: { index: false, follow: false },
+  };
 };
 
 const ProfilePage = () => {

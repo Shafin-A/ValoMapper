@@ -1,10 +1,15 @@
 import { SignupForm } from "@/components/auth-forms/signup-form";
 import { CenteredPageShell } from "@/components/shared/centered-page-shell";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Sign up",
-  robots: { index: false, follow: false },
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations("auth");
+
+  return {
+    title: t("signUp"),
+    robots: { index: false, follow: false },
+  };
 };
 
 const SignupPage = () => {

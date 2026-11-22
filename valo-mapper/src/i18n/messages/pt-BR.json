@@ -328,7 +328,8 @@
     "creating": "Criando…",
     "copyToLobbyButton": "Copiar para o lobby",
     "preparing": "Preparando análise…",
-    "eventLog": "Registro de eventos"
+    "eventLog": "Registro de eventos",
+    "metaTitle": "Análise da partida"
   },
   "replay": {
     "controls": {

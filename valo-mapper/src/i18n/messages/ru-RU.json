@@ -328,7 +328,8 @@
     "creating": "Создание...",
     "copyToLobbyButton": "Скопировать в лобби",
     "preparing": "Подготовка обзора...",
-    "eventLog": "Журнал событий"
+    "eventLog": "Журнал событий",
+    "metaTitle": "Обзор матча"
   },
   "replay": {
     "controls": {

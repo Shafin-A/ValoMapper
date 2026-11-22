@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { ReplayEntryPage } from "./replay-entry-page";
 
-export const metadata: Metadata = {
-  title: "Replay",
-  description:
-    "Play back VALORANT replay files on the map, review every round in real time, and copy any moment into an editable strategy lobby.",
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations("replay.entry");
+
+  return {
+    title: t("badge"),
+    description: t("description"),
+  };
 };
 
 const ReplayPage = () => {

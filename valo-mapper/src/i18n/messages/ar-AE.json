@@ -328,7 +328,8 @@
     "creating": "جارٍ الإنشاء...",
     "copyToLobbyButton": "نسخ إلى الردهة",
     "preparing": "جارٍ إعداد المراجعة...",
-    "eventLog": "سجل الأحداث"
+    "eventLog": "سجل الأحداث",
+    "metaTitle": "مراجعة المباراة"
   },
   "replay": {
     "controls": {

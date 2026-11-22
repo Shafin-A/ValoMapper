@@ -328,7 +328,8 @@
     "creating": "正在建立...",
     "copyToLobbyButton": "複製到大廳",
     "preparing": "正在準備回顧...",
-    "eventLog": "事件日誌"
+    "eventLog": "事件日誌",
+    "metaTitle": "比賽回顧"
   },
   "replay": {
     "controls": {

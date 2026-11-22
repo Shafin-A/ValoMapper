@@ -375,6 +375,47 @@ jest.mock("next-intl", () => {
   };
 });
 
+// Server-side next-intl APIs are ESM-only; page tests import modules that use
+// them for generateMetadata, so provide the same en-US catalog here.
+jest.mock("next-intl/server", () => {
+  const messages = mockEnUSMessages;
+
+  const resolvePath = (source: unknown, path: string): unknown =>
+    path.split(".").reduce<unknown>((value, part) => {
+      if (value && typeof value === "object") {
+        return (value as Record<string, unknown>)[part];
+      }
+      return undefined;
+    }, source);
+
+  const translate =
+    (namespace?: string) =>
+    (key: string, values?: Record<string, unknown>): string => {
+      const fullKey = namespace ? `${namespace}.${key}` : key;
+      const value = resolvePath(messages, fullKey);
+      if (typeof value !== "string") return fullKey;
+
+      return value.replace(/\{(\w+)\}/g, (match, name: string) => {
+        const replacement = values?.[name];
+        return replacement === undefined ? match : String(replacement);
+      });
+    };
+
+  return {
+    getTranslations: async (namespace?: string) => translate(namespace),
+    getLocale: async () => "en-US",
+    getMessages: async () => messages,
+    getFormatter: async () => ({
+      dateTime: (value: Date | number, options?: Intl.DateTimeFormatOptions) =>
+        new Intl.DateTimeFormat("en-US", options).format(value),
+      number: (value: number, options?: Intl.NumberFormatOptions) =>
+        new Intl.NumberFormat("en-US", options).format(value),
+      relativeTime: (value: number, unit: Intl.RelativeTimeFormatUnit) =>
+        new Intl.RelativeTimeFormat("en-US").format(value, unit),
+    }),
+  };
+});
+
 // Mock Firebase
 jest.mock("firebase/auth", () => ({
   getAuth: jest.fn(() => ({})),

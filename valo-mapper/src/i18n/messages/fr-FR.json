@@ -328,7 +328,8 @@
     "creating": "Création...",
     "copyToLobbyButton": "Copier dans le lobby",
     "preparing": "Préparation de la révision...",
-    "eventLog": "Journal des événements"
+    "eventLog": "Journal des événements",
+    "metaTitle": "Revue du match"
   },
   "replay": {
     "controls": {

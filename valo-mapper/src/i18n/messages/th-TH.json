@@ -328,7 +328,8 @@
     "creating": "กำลังสร้าง...",
     "copyToLobbyButton": "คัดลอกไปที่ล็อบบี้",
     "preparing": "กำลังเตรียมรีวิว...",
-    "eventLog": "บันทึกเหตุการณ์"
+    "eventLog": "บันทึกเหตุการณ์",
+    "metaTitle": "รีวิวแมตช์"
   },
   "replay": {
     "controls": {

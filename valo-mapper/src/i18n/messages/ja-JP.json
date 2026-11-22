@@ -328,7 +328,8 @@
     "creating": "作成...",
     "copyToLobbyButton": "ロビーにコピー",
     "preparing": "レビューを準備しています...",
-    "eventLog": "イベントログ"
+    "eventLog": "イベントログ",
+    "metaTitle": "試合レビュー"
   },
   "replay": {
     "controls": {

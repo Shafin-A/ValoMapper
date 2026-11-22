@@ -2,11 +2,16 @@ import { LoginForm } from "@/components/auth-forms/login-form";
 import { CenteredPageShell } from "@/components/shared/centered-page-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
-export const metadata: Metadata = {
-  title: "Log in",
-  robots: { index: false, follow: false },
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations("nav");
+
+  return {
+    title: t("login"),
+    robots: { index: false, follow: false },
+  };
 };
 
 const LoginPage = () => {

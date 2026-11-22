@@ -328,7 +328,8 @@
     "creating": "创建中...",
     "copyToLobbyButton": "复制到大厅",
     "preparing": "正在准备回顾...",
-    "eventLog": "事件日志"
+    "eventLog": "事件日志",
+    "metaTitle": "对局回顾"
   },
   "replay": {
     "controls": {

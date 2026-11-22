@@ -328,7 +328,8 @@
     "creating": "Tworzenie…",
     "copyToLobbyButton": "Skopiuj do lobby",
     "preparing": "Przygotowywanie przeglądu…",
-    "eventLog": "Dziennik zdarzeń"
+    "eventLog": "Dziennik zdarzeń",
+    "metaTitle": "Przegląd meczu"
   },
   "replay": {
     "controls": {

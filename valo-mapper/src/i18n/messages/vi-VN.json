@@ -328,7 +328,8 @@
     "creating": "Đang tạo...",
     "copyToLobbyButton": "Sao chép vào sảnh",
     "preparing": "Đang chuẩn bị đánh giá...",
-    "eventLog": "Nhật ký sự kiện"
+    "eventLog": "Nhật ký sự kiện",
+    "metaTitle": "Đánh giá trận đấu"
   },
   "replay": {
     "controls": {

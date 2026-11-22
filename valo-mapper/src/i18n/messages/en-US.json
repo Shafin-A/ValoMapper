@@ -328,7 +328,8 @@
     "creating": "Creating...",
     "copyToLobbyButton": "Copy to Lobby",
     "preparing": "Preparing review...",
-    "eventLog": "Event Log"
+    "eventLog": "Event Log",
+    "metaTitle": "Match Review"
   },
   "replay": {
     "controls": {

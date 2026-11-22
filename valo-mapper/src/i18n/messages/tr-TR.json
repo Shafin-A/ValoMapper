@@ -328,7 +328,8 @@
     "creating": "Oluşturuluyor...",
     "copyToLobbyButton": "Lobiye kopyala",
     "preparing": "İnceleme hazırlanıyor...",
-    "eventLog": "Olay Günlüğü"
+    "eventLog": "Olay Günlüğü",
+    "metaTitle": "Maç İncelemesi"
   },
   "replay": {
     "controls": {
