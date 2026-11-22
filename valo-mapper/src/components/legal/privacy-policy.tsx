@@ -2,7 +2,7 @@ export const PrivacyPolicy = () => {
   return (
     <div className="space-y-6 text-muted-foreground">
       <div className="text-sm text-muted-foreground/80">
-        <strong>Last Updated:</strong> Nov 15th, 2026
+        <strong>Last Updated:</strong> Nov 22nd, 2026
       </div>
 
       <p>
@@ -157,20 +157,53 @@ export const PrivacyPolicy = () => {
 
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">2. Cookies</h3>
-        <p className="mb-2">
-          ValoMapper uses minimal cookies for essential functionality, such as:
-        </p>
-        <ul className="list-disc list-inside space-y-1 ml-4 mb-3">
-          <li>Session management</li>
-          <li>
-            Short-lived, essential OAuth cookies used to protect Riot Sign-On
-            against CSRF during login
-          </li>
-          <li>
-            Temporary notification messages (e.g., success toasts after actions)
-          </li>
-          <li>Authentication state</li>
-        </ul>
+
+        <div>
+          <h4 className="font-semibold mb-2">Essential cookies</h4>
+          <p className="mb-2">
+            ValoMapper uses minimal cookies for essential functionality, such
+            as:
+          </p>
+          <ul className="list-disc list-inside space-y-1 ml-4 mb-3">
+            <li>Session management</li>
+            <li>
+              Short-lived, essential OAuth cookies used to protect Riot Sign-On
+              against CSRF during login
+            </li>
+            <li>
+              Temporary notification messages (e.g., success toasts after
+              actions)
+            </li>
+            <li>Authentication state</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="font-semibold mb-2">Preference cookies</h4>
+          <p className="mb-2">
+            We also use first-party functional cookies to remember interface
+            choices you make:
+          </p>
+          <ul className="list-disc list-inside space-y-1 ml-4 mb-3">
+            <li>
+              <code>vm_locale</code> — stores the language you select so
+              ValoMapper loads in that language on future visits. Expires after
+              1 year.
+            </li>
+            <li>
+              <code>sidebar_state</code> — stores whether the sidebar is open or
+              closed. Expires after 7 days.
+            </li>
+          </ul>
+          <p>
+            These cookies are set only to remember your interface preferences.
+            They are not used for analytics or advertising, and we do not share
+            them with third parties. Because they are used solely to provide the
+            preferences you request, we treat them as functional/strictly
+            necessary cookies.
+          </p>
+        </div>
+
         <p>
           You can disable cookies in your browser settings, but this may prevent
           certain features from working correctly.
