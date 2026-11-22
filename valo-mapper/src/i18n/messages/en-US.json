@@ -115,6 +115,39 @@
     "terms": "Terms of Service",
     "privacy": "Privacy Policy"
   },
+  "matches": {
+    "loading": "Loading...",
+    "loadingMatches": "Loading matches...",
+    "failedTitle": "Failed to load matches",
+    "failedDescription": "Something went wrong while loading matches.",
+    "tryAgain": "Try Again",
+    "title": "My Matches",
+    "description": "Recent competitive and unrated matches from your Riot account.",
+    "queue": "Queue",
+    "selectQueue": "Select a queue",
+    "queueAll": "All Queues",
+    "queueCompetitive": "Competitive",
+    "queueUnrated": "Unrated",
+    "queueCustom": "Custom",
+    "rsoRequiredTitle": "Riot Sign-On required",
+    "rsoRequiredDescription": "Matches are only available for Riot Sign-On accounts. Sign in with Riot to view your matches.",
+    "rsoEmailDescription": "You're signed in with email, but matches are only available for Riot Sign-On accounts. Sign in with Riot to view your matches. This switches your current session to your Riot account.",
+    "noMatchesTitle": "No matches found",
+    "noMatchesDescription": "No competitive or unrated matches were found for your account yet."
+  },
+  "replay": {
+    "entry": {
+      "back": "Back",
+      "badge": "Replay",
+      "title": "Play a round back in real time",
+      "description": "Drop a VALORANT replay file to watch every player move, fight, and plant the spike on the map. Draw over the action and copy any moment into a normal ValoMapper lobby.",
+      "or": "or",
+      "demo": "Try the demo replay",
+      "stays": "Replays stay in this tab. No account required.",
+      "preparing": "Preparing replay…",
+      "failed": "Could not open that replay."
+    }
+  },
   "errors": {
     "notFoundLabel": "404",
     "notFoundTitle": "Page not found",

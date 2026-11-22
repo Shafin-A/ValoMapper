@@ -15,8 +15,22 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useMatchesPage } from "@/hooks/use-matches-page";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const MatchesPage = () => {
+  const t = useTranslations("matches");
+  const queueLabel = (value: string) => {
+    switch (value) {
+      case "All":
+        return t("queueAll");
+      case "Competitive":
+        return t("queueCompetitive");
+      case "Unrated":
+        return t("queueUnrated");
+      default:
+        return t("queueCustom");
+    }
+  };
   const {
     firebaseUser,
     isRSOUser,
@@ -53,7 +67,7 @@ const MatchesPage = () => {
       >
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
-          <p className="text-muted-foreground font-medium">Loading...</p>
+          <p className="text-muted-foreground font-medium">{t("loading")}</p>
         </div>
       </div>
     );
@@ -70,7 +84,7 @@ const MatchesPage = () => {
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
           <p className="text-muted-foreground font-medium">
-            Loading matches...
+            {t("loadingMatches")}
           </p>
         </div>
       </div>
@@ -89,13 +103,12 @@ const MatchesPage = () => {
           <BackToHomeButton />
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Failed to load matches</AlertTitle>
+            <AlertTitle>{t("failedTitle")}</AlertTitle>
             <AlertDescription>
-              {matchesError?.message ||
-                "Something went wrong while loading matches."}
+              {matchesError?.message || t("failedDescription")}
             </AlertDescription>
           </Alert>
-          <Button onClick={() => refetchMatches()}>Try Again</Button>
+          <Button onClick={() => refetchMatches()}>{t("tryAgain")}</Button>
         </div>
       </div>
     );
@@ -111,25 +124,23 @@ const MatchesPage = () => {
       >
         <BackToHomeButton className="mb-4" />
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white">My Matches</h1>
-          <p className="mt-1 text-sm text-white/70">
-            Recent competitive and unrated matches from your Riot account.
-          </p>
+          <h1 className="text-3xl font-bold text-white">{t("title")}</h1>
+          <p className="mt-1 text-sm text-white/70">{t("description")}</p>
         </div>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           {canLoadMatches && totalMatches > 0 ? (
             <div className="w-full max-w-60 space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/70">
-                Queue
+                {t("queue")}
               </p>
               <Select value={queueFilter} onValueChange={selectQueueFilter}>
                 <SelectTrigger className="w-full border-slate-700 bg-slate-950/80 text-white">
-                  <SelectValue placeholder="Select a queue" />
+                  <SelectValue placeholder={t("selectQueue")} />
                 </SelectTrigger>
                 <SelectContent className="border-slate-700 bg-slate-950 text-white">
                   {MATCH_QUEUE_FILTER_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {queueLabel(option.value)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -143,11 +154,8 @@ const MatchesPage = () => {
         {!firebaseUser && (
           <div className="mb-4 space-y-3">
             <Alert>
-              <AlertTitle>Riot Sign-On required</AlertTitle>
-              <AlertDescription>
-                Matches are only available for Riot Sign-On accounts. Sign in
-                with Riot to view your matches.
-              </AlertDescription>
+              <AlertTitle>{t("rsoRequiredTitle")}</AlertTitle>
+              <AlertDescription>{t("rsoRequiredDescription")}</AlertDescription>
             </Alert>
             <RiotSignInButton
               href={rsoLink}
@@ -160,13 +168,8 @@ const MatchesPage = () => {
         {firebaseUser && !isRSOUser && (
           <div className="mb-4 space-y-3">
             <Alert>
-              <AlertTitle>Riot Sign-On required</AlertTitle>
-              <AlertDescription>
-                You&apos;re signed in with email, but matches are only
-                available for Riot Sign-On accounts. Sign in with Riot to view
-                your matches. This switches your current session to your Riot
-                account.
-              </AlertDescription>
+              <AlertTitle>{t("rsoRequiredTitle")}</AlertTitle>
+              <AlertDescription>{t("rsoEmailDescription")}</AlertDescription>
             </Alert>
             <RiotSignInButton
               href={rsoLink}
@@ -178,10 +181,8 @@ const MatchesPage = () => {
 
         {canLoadMatches && totalMatches === 0 ? (
           <Alert>
-            <AlertTitle>No matches found</AlertTitle>
-            <AlertDescription>
-              No competitive or unrated matches were found for your account yet.
-            </AlertDescription>
+            <AlertTitle>{t("noMatchesTitle")}</AlertTitle>
+            <AlertDescription>{t("noMatchesDescription")}</AlertDescription>
           </Alert>
         ) : canLoadMatches && totalMatches > 0 ? (
           <MatchesContent

@@ -15,12 +15,15 @@ import type {
   ReplayMatch,
 } from "@/lib/replay/types";
 import { getReplayDataSource } from "@/lib/replay/vrf-source";
-import { ArrowLeft, PlayCircle } from "lucide-react";import { useRouter } from "next/navigation";
+import { ArrowLeft, PlayCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type ReplayLoader = (options: ReplayLoadOptions) => Promise<ReplayMatch>;
 
 export const ReplayEntryPage = () => {
+  const t = useTranslations("replay.entry");
   const router = useRouter();
   const sidebarState = useSidebarState();
   const abortRef = useRef<AbortController | null>(null);
@@ -43,7 +46,7 @@ export const ReplayEntryPage = () => {
       abortRef.current = controller;
 
       setError(null);
-      setProgress({ percent: 0, label: "Preparing replay…" });
+      setProgress({ percent: 0, label: t("preparing") });
       setIsLoading(true);
 
       try {
@@ -70,12 +73,12 @@ export const ReplayEntryPage = () => {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "Could not open that replay.",
+            : t("failed"),
         );
         setIsLoading(false);
       }
     },
-    [router],
+    [router, t],
   );
 
   const handleFileSelected = useCallback(
@@ -126,21 +129,19 @@ export const ReplayEntryPage = () => {
           className="-mb-4 -ml-2 self-start text-white/60 hover:text-white"
         >
           <ArrowLeft />
-          Back
+          {t("back")}
         </Button>
 
         <div className="space-y-3 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
             <PlayCircle className="h-3.5 w-3.5" />
-            Replay
+            {t("badge")}
           </span>
           <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
-            Play a round back in real time
+            {t("title")}
           </h1>
           <p className="mx-auto max-w-xl text-sm text-white/70 md:text-base">
-            Drop a VALORANT replay file to watch every player move, fight, and
-            plant the spike on the map. Draw over the action and copy any moment
-            into a normal ValoMapper lobby.
+            {t("description")}
           </p>
         </div>
 
@@ -151,7 +152,7 @@ export const ReplayEntryPage = () => {
 
         <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/60">
           <span className="h-px flex-1 bg-primary/60" />
-          or
+          {t("or")}
           <span className="h-px flex-1 bg-primary/60" />
         </div>
 
@@ -163,11 +164,9 @@ export const ReplayEntryPage = () => {
             disabled={isLoading}
           >
             <PlayCircle className="mr-2 h-4 w-4" />
-            Try the demo replay
+            {t("demo")}
           </Button>
-          <p className="text-xs text-white/70">
-            Replays stay in this tab. No account required.
-          </p>
+          <p className="text-xs text-white/70">{t("stays")}</p>
         </div>
       </main>
 
