@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "i18n:check": "node scripts/i18n/check-messages.mjs",
+    "i18n:translate": "node scripts/i18n/translate-messages.mjs",
     "build:demo-replay": "node scripts/build-demo-replay.mjs",
     "build:valorant-i18n": "node scripts/build-valorant-i18n.mjs",
     "test": "jest",
