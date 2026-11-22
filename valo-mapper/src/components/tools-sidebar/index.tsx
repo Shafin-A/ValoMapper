@@ -61,6 +61,7 @@ import { Label } from "@/components/ui/label";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InfoHint } from "@/components/shared/info-hint";
+import { useTranslations } from "next-intl";
 
 interface MatchReviewControls {
   mapName: string;
@@ -104,20 +105,21 @@ const PhaseButton = ({
   hasContent,
   isSelected,
 }: PhaseButtonProps) => {
+  const t = useTranslations("tools");
   const editLabel = isEdited
     ? hasContent
-      ? " (edited)"
-      : " (empty step)"
+      ? ` ${t("phaseEdited")}`
+      : ` ${t("phaseEmpty")}`
     : "";
 
   const tooltipText =
     shortcut ??
-    (isEdited ? (hasContent ? "Edited" : "Empty step") : undefined);
+    (isEdited ? (hasContent ? t("edited") : t("emptyStep")) : undefined);
 
   const button = (
     <ToggleGroupItem
       value={phaseNumber.toString()}
-      aria-label={`Phase ${phaseNumber}${editLabel}`}
+      aria-label={`${t("phase", { number: phaseNumber })}${editLabel}`}
       className="relative"
     >
       {phaseNumber}
@@ -157,6 +159,7 @@ export const ToolsSidebar = ({
   variant = "lobby",
   showBackgroundSettings = false,
 }: ToolsSidebarProps) => {
+  const t = useTranslations("tools");
   const isMobile = useIsMobile();
   const isReplayVariant = variant === "replay";
   const {
@@ -286,7 +289,7 @@ export const ToolsSidebar = ({
         <SidebarHeader>
           <div className="flex flex-col gap-3 p-2">
             <div className="flex items-center justify-between">
-              <span className="text-base font-semibold">Maps</span>
+              <span className="text-base font-semibold">{t("maps")}</span>
               <div className="flex items-center gap-1">
                 <Popover
                   open={mapSettingsOpen}
@@ -297,7 +300,7 @@ export const ToolsSidebar = ({
                       variant="ghost"
                       size="icon"
                       className="h-10 w-10 sm:h-6 sm:w-6"
-                      aria-label="Map settings"
+                      aria-label={t("mapSettings")}
                       disabled={isLoadingLobby || isErrorLobby}
                     >
                       <Settings
@@ -309,11 +312,13 @@ export const ToolsSidebar = ({
                   </PopoverTrigger>
                   <PopoverContent className="w-56" align="end">
                   <div className="space-y-4">
-                    <h4 className="font-medium text-sm">Map Settings</h4>
+                    <h4 className="font-medium text-sm">
+                      {t("mapSettingsTitle")}
+                    </h4>
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="show-callouts" className="text-sm">
-                          Show Map Callouts
+                          {t("showCallouts")}
                         </Label>
                         <Switch
                           id="show-callouts"
@@ -326,7 +331,7 @@ export const ToolsSidebar = ({
                           htmlFor="show-spawn-barriers"
                           className="text-sm"
                         >
-                          Show Spawn Barriers
+                          {t("showSpawnBarriers")}
                         </Label>
                         <Switch
                           id="show-spawn-barriers"
@@ -336,7 +341,7 @@ export const ToolsSidebar = ({
                       </div>
                       <div className="flex items-center justify-between">
                         <Label htmlFor="show-ult-orbs" className="text-sm">
-                          Show Ult Orbs
+                          {t("showUltOrbs")}
                         </Label>
                         <Switch
                           id="show-ult-orbs"
@@ -347,7 +352,7 @@ export const ToolsSidebar = ({
                       {showBackgroundSettings && (
                         <div className="space-y-2 border-t pt-3">
                           <Label htmlFor="canvas-background" className="text-sm">
-                            Background
+                            {t("background")}
                           </Label>
                           <Select
                             value={canvasBackground}
@@ -359,12 +364,18 @@ export const ToolsSidebar = ({
                               id="canvas-background"
                               className="w-full"
                             >
-                              <SelectValue placeholder="Select a background" />
+                              <SelectValue placeholder={t("selectBackground")} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">None</SelectItem>
-                              <SelectItem value="dots">Dots</SelectItem>
-                              <SelectItem value="grid">Grid</SelectItem>
+                              <SelectItem value="none">
+                                {t("backgroundNone")}
+                              </SelectItem>
+                              <SelectItem value="dots">
+                                {t("backgroundDots")}
+                              </SelectItem>
+                              <SelectItem value="grid">
+                                {t("backgroundGrid")}
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -378,7 +389,7 @@ export const ToolsSidebar = ({
                     variant="ghost"
                     size="icon"
                     className="h-10 w-10"
-                    aria-label="Close maps sidebar"
+                    aria-label={t("closeMapsSidebar")}
                     onClick={() => setSidebarOpen?.(false)}
                   >
                     <X />
@@ -423,7 +434,7 @@ export const ToolsSidebar = ({
                     htmlFor="show-all-maps"
                     className="text-xs text-muted-foreground cursor-pointer"
                   >
-                    All maps
+                    {t("allMaps")}
                   </Label>
                 </div>
               </>
@@ -443,7 +454,9 @@ export const ToolsSidebar = ({
               {!isReplayVariant && reviewControls && selectedReviewRound && (
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-base font-semibold">Rounds</span>
+                    <span className="text-base font-semibold">
+                      {t("rounds")}
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-[auto_1fr_auto] gap-2">
@@ -454,7 +467,7 @@ export const ToolsSidebar = ({
                       className="h-12 w-12 border-slate-700 bg-slate-950 text-white hover:bg-slate-900"
                       onClick={() => handleReviewRoundStep(-1)}
                       disabled={!hasPreviousReviewRound}
-                      aria-label="Select previous round"
+                      aria-label={t("selectPreviousRound")}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -469,7 +482,9 @@ export const ToolsSidebar = ({
                           variant="outline"
                           className="h-12 justify-center border-slate-700 bg-slate-950 px-4 text-center text-base font-semibold text-white hover:bg-slate-900"
                         >
-                          Round {reviewControls.selectedRoundNumber}
+                          {t("round", {
+                            number: reviewControls.selectedRoundNumber,
+                          })}
                         </Button>
                       </SheetTrigger>
 
@@ -480,14 +495,16 @@ export const ToolsSidebar = ({
                         <SheetHeader className="border-b border-slate-800 px-5 py-4 text-left">
                           <div className="pr-8">
                             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/70">
-                              Match Review
+                              {t("matchReview")}
                             </p>
                             <SheetTitle className="mt-1 text-lg text-white">
-                              {reviewControls.mapName} • Round{" "}
-                              {reviewControls.selectedRoundNumber}
+                              {t("matchReviewTitle", {
+                                map: reviewControls.mapName,
+                                round: reviewControls.selectedRoundNumber,
+                              })}
                             </SheetTitle>
                             <SheetDescription className="text-white/60">
-                              Browse rounds and review events.
+                              {t("browseRounds")}
                             </SheetDescription>
                           </div>
                         </SheetHeader>
@@ -532,7 +549,7 @@ export const ToolsSidebar = ({
                       className="h-12 w-12 border-slate-700 bg-slate-950 text-white hover:bg-slate-900"
                       onClick={() => handleReviewRoundStep(1)}
                       disabled={!hasNextReviewRound}
-                      aria-label="Select next round"
+                      aria-label={t("selectNextRound")}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -543,26 +560,17 @@ export const ToolsSidebar = ({
               {!isReplayVariant && (
               <div className="space-y-2 mt-4" data-tour="phases">
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-semibold">Phases</span>
-                  <InfoHint label="About phases">
+                  <span className="text-base font-semibold">
+                    {t("phases")}
+                  </span>
+                  <InfoHint label={t("aboutPhases")}>
                     <div className="space-y-2">
                       {isMobile ? (
-                        <p>
-                          Tap a phase number to switch phases. Build your
-                          strategy step by step by placing agents and abilities
-                          at different phases.
-                        </p>
+                        <p>{t("phaseTapHelp")}</p>
                       ) : (
                         <>
-                          <p>
-                            Press A and D to switch back and forth between
-                            phases
-                          </p>
-                          <p>
-                            Use Phases to build out and detail your strategy
-                            step by step by placing agents and abilites at
-                            different phases
-                          </p>
+                          <p>{t("phaseKeysHelp")}</p>
+                          <p>{t("phaseDetailHelp")}</p>
                         </>
                       )}
                     </div>
@@ -618,7 +626,7 @@ export const ToolsSidebar = ({
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">
-                Loading tools...
+                {t("loadingTools")}
               </span>
             </div>
           )}
@@ -628,10 +636,10 @@ export const ToolsSidebar = ({
               <AlertCircle className="h-12 w-12 text-destructive" />
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium">
-                  Failed to load lobby
+                  {t("loadLobbyFailed")}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  Please try again later
+                  {t("tryAgainLater")}
                 </span>
               </div>
             </div>
@@ -643,10 +651,14 @@ export const ToolsSidebar = ({
 };
 
 const ToolsSidebarLoadingSkeleton = () => {
+  const t = useTranslations("tools");
+
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-8">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <span className="text-sm text-muted-foreground">Loading tools...</span>
+      <span className="text-sm text-muted-foreground">
+        {t("loadingTools")}
+      </span>
     </div>
   );
 };

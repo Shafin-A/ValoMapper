@@ -2,14 +2,16 @@ import { Slider } from "@/components/ui/slider";
 import { useSettings } from "@/contexts/settings-context";
 import { Switch } from "@/components/ui/switch";
 import { Info } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export const EraserSettings = () => {
+  const t = useTranslations("tools.eraserSettings");
   const { eraserSettings, updateEraserSettings } = useSettings();
 
   return (
     <div className="space-y-1 mt-6">
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Size</span>
+        <span className="text-sm font-medium w-20">{t("size")}</span>
         <Slider
           value={[eraserSettings.size]}
           onValueChange={(value) => updateEraserSettings({ size: value[0] })}
@@ -22,7 +24,9 @@ export const EraserSettings = () => {
 
       <div className="p-2">
         <div className="flex items-center gap-6">
-          <span className="text-sm font-medium w-20">Erase entire lines</span>
+          <span className="text-sm font-medium w-20">
+            {t("eraseEntireLines")}
+          </span>
           <Switch
             checked={eraserSettings.mode === "line"}
             onCheckedChange={(checked) =>
@@ -35,8 +39,7 @@ export const EraserSettings = () => {
           <div className="flex items-start gap-2">
             <Info className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
             <span className="text-xs text-muted-foreground italic">
-              Partially erased/disconnected lines are treated as complete lines
-              and erased entirely
+              {t("hint")}
             </span>
           </div>
         </div>

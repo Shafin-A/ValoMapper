@@ -17,8 +17,14 @@ import {
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useSettings } from "@/contexts/settings-context";
+import { useValorantTerms } from "@/contexts/valorant-terms-context";
 import { AGENTS, TEMP_DRAG_ID } from "@/lib/consts";
+import {
+  getLocalizedAgentName,
+  getLocalizedRoleName,
+} from "@/lib/i18n/valorant-terms";
 import { Agent, AgentRole } from "@/lib/types";
+import { useTranslations } from "next-intl";
 import { getAgentImgSrc } from "@/lib/assets";
 import { EllipsisVertical, Users } from "lucide-react";
 import Image from "next/image";
@@ -44,6 +50,9 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
 
   const { agentsOnCanvas } = useCanvasAgents();
   const { isAlly, selectedCanvasIcon, setSelectedCanvasIcon } = useCanvasUi();
+  const valorantTerms = useValorantTerms();
+  const t = useTranslations("agents");
+  const localizedRole = getLocalizedRoleName(valorantTerms, selectedRole);
 
   const allyColor = agentsSettings.allyColor;
   const enemyColor = agentsSettings.enemyColor;
@@ -74,13 +83,13 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
             </EmptyHeader>
             <EmptyTitle>
               {selectedRole === "All"
-                ? "No agents on map"
-                : `No ${selectedRole.toLowerCase()} agents on map`}
+                ? t("empty")
+                : t("emptyByRole", { role: localizedRole })}
             </EmptyTitle>
             <EmptyDescription>
               {selectedRole === "All"
-                ? "Add agents to the map to see them here"
-                : `Add ${selectedRole.toLowerCase()} agents to the map to see them here`}
+                ? t("addToMap")
+                : t("addRoleToMap", { role: localizedRole })}
             </EmptyDescription>
           </Empty>
         </div>
@@ -89,6 +98,10 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
           {filteredAgents.map((agent) => {
             const isSelected = selectedCanvasIcon?.name === agent.name;
             const borderColor = isAlly ? allyColor : enemyColor;
+            const displayName = getLocalizedAgentName(
+              valorantTerms,
+              agent.name,
+            );
 
             return (
               <div key={agent.name} className="relative inline-block">
@@ -110,7 +123,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                         WebkitTouchCallout: "none",
                       }}
                       src={getAgentImgSrc(agent.name)}
-                      alt={agent.name}
+                      alt={displayName}
                       width={50}
                       height={50}
                       draggable={false}
@@ -121,7 +134,7 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                       onClick={() => onAgentClick(agent)}
                     />
                   </TooltipTrigger>
-                  <TooltipContent>{agent.name}</TooltipContent>
+                  <TooltipContent>{displayName}</TooltipContent>
                 </Tooltip>
 
                 <Tooltip delayDuration={700}>
@@ -150,10 +163,10 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                       }}
                     >
                       <EllipsisVertical />
-                      <span className="sr-only">Abilities</span>
+                      <span className="sr-only">{t("abilities")}</span>
                     </Toggle>
                   </TooltipTrigger>
-                  <TooltipContent>Abilities</TooltipContent>
+                  <TooltipContent>{t("abilities")}</TooltipContent>
                 </Tooltip>
               </div>
             );

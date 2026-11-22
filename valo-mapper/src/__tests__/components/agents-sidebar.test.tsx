@@ -157,7 +157,7 @@ describe("AgentsGrid", () => {
       <AgentsGrid {...defaultProps} selectedRole="Duelist" onMap={true} />,
     );
 
-    expect(screen.getByText("No duelist agents on map")).toBeInTheDocument();
+    expect(screen.getByText("No Duelist agents on map")).toBeInTheDocument();
   });
 });
 

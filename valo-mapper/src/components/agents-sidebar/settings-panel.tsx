@@ -10,6 +10,7 @@ import {
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ColorPickerButton } from "@/components/shared/color-picker-button";
+import { useTranslations } from "next-intl";
 
 interface SettingsPanelProps {
   settings: IconSettings;
@@ -22,6 +23,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   onSettingsChange,
   onReset,
 }) => {
+  const t = useTranslations("agents.settings");
   const debouncedSetAllyColor = useMemo(
     () =>
       debounce((color: string) => onSettingsChange({ allyColor: color }), 16),
@@ -43,18 +45,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               onClick={onReset}
               variant="ghost"
               size="icon"
-              aria-label="Reset settings"
+              aria-label={t("reset")}
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right" align="center">
-            Reset settings
+            {t("reset")}
           </TooltipContent>
         </Tooltip>
       </div>
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Scale</span>
+        <span className="text-sm font-medium w-20">{t("scale")}</span>
         <Slider
           value={[settings.scale]}
           onValueChange={(value) => onSettingsChange({ scale: value[0] })}
@@ -65,7 +67,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         />
       </div>
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Radius</span>
+        <span className="text-sm font-medium w-20">{t("radius")}</span>
         <Slider
           value={[settings.radius]}
           onValueChange={(value) =>
@@ -78,7 +80,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         />
       </div>
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Border Opacity</span>
+        <span className="text-sm font-medium w-20">
+          {t("borderOpacity")}
+        </span>
         <Slider
           value={[settings.borderOpacity]}
           onValueChange={(value) =>
@@ -94,7 +98,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         />
       </div>
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Border Width</span>
+        <span className="text-sm font-medium w-20">{t("borderWidth")}</span>
         <Slider
           value={[settings.borderWidth]}
           onValueChange={(value) =>
@@ -110,17 +114,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         />
       </div>
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Ally Color</span>
+        <span className="text-sm font-medium w-20">{t("allyColor")}</span>
         <ColorPickerButton
-          label="Ally color"
+          label={t("allyColorLabel")}
           value={settings.allyColor}
           onChange={debouncedSetAllyColor}
         />
       </div>
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Enemy Color</span>
+        <span className="text-sm font-medium w-20">{t("enemyColor")}</span>
         <ColorPickerButton
-          label="Enemy color"
+          label={t("enemyColorLabel")}
           value={settings.enemyColor}
           onChange={debouncedSetEnemyColor}
         />

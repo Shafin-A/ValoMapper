@@ -6,6 +6,9 @@ import { RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/settings-context";
 import { useCanvasUi } from "@/contexts/canvas-context";
+import { useValorantTerms } from "@/contexts/valorant-terms-context";
+import { getLocalizedAbilityName } from "@/lib/i18n/valorant-terms";
+import { useTranslations } from "next-intl";
 import {
   Tooltip,
   TooltipContent,
@@ -39,8 +42,10 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
   onAbilityPointerDown,
 }) => {
   const { agentsSettings } = useSettings();
+  const t = useTranslations("agents");
 
   const { isAlly, selectedCanvasIcon } = useCanvasUi();
+  const valorantTerms = useValorantTerms();
 
   const allyColor = agentsSettings.allyColor;
   const enemyColor = agentsSettings.enemyColor;
@@ -81,6 +86,20 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
           const nextVariant = canSwap
             ? variants[(currentIndex + 1) % variants.length]
             : null;
+          const displayName = getLocalizedAbilityName(
+            valorantTerms,
+            agent.name,
+            iconConfig.slot,
+            resolvedAbility.name,
+          );
+          const nextDisplayName = nextVariant
+            ? getLocalizedAbilityName(
+                valorantTerms,
+                agent.name,
+                iconConfig.slot,
+                nextVariant.name,
+              )
+            : "";
 
           return (
             <div key={iconConfig.id} className="relative">
@@ -97,7 +116,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
                       WebkitTouchCallout: "none",
                     }}
                     src={resolvedAbility.src}
-                    alt={resolvedAbility.name}
+                    alt={displayName}
                     width={50}
                     height={50}
                     draggable={false}
@@ -108,9 +127,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
                     onClick={() => onAbilityClick(resolvedAbility)}
                   />
                 </TooltipTrigger>
-                <TooltipContent side="left">
-                  {resolvedAbility.name}
-                </TooltipContent>
+                <TooltipContent side="left">{displayName}</TooltipContent>
               </Tooltip>
 
               {canSwap && nextVariant && (
@@ -142,12 +159,12 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
                         }`}
                       />
                       <span className="sr-only">
-                        Swap to {nextVariant.name}
+                        {t("swapTo", { ability: nextDisplayName })}
                       </span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">
-                    Switch to {nextVariant.name}
+                    {t("switchTo", { ability: nextDisplayName })}
                   </TooltipContent>
                 </Tooltip>
               )}

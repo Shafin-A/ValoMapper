@@ -44,6 +44,7 @@ import { TextAddButton } from "./text-add-button";
 import { MapStageHandle } from "@/components/canvas";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InfoHint } from "@/components/shared/info-hint";
+import { useTranslations } from "next-intl";
 
 export interface ToolsSectionAction {
   icon: LucideIcon;
@@ -68,6 +69,7 @@ export const ToolsSection = ({
   saveAction,
   onTextAdded,
 }: ToolsSectionProps) => {
+  const t = useTranslations("tools");
   const [openSaveDialog, setOpenSaveDialog] = useState(false);
   const [openLineupDialog, setOpenLineupDialog] = useState(false);
   const [visionConesOpen, setVisionConesOpen] = useState(false);
@@ -139,31 +141,27 @@ export const ToolsSection = ({
     <>
       <div className="space-y-2 mt-4" data-tour="tools-section">
         <div className="flex items-center justify-between">
-          <span className="text-base font-semibold">Tools</span>
-          <InfoHint label="About tools">
+          <span className="text-base font-semibold">{t("toolsSection")}</span>
+          <InfoHint label={t("aboutTools")}>
             <div className="max-w-xs">
               {isMobile ? (
                 <div className="space-y-1">
-                  <p>Tap Draw or Erase, then drag on the map.</p>
-                  <p>Tap Undo/Redo to fix mistakes.</p>
-                  <p>Drag an item to the trash zone to delete it.</p>
-                  <p>Pinch to zoom and drag the map to pan.</p>
+                  <p>{t("mobileHelpDraw")}</p>
+                  <p>{t("mobileHelpUndo")}</p>
+                  <p>{t("mobileHelpDelete")}</p>
+                  <p>{t("mobileHelpPan")}</p>
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <p>Press Q to enter draw mode </p>
-                  <p>Press W to enter erase mode </p>
-                  <p>Press E while hovering an element to delete it</p>
-                  <p>Press R to recenter the canvas</p>
-                  <p>Press Ctrl+Z/Ctrl+Shift+Z to undo/redo</p>
+                  <p>{t("desktopHelpDraw")}</p>
+                  <p>{t("desktopHelpErase")}</p>
+                  <p>{t("desktopHelpDelete")}</p>
+                  <p>{t("desktopHelpRecenter")}</p>
+                  <p>{t("desktopHelpHistory")}</p>
                 </div>
               )}
               <div className="mt-2">
-                <p>
-                  {saveAction
-                    ? "Add text, images, and drawings here. You can also copy the current replay state into a fresh lobby, keep editing there, and save it once you are ready."
-                    : "Add text, images, and drawings here. Also recenter the view, screenshot the canvas, save to folders, sync changes to the lobby, or undo/redo any action."}
-                </p>
+                <p>{saveAction ? t("generalHelpReplay") : t("generalHelp")}</p>
               </div>
             </div>
           </InfoHint>
@@ -175,7 +173,7 @@ export const ToolsSection = ({
               <Button
                 variant="ghost"
                 size="lg"
-                aria-label="Recenter canvas"
+                aria-label={t("recenterCanvas")}
                 onClick={handleRecenterCanvas}
                 disabled={!stageRef}
               >
@@ -183,7 +181,7 @@ export const ToolsSection = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top" align="center">
-              Recenter Canvas (R)
+              {t("recenterCanvasShortcut")}
             </TooltipContent>
           </Tooltip>
 
@@ -222,7 +220,9 @@ export const ToolsSection = ({
                       data-tour="save-strategy"
                       variant="ghost"
                       size="lg"
-                      aria-label={!isAuthenticated ? "Log in to save" : "Save"}
+                      aria-label={
+                        !isAuthenticated ? t("logInToSave") : t("save")
+                      }
                       disabled={!isAuthenticated}
                     >
                       <Save />
@@ -230,7 +230,7 @@ export const ToolsSection = ({
                   </DialogTrigger>
                 </TooltipTrigger>
                 <TooltipContent side="top" align="center">
-                  {!isAuthenticated ? "Log in to save" : "Save"}
+                  {!isAuthenticated ? t("logInToSave") : t("save")}
                 </TooltipContent>
               </Tooltip>
 
@@ -245,13 +245,13 @@ export const ToolsSection = ({
                 disabled={!canUndo}
                 variant="ghost"
                 size="lg"
-                aria-label="Undo"
+                aria-label={t("undo")}
               >
                 <Undo />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top" align="center">
-              Undo (Ctrl + Z)
+              {t("undoShortcut")}
             </TooltipContent>
           </Tooltip>
 
@@ -262,13 +262,13 @@ export const ToolsSection = ({
                 disabled={!canRedo}
                 variant="ghost"
                 size="lg"
-                aria-label="Redo"
+                aria-label={t("redo")}
               >
                 <Redo />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top" align="center">
-              Redo (Ctrl + Shift + Z)
+              {t("redoShortcut")}
             </TooltipContent>
           </Tooltip>
 
@@ -276,7 +276,7 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <Toggle
                 size="lg"
-                aria-label="Draw"
+                aria-label={t("draw")}
                 data-state={isDrawMode && tool === "pencil" ? "on" : "off"}
                 pressed={isDrawMode && tool === "pencil"}
                 onPressedChange={(pressed) =>
@@ -287,7 +287,7 @@ export const ToolsSection = ({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Draw (Q)
+              {t("drawShortcut")}
             </TooltipContent>
           </Tooltip>
 
@@ -295,7 +295,7 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <Toggle
                 size="lg"
-                aria-label="Erase"
+                aria-label={t("eraser")}
                 data-state={isDrawMode && tool === "eraser" ? "on" : "off"}
                 pressed={isDrawMode && tool === "eraser"}
                 onPressedChange={(pressed) =>
@@ -306,7 +306,7 @@ export const ToolsSection = ({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Eraser (W)
+              {t("eraserShortcut")}
             </TooltipContent>
           </Tooltip>
 
@@ -315,7 +315,7 @@ export const ToolsSection = ({
               <Toggle
                 size="lg"
                 variant="destructive"
-                aria-label="Delete options"
+                aria-label={t("deleteOptions")}
                 data-state={isDeleteSettingsOpen ? "on" : "off"}
                 pressed={isDeleteSettingsOpen}
                 onPressedChange={handleDeletePressedChange}
@@ -324,7 +324,7 @@ export const ToolsSection = ({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Delete
+              {t("delete")}
             </TooltipContent>
           </Tooltip>
 
@@ -332,7 +332,7 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <TextAddButton
                 mapPosition={mapPosition}
-                aria-label="Add text"
+                aria-label={t("addText")}
                 onBeforeAdd={() => {
                   setVisionConesOpen(false);
                 }}
@@ -341,7 +341,7 @@ export const ToolsSection = ({
               />
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Add Text
+              {t("addText")}
             </TooltipContent>
           </Tooltip>
 
@@ -349,13 +349,13 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <ImageUploadButton
                 mapPosition={mapPosition}
-                aria-label="Add image"
+                aria-label={t("addImage")}
                 onImageAdded={notifyImageAdded}
                 disabled={!stageRef}
               />
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Add Image
+              {t("addImage")}
             </TooltipContent>
           </Tooltip>
 
@@ -363,7 +363,7 @@ export const ToolsSection = ({
             <TooltipTrigger asChild>
               <Toggle
                 size="lg"
-                aria-label="Vision cones"
+                aria-label={t("visionCones")}
                 data-state={visionConesOpen ? "on" : "off"}
                 pressed={visionConesOpen}
                 onPressedChange={(pressed) => {
@@ -376,7 +376,7 @@ export const ToolsSection = ({
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Vision Cones
+              {t("visionCones")}
             </TooltipContent>
           </Tooltip>
 
@@ -385,7 +385,7 @@ export const ToolsSection = ({
               <Button
                 variant="ghost"
                 size="lg"
-                aria-label="Take screenshot"
+                aria-label={t("screenshot")}
                 onClick={handleScreenshot}
                 disabled={!stageRef}
               >
@@ -393,7 +393,7 @@ export const ToolsSection = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Screenshot
+              {t("screenshot")}
             </TooltipContent>
           </Tooltip>
 
@@ -404,14 +404,14 @@ export const ToolsSection = ({
                   <Button
                     variant="ghost"
                     size="lg"
-                    aria-label="Add lineup"
+                    aria-label={t("addLineup")}
                   >
                     <MapPinned />
                   </Button>
                 </DialogTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom" align="center">
-                Add Lineup
+                {t("addLineup")}
               </TooltipContent>
             </Tooltip>
             <LineupDialog

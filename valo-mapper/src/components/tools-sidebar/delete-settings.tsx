@@ -23,8 +23,10 @@ import {
   Swords,
   Users,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export const DeleteSettings = () => {
+  const t = useTranslations("tools.deleteSettings");
   const { agentsOnCanvas, setAgentsOnCanvas } = useCanvasAgents();
   const { abilitiesOnCanvas, setAbilitiesOnCanvas } = useCanvasAbilities();
   const { drawLines, setDrawLines } = useCanvasDrawLines();
@@ -137,14 +139,14 @@ export const DeleteSettings = () => {
             className="w-full"
             onClick={handleResetCurrentPhase}
           >
-            Delete Current Phase
+            {t("deleteCurrentPhase")}
           </Button>
           <Button
             variant="destructive"
             className="w-full"
             onClick={handleResetAllPhases}
           >
-            Delete All Phases
+            {t("deleteAllPhases")}
           </Button>
         </div>
         <div className="grid grid-cols-3 gap-2 w-full">
@@ -153,14 +155,14 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetAgents}
-                aria-label="Delete agents"
+                aria-label={t("deleteAgents")}
                 className="w-full"
               >
                 <Users />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top" align="center">
-              Delete Agents
+              {t("deleteAgents")}
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -168,14 +170,14 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetAbilities}
-                aria-label="Delete abilities"
+                aria-label={t("deleteAbilities")}
                 className="w-full"
               >
                 <Swords />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top" align="center">
-              Delete Abilites
+              {t("deleteAbilities")}
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -183,14 +185,14 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetDrawings}
-                aria-label="Delete drawings"
+                aria-label={t("deleteDrawings")}
                 className="w-full"
               >
                 <Pencil />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top" align="center">
-              Delete Drawings
+              {t("deleteDrawings")}
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -198,14 +200,14 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetTexts}
-                aria-label="Delete texts"
+                aria-label={t("deleteTexts")}
                 className="w-full"
               >
                 <ALargeSmall />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Delete Texts
+              {t("deleteTexts")}
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -213,14 +215,14 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetImages}
-                aria-label="Delete images"
+                aria-label={t("deleteImages")}
                 className="w-full"
               >
                 <ImageIcon />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Delete Images
+              {t("deleteImages")}
             </TooltipContent>
           </Tooltip>
           <Tooltip>
@@ -228,14 +230,14 @@ export const DeleteSettings = () => {
               <Button
                 variant="destructiveOutline"
                 onClick={resetLineups}
-                aria-label="Delete lineups"
+                aria-label={t("deleteLineups")}
                 className="w-full"
               >
                 <MapPinned />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" align="center">
-              Delete Lineups
+              {t("deleteLineups")}
             </TooltipContent>
           </Tooltip>
         </div>

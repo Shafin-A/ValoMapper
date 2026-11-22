@@ -5,6 +5,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ROLE_ICONS } from "@/lib/consts";
+import { useValorantTerms } from "@/contexts/valorant-terms-context";
+import { getLocalizedRoleName } from "@/lib/i18n/valorant-terms";
 import { Grid3x3 } from "lucide-react";
 import Image from "next/image";
 
@@ -24,10 +26,16 @@ export const roleTabs = [
 export const RoleTabs: React.FC<Pick<RoleTabsProps, "selectedRole">> = ({
   selectedRole,
 }) => {
+  const valorantTerms = useValorantTerms();
+
   return (
     <TabsList className="flex justify-between gap-2 mb-4 w-full rounded-none">
       {roleTabs.map((tab) => {
         const isSelected = tab.value === selectedRole;
+        const displayLabel =
+          tab.value === "All"
+            ? tab.label
+            : getLocalizedRoleName(valorantTerms, tab.value);
         let icon: React.ReactNode;
 
         if (tab.value === "All") {
@@ -47,7 +55,7 @@ export const RoleTabs: React.FC<Pick<RoleTabsProps, "selectedRole">> = ({
             <div className="w-7 h-7 flex items-center justify-center">
               <Image
                 src={src}
-                alt={tab.value}
+                alt={displayLabel}
                 width={24}
                 height={24}
                 style={{ opacity: isSelected ? 1 : 0.5 }}
@@ -68,9 +76,7 @@ export const RoleTabs: React.FC<Pick<RoleTabsProps, "selectedRole">> = ({
                 {icon}
               </TabsTrigger>
             </TooltipTrigger>
-            <TooltipContent side="top">
-              {`${tab.label}${tab.label === "All" ? "" : "s"}`}
-            </TooltipContent>
+            <TooltipContent side="top">{displayLabel}</TooltipContent>
           </Tooltip>
         );
       })}

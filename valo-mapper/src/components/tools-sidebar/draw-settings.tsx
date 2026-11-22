@@ -26,6 +26,7 @@ import {
   Square,
 } from "lucide-react";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 const TraversalWeaponIcon = ({
   weapon,
@@ -64,6 +65,7 @@ const TraversalWeaponIcon = ({
 };
 
 export const DrawSettings = () => {
+  const t = useTranslations("tools.drawSettings");
   const { drawSettings, updateDrawSettings } = useSettings();
   const selectedTraversal = getTraversalSelection(drawSettings.traversalTime);
   const traversalMovement = selectedTraversal.movement ?? "run";
@@ -77,7 +79,7 @@ export const DrawSettings = () => {
   return (
     <div className="space-y-1 mt-6">
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Size</span>
+        <span className="text-sm font-medium w-20">{t("size")}</span>
         <Slider
           value={[drawSettings.size]}
           onValueChange={(value) => updateDrawSettings({ size: value[0] })}
@@ -89,7 +91,7 @@ export const DrawSettings = () => {
       </div>
 
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Opacity</span>
+        <span className="text-sm font-medium w-20">{t("opacity")}</span>
         <Slider
           value={[Math.round(drawSettings.opacity * 100)]}
           onValueChange={(value) =>
@@ -103,16 +105,16 @@ export const DrawSettings = () => {
       </div>
 
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Color</span>
+        <span className="text-sm font-medium w-20">{t("color")}</span>
         <ColorPickerButton
-          label="Draw color"
+          label={t("drawColor")}
           value={drawSettings.color}
           onChange={debouncedSetColor}
         />
       </div>
 
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Shape</span>
+        <span className="text-sm font-medium w-20">{t("shape")}</span>
         <div className="flex border rounded-md">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -130,7 +132,7 @@ export const DrawSettings = () => {
                 <LineSquiggle />
               </Toggle>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Free Draw</TooltipContent>
+            <TooltipContent side="bottom">{t("freeDraw")}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -148,7 +150,9 @@ export const DrawSettings = () => {
                 <Minus />
               </Toggle>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Straight Line</TooltipContent>
+            <TooltipContent side="bottom">
+              {t("straightLine")}
+            </TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -166,7 +170,7 @@ export const DrawSettings = () => {
                 <Square />
               </Toggle>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Rectangle</TooltipContent>
+            <TooltipContent side="bottom">{t("rectangle")}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -184,13 +188,13 @@ export const DrawSettings = () => {
                 <Circle />
               </Toggle>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Ellipse</TooltipContent>
+            <TooltipContent side="bottom">{t("ellipse")}</TooltipContent>
           </Tooltip>
         </div>
       </div>
 
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Stroke</span>
+        <span className="text-sm font-medium w-20">{t("stroke")}</span>
         <div className="flex gap-2">
           <div className="flex border rounded-md">
             <Tooltip>
@@ -209,7 +213,7 @@ export const DrawSettings = () => {
                   <Minus className="rotate-135" />
                 </Toggle>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Solid Line</TooltipContent>
+              <TooltipContent side="bottom">{t("solidLine")}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -227,7 +231,7 @@ export const DrawSettings = () => {
                   <MoreHorizontal className="rotate-135" />
                 </Toggle>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Dashed Line</TooltipContent>
+              <TooltipContent side="bottom">{t("dashedLine")}</TooltipContent>
             </Tooltip>
           </div>
 
@@ -244,13 +248,15 @@ export const DrawSettings = () => {
                 <MoveUpRight />
               </Toggle>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Arrow Head</TooltipContent>
+            <TooltipContent side="bottom">{t("arrowHead")}</TooltipContent>
           </Tooltip>
         </div>
       </div>
 
       <div className="flex items-center gap-6 p-2">
-        <span className="text-sm font-medium w-20">Traversal Time</span>
+        <span className="text-sm font-medium w-20">
+          {t("traversalTime")}
+        </span>
         <div className="flex items-center gap-2">
           <div className="flex border rounded-md">
             {TRAVERSAL_WEAPON_OPTIONS.map((option, optionIndex) => {
@@ -264,7 +270,12 @@ export const DrawSettings = () => {
                   <TooltipTrigger asChild>
                     <Toggle
                       size="sm"
-                      aria-label={`Traversal weapon ${option.label}`}
+                      aria-label={t("traversalWeapon", {
+                        label:
+                          option.value === "knife"
+                            ? t("knife")
+                            : t("phantomVandal"),
+                      })}
                       data-state={isSelected ? "on" : "off"}
                       pressed={isSelected}
                       onPressedChange={(pressed) => {
@@ -287,7 +298,12 @@ export const DrawSettings = () => {
                     </Toggle>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {option.label} Speed
+                    {t("traversalSpeed", {
+                      label:
+                        option.value === "knife"
+                          ? t("knife")
+                          : t("phantomVandal"),
+                    })}
                   </TooltipContent>
                 </Tooltip>
               );
@@ -301,7 +317,7 @@ export const DrawSettings = () => {
             )}
           >
             <Switch
-              aria-label="Traversal movement"
+              aria-label={t("traversalMovement")}
               checked={traversalMovement === "run"}
               disabled={traversalMovementDisabled}
               onCheckedChange={(checked) => {
@@ -318,7 +334,7 @@ export const DrawSettings = () => {
               }}
             />
             <span className="text-sm transition-colors">
-              {traversalMovement === "run" ? "Run" : "Walk"}
+              {traversalMovement === "run" ? t("run") : t("walk")}
             </span>
           </div>
         </div>

@@ -10,6 +10,8 @@ import { ChevronDown, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapOption, MapSide } from "@/lib/types";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
+import { useValorantTerms } from "@/contexts/valorant-terms-context";
+import { getLocalizedMapName } from "@/lib/i18n/valorant-terms";
 
 interface MapSelectProps {
   mapOptions: MapOption[];
@@ -41,6 +43,7 @@ export const MapSelect = ({
   readOnly = false,
 }: MapSelectProps) => {
   const { notifyMapChanged, notifySideChanged } = useCollaborativeCanvas();
+  const valorantTerms = useValorantTerms();
 
   const handleMapSelect = (option: MapOption) => {
     if (disabled) return;
@@ -70,7 +73,7 @@ export const MapSelect = ({
         <span
           className={`font-semibold text-lg drop-shadow-lg ${selectedMap.textColor}`}
         >
-          {selectedMap.text}
+          {getLocalizedMapName(valorantTerms, selectedMap.id, selectedMap.text)}
         </span>
       </div>
     </>
@@ -165,7 +168,11 @@ export const MapSelect = ({
                     <span
                       className={`font-medium text-sm drop-shadow-lg ${option.textColor}`}
                     >
-                      {option.text}
+                      {getLocalizedMapName(
+                        valorantTerms,
+                        option.id,
+                        option.text,
+                      )}
                     </span>
                   </div>
 

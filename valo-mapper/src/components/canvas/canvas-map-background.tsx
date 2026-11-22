@@ -4,6 +4,7 @@ import { MAP_SIZE } from "@/lib/consts";
 import { CANVAS_MAP_RENDER_SCALE } from "@/lib/map-positioning";
 import { Vector2d } from "konva/lib/types";
 import { useCanvasView } from "@/contexts/canvas-context";
+import { useLocalizedMapName } from "@/contexts/valorant-terms-context";
 import { useCommitCount } from "@/lib/perf-beacon";
 import { RefObject, memo, useEffect, useRef, useState } from "react";
 import { Stage as KonvaStage } from "konva/lib/Stage";
@@ -25,6 +26,10 @@ export const CanvasMapBackground = memo(function CanvasMapBackground({
   useCommitCount("CanvasMapBackground");
 
   const { selectedMap, mapSide, setIsMapTransitioning } = useCanvasView();
+  const localizedMapName = useLocalizedMapName(
+    selectedMap.id,
+    selectedMap.text,
+  );
   const [mapImage, status] = useImage(`/maps/minimaps/${selectedMap.id}.webp`);
 
   const [currentMap, setCurrentMap] = useState<CachedMap | null>(null);
@@ -128,7 +133,7 @@ export const CanvasMapBackground = memo(function CanvasMapBackground({
       {currentMap && (
         <Image
           ref={currentImageRef}
-          alt={selectedMap.text}
+          alt={localizedMapName}
           image={currentMap.image}
           {...commonProps}
           opacity={previousMap ? 0 : 1}
