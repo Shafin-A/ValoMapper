@@ -5,58 +5,46 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PrivacyPolicy } from "@/components/legal/privacy-policy";
 import { TermsOfService } from "@/components/legal/terms-of-service";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslations } from "next-intl";
 import { Shortcuts } from "./shortcuts";
 
 export const HelpTab = () => {
   const isMobile = useIsMobile();
+  const t = useTranslations("help.tabs");
 
   const tabs = [
     {
-      name: "About",
+      name: t("about"),
       value: "about",
       type: "text",
-      content:
-        "ValoMapper is a website that allows you to create and share strategies and executes for VALORANT.\n\n\
-        We give you a clean canvas to map out setups, routes, lineups, and site executes without dealing with cluttered screenshots or scattered notes. \n\n\
-        It's designed to be simple and practical. Draw your plan, share it, and refer to it in game. \
-        You can even create folders to organize your strategies and easily switch between them. \n\n\
-        Whether you're coordinating with a team or organizing your own ideas, ValoMapper keeps everything in one place.\n\n\
-        ValoMapper isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc. \n\n",
+      content: t("aboutContent"),
     },
     {
-      name: "Keyboard Shortcuts",
+      name: t("keyboardShortcuts"),
       value: "keyboard_shortcuts",
       type: "component",
     },
     {
-      name: "Lobbies",
+      name: t("lobbies"),
       value: "lobbies",
       type: "text",
-      content:
-        "Each lobby is a shareable strategy board with its own unique URL.\n\n\
-        You can share the URL or code with teammates or friends. Anyone with the lobby link can view and edit the strategies inside.\n\n\
-        Lobby canvases sync automatically after every change is made. This keeps your current layout, drawings, and notes preserved across page refreshes. \n\n\
-        You can also save lobbies to your account to easily access them later and organize them into folders as strategies. Saved lobbies won't be deleted during routine cleanups.\n\n\
-        Free tier users are limited to 1 saved lobby per account with no folder organization. Premium users can have unlimited saved lobbies and folder organization.\n\n\
-        Unsaved or 'unclaimed' lobbies (lobbies without an active account owner) are subject to automatic cleanup approximately every 12 hours, so make sure to save any lobbies you want to keep!\n\n",
+      content: t("lobbiesContent"),
     },
     {
-      name: "Privacy Policy",
+      name: t("privacyPolicy"),
       value: "privacy_policy",
       type: "component",
     },
     {
-      name: "Terms of Service",
+      name: t("termsOfService"),
       value: "terms_of_service",
       type: "component",
     },
     {
-      name: "Contact",
+      name: t("contact"),
       value: "contact",
       type: "text",
-      content:
-        "If you have questions, concerns, or requests please contact us at: \n\n\
-        valomappercontact@gmail.com",
+      content: t("contactContent"),
     },
   ];
 

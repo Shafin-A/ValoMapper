@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type CheckoutPlan, type CheckoutPlanOption } from "@/lib/consts";
+import { useTranslations } from "next-intl";
 
 interface CheckoutPlanSelectorProps {
   resolvedPlanOptions: CheckoutPlanOption[];
@@ -25,6 +26,26 @@ export const CheckoutPlanSelector = ({
   trialHeadline,
   trialDescription,
 }: CheckoutPlanSelectorProps) => {
+  const t = useTranslations("billing");
+  const planName = (plan: CheckoutPlan) =>
+    plan === "monthly"
+      ? t("monthlyLabel")
+      : plan === "yearly"
+        ? t("yearlyLabel")
+        : t("stackLabel");
+  const planCadence = (plan: CheckoutPlan) =>
+    plan === "monthly"
+      ? t("monthlyCadence")
+      : plan === "yearly"
+        ? t("yearlyCadence")
+        : t("stackCadence");
+  const planDescription = (plan: CheckoutPlan) =>
+    plan === "monthly"
+      ? t("monthlyPlanDescription")
+      : plan === "yearly"
+        ? t("yearlyPlanDescription")
+        : t("stackPlanDescription");
+
   const handlePlanChange = (value: string) => {
     const isKnownPlan = resolvedPlanOptions.some(
       (option) => option.id === value,
@@ -37,15 +58,15 @@ export const CheckoutPlanSelector = ({
   return (
     <>
       <div className="space-y-2">
-        <div className="text-sm font-medium">Selected plan</div>
+        <div className="text-sm font-medium">{t("selectedPlan")}</div>
         <Select value={selectedPlan} onValueChange={handlePlanChange}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a plan" />
+            <SelectValue placeholder={t("selectPlan")} />
           </SelectTrigger>
           <SelectContent>
             {resolvedPlanOptions.map((option) => (
               <SelectItem key={option.id} value={option.id}>
-                {option.label} ({option.priceLabel})
+                {planName(option.id)} ({option.priceLabel})
               </SelectItem>
             ))}
           </SelectContent>
@@ -53,16 +74,18 @@ export const CheckoutPlanSelector = ({
       </div>
 
       <div className="rounded-md border bg-muted/30 p-3 text-sm">
-        <p className="font-medium">{selectedPlanOption.label}</p>
+        <p className="font-medium">{planName(selectedPlanOption.id)}</p>
         <p className="mt-1 text-base font-semibold">
           {selectedPlanOption.priceLabel}
         </p>
-        <p className="text-muted-foreground">{selectedPlanOption.cadence}</p>
         <p className="text-muted-foreground">
-          Currency: {selectedPlanOption.currencyCode}
+          {planCadence(selectedPlanOption.id)}
+        </p>
+        <p className="text-muted-foreground">
+          {t("currency", { code: selectedPlanOption.currencyCode })}
         </p>
         <p className="mt-2 text-muted-foreground">
-          {selectedPlanOption.checkoutDescription}
+          {planDescription(selectedPlanOption.id)}
         </p>
       </div>
 
@@ -74,12 +97,9 @@ export const CheckoutPlanSelector = ({
       <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900 dark:border-green-900/60 dark:bg-green-950/30 dark:text-green-200">
         <p className="inline-flex items-center gap-2 font-medium">
           <ShieldCheck className="h-4 w-4" />
-          Secure checkout
+          {t("secureCheckout")}
         </p>
-        <p className="mt-1 text-xs opacity-90">
-          Payment is processed on Stripe. You can manage billing from your
-          profile.
-        </p>
+        <p className="mt-1 text-xs opacity-90">{t("secureDescription")}</p>
       </div>
     </>
   );

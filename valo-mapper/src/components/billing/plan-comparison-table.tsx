@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Check, X } from "lucide-react";
 import { type BillingPlansResponse } from "@/hooks/api/use-billing-plans";
 import { type CheckoutPlan, type CheckoutPlanOption } from "@/lib/consts";
+import { useFormatter, useTranslations } from "next-intl";
 
 type ComparisonPlanId = "free" | CheckoutPlan;
 
@@ -14,31 +15,29 @@ interface ComparisonColumn {
   isSelected: boolean;
 }
 
-interface FeatureRow {
-  label: string;
-  description: string;
+const FEATURE_ROWS: Array<{
+  labelKey: string;
+  descriptionKey: string;
   values: Record<ComparisonPlanId, boolean>;
-}
-
-const FEATURE_ROWS: FeatureRow[] = [
+}> = [
   {
-    label: "Create strategies",
-    description: "Available on every plan, including free",
+    labelKey: "featureCreate",
+    descriptionKey: "featureCreateDescription",
     values: { free: true, monthly: true, yearly: true, stack: true },
   },
   {
-    label: "Save unlimited strategies",
-    description: "Free plan is limited to 1 strategy",
+    labelKey: "featureUnlimited",
+    descriptionKey: "featureUnlimitedDescription",
     values: { free: false, monthly: true, yearly: true, stack: true },
   },
   {
-    label: "Organize strategies in folders",
-    description: "Not available on the free plan",
+    labelKey: "featureFolders",
+    descriptionKey: "featureFoldersDescription",
     values: { free: false, monthly: true, yearly: true, stack: true },
   },
   {
-    label: "Share premium membership with 5 others",
-    description: "Only available on the Stack plan",
+    labelKey: "featureStack",
+    descriptionKey: "featureStackDescription",
     values: { free: false, monthly: false, yearly: false, stack: true },
   },
 ];
@@ -54,6 +53,8 @@ export const PlanComparisonTable = ({
   billingPlans,
   selectedPlan,
 }: PlanComparisonTableProps) => {
+  const t = useTranslations("billing");
+  const format = useFormatter();
   const comparisonColumns = useMemo<ComparisonColumn[]>(() => {
     const monthlyAmount = billingPlans?.monthly?.unitAmount ?? 499;
     const yearlyAmount = billingPlans?.yearly?.unitAmount ?? 4499;
@@ -61,12 +62,12 @@ export const PlanComparisonTable = ({
     const currency = (billingPlans?.monthly?.currency ?? "usd").toUpperCase();
 
     const fmt = (cents: number) =>
-      new Intl.NumberFormat(undefined, {
+      format.number(cents / 100, {
         style: "currency",
         currency,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
-      }).format(cents / 100);
+      });
 
     const yearlyPerMonth = yearlyAmount / 12;
     const yearlySavingsPct =
@@ -80,20 +81,20 @@ export const PlanComparisonTable = ({
         id: option.id,
         shortLabel:
           option.id === "monthly"
-            ? "Monthly"
+            ? t("monthly")
             : option.id === "yearly"
-              ? "Yearly"
-              : "Stack",
+              ? t("yearly")
+              : t("stack"),
         priceLabel: option.priceLabel,
         perMonthLabel:
           option.id === "yearly"
-            ? `${fmt(yearlyPerMonth)}/mo`
+            ? t("perMonth", { price: fmt(yearlyPerMonth) })
             : option.id === "stack"
-              ? `${fmt(stackPerMemberMonth)}/mo per member`
+              ? t("perMemberMonth", { price: fmt(stackPerMemberMonth) })
               : "",
         savingsBadge:
           option.id === "yearly" && yearlySavingsPct > 0
-            ? `Save ${yearlySavingsPct}%`
+            ? t("save", { percent: yearlySavingsPct })
             : "",
         isSelected: option.id === selectedPlan,
       }),
@@ -102,7 +103,7 @@ export const PlanComparisonTable = ({
     return [
       {
         id: "free",
-        shortLabel: "Free",
+        shortLabel: t("free"),
         priceLabel: "",
         perMonthLabel: "",
         savingsBadge: "",
@@ -110,17 +111,17 @@ export const PlanComparisonTable = ({
       },
       ...paidColumns,
     ];
-  }, [resolvedPlanOptions, billingPlans, selectedPlan]);
+  }, [resolvedPlanOptions, billingPlans, selectedPlan, t, format]);
 
   return (
     <div className="space-y-2">
-      <div className="text-sm font-medium">Plans</div>
+      <div className="text-sm font-medium">{t("plans")}</div>
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full min-w-[640px] table-auto border-collapse text-[11px] sm:min-w-[720px] sm:table-fixed sm:text-sm">
           <thead className="bg-muted/40 text-left">
             <tr>
               <th className="px-2 py-2.5 align-top font-medium sm:w-1/5 sm:px-4 sm:py-3">
-                Feature
+                {t("feature")}
               </th>
               {comparisonColumns.map((col) => (
                 <th
@@ -153,12 +154,14 @@ export const PlanComparisonTable = ({
           </thead>
           <tbody>
             {FEATURE_ROWS.map((feature) => (
-              <tr key={feature.label}>
+              <tr key={feature.labelKey}>
                 <td className="border-t px-2 py-2.5 align-top sm:px-4 sm:py-3">
                   <div className="space-y-1">
-                    <div className="font-medium">{feature.label}</div>
+                    <div className="font-medium">
+                      {t(feature.labelKey as never)}
+                    </div>
                     <div className="text-xs text-muted-foreground">
-                      {feature.description}
+                      {t(feature.descriptionKey as never)}
                     </div>
                   </div>
                 </td>
@@ -176,12 +179,12 @@ export const PlanComparisonTable = ({
                         {included ? (
                           <Check
                             className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
-                            aria-label="Included"
+                            aria-label={t("included")}
                           />
                         ) : (
                           <X
                             className="h-4 w-4 text-muted-foreground/70"
-                            aria-label="Not included"
+                            aria-label={t("notIncluded")}
                           />
                         )}
                       </span>
@@ -193,10 +196,7 @@ export const PlanComparisonTable = ({
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Compare included features here, then use the select below to choose a
-        plan.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("compareHint")}</p>
     </div>
   );
 };

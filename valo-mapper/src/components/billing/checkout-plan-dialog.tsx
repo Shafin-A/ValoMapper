@@ -24,6 +24,7 @@ import { useBillingPlans } from "@/hooks/api/use-billing-plans";
 import { useUser } from "@/hooks/api/use-user";
 import { PlanComparisonTable } from "./plan-comparison-table";
 import { CheckoutPlanSelector } from "./checkout-plan-selector";
+import { useTranslations } from "next-intl";
 
 interface CheckoutPlanDialogProps {
   returnToPath: string;
@@ -34,6 +35,7 @@ export const CheckoutPlanDialog = ({
   returnToPath,
   trigger,
 }: CheckoutPlanDialogProps) => {
+  const t = useTranslations("billing");
   const [open, setOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(
     DEFAULT_CHECKOUT_PLAN,
@@ -55,20 +57,20 @@ export const CheckoutPlanDialog = ({
   const showTrialButton = isMonthlyTrialOffer && trialEligible;
 
   const trialHeadline = showTrialButton
-    ? `${premiumTrialDays}-day free trial available`
+    ? t("trialHeadline", { days: premiumTrialDays })
     : isMonthlyPlan
-      ? "Monthly billing starts immediately"
+      ? t("monthlyStarts")
       : isStackPlan
-        ? "Stack billing starts immediately"
-        : "Yearly billing starts immediately";
+        ? t("stackStarts")
+        : t("yearlyStarts");
 
   const trialDescription = showTrialButton
-    ? "Choose Try out for free below to start with trial. After trial, billing continues on the monthly plan."
+    ? t("trialDescription")
     : isMonthlyPlan
-      ? "Your monthly billing starts immediately after checkout."
+      ? t("monthlyDescription")
       : isStackPlan
-        ? "Your yearly stack billing begins at checkout and covers up to 6 total members. Only the stack owner pays for the billing plan. Billing renews yearly until canceled."
-        : "Yearly billing begins at checkout and renews yearly until canceled.";
+        ? t("stackDescription")
+        : t("yearlyDescription");
 
   const resolvedPlanOptions = useMemo<CheckoutPlanOption[]>(() => {
     const formatPriceLabel = (
@@ -151,10 +153,8 @@ export const CheckoutPlanDialog = ({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="w-[95vw] max-h-[calc(100dvh-1rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-3 sm:max-w-4xl sm:p-6">
         <DialogHeader>
-          <DialogTitle>Review your upgrade</DialogTitle>
-          <DialogDescription>
-            Compare plans, pick the best fit, then continue to Stripe checkout.
-          </DialogDescription>
+          <DialogTitle>{t("dialogTitle")}</DialogTitle>
+          <DialogDescription>{t("dialogDescription")}</DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 overflow-y-auto pr-1">
@@ -182,7 +182,7 @@ export const CheckoutPlanDialog = ({
             disabled={isPending}
             className="w-full sm:w-auto"
           >
-            Back
+            {t("back")}
           </Button>
           {showTrialButton && (
             <Button
@@ -194,7 +194,7 @@ export const CheckoutPlanDialog = ({
               {isPending && checkoutIntent === "trial" && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Try out for free
+              {t("tryFree")}
             </Button>
           )}
           <Button
@@ -205,7 +205,7 @@ export const CheckoutPlanDialog = ({
             {isPending && checkoutIntent === "paid" && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {showTrialButton ? "Subscribe now" : "Continue to secure checkout"}
+            {showTrialButton ? t("subscribeNow") : t("continueCheckout")}
           </Button>
         </DialogFooter>
       </DialogContent>

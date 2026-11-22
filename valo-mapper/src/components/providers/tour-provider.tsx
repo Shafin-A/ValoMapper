@@ -8,9 +8,10 @@ import {
 } from "@reactour/tour";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { tourSteps } from "@/components/tour/tour-steps";
+import { getTourSteps } from "@/components/tour/tour-steps";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { hasSeenOnboarding } from "@/lib/onboarding";
+import { useTranslations } from "next-intl";
 
 const TourContent = ({ children }: { children: React.ReactNode }) => {
   const { hasCompletedTour, startTour, isTourOpen } = useTour();
@@ -42,6 +43,9 @@ export const TourProviderWrapper = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const t = useTranslations("tour");
+  const tourSteps = getTourSteps(t as (key: string) => string);
+
   return (
     <TourContextProvider>
       <ReactourProvider

@@ -1,13 +1,15 @@
 import { StepType } from "@reactour/tour";
 import { TourStepContent } from "./tour-step-content";
 
-export const tourSteps: StepType[] = [
+type TourTranslator = (key: string) => string;
+
+export const getTourSteps = (t: TourTranslator): StepType[] => [
   {
     selector: '[data-tour="map-canvas"]',
     content: (
       <TourStepContent
-        title="Welcome to ValoMapper!"
-        description="This is your strategy canvas where you can create tactical plans for VALORANT."
+        title={t("welcomeTitle")}
+        description={t("welcomeDescription")}
       />
     ),
   },
@@ -15,8 +17,8 @@ export const tourSteps: StepType[] = [
     selector: '[data-tour="agent-brimstone"]',
     content: (
       <TourStepContent
-        title="Select an Agent"
-        description="Click on Brimstone to select him and see his abilities. You can then click on the canvas to place him or drag him directly onto the canvas in the next step."
+        title={t("agentTitle")}
+        description={t("agentDescription")}
         isAutoAdvanceStep
       />
     ),
@@ -30,30 +32,23 @@ export const tourSteps: StepType[] = [
     selector: '[data-tour="map-canvas"]',
     content: (
       <TourStepContent
-        title="Place Agent on Canvas"
-        description={`Now place Brimstone by clicking on the canvas or by dragging him from the sidebar and releasing over the map. You can drag agents to reposition them after placing. 
-          
-Delete an agent by dragging them to the trash can or press E while hovering over them.
-
-When you're ready, click Next to continue.`}
+        title={t("placeTitle")}
+        description={t("placeDescription")}
       />
     ),
   },
   {
     selector: '[data-tour="map-selector"]',
     content: (
-      <TourStepContent
-        title="Map Selection"
-        description="Click this button to select from all VALORANT maps to plan your strategies. You can explore the map options after this tour."
-      />
+      <TourStepContent title={t("mapTitle")} description={t("mapDescription")} />
     ),
   },
   {
     selector: '[data-tour="map-rotation"]',
     content: (
       <TourStepContent
-        title="Map Rotation"
-        description="Click this button to rotate the side of the map and choose between attack and defense."
+        title={t("rotationTitle")}
+        description={t("rotationDescription")}
       />
     ),
   },
@@ -61,10 +56,8 @@ When you're ready, click Next to continue.`}
     selector: '[data-tour="phases"]',
     content: (
       <TourStepContent
-        title="Phases"
-        description={`Build your strategy step by step using phases. Each phase can have the same agents and abilities placed at different places to represent different steps of your strategy. 
-          
-          Use keyboard shortcuts A and D to quickly navigate between phases.`}
+        title={t("phasesTitle")}
+        description={t("phasesDescription")}
       />
     ),
     position: "right",
@@ -73,10 +66,8 @@ When you're ready, click Next to continue.`}
     selector: '[data-tour="tools-section"]',
     content: (
       <TourStepContent
-        title="Tools"
-        description={`Use these tools to draw lines, add text, shapes and more to your strategy as needed. 
-        
-Feel free to experiment after this tour!`}
+        title={t("toolsTitle")}
+        description={t("toolsDescription")}
       />
     ),
     position: "right",
@@ -85,10 +76,8 @@ Feel free to experiment after this tour!`}
     selector: '[data-tour="save-strategy"]',
     content: (
       <TourStepContent
-        title="Save Your Strategy"
-        description={`Save your strategies so you can come back to them anytime. Keep everything organized with folders. 
-        
-Creating an account is required to save strategies.`}
+        title={t("saveTitle")}
+        description={t("saveDescription")}
       />
     ),
     position: "right",
@@ -97,12 +86,8 @@ Creating an account is required to save strategies.`}
     selector: '[data-tour="icons-section"]',
     content: (
       <TourStepContent
-        title="Icons"
-        description={`Add icons such as the Spike or weapons.
-
-Drag icons from the sidebar and drop them onto the map like agents and abilities. 
-
-You can also click on the icon and it will be placed on the map.`}
+        title={t("iconsTitle")}
+        description={t("iconsDescription")}
       />
     ),
     position: "right",
