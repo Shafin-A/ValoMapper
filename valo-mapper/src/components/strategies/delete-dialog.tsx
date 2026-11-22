@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useTranslations } from "next-intl";
 
 interface DeleteDialogProps {
   open: boolean;
@@ -24,26 +25,28 @@ export const DeleteDialog = ({
   itemName,
   type,
 }: DeleteDialogProps) => {
+  const t = useTranslations("strategies");
+  const title =
+    type === "folder" ? t("deleteFolderTitle") : t("deleteStrategyTitle");
+  const description =
+    type === "folder"
+      ? t("deleteFolderDescription", { name: itemName })
+      : t("deleteDescription", { name: itemName });
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {type}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete &quot;{itemName}&quot;? This action
-            cannot be undone.
-            {type === "folder"
-              ? " All sub-folders and strategies in the folder will also be deleted."
-              : ""}
-          </AlertDialogDescription>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/70"
           >
-            Delete
+            {t("delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

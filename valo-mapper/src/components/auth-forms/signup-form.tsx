@@ -22,8 +22,11 @@ import { FirebaseError } from "@firebase/util";
 import { sendEmailVerification } from "firebase/auth";
 import { toast } from "sonner";
 import { useCreateUser } from "@/hooks/api/use-create-user";
+import { useTranslations } from "next-intl";
 
 export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
+  const t = useTranslations("auth");
+  const tc = useTranslations("common");
   const { signUp, logout } = useFirebaseAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -39,7 +42,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("passwordsDoNotMatch"));
       return;
     }
 
@@ -62,24 +65,22 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
 
       setError("");
 
-      toast.success(
-        "Account created! Please check your email and verify your account before logging in.",
-      );
+      toast.success(t("signUpSuccess"));
     } catch (err) {
       if (err instanceof FirebaseError) {
         if (err.code === "auth/email-already-in-use") {
-          setError("An account with this email already exists.");
+          setError(t("emailInUse"));
         } else if (err.code === "auth/invalid-email") {
-          setError("Invalid email address.");
+          setError(t("invalidEmail"));
         } else if (err.code === "auth/weak-password") {
-          setError("Password is too weak.");
+          setError(t("weakPassword"));
         } else {
-          setError("Failed to create account. Please try again.");
+          setError(t("createAccountFailed"));
         }
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("An unexpected error occurred.");
+        setError(t("unexpectedError"));
       }
     } finally {
       setLoading(false);
@@ -89,20 +90,18 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
   return (
     <Card {...props}>
       <CardHeader>
-        <CardTitle as="h1">Create an account</CardTitle>
-        <CardDescription>
-          Enter your information below to create your account
-        </CardDescription>
+        <CardTitle as="h1">{t("createAccountTitle")}</CardTitle>
+        <CardDescription>{t("createAccountDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="name">Name</FieldLabel>
+              <FieldLabel htmlFor="name">{t("name")}</FieldLabel>
               <Input
                 id="name"
                 type="text"
-                placeholder="John Doe"
+                placeholder={t("namePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -110,24 +109,21 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
               <Input
                 id="email"
                 type="email"
                 autoComplete="email"
-                placeholder="email@example.com"
+                placeholder={t("emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading || createUserMutation.isPending}
               />
-              <FieldDescription>
-                We&apos;ll use this to contact you. We will not share your email
-                with anyone else.
-              </FieldDescription>
+              <FieldDescription>{t("emailHelp")}</FieldDescription>
             </Field>
             <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <FieldLabel htmlFor="password">{t("password")}</FieldLabel>
               <Input
                 id="password"
                 type="password"
@@ -137,14 +133,11 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                 required
                 disabled={loading || createUserMutation.isPending}
               />
-              <FieldDescription>
-                At least 8 characters, with upper & lowercase letters, a number,
-                and a special character.
-              </FieldDescription>
+              <FieldDescription>{t("passwordHelp")}</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="confirm-password">
-                Confirm Password
+                {t("confirmPassword")}
               </FieldLabel>
               <Input
                 id="confirm-password"
@@ -155,7 +148,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                 required
                 disabled={loading || createUserMutation.isPending}
               />
-              <FieldDescription>Please confirm your password.</FieldDescription>
+              <FieldDescription>{t("confirmPasswordHelp")}</FieldDescription>
             </Field>
             <FieldGroup>
               <Field>
@@ -164,8 +157,8 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                   disabled={loading || createUserMutation.isPending}
                 >
                   {loading || createUserMutation.isPending
-                    ? "Creating Account..."
-                    : "Create Account"}
+                    ? t("creatingAccount")
+                    : t("createAccount")}
                 </Button>
 
                 {error && (
@@ -175,7 +168,8 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                 )}
 
                 <FieldDescription className="px-6 text-center">
-                  Already have an account? <Link href="/login">Login</Link>
+                  {t("alreadyHaveAccount")}{" "}
+                  <Link href="/login">{t("login")}</Link>
                 </FieldDescription>
 
                 <FieldDescription className="mt-2 text-center text-xs text-muted-foreground">
@@ -183,14 +177,14 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
                     href="/terms-of-service"
                     className="underline underline-offset-4"
                   >
-                    Terms of Service
+                    {tc("termsOfService")}
                   </Link>{" "}
-                  and{" "}
+                  ·{" "}
                   <Link
                     href="/privacy-policy"
                     className="underline underline-offset-4"
                   >
-                    Privacy Policy
+                    {tc("privacyPolicy")}
                   </Link>
                 </FieldDescription>
               </Field>

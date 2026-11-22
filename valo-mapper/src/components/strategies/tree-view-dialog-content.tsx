@@ -28,6 +28,7 @@ import Link from "next/link";
 import { FREE_STRATEGY_LIMIT } from "@/lib/consts";
 import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
 import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
+import { useTranslations } from "next-intl";
 
 interface TreeViewDialogContentProps {
   setOpen: (open: boolean) => void;
@@ -49,6 +50,7 @@ const getParentFolderLocation = (
 export const TreeViewDialogContent = ({
   setOpen,
 }: TreeViewDialogContentProps) => {
+  const t = useTranslations("strategies");
   const [strategyName, setStrategyName] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<string>("root");
 
@@ -142,11 +144,11 @@ export const TreeViewDialogContent = ({
   };
 
   const dialogTitle = isExistingStrategy
-    ? "Update Saved Strategy"
-    : "Save Strategy";
+    ? t("updateSavedTitle")
+    : t("saveTitle");
   const dialogDescription = isExistingStrategy
-    ? "Move this saved strategy to another location or rename it"
-    : "Choose a location to save your new strategy";
+    ? t("updateSavedDescription")
+    : t("saveDescription");
 
   if (isError) {
     return (
@@ -157,15 +159,15 @@ export const TreeViewDialogContent = ({
         </DialogHeader>
         <div className="py-8 text-center">
           <p className="text-muted-foreground mb-4">
-            Failed to load folders. Please try again.
+            {t("loadFoldersFailed")}
           </p>
           <Button onClick={() => refetchFolders()} variant="outline">
-            Retry
+            {t("retry")}
           </Button>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {t("cancel")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -182,20 +184,19 @@ export const TreeViewDialogContent = ({
       {isExistingStrategy && existingStrategy && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Strategy already saved</AlertTitle>
+          <AlertTitle>{t("alreadySavedTitle")}</AlertTitle>
           <AlertDescription>
             <p>
-              This strategy is already saved as &quot;{existingStrategy.name}
-              &quot;. You can move it to a different location.
+              {t("alreadySavedDescription", { name: existingStrategy.name })}
             </p>
             <p>
-              Current location:{" "}
+              {t("currentLocation")}{" "}
               <span className="font-medium">{existingLocationLabel}</span>
             </p>
             <p>
-              You can still manage saved strategies anytime in{" "}
+              {t("manageSaved")}{" "}
               <Link className="underline" href="/strategies">
-                My Strategies
+                {t("rootName")}
               </Link>
               .
             </p>
@@ -206,42 +207,32 @@ export const TreeViewDialogContent = ({
       {!isExistingStrategy && isFreeUserAtStrategyLimit && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Free plan limit reached</AlertTitle>
+          <AlertTitle>{t("freeLimitTitle")}</AlertTitle>
           <AlertDescription>
-            <p>
-              You currently have {strategyCount} saved strategies. Free users
-              can keep up to {FREE_STRATEGY_LIMIT}.
-            </p>
-            <p>ValoMapper Premium unlocks unlimited saved strategies.</p>
-            <p>
-              Delete a saved strategy in{" "}
-              <Link className="underline" href="/strategies">
-                My Strategies
-              </Link>{" "}
-              or{" "}
-              <CheckoutPlanDialog
-                returnToPath={returnToPath}
-                trigger={
-                  <button
-                    type="button"
-                    className="underline font-medium inline-flex items-center gap-1"
-                  >
-                    upgrade to ValoMapper Premium
-                  </button>
-                }
-              />
-              .
-            </p>
+            <p>{t("freeLimitDescription", { count: strategyCount, limit: FREE_STRATEGY_LIMIT })}</p>
+            <p>{t("premiumUnlocks")}</p>
+            <p>{t("deleteOrUpgrade")}</p>
+            <CheckoutPlanDialog
+              returnToPath={returnToPath}
+              trigger={
+                <button
+                  type="button"
+                  className="underline font-medium inline-flex items-center gap-1"
+                >
+                  {t("upgrade")}
+                </button>
+              }
+            />
           </AlertDescription>
         </Alert>
       )}
 
       <div className="space-y-4 py-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Strategy Name</Label>
+          <Label htmlFor="name">{t("strategyName")}</Label>
           <Input
             id="name"
-            placeholder="eg. B Site Rush"
+            placeholder={t("strategyNamePlaceholder")}
             value={strategyName}
             onChange={(e) => setStrategyName(e.target.value)}
             disabled={isLoading || isPending || isUserLoading}
@@ -249,7 +240,7 @@ export const TreeViewDialogContent = ({
         </div>
 
         <div className="space-y-2">
-          <div className="text-sm font-medium">Save Location</div>
+          <div className="text-sm font-medium">{t("saveLocation")}</div>
           <FolderTreePicker
             flatData={flatData}
             selectedLocation={selectedLocation}
@@ -264,7 +255,7 @@ export const TreeViewDialogContent = ({
 
       <DialogFooter>
         <Button variant="outline" onClick={() => setOpen(false)}>
-          Cancel
+          {t("cancel")}
         </Button>
         <Button
           onClick={handleSave}
@@ -277,7 +268,7 @@ export const TreeViewDialogContent = ({
             isNoOpUpdate
           }
         >
-          {isExistingStrategy ? "Update Strategy" : "Save Strategy"}
+          {isExistingStrategy ? t("updateStrategy") : t("saveTitle")}
         </Button>
       </DialogFooter>
     </DialogContent>

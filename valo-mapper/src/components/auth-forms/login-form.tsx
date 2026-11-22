@@ -24,6 +24,7 @@ import Link from "next/link";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { sanitizeRedirectPath } from "@/lib/rso";
 import { useUser } from "@/hooks/api/use-user";
+import { useTranslations } from "next-intl";
 
 export const LoginForm = ({
   className,
@@ -31,6 +32,8 @@ export const LoginForm = ({
 }: React.ComponentProps<"div">) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("auth");
+  const tc = useTranslations("common");
   const { signIn, logout } = useFirebaseAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,7 +56,7 @@ export const LoginForm = ({
 
   useEffect(() => {
     if (isUserError && userError) {
-      setError(`Failed to load user data: ${userError.message}`);
+      setError(userError.message);
       setLoading(false);
     }
   }, [isUserError, userError]);
@@ -75,9 +78,7 @@ export const LoginForm = ({
       const firebaseUser = await signIn(email, password);
 
       if (!firebaseUser.emailVerified) {
-        setError(
-          "Please verify your email before signing in. Check your inbox for the verification link.",
-        );
+        setError(t("verifyEmailFirst"));
 
         await logout();
 
@@ -90,16 +91,16 @@ export const LoginForm = ({
     } catch (err: unknown) {
       if (err instanceof FirebaseError) {
         if (err.code === "auth/invalid-credential") {
-          setError("Invalid email or password.");
+          setError(t("invalidCredentials"));
         } else if (err.code === "auth/too-many-requests") {
-          setError("Too many failed attempts. Please try again later.");
+          setError(t("tooManyLoginAttempts"));
         } else {
-          setError("Failed to log in. Please try again.");
+          setError(t("loginFailed"));
         }
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("An unexpected error occurred.");
+        setError(t("unexpectedError"));
       }
       setLoading(false);
     }
@@ -109,10 +110,8 @@ export const LoginForm = ({
     <div className={className} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle as="h1">Sign in to your account</CardTitle>
-          <CardDescription>
-            Sign in using one of the methods below
-          </CardDescription>
+          <CardTitle as="h1">{t("signInTitle")}</CardTitle>
+          <CardDescription>{t("signInDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
@@ -124,10 +123,10 @@ export const LoginForm = ({
                 />
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-                OR
+                {t("or")}
               </FieldSeparator>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
                 <Input
                   id="email"
                   type="email"
@@ -141,12 +140,12 @@ export const LoginForm = ({
               </Field>
               <Field>
                 <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldLabel htmlFor="password">{t("password")}</FieldLabel>
                   <Link
                     href="/forgotpassword"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    {t("forgotPassword")}
                   </Link>
                 </div>
                 <Input
@@ -161,7 +160,7 @@ export const LoginForm = ({
               </Field>
               <Field>
                 <Button type="submit" disabled={loading || isUserLoading}>
-                  {loading || isUserLoading ? "Logging in..." : "Login"}
+                  {loading || isUserLoading ? t("loggingIn") : t("login")}
                 </Button>
 
                 {error && (
@@ -171,8 +170,7 @@ export const LoginForm = ({
                 )}
 
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account?{" "}
-                  <Link href="/signup">Sign up</Link>
+                  {t("noAccount")} <Link href="/signup">{t("signUp")}</Link>
                 </FieldDescription>
 
                 <FieldDescription className="mt-2 text-center text-xs text-muted-foreground">
@@ -180,14 +178,14 @@ export const LoginForm = ({
                     href="/terms-of-service"
                     className="underline underline-offset-4"
                   >
-                    Terms of Service
+                    {tc("termsOfService")}
                   </Link>{" "}
-                  and{" "}
+                  ·{" "}
                   <Link
                     href="/privacy-policy"
                     className="underline underline-offset-4"
                   >
-                    Privacy Policy
+                    {tc("privacyPolicy")}
                   </Link>
                 </FieldDescription>
               </Field>

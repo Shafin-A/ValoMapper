@@ -9,7 +9,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/cn";
 import { getRelativeTime } from "@/lib/format";
+import { MAP_OPTIONS } from "@/lib/consts";
+import { useLocalizedMapName } from "@/contexts/valorant-terms-context";
 import { FolderInput, FolderPen, MoreVertical, Trash2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -39,12 +42,17 @@ export const StrategyItem = ({
   onDelete,
   className,
 }: StrategyItemProps) => {
+  const t = useTranslations("strategies");
+  const locale = useLocale();
   const [openDropdown, setOpenDropdown] = useState(false);
   const [openRenameDialog, setOpenRenameDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openMoveDialog, setOpenMoveDialog] = useState(false);
 
   const mapId = selectedMapId;
+  const mapFallback =
+    MAP_OPTIONS.find((option) => option.id === mapId)?.text ?? mapId;
+  const mapName = useLocalizedMapName(mapId, mapFallback);
   const imageUrl = mapId ? `/maps/listviewicons/${mapId}.webp` : "";
 
   return (
@@ -56,14 +64,14 @@ export const StrategyItem = ({
     >
       <Link
         href={href}
-        aria-label={`Open strategy ${name}`}
+        aria-label={t("openStrategy", { name })}
         className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
       />
 
       <div className="pointer-events-none relative h-32 w-full bg-zinc-950">
         <Image
           src={imageUrl}
-          alt={mapId ?? "Map preview"}
+          alt={mapName || "Map preview"}
           fill
           sizes="100%"
           className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
@@ -77,7 +85,7 @@ export const StrategyItem = ({
               <Button
                 variant="ghost"
                 onClick={(e) => e.stopPropagation()}
-                aria-label="Strategy actions"
+                aria-label={t("strategyActions")}
                 className="pointer-events-auto absolute top-2 right-2 rounded-full"
               >
                 <MoreVertical size={16} />
@@ -102,7 +110,7 @@ export const StrategyItem = ({
                   }}
                 >
                   <FolderPen />
-                  Rename
+                  {t("rename")}
                 </DropdownMenuItem>
               </DialogTrigger>
               <DropdownMenuItem
@@ -114,7 +122,7 @@ export const StrategyItem = ({
                 }}
               >
                 <FolderInput />
-                Move
+                {t("move")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => e.stopPropagation()}
@@ -125,7 +133,7 @@ export const StrategyItem = ({
                 }}
               >
                 <Trash2 className="text-destructive" />
-                <span className="text-destructive">Delete</span>
+                <span className="text-destructive">{t("delete")}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -163,9 +171,9 @@ export const StrategyItem = ({
 
       <div className="pointer-events-none flex flex-col gap-1 px-3 py-3">
         <p className="text-white font-medium truncate">{name}</p>
-        <p className="text-white font-medium truncate capitalize">{mapId}</p>
+        <p className="text-white font-medium truncate">{mapName}</p>
         <p className="text-xs text-zinc-400">
-          Updated {getRelativeTime(updatedAt)}
+          {t("updated", { time: getRelativeTime(updatedAt, locale) })}
         </p>
       </div>
     </div>

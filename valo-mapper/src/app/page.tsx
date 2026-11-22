@@ -4,12 +4,14 @@ import { HeaderActions } from "@/components/landing/header-actions";
 import { ExternalLinks } from "@/components/shared/external-links";
 import { HeroSection } from "@/components/landing/hero-section";
 import { useCreateLobby } from "@/hooks/api/use-create-lobby";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import React, { useState } from "react";
 
 const LandingPage = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   const createLobbyMutation = useCreateLobby();
+  const t = useTranslations("landing");
 
   const handleStartMapping = () => {
     setIsNavigating(true);
@@ -45,7 +47,7 @@ const LandingPage = () => {
             href="/terms-of-service"
             className="transition-colors hover:text-foreground"
           >
-            Terms of Service
+            {t("terms")}
           </Link>
           <span aria-hidden className="text-muted-foreground/30">
             ·
@@ -54,7 +56,7 @@ const LandingPage = () => {
             href="/privacy-policy"
             className="transition-colors hover:text-foreground"
           >
-            Privacy Policy
+            {t("privacy")}
           </Link>
         </div>
       </footer>

@@ -41,6 +41,8 @@ import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { useWebSocketUsers } from "@/contexts/websocket-presence-context";
 import { usePendingStackInvites } from "@/hooks/api/use-pending-stack-invite";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
@@ -60,6 +62,7 @@ export const SiteHeader = ({
 }: SiteHeaderProps) => {
   const { logout } = useFirebaseAuth();
   const { data: user, isLoading } = useUser();
+  const t = useTranslations("nav");
   const pathname = usePathname();
   const users = useWebSocketUsers();
   const isRSOUser = Boolean(user?.rsoSubjectId);
@@ -80,7 +83,7 @@ export const SiteHeader = ({
                 className="h-10 w-10 sm:h-8 sm:w-8"
                 variant="ghost"
                 size="icon"
-                aria-label="Toggle left sidebar"
+                aria-label={t("toggleLeftSidebar")}
                 onClick={() => setLeftSidebarOpen((prev) => !prev)}
               >
                 <SidebarIcon />
@@ -93,7 +96,11 @@ export const SiteHeader = ({
           )}
 
           <div className="flex items-center gap-2">
-            <Link href="/" className="whitespace-nowrap">
+            <Link
+              href="/"
+              className="whitespace-nowrap"
+              aria-label={t("brandHome")}
+            >
               <span className="text-sm font-bold sm:text-base">
                 <span className="bg-linear-to-r from-foreground to-primary bg-clip-text text-transparent">
                   ValoMapper
@@ -126,13 +133,13 @@ export const SiteHeader = ({
                 pathname?.startsWith("/replay") ? "page" : undefined
               }
             >
-              Replays
+              {t("replays")}
             </Link>
           </Button>
 
           <Link
             href="/whats-new"
-            aria-label="What's New"
+            aria-label={t("whatsNew")}
             aria-current={pathname === "/whats-new" ? "page" : undefined}
             className={cn(
               buttonVariants({ variant: "ghost" }),
@@ -141,8 +148,10 @@ export const SiteHeader = ({
             )}
           >
             <Sparkles className="size-4 sm:hidden" aria-hidden />
-            <span className="hidden sm:inline">What&apos;s New</span>
+            <span className="hidden sm:inline">{t("whatsNew")}</span>
           </Link>
+
+          <LanguageSwitcher />
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -150,7 +159,7 @@ export const SiteHeader = ({
                 href={DISCORD_INVITE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Join the ValoMapper Discord"
+                aria-label={t("discordLabel")}
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "icon" }),
                   "h-10 w-10 text-white/70 transition-colors hover:text-white sm:h-8 sm:w-8",
@@ -161,7 +170,7 @@ export const SiteHeader = ({
               </Link>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              Report bugs or share feedback on Discord
+              {t("discordTooltip")}
             </TooltipContent>
           </Tooltip>
 
@@ -171,7 +180,7 @@ export const SiteHeader = ({
                 className="h-10 w-10 sm:h-8 sm:w-8"
                 variant="ghost"
                 size="icon"
-                aria-label="Open help"
+                aria-label={t("openHelp")}
               >
                 <CircleQuestionMark />
               </Button>
@@ -179,10 +188,8 @@ export const SiteHeader = ({
 
             <DialogContent className="flex h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none flex-col overflow-hidden p-4 sm:h-[min(640px,90dvh)] sm:w-[90vw] sm:max-w-4xl sm:p-6">
               <DialogHeader className="shrink-0 pr-8 text-left">
-                <DialogTitle>Help</DialogTitle>
-                <DialogDescription>
-                  Find help for different sections.
-                </DialogDescription>
+                <DialogTitle>{t("help")}</DialogTitle>
+                <DialogDescription>{t("helpDescription")}</DialogDescription>
               </DialogHeader>
 
               <HelpTab />
@@ -195,7 +202,7 @@ export const SiteHeader = ({
                 className="h-10 w-10 sm:h-8 sm:w-8"
                 variant="ghost"
                 size="icon"
-                aria-label="Account menu"
+                aria-label={t("accountMenu")}
               >
                 <UserRound />
               </Button>
@@ -206,34 +213,40 @@ export const SiteHeader = ({
                   <Link
                     href={`/login?redirect=${encodeURIComponent(pathname)}`}
                   >
-                    Login
+                    {t("login")}
                   </Link>
                 </DropdownMenuItem>
               ) : (
                 <>
-                  <DropdownMenuLabel>Welcome {user?.name}</DropdownMenuLabel>
+                  <DropdownMenuLabel>
+                    {t("welcome", { name: user?.name ?? "" })}
+                  </DropdownMenuLabel>
                   <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
-                      <Link href="/profile">My Profile</Link>
+                      <Link href="/profile">{t("myProfile")}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/strategies">My Strategies</Link>
+                      <Link href="/strategies">{t("myStrategies")}</Link>
                     </DropdownMenuItem>
                     {isRSOUser && (
                       <DropdownMenuItem asChild>
-                        <Link href="/matches">My Matches</Link>
+                        <Link href="/matches">{t("myMatches")}</Link>
                       </DropdownMenuItem>
                     )}
                     {pendingStackInviteCount > 0 && (
                       <DropdownMenuItem asChild>
                         <Link href="/profile" className="text-amber-600">
-                          Pending Stack Invites ({pendingStackInviteCount})
+                          {t("pendingStackInvites", {
+                            count: pendingStackInviteCount,
+                          })}
                         </Link>
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>
+                    {t("logout")}
+                  </DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>
@@ -249,7 +262,7 @@ export const SiteHeader = ({
                 className="h-10 w-10 sm:h-8 sm:w-8"
                 variant="ghost"
                 size="icon"
-                aria-label="Toggle right sidebar"
+                aria-label={t("toggleRightSidebar")}
                 onClick={() => setRightSidebarOpen((prev) => !prev)}
               >
                 <SidebarIcon className="rotate-180" />

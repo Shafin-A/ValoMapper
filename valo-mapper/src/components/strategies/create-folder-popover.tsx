@@ -15,6 +15,7 @@ import {
 import { useCreateFolder } from "@/hooks/api/use-create-folder";
 import { CreateFolderForm } from "./create-folder-form";
 import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface CreateFolderPopoverProps {
   parentFolderId: number | null;
@@ -27,8 +28,9 @@ export const CreateFolderPopover = ({
   parentFolderId,
   onSuccess,
   disabled = false,
-  disabledTooltip = "Active subscription required to create folders",
+  disabledTooltip,
 }: CreateFolderPopoverProps) => {
+  const t = useTranslations("strategies");
   const [open, setOpen] = useState(false);
   const { mutate: createFolder, isPending } = useCreateFolder();
 
@@ -51,11 +53,13 @@ export const CreateFolderPopover = ({
           <span className="inline-flex">
             <Button disabled>
               <Plus />
-              New Folder
+              {t("newFolder")}
             </Button>
           </span>
         </TooltipTrigger>
-        <TooltipContent>{disabledTooltip}</TooltipContent>
+        <TooltipContent>
+          {disabledTooltip ?? t("createFolderDisabled")}
+        </TooltipContent>
       </Tooltip>
     );
   }
@@ -65,7 +69,7 @@ export const CreateFolderPopover = ({
       <PopoverTrigger asChild>
         <Button>
           <Plus />
-          New Folder
+          {t("newFolder")}
         </Button>
       </PopoverTrigger>
 

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
 import { FolderPen, MoreVertical, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { DeleteDialog } from "./delete-dialog";
 
@@ -33,9 +34,10 @@ export const FolderCard = ({
   onRename,
   onDelete,
   actionsDisabled = false,
-  actionsDisabledTooltip = "Active subscription required to edit folders",
+  actionsDisabledTooltip,
   className,
 }: FolderCardProps) => {
+  const t = useTranslations("strategies");
   const [openDropdown, setOpenDropdown] = useState(false);
   const [openRenameDialog, setOpenRenameDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -58,7 +60,7 @@ export const FolderCard = ({
 
       <button
         type="button"
-        aria-label={`Open folder ${name}`}
+        aria-label={t("openFolder", { name })}
         onClick={() => onClick?.()}
         className="absolute inset-0 z-0 w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
       />
@@ -71,13 +73,15 @@ export const FolderCard = ({
                 <Button
                   variant="ghost"
                   onClick={(e) => e.stopPropagation()}
-                  aria-label="Folder actions"
+                  aria-label={t("folderActions")}
                   className="pointer-events-auto self-end mt-10 rounded-full"
                 >
                   <MoreVertical size={18} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{actionsDisabledTooltip}</TooltipContent>
+              <TooltipContent>
+                {actionsDisabledTooltip ?? t("folderEditDisabled")}
+              </TooltipContent>
             </Tooltip>
           ) : (
             <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
@@ -85,7 +89,7 @@ export const FolderCard = ({
                 <Button
                   variant="ghost"
                   onClick={(e) => e.stopPropagation()}
-                  aria-label="Folder actions"
+                  aria-label={t("folderActions")}
                   className="pointer-events-auto self-end mt-10 rounded-full"
                 >
                   <MoreVertical size={18} />
@@ -110,7 +114,7 @@ export const FolderCard = ({
                     }}
                   >
                     <FolderPen />
-                    Rename
+                    {t("rename")}
                   </DropdownMenuItem>
                 </DialogTrigger>
                 <DropdownMenuItem
@@ -122,7 +126,7 @@ export const FolderCard = ({
                   }}
                 >
                   <Trash2 className="text-destructive" />
-                  <span className="text-destructive">Delete</span>
+                  <span className="text-destructive">{t("delete")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

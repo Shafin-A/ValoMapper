@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { usePreviousPathname } from "@/components/providers/navigation-history-provider";
 import { cn } from "@/lib/cn";
+import { useTranslations } from "next-intl";
 
 interface BackToHomeButtonProps {
   className?: string;
@@ -13,9 +14,10 @@ interface BackToHomeButtonProps {
 
 export const BackToHomeButton = ({ className }: BackToHomeButtonProps) => {
   const router = useRouter();
+  const t = useTranslations("common");
   const previousPathname = usePreviousPathname();
   const returnsToHome = previousPathname === null || previousPathname === "/";
-  const label = returnsToHome ? "Back to ValoMapper" : "Back";
+  const label = returnsToHome ? t("backToHome") : t("back");
 
   return (
     <Button

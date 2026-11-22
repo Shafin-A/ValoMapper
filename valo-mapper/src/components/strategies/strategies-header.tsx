@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreateFolderPopover } from "./create-folder-popover";
 import { CheckoutPlanDialog } from "@/components/billing/checkout-plan-dialog";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { useTranslations } from "next-intl";
 
 interface StrategiesHeaderProps {
   navigationPath: { id: string; name: string }[];
@@ -44,6 +46,7 @@ export const StrategiesHeader = ({
   freeStrategyLimit,
   upgradeReturnToPath,
 }: StrategiesHeaderProps) => {
+  const t = useTranslations("strategies");
   const isFreePlan = !isUserLoading && !hasValoMapperPremium;
   const hasReachedFreeLimit = isFreePlan && strategyCount >= freeStrategyLimit;
   const hasActivePremiumTrial =
@@ -53,18 +56,18 @@ export const StrategiesHeader = ({
     premiumTrialDaysLeft > 0;
   const trialLabelSuffix =
     premiumTrialDaysLeft === 1
-      ? "1 day left"
-      : `${premiumTrialDaysLeft} days left`;
+      ? t("trialDayLeft", { count: 1 })
+      : t("trialDaysLeft", { count: premiumTrialDaysLeft ?? 0 });
 
   const planLabel = isUserLoading
-    ? "Loading"
+    ? t("planLoading")
     : hasActivePremiumTrial
-      ? `Premium Trial (${trialLabelSuffix})`
+      ? t("planTrial", { days: trialLabelSuffix })
       : hasScheduledCancellation
-        ? "Premium (Cancels at Period End)"
+        ? t("planCancelsAtPeriodEnd")
         : hasValoMapperPremium
-          ? "Premium"
-          : "Free";
+          ? t("planPremium")
+          : t("planFree");
 
   const planBadgeVariant = isUserLoading
     ? "outline"
@@ -98,12 +101,13 @@ export const StrategiesHeader = ({
             {navigationPath[navigationPath.length - 1].name}
           </h1>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <LanguageSwitcher />
           <CreateFolderPopover
             parentFolderId={currentFolderId}
             onSuccess={refetch}
             disabled={!canManageFolders}
-            disabledTooltip="Active subscription required to create folders"
+            disabledTooltip={t("createFolderDisabled")}
           />
         </div>
       </div>
@@ -134,7 +138,7 @@ export const StrategiesHeader = ({
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Plan:</span>
+          <span className="text-muted-foreground">{t("plan")}</span>
           <Badge variant={planBadgeVariant} className={planBadgeClassName}>
             {planLabel}
           </Badge>
@@ -143,11 +147,11 @@ export const StrategiesHeader = ({
         {isFreePlan && (
           <>
             <Badge variant={savedBadgeVariant}>
-              Saved {strategyCount}/{freeStrategyLimit}
+              {t("saved", { count: strategyCount, limit: freeStrategyLimit })}
             </Badge>
             <CheckoutPlanDialog
               returnToPath={upgradeReturnToPath}
-              trigger={<Button size="sm">Upgrade to Premium</Button>}
+              trigger={<Button size="sm">{t("upgrade")}</Button>}
             />
           </>
         )}

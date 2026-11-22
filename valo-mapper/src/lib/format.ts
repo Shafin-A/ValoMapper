@@ -1,4 +1,4 @@
-export const getRelativeTime = (date: Date) => {
+export const getRelativeTime = (date: Date, locale = "en-US") => {
   const now = new Date();
 
   const secondsUntil = (date.getTime() - now.getTime()) / 1000;
@@ -13,7 +13,7 @@ export const getRelativeTime = (date: Date) => {
     { label: "second", seconds: 1 },
   ];
 
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
 
   for (const interval of intervals) {
     const count = Math.trunc(secondsUntil / interval.seconds);

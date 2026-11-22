@@ -12,6 +12,7 @@ import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
 import { StrategyData } from "@/lib/types";
 import { convertFolderOrStrategyId } from "@/lib/strategy-tree";
 import { FolderOpen } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { FolderCard } from "./folder-card";
 import { StrategyItem } from "./strategy-item";
 
@@ -28,6 +29,7 @@ export const StrategiesContent = ({
   navigateToFolder,
   canManageFolders,
 }: StrategiesContentProps) => {
+  const t = useTranslations("strategies");
   const { mutate: updateFolder } = useUpdateFolder();
   const { mutate: updateStrategy } = useUpdateStrategy();
 
@@ -42,10 +44,8 @@ export const StrategiesContent = ({
             <EmptyMedia variant="icon">
               <FolderOpen />
             </EmptyMedia>
-            <EmptyTitle>This folder is empty</EmptyTitle>
-            <EmptyDescription>
-              Create a new strategy or folder to get started
-            </EmptyDescription>
+            <EmptyTitle>{t("emptyTitle")}</EmptyTitle>
+            <EmptyDescription>{t("emptyDescription")}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
@@ -57,7 +57,7 @@ export const StrategiesContent = ({
                 name={item.name}
                 onClick={() => navigateToFolder(item.id, item.name)}
                 actionsDisabled={!canManageFolders}
-                actionsDisabledTooltip="Active subscription required to rename or delete folders"
+                actionsDisabledTooltip={t("folderActionsDisabled")}
                 onRename={(newName) =>
                   updateFolder({
                     folderId: convertFolderOrStrategyId(item.id, "folder"),

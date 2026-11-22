@@ -18,7 +18,8 @@ import {
 import { StrategyData } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
+import { Suspense, useEffect, useState } from "react";
 import { convertFolderOrStrategyId } from "@/lib/strategy-tree";
 
 const countStrategies = (items: StrategyData[]): number => {
@@ -36,13 +37,25 @@ const countStrategies = (items: StrategyData[]): number => {
 };
 
 const MyStrategiesPage = () => {
+  const t = useTranslations("strategies");
+  const format = useFormatter();
   const { user, loading: authLoading } = useFirebaseAuth();
   const { data, isLoading, isError, error, refetch } = useFolders();
   const { data: userProfile, isLoading: isUserProfileLoading } = useUser();
 
+  const rootName = t("rootName");
   const [navigationPath, setNavigationPath] = useState<
     { id: string; name: string }[]
-  >([{ id: "root", name: "My Strategies" }]);
+  >([{ id: "root", name: rootName }]);
+
+  useEffect(() => {
+    setNavigationPath((previous) => {
+      if (previous[0]?.name === rootName) return previous;
+      return previous.map((part, index) =>
+        index === 0 ? { ...part, name: rootName } : part,
+      );
+    });
+  }, [rootName]);
 
   const treeData = data || [];
   const strategyCount = countStrategies(treeData);
@@ -123,7 +136,7 @@ const MyStrategiesPage = () => {
       >
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
-          <p className="text-muted-foreground font-medium">Loading...</p>
+          <p className="text-muted-foreground font-medium">{t("loading")}</p>
         </div>
       </div>
     );
@@ -141,16 +154,13 @@ const MyStrategiesPage = () => {
           <BackToHomeButton />
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Authentication Required</AlertTitle>
+            <AlertTitle>{t("authRequiredTitle")}</AlertTitle>
             <AlertDescription>
-              <p>
-                You must be logged in to access your strategies. Please sign in
-                to continue.
-              </p>
+              <p>{t("authRequiredDescription")}</p>
             </AlertDescription>
           </Alert>
           <Button asChild className="w-full">
-            <Link href="/login?redirect=%2Fstrategies">Log in</Link>
+            <Link href="/login?redirect=%2Fstrategies">{t("login")}</Link>
           </Button>
         </div>
       </div>
@@ -168,7 +178,7 @@ const MyStrategiesPage = () => {
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
           <p className="text-muted-foreground font-medium">
-            Loading folders...
+            {t("loadingFolders")}
           </p>
         </div>
       </div>
@@ -187,11 +197,10 @@ const MyStrategiesPage = () => {
           <BackToHomeButton />
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Failed to load data</AlertTitle>
+            <AlertTitle>{t("loadFailedTitle")}</AlertTitle>
             <AlertDescription>
               <p>
-                There was an error loading your folders. Please try refreshing
-                the page or try again later. {error?.message}.
+                {t("loadFailedDescription")} {error?.message}
               </p>
             </AlertDescription>
           </Alert>
@@ -228,47 +237,40 @@ const MyStrategiesPage = () => {
           {strategyCleanupGracePeriod && (
             <Alert className="mb-4 border-amber-200 bg-stone-50 text-stone-900 shadow-sm dark:border-amber-900/70 dark:bg-zinc-900 dark:text-zinc-100">
               <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-              <AlertTitle>Cancellation grace period active</AlertTitle>
+              <AlertTitle>{t("cleanupTitle")}</AlertTitle>
               <AlertDescription className="space-y-1 text-stone-700 dark:text-zinc-300">
                 <p>
-                  Your account is now on the free plan. Cleanup runs after your
-                  grace period on{" "}
-                  {strategyCleanupGracePeriod.endsAt.toLocaleDateString(
-                    "en-US",
-                    {
+                  {t("cleanupFreePlan", {
+                    date: format.dateTime(strategyCleanupGracePeriod.endsAt, {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
-                    },
-                  )}
-                  .
+                    }),
+                  })}
                 </p>
                 <p>
-                  {strategyCleanupGracePeriod.daysRemaining} day
-                  {strategyCleanupGracePeriod.daysRemaining === 1
-                    ? ""
-                    : "s"}{" "}
-                  remaining. After grace ends, we keep your{" "}
-                  {FREE_STRATEGY_LIMIT} most recently saved strategies and
-                  remove older ones.
+                  {t("cleanupDaysRemaining", {
+                    count: strategyCleanupGracePeriod.daysRemaining,
+                    limit: FREE_STRATEGY_LIMIT,
+                  })}
                 </p>
                 {keptStrategiesPreview && (
                   <p>
-                    <span className="font-medium">Will be kept:</span>{" "}
+                    <span className="font-medium">{t("willBeKept")}</span>{" "}
                     {keptStrategiesPreview}.
                   </p>
                 )}
                 {deletedStrategies.length > 0 ? (
                   <p>
-                    <span className="font-medium">Will be deleted:</span>{" "}
+                    <span className="font-medium">{t("willBeDeleted")}</span>{" "}
                     {deletedStrategiesPreview}
                     {hiddenDeletedStrategiesCount > 0
-                      ? ` and ${hiddenDeletedStrategiesCount} more`
+                      ? ` ${t("andMore", { count: hiddenDeletedStrategiesCount })}`
                       : ""}
                     .
                   </p>
                 ) : (
-                  <p>No strategies are currently scheduled for deletion.</p>
+                  <p>{t("nothingScheduled")}</p>
                 )}
               </AlertDescription>
             </Alert>

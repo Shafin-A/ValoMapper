@@ -100,8 +100,8 @@ describe("SiteHeader", () => {
 
     const buttons = screen.getAllByRole("button");
 
-    // Should have exactly 4 buttons: left sidebar, help, user dropdown, right sidebar
-    expect(buttons).toHaveLength(4);
+    // Left sidebar, language, help, user dropdown, right sidebar.
+    expect(buttons).toHaveLength(5);
   });
 
   it("should label the icon-only header buttons", () => {
@@ -117,6 +117,9 @@ describe("SiteHeader", () => {
 
     expect(
       screen.getByRole("button", { name: "Toggle left sidebar" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Language" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Open help" }),

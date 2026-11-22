@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { LANDING_MESSAGES } from "@/lib/consts";
 import { ArrowRight, Crosshair, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import React from "react";
 
 interface HeroSectionProps {
@@ -14,6 +14,9 @@ export const HeroSection = ({
   onStartMapping,
   isLoading,
 }: HeroSectionProps) => {
+  const t = useTranslations("landing");
+  const messages = t.raw("messages") as string[];
+
   const handleStartMapping = async () => {
     onStartMapping();
   };
@@ -39,7 +42,7 @@ export const HeroSection = ({
       </div>
 
       <div className="font-mono text-muted-foreground mb-12">
-        {LANDING_MESSAGES.map((message, index) => (
+        {messages.map((message, index) => (
           <React.Fragment key={index}>
             <span className="text-primary">{">"}</span> {message}
             <br />
@@ -59,12 +62,12 @@ export const HeroSection = ({
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Starting...
+                {t("starting")}
               </>
             ) : (
               <>
                 <Crosshair className="w-4 h-4" />
-                Start Mapping
+                {t("startMapping")}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </>
             )}

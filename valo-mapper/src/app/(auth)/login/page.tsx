@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 const LoginPage = () => {
   return (
-    <CenteredPageShell>
+    <CenteredPageShell showLanguageSwitcher>
       <Suspense fallback={<LoginFormSkeleton />}>
         <LoginForm />
       </Suspense>

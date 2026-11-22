@@ -34,8 +34,18 @@ import { ProfileSubscriptionSection } from "./profile-subscription-section";
 import { ProfileStackMembersSection } from "./profile-stack-members-section";
 import { ProfileActionsRow } from "./profile-actions-row";
 import { ProfileDeleteAccountSection } from "./profile-delete-account-section";
+import { ProfileLanguageSection } from "@/components/i18n/profile-language-section";
+import { useFormatter, useTranslations } from "next-intl";
 
 export const ProfileContent = () => {
+  const t = useTranslations("profile");
+  const format = useFormatter();
+  const formatDate = (date: Date) =>
+    format.dateTime(date, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   const { data: user, isLoading, refetch } = useUser();
   const { logout, user: firebaseUser } = useFirebaseAuth();
   const { mutate: updateUser, isPending: isUpdatingUser } = useUpdateUser();
@@ -171,19 +181,8 @@ export const ProfileContent = () => {
 
   const subscriptionStartedText = subscriptionStartedAt
     ? isStackPlan && isActiveStackMember
-      ? `Stack membership started on ${subscriptionStartedAt.toLocaleDateString(
-          "en-US",
-          {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          },
-        )}`
-      : `Subscribed on ${subscriptionStartedAt.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })}`
+      ? `Stack membership started on ${formatDate(subscriptionStartedAt)}`
+      : `Subscribed on ${formatDate(subscriptionStartedAt)}`
     : undefined;
 
   const subscriptionLabel = (() => {
@@ -216,14 +215,7 @@ export const ProfileContent = () => {
     }
 
     if (hasScheduledCancellation && subscriptionEndsAt) {
-      return `${subscriptionLabel} access remains active until ${subscriptionEndsAt.toLocaleDateString(
-        "en-US",
-        {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        },
-      )}.`;
+      return `${subscriptionLabel} access remains active until ${formatDate(subscriptionEndsAt)}.`;
     }
 
     if (hasActivePremiumTrial) {
@@ -236,14 +228,7 @@ export const ProfileContent = () => {
         : `You are covered under ${stackOwnerDisplayName}'s Premium Stack plan.`;
 
       if (hasScheduledPersonalCancellation && personalSubscriptionEndsAt) {
-        return `${stackSummary} Your personal ${personalPlanLabel} subscription is scheduled to cancel on ${personalSubscriptionEndsAt.toLocaleDateString(
-          "en-US",
-          {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          },
-        )}.`;
+        return `${stackSummary} Your personal ${personalPlanLabel} subscription is scheduled to cancel on ${formatDate(personalSubscriptionEndsAt)}.`;
       }
 
       return stackSummary;
@@ -397,10 +382,8 @@ export const ProfileContent = () => {
     <div className="w-full">
       <Card>
         <CardHeader>
-          <CardTitle as="h1">My Profile</CardTitle>
-          <CardDescription>
-            View and manage your account information
-          </CardDescription>
+          <CardTitle as="h1">{t("title")}</CardTitle>
+          <CardDescription>{t("description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -413,6 +396,8 @@ export const ProfileContent = () => {
               onNameChange={handleNameChange}
               onCopyFirebaseUid={handleCopyFirebaseUid}
             />
+
+            <ProfileLanguageSection />
 
             {!isStackPlan && (
               <ProfilePendingStackInvitesAlert
@@ -467,24 +452,16 @@ export const ProfileContent = () => {
 
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div className="space-y-2">
-                <div className="text-xs font-semibold">Member Since</div>
+                <div className="text-xs font-semibold">{t("memberSince")}</div>
                 <div className="text-xs text-muted-foreground">
-                  {new Date(user.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
+                  {formatDate(new Date(user.createdAt))}
                 </div>
               </div>
 
               <div className="space-y-2 text-right">
-                <div className="text-xs font-semibold">Last Updated</div>
+                <div className="text-xs font-semibold">{t("lastUpdated")}</div>
                 <div className="text-xs text-muted-foreground">
-                  {new Date(user.updatedAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
+                  {formatDate(new Date(user.updatedAt))}
                 </div>
               </div>
             </div>

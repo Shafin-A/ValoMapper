@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { LogOut } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ProfileActionsRowProps {
   isEditing: boolean;
@@ -30,13 +31,15 @@ export const ProfileActionsRow = ({
   onCancel,
   onLogout,
 }: ProfileActionsRowProps) => {
+  const t = useTranslations("profile");
+
   return (
     <div className="flex gap-2 pt-4">
       {!isEditing ? (
         <>
           {!isRSOUser && (
             <Button onClick={onStartEdit} className="flex-1">
-              Edit Profile
+              {t("editProfile")}
             </Button>
           )}
           <TooltipProvider>
@@ -46,12 +49,12 @@ export const ProfileActionsRow = ({
                   onClick={onLogout}
                   variant="outline"
                   size="icon"
-                  aria-label="Log out"
+                  aria-label={t("logOut")}
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Log out</TooltipContent>
+              <TooltipContent>{t("logOut")}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </>
@@ -66,14 +69,14 @@ export const ProfileActionsRow = ({
             }
             className="flex-1"
           >
-            {isUpdatingUser ? "Saving..." : "Save"}
+            {isUpdatingUser ? t("saving") : t("save")}
           </Button>
           <Button
             onClick={onCancel}
             variant="outline"
             disabled={isUpdatingUser}
           >
-            Cancel
+            {t("cancel")}
           </Button>
         </>
       )}

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { DiscordIcon } from "@/components/shared/discord-icon";
 import { DISCORD_INVITE_URL } from "@/lib/consts";
+import { useTranslations } from "next-intl";
 
 interface ExternalLink {
   icon: ReactNode;
@@ -24,26 +25,28 @@ interface ExternalLinksProps {
   className?: string;
 }
 
-const defaultLinks: ExternalLink[] = [
-  {
-    icon: <Coffee className="size-6" />,
-    href: "https://ko-fi.com/5h4fin",
-    tooltip: "Support on Ko-fi",
-    ariaLabel: "Support on Ko-fi",
-  },
-  {
-    icon: <DiscordIcon className="size-6" />,
-    href: DISCORD_INVITE_URL,
-    tooltip: "Join the Discord",
-    ariaLabel: "Join the Discord",
-  },
-];
-
 export const ExternalLinks = ({
-  links = defaultLinks,
+  links,
   className = "",
 }: ExternalLinksProps) => {
+  const t = useTranslations("common");
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const defaultLinks: ExternalLink[] = [
+    {
+      icon: <Coffee className="size-6" />,
+      href: "https://ko-fi.com/5h4fin",
+      tooltip: t("supportOnKofi"),
+      ariaLabel: t("supportOnKofi"),
+    },
+    {
+      icon: <DiscordIcon className="size-6" />,
+      href: DISCORD_INVITE_URL,
+      tooltip: t("joinDiscord"),
+      ariaLabel: t("joinDiscord"),
+    },
+  ];
+  const resolvedLinks = links ?? defaultLinks;
 
   return (
     <div
@@ -56,11 +59,13 @@ export const ExternalLinks = ({
         className={`rounded-full shadow-lg transition-transform duration-300 size-12 cursor-pointer ${
           isExpanded ? "translate-y-[-60px]" : ""
         }`}
-        aria-label={isExpanded ? "Hide external links" : "Show external links"}
+        aria-label={
+          isExpanded ? t("hideExternalLinks") : t("showExternalLinks")
+        }
       >
         <Menu className="size-6" />
       </Button>
-      {links.map((link, index) => (
+      {resolvedLinks.map((link, index) => (
         <div
           key={index}
           className={`transition-all duration-300 ${

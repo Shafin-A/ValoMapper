@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const ForgotPasswordPage = () => {
   return (
-    <CenteredPageShell>
+    <CenteredPageShell showLanguageSwitcher>
       <ForgotPasswordForm />
     </CenteredPageShell>
   );

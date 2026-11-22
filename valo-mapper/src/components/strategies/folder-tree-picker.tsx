@@ -18,14 +18,18 @@ import {
 import { Loader2 } from "lucide-react";
 import { StrategyData } from "@/lib/types";
 import { buildLocationPath } from "@/lib/strategy-tree";
+import { useTranslations } from "next-intl";
 import { TreeView } from "./tree-view";
 
-const renderBreadcrumbs = (parts: Array<{ id: string; name: string }>) => {
+const renderBreadcrumbs = (
+  parts: Array<{ id: string; name: string }>,
+  rootLabel: string,
+) => {
   if (parts.length === 0) {
     return (
       <BreadcrumbItem className="h-5 flex items-center">
         <BreadcrumbPage className="text-muted-foreground">
-          My Strategies
+          {rootLabel}
         </BreadcrumbPage>
       </BreadcrumbItem>
     );
@@ -91,17 +95,20 @@ export const FolderTreePicker = ({
   isLoading = false,
   showSameLocationWarning = false,
 }: FolderTreePickerProps) => {
+  const t = useTranslations("strategies");
   const locationPath = buildLocationPath(selectedLocation, flatData);
 
   return (
     <>
       {showSameLocationWarning && (
         <p className="text-xs text-muted-foreground">
-          This strategy is already in the selected location.
+          {t("sameLocationWarning")}
         </p>
       )}
       <Breadcrumb className="mb-4">
-        <BreadcrumbList>{renderBreadcrumbs(locationPath)}</BreadcrumbList>
+        <BreadcrumbList>
+          {renderBreadcrumbs(locationPath, t("rootName"))}
+        </BreadcrumbList>
       </Breadcrumb>
       <ScrollArea className="h-[300px] border rounded-md">
         <Suspense fallback={<FolderTreeLoadingSkeleton />}>

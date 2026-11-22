@@ -1,20 +1,23 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { CenteredPageShell } from "@/components/shared/centered-page-shell";
 import { Button } from "@/components/ui/button";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const t = await getTranslations("errors");
+
   return (
     <CenteredPageShell>
       <div className="rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-          404
+          {t("notFoundLabel")}
         </p>
-        <h1 className="mt-2 text-2xl font-bold">Page not found</h1>
+        <h1 className="mt-2 text-2xl font-bold">{t("notFoundTitle")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you&apos;re looking for doesn&apos;t exist or may have moved.
+          {t("notFoundDescription")}
         </p>
         <Button asChild className="mt-6 w-full">
-          <Link href="/">Go to ValoMapper</Link>
+          <Link href="/">{t("goHome")}</Link>
         </Button>
       </div>
     </CenteredPageShell>

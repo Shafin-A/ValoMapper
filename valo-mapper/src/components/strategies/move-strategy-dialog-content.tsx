@@ -17,6 +17,7 @@ import {
 } from "@/lib/strategy-tree";
 import { FolderTreePicker } from "./folder-tree-picker";
 import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
+import { useTranslations } from "next-intl";
 
 interface MoveStrategyDialogContentProps {
   strategyId: string;
@@ -31,6 +32,7 @@ export const MoveStrategyDialogContent = ({
   currentLocationId,
   setOpen,
 }: MoveStrategyDialogContentProps) => {
+  const t = useTranslations("strategies");
   const [selectedLocation, setSelectedLocation] = useState<string>("root");
 
   const { data, isLoading, isError, refetch } = useFolders();
@@ -81,22 +83,20 @@ export const MoveStrategyDialogContent = ({
     return (
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Move Strategy</DialogTitle>
-          <DialogDescription>
-            Choose a new location for this strategy
-          </DialogDescription>
+          <DialogTitle>{t("moveTitle")}</DialogTitle>
+          <DialogDescription>{t("moveDescription")}</DialogDescription>
         </DialogHeader>
         <div className="py-8 text-center">
           <p className="text-muted-foreground mb-4">
-            Failed to load folders. Please try again.
+            {t("loadFoldersFailed")}
           </p>
           <Button onClick={() => refetch()} variant="outline">
-            Retry
+            {t("retry")}
           </Button>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {t("cancel")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -106,20 +106,20 @@ export const MoveStrategyDialogContent = ({
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
-        <DialogTitle>Move Strategy</DialogTitle>
+        <DialogTitle>{t("moveTitle")}</DialogTitle>
         <DialogDescription>
-          Choose a new location for &quot;{strategyName}&quot;
+          {t("moveDescriptionNamed", { name: strategyName })}
         </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-4 py-4">
         <div className="text-sm text-muted-foreground">
-          Current location:{" "}
+          {t("currentLocation")}{" "}
           <span className="font-medium">{currentLocationLabel}</span>
         </div>
 
         <div className="space-y-2">
-          <div className="text-sm font-medium">New Location</div>
+          <div className="text-sm font-medium">{t("newLocation")}</div>
           <FolderTreePicker
             flatData={flatData}
             selectedLocation={selectedLocation}
@@ -132,13 +132,13 @@ export const MoveStrategyDialogContent = ({
 
       <DialogFooter>
         <Button variant="outline" onClick={() => setOpen(false)}>
-          Cancel
+          {t("cancel")}
         </Button>
         <Button
           onClick={handleMove}
           disabled={isLoading || isPending || isSameLocation}
         >
-          Move Strategy
+          {t("moveStrategy")}
         </Button>
       </DialogFooter>
     </DialogContent>

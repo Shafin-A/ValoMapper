@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ProfileDeleteAccountSectionProps {
   isEditing: boolean;
@@ -21,6 +22,8 @@ export const ProfileDeleteAccountSection = ({
   isEditing,
   onDeleteAccount,
 }: ProfileDeleteAccountSectionProps) => {
+  const t = useTranslations("profile");
+
   if (isEditing) {
     return null;
   }
@@ -31,24 +34,23 @@ export const ProfileDeleteAccountSection = ({
         <AlertDialogTrigger asChild>
           <Button variant="destructive" className="w-full gap-2">
             <Trash2 className="h-4 w-4" />
-            Delete Account
+            {t("deleteAccount")}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove all your data from our servers.
+              {t("deleteConfirmDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDeleteAccount}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/70"
             >
-              Delete
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

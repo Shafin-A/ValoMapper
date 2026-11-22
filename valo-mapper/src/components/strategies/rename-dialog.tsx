@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { capitalize } from "@/lib/format";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 interface RenameDialogProps {
@@ -21,7 +21,17 @@ export const RenameDialog = ({
   onRename,
   type,
 }: RenameDialogProps) => {
+  const t = useTranslations("strategies");
   const [name, setName] = useState(currentName);
+  const title = type === "folder" ? t("renameFolderTitle") : t("renameStrategyTitle");
+  const description =
+    type === "folder"
+      ? t("renameFolderDescription")
+      : t("renameStrategyDescription");
+  const placeholder =
+    type === "folder"
+      ? t("renameFolderPlaceholder")
+      : t("renameStrategyPlaceholder");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -49,19 +59,19 @@ export const RenameDialog = ({
       }}
     >
       <DialogHeader>
-        <DialogTitle>Rename {capitalize(type)}</DialogTitle>
-        <DialogDescription>Enter a new name for this {type}.</DialogDescription>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <form onSubmit={handleSubmit}>
         <Input
           ref={inputRef}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder={`${capitalize(type)} name`}
+          placeholder={placeholder}
         />
         <DialogFooter className="mt-4">
           <Button type="submit" disabled={!name.trim() || name === currentName}>
-            Rename
+            {t("rename")}
           </Button>
         </DialogFooter>
       </form>

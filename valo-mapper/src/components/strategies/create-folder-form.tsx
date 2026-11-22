@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 
 interface CreateFolderFormProps {
   onSubmit: (folderName: string) => void;
@@ -15,6 +16,7 @@ export const CreateFolderForm = ({
   onSubmit,
   isPending,
 }: CreateFolderFormProps) => {
+  const t = useTranslations("strategies");
   const [folderName, setFolderName] = useState("");
 
   return (
@@ -30,9 +32,11 @@ export const CreateFolderForm = ({
       <Card className="border-none shadow-none p-0">
         <CardContent className="p-0 flex flex-col gap-4">
           <div className="space-y-1">
-            <h4 className="leading-none font-medium">Create new folder</h4>
+            <h4 className="leading-none font-medium">
+              {t("createFolderTitle")}
+            </h4>
             <p className="text-sm text-muted-foreground">
-              Add a name to organize your strategies.
+              {t("createFolderDescription")}
             </p>
           </div>
 
@@ -41,13 +45,13 @@ export const CreateFolderForm = ({
               htmlFor="folderName"
               className="text-sm font-medium text-muted-foreground"
             >
-              Folder name
+              {t("folderName")}
             </Label>
             <Input
               id="folderName"
               type="text"
               name="folderName"
-              placeholder="e.g. B Site Rush"
+              placeholder={t("folderNamePlaceholder")}
               value={folderName}
               onChange={(e) => setFolderName(e.target.value)}
               className="h-9 text-sm"
@@ -61,7 +65,7 @@ export const CreateFolderForm = ({
             className="w-full font-medium"
             disabled={!folderName.trim() || isPending}
           >
-            {isPending ? "Creating..." : "Create Folder"}
+            {isPending ? t("creating") : t("createFolder")}
           </Button>
         </CardContent>
       </Card>

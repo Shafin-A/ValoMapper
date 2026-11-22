@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { CenteredPageShell } from "@/components/shared/centered-page-shell";
 import { Button } from "@/components/ui/button";
 
@@ -11,27 +12,29 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errors");
+
   return (
     <CenteredPageShell>
       <div className="rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-destructive">
-          Something went wrong
+          {t("errorLabel")}
         </p>
-        <h1 className="mt-2 text-2xl font-bold">Unexpected error</h1>
+        <h1 className="mt-2 text-2xl font-bold">{t("errorTitle")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Try again, or head back to the home page.
+          {t("errorDescription")}
         </p>
         {error.digest && (
           <p className="mt-2 font-mono text-[11px] text-muted-foreground">
-            Error ID: {error.digest}
+            {t("errorId", { id: error.digest })}
           </p>
         )}
         <div className="mt-6 flex gap-2">
           <Button onClick={() => reset()} className="flex-1">
-            Try again
+            {t("tryAgain")}
           </Button>
           <Button asChild variant="outline">
-            <Link href="/">Home</Link>
+            <Link href="/">{t("home")}</Link>
           </Button>
         </div>
       </div>

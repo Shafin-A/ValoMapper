@@ -10,25 +10,30 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export const ProfileNotAuthenticatedCard = () => {
+  const t = useTranslations("profile");
+
   return (
     <div className="w-full">
       <Card>
         <CardHeader>
-          <CardTitle as="h1">Profile</CardTitle>
-          <CardDescription>Please log in to view your profile</CardDescription>
+          <CardTitle as="h1">{t("notAuthenticatedTitle")}</CardTitle>
+          <CardDescription>
+            {t("notAuthenticatedDescription")}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Not Authenticated</AlertTitle>
+            <AlertTitle>{t("notAuthenticatedAlertTitle")}</AlertTitle>
             <AlertDescription>
-              Please log in to view your profile.
+              {t("notAuthenticatedAlertDescription")}
             </AlertDescription>
           </Alert>
           <Button asChild className="w-full">
-            <Link href="/login?redirect=%2Fprofile">Log in</Link>
+            <Link href="/login?redirect=%2Fprofile">{t("logIn")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -82,18 +87,20 @@ export const ProfileLoadingCard = () => {
 };
 
 export const ProfileUserDataNotFoundCard = () => {
+  const t = useTranslations("profile");
+
   return (
     <div className="w-full">
       <Card>
         <CardHeader>
-          <CardTitle as="h1">Profile</CardTitle>
+          <CardTitle as="h1">{t("notAuthenticatedTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>User Data Not Found</AlertTitle>
+            <AlertTitle>{t("userDataNotFoundTitle")}</AlertTitle>
             <AlertDescription>
-              Could not load your profile information.
+              {t("userDataNotFoundDescription")}
             </AlertDescription>
           </Alert>
         </CardContent>

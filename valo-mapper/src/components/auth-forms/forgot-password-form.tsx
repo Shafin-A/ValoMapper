@@ -20,11 +20,14 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { auth } from "@/lib/firebase";
+import { useTranslations } from "next-intl";
 
 export const ForgotPasswordForm = ({
   className,
   ...props
 }: React.ComponentProps<"div">) => {
+  const t = useTranslations("auth");
+  const tc = useTranslations("common");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -42,12 +45,12 @@ export const ForgotPasswordForm = ({
     } catch (err) {
       if (err instanceof FirebaseError) {
         if (err.code === "auth/too-many-requests") {
-          setError("Too many requests. Please try again later.");
+          setError(t("tooManyRequests"));
         } else {
-          setError("Failed to send reset email. Please try again.");
+          setError(t("resetFailed"));
         }
       } else {
-        setError("An unexpected error occurred.");
+        setError(t("unexpectedError"));
       }
     } finally {
       setLoading(false);
@@ -58,22 +61,19 @@ export const ForgotPasswordForm = ({
     <div className={className} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle as="h1">Reset your password</CardTitle>
-          <CardDescription>
-            Enter your email address and we&apos;ll send you a link to reset
-            your password
-          </CardDescription>
+          <CardTitle as="h1">{t("resetTitle")}</CardTitle>
+          <CardDescription>{t("resetDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
                 <Input
                   id="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="email@example.com"
+                  placeholder={t("emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -82,7 +82,7 @@ export const ForgotPasswordForm = ({
               </Field>
               <Field>
                 <Button type="submit" disabled={loading || success}>
-                  {loading ? "Sending..." : "Send Reset Link"}
+                  {loading ? t("sending") : t("sendResetLink")}
                 </Button>
 
                 {error && (
@@ -91,15 +91,12 @@ export const ForgotPasswordForm = ({
                   </div>
                 )}
                 {success && (
-                  <div className="text-sm text-accent">
-                    Password reset email sent! Check your inbox and follow the
-                    link to reset your password.
-                  </div>
+                  <div className="text-sm text-accent">{t("resetSent")}</div>
                 )}
 
                 <FieldDescription className="text-center">
-                  Remember your password?{" "}
-                  <Link href="/login">Back to login</Link>
+                  {t("rememberPassword")}{" "}
+                  <Link href="/login">{t("backToLogin")}</Link>
                 </FieldDescription>
 
                 <FieldDescription className="mt-2 text-center text-xs text-muted-foreground">
@@ -107,14 +104,14 @@ export const ForgotPasswordForm = ({
                     href="/terms-of-service"
                     className="underline underline-offset-4"
                   >
-                    Terms of Service
+                    {tc("termsOfService")}
                   </Link>{" "}
-                  and{" "}
+                  ·{" "}
                   <Link
                     href="/privacy-policy"
                     className="underline underline-offset-4"
                   >
-                    Privacy Policy
+                    {tc("privacyPolicy")}
                   </Link>
                 </FieldDescription>
               </Field>

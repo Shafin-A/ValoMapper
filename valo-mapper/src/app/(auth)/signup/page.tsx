@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const SignupPage = () => {
   return (
-    <CenteredPageShell>
+    <CenteredPageShell showLanguageSwitcher>
       <SignupForm />
     </CenteredPageShell>
   );

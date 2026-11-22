@@ -1,41 +1,49 @@
 "use client";
 
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/api/use-user";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const WhatsNewButton = () => (
-  <Button
-    variant="ghost"
-    className="px-2 transition-all hover:scale-105 will-change-transform sm:px-4"
-    asChild
-  >
-    <Link href="/whats-new" aria-label="What's New">
-      <Sparkles className="size-4 sm:hidden" aria-hidden />
-      <span className="hidden sm:inline">What&apos;s New</span>
-    </Link>
-  </Button>
-);
+const WhatsNewButton = () => {
+  const t = useTranslations("nav");
+
+  return (
+    <Button
+      variant="ghost"
+      className="px-2 transition-all hover:scale-105 will-change-transform sm:px-4"
+      asChild
+    >
+      <Link href="/whats-new" aria-label={t("whatsNew")}>
+        <Sparkles className="size-4 sm:hidden" aria-hidden />
+        <span className="hidden sm:inline">{t("whatsNew")}</span>
+      </Link>
+    </Button>
+  );
+};
 
 export const HeaderActions = () => {
   const pathname = usePathname();
   const { user, logout } = useFirebaseAuth();
   const { data: userProfile } = useUser();
+  const t = useTranslations("nav");
 
   const isRSOUser = Boolean(userProfile?.rsoSubjectId);
 
   if (!user) {
     return (
-      <div className="absolute top-8 right-8 flex gap-3">
+      <div className="absolute top-8 right-8 flex items-center gap-3">
+        <LanguageSwitcher className="transition-all hover:scale-105 will-change-transform" />
         <Button
           variant="ghost"
           className="transition-all hover:scale-105 will-change-transform"
           asChild
         >
-          <Link href="/replay">Replays</Link>
+          <Link href="/replay">{t("replays")}</Link>
         </Button>
         <WhatsNewButton />
         <Button
@@ -44,7 +52,7 @@ export const HeaderActions = () => {
           asChild
         >
           <Link href={`/login?redirect=${encodeURIComponent(pathname)}`}>
-            Login
+            {t("login")}
           </Link>
         </Button>
       </div>
@@ -52,13 +60,14 @@ export const HeaderActions = () => {
   }
 
   return (
-    <div className="absolute top-8 right-8 flex gap-3">
+    <div className="absolute top-8 right-8 flex items-center gap-3">
+      <LanguageSwitcher className="transition-all hover:scale-105 will-change-transform" />
       <Button
         variant="ghost"
         className="transition-all hover:scale-105 will-change-transform"
         asChild
       >
-        <Link href="/replay">Replays</Link>
+        <Link href="/replay">{t("replays")}</Link>
       </Button>
       <WhatsNewButton />
       <Button
@@ -66,14 +75,14 @@ export const HeaderActions = () => {
         className="transition-all hover:scale-105 will-change-transform"
         asChild
       >
-        <Link href="/strategies">My Strategies</Link>
+        <Link href="/strategies">{t("myStrategies")}</Link>
       </Button>
       <Button
         variant="ghost"
         className="transition-all hover:scale-105 will-change-transform"
         asChild
       >
-        <Link href="/profile">My Profile</Link>
+        <Link href="/profile">{t("myProfile")}</Link>
       </Button>
       {isRSOUser && (
         <Button
@@ -81,7 +90,7 @@ export const HeaderActions = () => {
           className="transition-all hover:scale-105 will-change-transform"
           asChild
         >
-          <Link href="/matches">My Matches</Link>
+          <Link href="/matches">{t("myMatches")}</Link>
         </Button>
       )}
       <Button
@@ -89,7 +98,7 @@ export const HeaderActions = () => {
         onClick={logout}
         className="transition-all hover:scale-105 will-change-transform"
       >
-        Logout
+        {t("logout")}
       </Button>
     </div>
   );

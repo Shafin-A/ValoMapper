@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { exchangeCodeForTokens, sanitizeRedirectPath } from "@/lib/rso";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export const RSOCallbackContent = () => {
+  const t = useTranslations("auth");
   const router = useRouter();
   const searchParams = useSearchParams();
   const { loading } = useFirebaseAuth();
@@ -27,7 +29,7 @@ export const RSOCallbackContent = () => {
       const redirectTo = sanitizeRedirectPath(searchParams.get("redirect"));
 
       if (callbackError) {
-        setErrorMessage("Riot sign-in session expired. Please try again.");
+        setErrorMessage(t("rsoSessionExpired"));
         setStatus("error");
         return;
       }
@@ -51,7 +53,7 @@ export const RSOCallbackContent = () => {
             ({ signInWithCustomToken, getAuth }) =>
               signInWithCustomToken(getAuth(), token),
           );
-          toast.success("Logged in with Riot account!");
+          toast.success(t("rsoSuccessToast"));
           setStatus("success");
 
           setTimeout(() => {
@@ -63,47 +65,45 @@ export const RSOCallbackContent = () => {
       } catch (error) {
         console.error("RSO callback error:", error);
         setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Failed to sign in with Riot account",
+          error instanceof Error ? error.message : t("rsoFailed"),
         );
         setStatus("error");
       }
     };
 
     processCallback();
-  }, [loading, searchParams, router]);
+  }, [loading, searchParams, router, t]);
 
   return (
     <div className="space-y-4 text-center">
       {status === "loading" && (
         <>
-          <h1 className="text-2xl font-bold">Signing you in with Riot...</h1>
-          <p className="text-foreground/75">
-            Please wait while we complete the login.
-          </p>
+          <h1 className="text-2xl font-bold">{t("rsoLoadingTitle")}</h1>
+          <p className="text-foreground/75">{t("rsoLoadingDescription")}</p>
         </>
       )}
 
       {status === "success" && (
         <>
-          <h1 className="text-2xl font-bold text-green-600">Success!</h1>
-          <p className="text-foreground/75">
-            You have been signed in using your Riot account.
-          </p>
-          <p className="text-sm text-foreground/65">Redirecting you now...</p>
+          <h1 className="text-2xl font-bold text-green-600">
+            {t("rsoSuccessTitle")}
+          </h1>
+          <p className="text-foreground/75">{t("rsoSuccessDescription")}</p>
+          <p className="text-sm text-foreground/65">{t("rsoRedirecting")}</p>
         </>
       )}
 
       {status === "error" && (
         <>
-          <h1 className="text-2xl font-bold text-red-600">Error</h1>
+          <h1 className="text-2xl font-bold text-red-600">
+            {t("rsoErrorTitle")}
+          </h1>
           <p className="text-foreground/75">{errorMessage}</p>
           <button
             onClick={() => router.push("/profile")}
             className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
-            Go to Profile
+            {t("goToProfile")}
           </button>
         </>
       )}
@@ -111,16 +111,14 @@ export const RSOCallbackContent = () => {
       {status === "no_code" && (
         <>
           <h1 className="text-2xl font-bold text-yellow-600">
-            No Authorization Code
+            {t("rsoNoCodeTitle")}
           </h1>
-          <p className="text-foreground/75">
-            It looks like the Riot login was cancelled.
-          </p>
+          <p className="text-foreground/75">{t("rsoNoCodeDescription")}</p>
           <button
             onClick={() => router.push("/profile")}
             className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
-            Go to Profile
+            {t("goToProfile")}
           </button>
         </>
       )}
