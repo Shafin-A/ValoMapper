@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -28,11 +29,13 @@ export const LineupFullscreenViewer = ({
   startIndex,
   onClose,
 }: LineupFullscreenViewerProps) => {
+  const t = useTranslations("canvas.lineup");
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogTitle className="sr-only">Fullscreen view</DialogTitle>
+      <DialogTitle className="sr-only">{t("fullscreenView")}</DialogTitle>
       <DialogDescription className="sr-only">
-        View lineup images in fullscreen mode
+        {t("fullscreenDescription")}
       </DialogDescription>
       <DialogContent
         className="max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-[95vw] xl:max-w-[95vw] max-h-[95vh] w-auto h-auto border-0 p-0 bg-transparent rounded-none"
@@ -67,7 +70,7 @@ export const LineupFullscreenViewer = ({
             size="icon"
             className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 rounded-full z-10"
             onClick={onClose}
-            aria-label="Close fullscreen"
+            aria-label={t("closeFullscreen")}
           >
             <X className="size-5" />
           </Button>

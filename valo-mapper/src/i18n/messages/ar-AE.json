@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "تم نسخ الرابط!",
-    "linkCopyFailed": "فشل نسخ الرابط إلى الحافظة"
+    "linkCopyFailed": "فشل نسخ الرابط إلى الحافظة",
+    "loading": "جارٍ تحميل الردهة..."
   },
   "billing": {
     "dialogTitle": "قم بمراجعة الترقية الخاصة بك",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "افتح الرابط في علامة تبويب جديدة.",
       "noDetails": "لا توجد تفاصيل متاحة لهذه التشكيلة.",
       "viewImageFullscreen": "عرض صورة التشكيلة {index} بملء الشاشة",
+      "fullscreenView": "عرض ملء الشاشة",
+      "fullscreenDescription": "عرض صور التشكيلة في وضع ملء الشاشة",
+      "closeFullscreen": "إغلاق ملء الشاشة",
+      "uploadLineupImages": "تحميل صور التشكيلة",
       "description": "إضافة تشكيلة جديدة",
       "agent": "عامل",
       "selectAgent": "حدد وكيلا",

@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Tautan disalin!",
-    "linkCopyFailed": "Gagal menyalin tautan ke papan klip"
+    "linkCopyFailed": "Gagal menyalin tautan ke papan klip",
+    "loading": "Memuat lobi..."
   },
   "billing": {
     "dialogTitle": "Tinjau peningkatan Anda",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "Buka tautan di tab baru.",
       "noDetails": "Tidak ada detail yang tersedia untuk lineup ini.",
       "viewImageFullscreen": "Lihat gambar lineup {index} layar penuh",
+      "fullscreenView": "Tampilan layar penuh",
+      "fullscreenDescription": "Lihat gambar lineup dalam mode layar penuh",
+      "closeFullscreen": "Tutup layar penuh",
+      "uploadLineupImages": "Unggah gambar barisan",
       "description": "Tambahkan Barisan baru",
       "agent": "Agen",
       "selectAgent": "Pilih agen",

@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Link copied!",
-    "linkCopyFailed": "Failed to copy link to clipboard"
+    "linkCopyFailed": "Failed to copy link to clipboard",
+    "loading": "Loading lobby..."
   },
   "billing": {
     "dialogTitle": "Review your upgrade",
@@ -729,6 +730,10 @@
       "openLinkNewTab": "Open link in new tab.",
       "noDetails": "No details available for this lineup.",
       "viewImageFullscreen": "View lineup image {index} fullscreen",
+      "fullscreenView": "Fullscreen view",
+      "fullscreenDescription": "View lineup images in fullscreen mode",
+      "closeFullscreen": "Close fullscreen",
+      "uploadLineupImages": "Upload lineup images",
       "description": "Add a new Lineup",
       "agent": "Agent",
       "selectAgent": "Select an agent",

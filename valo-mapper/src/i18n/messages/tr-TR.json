@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Bağlantı kopyalandı!",
-    "linkCopyFailed": "Bağlantı panoya kopyalanamadı"
+    "linkCopyFailed": "Bağlantı panoya kopyalanamadı",
+    "loading": "Lobi yükleniyor..."
   },
   "billing": {
     "dialogTitle": "Yükseltmenizi gözden geçirin",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "Bağlantıyı yeni sekmede açın.",
       "noDetails": "Bu kadro için ayrıntı mevcut değil.",
       "viewImageFullscreen": "Sıralama resmini {index} tam ekran görüntüle",
+      "fullscreenView": "Tam ekran görünümü",
+      "fullscreenDescription": "Sıralama resimlerini tam ekran modunda görüntüleyin",
+      "closeFullscreen": "Tam ekranı kapat",
+      "uploadLineupImages": "Diziliş resimlerini yükleyin",
       "description": "Yeni bir Diziliş ekle",
       "agent": "Ajan",
       "selectAgent": "Bir temsilci seçin",

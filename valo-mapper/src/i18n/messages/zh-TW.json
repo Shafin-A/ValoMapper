@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "連結已複製！",
-    "linkCopyFailed": "無法將連結複製到剪貼簿"
+    "linkCopyFailed": "無法將連結複製到剪貼簿",
+    "loading": "正在加載大廳..."
   },
   "billing": {
     "dialogTitle": "查看您的升級",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "在新分頁中開啟連結。",
       "noDetails": "沒有關於此陣容的詳細資訊。",
       "viewImageFullscreen": "全螢幕檢視陣容影像 {index}",
+      "fullscreenView": "全螢幕視圖",
+      "fullscreenDescription": "以全螢幕模式檢視陣容影像",
+      "closeFullscreen": "關閉全螢幕",
+      "uploadLineupImages": "上傳陣容圖片",
       "description": "新增陣容",
       "agent": "代理人",
       "selectAgent": "選擇代理",

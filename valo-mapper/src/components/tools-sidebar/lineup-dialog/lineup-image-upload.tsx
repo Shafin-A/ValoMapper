@@ -7,6 +7,7 @@ import {
 } from "@/lib/consts";
 import { Upload, X, Expand, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   Carousel,
@@ -29,6 +30,7 @@ export const LineupImageUpload = ({
   onImageRemove,
   onImageExpand,
 }: LineupImageUploadProps) => {
+  const t = useTranslations("canvas.lineup");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -91,13 +93,13 @@ export const LineupImageUpload = ({
 
   return (
     <div className="space-y-2">
-      <Label>Lineup Images</Label>
+      <Label>{t("lineupImages")}</Label>
       <input
         ref={fileInputRef}
         type="file"
         accept={IMAGE_UPLOAD_ACCEPT_ATTR}
         multiple
-        aria-label="Upload lineup images"
+        aria-label={t("uploadLineupImages")}
         onChange={handleFileChange}
         className="hidden"
       />

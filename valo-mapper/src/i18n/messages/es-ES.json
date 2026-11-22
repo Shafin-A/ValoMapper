@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Enlace copiado!",
-    "linkCopyFailed": "No se pudo copiar el enlace al portapapeles"
+    "linkCopyFailed": "No se pudo copiar el enlace al portapapeles",
+    "loading": "Cargando vestíbulo..."
   },
   "billing": {
     "dialogTitle": "Revisa tu actualización",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "Abrir enlace en nueva pestaña.",
       "noDetails": "No hay detalles disponibles para esta alineación.",
       "viewImageFullscreen": "Ver imagen de alineación {index} en pantalla completa",
+      "fullscreenView": "Vista de pantalla completa",
+      "fullscreenDescription": "Ver imágenes de alineación en modo de pantalla completa",
+      "closeFullscreen": "Cerrar pantalla completa",
+      "uploadLineupImages": "Subir imágenes de alineación",
       "description": "Agregar una nueva alineación",
       "agent": "Agente",
       "selectAgent": "Seleccione un agente",

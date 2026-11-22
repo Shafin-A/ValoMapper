@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Đã sao chép liên kết!",
-    "linkCopyFailed": "Không sao chép được liên kết vào bảng nhớ tạm"
+    "linkCopyFailed": "Không sao chép được liên kết vào bảng nhớ tạm",
+    "loading": "Đang tải tiền sảnh..."
   },
   "billing": {
     "dialogTitle": "Xem lại nâng cấp của bạn",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "Mở liên kết trong tab mới.",
       "noDetails": "Không có thông tin chi tiết có sẵn cho dòng sản phẩm này.",
       "viewImageFullscreen": "Xem hình ảnh đội hình {index} toàn màn hình",
+      "fullscreenView": "Chế độ xem toàn màn hình",
+      "fullscreenDescription": "Xem hình ảnh đội hình ở chế độ toàn màn hình",
+      "closeFullscreen": "Đóng toàn màn hình",
+      "uploadLineupImages": "Tải lên hình ảnh đội hình",
       "description": "Thêm đội hình mới",
       "agent": "Đại lý",
       "selectAgent": "Chọn đại lý",

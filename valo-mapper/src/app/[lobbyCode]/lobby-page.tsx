@@ -357,11 +357,13 @@ const LobbyEditPage = () => {
 };
 
 const LobbyLoadingSkeleton = () => {
+  const t = useTranslations("lobby");
+
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div className="text-center space-y-4">
         <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
-        <p className="text-muted-foreground font-medium">Loading lobby...</p>
+        <p className="text-muted-foreground font-medium">{t("loading")}</p>
       </div>
     </div>
   );

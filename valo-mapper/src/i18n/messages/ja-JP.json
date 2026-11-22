@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "リンクがコピーされました!",
-    "linkCopyFailed": "リンクをクリップボードにコピーできませんでした"
+    "linkCopyFailed": "リンクをクリップボードにコピーできませんでした",
+    "loading": "ロビーを読み込み中..."
   },
   "billing": {
     "dialogTitle": "アップグレードを確認してください",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "リンクを新しいタブで開きます。",
       "noDetails": "このラインナップの詳細は不明です。",
       "viewImageFullscreen": "ラインナップ画像 {index} 全画面表示",
+      "fullscreenView": "全画面表示",
+      "fullscreenDescription": "ラインナップ画像をフルスクリーンモードで表示",
+      "closeFullscreen": "全画面表示を閉じる",
+      "uploadLineupImages": "ラインナップ画像をアップロードする",
       "description": "新しいラインナップを追加",
       "agent": "エージェント",
       "selectAgent": "エージェントを選択してください",

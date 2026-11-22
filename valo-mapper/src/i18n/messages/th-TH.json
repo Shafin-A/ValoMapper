@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "คัดลอกลิงก์แล้ว!",
-    "linkCopyFailed": "คัดลอกลิงก์ไปยังคลิปบอร์ดไม่สำเร็จ"
+    "linkCopyFailed": "คัดลอกลิงก์ไปยังคลิปบอร์ดไม่สำเร็จ",
+    "loading": "กำลังโหลดล็อบบี้..."
   },
   "billing": {
     "dialogTitle": "ตรวจสอบการอัพเกรดของคุณ",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "เปิดลิงก์ในแท็บใหม่",
       "noDetails": "ไม่มีรายละเอียดสำหรับรายการนี้",
       "viewImageFullscreen": "ดูภาพรายการสินค้า {index} แบบเต็มจอ",
+      "fullscreenView": "มุมมองแบบเต็มหน้าจอ",
+      "fullscreenDescription": "ดูภาพรายการในโหมดเต็มหน้าจอ",
+      "closeFullscreen": "ปิดการแสดงเต็มหน้าจอ",
+      "uploadLineupImages": "อัปโหลดรูปภาพรายการต่างๆ",
       "description": "เพิ่มรายการใหม่",
       "agent": "ตัวแทน",
       "selectAgent": "เลือกตัวแทน",

@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Link copiado!",
-    "linkCopyFailed": "Falha ao copiar o link para a área de transferência"
+    "linkCopyFailed": "Falha ao copiar o link para a área de transferência",
+    "loading": "Carregando lobby..."
   },
   "billing": {
     "dialogTitle": "Revise sua atualização",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "Abra o link em uma nova guia.",
       "noDetails": "Não há detalhes disponíveis para esta escalação.",
       "viewImageFullscreen": "Ver imagem da escalação {index} em tela cheia",
+      "fullscreenView": "Visualização em tela cheia",
+      "fullscreenDescription": "Veja imagens da escalação em modo de tela cheia",
+      "closeFullscreen": "Fechar tela cheia",
+      "uploadLineupImages": "Carregar imagens da escalação",
       "description": "Adicionar uma nova escalação",
       "agent": "Agente",
       "selectAgent": "Selecione um agente",

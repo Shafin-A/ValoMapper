@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Link copiato!",
-    "linkCopyFailed": "Impossibile copiare il collegamento negli appunti"
+    "linkCopyFailed": "Impossibile copiare il collegamento negli appunti",
+    "loading": "Caricamento lobby..."
   },
   "billing": {
     "dialogTitle": "Controlla il tuo aggiornamento",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "Apri il collegamento in una nuova scheda.",
       "noDetails": "Nessun dettaglio disponibile per questa formazione.",
       "viewImageFullscreen": "Visualizza l'immagine della formazione {index} a schermo intero",
+      "fullscreenView": "Visualizzazione a schermo intero",
+      "fullscreenDescription": "Visualizza le immagini della formazione in modalità a schermo intero",
+      "closeFullscreen": "Chiudi lo schermo intero",
+      "uploadLineupImages": "Carica le immagini della formazione",
       "description": "Aggiungi una nuova formazione",
       "agent": "Agente",
       "selectAgent": "Seleziona un agente",

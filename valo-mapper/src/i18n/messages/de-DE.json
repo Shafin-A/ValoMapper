@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Link kopiert!",
-    "linkCopyFailed": "Link konnte nicht in die Zwischenablage kopiert werden"
+    "linkCopyFailed": "Link konnte nicht in die Zwischenablage kopiert werden",
+    "loading": "Lobby wird geladen..."
   },
   "billing": {
     "dialogTitle": "Überprüfen Sie Ihr Upgrade",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "Link in neuem Tab öffnen.",
       "noDetails": "Für diese Aufstellung sind keine Details verfügbar.",
       "viewImageFullscreen": "Aufstellungsbild {index} im Vollbildmodus anzeigen",
+      "fullscreenView": "Vollbildansicht",
+      "fullscreenDescription": "Aufstellungsbilder im Vollbildmodus ansehen",
+      "closeFullscreen": "Vollbild schließen",
+      "uploadLineupImages": "Laden Sie Aufstellungsbilder hoch",
       "description": "Fügen Sie eine neue Aufstellung hinzu",
       "agent": "Agent",
       "selectAgent": "Wählen Sie einen Agenten aus",

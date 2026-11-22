@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "链接已复制！",
-    "linkCopyFailed": "无法将链接复制到剪贴板"
+    "linkCopyFailed": "无法将链接复制到剪贴板",
+    "loading": "正在加载大厅..."
   },
   "billing": {
     "dialogTitle": "查看您的升级",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "在新选项卡中打开链接。",
       "noDetails": "没有关于此阵容的详细信息。",
       "viewImageFullscreen": "全屏查看阵容图像 {index}",
+      "fullscreenView": "全屏视图",
+      "fullscreenDescription": "以全屏模式查看阵容图像",
+      "closeFullscreen": "关闭全屏",
+      "uploadLineupImages": "上传阵容图片",
       "description": "添加新阵容",
       "agent": "代理人",
       "selectAgent": "选择代理",

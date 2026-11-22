@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Link skopiowany!",
-    "linkCopyFailed": "Nie udało się skopiować linku do schowka"
+    "linkCopyFailed": "Nie udało się skopiować linku do schowka",
+    "loading": "Ładowanie lobby..."
   },
   "billing": {
     "dialogTitle": "Przejrzyj aktualizację",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "Otwórz link w nowej karcie.",
       "noDetails": "Brak szczegółów dotyczących tego składu.",
       "viewImageFullscreen": "Wyświetl obraz składu {index} na pełnym ekranie",
+      "fullscreenView": "Widok pełnoekranowy",
+      "fullscreenDescription": "Oglądaj obrazy składu w trybie pełnoekranowym",
+      "closeFullscreen": "Zamknij pełny ekran",
+      "uploadLineupImages": "Prześlij obrazy składu",
       "description": "Dodaj nowy skład",
       "agent": "Agent",
       "selectAgent": "Wybierz agenta",

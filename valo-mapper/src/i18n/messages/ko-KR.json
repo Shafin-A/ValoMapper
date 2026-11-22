@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "링크가 복사되었습니다!",
-    "linkCopyFailed": "링크를 클립보드에 복사하지 못했습니다."
+    "linkCopyFailed": "링크를 클립보드에 복사하지 못했습니다.",
+    "loading": "로비 로드 중..."
   },
   "billing": {
     "dialogTitle": "업그레이드 검토",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "새 탭에서 링크를 엽니다.",
       "noDetails": "이 라인업에 대한 세부정보가 없습니다.",
       "viewImageFullscreen": "라인업 이미지 보기 {index} 전체화면",
+      "fullscreenView": "전체 화면 보기",
+      "fullscreenDescription": "전체 화면 모드에서 라인업 이미지 보기",
+      "closeFullscreen": "전체 화면 닫기",
+      "uploadLineupImages": "라인업 이미지 업로드",
       "description": "새로운 라인업 추가",
       "agent": "대리인",
       "selectAgent": "에이전트를 선택하세요",

@@ -152,7 +152,8 @@
   },
   "lobby": {
     "linkCopied": "Lien copié !",
-    "linkCopyFailed": "Échec de la copie du lien dans le presse-papiers"
+    "linkCopyFailed": "Échec de la copie du lien dans le presse-papiers",
+    "loading": "Chargement du hall..."
   },
   "billing": {
     "dialogTitle": "Vérifiez votre mise à niveau",
@@ -728,6 +729,10 @@
       "openLinkNewTab": "Ouvrir le lien dans un nouvel onglet.",
       "noDetails": "Aucun détail disponible pour cette gamme.",
       "viewImageFullscreen": "Voir l'image de la programmation {index} en plein écran",
+      "fullscreenView": "Vue plein écran",
+      "fullscreenDescription": "Afficher les images de la programmation en mode plein écran",
+      "closeFullscreen": "Fermer le mode plein écran",
+      "uploadLineupImages": "Télécharger des images de la programmation",
       "description": "Ajouter une nouvelle programmation",
       "agent": "Agent",
       "selectAgent": "Sélectionnez un mandataire",
