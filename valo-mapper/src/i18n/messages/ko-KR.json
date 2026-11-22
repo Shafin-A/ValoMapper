@@ -15,7 +15,8 @@
     "showExternalLinks": "외부 링크 표시",
     "hideExternalLinks": "외부 링크 숨기기",
     "supportOnKofi": "Ko-fi로 후원하기",
-    "joinDiscord": "Discord 참여하기"
+    "joinDiscord": "Discord 참여하기",
+    "customColor": "사용자 지정 색상"
   },
   "auth": {
     "signInTitle": "계정에 로그인하세요",

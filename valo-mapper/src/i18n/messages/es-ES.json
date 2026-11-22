@@ -15,7 +15,8 @@
     "showExternalLinks": "Mostrar enlaces externos",
     "hideExternalLinks": "Ocultar enlaces externos",
     "supportOnKofi": "Apoyar en Ko-fi",
-    "joinDiscord": "Únete al Discord"
+    "joinDiscord": "Únete al Discord",
+    "customColor": "Color personalizado"
   },
   "auth": {
     "signInTitle": "Inicia sesión en tu cuenta",

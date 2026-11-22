@@ -15,7 +15,8 @@
     "showExternalLinks": "Harici bağlantıları göster",
     "hideExternalLinks": "Harici bağlantıları gizle",
     "supportOnKofi": "Ko-fi'da destek ol",
-    "joinDiscord": "Discord'a katıl"
+    "joinDiscord": "Discord'a katıl",
+    "customColor": "Özel renk"
   },
   "auth": {
     "signInTitle": "Hesabına giriş yap",

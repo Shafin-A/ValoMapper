@@ -15,7 +15,8 @@
     "showExternalLinks": "แสดงลิงก์ภายนอก",
     "hideExternalLinks": "ซ่อนลิงก์ภายนอก",
     "supportOnKofi": "สนับสนุนเราบน Ko-fi",
-    "joinDiscord": "เข้าร่วม Discord"
+    "joinDiscord": "เข้าร่วม Discord",
+    "customColor": "สีที่กำหนดเอง"
   },
   "auth": {
     "signInTitle": "ลงชื่อเข้าใช้บัญชีของคุณ",

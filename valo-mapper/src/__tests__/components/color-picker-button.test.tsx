@@ -66,7 +66,7 @@ describe("ColorPickerButton", () => {
     await user.click(screen.getByRole("button", { name: "Draw color" }));
 
     fireEvent.change(
-      screen.getByLabelText("Draw color custom color"),
+      screen.getByLabelText("Draw color Custom color"),
       { target: { value: "#123456" } },
     );
 
@@ -84,7 +84,7 @@ describe("ColorPickerButton", () => {
     await user.click(trigger);
 
     fireEvent.change(
-      screen.getByLabelText("Draw color custom color"),
+      screen.getByLabelText("Draw color Custom color"),
       { target: { value: "#abcdef" } },
     );
 

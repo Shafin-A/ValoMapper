@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Popover,
@@ -41,6 +42,7 @@ export const ColorPickerButton = ({
   onChange,
   className,
 }: ColorPickerButtonProps) => {
+  const t = useTranslations("common");
   const [open, setOpen] = useState(false);
   const normalizedValue = value.toLowerCase();
 
@@ -81,11 +83,11 @@ export const ColorPickerButton = ({
           })}
         </div>
         <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-          Custom
+          {t("customColor")}
           <input
             type="color"
             value={value}
-            aria-label={`${label} custom color`}
+            aria-label={`${label} ${t("customColor")}`}
             onChange={(event) => onChange(event.target.value)}
             className="h-7 w-10 cursor-pointer rounded border border-zinc-600 bg-transparent p-0"
           />

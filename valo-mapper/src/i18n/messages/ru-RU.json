@@ -15,7 +15,8 @@
     "showExternalLinks": "Показать внешние ссылки",
     "hideExternalLinks": "Скрыть внешние ссылки",
     "supportOnKofi": "Поддержать на Ko-fi",
-    "joinDiscord": "Присоединиться к Discord"
+    "joinDiscord": "Присоединиться к Discord",
+    "customColor": "Свой цвет"
   },
   "auth": {
     "signInTitle": "Вход в аккаунт",

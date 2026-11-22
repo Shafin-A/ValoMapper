@@ -15,7 +15,8 @@
     "showExternalLinks": "Hiển thị liên kết bên ngoài",
     "hideExternalLinks": "Ẩn liên kết bên ngoài",
     "supportOnKofi": "Hỗ trợ trên Ko-fi",
-    "joinDiscord": "Tham gia Discord"
+    "joinDiscord": "Tham gia Discord",
+    "customColor": "Màu tùy chỉnh"
   },
   "auth": {
     "signInTitle": "Đăng nhập vào tài khoản của bạn",

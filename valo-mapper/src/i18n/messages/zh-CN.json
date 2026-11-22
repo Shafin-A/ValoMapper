@@ -15,7 +15,8 @@
     "showExternalLinks": "显示外部链接",
     "hideExternalLinks": "隐藏外部链接",
     "supportOnKofi": "在 Ko-fi 上支持我们",
-    "joinDiscord": "加入 Discord"
+    "joinDiscord": "加入 Discord",
+    "customColor": "自定义颜色"
   },
   "auth": {
     "signInTitle": "登录你的账户",

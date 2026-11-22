@@ -15,7 +15,8 @@
     "showExternalLinks": "外部リンクを表示",
     "hideExternalLinks": "外部リンクを非表示",
     "supportOnKofi": "Ko-fi で支援する",
-    "joinDiscord": "Discord に参加する"
+    "joinDiscord": "Discord に参加する",
+    "customColor": "カスタムカラー"
   },
   "auth": {
     "signInTitle": "アカウントにサインイン",

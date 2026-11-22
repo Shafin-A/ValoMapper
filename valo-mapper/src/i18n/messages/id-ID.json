@@ -15,7 +15,8 @@
     "showExternalLinks": "Tampilkan tautan eksternal",
     "hideExternalLinks": "Sembunyikan tautan eksternal",
     "supportOnKofi": "Dukung di Ko-fi",
-    "joinDiscord": "Gabung Discord"
+    "joinDiscord": "Gabung Discord",
+    "customColor": "Warna kustom"
   },
   "auth": {
     "signInTitle": "Masuk ke akunmu",
