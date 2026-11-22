@@ -309,6 +309,12 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  html[lang="ar"] body {
+    font-family:
+      var(--font-geist-sans), "Noto Sans Arabic", "Segoe UI", Tahoma,
+      sans-serif;
+  }
 }
 
 @media (hover: none), (pointer: coarse) {

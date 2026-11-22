@@ -64,6 +64,7 @@ export const ProfileStackMembersSection = ({
           <div className="flex gap-2">
             <Input
               id="stack-invite-uid"
+              dir="ltr"
               value={inviteFirebaseUid}
               onChange={(event) =>
                 onInviteFirebaseUidChange(event.target.value)

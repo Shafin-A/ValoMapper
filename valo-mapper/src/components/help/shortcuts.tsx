@@ -100,7 +100,7 @@ export const Shortcuts = () => {
                 className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 py-1"
               >
                 <span className="text-sm">{shortcut.description}</span>
-                <KbdGroup className="ml-auto flex-wrap justify-end">
+                <KbdGroup className="ms-auto flex-wrap justify-end">
                   {shortcut.keys.map((combo, comboIdx) => (
                     <Kbd key={comboIdx}>{combo.join(" + ")}</Kbd>
                   ))}

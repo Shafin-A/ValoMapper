@@ -130,6 +130,7 @@ export const LoginForm = ({
                 <Input
                   id="email"
                   type="email"
+                  dir="ltr"
                   autoComplete="email"
                   placeholder="email@example.com"
                   value={email}
@@ -143,7 +144,7 @@ export const LoginForm = ({
                   <FieldLabel htmlFor="password">{t("password")}</FieldLabel>
                   <Link
                     href="/forgotpassword"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                    className="ms-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
                     {t("forgotPassword")}
                   </Link>
@@ -151,6 +152,7 @@ export const LoginForm = ({
                 <Input
                   id="password"
                   type="password"
+                  dir="ltr"
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

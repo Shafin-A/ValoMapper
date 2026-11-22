@@ -24,7 +24,7 @@ export const BackToHomeButton = ({ className }: BackToHomeButtonProps) => {
       asChild
       variant="ghost"
       size="sm"
-      className={cn("-ml-2 text-white/60 hover:text-white", className)}
+      className={cn("-ms-2 text-white/60 hover:text-white", className)}
     >
       <Link
         href="/"
@@ -36,7 +36,7 @@ export const BackToHomeButton = ({ className }: BackToHomeButtonProps) => {
           }
         }}
       >
-        <ArrowLeft />
+        <ArrowLeft className="rtl:rotate-180" />
         {label}
       </Link>
     </Button>

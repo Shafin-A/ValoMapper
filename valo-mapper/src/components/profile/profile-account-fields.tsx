@@ -51,6 +51,7 @@ export const ProfileAccountFields = ({
           <Input
             id="email"
             type="email"
+            dir="ltr"
             value={user.email || ""}
             disabled
             className="bg-muted"
@@ -68,6 +69,7 @@ export const ProfileAccountFields = ({
         <div className="flex items-center gap-2">
           <Input
             id="firebase-uid"
+            dir="ltr"
             value={user.firebaseUid || ""}
             disabled
             className="bg-muted font-mono text-xs"

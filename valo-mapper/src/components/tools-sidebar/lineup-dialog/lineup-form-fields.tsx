@@ -138,6 +138,7 @@ export const LineupFormFields = ({
         <Input
           id="link"
           type="url"
+          dir="ltr"
           placeholder="https://example.com/..."
           value={youtubeLink}
           onChange={(e) => onYoutubeLinkChange(e.target.value)}

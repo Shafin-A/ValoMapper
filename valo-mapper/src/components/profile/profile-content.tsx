@@ -456,7 +456,7 @@ export const ProfileContent = () => {
                 </div>
               </div>
 
-              <div className="space-y-2 text-right">
+              <div className="space-y-2 text-end">
                 <div className="text-xs font-semibold">{t("lastUpdated")}</div>
                 <div className="text-xs text-muted-foreground">
                   {formatDate(new Date(user.updatedAt))}

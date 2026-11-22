@@ -118,7 +118,7 @@ export const PlanComparisonTable = ({
       <div className="text-sm font-medium">{t("plans")}</div>
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full min-w-[640px] table-auto border-collapse text-[11px] sm:min-w-[720px] sm:table-fixed sm:text-sm">
-          <thead className="bg-muted/40 text-left">
+          <thead className="bg-muted/40 text-start">
             <tr>
               <th className="px-2 py-2.5 align-top font-medium sm:w-1/5 sm:px-4 sm:py-3">
                 {t("feature")}

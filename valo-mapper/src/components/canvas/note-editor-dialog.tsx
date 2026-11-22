@@ -104,7 +104,7 @@ const NoteEditorContent = ({
             onChange={(event) => setValue(event.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <p className="text-right text-xs text-muted-foreground">
+          <p className="text-end text-xs text-muted-foreground">
             {value.length}/{NOTE_MAX_LENGTH}
           </p>
         </div>
@@ -112,7 +112,7 @@ const NoteEditorContent = ({
         <DialogFooter className="flex-wrap gap-2">
           <Button
             variant="destructiveGhost"
-            className="mr-auto"
+            className="me-auto"
             onClick={handleRemove}
             disabled={!hasExistingNote}
           >

@@ -84,7 +84,7 @@ export const MobileOnboarding = ({ ready }: { ready: boolean }) => {
         side="bottom"
         className="max-h-[85dvh] gap-0 overflow-y-auto rounded-t-xl pb-[env(safe-area-inset-bottom)]"
       >
-        <SheetHeader className="border-b px-4 pb-3 pr-10 text-left">
+        <SheetHeader className="border-b px-4 pb-3 pr-10 text-start">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             {t("quickStart")}
           </p>

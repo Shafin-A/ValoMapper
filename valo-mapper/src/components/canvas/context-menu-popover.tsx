@@ -436,7 +436,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
           side="bottom"
           className="max-h-[80dvh] gap-0 rounded-t-xl pb-[env(safe-area-inset-bottom)]"
         >
-          <SheetHeader className="border-b px-4 pb-3 text-left">
+          <SheetHeader className="border-b px-4 pb-3 text-start">
             <SheetTitle>{selectionLabel}</SheetTitle>
             <SheetDescription>{t("chooseAction")}</SheetDescription>
           </SheetHeader>
@@ -483,7 +483,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
         align="start"
         onContextMenu={(event) => event.preventDefault()}
       >
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center gap-1">
           <ConditionalTooltip
             enabled={allowTooltips}
             content={

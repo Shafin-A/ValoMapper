@@ -25,8 +25,8 @@ export const DEFAULT_LOCALE: Locale = "en-US";
 
 export const LOCALE_COOKIE = "vm_locale";
 
-// Arabic is deferred until the layout has an RTL pass.
-export const DEFERRED_LOCALES: readonly Locale[] = ["ar-AE"];
+// Arabic is enabled with a best-effort RTL pass.
+export const DEFERRED_LOCALES: readonly Locale[] = [];
 
 export const LAUNCH_LOCALES: readonly Locale[] = LOCALES.filter(
   (locale) => !DEFERRED_LOCALES.includes(locale),

@@ -153,9 +153,12 @@ export const ReplayFileDropzone = ({
         </div>
 
         <div className="flex w-full max-w-md flex-col gap-2">
-          <div className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950/60 p-1.5 pl-2.5 text-[11px] text-white/60">
+          <div className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950/60 p-1.5 ps-2.5 text-[11px] text-white/60">
             <FileVideo className="size-3.5 shrink-0 text-primary" />
-            <code className="min-w-0 flex-1 break-all text-left font-mono text-white/70">
+            <code
+              dir="ltr"
+              className="min-w-0 flex-1 break-all text-left font-mono text-white/70"
+            >
               {REPLAY_FOLDER}
             </code>
             <Button
@@ -204,7 +207,7 @@ export const ReplayFileDropzone = ({
           </button>
 
           {isHelpOpen && (
-            <div className="mt-3 space-y-2 rounded-md border border-slate-800 bg-slate-950/60 p-3 text-left text-xs leading-relaxed text-white/60">
+            <div className="mt-3 space-y-2 rounded-md border border-slate-800 bg-slate-950/60 p-3 text-start text-xs leading-relaxed text-white/60">
               <p>
                 {t("helpCopyPrefix")}{" "}
                 <span className="font-medium text-white/80">{t("copy")}</span>{" "}

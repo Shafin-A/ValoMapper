@@ -112,7 +112,7 @@ export const UserAvatars = () => {
 
   return (
     <TooltipProvider>
-      <div className="flex items-center -space-x-2">
+      <div className="flex items-center -space-x-2 rtl:space-x-reverse">
         {visibleUsers.map((user) => (
           <Tooltip key={user.id}>
             <TooltipTrigger asChild>

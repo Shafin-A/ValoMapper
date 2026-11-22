@@ -469,7 +469,7 @@ export const ToolsSidebar = ({
                       disabled={!hasPreviousReviewRound}
                       aria-label={t("selectPreviousRound")}
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
                     </Button>
 
                     <Sheet
@@ -492,7 +492,7 @@ export const ToolsSidebar = ({
                         side="left"
                         className="gap-0 border-slate-800 bg-slate-950 px-0 text-white w-[min(420px,calc(100vw-1rem))] max-w-[420px] sm:max-w-[420px]"
                       >
-                        <SheetHeader className="border-b border-slate-800 px-5 py-4 text-left">
+                        <SheetHeader className="border-b border-slate-800 px-5 py-4 text-start">
                           <div className="pr-8">
                             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/70">
                               {t("matchReview")}
@@ -551,7 +551,7 @@ export const ToolsSidebar = ({
                       disabled={!hasNextReviewRound}
                       aria-label={t("selectNextRound")}
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                     </Button>
                   </div>
                 </div>

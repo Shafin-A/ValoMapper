@@ -37,7 +37,7 @@ export const MatchCard = forwardRef<HTMLButtonElement, MatchCardProps>(
       <button
         ref={ref}
         type="button"
-        className={`relative isolate mb-1.5 block h-[108px] w-full cursor-pointer overflow-hidden text-left outline-none ${MATCH_PAGE_CLASSES.cardBackground} backdrop-blur-[1px] transition-transform focus-visible:ring-2 focus-visible:ring-[#42EEC7]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 sm:h-28 ${className ?? ""}`}
+        className={`relative isolate mb-1.5 block h-[108px] w-full cursor-pointer overflow-hidden text-start outline-none ${MATCH_PAGE_CLASSES.cardBackground} backdrop-blur-[1px] transition-transform focus-visible:ring-2 focus-visible:ring-[#42EEC7]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 sm:h-28 ${className ?? ""}`}
         {...props}
       >
         <div

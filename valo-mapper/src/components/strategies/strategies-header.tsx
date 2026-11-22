@@ -101,7 +101,7 @@ export const StrategiesHeader = ({
             {navigationPath[navigationPath.length - 1].name}
           </h1>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ms-auto flex items-center gap-2">
           <LanguageSwitcher />
           <CreateFolderPopover
             parentFolderId={currentFolderId}

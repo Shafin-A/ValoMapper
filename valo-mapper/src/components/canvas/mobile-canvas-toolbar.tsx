@@ -152,7 +152,7 @@ export const MobileCanvasToolbar = ({
           side="bottom"
           className="max-h-[80dvh] gap-0 rounded-t-xl pb-[env(safe-area-inset-bottom)]"
         >
-          <SheetHeader className="border-b px-4 pb-3 text-left">
+          <SheetHeader className="border-b px-4 pb-3 text-start">
             <SheetTitle>{t("deleteTitle")}</SheetTitle>
             <SheetDescription>{t("deleteDescription")}</SheetDescription>
           </SheetHeader>

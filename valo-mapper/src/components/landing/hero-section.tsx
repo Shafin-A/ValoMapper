@@ -68,7 +68,7 @@ export const HeroSection = ({
               <>
                 <Crosshair className="w-4 h-4" />
                 {t("startMapping")}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
               </>
             )}
           </span>

@@ -113,6 +113,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
               <Input
                 id="email"
                 type="email"
+                dir="ltr"
                 autoComplete="email"
                 placeholder={t("emailPlaceholder")}
                 value={email}
@@ -127,6 +128,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
               <Input
                 id="password"
                 type="password"
+                dir="ltr"
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -142,6 +144,7 @@ export const SignupForm = ({ ...props }: React.ComponentProps<typeof Card>) => {
               <Input
                 id="confirm-password"
                 type="password"
+                dir="ltr"
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

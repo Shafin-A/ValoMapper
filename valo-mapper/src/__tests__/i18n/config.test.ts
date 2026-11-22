@@ -14,10 +14,10 @@ describe("i18n config", () => {
     expect(new Set(LOCALES).size).toBe(LOCALES.length);
   });
 
-  it("defers Arabic but keeps it configured", () => {
+  it("includes Arabic in the launch set", () => {
     expect(LOCALES).toContain("ar-AE");
-    expect(LAUNCH_LOCALES).not.toContain("ar-AE");
-    expect(LAUNCH_LOCALES).toHaveLength(17);
+    expect(LAUNCH_LOCALES).toContain("ar-AE");
+    expect(LAUNCH_LOCALES).toHaveLength(18);
   });
 
   it("has metadata for every locale", () => {
@@ -56,9 +56,10 @@ describe("i18n config", () => {
     expect(negotiateLocale("de-DE;q=0.4,ja-JP;q=0.9")).toBe("ja-JP");
   });
 
-  it("falls back to English for deferred Arabic in the launch set", () => {
-    expect(negotiateLocale("ar-AE")).toBe("en-US");
-    expect(negotiateLocale("ar-AE", LOCALES)).toBe("ar-AE");
+  it("negotiates Arabic and falls back across regions", () => {
+    expect(negotiateLocale("ar-AE")).toBe("ar-AE");
+    expect(negotiateLocale("ar-EG")).toBe("ar-AE");
+    expect(negotiateLocale("ar")).toBe("ar-AE");
   });
 
   it("falls back to the default locale", () => {

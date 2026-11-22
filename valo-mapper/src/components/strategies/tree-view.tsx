@@ -59,15 +59,15 @@ export const TreeView: React.FC<TreeViewProps> = ({
             key={item.getKey()}
             {...item.getProps()}
             style={{
-              paddingLeft: `${item.getItemMeta().level * 20}px`,
+              paddingInlineStart: `${item.getItemMeta().level * 20}px`,
             }}
             className={`
-              w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-accent transition-colors
-              ${item.isSelected() ? "bg-accent border-l-2 border-primary" : ""}
+              w-full text-start px-3 py-2 flex items-center gap-2 hover:bg-accent transition-colors
+              ${item.isSelected() ? "bg-accent border-s-2 border-primary" : ""}
               ${item.isFocused() ? "ring-1 ring-ring" : ""}
             `}
           >
-            <span className="text-base ml-2">
+            <span className="text-base ms-2">
               {item.isExpanded() || item.getChildren().length === 0 ? (
                 <FolderOpen />
               ) : (

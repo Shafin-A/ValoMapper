@@ -127,7 +127,7 @@ export const DrawSettings = () => {
                     updateDrawSettings({ shape: "freehand" });
                   }
                 }}
-                className="rounded-r-none border-r"
+                className="rounded-e-none border-e"
               >
                 <LineSquiggle />
               </Toggle>
@@ -183,7 +183,7 @@ export const DrawSettings = () => {
                     updateDrawSettings({ shape: "circle" });
                   }
                 }}
-                className="rounded-l-none"
+                className="rounded-s-none"
               >
                 <Circle />
               </Toggle>
@@ -208,7 +208,7 @@ export const DrawSettings = () => {
                       updateDrawSettings({ isDashed: false });
                     }
                   }}
-                  className="rounded-r-none border-r"
+                  className="rounded-e-none border-e"
                 >
                   <Minus className="rotate-135" />
                 </Toggle>
@@ -226,7 +226,7 @@ export const DrawSettings = () => {
                       updateDrawSettings({ isDashed: true });
                     }
                   }}
-                  className="rounded-l-none"
+                  className="rounded-s-none"
                 >
                   <MoreHorizontal className="rotate-135" />
                 </Toggle>
@@ -289,9 +289,9 @@ export const DrawSettings = () => {
                       }}
                       className={cn(
                         "w-10 px-0",
-                        isFirst && "rounded-r-none border-r",
+                        isFirst && "rounded-e-none border-e",
                         !isFirst && !isLast && "rounded-none border-x",
-                        isLast && "rounded-l-none",
+                        isLast && "rounded-s-none",
                       )}
                     >
                       <TraversalWeaponIcon weapon={option.value} {...option} />

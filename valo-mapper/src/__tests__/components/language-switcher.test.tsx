@@ -10,7 +10,7 @@ jest.mock("@/i18n/actions", () => ({
 }));
 
 describe("LanguageSwitcher", () => {
-  it("lists every launch locale and hides deferred Arabic", async () => {
+  it("lists every launch locale", async () => {
     const user = userEvent.setup();
     render(<LanguageSwitcher />);
 
@@ -18,7 +18,7 @@ describe("LanguageSwitcher", () => {
 
     expect(await screen.findByText("Deutsch")).toBeInTheDocument();
     expect(screen.getByText("日本語")).toBeInTheDocument();
-    expect(screen.queryByText("العربية")).not.toBeInTheDocument();
+    expect(screen.getByText("العربية")).toBeInTheDocument();
 
     // Radix renders each radio item; the menu label is also present.
     expect(screen.getAllByRole("menuitemradio")).toHaveLength(
