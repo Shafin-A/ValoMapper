@@ -1,47 +1,31 @@
 import type { Locale } from "../config";
-import arAE from "./ar-AE.json";
-import deDE from "./de-DE.json";
 import enUS from "./en-US.json";
-import esES from "./es-ES.json";
-import esMX from "./es-MX.json";
-import frFR from "./fr-FR.json";
-import idID from "./id-ID.json";
-import itIT from "./it-IT.json";
-import jaJP from "./ja-JP.json";
-import koKR from "./ko-KR.json";
-import plPL from "./pl-PL.json";
-import ptBR from "./pt-BR.json";
-import ruRU from "./ru-RU.json";
-import thTH from "./th-TH.json";
-import trTR from "./tr-TR.json";
-import viVN from "./vi-VN.json";
-import zhCN from "./zh-CN.json";
-import zhTW from "./zh-TW.json";
 
 export type Messages = typeof enUS;
 
 type MessagesLoader = () => Promise<{ default: Record<string, unknown> }>;
 
-// Locales without a message file fall back to English during rollout.
+// Keep en-US static as the fallback/base catalog. Other locales are loaded
+// on demand so a request only pulls in the active locale's message chunk.
 const MESSAGE_LOADERS: Partial<Record<Locale, MessagesLoader>> = {
-  "ar-AE": async () => ({ default: arAE }),
-  "de-DE": async () => ({ default: deDE }),
+  "ar-AE": () => import("./ar-AE.json"),
+  "de-DE": () => import("./de-DE.json"),
   "en-US": async () => ({ default: enUS }),
-  "es-ES": async () => ({ default: esES }),
-  "es-MX": async () => ({ default: esMX }),
-  "fr-FR": async () => ({ default: frFR }),
-  "id-ID": async () => ({ default: idID }),
-  "it-IT": async () => ({ default: itIT }),
-  "ja-JP": async () => ({ default: jaJP }),
-  "ko-KR": async () => ({ default: koKR }),
-  "pl-PL": async () => ({ default: plPL }),
-  "pt-BR": async () => ({ default: ptBR }),
-  "ru-RU": async () => ({ default: ruRU }),
-  "th-TH": async () => ({ default: thTH }),
-  "tr-TR": async () => ({ default: trTR }),
-  "vi-VN": async () => ({ default: viVN }),
-  "zh-CN": async () => ({ default: zhCN }),
-  "zh-TW": async () => ({ default: zhTW }),
+  "es-ES": () => import("./es-ES.json"),
+  "es-MX": () => import("./es-MX.json"),
+  "fr-FR": () => import("./fr-FR.json"),
+  "id-ID": () => import("./id-ID.json"),
+  "it-IT": () => import("./it-IT.json"),
+  "ja-JP": () => import("./ja-JP.json"),
+  "ko-KR": () => import("./ko-KR.json"),
+  "pl-PL": () => import("./pl-PL.json"),
+  "pt-BR": () => import("./pt-BR.json"),
+  "ru-RU": () => import("./ru-RU.json"),
+  "th-TH": () => import("./th-TH.json"),
+  "tr-TR": () => import("./tr-TR.json"),
+  "vi-VN": () => import("./vi-VN.json"),
+  "zh-CN": () => import("./zh-CN.json"),
+  "zh-TW": () => import("./zh-TW.json"),
 };
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
