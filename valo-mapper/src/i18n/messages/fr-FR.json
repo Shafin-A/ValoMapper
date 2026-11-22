@@ -213,11 +213,11 @@
     "done": "Fait",
     "next": "Suivant",
     "placeTitle": "Placer des éléments",
-    "placeDescription": "Appuyez sur un agent, une capacité ou une icône dans la barre latérale, puis appuyez sur la carte pour le placer. Vous pouvez également le faire glisser sur la carte.",
+    "placeDescription": "Appuyez sur un agent, une compétence ou une icône dans la barre latérale, puis appuyez sur la carte pour le placer. Vous pouvez également le faire glisser sur la carte.",
     "zoomTitle": "Zoom et panoramique",
     "zoomDescription": "Pincez avec deux doigts pour zoomer et faites glisser la carte pour effectuer un panoramique. Utilisez les commandes flottantes +/-/Ajuster pour des modifications précises.",
     "actionsTitle": "Actions sur les éléments",
-    "actionsDescription": "Appuyez longuement sur un élément de la carte pour le dupliquer, changer d'équipe, permuter des capacités ou le supprimer. Vous pouvez également le faire glisser vers la zone de corbeille.",
+    "actionsDescription": "Appuyez longuement sur un élément de la carte pour le dupliquer, changer d'équipe, permuter des compétences ou le supprimer. Vous pouvez également le faire glisser vers la zone de corbeille.",
     "toolbarTitle": "Barre d'outils rapide",
     "toolbarDescription": "Utilisez la barre inférieure pour annuler/rétablir, dessiner, effacer, supprimer et recentrer. Les boutons à chaque extrémité ouvrent les barres latérales des outils et des agents.",
     "textTitle": "Modifier le texte",
@@ -227,7 +227,7 @@
     "welcomeTitle": "Bienvenue sur ValoMapper !",
     "welcomeDescription": "Il s'agit de votre canevas stratégique où vous pouvez créer des plans tactiques pour VALORANT.",
     "agentTitle": "Sélectionnez un agent",
-    "agentDescription": "Cliquez sur Brimstone pour le sélectionner et voir ses capacités. Vous pouvez ensuite cliquer sur le canevas pour le placer ou le faire glisser directement sur le canevas à l'étape suivante.",
+    "agentDescription": "Cliquez sur Brimstone pour le sélectionner et voir ses compétences. Vous pouvez ensuite cliquer sur le canevas pour le placer ou le faire glisser directement sur le canevas à l'étape suivante.",
     "placeTitle": "Placer l'agent sur le canevas",
     "placeDescription": "Placez maintenant Brimstone en cliquant sur le canevas ou en le faisant glisser depuis la barre latérale et en le relâchant sur la carte. Vous pouvez faire glisser les agents pour les repositionner après leur placement.\n\nSupprimez un agent en le faisant glisser vers la corbeille ou appuyez sur E tout en le survolant.\n\nLorsque vous êtes prêt, cliquez sur Suivant pour continuer.",
     "mapTitle": "Sélection de carte",
@@ -235,13 +235,13 @@
     "rotationTitle": "Rotation de la carte",
     "rotationDescription": "Cliquez sur ce bouton pour faire pivoter le côté de la carte et choisir entre l'attaque et la défense.",
     "phasesTitle": "Étapes",
-    "phasesDescription": "Construisez votre stratégie étape par étape en utilisant des phases. Chaque phase peut avoir les mêmes agents et capacités placés à différents endroits pour représenter différentes étapes de votre stratégie.\n\nUtilisez les raccourcis clavier A et D pour naviguer rapidement entre les phases.",
+    "phasesDescription": "Construisez votre stratégie étape par étape en utilisant des phases. Chaque phase peut avoir les mêmes agents et compétences placés à différents endroits pour représenter différentes étapes de votre stratégie.\n\nUtilisez les raccourcis clavier A et D pour naviguer rapidement entre les phases.",
     "toolsTitle": "Outils",
     "toolsDescription": "Utilisez ces outils pour tracer des lignes, ajouter du texte, des formes et bien plus encore à votre stratégie selon vos besoins.\n\nN'hésitez pas à expérimenter après cette visite !",
     "saveTitle": "Enregistrez votre stratégie",
     "saveDescription": "Enregistrez vos stratégies pour pouvoir y revenir à tout moment. Gardez tout organisé avec des dossiers.\n\nLa création d'un compte est nécessaire pour enregistrer les stratégies.",
     "iconsTitle": "Icônes",
-    "iconsDescription": "Ajoutez des icônes telles que le Spike ou des armes.\n\nFaites glisser les icônes de la barre latérale et déposez-les sur la carte comme des agents et des capacités.\n\nVous pouvez également cliquer sur l'icône et elle sera placée sur la carte."
+    "iconsDescription": "Ajoutez des icônes telles que le Spike ou des armes.\n\nFaites glisser les icônes de la barre latérale et déposez-les sur la carte comme des agents et des compétences.\n\nVous pouvez également cliquer sur l'icône et elle sera placée sur la carte."
   },
   "matchDetails": {
     "loading": "Chargement du résumé du match...",
@@ -318,7 +318,7 @@
     "settings": {
       "label": "Paramètres du Replay",
       "hideAgentVision": "Masquer la vision des agents",
-      "hideAbilities": "Masquer les capacités",
+      "hideAbilities": "Masquer les compétences",
       "hideAgentWeapons": "Cacher les armes des agents",
       "hideWeaponHits": "Masquer les coups d'arme",
       "hideDeadAgents": "Cacher les agents morts",
@@ -424,7 +424,7 @@
     },
     "replay": {
       "title": "Regardez chaque manche se dérouler sur la carte",
-      "description": "Téléversez un fichier Replay et voyez la manche se dérouler avec le tableau des scores, la chronologie et les capacités synchronisés.",
+      "description": "Téléversez un fichier Replay et voyez la manche se dérouler avec le tableau des scores, la chronologie et les compétences synchronisés.",
       "bullets": [
         "Téléversez un fichier Replay et regardez le match se dérouler directement sur la carte.",
         "Chargez un Replay de démonstration pour l'essayer sans fichier.",
@@ -432,13 +432,13 @@
       ],
       "openPlayer": "Ouvrir le lecteur de Replay",
       "imageAlt": "Replay complet avec la carte, la chronologie de la manche et le tableau des scores des joueurs",
-      "imageLabel": "Carte, chronologie, tableau des scores et capacités"
+      "imageLabel": "Carte, chronologie, tableau des scores et compétences"
     },
     "notes": {
       "title": "Ajoutez du contexte à tout ce qui se trouve sur le tableau",
       "description": "Laissez le callout, le timing ou le rappel directement sur l'élément auquel il appartient. Tout le monde dans le lobby peut le voir.",
       "bullets": [
-        "Ajoutez une note à n’importe quel agent, capacité, icône, texte ou image pour expliquer le plan ou la légende.",
+        "Ajoutez une note à n’importe quel agent, compétence, icône, texte ou image pour expliquer le plan ou la légende.",
         "Un petit badge à bulle marque les éléments comportant une note.",
         "Passez la souris sur un élément pour prévisualiser sa note sans rien ouvrir.",
         "Cliquez sur le badge, utilisez le menu contextuel ou appuyez longuement, ou appuyez sur N pour ajouter ou modifier une note."
@@ -455,7 +455,7 @@
         "Faites glisser une zone de sélection en maintenant le clic droit pour saisir plusieurs éléments du tableau en même temps.",
         "Rassemblez tout le groupe.",
         "Dupliquez le groupe en une seule action.",
-        "Fonctionne avec des agents, des capacités, des icônes d'outils, du texte et des images."
+        "Fonctionne avec des agents, des compétences, des icônes d'outils, du texte et des images."
       ],
       "image1Alt": "Zone de sélection au clic droit déplacée autour des éléments du tableau",
       "image1Label": "Faites glisser pour sélectionner",
@@ -473,7 +473,7 @@
       ],
       "backgroundsTitle": "Arrière-plans du tableau",
       "backgroundsDescription": "Choisissez un fond uni, à pois ou en grille pour chaque tableau. Votre choix d’arrière-plan est mémorisé pour ce tableau.",
-      "imageAlt": "Tableau de stratégie avec texte enrichi, agents, capacités et notes",
+      "imageAlt": "Tableau de stratégie avec texte enrichi, agents, compétences et notes",
       "imageLabel": "Texte enrichi, notes et phases en un seul endroit",
       "gridAlt": "Panneau des paramètres de la carte avec l'arrière-plan du tableau défini sur Grille",
       "gridLabel": "Grille sélectionnée",
@@ -754,17 +754,17 @@
     "contextMenu": {
       "itemTypes": {
         "agent": "Agent",
-        "ability": "Capacité",
+        "ability": "Compétence",
         "image": "Image",
         "icon": "Icône",
         "text": "Texte"
       },
       "items": {
-        "agent": "agent",
-        "ability": "capacité",
-        "image": "image",
-        "icon": "icône",
-        "text": "texte"
+        "agent": "l'agent",
+        "ability": "la compétence",
+        "image": "l'image",
+        "icon": "l'icône",
+        "text": "le texte"
       },
       "chooseAction": "Choisissez une action",
       "itemsCount": "{count} éléments",
@@ -782,12 +782,12 @@
       "killAgents": "Tuer les agents",
       "reviveAgent": "Réanimer l'agent",
       "killAgent": "Tuer l'agent",
-      "swapAbilities": "Permuter les capacités",
-      "swapAbility": "Permuter la capacité",
-      "showAbilityShapes": "Afficher les formes de capacités",
-      "hideAbilityShapes": "Masquer les formes de capacités",
-      "showAbilityRange": "Afficher la plage de capacités",
-      "hideAbilityRange": "Masquer la plage de capacités",
+      "swapAbilities": "Permuter les compétences",
+      "swapAbility": "Permuter la compétence",
+      "showAbilityShapes": "Afficher les formes de compétences",
+      "hideAbilityShapes": "Masquer les formes de compétences",
+      "showAbilityRange": "Afficher la plage de compétences",
+      "hideAbilityRange": "Masquer la plage de compétences",
       "removeVisionCones": "Supprimer les cônes de vision",
       "removeVisionCone": "Supprimer le cône de vision",
       "detachVisionCones": "Détacher les cônes de vision",
@@ -842,8 +842,8 @@
       "description": "Ajouter un nouveau lineup",
       "agent": "Agent",
       "selectAgent": "Sélectionnez un agent",
-      "ability": "Capacité",
-      "selectAbility": "Sélectionnez une capacité",
+      "ability": "Compétence",
+      "selectAbility": "Sélectionnez une compétence",
       "link": "Lien",
       "notes": "Remarques",
       "notesPlaceholder": "Ajoutez des notes sur ce lineup…",
@@ -926,7 +926,7 @@
     "emptyByRole": "Aucun agent {role} sur la carte",
     "addToMap": "Ajoutez des agents à la carte pour les voir ici",
     "addRoleToMap": "Ajoutez les agents {role} à la carte pour les voir ici",
-    "abilities": "Capacités",
+    "abilities": "Compétences",
     "swapTo": "Passer à {ability}",
     "switchTo": "Passer à {ability}",
     "settings": {
@@ -939,7 +939,14 @@
       "enemyColor": "Couleur de l'ennemi",
       "allyColorLabel": "Couleur alliée",
       "enemyColorLabel": "Couleur ennemie"
-    }
+    },
+    "ally": "Allié",
+    "enemy": "Ennemi",
+    "sidebarHelpLabel": "Aide de la barre latérale des agents",
+    "sidebarHelpMobile": "Appuyez sur un agent ou une compétence pour le sélectionner, puis appuyez sur la carte pour le placer. Faites-le glisser vers la corbeille pour le supprimer. Pincez pour zoomer et faites glisser la carte pour la déplacer.",
+    "sidebarHelpDesktop": "Choisissez un agent ou une compétence, puis cliquez sur la carte pour le placer, ou faites-le glisser directement sur la carte. Appuyez sur E en survolant un élément sur la carte pour le supprimer.",
+    "agentsSettings": "Paramètres des agents",
+    "abilitiesSettings": "Paramètres des compétences"
   },
   "tools": {
     "maps": "Cartes",
@@ -964,9 +971,9 @@
     "browseRounds": "Parcourez les manches et passez en revue les événements.",
     "phases": "Étapes",
     "aboutPhases": "À propos des phases",
-    "phaseTapHelp": "Appuyez sur un numéro de phase pour changer de phase. Construisez votre stratégie étape par étape en plaçant les agents et les capacités à différentes phases.",
+    "phaseTapHelp": "Appuyez sur un numéro de phase pour changer de phase. Construisez votre stratégie étape par étape en plaçant les agents et les compétences à différentes phases.",
     "phaseKeysHelp": "Appuyez sur A et D pour basculer entre les phases.",
-    "phaseDetailHelp": "Utilisez les phases pour élaborer et détailler votre stratégie étape par étape en plaçant les agents et les capacités à différentes phases.",
+    "phaseDetailHelp": "Utilisez les phases pour élaborer et détailler votre stratégie étape par étape en plaçant les agents et les compétences à différentes phases.",
     "phase": "Phase {number}",
     "phaseEdited": "(modifiée)",
     "phaseEmpty": "(phase vide)",
@@ -1040,11 +1047,14 @@
       "deleteCurrentPhase": "Supprimer la phase actuelle",
       "deleteAllPhases": "Supprimer toutes les phases",
       "deleteAgents": "Supprimer des agents",
-      "deleteAbilities": "Supprimer les capacités",
+      "deleteAbilities": "Supprimer les compétences",
       "deleteDrawings": "Supprimer des dessins",
       "deleteTexts": "Supprimer des textes",
       "deleteImages": "Supprimer des images",
       "deleteLineups": "Supprimer les lineups"
-    }
+    },
+    "attackSide": "Attaque",
+    "defenseSide": "Défense",
+    "rotateMapSide": "Changer le côté de la carte"
   }
 }

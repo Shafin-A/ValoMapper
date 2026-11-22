@@ -939,7 +939,14 @@
       "enemyColor": "적군 색상",
       "allyColorLabel": "아군 색상",
       "enemyColorLabel": "적군 색상"
-    }
+    },
+    "ally": "아군",
+    "enemy": "적",
+    "sidebarHelpLabel": "에이전트 사이드바 도움말",
+    "sidebarHelpMobile": "에이전트나 능력을 탭해 선택한 다음 지도를 탭해 배치하세요. 휴지통으로 끌어다 놓으면 삭제됩니다. 두 손가락으로 집어 확대하고 지도를 끌어 이동하세요.",
+    "sidebarHelpDesktop": "에이전트나 능력을 선택한 다음 지도를 클릭해 배치하거나 지도로 직접 끌어다 놓으세요. 지도 위에서 항목에 마우스를 올리고 E를 누르면 삭제됩니다.",
+    "agentsSettings": "에이전트 설정",
+    "abilitiesSettings": "능력 설정"
   },
   "tools": {
     "maps": "지도",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "텍스트 삭제",
       "deleteImages": "이미지 삭제",
       "deleteLineups": "라인업 삭제"
-    }
+    },
+    "attackSide": "공격",
+    "defenseSide": "수비",
+    "rotateMapSide": "맵 진영 전환"
   }
 }

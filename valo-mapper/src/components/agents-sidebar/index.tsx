@@ -490,19 +490,12 @@ export const AgentsSidebar = ({
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold">{t("title")}</span>
               <div className="flex items-center gap-1">
-                <InfoHint label="Agent sidebar help">
-                  <div className="space-y-2">
-                    <p>
-                      {isMobile
-                        ? "Tap an agent or ability to select it, then tap the map to place it. Drag the icon onto the map to place it directly."
-                        : "Press E while hovering an agent/ability on the map to delete it"}
-                    </p>
-                    <p>
-                      {isMobile
-                        ? "Drag an item to the trash zone to delete it. Pinch to zoom and drag the map to pan."
-                        : "Choose an agent/ability, then click the map to place it, or drag it directly onto the map"}
-                    </p>
-                  </div>
+                <InfoHint label={t("sidebarHelpLabel")}>
+                  <p>
+                    {isMobile
+                      ? t("sidebarHelpMobile")
+                      : t("sidebarHelpDesktop")}
+                  </p>
                 </InfoHint>
                 {isMobile && (
                   <Button
@@ -520,6 +513,7 @@ export const AgentsSidebar = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Switch
+                  aria-label={isAlly ? t("ally") : t("enemy")}
                   style={{
                     backgroundColor: isAlly
                       ? agentsSettings.allyColor
@@ -532,7 +526,9 @@ export const AgentsSidebar = ({
                   }}
                   disabled={isLoadingLobby || isErrorLobby}
                 />
-                <span className="text-sm">{isAlly ? "Ally" : "Enemy"}</span>
+                <span className="text-sm">
+                  {isAlly ? t("ally") : t("enemy")}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -579,7 +575,7 @@ export const AgentsSidebar = ({
             <Accordion type="multiple" className="w-full">
               <AccordionItem value="agents-settings">
                 <AccordionTrigger className="px-2">
-                  Agents Settings
+                  {t("agentsSettings")}
                 </AccordionTrigger>
                 <AccordionContent>
                   <SettingsPanel
@@ -598,7 +594,7 @@ export const AgentsSidebar = ({
 
               <AccordionItem value="abilities-settings">
                 <AccordionTrigger className="px-2">
-                  Abilities Settings
+                  {t("abilitiesSettings")}
                 </AccordionTrigger>
                 <AccordionContent>
                   <SettingsPanel

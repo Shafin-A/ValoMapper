@@ -95,7 +95,9 @@ describe("MapSelect", () => {
     const user = userEvent.setup();
     renderComponent(mapOptions[0], "defense", true);
 
-    await user.click(screen.getByRole("button", { name: /defense/i }));
+    await user.click(
+      screen.getByRole("button", { name: /rotate map side/i }),
+    );
 
     expect(mockSetMapSide).toHaveBeenCalledWith("attack");
     expect(mockNotifySideChanged).toHaveBeenCalledWith("attack");

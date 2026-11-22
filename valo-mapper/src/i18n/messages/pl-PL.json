@@ -939,7 +939,14 @@
       "enemyColor": "Kolor wrogów",
       "allyColorLabel": "Kolor sojuszników",
       "enemyColorLabel": "Kolor wrogów"
-    }
+    },
+    "ally": "Sojusznik",
+    "enemy": "Wróg",
+    "sidebarHelpLabel": "Pomoc dotycząca paska bocznego agentów",
+    "sidebarHelpMobile": "Dotknij agenta lub umiejętności, aby ją wybrać, a następnie dotknij mapy, aby ją umieścić. Przeciągnij ją do kosza, aby ją usunąć. Uszczypnij, aby powiększyć, i przeciągnij mapę, aby ją przesunąć.",
+    "sidebarHelpDesktop": "Wybierz agenta lub umiejętność, a następnie kliknij mapę, aby ją umieścić, albo przeciągnij ją bezpośrednio na mapę. Naciśnij E, gdy najedziesz na element na mapie, aby go usunąć.",
+    "agentsSettings": "Ustawienia agentów",
+    "abilitiesSettings": "Ustawienia umiejętności"
   },
   "tools": {
     "maps": "Mapy",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "Usuń teksty",
       "deleteImages": "Usuń obrazy",
       "deleteLineups": "Usuń lineupy"
-    }
+    },
+    "attackSide": "Atak",
+    "defenseSide": "Obrona",
+    "rotateMapSide": "Zmień stronę mapy"
   }
 }

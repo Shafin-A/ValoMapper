@@ -939,7 +939,14 @@
       "enemyColor": "敵方顏色",
       "allyColorLabel": "友方顏色",
       "enemyColorLabel": "敵方顏色"
-    }
+    },
+    "ally": "友方",
+    "enemy": "敵方",
+    "sidebarHelpLabel": "特務側邊欄說明",
+    "sidebarHelpMobile": "點按特務或技能將其選取，然後點按地圖放置。將其拖到垃圾桶即可刪除。雙指捏合以縮放，拖曳地圖以平移。",
+    "sidebarHelpDesktop": "選擇特務或技能，然後點擊地圖放置，或直接將其拖曳到地圖上。將滑鼠游標移到地圖上的項目並按 E 即可刪除。",
+    "agentsSettings": "特務設定",
+    "abilitiesSettings": "技能設定"
   },
   "tools": {
     "maps": "地圖",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "刪除文字",
       "deleteImages": "刪除圖片",
       "deleteLineups": "刪除陣容"
-    }
+    },
+    "attackSide": "進攻",
+    "defenseSide": "防守",
+    "rotateMapSide": "切換地圖陣營"
   }
 }

@@ -939,7 +939,14 @@
       "enemyColor": "Color de enemigos",
       "allyColorLabel": "Color de aliados",
       "enemyColorLabel": "Color de enemigos"
-    }
+    },
+    "ally": "Aliado",
+    "enemy": "Enemigo",
+    "sidebarHelpLabel": "Ayuda de la barra lateral de agentes",
+    "sidebarHelpMobile": "Toca un agente o una habilidad para seleccionarlo y luego toca el mapa para colocarlo. Arrástralo a la papelera para eliminarlo. Pellizca para hacer zoom y arrastra el mapa para desplazarte.",
+    "sidebarHelpDesktop": "Elige un agente o una habilidad, luego haz clic en el mapa para colocarlo o arrástralo directamente al mapa. Pulsa E mientras pasas el cursor sobre uno en el mapa para eliminarlo.",
+    "agentsSettings": "Ajustes de agentes",
+    "abilitiesSettings": "Ajustes de habilidades"
   },
   "tools": {
     "maps": "Mapas",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "Eliminar textos",
       "deleteImages": "Eliminar imágenes",
       "deleteLineups": "Eliminar lineups"
-    }
+    },
+    "attackSide": "Ataque",
+    "defenseSide": "Defensa",
+    "rotateMapSide": "Cambiar el lado del mapa"
   }
 }

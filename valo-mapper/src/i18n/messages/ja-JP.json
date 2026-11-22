@@ -939,7 +939,14 @@
       "enemyColor": "敵の色",
       "allyColorLabel": "味方の色",
       "enemyColorLabel": "敵の色"
-    }
+    },
+    "ally": "味方",
+    "enemy": "敵",
+    "sidebarHelpLabel": "エージェントサイドバーのヘルプ",
+    "sidebarHelpMobile": "エージェントまたはアビリティをタップして選択し、マップをタップして配置します。ゴミ箱にドラッグすると削除できます。2本指でピンチしてズームし、マップをドラッグして移動します。",
+    "sidebarHelpDesktop": "エージェントまたはアビリティを選び、マップをクリックして配置するか、マップに直接ドラッグします。マップ上の要素にカーソルを合わせて E を押すと削除できます。",
+    "agentsSettings": "エージェント設定",
+    "abilitiesSettings": "アビリティ設定"
   },
   "tools": {
     "maps": "マップ",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "テキストを削除",
       "deleteImages": "画像を削除",
       "deleteLineups": "ラインナップを削除"
-    }
+    },
+    "attackSide": "攻撃",
+    "defenseSide": "防御",
+    "rotateMapSide": "マップのサイドを切り替える"
   }
 }

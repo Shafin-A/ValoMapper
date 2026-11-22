@@ -43,6 +43,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
 }) => {
   const { agentsSettings } = useSettings();
   const t = useTranslations("agents");
+  const tCommon = useTranslations("common.actions");
 
   const { isAlly, selectedCanvasIcon } = useCanvasUi();
   const valorantTerms = useValorantTerms();
@@ -67,7 +68,7 @@ const AgentAbilities: React.FC<AgentAbilitiesProps> = ({
         onClick={onClose}
       >
         <X />
-        <span className="sr-only">Close</span>
+        <span className="sr-only">{tCommon("close")}</span>
       </Button>
       <div className="flex flex-col items-center gap-6">
         {AGENT_ICON_CONFIGS[agent.name]?.map((iconConfig) => {

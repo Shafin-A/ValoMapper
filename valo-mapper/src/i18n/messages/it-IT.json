@@ -939,7 +939,14 @@
       "enemyColor": "Colore nemici",
       "allyColorLabel": "Colore alleati",
       "enemyColorLabel": "Colore nemici"
-    }
+    },
+    "ally": "Alleato",
+    "enemy": "Nemico",
+    "sidebarHelpLabel": "Guida alla barra laterale degli agenti",
+    "sidebarHelpMobile": "Tocca un agente o un'abilità per selezionarlo, poi tocca la mappa per posizionarlo. Trascinalo nella spazzatura per eliminarlo. Pizzica per ingrandire e trascina la mappa per spostarti.",
+    "sidebarHelpDesktop": "Scegli un agente o un'abilità, poi fai clic sulla mappa per posizionarlo oppure trascinalo direttamente sulla mappa. Premi E mentre passi il cursore su un elemento sulla mappa per eliminarlo.",
+    "agentsSettings": "Impostazioni agenti",
+    "abilitiesSettings": "Impostazioni abilità"
   },
   "tools": {
     "maps": "Mappe",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "Elimina testi",
       "deleteImages": "Elimina immagini",
       "deleteLineups": "Elimina lineup"
-    }
+    },
+    "attackSide": "Attacco",
+    "defenseSide": "Difesa",
+    "rotateMapSide": "Cambia il lato della mappa"
   }
 }

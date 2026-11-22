@@ -939,7 +939,14 @@
       "enemyColor": "Warna Musuh",
       "allyColorLabel": "Warna sekutu",
       "enemyColorLabel": "Warna musuh"
-    }
+    },
+    "ally": "Sekutu",
+    "enemy": "Musuh",
+    "sidebarHelpLabel": "Bantuan bilah samping agen",
+    "sidebarHelpMobile": "Ketuk agen atau kemampuan untuk memilihnya, lalu ketuk peta untuk menempatkannya. Seret ke tempat sampah untuk menghapusnya. Cubit untuk memperbesar dan seret peta untuk menggeser.",
+    "sidebarHelpDesktop": "Pilih agen atau kemampuan, lalu klik peta untuk menempatkannya, atau seret langsung ke peta. Tekan E saat mengarahkan kursor ke salah satunya di peta untuk menghapusnya.",
+    "agentsSettings": "Pengaturan agen",
+    "abilitiesSettings": "Pengaturan kemampuan"
   },
   "tools": {
     "maps": "Peta",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "Hapus Teks",
       "deleteImages": "Hapus Gambar",
       "deleteLineups": "Hapus Lineup"
-    }
+    },
+    "attackSide": "Serang",
+    "defenseSide": "Bertahan",
+    "rotateMapSide": "Ubah sisi peta"
   }
 }

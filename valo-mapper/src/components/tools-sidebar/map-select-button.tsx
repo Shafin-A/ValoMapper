@@ -12,6 +12,7 @@ import { MapOption, MapSide } from "@/lib/types";
 import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useValorantTerms } from "@/contexts/valorant-terms-context";
 import { getLocalizedMapName } from "@/lib/i18n/valorant-terms";
+import { useTranslations } from "next-intl";
 
 interface MapSelectProps {
   mapOptions: MapOption[];
@@ -44,6 +45,7 @@ export const MapSelect = ({
 }: MapSelectProps) => {
   const { notifyMapChanged, notifySideChanged } = useCollaborativeCanvas();
   const valorantTerms = useValorantTerms();
+  const t = useTranslations("tools");
 
   const handleMapSelect = (option: MapOption) => {
     if (disabled) return;
@@ -84,6 +86,7 @@ export const MapSelect = ({
       data-tour="map-rotation"
       variant="outline"
       onClick={handleRotationToggle}
+      aria-label={t("rotateMapSide")}
       className="h-20 w-16 shrink-0 transition-all duration-200 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
       disabled={disabled}
     >
@@ -94,7 +97,7 @@ export const MapSelect = ({
         color={mapSide === "attack" ? enemyColor : allyColor}
       />
       <span className="text-xs text-white font-semibold uppercase">
-        {mapSide}
+        {mapSide === "attack" ? t("attackSide") : t("defenseSide")}
       </span>
     </Button>
   );

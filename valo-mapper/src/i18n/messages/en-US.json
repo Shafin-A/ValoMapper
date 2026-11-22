@@ -607,7 +607,7 @@
     "uidCopyFailed": "Failed to copy UID",
     "subscription": {
       "title": "Subscription",
-      "premium": "ValoMapper Premium",
+      "premium": "Premium",
       "loadingPermissions": "Loading stack billing permissions...",
       "leaveStack": "Leave Stack",
       "leaveStackTitle": "Leave this stack?",
@@ -630,7 +630,6 @@
       "stackMember": "Stack Member",
       "yearly": "Yearly",
       "monthly": "Monthly",
-      "premium": "Premium",
       "summaryFree": "You are currently on the free plan.",
       "summaryCancels": "{label} access remains active until {date}.",
       "summaryTrialOne": "You are currently on a Premium trial with 1 day remaining.",
@@ -940,7 +939,14 @@
       "enemyColor": "Enemy Color",
       "allyColorLabel": "Ally color",
       "enemyColorLabel": "Enemy color"
-    }
+    },
+    "ally": "Ally",
+    "enemy": "Enemy",
+    "sidebarHelpLabel": "Agent sidebar help",
+    "sidebarHelpMobile": "Tap an agent or ability to select it, then tap the map to place it. Drag it to the trash zone to delete it. Pinch to zoom and drag the map to pan.",
+    "sidebarHelpDesktop": "Choose an agent or ability, then click the map to place it, or drag it directly onto the map. Press E while hovering one on the map to delete it.",
+    "agentsSettings": "Agents Settings",
+    "abilitiesSettings": "Abilities Settings"
   },
   "tools": {
     "maps": "Maps",
@@ -1046,6 +1052,9 @@
       "deleteTexts": "Delete Texts",
       "deleteImages": "Delete Images",
       "deleteLineups": "Delete Lineups"
-    }
+    },
+    "attackSide": "Attack",
+    "defenseSide": "Defense",
+    "rotateMapSide": "Rotate map side"
   }
 }

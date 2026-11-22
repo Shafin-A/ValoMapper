@@ -939,7 +939,14 @@
       "enemyColor": "敌方颜色",
       "allyColorLabel": "友方颜色",
       "enemyColorLabel": "敌方颜色"
-    }
+    },
+    "ally": "友方",
+    "enemy": "敌方",
+    "sidebarHelpLabel": "特工侧边栏帮助",
+    "sidebarHelpMobile": "点按特工或技能将其选中，然后点按地图放置。将其拖到垃圾桶即可删除。双指捏合以缩放，拖动地图以平移。",
+    "sidebarHelpDesktop": "选择特工或技能，然后点击地图放置，或直接将其拖到地图上。将鼠标悬停在地图上的项目上并按 E 即可删除。",
+    "agentsSettings": "特工设置",
+    "abilitiesSettings": "技能设置"
   },
   "tools": {
     "maps": "地图",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "删除文本",
       "deleteImages": "删除图片",
       "deleteLineups": "删除点位"
-    }
+    },
+    "attackSide": "进攻",
+    "defenseSide": "防守",
+    "rotateMapSide": "切换地图阵营"
   }
 }

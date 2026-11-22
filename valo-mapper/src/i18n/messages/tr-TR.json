@@ -939,7 +939,14 @@
       "enemyColor": "Düşman Rengi",
       "allyColorLabel": "Müttefik rengi",
       "enemyColorLabel": "Düşman rengi"
-    }
+    },
+    "ally": "Dost",
+    "enemy": "Düşman",
+    "sidebarHelpLabel": "Ajan kenar çubuğu yardımı",
+    "sidebarHelpMobile": "Bir ajanı veya yeteneği seçmek için dokun, ardından yerleştirmek için haritaya dokun. Silmek için çöp kutusuna sürükle. Yakınlaştırmak için iki parmağınla sıkıştır ve haritayı kaydırmak için sürükle.",
+    "sidebarHelpDesktop": "Bir ajan veya yetenek seç, ardından yerleştirmek için haritaya tıkla veya doğrudan haritaya sürükle. Haritadaki bir öğenin üzerine gelerek E tuşuna basıp silebilirsin.",
+    "agentsSettings": "Ajan ayarları",
+    "abilitiesSettings": "Yetenek ayarları"
   },
   "tools": {
     "maps": "Haritalar",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "Metinleri Sil",
       "deleteImages": "Görselleri Sil",
       "deleteLineups": "Lineup'ları Sil"
-    }
+    },
+    "attackSide": "Saldırı",
+    "defenseSide": "Savunma",
+    "rotateMapSide": "Harita tarafını değiştir"
   }
 }

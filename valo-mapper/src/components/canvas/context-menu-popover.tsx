@@ -281,6 +281,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
   const selectionLabel = isMultiSelection
     ? t("itemsCount", { count: selectedCount })
     : itemLabel(snapType);
+  const selectionItem = itemWord(snapType);
 
   const mobileActions: Array<{
     key: string;
@@ -488,7 +489,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
             content={
               isMultiSelection
                 ? t("duplicateItems", { count: selectedCount })
-                : t("duplicateItem", { item: selectionLabel })
+                : t("duplicateItem", { item: selectionItem })
             }
           >
             <Button
@@ -497,7 +498,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
               aria-label={
                 isMultiSelection
                   ? t("duplicateItems", { count: selectedCount })
-                  : t("duplicateItem", { item: selectionLabel })
+                  : t("duplicateItem", { item: selectionItem })
               }
               onClick={onDuplicate}
             >
@@ -802,7 +803,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
             content={
               isMultiSelection
                 ? t("deleteItems", { count: selectedCount })
-                : t("deleteItem", { item: selectionLabel })
+                : t("deleteItem", { item: selectionItem })
             }
           >
             <Button
@@ -811,7 +812,7 @@ export const ContextMenuPopover = memo(function ContextMenuPopover({
               aria-label={
                 isMultiSelection
                   ? t("deleteItems", { count: selectedCount })
-                  : t("deleteItem", { item: selectionLabel })
+                  : t("deleteItem", { item: selectionItem })
               }
               onClick={onDelete}
             >

@@ -939,7 +939,14 @@
       "enemyColor": "Màu kẻ địch",
       "allyColorLabel": "Màu đồng minh",
       "enemyColorLabel": "Màu kẻ địch"
-    }
+    },
+    "ally": "Đồng minh",
+    "enemy": "Kẻ địch",
+    "sidebarHelpLabel": "Trợ giúp thanh bên đặc vụ",
+    "sidebarHelpMobile": "Chạm vào đặc vụ hoặc kỹ năng để chọn, sau đó chạm vào bản đồ để đặt. Kéo vào thùng rác để xóa. Chụm hai ngón tay để thu phóng và kéo bản đồ để di chuyển.",
+    "sidebarHelpDesktop": "Chọn một đặc vụ hoặc kỹ năng, sau đó nhấp vào bản đồ để đặt hoặc kéo trực tiếp vào bản đồ. Nhấn E khi di chuột qua một mục trên bản đồ để xóa.",
+    "agentsSettings": "Cài đặt đặc vụ",
+    "abilitiesSettings": "Cài đặt kỹ năng"
   },
   "tools": {
     "maps": "Bản đồ",
@@ -1045,6 +1052,9 @@
       "deleteTexts": "Xóa văn bản",
       "deleteImages": "Xóa hình ảnh",
       "deleteLineups": "Xóa lineup"
-    }
+    },
+    "attackSide": "Tấn công",
+    "defenseSide": "Phòng thủ",
+    "rotateMapSide": "Đổi phía bản đồ"
   }
 }
