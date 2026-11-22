@@ -249,10 +249,14 @@ const MyStrategiesPage = () => {
                   })}
                 </p>
                 <p>
-                  {t("cleanupDaysRemaining", {
-                    count: strategyCleanupGracePeriod.daysRemaining,
-                    limit: FREE_STRATEGY_LIMIT,
-                  })}
+                  {strategyCleanupGracePeriod.daysRemaining === 1
+                    ? t("cleanupDayRemaining", {
+                        limit: FREE_STRATEGY_LIMIT,
+                      })
+                    : t("cleanupDaysRemaining", {
+                        count: strategyCleanupGracePeriod.daysRemaining,
+                        limit: FREE_STRATEGY_LIMIT,
+                      })}
                 </p>
                 {keptStrategiesPreview && (
                   <p>
