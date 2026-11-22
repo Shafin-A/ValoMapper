@@ -21,7 +21,7 @@
     "toggleSidebar": "切換側邊欄",
     "previousSlide": "上一張投影片",
     "nextSlide": "下一張投影片",
-    "more": "更多的",
+    "more": "更多",
     "breadcrumb": "麵包屑導覽",
     "skipToContent": "跳至主要內容",
     "theme": {
@@ -998,7 +998,7 @@
     "agentsSettings": "特務設定",
     "abilitiesSettings": "技能設定",
     "loading": "正在載入特務...",
-    "loadLobbyFailed": "加載大廳失敗",
+    "loadLobbyFailed": "大廳載入失敗",
     "tryAgainLater": "請稍後重試"
   },
   "tools": {
@@ -1120,7 +1120,7 @@
     "inviteSent": "邀請已發送",
     "inviteAccepted": "已接受邀請",
     "inviteDeclined": "邀請被拒絕",
-    "memberRemoved": "會員已刪除",
+    "memberRemoved": "成員已移除",
     "leftStack": "已離開 Stack",
     "subscriptionCanceled": "訂閱將在計費週期結束時取消",
     "subscriptionResumed": "訂閱將正常續訂",

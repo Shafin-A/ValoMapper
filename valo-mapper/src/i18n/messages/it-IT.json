@@ -21,13 +21,13 @@
     "toggleSidebar": "Attiva/disattiva la barra laterale",
     "previousSlide": "Diapositiva precedente",
     "nextSlide": "Diapositiva successiva",
-    "more": "Di più",
+    "more": "Altro",
     "breadcrumb": "Percorso di navigazione",
     "skipToContent": "Passa al contenuto principale",
     "theme": {
       "toggle": "Cambia tema",
       "light": "Chiaro",
-      "dark": "Buio",
+      "dark": "Scuro",
       "system": "Sistema"
     },
     "sidebar": "Barra laterale",
@@ -933,7 +933,7 @@
       "textColor": "Colore testo {color}",
       "customColor": "Colore del testo personalizzato",
       "fontSize": "Dimensione del carattere",
-      "clickToAdd": "Fare clic per aggiungere testo..."
+      "clickToAdd": "Fai clic per aggiungere testo..."
     }
   },
   "help": {
@@ -1129,8 +1129,8 @@
     "uidRequired": "Inserisci un UID da invitare",
     "filesSkipped": "Alcuni file sono stati saltati. Tipi consentiti: JPEG, PNG, GIF, WEBP.",
     "screenshotFailed": "Impossibile salvare lo screenshot",
-    "canvasPatchFailed": "Aggiornamento Canvas non riuscito",
-    "shortcutError": "Errore di scelta rapida da tastiera",
+    "canvasPatchFailed": "Aggiornamento della tela non riuscito",
+    "shortcutError": "Errore di scorciatoia da tastiera",
     "profileUpdated": "Profilo aggiornato",
     "folderCreated": "Cartella \"{name}\" creata",
     "folderUpdated": "Cartella \"{name}\" aggiornata",

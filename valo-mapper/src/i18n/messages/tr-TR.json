@@ -18,10 +18,10 @@
     "supportOnKofi": "Ko-fi'da destek ol",
     "joinDiscord": "Discord'a katıl",
     "customColor": "Özel renk",
-    "toggleSidebar": "Kenar Çubuğunu Değiştir",
+    "toggleSidebar": "Kenar Çubuğunu Aç/Kapat",
     "previousSlide": "Önceki slayt",
     "nextSlide": "Sonraki slayt",
-    "more": "Daha",
+    "more": "Daha fazla",
     "breadcrumb": "Gezinti yolu",
     "skipToContent": "Ana içeriğe atla",
     "theme": {
@@ -343,7 +343,7 @@
       "spikePlanted": "{time} — Spike yerleştirildi",
       "spikeDefused": "{time} — Spike etkisiz hale getirildi",
       "spikeDetonated": "{time} — Spike patlatıldı",
-      "killEvent": "{time} — {killer}, {victim}'yi öldürdü",
+      "killEvent": "{time} — {killer}, {victim} oyuncusunu öldürdü",
       "unknownPlayer": "Bilinmiyor"
     },
     "settings": {
@@ -933,7 +933,7 @@
       "textColor": "Metin rengi {color}",
       "customColor": "Özel metin rengi",
       "fontSize": "Yazı tipi boyutu",
-      "clickToAdd": "Metin eklemek için tıklayın..."
+      "clickToAdd": "Metin eklemek için tıkla..."
     }
   },
   "help": {
@@ -999,7 +999,7 @@
     "abilitiesSettings": "Yetenek ayarları",
     "loading": "Ajanlar yükleniyor...",
     "loadLobbyFailed": "Lobi yüklenemedi",
-    "tryAgainLater": "Lütfen daha sonra tekrar deneyin"
+    "tryAgainLater": "Lütfen daha sonra tekrar dene."
   },
   "tools": {
     "maps": "Haritalar",
@@ -1112,7 +1112,7 @@
   },
   "toasts": {
     "failed": "Bir şeyler ters gitti: {error}",
-    "tryAgain": "Lütfen tekrar deneyin.",
+    "tryAgain": "Lütfen tekrar dene.",
     "saved": "Kaydedildi",
     "created": "Oluşturuldu",
     "updated": "Güncellendi",
@@ -1126,11 +1126,11 @@
     "subscriptionResumed": "Abonelik normal şekilde yenilenecek",
     "profileDataUnavailable": "Kullanıcı verileri mevcut değil",
     "nameRequired": "Ad boş olamaz",
-    "uidRequired": "Davet etmek için bir UID girin",
+    "uidRequired": "Davet etmek için bir UID gir",
     "filesSkipped": "Bazı dosyalar atlandı. İzin verilen türler: JPEG, PNG, GIF, WEBP.",
     "screenshotFailed": "Ekran görüntüsü kaydedilemedi",
     "canvasPatchFailed": "Tuval güncellemesi başarısız oldu",
-    "shortcutError": "Klavye kısayol hatası",
+    "shortcutError": "Klavye kısayolu hatası",
     "profileUpdated": "Profil güncellendi",
     "folderCreated": "\"{name}\" klasörü oluşturuldu",
     "folderUpdated": "\"{name}\" klasörü güncellendi",

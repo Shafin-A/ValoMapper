@@ -341,9 +341,9 @@
       "spaceKey": "Leertaste",
       "barrierDrop": "{time} — Barriere fällt",
       "spikePlanted": "{time} — Spike platziert",
-      "spikeDefused": "{time} – Spike entschärft",
-      "spikeDetonated": "{time} – Spike explodierte",
-      "killEvent": "{time} – {killer} hat {victim} getötet",
+      "spikeDefused": "{time} — Spike entschärft",
+      "spikeDetonated": "{time} — Spike explodierte",
+      "killEvent": "{time} — {killer} hat {victim} getötet",
       "unknownPlayer": "Unbekannt"
     },
     "settings": {
@@ -933,7 +933,7 @@
       "textColor": "Textfarbe {color}",
       "customColor": "Benutzerdefinierte Textfarbe",
       "fontSize": "Schriftgröße",
-      "clickToAdd": "Klicken Sie, um Text hinzuzufügen..."
+      "clickToAdd": "Klicke, um Text hinzuzufügen..."
     }
   },
   "help": {
@@ -999,7 +999,7 @@
     "abilitiesSettings": "Fähigkeiten-Einstellungen",
     "loading": "Agenten werden geladen...",
     "loadLobbyFailed": "Lobby konnte nicht geladen werden",
-    "tryAgainLater": "Bitte versuchen Sie es später noch einmal"
+    "tryAgainLater": "Bitte versuche es später erneut."
   },
   "tools": {
     "maps": "Karten",
@@ -1112,7 +1112,7 @@
   },
   "toasts": {
     "failed": "Es ist ein Fehler aufgetreten: {error}",
-    "tryAgain": "Bitte versuchen Sie es erneut.",
+    "tryAgain": "Bitte versuche es erneut.",
     "saved": "Gespeichert",
     "created": "Erstellt",
     "updated": "Aktualisiert",
@@ -1123,13 +1123,13 @@
     "memberRemoved": "Mitglied entfernt",
     "leftStack": "Stack verlassen",
     "subscriptionCanceled": "Das Abonnement wird am Ende des Abrechnungszeitraums gekündigt",
-    "subscriptionResumed": "Das Abonnement verlängert sich normal",
+    "subscriptionResumed": "Das Abonnement wird wie gewohnt verlängert",
     "profileDataUnavailable": "Benutzerdaten sind nicht verfügbar",
     "nameRequired": "Der Name darf nicht leer sein",
-    "uidRequired": "Geben Sie eine UID ein, um einzuladen",
+    "uidRequired": "Gib eine UID ein, um einzuladen",
     "filesSkipped": "Einige Dateien wurden übersprungen. Zulässige Typen: JPEG, PNG, GIF, WEBP.",
     "screenshotFailed": "Screenshot konnte nicht gespeichert werden",
-    "canvasPatchFailed": "Das Canvas-Update ist fehlgeschlagen",
+    "canvasPatchFailed": "Leinwand-Aktualisierung fehlgeschlagen",
     "shortcutError": "Fehler bei der Tastenkombination",
     "profileUpdated": "Profil aktualisiert",
     "folderCreated": "Ordner „{name}“ erstellt",

@@ -21,7 +21,7 @@
     "toggleSidebar": "切换侧边栏",
     "previousSlide": "上一张幻灯片",
     "nextSlide": "下一张幻灯片",
-    "more": "更多的",
+    "more": "更多",
     "breadcrumb": "面包屑导航",
     "skipToContent": "跳至主要内容",
     "theme": {
@@ -1120,7 +1120,7 @@
     "inviteSent": "邀请已发送",
     "inviteAccepted": "已接受邀请",
     "inviteDeclined": "邀请被拒绝",
-    "memberRemoved": "会员已删除",
+    "memberRemoved": "成员已移除",
     "leftStack": "已离开 Stack",
     "subscriptionCanceled": "订阅将在计费周期结束时取消",
     "subscriptionResumed": "订阅将正常续订",

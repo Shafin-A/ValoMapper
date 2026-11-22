@@ -933,7 +933,7 @@
       "textColor": "Color del texto {color}",
       "customColor": "Color de texto personalizado",
       "fontSize": "Tamaño de fuente",
-      "clickToAdd": "Haga clic para agregar texto..."
+      "clickToAdd": "Haz clic para agregar texto..."
     }
   },
   "help": {
@@ -1126,11 +1126,11 @@
     "subscriptionResumed": "La suscripción se renovará normalmente.",
     "profileDataUnavailable": "Los datos del usuario no están disponibles",
     "nameRequired": "El nombre no puede estar vacío",
-    "uidRequired": "Ingrese un UID para invitar",
+    "uidRequired": "Ingresa un UID para invitar",
     "filesSkipped": "Se omitieron algunos archivos. Tipos permitidos: JPEG, PNG, GIF, WEBP.",
     "screenshotFailed": "No se pudo guardar la captura de pantalla",
     "canvasPatchFailed": "Error en la actualización del lienzo",
-    "shortcutError": "Error de método abreviado de teclado",
+    "shortcutError": "Error de atajo de teclado",
     "profileUpdated": "Perfil actualizado",
     "folderCreated": "Carpeta \"{name}\" creada",
     "folderUpdated": "Carpeta \"{name}\" actualizada",

@@ -21,7 +21,7 @@
     "toggleSidebar": "สลับแถบด้านข้าง",
     "previousSlide": "สไลด์ก่อนหน้า",
     "nextSlide": "สไลด์ถัดไป",
-    "more": "มากกว่า",
+    "more": "เพิ่มเติม",
     "breadcrumb": "เส้นทางนำทาง",
     "skipToContent": "ข้ามไปที่เนื้อหาหลัก",
     "theme": {
@@ -1129,7 +1129,7 @@
     "uidRequired": "ป้อน UID ที่จะเชิญ",
     "filesSkipped": "ไฟล์บางไฟล์ถูกข้าม ประเภทที่อนุญาต: JPEG, PNG, GIF, WEBP",
     "screenshotFailed": "ไม่สามารถบันทึกภาพหน้าจอ",
-    "canvasPatchFailed": "การอัปเดต Canvas ล้มเหลว",
+    "canvasPatchFailed": "การอัปเดตผืนผ้าใบล้มเหลว",
     "shortcutError": "ข้อผิดพลาดแป้นพิมพ์ลัด",
     "profileUpdated": "อัปเดตโปรไฟล์แล้ว",
     "folderCreated": "สร้างโฟลเดอร์ \"{name}\" แล้ว",

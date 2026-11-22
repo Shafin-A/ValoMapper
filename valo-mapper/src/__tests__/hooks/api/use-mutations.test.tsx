@@ -260,7 +260,8 @@ const successCases: SuccessCase[] = [
       url: "/api/billing/cancel-subscription",
       options: { method: "POST" },
     },
-    successToast: "Subscription will cancel at the end of the billing period",
+    successToast:
+      "Subscription will be canceled at the end of the billing period",
     errorToast: "Something went wrong: boom",
   },
   {
@@ -357,7 +358,7 @@ const successCases: SuccessCase[] = [
       url: "/api/billing/stack/leave",
       options: { method: "DELETE" },
     },
-    successToast: "Left Stack",
+    successToast: "Left the Stack",
     invalidates: [
       queryKeys.user,
       queryKeys.stackMembers,

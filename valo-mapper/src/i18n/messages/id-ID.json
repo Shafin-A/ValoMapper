@@ -18,10 +18,10 @@
     "supportOnKofi": "Dukung di Ko-fi",
     "joinDiscord": "Gabung Discord",
     "customColor": "Warna kustom",
-    "toggleSidebar": "Alihkan Bilah Sisi",
+    "toggleSidebar": "Alihkan bilah samping",
     "previousSlide": "Slide sebelumnya",
     "nextSlide": "Slide berikutnya",
-    "more": "Lagi",
+    "more": "Lainnya",
     "breadcrumb": "Jejak navigasi",
     "skipToContent": "Lompat ke konten utama",
     "theme": {
@@ -31,7 +31,7 @@
       "system": "Sistem"
     },
     "sidebar": "Bilah samping",
-    "sidebarDescription": "Menampilkan sidebar seluler.",
+    "sidebarDescription": "Menampilkan bilah samping seluler.",
     "iconAlt": "Ikon {name}",
     "image": "Gambar"
   },
@@ -339,12 +339,12 @@
       "speed": "kecepatan",
       "timeline": "Garis waktu tayangan ulang",
       "spaceKey": "Spasi",
-      "barrierDrop": "{time} — Penurunan penghalang",
+      "barrierDrop": "{time} — Penghalang turun",
       "spikePlanted": "{time} — Spike ditanam",
       "spikeDefused": "{time} — Spike dinonaktifkan",
       "spikeDetonated": "{time} — Spike diledakkan",
       "killEvent": "{time} — {killer} membunuh {victim}",
-      "unknownPlayer": "Tidak dikenal"
+      "unknownPlayer": "Tidak diketahui"
     },
     "settings": {
       "label": "Pengaturan tayangan ulang",
@@ -1121,7 +1121,7 @@
     "inviteAccepted": "Undangan diterima",
     "inviteDeclined": "Undangan ditolak",
     "memberRemoved": "Anggota dihapus",
-    "leftStack": "Keluar dari Stack",
+    "leftStack": "Berhasil keluar dari Stack",
     "subscriptionCanceled": "Langganan akan dibatalkan pada akhir periode penagihan",
     "subscriptionResumed": "Langganan akan diperpanjang secara normal",
     "profileDataUnavailable": "Data pengguna tidak tersedia",
@@ -1134,7 +1134,7 @@
     "profileUpdated": "Profil diperbarui",
     "folderCreated": "Folder \"{name}\" dibuat",
     "folderUpdated": "Folder \"{name}\" diperbarui",
-    "folderDeleted": "Foldernya dihapus",
+    "folderDeleted": "Folder dihapus",
     "strategyCreated": "Strategi \"{name}\" dibuat",
     "strategyUpdated": "Strategi \"{name}\" diperbarui",
     "strategyDeleted": "Strategi dihapus",

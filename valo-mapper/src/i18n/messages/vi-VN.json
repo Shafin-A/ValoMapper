@@ -21,7 +21,7 @@
     "toggleSidebar": "Chuyển đổi thanh bên",
     "previousSlide": "Trang trình bày trước",
     "nextSlide": "Trang trình bày tiếp theo",
-    "more": "Hơn",
+    "more": "Thêm",
     "breadcrumb": "Đường dẫn điều hướng",
     "skipToContent": "Chuyển đến nội dung chính",
     "theme": {
@@ -342,8 +342,8 @@
       "barrierDrop": "{time} — Rào chắn hạ xuống",
       "spikePlanted": "{time} — Spike đã được đặt",
       "spikeDefused": "{time} — Đã gỡ bỏ Spike",
-      "spikeDetonated": "{time} - Spike phát nổ",
-      "killEvent": "{time} - {killer} đã giết {victim}",
+      "spikeDetonated": "{time} — Spike phát nổ",
+      "killEvent": "{time} — {killer} đã giết {victim}",
       "unknownPlayer": "Không xác định"
     },
     "settings": {
@@ -998,7 +998,7 @@
     "agentsSettings": "Cài đặt đặc vụ",
     "abilitiesSettings": "Cài đặt kỹ năng",
     "loading": "Đang tải đặc vụ...",
-    "loadLobbyFailed": "Không tải được tiền sảnh",
+    "loadLobbyFailed": "Không tải được sảnh",
     "tryAgainLater": "Vui lòng thử lại sau"
   },
   "tools": {
@@ -1120,16 +1120,16 @@
     "inviteSent": "Đã gửi lời mời",
     "inviteAccepted": "Lời mời đã được chấp nhận",
     "inviteDeclined": "Lời mời bị từ chối",
-    "memberRemoved": "Thành viên đã bị xóa",
+    "memberRemoved": "Đã xóa thành viên",
     "leftStack": "Đã rời Stack",
-    "subscriptionCanceled": "Đăng ký sẽ hủy vào cuối thời hạn thanh toán",
+    "subscriptionCanceled": "Đăng ký sẽ bị hủy vào cuối kỳ thanh toán",
     "subscriptionResumed": "Đăng ký sẽ gia hạn bình thường",
     "profileDataUnavailable": "Dữ liệu người dùng không có sẵn",
     "nameRequired": "Tên không thể trống",
     "uidRequired": "Nhập UID để mời",
     "filesSkipped": "Một số tập tin đã bị bỏ qua. Các loại được phép: JPEG, PNG, GIF, WEBP.",
     "screenshotFailed": "Không lưu được ảnh chụp màn hình",
-    "canvasPatchFailed": "Cập nhật canvas không thành công",
+    "canvasPatchFailed": "Cập nhật khung vẽ không thành công",
     "shortcutError": "Lỗi phím tắt",
     "profileUpdated": "Đã cập nhật hồ sơ",
     "folderCreated": "Đã tạo thư mục \"{name}\"",
@@ -1138,7 +1138,7 @@
     "strategyCreated": "Chiến lược \"{name}\" đã được tạo",
     "strategyUpdated": "Chiến lược \"{name}\" được cập nhật",
     "strategyDeleted": "Đã xóa chiến lược",
-    "userDeleted": "Người dùng đã xóa",
+    "userDeleted": "Đã xóa người dùng",
     "screenshotSaved": "Đã lưu ảnh chụp màn hình"
   }
 }

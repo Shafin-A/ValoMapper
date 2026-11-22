@@ -21,7 +21,7 @@
     "toggleSidebar": "تبديل الشريط الجانبي",
     "previousSlide": "الشريحة السابقة",
     "nextSlide": "الشريحة التالية",
-    "more": "أكثر",
+    "more": "المزيد",
     "breadcrumb": "مسار التنقل",
     "skipToContent": "انتقل إلى المحتوى الرئيسي",
     "theme": {
@@ -1135,9 +1135,9 @@
     "folderCreated": "تم إنشاء المجلد \"{name}\".",
     "folderUpdated": "تم تحديث المجلد \"{name}\".",
     "folderDeleted": "تم حذف المجلد",
-    "strategyCreated": "تم إنشاء الإستراتيجية \"{name}\".",
-    "strategyUpdated": "تم تحديث الإستراتيجية \"{name}\".",
-    "strategyDeleted": "تم حذف الإستراتيجية",
+    "strategyCreated": "تم إنشاء الاستراتيجية \"{name}\".",
+    "strategyUpdated": "تم تحديث الاستراتيجية \"{name}\".",
+    "strategyDeleted": "تم حذف الاستراتيجية",
     "userDeleted": "تم حذف المستخدم",
     "screenshotSaved": "تم حفظ لقطة الشاشة"
   }
