@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Errore",
     "rsoNoCodeTitle": "Nessun codice di autorizzazione",
     "rsoNoCodeDescription": "Sembra che l'accesso a Riot sia stato annullato.",
+    "rsoCallbackTitle": "Collegamento dell'account Riot...",
+    "rsoProcessingTitle": "Elaborazione dell'accesso a Riot in corso...",
+    "rsoProcessingDescription": "Ti preghiamo di attendere mentre completiamo il collegamento dell'account.",
     "goToProfile": "Vai al Profilo"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "PUNTO",
     "agentFallback": "Agente"
+  },
+  "collaboration": {
+    "usersInLobby": "Utenti nella lobby:",
+    "statusConnected": "Collegato",
+    "statusConnecting": "Connessione...",
+    "statusDisconnected": "Disconnesso",
+    "statusError": "Errore di connessione"
+  },
+  "lobby": {
+    "linkCopied": "Link copiato!",
+    "linkCopyFailed": "Impossibile copiare il collegamento negli appunti"
   },
   "billing": {
     "dialogTitle": "Controlla il tuo aggiornamento",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Rigiocare"
+    },
+    "scoreboard": {
+      "active": "attivo",
+      "points": "punti",
+      "ready": "pronto",
+      "charges": "spese",
+      "used": "usato",
+      "available": "disponibile",
+      "cooldown": "Tempo di recupero di {seconds}"
+    },
+    "session": {
+      "missingId": "A questo collegamento di riproduzione manca un ID.",
+      "opening": "Replay di apertura...",
+      "expired": "Questa riproduzione è scaduta. Riapri il file .vrf per analizzarlo nuovamente: i replay analizzati vengono conservati su questo dispositivo e la copia sul server dura solo poco tempo.",
+      "couldNotOpen": "Impossibile aprire questo replay.",
+      "loadingPlayer": "Caricamento del riproduttore"
     },
     "player": {
       "copyToLobby": "Copia nella nuova lobby",
@@ -684,8 +714,20 @@
       "zoomIn": "Ingrandisci",
       "close": "Chiudi lo schermo intero"
     },
+    "aria": {
+      "tacticalMap": "Tela della mappa tattica",
+      "zoomIn": "Ingrandisci",
+      "zoomOut": "Rimpicciolisci",
+      "fitMap": "Adatta mappa"
+    },
     "lineup": {
       "title": "Aggiungi formazione",
+      "lineupImages": "Immagini della scaletta",
+      "youtubeVideo": "Video di YouTube",
+      "youtubePlayer": "Lettore video di YouTube",
+      "openLinkNewTab": "Apri il collegamento in una nuova scheda.",
+      "noDetails": "Nessun dettaglio disponibile per questa formazione.",
+      "viewImageFullscreen": "Visualizza l'immagine della formazione {index} a schermo intero",
       "description": "Aggiungi una nuova formazione",
       "agent": "Agente",
       "selectAgent": "Seleziona un agente",
@@ -717,6 +759,12 @@
       "uploadingImage": "Caricamento immagine"
     },
     "textEditor": {
+      "editText": "Modifica testo",
+      "textContent": "Contenuto del testo",
+      "tapDone": "Tocca Fine quando hai finito",
+      "done": "Fatto",
+      "placeholder": "Digita il tuo testo...",
+      "close": "Vicino",
       "bold": "Grassetto",
       "italic": "Corsivo",
       "underline": "Sottolineare",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "Agenti",
+    "closeSidebar": "Barra laterale degli agenti vicini",
+    "onMap": "Sulla mappa",
     "all": "Tutto",
     "empty": "Nessun agente sulla mappa",
     "emptyByRole": "Nessun agente {role} sulla mappa",

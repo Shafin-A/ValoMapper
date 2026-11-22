@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Błąd",
     "rsoNoCodeTitle": "Brak kodu autoryzacyjnego",
     "rsoNoCodeDescription": "Wygląda na to, że logowanie do Riot zostało anulowane.",
+    "rsoCallbackTitle": "Łączenie konta Riot...",
+    "rsoProcessingTitle": "Przetwarzam dane logowania Riot...",
+    "rsoProcessingDescription": "Poczekaj, aż zakończymy łączenie kont.",
     "goToProfile": "Przejdź do profilu"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "WYNIK",
     "agentFallback": "Agent"
+  },
+  "collaboration": {
+    "usersInLobby": "Użytkownicy w lobby:",
+    "statusConnected": "Połączony",
+    "statusConnecting": "Złączony...",
+    "statusDisconnected": "Bezładny",
+    "statusError": "Błąd połączenia"
+  },
+  "lobby": {
+    "linkCopied": "Link skopiowany!",
+    "linkCopyFailed": "Nie udało się skopiować linku do schowka"
   },
   "billing": {
     "dialogTitle": "Przejrzyj aktualizację",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Powtórna rozgrywka"
+    },
+    "scoreboard": {
+      "active": "aktywny",
+      "points": "zwrotnica",
+      "ready": "gotowy",
+      "charges": "opłaty",
+      "used": "używany",
+      "available": "dostępny",
+      "cooldown": "Czas odnowienia {seconds}"
+    },
+    "session": {
+      "missingId": "W tym linku do powtórki brakuje identyfikatora.",
+      "opening": "Otwieram powtórkę…",
+      "expired": "Ta powtórka wygasła. Otwórz ponownie plik .vrf, aby go ponownie przeanalizować — przeanalizowane powtórki są przechowywane na tym urządzeniu, a kopia na serwerze trwa tylko przez krótki czas.",
+      "couldNotOpen": "Nie można otworzyć tej powtórki.",
+      "loadingPlayer": "Ładowanie odtwarzacza powtórek"
     },
     "player": {
       "copyToLobby": "Skopiuj do nowego lobby",
@@ -684,8 +714,20 @@
       "zoomIn": "Powiększ",
       "close": "Zamknij pełny ekran"
     },
+    "aria": {
+      "tacticalMap": "Płótno mapy taktycznej",
+      "zoomIn": "Powiększ",
+      "zoomOut": "Pomniejsz",
+      "fitMap": "Dopasuj mapę"
+    },
     "lineup": {
       "title": "Dodaj skład",
+      "lineupImages": "Obrazy składu",
+      "youtubeVideo": "Film z YouTube'a",
+      "youtubePlayer": "Odtwarzacz wideo YouTube",
+      "openLinkNewTab": "Otwórz link w nowej karcie.",
+      "noDetails": "Brak szczegółów dotyczących tego składu.",
+      "viewImageFullscreen": "Wyświetl obraz składu {index} na pełnym ekranie",
       "description": "Dodaj nowy skład",
       "agent": "Agent",
       "selectAgent": "Wybierz agenta",
@@ -717,6 +759,12 @@
       "uploadingImage": "Przesyłanie obrazu"
     },
     "textEditor": {
+      "editText": "Edytuj tekst",
+      "textContent": "Treść tekstowa",
+      "tapDone": "Gdy skończysz, dotknij Gotowe",
+      "done": "Zrobione",
+      "placeholder": "Wpisz swój tekst...",
+      "close": "Zamknąć",
       "bold": "Pogrubiony",
       "italic": "italski",
       "underline": "Podkreślać",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "Agenci",
+    "closeSidebar": "Zamknij pasek boczny agentów",
+    "onMap": "Na mapie",
     "all": "Wszystko",
     "empty": "Brak agentów na mapie",
     "emptyByRole": "Brak agentów {role} na mapie",

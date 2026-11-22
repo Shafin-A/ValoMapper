@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Lỗi",
     "rsoNoCodeTitle": "Không có mã ủy quyền",
     "rsoNoCodeDescription": "Có vẻ như đăng nhập Riot đã bị hủy.",
+    "rsoCallbackTitle": "Đang liên kết tài khoản Riot...",
+    "rsoProcessingTitle": "Đang xử lý thông tin đăng nhập Riot...",
+    "rsoProcessingDescription": "Vui lòng đợi trong khi chúng tôi hoàn tất việc liên kết tài khoản.",
     "goToProfile": "Đi tới hồ sơ"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "ĐIỂM",
     "agentFallback": "Đại lý"
+  },
+  "collaboration": {
+    "usersInLobby": "Người dùng ở sảnh:",
+    "statusConnected": "Đã kết nối",
+    "statusConnecting": "Đang kết nối...",
+    "statusDisconnected": "Đã ngắt kết nối",
+    "statusError": "Lỗi kết nối"
+  },
+  "lobby": {
+    "linkCopied": "Đã sao chép liên kết!",
+    "linkCopyFailed": "Không sao chép được liên kết vào bảng nhớ tạm"
   },
   "billing": {
     "dialogTitle": "Xem lại nâng cấp của bạn",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Phát lại"
+    },
+    "scoreboard": {
+      "active": "tích cực",
+      "points": "điểm",
+      "ready": "sẵn sàng",
+      "charges": "phí",
+      "used": "đã sử dụng",
+      "available": "có sẵn",
+      "cooldown": "Thời gian hồi chiêu của {seconds}"
+    },
+    "session": {
+      "missingId": "Liên kết phát lại này thiếu id.",
+      "opening": "Đang mở bản phát lại…",
+      "expired": "Bản phát lại này đã hết hạn. Mở lại tệp .vrf để phân tích cú pháp lại — các bản phát lại được phân tích cú pháp được lưu giữ trên thiết bị này và bản sao máy chủ chỉ tồn tại trong một thời gian ngắn.",
+      "couldNotOpen": "Không thể mở bản phát lại này.",
+      "loadingPlayer": "Đang tải trình phát lại"
     },
     "player": {
       "copyToLobby": "Sao chép vào sảnh mới",
@@ -684,8 +714,20 @@
       "zoomIn": "Phóng to",
       "close": "Đóng toàn màn hình"
     },
+    "aria": {
+      "tacticalMap": "Canvas bản đồ chiến thuật",
+      "zoomIn": "Phóng to",
+      "zoomOut": "Thu nhỏ",
+      "fitMap": "Bản đồ phù hợp"
+    },
     "lineup": {
       "title": "Thêm đội hình",
+      "lineupImages": "Hình ảnh đội hình",
+      "youtubeVideo": "Video YouTube",
+      "youtubePlayer": "Trình phát video YouTube",
+      "openLinkNewTab": "Mở liên kết trong tab mới.",
+      "noDetails": "Không có thông tin chi tiết có sẵn cho dòng sản phẩm này.",
+      "viewImageFullscreen": "Xem hình ảnh đội hình {index} toàn màn hình",
       "description": "Thêm đội hình mới",
       "agent": "Đại lý",
       "selectAgent": "Chọn đại lý",
@@ -717,6 +759,12 @@
       "uploadingImage": "Đang tải hình ảnh lên"
     },
     "textEditor": {
+      "editText": "Chỉnh sửa văn bản",
+      "textContent": "Nội dung văn bản",
+      "tapDone": "Nhấn vào Xong khi bạn hoàn tất",
+      "done": "Xong",
+      "placeholder": "Nhập văn bản của bạn...",
+      "close": "Đóng",
       "bold": "In đậm",
       "italic": "Nghiêng",
       "underline": "gạch chân",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "Đại lý",
+    "closeSidebar": "Đóng thanh bên đại lý",
+    "onMap": "Trên bản đồ",
     "all": "Tất cả",
     "empty": "Không có đại lý trên bản đồ",
     "emptyByRole": "Không có đại lý {role} trên bản đồ",

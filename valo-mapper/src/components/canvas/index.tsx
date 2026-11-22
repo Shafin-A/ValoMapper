@@ -8,6 +8,7 @@ import {
   useCanvasView,
 } from "@/contexts/canvas-context";
 import { useCommitCount } from "@/lib/perf-beacon";
+import { useTranslations } from "next-intl";
 import { useSendCursorPosition } from "@/contexts/websocket-context";
 import Konva from "konva";
 import { Stage as KonvaStage } from "konva/lib/Stage";
@@ -153,6 +154,7 @@ export const MapStage = memo(
       forwardedRef,
     ) => {
     useCommitCount("MapStage");
+    const t = useTranslations("canvas.aria");
 
     const isMobile = useIsMobile();
     const { isDrawMode, setIsDraggingCanvasItem } = useCanvasUi();
@@ -328,7 +330,7 @@ export const MapStage = memo(
     return (
       <div
         role="region"
-        aria-label="Tactical map canvas"
+        aria-label={t("tacticalMap")}
         className={canvasBackgroundClassName}
         onPointerDown={() => {
           requestAnimationFrame(() => {
@@ -441,7 +443,7 @@ export const MapStage = memo(
               variant="ghost"
               size="icon"
               className="h-11 w-11"
-              aria-label="Zoom in"
+              aria-label={t("zoomIn")}
               onClick={handleZoomIn}
             >
               <Plus />
@@ -450,7 +452,7 @@ export const MapStage = memo(
               variant="ghost"
               size="icon"
               className="h-11 w-11"
-              aria-label="Zoom out"
+              aria-label={t("zoomOut")}
               onClick={handleZoomOut}
             >
               <Minus />
@@ -459,7 +461,7 @@ export const MapStage = memo(
               variant="ghost"
               size="icon"
               className="h-11 w-11"
-              aria-label="Fit map"
+              aria-label={t("fitMap")}
               onClick={handleResetZoom}
             >
               <Scan />

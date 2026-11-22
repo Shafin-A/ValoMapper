@@ -75,6 +75,9 @@
     "rsoErrorTitle": "错误",
     "rsoNoCodeTitle": "无授权码",
     "rsoNoCodeDescription": "Riot 登录似乎已被取消。",
+    "rsoCallbackTitle": "正在链接 Riot 帐户...",
+    "rsoProcessingTitle": "正在处理 Riot 登录...",
+    "rsoProcessingDescription": "我们正在完成帐户关联，请稍候。",
     "goToProfile": "前往个人资料"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "凯达",
     "score": "分数",
     "agentFallback": "代理人"
+  },
+  "collaboration": {
+    "usersInLobby": "大厅用户：",
+    "statusConnected": "已连接",
+    "statusConnecting": "正在连接...",
+    "statusDisconnected": "已断开连接",
+    "statusError": "连接错误"
+  },
+  "lobby": {
+    "linkCopied": "链接已复制！",
+    "linkCopyFailed": "无法将链接复制到剪贴板"
   },
   "billing": {
     "dialogTitle": "查看您的升级",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "重播"
+    },
+    "scoreboard": {
+      "active": "积极的",
+      "points": "点",
+      "ready": "准备好",
+      "charges": "收费",
+      "used": "用过的",
+      "available": "可用的",
+      "cooldown": "{seconds}的冷却时间"
+    },
+    "session": {
+      "missingId": "此重播链接缺少 ID。",
+      "opening": "重播开始……",
+      "expired": "此重播已过期。重新打开 .vrf 文件以再次解析它 - 解析的重放保留在此设备上，并且服务器副本仅持续很短的时间。",
+      "couldNotOpen": "无法打开此重播。",
+      "loadingPlayer": "正在加载重播播放器"
     },
     "player": {
       "copyToLobby": "复制到新大厅",
@@ -684,8 +714,20 @@
       "zoomIn": "放大",
       "close": "关闭全屏"
     },
+    "aria": {
+      "tacticalMap": "战术地图画布",
+      "zoomIn": "放大",
+      "zoomOut": "缩小",
+      "fitMap": "适合地图"
+    },
     "lineup": {
       "title": "添加阵容",
+      "lineupImages": "阵容图片",
+      "youtubeVideo": "Youtube 视频",
+      "youtubePlayer": "YouTube 视频播放器",
+      "openLinkNewTab": "在新选项卡中打开链接。",
+      "noDetails": "没有关于此阵容的详细信息。",
+      "viewImageFullscreen": "全屏查看阵容图像 {index}",
       "description": "添加新阵容",
       "agent": "代理人",
       "selectAgent": "选择代理",
@@ -717,6 +759,12 @@
       "uploadingImage": "上传图片"
     },
     "textEditor": {
+      "editText": "编辑文字",
+      "textContent": "文字内容",
+      "tapDone": "完成后点击“完成”",
+      "done": "完毕",
+      "placeholder": "输入您的文字...",
+      "close": "关闭",
       "bold": "大胆的",
       "italic": "斜体",
       "underline": "强调",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "代理商",
+    "closeSidebar": "关闭代理侧边栏",
+    "onMap": "在地图上",
     "all": "全部",
     "empty": "地图上没有代理",
     "emptyByRole": "地图上没有 {role} 特工",

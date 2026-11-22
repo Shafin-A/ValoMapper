@@ -7,6 +7,7 @@ import type {
   ReplayMatch,
 } from "@/lib/replay/types";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import {
   lazy,
@@ -22,18 +23,23 @@ const ReplaySessionPlayer = lazy(() =>
   })),
 );
 
-const ReplayPlayerFallback = () => (
-  <div
-    role="status"
-    aria-live="polite"
-    className="flex min-h-screen items-center justify-center"
-  >
-    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-    <span className="sr-only">Loading replay player</span>
-  </div>
-);
+const ReplayPlayerFallback = () => {
+  const t = useTranslations("replay.session");
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex min-h-screen items-center justify-center"
+    >
+      <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <span className="sr-only">{t("loadingPlayer")}</span>
+    </div>
+  );
+};
 
 export const ReplaySessionPage = () => {
+  const t = useTranslations("replay.session");
   const params = useParams();
   const router = useRouter();
   const replayId =
@@ -50,13 +56,13 @@ export const ReplaySessionPage = () => {
 
   const loadReplay = useCallback(async () => {
     if (!replayId) {
-      setError("This replay link is missing an id.");
+      setError(t("missingId"));
       setIsLoading(false);
       return;
     }
 
     setError(null);
-    setProgress({ percent: 0, label: "Opening replay…" });
+    setProgress({ percent: 0, label: t("opening") });
     setIsLoading(true);
 
     try {
@@ -65,9 +71,7 @@ export const ReplaySessionPage = () => {
       });
 
       if (!session) {
-        setError(
-          "This replay has expired. Reopen the .vrf file to parse it again — parsed replays are kept on this device, and the server copy only lasts a short time.",
-        );
+        setError(t("expired"));
         return;
       }
 
@@ -76,12 +80,12 @@ export const ReplaySessionPage = () => {
       setError(
         loadError instanceof Error
           ? loadError.message
-          : "Could not open this replay.",
+          : t("couldNotOpen"),
       );
     } finally {
       setIsLoading(false);
     }
-  }, [replayId]);
+  }, [replayId, t]);
 
   useEffect(() => {
     void loadReplay();

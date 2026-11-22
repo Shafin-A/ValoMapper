@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LineupImageUpload } from "../tools-sidebar/lineup-dialog/lineup-image-upload";
 import { debounce } from "@/lib/utils";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 interface LineupEditContentProps {
   images: string[];
@@ -30,6 +31,7 @@ export const LineupEditContent = ({
   onNotesChange,
   onLineColorChange,
 }: LineupEditContentProps) => {
+  const t = useTranslations("canvas.lineup");
   const debouncedSetLineColor = useMemo(
     () => debounce((color: string) => onLineColorChange(color), 16),
     [onLineColorChange],
@@ -44,7 +46,7 @@ export const LineupEditContent = ({
         onImageExpand={onImageExpand}
       />
       <div className="space-y-2">
-        <Label htmlFor="edit-link">Link</Label>
+        <Label htmlFor="edit-link">{t("link")}</Label>
         <Input
           id="edit-link"
           type="url"
@@ -54,16 +56,16 @@ export const LineupEditContent = ({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="edit-notes">Notes</Label>
+        <Label htmlFor="edit-notes">{t("notes")}</Label>
         <Textarea
           id="edit-notes"
-          placeholder="Add any notes about this lineup..."
+          placeholder={t("notesPlaceholder")}
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="edit-line-color">Line Color</Label>
+        <Label htmlFor="edit-line-color">{t("lineColor")}</Label>
         <div className="flex items-center gap-3">
           <input
             id="edit-line-color"

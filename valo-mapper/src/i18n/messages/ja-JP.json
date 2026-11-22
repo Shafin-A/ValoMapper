@@ -75,6 +75,9 @@
     "rsoErrorTitle": "エラー",
     "rsoNoCodeTitle": "認証コードがありません",
     "rsoNoCodeDescription": "Riotのログインがキャンセルされたようです。",
+    "rsoCallbackTitle": "Riot アカウントをリンクしています...",
+    "rsoProcessingTitle": "Riot ログインを処理しています...",
+    "rsoProcessingDescription": "アカウントのリンクが完了するまでお待ちください。",
     "goToProfile": "プロフィールに移動"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "スコア",
     "agentFallback": "エージェント"
+  },
+  "collaboration": {
+    "usersInLobby": "ロビーのユーザー:",
+    "statusConnected": "接続済み",
+    "statusConnecting": "接続中...",
+    "statusDisconnected": "切断されました",
+    "statusError": "接続エラー"
+  },
+  "lobby": {
+    "linkCopied": "リンクがコピーされました!",
+    "linkCopyFailed": "リンクをクリップボードにコピーできませんでした"
   },
   "billing": {
     "dialogTitle": "アップグレードを確認してください",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "リプレイ"
+    },
+    "scoreboard": {
+      "active": "アクティブ",
+      "points": "ポイント",
+      "ready": "準備ができて",
+      "charges": "料金",
+      "used": "使用済み",
+      "available": "利用可能",
+      "cooldown": "{seconds} のクールダウン"
+    },
+    "session": {
+      "missingId": "このリプレイ リンクには ID がありません。",
+      "opening": "オープニングリプレイ…",
+      "expired": "このリプレイは有効期限が切れています。 .vrf ファイルをもう一度開いて再度解析します。解析されたリプレイはこのデバイスに保存され、サーバー コピーは短時間しか持続しません。",
+      "couldNotOpen": "このリプレイを開けませんでした。",
+      "loadingPlayer": "リプレイプレーヤーをロードしています"
     },
     "player": {
       "copyToLobby": "新しいロビーにコピー",
@@ -684,8 +714,20 @@
       "zoomIn": "ズームイン",
       "close": "全画面表示を閉じる"
     },
+    "aria": {
+      "tacticalMap": "戦術マップキャンバス",
+      "zoomIn": "ズームイン",
+      "zoomOut": "ズームアウト",
+      "fitMap": "フィットマップ"
+    },
     "lineup": {
       "title": "ラインナップを追加",
+      "lineupImages": "ラインナップイメージ",
+      "youtubeVideo": "YouTubeビデオ",
+      "youtubePlayer": "YouTubeビデオプレーヤー",
+      "openLinkNewTab": "リンクを新しいタブで開きます。",
+      "noDetails": "このラインナップの詳細は不明です。",
+      "viewImageFullscreen": "ラインナップ画像 {index} 全画面表示",
       "description": "新しいラインナップを追加",
       "agent": "エージェント",
       "selectAgent": "エージェントを選択してください",
@@ -717,6 +759,12 @@
       "uploadingImage": "画像をアップロードしています"
     },
     "textEditor": {
+      "editText": "テキストを編集する",
+      "textContent": "テキストの内容",
+      "tapDone": "完了したら「完了」をタップします",
+      "done": "終わり",
+      "placeholder": "テキストを入力してください...",
+      "close": "近い",
       "bold": "大胆な",
       "italic": "イタリック",
       "underline": "下線",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "エージェント",
+    "closeSidebar": "エージェントのサイドバーを閉じる",
+    "onMap": "地図上",
     "all": "全て",
     "empty": "地図上にエージェントはいません",
     "emptyByRole": "マップ上に {role} エージェントはいません",

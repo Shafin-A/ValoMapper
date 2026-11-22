@@ -61,6 +61,7 @@ import {
 } from "@/lib/consts/configs/agent-icon/consts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InfoHint } from "@/components/shared/info-hint";
+import { useTranslations } from "next-intl";
 
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
@@ -79,6 +80,7 @@ export const AgentsSidebar = ({
   sidebarOpen,
   setSidebarOpen,
 }: AgentsSidebarProps) => {
+  const t = useTranslations("agents");
   const isMobile = useIsMobile();
 
   const {
@@ -486,7 +488,7 @@ export const AgentsSidebar = ({
         <SidebarHeader>
           <div className="flex flex-col gap-3 p-2">
             <div className="flex items-center justify-between">
-              <span className="text-base font-semibold">Agents</span>
+              <span className="text-base font-semibold">{t("title")}</span>
               <div className="flex items-center gap-1">
                 <InfoHint label="Agent sidebar help">
                   <div className="space-y-2">
@@ -507,7 +509,7 @@ export const AgentsSidebar = ({
                     variant="ghost"
                     size="icon"
                     className="h-10 w-10"
-                    aria-label="Close agents sidebar"
+                    aria-label={t("closeSidebar")}
                     onClick={() => setSidebarOpen?.(false)}
                   >
                     <X />
@@ -541,7 +543,7 @@ export const AgentsSidebar = ({
                   }}
                   disabled={isLoadingLobby || isErrorLobby}
                 />
-                <span className="text-sm">On map</span>
+                <span className="text-sm">{t("onMap")}</span>
               </div>
             </div>
           </div>

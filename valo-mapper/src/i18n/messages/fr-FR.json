@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Erreur",
     "rsoNoCodeTitle": "Aucun code d'autorisation",
     "rsoNoCodeDescription": "Il semble que la connexion Riot ait été annulée.",
+    "rsoCallbackTitle": "Lier un compte Riot...",
+    "rsoProcessingTitle": "Traitement de la connexion Riot...",
+    "rsoProcessingDescription": "Veuillez patienter pendant que nous finalisons l'association du compte.",
     "goToProfile": "Aller au profil"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "SCORE",
     "agentFallback": "Agent"
+  },
+  "collaboration": {
+    "usersInLobby": "Utilisateurs dans le lobby :",
+    "statusConnected": "Connecté",
+    "statusConnecting": "De liaison...",
+    "statusDisconnected": "Déconnecté",
+    "statusError": "Erreur de connexion"
+  },
+  "lobby": {
+    "linkCopied": "Lien copié !",
+    "linkCopyFailed": "Échec de la copie du lien dans le presse-papiers"
   },
   "billing": {
     "dialogTitle": "Vérifiez votre mise à niveau",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Rejouer"
+    },
+    "scoreboard": {
+      "active": "actif",
+      "points": "points",
+      "ready": "prêt",
+      "charges": "frais",
+      "used": "utilisé",
+      "available": "disponible",
+      "cooldown": "Temps de recharge des {seconds}"
+    },
+    "session": {
+      "missingId": "Il manque un identifiant à ce lien de relecture.",
+      "opening": "Rediffusion d’ouverture…",
+      "expired": "Cette rediffusion a expiré. Rouvrez le fichier .vrf pour l'analyser à nouveau : les rediffusions analysées sont conservées sur cet appareil et la copie du serveur ne dure que peu de temps.",
+      "couldNotOpen": "Impossible d'ouvrir cette rediffusion.",
+      "loadingPlayer": "Chargement du lecteur de replay"
     },
     "player": {
       "copyToLobby": "Copier dans le nouveau lobby",
@@ -684,8 +714,20 @@
       "zoomIn": "Zoomer",
       "close": "Fermer le mode plein écran"
     },
+    "aria": {
+      "tacticalMap": "Toile de carte tactique",
+      "zoomIn": "Zoomer",
+      "zoomOut": "Zoom arrière",
+      "fitMap": "Ajuster la carte"
+    },
     "lineup": {
       "title": "Ajouter une programmation",
+      "lineupImages": "Images de la programmation",
+      "youtubeVideo": "Vidéo YouTube",
+      "youtubePlayer": "Lecteur vidéo YouTube",
+      "openLinkNewTab": "Ouvrir le lien dans un nouvel onglet.",
+      "noDetails": "Aucun détail disponible pour cette gamme.",
+      "viewImageFullscreen": "Voir l'image de la programmation {index} en plein écran",
       "description": "Ajouter une nouvelle programmation",
       "agent": "Agent",
       "selectAgent": "Sélectionnez un mandataire",
@@ -717,6 +759,12 @@
       "uploadingImage": "Téléchargement de l'image"
     },
     "textEditor": {
+      "editText": "Modifier le texte",
+      "textContent": "Contenu du texte",
+      "tapDone": "Appuyez sur Terminé lorsque vous avez terminé",
+      "done": "Fait",
+      "placeholder": "Tapez votre texte...",
+      "close": "Fermer",
       "bold": "Audacieux",
       "italic": "Italique",
       "underline": "Souligner",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "Agents",
+    "closeSidebar": "Fermer la barre latérale des agents",
+    "onMap": "Sur la carte",
     "all": "Tous",
     "empty": "Aucun agent sur la carte",
     "emptyByRole": "Aucun agent {role} sur la carte",

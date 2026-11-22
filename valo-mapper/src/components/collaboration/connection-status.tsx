@@ -13,34 +13,36 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Users, Wifi, WifiOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const STATUS_CONFIG: Record<
   WSConnectionStatus,
-  { color: string; text: string; icon: typeof Wifi }
+  { color: string; textKey: string; icon: typeof Wifi }
 > = {
   connected: {
     color: "bg-green-500",
-    text: "Connected",
+    textKey: "statusConnected",
     icon: Wifi,
   },
   connecting: {
     color: "bg-yellow-500 animate-pulse",
-    text: "Connecting...",
+    textKey: "statusConnecting",
     icon: Wifi,
   },
   disconnected: {
     color: "bg-gray-500",
-    text: "Disconnected",
+    textKey: "statusDisconnected",
     icon: WifiOff,
   },
   error: {
     color: "bg-destructive",
-    text: "Connection Error",
+    textKey: "statusError",
     icon: WifiOff,
   },
 };
 
 export const ConnectionStatus = () => {
+  const t = useTranslations("collaboration");
   const status = useWebSocketStatus();
   const users = useWebSocketUsers();
   const config = STATUS_CONFIG[status];
@@ -57,7 +59,7 @@ export const ConnectionStatus = () => {
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{config.text}</p>
+            <p>{t(config.textKey as never)}</p>
           </TooltipContent>
         </Tooltip>
 
@@ -73,7 +75,7 @@ export const ConnectionStatus = () => {
             </TooltipTrigger>
             <TooltipContent>
               <div className="space-y-1">
-                <p className="font-medium">Users in lobby:</p>
+                <p className="font-medium">{t("usersInLobby")}</p>
                 {users.map((user) => (
                   <UserBadge key={user.id} user={user} />
                 ))}

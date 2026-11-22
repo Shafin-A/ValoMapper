@@ -26,6 +26,7 @@ import type { MatchPlayerSummary } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { Shield } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 const PIP_ROW_SIZE = 4;
@@ -78,6 +79,7 @@ const AbilityCell = ({
   ability: ReplayAbilityDisplay;
   currentTimeMs: number;
 }) => {
+  const t = useTranslations("replay.scoreboard");
   const castTimes =
     ability.castTimesMs ??
     (ability.castTimeMs !== undefined ? [ability.castTimeMs] : []);
@@ -155,19 +157,21 @@ const AbilityCell = ({
   let status: string;
   if (isUltimate && ultimatePoint) {
     if (ultimateActive) {
-      status = "active";
+      status = t("active");
     } else if (ultimateCost > 0) {
-      status = `${ultimatePoints}/${ultimateCost} points${ultimateReady ? " · ready" : ""}`;
+      status = `${ultimatePoints}/${ultimateCost} ${t("points")}${
+        ultimateReady ? ` · ${t("ready")}` : ""
+      }`;
     } else {
-      status = `${ultimatePoints} points`;
+      status = `${ultimatePoints} ${t("points")}`;
     }
   } else if (maxCharges) {
-    status = `${remaining}/${maxCharges} charges`;
+    status = `${remaining}/${maxCharges} ${t("charges")}`;
   } else {
-    status = depleted ? "used" : "available";
+    status = depleted ? t("used") : t("available");
   }
   if (cooldown) {
-    status += ` · ${cooldownSeconds}s cooldown`;
+    status += ` · ${t("cooldown", { seconds: cooldownSeconds })}`;
   }
 
   return (

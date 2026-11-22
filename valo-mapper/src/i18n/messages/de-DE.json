@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Fehler",
     "rsoNoCodeTitle": "Kein Autorisierungscode",
     "rsoNoCodeDescription": "Es sieht so aus, als ob der Riot-Login abgebrochen wurde.",
+    "rsoCallbackTitle": "Riot-Konto verknüpfen...",
+    "rsoProcessingTitle": "Riot-Login wird verarbeitet...",
+    "rsoProcessingDescription": "Bitte warten Sie, während wir die Kontoverknüpfung abschließen.",
     "goToProfile": "Gehen Sie zu Profil"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "PUNKTZAHL",
     "agentFallback": "Agent"
+  },
+  "collaboration": {
+    "usersInLobby": "Benutzer in der Lobby:",
+    "statusConnected": "Verbunden",
+    "statusConnecting": "Verbinden...",
+    "statusDisconnected": "Getrennt",
+    "statusError": "Verbindungsfehler"
+  },
+  "lobby": {
+    "linkCopied": "Link kopiert!",
+    "linkCopyFailed": "Link konnte nicht in die Zwischenablage kopiert werden"
   },
   "billing": {
     "dialogTitle": "Überprüfen Sie Ihr Upgrade",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Wiederholung"
+    },
+    "scoreboard": {
+      "active": "aktiv",
+      "points": "Punkte",
+      "ready": "bereit",
+      "charges": "Gebühren",
+      "used": "gebraucht",
+      "available": "verfügbar",
+      "cooldown": "{seconds}s Abklingzeit"
+    },
+    "session": {
+      "missingId": "Diesem Wiedergabelink fehlt eine ID.",
+      "opening": "Eröffnungswiederholung…",
+      "expired": "Diese Wiederholung ist abgelaufen. Öffnen Sie die .vrf-Datei erneut, um sie erneut zu analysieren. Die analysierten Wiederholungen werden auf diesem Gerät gespeichert und die Serverkopie ist nur für kurze Zeit gültig.",
+      "couldNotOpen": "Diese Wiederholung konnte nicht geöffnet werden.",
+      "loadingPlayer": "Replay-Player wird geladen"
     },
     "player": {
       "copyToLobby": "In neue Lobby kopieren",
@@ -684,8 +714,20 @@
       "zoomIn": "Vergrößern",
       "close": "Vollbild schließen"
     },
+    "aria": {
+      "tacticalMap": "Taktische Kartenleinwand",
+      "zoomIn": "Vergrößern",
+      "zoomOut": "Herauszoomen",
+      "fitMap": "Karte anpassen"
+    },
     "lineup": {
       "title": "Aufstellung hinzufügen",
+      "lineupImages": "Aufstellungsbilder",
+      "youtubeVideo": "YouTube-Video",
+      "youtubePlayer": "YouTube-Videoplayer",
+      "openLinkNewTab": "Link in neuem Tab öffnen.",
+      "noDetails": "Für diese Aufstellung sind keine Details verfügbar.",
+      "viewImageFullscreen": "Aufstellungsbild {index} im Vollbildmodus anzeigen",
       "description": "Fügen Sie eine neue Aufstellung hinzu",
       "agent": "Agent",
       "selectAgent": "Wählen Sie einen Agenten aus",
@@ -717,6 +759,12 @@
       "uploadingImage": "Bild hochladen"
     },
     "textEditor": {
+      "editText": "Text bearbeiten",
+      "textContent": "Textinhalt",
+      "tapDone": "Tippen Sie auf „Fertig“, wenn Sie fertig sind",
+      "done": "Erledigt",
+      "placeholder": "Geben Sie Ihren Text ein...",
+      "close": "Schließen",
       "bold": "Deutlich",
       "italic": "Kursiv",
       "underline": "Unterstreichen",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "Agenten",
+    "closeSidebar": "Schließen Sie die Agenten-Seitenleiste",
+    "onMap": "Auf der Karte",
     "all": "Alle",
     "empty": "Keine Agenten auf der Karte",
     "emptyByRole": "Keine {role}-Agenten auf der Karte",

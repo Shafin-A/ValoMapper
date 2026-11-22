@@ -75,6 +75,9 @@
     "rsoErrorTitle": "ข้อผิดพลาด",
     "rsoNoCodeTitle": "ไม่มีรหัสอนุญาต",
     "rsoNoCodeDescription": "ดูเหมือนว่าการเข้าสู่ระบบ Riot จะถูกยกเลิก",
+    "rsoCallbackTitle": "กำลังเชื่อมโยงบัญชี Riot...",
+    "rsoProcessingTitle": "กำลังประมวลผลการเข้าสู่ระบบ Riot...",
+    "rsoProcessingDescription": "โปรดรอในขณะที่เราเชื่อมโยงบัญชีเสร็จสมบูรณ์",
     "goToProfile": "ไปที่โปรไฟล์"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "เคดีเอ",
     "score": "คะแนน",
     "agentFallback": "ตัวแทน"
+  },
+  "collaboration": {
+    "usersInLobby": "ผู้ใช้ในล็อบบี้:",
+    "statusConnected": "เชื่อมต่อแล้ว",
+    "statusConnecting": "กำลังเชื่อมต่อ...",
+    "statusDisconnected": "ตัดการเชื่อมต่อแล้ว",
+    "statusError": "ข้อผิดพลาดในการเชื่อมต่อ"
+  },
+  "lobby": {
+    "linkCopied": "คัดลอกลิงก์แล้ว!",
+    "linkCopyFailed": "คัดลอกลิงก์ไปยังคลิปบอร์ดไม่สำเร็จ"
   },
   "billing": {
     "dialogTitle": "ตรวจสอบการอัพเกรดของคุณ",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "เล่นซ้ำ"
+    },
+    "scoreboard": {
+      "active": "คล่องแคล่ว",
+      "points": "คะแนน",
+      "ready": "พร้อม",
+      "charges": "ค่าธรรมเนียม",
+      "used": "ใช้แล้ว",
+      "available": "มีอยู่",
+      "cooldown": "คูลดาวน์ของ {seconds}"
+    },
+    "session": {
+      "missingId": "ลิงก์เล่นซ้ำนี้ไม่มีรหัส",
+      "opening": "กำลังเปิดเล่นซ้ำ...",
+      "expired": "รีเพลย์นี้หมดอายุแล้ว เปิดไฟล์ .vrf อีกครั้งเพื่อแยกวิเคราะห์อีกครั้ง — การเล่นซ้ำที่แยกวิเคราะห์จะถูกเก็บไว้บนอุปกรณ์นี้ และการคัดลอกเซิร์ฟเวอร์จะคงอยู่เพียงช่วงเวลาสั้นๆ เท่านั้น",
+      "couldNotOpen": "ไม่สามารถเปิดการเล่นซ้ำนี้ได้",
+      "loadingPlayer": "กำลังโหลดโปรแกรมเล่นซ้ำ"
     },
     "player": {
       "copyToLobby": "คัดลอกไปที่ล็อบบี้ใหม่",
@@ -684,8 +714,20 @@
       "zoomIn": "ซูมเข้า",
       "close": "ปิดการแสดงเต็มหน้าจอ"
     },
+    "aria": {
+      "tacticalMap": "ผ้าใบแผนที่ยุทธวิธี",
+      "zoomIn": "ซูมเข้า",
+      "zoomOut": "ซูมออก",
+      "fitMap": "แผนที่พอดี"
+    },
     "lineup": {
       "title": "เพิ่มรายการผู้เล่นตัวจริง",
+      "lineupImages": "รูปภาพรายการต่างๆ",
+      "youtubeVideo": "วิดีโอ YouTube",
+      "youtubePlayer": "เครื่องเล่นวิดีโอ YouTube",
+      "openLinkNewTab": "เปิดลิงก์ในแท็บใหม่",
+      "noDetails": "ไม่มีรายละเอียดสำหรับรายการนี้",
+      "viewImageFullscreen": "ดูภาพรายการสินค้า {index} แบบเต็มจอ",
       "description": "เพิ่มรายการใหม่",
       "agent": "ตัวแทน",
       "selectAgent": "เลือกตัวแทน",
@@ -717,6 +759,12 @@
       "uploadingImage": "กำลังอัพโหลดรูปภาพ"
     },
     "textEditor": {
+      "editText": "แก้ไขข้อความ",
+      "textContent": "เนื้อหาข้อความ",
+      "tapDone": "แตะเสร็จสิ้นเมื่อคุณทำเสร็จแล้ว",
+      "done": "เสร็จแล้ว",
+      "placeholder": "พิมพ์ข้อความของคุณ...",
+      "close": "ปิด",
       "bold": "ตัวหนา",
       "italic": "ตัวเอียง",
       "underline": "ขีดเส้นใต้",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "ตัวแทน",
+    "closeSidebar": "ปิดแถบด้านข้างของตัวแทน",
+    "onMap": "บนแผนที่",
     "all": "ทั้งหมด",
     "empty": "ไม่มีตัวแทนบนแผนที่",
     "emptyByRole": "ไม่มีตัวแทน {role} บนแผนที่",

@@ -36,6 +36,7 @@ import {
   type ActiveFormats,
 } from "./formatting";
 import { TextEditorToolbar } from "./toolbar";
+import { useTranslations } from "next-intl";
 import {
   useEditorFocus,
   useFontSizeFocusSync,
@@ -65,6 +66,7 @@ export const TextEditor = ({
   onClose,
   mobile,
 }: TextEditorProps) => {
+  const t = useTranslations("canvas.textEditor");
   const detectedMobile = useIsMobile();
   const isMobile = mobile ?? detectedMobile;
   const viewport = useVisualViewport();
@@ -519,19 +521,19 @@ export const TextEditor = ({
         ref={containerRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Edit text"
+        aria-label={t("editText")}
         style={mobileOverlayStyle}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3">
           <div>
-            <p className="text-sm font-semibold text-white">Edit text</p>
-            <p className="text-xs text-zinc-400">
-              Tap Done when you&apos;re finished
+            <p className="text-sm font-semibold text-white">
+              {t("editText")}
             </p>
+            <p className="text-xs text-zinc-400">{t("tapDone")}</p>
           </div>
           <Button size="sm" className="gap-1.5" onClick={commit}>
             <Check className="size-4" />
-            Done
+            {t("done")}
           </Button>
         </div>
 
@@ -543,7 +545,7 @@ export const TextEditor = ({
             <div
               ref={attachEditor}
               role="textbox"
-              aria-label="Text content"
+              aria-label={t("textContent")}
               aria-multiline="true"
               contentEditable
               suppressContentEditableWarning
@@ -567,7 +569,7 @@ export const TextEditor = ({
                   lineHeight: 1.5,
                 }}
               >
-                Type your text...
+                {t("placeholder")}
               </span>
             )}
           </div>
@@ -615,7 +617,7 @@ export const TextEditor = ({
         <div
           ref={attachEditor}
           role="textbox"
-          aria-label="Text content"
+          aria-label={t("textContent")}
           aria-multiline="true"
           contentEditable
           suppressContentEditableWarning
@@ -656,7 +658,7 @@ export const TextEditor = ({
           }}
         >
           <X />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{t("close")}</span>
         </Button>
       </div>
     </Html>

@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Kesalahan",
     "rsoNoCodeTitle": "Tidak Ada Kode Otorisasi",
     "rsoNoCodeDescription": "Sepertinya login Riot dibatalkan.",
+    "rsoCallbackTitle": "Menautkan Akun Riot...",
+    "rsoProcessingTitle": "Memproses login Riot...",
+    "rsoProcessingDescription": "Harap tunggu sementara kami menyelesaikan penautan akun.",
     "goToProfile": "Buka Profil"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "SKOR",
     "agentFallback": "Agen"
+  },
+  "collaboration": {
+    "usersInLobby": "Pengguna di lobi:",
+    "statusConnected": "Terhubung",
+    "statusConnecting": "Menghubungkan...",
+    "statusDisconnected": "Terputus",
+    "statusError": "Kesalahan Koneksi"
+  },
+  "lobby": {
+    "linkCopied": "Tautan disalin!",
+    "linkCopyFailed": "Gagal menyalin tautan ke papan klip"
   },
   "billing": {
     "dialogTitle": "Tinjau peningkatan Anda",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Memutar ulang"
+    },
+    "scoreboard": {
+      "active": "aktif",
+      "points": "poin",
+      "ready": "siap",
+      "charges": "biaya",
+      "used": "digunakan",
+      "available": "tersedia",
+      "cooldown": "Cooldown {seconds}"
+    },
+    "session": {
+      "missingId": "Tautan putar ulang ini tidak memiliki ID.",
+      "opening": "Membuka tayangan ulang…",
+      "expired": "Pemutaran ulang ini telah kedaluwarsa. Buka kembali file .vrf untuk menguraikannya lagi — pemutaran ulang yang diurai disimpan di perangkat ini, dan salinan server hanya berlangsung dalam waktu singkat.",
+      "couldNotOpen": "Tidak dapat membuka tayangan ulang ini.",
+      "loadingPlayer": "Memuat pemutar ulangan"
     },
     "player": {
       "copyToLobby": "Salin ke lobi baru",
@@ -684,8 +714,20 @@
       "zoomIn": "Perbesar",
       "close": "Tutup layar penuh"
     },
+    "aria": {
+      "tacticalMap": "Kanvas peta taktis",
+      "zoomIn": "Perbesar",
+      "zoomOut": "Perkecil",
+      "fitMap": "Peta yang pas"
+    },
     "lineup": {
       "title": "Tambahkan Daftar",
+      "lineupImages": "Gambar Susunan",
+      "youtubeVideo": "Video YouTube",
+      "youtubePlayer": "Pemutar video YouTube",
+      "openLinkNewTab": "Buka tautan di tab baru.",
+      "noDetails": "Tidak ada detail yang tersedia untuk lineup ini.",
+      "viewImageFullscreen": "Lihat gambar lineup {index} layar penuh",
       "description": "Tambahkan Barisan baru",
       "agent": "Agen",
       "selectAgent": "Pilih agen",
@@ -717,6 +759,12 @@
       "uploadingImage": "Mengunggah gambar"
     },
     "textEditor": {
+      "editText": "Sunting teks",
+      "textContent": "Konten teks",
+      "tapDone": "Ketuk Selesai setelah Anda selesai",
+      "done": "Selesai",
+      "placeholder": "Ketikkan teks Anda...",
+      "close": "Menutup",
       "bold": "Berani",
       "italic": "miring",
       "underline": "Menggarisbawahi",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "Agen",
+    "closeSidebar": "Tutup sidebar agen",
+    "onMap": "Di peta",
     "all": "Semua",
     "empty": "Tidak ada agen di peta",
     "emptyByRole": "Tidak ada agen {role} di peta",

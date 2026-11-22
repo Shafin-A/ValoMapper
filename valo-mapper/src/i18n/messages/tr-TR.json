@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Hata",
     "rsoNoCodeTitle": "Yetki Kodu Yok",
     "rsoNoCodeDescription": "Riot'a giriş iptal edilmiş gibi görünüyor.",
+    "rsoCallbackTitle": "Riot Hesabı bağlanıyor...",
+    "rsoProcessingTitle": "Riot girişi işleniyor...",
+    "rsoProcessingDescription": "Hesap bağlama işlemi tamamlanırken lütfen bekleyin.",
     "goToProfile": "Profile Git"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "GOL",
     "agentFallback": "Ajan"
+  },
+  "collaboration": {
+    "usersInLobby": "Lobideki kullanıcılar:",
+    "statusConnected": "Bağlı",
+    "statusConnecting": "Bağlanıyor...",
+    "statusDisconnected": "Bağlantı kesildi",
+    "statusError": "Bağlantı Hatası"
+  },
+  "lobby": {
+    "linkCopied": "Bağlantı kopyalandı!",
+    "linkCopyFailed": "Bağlantı panoya kopyalanamadı"
   },
   "billing": {
     "dialogTitle": "Yükseltmenizi gözden geçirin",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Tekrar oynat"
+    },
+    "scoreboard": {
+      "active": "aktif",
+      "points": "puan",
+      "ready": "hazır",
+      "charges": "masraflar",
+      "used": "kullanılmış",
+      "available": "mevcut",
+      "cooldown": "{seconds}'nin bekleme süresi"
+    },
+    "session": {
+      "missingId": "Bu tekrar oynatma bağlantısında bir kimlik eksik.",
+      "opening": "Tekrar açılıyor…",
+      "expired": "Bu tekrarın süresi doldu. Tekrar ayrıştırmak için .vrf dosyasını yeniden açın; ayrıştırılmış tekrarlar bu cihazda tutulur ve sunucu kopyası yalnızca kısa bir süre dayanır.",
+      "couldNotOpen": "Bu tekrar açılamadı.",
+      "loadingPlayer": "Tekrar oynatma oynatıcısı yükleniyor"
     },
     "player": {
       "copyToLobby": "Yeni lobiye kopyala",
@@ -684,8 +714,20 @@
       "zoomIn": "Yakınlaştır",
       "close": "Tam ekranı kapat"
     },
+    "aria": {
+      "tacticalMap": "Taktik harita tuvali",
+      "zoomIn": "Yakınlaştır",
+      "zoomOut": "Uzaklaştır",
+      "fitMap": "Haritayı sığdır"
+    },
     "lineup": {
       "title": "Diziliş Ekle",
+      "lineupImages": "Diziliş Resimleri",
+      "youtubeVideo": "YouTube Videosu",
+      "youtubePlayer": "YouTube video oynatıcısı",
+      "openLinkNewTab": "Bağlantıyı yeni sekmede açın.",
+      "noDetails": "Bu kadro için ayrıntı mevcut değil.",
+      "viewImageFullscreen": "Sıralama resmini {index} tam ekran görüntüle",
       "description": "Yeni bir Diziliş ekle",
       "agent": "Ajan",
       "selectAgent": "Bir temsilci seçin",
@@ -717,6 +759,12 @@
       "uploadingImage": "Resim yükleniyor"
     },
     "textEditor": {
+      "editText": "Metni düzenle",
+      "textContent": "Metin içeriği",
+      "tapDone": "İşiniz bittiğinde Bitti'ye dokunun",
+      "done": "Tamamlamak",
+      "placeholder": "Metninizi yazın...",
+      "close": "Kapalı",
       "bold": "Gözü pek",
       "italic": "İtalik",
       "underline": "Altı çizili",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "Temsilciler",
+    "closeSidebar": "Temsilci kenar çubuğunu kapat",
+    "onMap": "Haritada",
     "all": "Tüm",
     "empty": "Haritada ajan yok",
     "emptyByRole": "Haritada {role} ajanı yok",

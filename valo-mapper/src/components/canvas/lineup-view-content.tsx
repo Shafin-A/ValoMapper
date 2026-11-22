@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Expand } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { ensureAbsoluteUrl } from "@/lib/url";
 
 interface LineupViewContentProps {
@@ -30,6 +31,7 @@ export const LineupViewContent = ({
   lineColor,
   onOpenFullscreen,
 }: LineupViewContentProps) => {
+  const t = useTranslations("canvas.lineup");
   const hasImages = images.length > 0;
   const hasYoutube = youtubeLink.trim() !== "";
   const hasNotes = notes.trim() !== "";
@@ -38,7 +40,7 @@ export const LineupViewContent = ({
     <div className="space-y-4 py-4">
       {hasImages && (
         <div className="space-y-2">
-          <Label>Lineup Images</Label>
+          <Label>{t("lineupImages")}</Label>
           <div className="relative px-12">
             <Carousel className="w-full">
               <CarouselContent>
@@ -55,7 +57,9 @@ export const LineupViewContent = ({
                         variant="secondary"
                         size="icon"
                         className="absolute top-2 left-2 h-6 w-6"
-                        aria-label={`View lineup image ${index + 1} fullscreen`}
+                        aria-label={t("viewImageFullscreen", {
+                          index: index + 1,
+                        })}
                         onClick={() => onOpenFullscreen(index)}
                       >
                         <Expand className="h-4 w-4" />
@@ -73,11 +77,11 @@ export const LineupViewContent = ({
 
       {hasYoutube && youtubeEmbedUrl && (
         <div className="space-y-2">
-          <Label>YouTube Video</Label>
+          <Label>{t("youtubeVideo")}</Label>
           <div className="w-full aspect-video rounded-md border overflow-hidden bg-muted">
             <iframe
               src={youtubeEmbedUrl}
-              title="YouTube video player"
+              title={t("youtubePlayer")}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="w-full h-full"
@@ -88,7 +92,7 @@ export const LineupViewContent = ({
 
       {isInvalidYoutubeLink && (
         <div className="space-y-2">
-          <Label>Link</Label>
+          <Label>{t("link")}</Label>
           <div className="p-3 rounded-md border bg-muted/50">
             <a
               href={ensureAbsoluteUrl(youtubeLink)}
@@ -99,7 +103,7 @@ export const LineupViewContent = ({
               {youtubeLink}
             </a>
             <p className="text-xs text-muted-foreground mt-1">
-              Open link in new tab.
+              {t("openLinkNewTab")}
             </p>
           </div>
         </div>
@@ -107,7 +111,7 @@ export const LineupViewContent = ({
 
       {hasNotes && (
         <div className="space-y-2">
-          <Label>Notes</Label>
+          <Label>{t("notes")}</Label>
           <div className="p-3 rounded-md border bg-muted/50 whitespace-pre-wrap">
             {notes}
           </div>
@@ -115,12 +119,12 @@ export const LineupViewContent = ({
       )}
 
       <div className="space-y-2">
-        <Label>Line Color</Label>
+        <Label>{t("lineColor")}</Label>
         <div className="flex items-center gap-3">
           <input
             type="color"
             value={lineColor}
-            aria-label="Line color"
+            aria-label={t("lineColor")}
             className="h-6 w-6 rounded"
             disabled
           />
@@ -129,7 +133,7 @@ export const LineupViewContent = ({
 
       {!hasImages && !hasYoutube && !hasNotes && (
         <div className="text-center text-muted-foreground py-8">
-          No details available for this lineup.
+          {t("noDetails")}
         </div>
       )}
     </div>

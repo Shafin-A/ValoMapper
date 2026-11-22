@@ -75,6 +75,9 @@
     "rsoErrorTitle": "오류",
     "rsoNoCodeTitle": "인증 코드 없음",
     "rsoNoCodeDescription": "라이엇 로그인이 취소된 것 같습니다.",
+    "rsoCallbackTitle": "라이엇 계정 연결 중...",
+    "rsoProcessingTitle": "라이엇 로그인 처리 중...",
+    "rsoProcessingDescription": "계정 연결을 완료하는 동안 기다려 주세요.",
     "goToProfile": "프로필로 이동"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "점수",
     "agentFallback": "대리인"
+  },
+  "collaboration": {
+    "usersInLobby": "로비에 있는 사용자:",
+    "statusConnected": "연결됨",
+    "statusConnecting": "연결 중...",
+    "statusDisconnected": "연결이 끊김",
+    "statusError": "연결 오류"
+  },
+  "lobby": {
+    "linkCopied": "링크가 복사되었습니다!",
+    "linkCopyFailed": "링크를 클립보드에 복사하지 못했습니다."
   },
   "billing": {
     "dialogTitle": "업그레이드 검토",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "다시 하다"
+    },
+    "scoreboard": {
+      "active": "활동적인",
+      "points": "전철기",
+      "ready": "준비가 된",
+      "charges": "요금",
+      "used": "사용된",
+      "available": "사용 가능",
+      "cooldown": "{seconds} 쿨다운"
+    },
+    "session": {
+      "missingId": "이 재생 링크에 ID가 없습니다.",
+      "opening": "다시보기를 여는 중…",
+      "expired": "이 리플레이는 만료되었습니다. .vrf 파일을 다시 열어 다시 구문 분석합니다. 구문 분석된 재생은 이 장치에 보관되며 서버 복사본은 짧은 시간 동안만 지속됩니다.",
+      "couldNotOpen": "이 재생을 열 수 없습니다.",
+      "loadingPlayer": "리플레이 플레이어 로드 중"
     },
     "player": {
       "copyToLobby": "새 로비에 복사",
@@ -684,8 +714,20 @@
       "zoomIn": "확대",
       "close": "전체 화면 닫기"
     },
+    "aria": {
+      "tacticalMap": "전술 지도 캔버스",
+      "zoomIn": "확대",
+      "zoomOut": "축소",
+      "fitMap": "지도에 맞추기"
+    },
     "lineup": {
       "title": "라인업 추가",
+      "lineupImages": "라인업 이미지",
+      "youtubeVideo": "유튜브 비디오",
+      "youtubePlayer": "유튜브 비디오 플레이어",
+      "openLinkNewTab": "새 탭에서 링크를 엽니다.",
+      "noDetails": "이 라인업에 대한 세부정보가 없습니다.",
+      "viewImageFullscreen": "라인업 이미지 보기 {index} 전체화면",
       "description": "새로운 라인업 추가",
       "agent": "대리인",
       "selectAgent": "에이전트를 선택하세요",
@@ -717,6 +759,12 @@
       "uploadingImage": "이미지 업로드 중"
     },
     "textEditor": {
+      "editText": "텍스트 편집",
+      "textContent": "텍스트 내용",
+      "tapDone": "완료되면 완료를 탭하세요.",
+      "done": "완료",
+      "placeholder": "텍스트를 입력하세요...",
+      "close": "닫다",
       "bold": "용감한",
       "italic": "이탤릭체",
       "underline": "밑줄",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "자치령 대표",
+    "closeSidebar": "상담원 사이드바 닫기",
+    "onMap": "지도에서",
     "all": "모두",
     "empty": "지도에 에이전트 없음",
     "emptyByRole": "지도에 {role} 에이전트가 없습니다.",

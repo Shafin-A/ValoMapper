@@ -24,6 +24,7 @@ import { preloadImages, preloadImagesWithTimeout } from "@/lib/image-preload";
 import { shouldWarmAllAssets } from "@/lib/network-policy";
 import { getAgentImgSrc } from "@/lib/assets";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -48,6 +49,7 @@ const MAP_POSITION = {
 };
 
 const LobbyEditPage = () => {
+  const t = useTranslations("lobby");
   const divRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<MapStageHandle | null>(null);
   const [stageScale, setStageScale] = useState(1);
@@ -233,17 +235,17 @@ const LobbyEditPage = () => {
         onClick: async () => {
           try {
             await navigator.clipboard.writeText(window.location.href);
-            toast.success("Link copied!");
+            toast.success(t("linkCopied"));
           } catch (err) {
             console.error("Failed to copy link:", err);
-            toast.error("Failed to copy link to clipboard");
+            toast.error(t("linkCopyFailed"));
           }
         },
       },
     });
 
     clearPendingLobbyToast();
-  }, [params.lobbyCode]);
+  }, [params.lobbyCode, t]);
 
   const isNotFound = lobbyError?.message?.includes("not found");
 

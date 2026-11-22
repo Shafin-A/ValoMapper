@@ -75,6 +75,9 @@
     "rsoErrorTitle": "خطأ",
     "rsoNoCodeTitle": "لا يوجد رمز التفويض",
     "rsoNoCodeDescription": "يبدو أنه تم إلغاء تسجيل الدخول إلى Riot.",
+    "rsoCallbackTitle": "ربط حساب Riot...",
+    "rsoProcessingTitle": "جارٍ معالجة تسجيل دخول Riot...",
+    "rsoProcessingDescription": "يرجى الانتظار حتى نكمل ربط الحساب.",
     "goToProfile": "انتقل إلى الملف الشخصي"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "كيلودا",
     "score": "نتيجة",
     "agentFallback": "عامل"
+  },
+  "collaboration": {
+    "usersInLobby": "المستخدمون في الردهة:",
+    "statusConnected": "متصل",
+    "statusConnecting": "جارٍ الاتصال...",
+    "statusDisconnected": "غير متصل",
+    "statusError": "خطأ في الاتصال"
+  },
+  "lobby": {
+    "linkCopied": "تم نسخ الرابط!",
+    "linkCopyFailed": "فشل نسخ الرابط إلى الحافظة"
   },
   "billing": {
     "dialogTitle": "قم بمراجعة الترقية الخاصة بك",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "إعادة التشغيل"
+    },
+    "scoreboard": {
+      "active": "نشيط",
+      "points": "نقاط",
+      "ready": "مستعد",
+      "charges": "رسوم",
+      "used": "مستخدم",
+      "available": "متاح",
+      "cooldown": "{seconds}s فترة التهدئة"
+    },
+    "session": {
+      "missingId": "رابط إعادة التشغيل هذا يفتقد معرفًا.",
+      "opening": "جارٍ فتح الإعادة…",
+      "expired": "انتهت صلاحية هذه الإعادة. أعد فتح ملف .vrf لتحليله مرة أخرى - يتم الاحتفاظ بالإعادات التي تم تحليلها على هذا الجهاز، وتستمر نسخة الخادم لفترة قصيرة فقط.",
+      "couldNotOpen": "تعذر فتح هذه الإعادة.",
+      "loadingPlayer": "جارٍ تحميل مشغل الإعادة"
     },
     "player": {
       "copyToLobby": "نسخ إلى الردهة الجديدة",
@@ -684,8 +714,20 @@
       "zoomIn": "تكبير",
       "close": "إغلاق ملء الشاشة"
     },
+    "aria": {
+      "tacticalMap": "قماش الخريطة التكتيكية",
+      "zoomIn": "تكبير",
+      "zoomOut": "تصغير",
+      "fitMap": "خريطة ملائمة"
+    },
     "lineup": {
       "title": "إضافة التشكيلة",
+      "lineupImages": "صور التشكيلة",
+      "youtubeVideo": "فيديو يوتيوب",
+      "youtubePlayer": "مشغل فيديو يوتيوب",
+      "openLinkNewTab": "افتح الرابط في علامة تبويب جديدة.",
+      "noDetails": "لا توجد تفاصيل متاحة لهذه التشكيلة.",
+      "viewImageFullscreen": "عرض صورة التشكيلة {index} بملء الشاشة",
       "description": "إضافة تشكيلة جديدة",
       "agent": "عامل",
       "selectAgent": "حدد وكيلا",
@@ -717,6 +759,12 @@
       "uploadingImage": "جارٍ تحميل الصورة"
     },
     "textEditor": {
+      "editText": "تحرير النص",
+      "textContent": "محتوى النص",
+      "tapDone": "اضغط على تم عند الانتهاء",
+      "done": "منتهي",
+      "placeholder": "اكتب النص الخاص بك...",
+      "close": "يغلق",
       "bold": "عريض",
       "italic": "مائل",
       "underline": "تسطير",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "الوكلاء",
+    "closeSidebar": "إغلاق الشريط الجانبي للوكلاء",
+    "onMap": "على الخريطة",
     "all": "الجميع",
     "empty": "لا يوجد وكلاء على الخريطة",
     "emptyByRole": "لا يوجد وكلاء {role} على الخريطة",

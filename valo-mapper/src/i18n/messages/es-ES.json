@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Error",
     "rsoNoCodeTitle": "Sin código de autorización",
     "rsoNoCodeDescription": "Parece que el inicio de sesión de Riot fue cancelado.",
+    "rsoCallbackTitle": "Vinculando cuenta de Riot...",
+    "rsoProcessingTitle": "Procesando el inicio de sesión de Riot...",
+    "rsoProcessingDescription": "Espere mientras completamos la vinculación de la cuenta.",
     "goToProfile": "Ir al perfil"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "kda",
     "score": "PUNTAJE",
     "agentFallback": "Agente"
+  },
+  "collaboration": {
+    "usersInLobby": "Usuarios en el lobby:",
+    "statusConnected": "Conectado",
+    "statusConnecting": "Conectando...",
+    "statusDisconnected": "Desconectado",
+    "statusError": "Error de conexión"
+  },
+  "lobby": {
+    "linkCopied": "Enlace copiado!",
+    "linkCopyFailed": "No se pudo copiar el enlace al portapapeles"
   },
   "billing": {
     "dialogTitle": "Revisa tu actualización",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Repetición"
+    },
+    "scoreboard": {
+      "active": "activo",
+      "points": "agujas",
+      "ready": "listo",
+      "charges": "cargos",
+      "used": "usado",
+      "available": "disponible",
+      "cooldown": "Tiempo de reutilización de {seconds}"
+    },
+    "session": {
+      "missingId": "A este enlace de reproducción le falta una identificación.",
+      "opening": "Abriendo repetición…",
+      "expired": "Esta repetición ha caducado. Vuelva a abrir el archivo .vrf para analizarlo nuevamente: las repeticiones analizadas se guardan en este dispositivo y la copia del servidor solo dura poco tiempo.",
+      "couldNotOpen": "No se pudo abrir esta repetición.",
+      "loadingPlayer": "Cargando reproductor de repetición"
     },
     "player": {
       "copyToLobby": "Copiar al nuevo lobby",
@@ -684,8 +714,20 @@
       "zoomIn": "Dar un golpe de zoom",
       "close": "Cerrar pantalla completa"
     },
+    "aria": {
+      "tacticalMap": "Lienzo de mapa táctico",
+      "zoomIn": "Dar un golpe de zoom",
+      "zoomOut": "alejar",
+      "fitMap": "Ajustar mapa"
+    },
     "lineup": {
       "title": "Agregar alineación",
+      "lineupImages": "Imágenes de alineación",
+      "youtubeVideo": "Vídeo de YouTube",
+      "youtubePlayer": "reproductor de vídeos de youtube",
+      "openLinkNewTab": "Abrir enlace en nueva pestaña.",
+      "noDetails": "No hay detalles disponibles para esta alineación.",
+      "viewImageFullscreen": "Ver imagen de alineación {index} en pantalla completa",
       "description": "Agregar una nueva alineación",
       "agent": "Agente",
       "selectAgent": "Seleccione un agente",
@@ -717,6 +759,12 @@
       "uploadingImage": "Subiendo imagen"
     },
     "textEditor": {
+      "editText": "Editar texto",
+      "textContent": "Contenido del texto",
+      "tapDone": "Toca Listo cuando hayas terminado",
+      "done": "Hecho",
+      "placeholder": "Escribe tu texto...",
+      "close": "Cerca",
       "bold": "Atrevido",
       "italic": "Itálico",
       "underline": "Subrayar",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "Agentes",
+    "closeSidebar": "Cerrar barra lateral de agentes",
+    "onMap": "En el mapa",
     "all": "Todo",
     "empty": "No hay agentes en el mapa.",
     "emptyByRole": "No hay agentes {role} en el mapa.",

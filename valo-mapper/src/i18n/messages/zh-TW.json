@@ -75,6 +75,9 @@
     "rsoErrorTitle": "錯誤",
     "rsoNoCodeTitle": "無授權碼",
     "rsoNoCodeDescription": "Riot 登入似乎已被取消。",
+    "rsoCallbackTitle": "正在連結 Riot 帳戶...",
+    "rsoProcessingTitle": "正在處理 Riot 登入...",
+    "rsoProcessingDescription": "我們正在完成帳戶關聯，請稍候。",
     "goToProfile": "前往個人資料"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "凱達",
     "score": "分數",
     "agentFallback": "代理人"
+  },
+  "collaboration": {
+    "usersInLobby": "大廳用戶：",
+    "statusConnected": "已連接",
+    "statusConnecting": "正在連接...",
+    "statusDisconnected": "已斷開連接",
+    "statusError": "連線錯誤"
+  },
+  "lobby": {
+    "linkCopied": "連結已複製！",
+    "linkCopyFailed": "無法將連結複製到剪貼簿"
   },
   "billing": {
     "dialogTitle": "查看您的升級",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "重播"
+    },
+    "scoreboard": {
+      "active": "積極的",
+      "points": "點",
+      "ready": "準備好",
+      "charges": "收費",
+      "used": "用過的",
+      "available": "可用的",
+      "cooldown": "{seconds}的冷卻時間"
+    },
+    "session": {
+      "missingId": "此重播連結缺少 ID。",
+      "opening": "重播開始…",
+      "expired": "此重播已過期。重新開啟 .vrf 檔案以再次解析它 - 解析的重播保留在此裝置上，且伺服器副本僅持續很短的時間。",
+      "couldNotOpen": "無法開啟此重播。",
+      "loadingPlayer": "正在載入重播播放器"
     },
     "player": {
       "copyToLobby": "複製到新大廳",
@@ -684,8 +714,20 @@
       "zoomIn": "放大",
       "close": "關閉全螢幕"
     },
+    "aria": {
+      "tacticalMap": "戰術地圖畫布",
+      "zoomIn": "放大",
+      "zoomOut": "縮小",
+      "fitMap": "適合地圖"
+    },
     "lineup": {
       "title": "新增陣容",
+      "lineupImages": "陣容圖片",
+      "youtubeVideo": "Youtube 視頻",
+      "youtubePlayer": "YouTube 影片播放器",
+      "openLinkNewTab": "在新分頁中開啟連結。",
+      "noDetails": "沒有關於此陣容的詳細資訊。",
+      "viewImageFullscreen": "全螢幕檢視陣容影像 {index}",
       "description": "新增陣容",
       "agent": "代理人",
       "selectAgent": "選擇代理",
@@ -717,6 +759,12 @@
       "uploadingImage": "上傳圖片"
     },
     "textEditor": {
+      "editText": "編輯文字",
+      "textContent": "文字內容",
+      "tapDone": "完成後點擊“完成”",
+      "done": "完畢",
+      "placeholder": "輸入您的文字...",
+      "close": "關閉",
       "bold": "大膽的",
       "italic": "斜體",
       "underline": "強調",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "代理商",
+    "closeSidebar": "關閉代理側邊欄",
+    "onMap": "在地圖上",
     "all": "全部",
     "empty": "地圖上沒有代理",
     "emptyByRole": "地圖上沒有 {role} 特工",

@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Erro",
     "rsoNoCodeTitle": "Sem código de autorização",
     "rsoNoCodeDescription": "Parece que o login da Riot foi cancelado.",
+    "rsoCallbackTitle": "Vinculando conta Riot...",
+    "rsoProcessingTitle": "Processando login da Riot...",
+    "rsoProcessingDescription": "Aguarde enquanto concluímos a vinculação da conta.",
     "goToProfile": "Vá para o perfil"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "PONTUAÇÃO",
     "agentFallback": "Agente"
+  },
+  "collaboration": {
+    "usersInLobby": "Usuários no lobby:",
+    "statusConnected": "Conectado",
+    "statusConnecting": "Conectando...",
+    "statusDisconnected": "Desconectado",
+    "statusError": "Erro de conexão"
+  },
+  "lobby": {
+    "linkCopied": "Link copiado!",
+    "linkCopyFailed": "Falha ao copiar o link para a área de transferência"
   },
   "billing": {
     "dialogTitle": "Revise sua atualização",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Repetir"
+    },
+    "scoreboard": {
+      "active": "ativo",
+      "points": "pontos",
+      "ready": "preparar",
+      "charges": "cobranças",
+      "used": "usado",
+      "available": "disponível",
+      "cooldown": "Tempo de espera de {seconds}"
+    },
+    "session": {
+      "missingId": "Este link de repetição está sem um ID.",
+      "opening": "Abrindo o replay…",
+      "expired": "Esta repetição expirou. Reabra o arquivo .vrf para analisá-lo novamente – os replays analisados ​​são mantidos neste dispositivo e a cópia do servidor dura pouco tempo.",
+      "couldNotOpen": "Não foi possível abrir este replay.",
+      "loadingPlayer": "Carregando reprodutor de repetição"
     },
     "player": {
       "copyToLobby": "Copiar para novo lobby",
@@ -684,8 +714,20 @@
       "zoomIn": "Ampliar",
       "close": "Fechar tela cheia"
     },
+    "aria": {
+      "tacticalMap": "Tela de mapa tático",
+      "zoomIn": "Ampliar",
+      "zoomOut": "Diminuir zoom",
+      "fitMap": "Ajustar mapa"
+    },
     "lineup": {
       "title": "Adicionar escalação",
+      "lineupImages": "Imagens de escalação",
+      "youtubeVideo": "Vídeo do YouTube",
+      "youtubePlayer": "Reprodutor de vídeo do YouTube",
+      "openLinkNewTab": "Abra o link em uma nova guia.",
+      "noDetails": "Não há detalhes disponíveis para esta escalação.",
+      "viewImageFullscreen": "Ver imagem da escalação {index} em tela cheia",
       "description": "Adicionar uma nova escalação",
       "agent": "Agente",
       "selectAgent": "Selecione um agente",
@@ -717,6 +759,12 @@
       "uploadingImage": "Fazendo upload da imagem"
     },
     "textEditor": {
+      "editText": "Editar texto",
+      "textContent": "Conteúdo de texto",
+      "tapDone": "Toque em Concluído quando terminar",
+      "done": "Feito",
+      "placeholder": "Digite seu texto...",
+      "close": "Fechar",
       "bold": "Audacioso",
       "italic": "itálico",
       "underline": "Sublinhado",
@@ -759,6 +807,9 @@
     }
   },
   "agents": {
+    "title": "Agentes",
+    "closeSidebar": "Fechar barra lateral de agentes",
+    "onMap": "No mapa",
     "all": "Todos",
     "empty": "Nenhum agente no mapa",
     "emptyByRole": "Nenhum agente {role} no mapa",

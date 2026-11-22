@@ -75,6 +75,9 @@
     "rsoErrorTitle": "Error",
     "rsoNoCodeTitle": "No Authorization Code",
     "rsoNoCodeDescription": "It looks like the Riot login was cancelled.",
+    "rsoCallbackTitle": "Linking Riot Account...",
+    "rsoProcessingTitle": "Processing Riot login...",
+    "rsoProcessingDescription": "Please wait while we complete account linking.",
     "goToProfile": "Go to Profile"
   },
   "nav": {
@@ -139,6 +142,17 @@
     "kda": "KDA",
     "score": "SCORE",
     "agentFallback": "Agent"
+  },
+  "collaboration": {
+    "usersInLobby": "Users in lobby:",
+    "statusConnected": "Connected",
+    "statusConnecting": "Connecting...",
+    "statusDisconnected": "Disconnected",
+    "statusError": "Connection Error"
+  },
+  "lobby": {
+    "linkCopied": "Link copied!",
+    "linkCopyFailed": "Failed to copy link to clipboard"
   },
   "billing": {
     "dialogTitle": "Review your upgrade",
@@ -346,6 +360,22 @@
     },
     "roundSidebar": {
       "title": "Replay"
+    },
+    "scoreboard": {
+      "active": "active",
+      "points": "points",
+      "ready": "ready",
+      "charges": "charges",
+      "used": "used",
+      "available": "available",
+      "cooldown": "{seconds}s cooldown"
+    },
+    "session": {
+      "missingId": "This replay link is missing an id.",
+      "opening": "Opening replay…",
+      "expired": "This replay has expired. Reopen the .vrf file to parse it again — parsed replays are kept on this device, and the server copy only lasts a short time.",
+      "couldNotOpen": "Could not open this replay.",
+      "loadingPlayer": "Loading replay player"
     },
     "player": {
       "copyToLobby": "Copy to new lobby",
@@ -685,8 +715,20 @@
       "zoomIn": "Zoom in",
       "close": "Close fullscreen"
     },
+    "aria": {
+      "tacticalMap": "Tactical map canvas",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fitMap": "Fit map"
+    },
     "lineup": {
       "title": "Add Lineup",
+      "lineupImages": "Lineup Images",
+      "youtubeVideo": "YouTube Video",
+      "youtubePlayer": "YouTube video player",
+      "openLinkNewTab": "Open link in new tab.",
+      "noDetails": "No details available for this lineup.",
+      "viewImageFullscreen": "View lineup image {index} fullscreen",
       "description": "Add a new Lineup",
       "agent": "Agent",
       "selectAgent": "Select an agent",
@@ -718,6 +760,12 @@
       "uploadingImage": "Uploading image"
     },
     "textEditor": {
+      "editText": "Edit text",
+      "textContent": "Text content",
+      "tapDone": "Tap Done when you're finished",
+      "done": "Done",
+      "placeholder": "Type your text...",
+      "close": "Close",
       "bold": "Bold",
       "italic": "Italic",
       "underline": "Underline",
@@ -760,6 +808,9 @@
     }
   },
   "agents": {
+    "title": "Agents",
+    "closeSidebar": "Close agents sidebar",
+    "onMap": "On map",
     "all": "All",
     "empty": "No agents on map",
     "emptyByRole": "No {role} agents on map",
