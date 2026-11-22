@@ -374,6 +374,11 @@
       "failed": "Could not open that replay."
     }
   },
+  "metadata": {
+    "title": "Create strategies and executes for VALORANT",
+    "description": "Create strategies and executes for VALORANT",
+    "ogAlt": "ValoMapper — create strategies and executes for VALORANT"
+  },
   "legal": {
     "notice": "This document is provided in English. The English version is authoritative.",
     "privacyTitle": "Privacy Policy",
