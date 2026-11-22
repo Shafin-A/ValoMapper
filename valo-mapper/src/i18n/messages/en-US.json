@@ -140,6 +140,50 @@
     "score": "SCORE",
     "agentFallback": "Agent"
   },
+  "matchDetails": {
+    "loading": "Loading match summary...",
+    "failedTitle": "Failed to load match summary",
+    "failedDescription": "Something went wrong while loading the selected match.",
+    "tryAgain": "Try Again",
+    "round": "Round {round}",
+    "yourBestRound": "(Your Best Round)",
+    "loadRound": "Load Round",
+    "roundIcon": "{code} icon"
+  },
+  "matchEvent": {
+    "killer": "Killer",
+    "victim": "Victim",
+    "spike": "Spike",
+    "player": "Player",
+    "detonation": "Detonation",
+    "defuse": "Defuse"
+  },
+  "matchStats": {
+    "player": "Player",
+    "score": "Score",
+    "kills": "K",
+    "deaths": "D",
+    "assists": "A",
+    "econ": "Econ",
+    "playerFallback": "Player",
+    "agentFallback": "Agent",
+    "unknownAgent": "Unknown Agent"
+  },
+  "matchesContent": {
+    "showing": "Showing {loaded}/{total} matches",
+    "showingLoaded": "Showing {loaded} loaded {queue} matches",
+    "showingFiltered": "Showing {loaded}/{total} {queue} matches",
+    "noMatches": "No matches found.",
+    "noFilterMatches": "No {queue} matches found.",
+    "loadMoreToSearchAll": "Load more matches to keep searching the match list.",
+    "loadMoreToSearchQueue": "Load more matches to keep searching the {queue} queue.",
+    "comeBackAll": "Try coming back later after some matches have been played.",
+    "comeBackQueue": "Try coming back later after some {queue} matches have been played.",
+    "loadingMore": "Loading more matches...",
+    "loadMore": "Load more matches",
+    "allLoaded": "All matches are loaded.",
+    "unableMore": "Unable to load more matches right now."
+  },
   "matchReview": {
     "loading": "Loading match review...",
     "failedTitle": "Failed to load match review",

@@ -11,6 +11,7 @@ import { MatchDetails } from "@/components/matches/match-details";
 import { ALL_MATCH_QUEUE_FILTER } from "@/lib/consts";
 import { MatchQueueFilter, MatchPreview } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 
 interface MatchesContentProps {
@@ -93,6 +94,8 @@ export const MatchesContent = ({
   onSelectRound,
   onLoadMoreMatches,
 }: MatchesContentProps) => {
+  const t = useTranslations("matchesContent");
+  const tq = useTranslations("matches");
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
   const expandedMatchIdSet = new Set(expandedMatchIds);
 
@@ -120,27 +123,38 @@ export const MatchesContent = ({
     return () => observer.disconnect();
   }, [hasMoreMatches, isFetchingNextMatches, onLoadMoreMatches]);
 
+  const queueName =
+    queueFilter === ALL_MATCH_QUEUE_FILTER
+      ? tq("queueAll")
+      : queueFilter === "Competitive"
+        ? tq("queueCompetitive")
+        : queueFilter === "Unrated"
+          ? tq("queueUnrated")
+          : tq("queueCustom");
+
   const queueSummaryText =
     queueFilter === ALL_MATCH_QUEUE_FILTER
-      ? `Showing ${matches.length}/${totalMatches} matches`
+      ? t("showing", { loaded: matches.length, total: totalMatches })
       : hasMoreMatches
-        ? `Showing ${matches.length} loaded ${queueFilter} matches`
-        : `Showing ${matches.length}/${matches.length} ${queueFilter} matches`;
+        ? t("showingLoaded", { loaded: matches.length, queue: queueName })
+        : t("showingFiltered", {
+            loaded: matches.length,
+            total: matches.length,
+            queue: queueName,
+          });
 
   const emptyFilterTitle =
     queueFilter === ALL_MATCH_QUEUE_FILTER
-      ? "No matches found."
-      : `No ${queueFilter} matches found.`;
+      ? t("noMatches")
+      : t("noFilterMatches", { queue: queueName });
 
   const emptyFilterDescription = hasMoreMatches
-    ? `Load more matches to keep searching the ${
-        queueFilter === ALL_MATCH_QUEUE_FILTER
-          ? "match list"
-          : `${queueFilter} queue`
-      }.`
+    ? queueFilter === ALL_MATCH_QUEUE_FILTER
+      ? t("loadMoreToSearchAll")
+      : t("loadMoreToSearchQueue", { queue: queueName })
     : queueFilter === ALL_MATCH_QUEUE_FILTER
-      ? "Try coming back later after some matches have been played."
-      : `Try coming back later after some ${queueFilter} matches have been played.`;
+      ? t("comeBackAll")
+      : t("comeBackQueue", { queue: queueName });
 
   return (
     <section className="space-y-px">
@@ -184,23 +198,23 @@ export const MatchesContent = ({
               {isFetchingNextMatches ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading more matches...
+                  {t("loadingMore")}
                 </>
               ) : (
-                "Load more matches"
+                t("loadMore")
               )}
             </Button>
           </>
         ) : totalMatches > 0 ? (
           <p className="text-sm text-muted-foreground">
-            All matches are loaded.
+            {t("allLoaded")}
           </p>
         ) : null}
 
         {isFetchNextMatchesError ? (
           <p className="flex items-center gap-2 text-sm text-destructive">
             <AlertCircle className="h-4 w-4" />
-            Unable to load more matches right now.
+            {t("unableMore")}
           </p>
         ) : null}
       </div>

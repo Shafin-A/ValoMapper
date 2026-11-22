@@ -6,7 +6,10 @@ import {
   getAgentImageSrc,
   getPlayerSummary,
 } from "@/lib/matches";
+import { useValorantTerms } from "@/contexts/valorant-terms-context";
+import { getLocalizedAgentName } from "@/lib/i18n/valorant-terms";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 interface MatchPlayerStatsTableProps {
   players: MatchPlayers;
@@ -19,22 +22,29 @@ export const MatchPlayerStatsTable = ({
   round,
   currentPlayerPuuid,
 }: MatchPlayerStatsTableProps) => {
+  const t = useTranslations("matchStats");
+  const valorantTerms = useValorantTerms();
+
   return (
     <ScrollArea className="w-full">
       <div className="min-w-[640px] pr-2 sm:min-w-[720px]">
         <div className="mb-2 grid grid-cols-[48px_minmax(140px,1fr)_64px_44px_44px_44px_100px] items-center text-[11px] font-semibold uppercase tracking-[0.1em] text-white/70 sm:grid-cols-[56px_minmax(172px,1fr)_80px_52px_52px_52px_120px] sm:text-[12px]">
-          <span className="text-center">Player</span>
+          <span className="text-center">{t("player")}</span>
           <span aria-hidden="true" />
-          <span className="text-center">Score</span>
-          <span className="text-center">K</span>
-          <span className="text-center">D</span>
-          <span className="text-center">A</span>
-          <span className="text-center">Econ</span>
+          <span className="text-center">{t("score")}</span>
+          <span className="text-center">{t("kills")}</span>
+          <span className="text-center">{t("deaths")}</span>
+          <span className="text-center">{t("assists")}</span>
+          <span className="text-center">{t("econ")}</span>
         </div>
 
         {round.playerStats.flatMap((stats, index, allStats) => {
           const player = getPlayerSummary(players, stats.puuid);
           const isCurrentPlayer = stats.puuid === currentPlayerPuuid;
+          const agentName = getLocalizedAgentName(
+            valorantTerms,
+            player?.characterName ?? "",
+          );
           const rowToneClasses =
             MATCH_TONE_CLASSES[getMatchTone(player?.teamId, isCurrentPlayer)];
 
@@ -64,7 +74,7 @@ export const MatchPlayerStatsTable = ({
                     <div className="relative h-full min-h-12 w-full sm:min-h-14">
                       <Image
                         src={getAgentImageSrc(player?.characterName ?? "Astra")}
-                        alt={player?.characterName ?? "Agent"}
+                        alt={agentName || t("agentFallback")}
                         fill
                         sizes="56px"
                         className="object-fill"
@@ -77,10 +87,10 @@ export const MatchPlayerStatsTable = ({
                   >
                     <div className="min-w-0">
                       <p className="truncate text-base font-semibold leading-tight text-white sm:text-lg">
-                        {player?.gameName ?? "Player"}
+                        {player?.gameName ?? t("playerFallback")}
                       </p>
                       <p className="mt-1 truncate text-xs font-semibold leading-tight text-white/70 sm:text-sm">
-                        {player?.characterName ?? "Unknown Agent"}
+                        {agentName || t("unknownAgent")}
                       </p>
                     </div>
                   </div>

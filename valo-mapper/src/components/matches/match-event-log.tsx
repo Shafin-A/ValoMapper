@@ -12,6 +12,7 @@ import {
   getPlayerSummary,
 } from "@/lib/matches";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 interface MatchEventLogProps {
   events: MatchRoundEvent[];
@@ -38,6 +39,7 @@ export const RoundEventRow = ({
   isSelected = false,
   onSelect,
 }: RoundEventRowProps) => {
+  const t = useTranslations("matchEvent");
   const selectedStateClassName =
     "border-sky-300/55 bg-sky-400/12 ring-2 ring-inset ring-sky-300/80 shadow-[0_0_0_1px_rgba(125,211,252,0.22)]";
   const actorPuuid =
@@ -102,7 +104,7 @@ export const RoundEventRow = ({
             <div className={`relative h-8 overflow-hidden ${iconShade}`}>
               <Image
                 src={getPlayerAgentIconSrc(players, event.killerPuuid)}
-                alt="Killer"
+                alt={t("killer")}
                 fill
                 sizes="32px"
                 className="object-fill"
@@ -136,7 +138,7 @@ export const RoundEventRow = ({
             <div className={`relative h-8 overflow-hidden ${victimIconShade}`}>
               <Image
                 src={getPlayerAgentIconSrc(players, event.victimPuuid)}
-                alt="Victim"
+                alt={t("victim")}
                 fill
                 sizes="32px"
                 className="object-fill"
@@ -166,7 +168,7 @@ export const RoundEventRow = ({
             {event.eventType === "spike_exploded" ? (
               <Image
                 src="/tools/spike.webp"
-                alt="Spike"
+                alt={t("spike")}
                 fill
                 sizes="32px"
                 className={MATCH_SPIKE_IMAGE_CLASS_NAME}
@@ -174,7 +176,7 @@ export const RoundEventRow = ({
             ) : (
               <Image
                 src={getPlayerAgentIconSrc(players, actorPuuid)}
-                alt="Player"
+                alt={t("player")}
                 fill
                 sizes="32px"
                 className="object-fill"
@@ -200,7 +202,7 @@ export const RoundEventRow = ({
               {event.eventType === "spike_planted" ? (
                 <Image
                   src="/tools/spike.webp"
-                  alt="Spike"
+                  alt={t("spike")}
                   fill
                   sizes="32px"
                   className={MATCH_SPIKE_IMAGE_CLASS_NAME}
@@ -208,7 +210,7 @@ export const RoundEventRow = ({
               ) : event.eventType === "spike_exploded" ? (
                 <Image
                   src="/matchOutcomes/explosionwin1.png"
-                  alt="Detonation"
+                  alt={t("detonation")}
                   fill
                   sizes="32px"
                   className="object-contain object-left"
@@ -216,7 +218,7 @@ export const RoundEventRow = ({
               ) : (
                 <Image
                   src="/matchOutcomes/defuse.png"
-                  alt="Defuse"
+                  alt={t("defuse")}
                   fill
                   sizes="32px"
                   className="object-contain object-left scale-[0.7]"

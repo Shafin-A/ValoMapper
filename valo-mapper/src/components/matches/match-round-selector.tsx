@@ -3,6 +3,7 @@ import { MATCH_PAGE_CLASSES } from "@/lib/consts";
 import { MatchRound, getRoundOutcomeIconSrc } from "@/lib/matches";
 import { RefreshCw } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 interface MatchRoundSelectorProps {
   rounds: MatchRound[];
@@ -63,6 +64,7 @@ export const MatchRoundSelector = ({
   queueLabel,
   onSelectRound,
 }: MatchRoundSelectorProps) => {
+  const t = useTranslations("matchDetails");
   const roundsPerHalf = getRoundsPerHalf(rounds, queueLabel);
 
   return (
@@ -92,7 +94,7 @@ export const MatchRoundSelector = ({
                     currentPlayerTeamId,
                     round.roundNumber === (currentPlayerBestRoundNumber ?? -1),
                   )}
-                  alt={`${round.roundResultCode} icon`}
+                  alt={t("roundIcon", { code: round.roundResultCode })}
                   width={20}
                   height={20}
                   className="h-5 w-5"

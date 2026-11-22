@@ -17,6 +17,7 @@ import { MatchSummaryResponse } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface MatchDetailsProps {
   matchId: string;
@@ -39,12 +40,14 @@ export const MatchDetails = ({
   selectedRoundNumber,
   onSelectRound,
 }: MatchDetailsProps) => {
+  const t = useTranslations("matchDetails");
+
   if (isLoading) {
     return (
       <section className="rounded-b-xl border border-slate-700 bg-slate-950/90 px-4 py-8 sm:px-5">
         <div className="flex items-center justify-center gap-3 text-slate-200">
           <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm font-medium">Loading match summary...</span>
+          <span className="text-sm font-medium">{t("loading")}</span>
         </div>
       </section>
     );
@@ -56,14 +59,13 @@ export const MatchDetails = ({
         <div className="space-y-3">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Failed to load match summary</AlertTitle>
+            <AlertTitle>{t("failedTitle")}</AlertTitle>
             <AlertDescription>
-              {error?.message ||
-                "Something went wrong while loading the selected match."}
+              {error?.message || t("failedDescription")}
             </AlertDescription>
           </Alert>
           <Button size="sm" onClick={() => void onRetry()}>
-            Try Again
+            {t("tryAgain")}
           </Button>
         </div>
       </section>
@@ -110,7 +112,7 @@ export const MatchDetails = ({
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-lg font-semibold uppercase text-white sm:text-xl">
-            Round {selectedRound.roundNumber}
+            {t("round", { round: selectedRound.roundNumber })}
             <span className="px-1 font-normal">|</span>
             <span
               className={`inline-flex min-w-0 flex-wrap items-center gap-1 font-semibold sm:gap-2 ${roundOutcomeTextClass}`}
@@ -122,7 +124,7 @@ export const MatchDetails = ({
                   currentPlayerTeamId,
                   false,
                 )}
-                alt={`${selectedRound.roundResultCode} icon`}
+                alt={t("roundIcon", { code: selectedRound.roundResultCode })}
                 width={24}
                 height={24}
                 className="h-4 w-4 shrink-0 sm:h-6 sm:w-6"
@@ -140,7 +142,7 @@ export const MatchDetails = ({
                 <span
                   className={`block w-full text-base leading-tight ${MATCH_PAGE_CLASSES.bestRoundText} sm:inline sm:w-auto sm:text-xl`}
                 >
-                  (Your Best Round)
+                  {t("yourBestRound")}
                 </span>
               )}
             </span>
@@ -150,7 +152,7 @@ export const MatchDetails = ({
             <Link
               href={`/matches/${encodeURIComponent(matchId)}?round=${selectedRound.roundNumber}`}
             >
-              Load Round
+              {t("loadRound")}
             </Link>
           </Button>
         </div>
