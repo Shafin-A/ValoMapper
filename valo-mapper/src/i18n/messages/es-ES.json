@@ -421,7 +421,113 @@
       "boards": "tableros",
       "mobile": "Móvil",
       "more": "Más"
-    }
+    },
+    "replay": {
+      "title": "Mira cómo se reproduce cada ronda en el mapa.",
+      "description": "Sube un archivo de repetición y observa cómo se desarrolla la ronda con el marcador, la línea de tiempo y las habilidades sincronizadas.",
+      "bullets": [
+        "Sube un archivo de repetición y mira cómo se desarrolla el partido directamente en el mapa.",
+        "Cargue una repetición de demostración para probarla sin un archivo.",
+        "Copia una ronda de repetición directamente en un tablero de estrategia para seguir construyendo a partir de ella."
+      ],
+      "openPlayer": "Abre el reproductor de repetición",
+      "imageAlt": "Reproducción completa con el mapa, la línea de tiempo de la ronda y el marcador del jugador.",
+      "imageLabel": "Mapa, línea de tiempo, marcador y habilidades."
+    },
+    "notes": {
+      "title": "Añade contexto a cualquier cosa en el tablero.",
+      "description": "Deje la leyenda, el tiempo o el recordatorio directamente en el elemento al que pertenece. Todos en el vestíbulo pueden verlo.",
+      "bullets": [
+        "Agregue una nota a cualquier agente, habilidad, ícono, texto o imagen para explicar el plan o la leyenda.",
+        "Una pequeña insignia con forma de bocadillo marca los elementos que tienen una nota.",
+        "Pase el cursor sobre un elemento para obtener una vista previa de su nota sin abrir nada.",
+        "Haga clic en la insignia, use el menú contextual o de presión prolongada, o presione N para agregar o editar una nota."
+      ],
+      "image1Alt": "Primer plano de los elementos del tablero con insignias de notas con forma de globo",
+      "image1Label": "Insignia de nota",
+      "image2Alt": "Primer plano de una vista previa de una nota que aparece encima de un agente en el tablero",
+      "image2Label": "Coloca el cursor para obtener una vista previa"
+    },
+    "multiSelect": {
+      "title": "Mover un plan completo a la vez",
+      "description": "Mantenga presionado el botón derecho y arrastre un cuadro alrededor de varios elementos, luego mueva o duplique el grupo.",
+      "bullets": [
+        "Arrastre un cuadro de selección manteniendo presionado el botón derecho para tomar varios elementos en el tablero al mismo tiempo.",
+        "Mueva a todo el grupo junto.",
+        "Duplica el grupo en una sola acción.",
+        "Funciona con agentes, habilidades, íconos de herramientas, texto e imágenes."
+      ],
+      "image1Alt": "Cuadro de selección con clic derecho que se arrastra alrededor de los elementos del tablero",
+      "image1Label": "Arrastra para seleccionar",
+      "image2Alt": "Varios elementos en el tablero resaltados con esquemas de selección",
+      "image2Label": "Seleccionado y listo para moverse"
+    },
+    "boards": {
+      "title": "Haga que cada tablero sea más fácil de leer",
+      "description": "Texto enriquecido, fases más limpias y fondos que se adaptan a tu forma de planificar.",
+      "richTextTitle": "Texto enriquecido en el tablero.",
+      "richTextBullets": [
+        "Negrita, cursiva y subrayado.",
+        "Listas con viñetas y numeradas.",
+        "Colores de texto personalizados y tamaños de fuente."
+      ],
+      "backgroundsTitle": "Fondos del tablero",
+      "backgroundsDescription": "Elija un fondo liso, de puntos o de cuadrícula para cada tablero. Tu elección de fondo se recuerda en ese tablero.",
+      "imageAlt": "Tablero de estrategia con texto enriquecido, agentes, habilidades y notas.",
+      "imageLabel": "Texto enriquecido, notas y fases en un solo lugar",
+      "gridAlt": "Panel de configuración del mapa con el fondo del tablero configurado en Cuadrícula",
+      "gridLabel": "Cuadrícula seleccionada",
+      "optionsAlt": "Menú de fondo del tablero abierto con las opciones Ninguno, Puntos y Cuadrícula",
+      "optionsLabel": "Ninguno, puntos o cuadrícula"
+    },
+    "mobile": {
+      "title": "Un cambio de imagen móvil",
+      "description": "El tablero ahora se ajusta correctamente a la pantalla, con los controles que necesitas a tu alcance.",
+      "bullets": [
+        "Un nuevo diseño móvil con una barra de acciones inferior para deshacer, rehacer, dibujar, borrar y eliminar.",
+        "Controles de zoom flotantes y un mapa que se ajusta correctamente a la pantalla.",
+        "Mantenga presionado cualquier elemento en el tablero para abrir sus acciones de clic derecho.",
+        "Un editor de texto de pantalla completa en teléfonos, con el panel de herramientas que se cierra automáticamente después de agregar texto."
+      ],
+      "imageAlt": "Diseño móvil de ValoMapper con tablero, controles de zoom flotantes y barra de acción inferior"
+    },
+    "more": {
+      "label": "También mejorado",
+      "title": "Actualizaciones más pequeñas, mejores en todas partes",
+      "description": "Algunos cambios en la calidad de vida que hacen que toda la aplicación se sienta más fluida.",
+      "items": [
+        {
+          "title": "Una nueva mirada al sitio",
+          "bullets": [
+            "Página de inicio rediseñada y logotipo actualizado.",
+            "Un botón de Discord en el encabezado.",
+            "Navegación hacia atrás consistente entre páginas."
+          ]
+        },
+        {
+          "title": "Mejoras en el tablero",
+          "bullets": [
+            "Elimine todos los elementos o solo la fase actual en una sola acción.",
+            "Estilo de fase renovado, incluido un estado de fase vacía más claro.",
+            "Rendimiento mejorado de la junta subyacente."
+          ]
+        },
+        {
+          "title": "Herramientas de mapas más inteligentes",
+          "bullets": [
+            "Los conos de visión ahora se detienen en las paredes en lugar de atravesarlas.",
+            "Los conos de visión se pueden adjuntar a los iconos y eliminarlos del menú contextual.",
+            "Los iconos de herramientas, la púa y las armas se pueden adjuntar a los agentes arrastrándolos.",
+            "Los agentes se pueden marcar como muertos o revividos desde el menú contextual."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "¿Listo para ponerlo en el tablero?",
+    "ctaDescription": "Comience con un tablero en blanco o cargue la repetición de la demostración y vea cómo se desarrolla una ronda.",
+    "footerTitle": "ValoMapper — Novedades",
+    "home": "Hogar",
+    "replays": "Repeticiones"
   },
   "billingPages": {
     "successMeta": "Suscripción confirmada",

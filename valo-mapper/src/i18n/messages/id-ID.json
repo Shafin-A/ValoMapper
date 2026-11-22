@@ -421,7 +421,113 @@
       "boards": "Papan",
       "mobile": "Seluler",
       "more": "Lagi"
-    }
+    },
+    "replay": {
+      "title": "Saksikan setiap putaran diputar ulang di peta",
+      "description": "Unggah file replay dan lihat putarannya berlangsung dengan papan skor, garis waktu, dan kemampuan yang sinkron.",
+      "bullets": [
+        "Unggah file replay dan saksikan pertandingan dimainkan langsung di peta.",
+        "Muat tayangan ulang demo untuk mencobanya tanpa file.",
+        "Salin putaran ulangan langsung ke papan strategi untuk terus mengembangkannya."
+      ],
+      "openPlayer": "Buka pemutar ulangan",
+      "imageAlt": "Pemutaran ulang penuh dengan peta, garis waktu putaran, dan papan skor pemain",
+      "imageLabel": "Peta, garis waktu, papan skor, dan kemampuan"
+    },
+    "notes": {
+      "title": "Tambahkan konteks pada apa pun di papan tulis",
+      "description": "Tinggalkan info, pengaturan waktu, atau pengingat langsung pada elemen miliknya. Semua orang di lobi dapat melihatnya.",
+      "bullets": [
+        "Tambahkan catatan ke agen, kemampuan, ikon, teks, atau gambar apa pun untuk menjelaskan rencana atau info.",
+        "Lencana gelembung ucapan kecil menandai item yang memiliki catatan.",
+        "Arahkan kursor ke item untuk melihat pratinjau catatannya tanpa membuka apa pun.",
+        "Klik lencana, gunakan menu klik kanan atau tekan lama, atau tekan N untuk menambah atau mengedit catatan."
+      ],
+      "image1Alt": "Tampilan jarak dekat dari elemen papan dengan lencana catatan gelembung ucapan",
+      "image1Label": "Lencana catatan",
+      "image2Alt": "Tampilan jarak dekat dari pratinjau catatan yang muncul di atas agen di papan",
+      "image2Label": "Arahkan kursor ke pratinjau"
+    },
+    "multiSelect": {
+      "title": "Pindahkan seluruh rencana sekaligus",
+      "description": "Tahan klik kanan dan seret kotak di sekitar beberapa item, lalu pindahkan atau duplikat grup tersebut bersama-sama.",
+      "bullets": [
+        "Seret kotak pilihan sambil menahan klik kanan untuk mengambil beberapa item di papan secara bersamaan.",
+        "Pindahkan seluruh kelompok bersama-sama.",
+        "Gandakan grup dalam satu tindakan.",
+        "Bekerja dengan agen, kemampuan, ikon alat, teks, dan gambar."
+      ],
+      "image1Alt": "Klik kanan kotak pilihan yang diseret di sekitar item di papan",
+      "image1Label": "Seret untuk memilih",
+      "image2Alt": "Beberapa item di papan disorot dengan garis seleksi",
+      "image2Label": "Terpilih dan siap bergerak"
+    },
+    "boards": {
+      "title": "Jadikan setiap papan lebih mudah dibaca",
+      "description": "Teks kaya, fase yang lebih bersih, dan latar belakang yang sesuai dengan rencana Anda.",
+      "richTextTitle": "Teks kaya di papan tulis",
+      "richTextBullets": [
+        "Tebal, miring, dan bergaris bawah.",
+        "Daftar berbutir dan bernomor.",
+        "Warna teks khusus dan ukuran font."
+      ],
+      "backgroundsTitle": "Latar belakang papan",
+      "backgroundsDescription": "Pilih latar belakang polos, titik, atau kisi untuk setiap papan. Pilihan latar belakang Anda diingat untuk papan itu.",
+      "imageAlt": "Papan strategi dengan teks kaya, agen, kemampuan, dan catatan",
+      "imageLabel": "Teks kaya, catatan, dan fase di satu tempat",
+      "gridAlt": "Panel pengaturan peta dengan latar belakang papan diatur ke Grid",
+      "gridLabel": "Kotak dipilih",
+      "optionsAlt": "Menu latar belakang papan terbuka dengan opsi Tidak Ada, Titik, dan Kisi",
+      "optionsLabel": "Tidak ada, Titik, atau Kotak"
+    },
+    "mobile": {
+      "title": "Perubahan seluler",
+      "description": "Papan sekarang pas dengan layar, dengan kontrol yang Anda perlukan dalam jangkauan.",
+      "bullets": [
+        "Tata letak seluler baru dengan bilah tindakan bawah untuk membatalkan, mengulang, menggambar, menghapus, dan menghapus.",
+        "Kontrol zoom mengambang, dan peta yang pas dengan layar.",
+        "Tekan lama item apa pun di papan untuk membuka tindakan klik kanannya.",
+        "Editor teks layar penuh di ponsel, dengan panel alat menutup secara otomatis setelah menambahkan teks."
+      ],
+      "imageAlt": "Tata letak seluler ValoMapper dengan papan, kontrol zoom mengambang, dan bilah tindakan bawah"
+    },
+    "more": {
+      "label": "Juga ditingkatkan",
+      "title": "Pembaruan lebih kecil, lebih baik di mana saja",
+      "description": "Beberapa perubahan kualitas hidup yang membuat keseluruhan aplikasi terasa lebih lancar.",
+      "items": [
+        {
+          "title": "Tampilan segar di seluruh situs",
+          "bullets": [
+            "Halaman arahan yang didesain ulang dan logo yang diperbarui.",
+            "Tombol Perselisihan di header.",
+            "Navigasi kembali yang konsisten di seluruh halaman."
+          ]
+        },
+        {
+          "title": "Perbaikan papan",
+          "bullets": [
+            "Hapus semua item atau hanya fase saat ini dalam satu tindakan.",
+            "Gaya fase yang diperbarui, termasuk status fase kosong yang lebih jelas.",
+            "Peningkatan kinerja dewan yang mendasarinya."
+          ]
+        },
+        {
+          "title": "Alat peta yang lebih cerdas",
+          "bullets": [
+            "Kerucut penglihatan sekarang berhenti di dinding, bukan melewatinya.",
+            "Kerucut penglihatan dapat dilampirkan ke ikon dan dihapus dari menu klik kanan.",
+            "Ikon alat, paku, dan senjata dapat dipasang ke agen dengan menyeretnya.",
+            "Agen dapat ditandai mati atau dihidupkan kembali dari menu klik kanan."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Siap untuk menaruhnya di papan?",
+    "ctaDescription": "Mulailah dengan papan kosong, atau muat tayangan ulang demo dan lihat bagaimana sebuah putaran terjadi.",
+    "footerTitle": "ValoMapper — Apa yang Baru",
+    "home": "Rumah",
+    "replays": "Pemutaran ulang"
   },
   "billingPages": {
     "successMeta": "Langganan dikonfirmasi",

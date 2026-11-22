@@ -421,7 +421,113 @@
       "boards": "Panolar",
       "mobile": "Mobil",
       "more": "Daha"
-    }
+    },
+    "replay": {
+      "title": "Haritada her turun oynanışını izleyin",
+      "description": "Bir tekrar dosyası yükleyin ve turun skor tablosu, zaman çizelgesi ve yeteneklerle senkronize şekilde geliştiğini görün.",
+      "bullets": [
+        "Bir tekrar dosyası yükleyin ve maçın oynanışını doğrudan harita üzerinde izleyin.",
+        "Dosya olmadan denemek için bir demo tekrarı yükleyin.",
+        "Oyun geliştirmeye devam etmek için bir tekrar turunu doğrudan strateji panosuna kopyalayın."
+      ],
+      "openPlayer": "Tekrar oynatıcısını aç",
+      "imageAlt": "Harita, tur zaman çizelgesi ve oyuncu puan tablosuyla tam tekrar oynatma",
+      "imageLabel": "Harita, zaman çizelgesi, puan tablosu ve yetenekler"
+    },
+    "notes": {
+      "title": "Tahtadaki herhangi bir şeye bağlam ekleyin",
+      "description": "Açıklama metnini, zamanlamayı veya hatırlatıcıyı doğrudan ait olduğu öğenin üzerinde bırakın. Lobideki herkes bunu görebilir.",
+      "bullets": [
+        "Planı veya belirtme çizgisini açıklamak için herhangi bir aracıya, yeteneğe, simgeye, metne veya resme bir not ekleyin.",
+        "Küçük bir konuşma balonu rozeti, notu olan öğeleri işaretler.",
+        "Hiçbir şeyi açmadan notunun önizlemesini görmek için bir öğenin üzerine gelin.",
+        "Rozete tıklayın, sağ tıklama veya uzun basma menüsünü kullanın veya not eklemek veya notu düzenlemek için N tuşuna basın."
+      ],
+      "image1Alt": "Konuşma balonu not rozetleriyle pano elemanlarının yakın çekimi",
+      "image1Label": "Not rozeti",
+      "image2Alt": "Panodaki bir temsilcinin üzerinde görünen not ön izlemesinin yakından görünümü",
+      "image2Label": "Önizlemek için üzerine gelin"
+    },
+    "multiSelect": {
+      "title": "Tüm planı aynı anda taşıyın",
+      "description": "Sağ tıklayın ve kutuyu birkaç öğenin etrafına sürükleyin, ardından grubu birlikte taşıyın veya çoğaltın.",
+      "bullets": [
+        "Tahtadaki birden fazla öğeyi aynı anda almak için sağ tıklamayı basılı tutarak bir seçim kutusunu sürükleyin.",
+        "Tüm grubu birlikte hareket ettirin.",
+        "Grubu tek bir eylemle çoğaltın.",
+        "Aracılar, yetenekler, araç simgeleri, metin ve resimlerle çalışır."
+      ],
+      "image1Alt": "Panodaki öğelerin etrafında sürüklenen seçim kutusuna sağ tıklayın",
+      "image1Label": "Seçmek için sürükleyin",
+      "image2Alt": "Seçim ana hatlarıyla vurgulanan panodaki birden fazla öğe",
+      "image2Label": "Seçildi ve taşınmaya hazır"
+    },
+    "boards": {
+      "title": "Her panonun okunmasını kolaylaştırın",
+      "description": "Planlama şeklinize uygun zengin metin, daha net aşamalar ve arka planlar.",
+      "richTextTitle": "Tahtada zengin metin",
+      "richTextBullets": [
+        "Kalın, italik ve altı çizili.",
+        "Madde işaretli ve numaralı listeler.",
+        "Özel metin renkleri ve yazı tipi boyutları."
+      ],
+      "backgroundsTitle": "Pano arka planları",
+      "backgroundsDescription": "Her pano için düz, noktalı veya ızgaralı bir arka plan seçin. O pano için arka plan seçiminiz hatırlanır.",
+      "imageAlt": "Zengin metin, aracılar, yetenekler ve notlar içeren strateji panosu",
+      "imageLabel": "Zengin metin, notlar ve aşamalar tek bir yerde",
+      "gridAlt": "Pano arka planının Izgara olarak ayarlandığı harita ayarları paneli",
+      "gridLabel": "Izgara seçildi",
+      "optionsAlt": "Hiçbiri, Noktalar ve Izgara seçenekleriyle açılan pano arka plan menüsü",
+      "optionsLabel": "Yok, Noktalar veya Izgara"
+    },
+    "mobile": {
+      "title": "Mobil bir dönüşüm",
+      "description": "Kart artık ekrana tam olarak sığıyor ve ihtiyacınız olan kontroller elinizin altında.",
+      "bullets": [
+        "Geri alma, yineleme, çizme, silme ve silme işlemleri için alt işlem çubuğuna sahip yeni bir mobil düzen.",
+        "Kayan yakınlaştırma kontrolleri ve ekrana tam olarak uyan bir harita.",
+        "Sağ tıklama eylemlerini açmak için tahtadaki herhangi bir öğeye uzun basın.",
+        "Metin ekledikten sonra araç panelinin otomatik olarak kapandığı, telefonlarda tam ekran bir metin düzenleyici."
+      ],
+      "imageAlt": "Pano, kayan yakınlaştırma kontrolleri ve alt eylem çubuğuyla ValoMapper mobil düzeni"
+    },
+    "more": {
+      "label": "Ayrıca geliştirildi",
+      "title": "Daha küçük güncellemeler, her yerde daha iyi",
+      "description": "Uygulamanın tamamının daha akıcı olmasını sağlayacak birkaç yaşam kalitesi değişikliği.",
+      "items": [
+        {
+          "title": "Site genelinde yeni bir görünüm",
+          "bullets": [
+            "Yeniden tasarlanan açılış sayfası ve güncellenen logo.",
+            "Başlıkta bir Discord düğmesi.",
+            "Sayfalar arasında tutarlı geriye gezinme."
+          ]
+        },
+        {
+          "title": "Yönetim kurulu iyileştirmeleri",
+          "bullets": [
+            "Tek bir işlemle tüm öğeleri veya yalnızca geçerli aşamayı silin.",
+            "Daha net bir boş faz durumu da dahil olmak üzere yenilenmiş faz stili.",
+            "Geliştirilmiş temel kart performansı."
+          ]
+        },
+        {
+          "title": "Daha akıllı harita araçları",
+          "bullets": [
+            "Görüş konileri artık duvarların içinden geçmek yerine duvarların üzerinde duracak.",
+            "Görüş konileri simgelere eklenebilir ve sağ tıklama menüsünden kaldırılabilir.",
+            "Araç simgeleri, çivi ve silahlar, sürüklenerek ajanlara iliştirilebilir.",
+            "Aracılar sağ tıklama menüsünden ölü olarak işaretlenebilir veya yeniden canlandırılabilir."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Tahtaya koymaya hazır mısın?",
+    "ctaDescription": "Boş bir tahtayla başlayın veya demo tekrarını yükleyin ve bir turun nasıl bir araya geldiğini görün.",
+    "footerTitle": "ValoMapper — Yenilikler",
+    "home": "Ev",
+    "replays": "Tekrarlar"
   },
   "billingPages": {
     "successMeta": "Abonelik onaylandı",

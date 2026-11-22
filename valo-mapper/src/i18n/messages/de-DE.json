@@ -421,7 +421,113 @@
       "boards": "Bretter",
       "mobile": "Mobile",
       "more": "Mehr"
-    }
+    },
+    "replay": {
+      "title": "Sehen Sie sich jede Runde auf der Karte an",
+      "description": "Laden Sie eine Wiedergabedatei hoch und sehen Sie, wie sich die Runde mit synchronisierter Anzeigetafel, Zeitleiste und Fähigkeiten abspielt.",
+      "bullets": [
+        "Laden Sie eine Wiederholungsdatei hoch und sehen Sie sich das Spiel direkt auf der Karte an.",
+        "Laden Sie eine Demo-Wiedergabe, um es ohne Datei auszuprobieren.",
+        "Kopieren Sie eine Wiederholungsrunde direkt in ein Strategiebrett, um daraus weiter aufzubauen."
+      ],
+      "openPlayer": "Öffnen Sie den Replay-Player",
+      "imageAlt": "Vollständige Wiederholungswiedergabe mit Karte, Rundenzeitleiste und Spieleranzeigetafel",
+      "imageLabel": "Karte, Zeitleiste, Anzeigetafel und Fähigkeiten"
+    },
+    "notes": {
+      "title": "Fügen Sie allem auf der Tafel Kontext hinzu",
+      "description": "Belassen Sie die Beschriftung, das Timing oder die Erinnerung direkt auf dem Element, zu dem sie gehört. Jeder in der Lobby kann es sehen.",
+      "bullets": [
+        "Fügen Sie jedem Agenten, jeder Fähigkeit, jedem Symbol, jedem Text oder jedem Bild eine Notiz hinzu, um den Plan oder Hinweis zu erläutern.",
+        "Ein kleines Sprechblasen-Abzeichen markiert Elemente, die eine Notiz haben.",
+        "Bewegen Sie den Mauszeiger über ein Element, um eine Vorschau seiner Notiz anzuzeigen, ohne etwas zu öffnen.",
+        "Klicken Sie auf das Abzeichen, verwenden Sie das Rechtsklick- oder Langdruckmenü oder drücken Sie N, um eine Notiz hinzuzufügen oder zu bearbeiten."
+      ],
+      "image1Alt": "Nahaufnahme von Tafelelementen mit Sprechblasen-Notizabzeichen",
+      "image1Label": "Notizabzeichen",
+      "image2Alt": "Nahaufnahme einer Notizvorschau, die über einem Agenten auf der Tafel erscheint",
+      "image2Label": "Bewegen Sie den Mauszeiger, um eine Vorschau anzuzeigen"
+    },
+    "multiSelect": {
+      "title": "Verschieben Sie einen ganzen Plan auf einmal",
+      "description": "Halten Sie die rechte Maustaste gedrückt und ziehen Sie einen Rahmen um mehrere Elemente. Verschieben oder duplizieren Sie dann die Gruppe zusammen.",
+      "bullets": [
+        "Ziehen Sie ein Auswahlfeld und halten Sie dabei die rechte Maustaste gedrückt, um mehrere Elemente auf der Tafel gleichzeitig zu greifen.",
+        "Bewegen Sie die gesamte Gruppe zusammen.",
+        "Duplizieren Sie die Gruppe in einer Aktion.",
+        "Funktioniert mit Agenten, Fähigkeiten, Werkzeugsymbolen, Text und Bildern."
+      ],
+      "image1Alt": "Klicken Sie mit der rechten Maustaste auf ein Auswahlfeld, das um Elemente auf der Tafel gezogen wird",
+      "image1Label": "Zum Auswählen ziehen",
+      "image2Alt": "Mehrere Elemente auf der Tafel werden durch Auswahlumrisse hervorgehoben",
+      "image2Label": "Ausgewählt und bereit zum Umzug"
+    },
+    "boards": {
+      "title": "Machen Sie jedes Board leichter lesbar",
+      "description": "Reichhaltiger Text, klarere Phasen und Hintergründe, die zu Ihrer Planung passen.",
+      "richTextTitle": "Rich-Text auf der Tafel",
+      "richTextBullets": [
+        "Fett, kursiv und unterstrichen.",
+        "Aufzählungslisten und nummerierte Listen.",
+        "Benutzerdefinierte Textfarben und Schriftgrößen."
+      ],
+      "backgroundsTitle": "Board-Hintergründe",
+      "backgroundsDescription": "Wählen Sie für jedes Board einen einfachen, gepunkteten oder gitterförmigen Hintergrund. Ihre Hintergrundauswahl wird für dieses Board gespeichert.",
+      "imageAlt": "Strategietafel mit Rich-Text, Agenten, Fähigkeiten und Notizen",
+      "imageLabel": "Rich-Text, Notizen und Phasen an einem Ort",
+      "gridAlt": "Karteneinstellungsfeld mit auf „Gitter“ eingestelltem Tafelhintergrund",
+      "gridLabel": "Raster ausgewählt",
+      "optionsAlt": "Das Menü „Board-Hintergrund“ wird mit den Optionen „Keine“, „Punkte“ und „Raster“ geöffnet",
+      "optionsLabel": "Keine, Punkte oder Raster"
+    },
+    "mobile": {
+      "title": "Ein mobiles Makeover",
+      "description": "Das Board passt jetzt genau auf den Bildschirm und die benötigten Bedienelemente sind in Reichweite.",
+      "bullets": [
+        "Ein neues mobiles Layout mit einer unteren Aktionsleiste zum Rückgängigmachen, Wiederherstellen, Zeichnen, Löschen und Löschen.",
+        "Schwebende Zoomsteuerung und eine Karte, die genau auf den Bildschirm passt.",
+        "Drücken Sie lange auf ein beliebiges Element auf der Tafel, um dessen Rechtsklick-Aktionen zu öffnen.",
+        "Ein Vollbild-Texteditor auf Telefonen, wobei das Werkzeugfeld nach dem Hinzufügen von Text automatisch geschlossen wird."
+      ],
+      "imageAlt": "Mobiles ValoMapper-Layout mit der Tafel, schwebenden Zoom-Steuerelementen und unterer Aktionsleiste"
+    },
+    "more": {
+      "label": "Auch verbessert",
+      "title": "Kleinere Updates, überall besser",
+      "description": "Ein paar Verbesserungen der Lebensqualität, die dafür sorgen, dass sich die gesamte App flüssiger anfühlt.",
+      "items": [
+        {
+          "title": "Ein frischer Look auf der gesamten Website",
+          "bullets": [
+            "Neu gestaltete Landingpage und aktualisiertes Logo.",
+            "Ein Discord-Button in der Kopfzeile.",
+            "Konsistente Rückwärtsnavigation über alle Seiten hinweg."
+          ]
+        },
+        {
+          "title": "Board-Verbesserungen",
+          "bullets": [
+            "Löschen Sie alle Elemente oder nur die aktuelle Phase in einer Aktion.",
+            "Aktualisierter Phasenstil, einschließlich eines klareren Leerphasenzustands.",
+            "Verbesserte zugrunde liegende Board-Leistung."
+          ]
+        },
+        {
+          "title": "Intelligentere Kartentools",
+          "bullets": [
+            "Sichtkegel stoppen jetzt an Wänden, anstatt sie zu durchdringen.",
+            "Sichtkegel können an Symbole angehängt und über das Rechtsklick-Menü entfernt werden.",
+            "Werkzeugsymbole, der Dorn und Waffen können durch Ziehen an Agenten angebracht werden.",
+            "Agenten können über das Rechtsklick-Menü als tot oder wiederbelebt markiert werden."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Bereit, es an die Tafel zu bringen?",
+    "ctaDescription": "Beginnen Sie mit einem leeren Brett oder laden Sie die Demo-Wiederholung und sehen Sie, wie eine Runde zusammenkommt.",
+    "footerTitle": "ValoMapper – Was ist neu?",
+    "home": "Heim",
+    "replays": "Wiederholungen"
   },
   "billingPages": {
     "successMeta": "Abonnement bestätigt",

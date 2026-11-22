@@ -421,7 +421,113 @@
       "boards": "板",
       "mobile": "移動的",
       "more": "更多的"
-    }
+    },
+    "replay": {
+      "title": "Watch every round play back on the map",
+      "description": "Upload a replay file and see the round unfold with the scoreboard, timeline, and abilities in sync.",
+      "bullets": [
+        "上傳重播檔案並直接在地圖上觀看比賽。",
+        "Load a demo replay to try it without a file.",
+        "Copy a replay round straight into a strategy board to keep building from it."
+      ],
+      "openPlayer": "開啟重播播放器",
+      "imageAlt": "Full replay playback with the map, round timeline, and player scoreboard",
+      "imageLabel": "Map, timeline, scoreboard, and abilities"
+    },
+    "notes": {
+      "title": "Add context to anything on the board",
+      "description": "Leave the callout, timing, or reminder directly on the element it belongs to. Everyone in the lobby can see it.",
+      "bullets": [
+        "Add a note to any agent, ability, icon, text, or image to explain the plan or callout.",
+        "A small speech-bubble badge marks items that have a note.",
+        "將滑鼠懸停在某個項目上即可預覽其註釋，而無需打開任何內容。",
+        "Click the badge, use the right-click or long-press menu, or press N to add or edit a note."
+      ],
+      "image1Alt": "Close-up of board elements with speech-bubble note badges",
+      "image1Label": "注意徽章",
+      "image2Alt": "板上代理上方出現的註釋預覽的特寫",
+      "image2Label": "懸停預覽"
+    },
+    "multiSelect": {
+      "title": "一次性移動整個計劃",
+      "description": "按住右鍵單擊並在多個項目周圍拖曳一個框，然後將群組移動或複製到一起。",
+      "bullets": [
+        "按住右鍵點選拖曳選擇框可同時抓取板上的多個項目。",
+        "將整個小組移動在一起。",
+        "透過一次操作複製該組。",
+        "適用於代理商、能力、工具圖示、文字和圖像。"
+      ],
+      "image1Alt": "右鍵單擊在板上項目周圍拖曳的選擇框",
+      "image1Label": "拖曳選擇",
+      "image2Alt": "板上的多個項目以選擇輪廓突出顯示",
+      "image2Label": "已選定並準備搬遷"
+    },
+    "boards": {
+      "title": "讓每塊板更易於閱讀",
+      "description": "豐富的文字、清晰的階段和適合您計劃的背景。",
+      "richTextTitle": "黑板上的富文本",
+      "richTextBullets": [
+        "粗體、斜體和底線。",
+        "項目符號和編號清單。",
+        "自訂文字顏色和字體大小。"
+      ],
+      "backgroundsTitle": "董事會背景",
+      "backgroundsDescription": "為每個板選擇純色、圓點或網格背景。該委員會會記住您的背景選擇。",
+      "imageAlt": "具有豐富文字、代理、能力和註釋的策略板",
+      "imageLabel": "豐富的文本、註釋和階段集中在一處",
+      "gridAlt": "地圖設定面板，板背景設定為網格",
+      "gridLabel": "已選擇網格",
+      "optionsAlt": "開啟的板背景選單包含「無」、「點」和「網格」選項",
+      "optionsLabel": "無、點或網格"
+    },
+    "mobile": {
+      "title": "行動改造",
+      "description": "該板現在可以正確貼合螢幕，您所需的控制觸手可及。",
+      "bullets": [
+        "新的移動佈局，帶有用於撤消、重做、繪製、擦除和刪除的底部操作欄。",
+        "浮動縮放控制項以及適合螢幕的地圖。",
+        "長按板上的任何項目即可開啟其右鍵操作。",
+        "手機上的全螢幕文字編輯器，新增文字後工具面板會自動關閉。"
+      ],
+      "imageAlt": "ValoMapper 移動佈局，帶有面板、浮動縮放控制和底部操作欄"
+    },
+    "more": {
+      "label": "Also improved",
+      "title": "更小的更新，更好的無所不在",
+      "description": "一些生活品質的改變讓整個應用程式感覺更流暢。",
+      "items": [
+        {
+          "title": "A fresh look across the site",
+          "bullets": [
+            "重新設計的登陸頁面和更新的標誌。",
+            "標題中的 Discord 按鈕。",
+            "跨頁面一致的後退導覽。"
+          ]
+        },
+        {
+          "title": "Board improvements",
+          "bullets": [
+            "透過一項操作刪除所有項目或僅刪除目前階段。",
+            "更新的相位樣式，包括更清晰的空相位狀態。",
+            "提高了底層板的性能。"
+          ]
+        },
+        {
+          "title": "Smarter map tools",
+          "bullets": [
+            "視錐現在停在牆壁上而不是穿過牆壁。",
+            "視錐可以附加到圖示上並從右鍵選單中刪除。",
+            "工具圖示、尖刺和武器可以透過拖曳來附加到代理上。",
+            "Agents can be marked dead or revived from the right-click menu."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Ready to put it on the board?",
+    "ctaDescription": "Start with a blank board, or load the demo replay and see how a round comes together.",
+    "footerTitle": "ValoMapper — What's New",
+    "home": "家",
+    "replays": "重播"
   },
   "billingPages": {
     "successMeta": "訂閱已確認",

@@ -421,7 +421,113 @@
       "boards": "Boards",
       "mobile": "Mobile",
       "more": "More"
-    }
+    },
+    "replay": {
+      "title": "Watch every round play back on the map",
+      "description": "Upload a replay file and see the round unfold with the scoreboard, timeline, and abilities in sync.",
+      "bullets": [
+        "Upload a replay file and watch the match play out directly on the map.",
+        "Load a demo replay to try it without a file.",
+        "Copy a replay round straight into a strategy board to keep building from it."
+      ],
+      "openPlayer": "Open the replay player",
+      "imageAlt": "Full replay playback with the map, round timeline, and player scoreboard",
+      "imageLabel": "Map, timeline, scoreboard, and abilities"
+    },
+    "notes": {
+      "title": "Add context to anything on the board",
+      "description": "Leave the callout, timing, or reminder directly on the element it belongs to. Everyone in the lobby can see it.",
+      "bullets": [
+        "Add a note to any agent, ability, icon, text, or image to explain the plan or callout.",
+        "A small speech-bubble badge marks items that have a note.",
+        "Hover over an item to preview its note without opening anything.",
+        "Click the badge, use the right-click or long-press menu, or press N to add or edit a note."
+      ],
+      "image1Alt": "Close-up of board elements with speech-bubble note badges",
+      "image1Label": "Note badge",
+      "image2Alt": "Close-up of a note preview appearing above an agent on the board",
+      "image2Label": "Hover to preview"
+    },
+    "multiSelect": {
+      "title": "Move a whole plan at once",
+      "description": "Hold right-click and drag a box around several items, then move or duplicate the group together.",
+      "bullets": [
+        "Drag a selection box holding right-click to grab several items on the board at the same time.",
+        "Move the whole group together.",
+        "Duplicate the group in one action.",
+        "Works with agents, abilities, tool icons, text, and images."
+      ],
+      "image1Alt": "Right-click selection box being dragged around items on the board",
+      "image1Label": "Drag to select",
+      "image2Alt": "Multiple items on the board highlighted with selection outlines",
+      "image2Label": "Selected and ready to move"
+    },
+    "boards": {
+      "title": "Make every board easier to read",
+      "description": "Rich text, cleaner phases, and backgrounds that fit the way you plan.",
+      "richTextTitle": "Rich text on the board",
+      "richTextBullets": [
+        "Bold, italic, and underline.",
+        "Bullet and numbered lists.",
+        "Custom text colors and font sizes."
+      ],
+      "backgroundsTitle": "Board backgrounds",
+      "backgroundsDescription": "Choose a plain, dots, or grid background for each board. Your background choice is remembered for that board.",
+      "imageAlt": "Strategy board with rich text, agents, abilities, and notes",
+      "imageLabel": "Rich text, notes, and phases in one place",
+      "gridAlt": "Map settings panel with the board background set to Grid",
+      "gridLabel": "Grid selected",
+      "optionsAlt": "Board background menu open with None, Dots, and Grid options",
+      "optionsLabel": "None, Dots, or Grid"
+    },
+    "mobile": {
+      "title": "A mobile makeover",
+      "description": "The board now fits the screen properly, with the controls you need within reach.",
+      "bullets": [
+        "A new mobile layout with a bottom action bar for undo, redo, draw, erase, and delete.",
+        "Floating zoom controls, and a map that fits the screen properly.",
+        "Long-press any item on the board to open its right-click actions.",
+        "A full-screen text editor on phones, with the tools panel closing automatically after adding text."
+      ],
+      "imageAlt": "ValoMapper mobile layout with the board, floating zoom controls, and bottom action bar"
+    },
+    "more": {
+      "label": "Also improved",
+      "title": "Smaller updates, better everywhere",
+      "description": "A few quality-of-life changes that make the whole app feel smoother.",
+      "items": [
+        {
+          "title": "A fresh look across the site",
+          "bullets": [
+            "Redesigned landing page and updated logo.",
+            "A Discord button in the header.",
+            "Consistent back navigation across pages."
+          ]
+        },
+        {
+          "title": "Board improvements",
+          "bullets": [
+            "Delete all items or just the current phase in one action.",
+            "Refreshed phase styling, including a clearer empty-phase state.",
+            "Improved underlying board performance."
+          ]
+        },
+        {
+          "title": "Smarter map tools",
+          "bullets": [
+            "Vision cones now stop at walls instead of passing through them.",
+            "Vision cones can be attached to icons and removed from the right-click menu.",
+            "Tool icons, the spike, and weapons can be attached to agents by dragging them on.",
+            "Agents can be marked dead or revived from the right-click menu."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Ready to put it on the board?",
+    "ctaDescription": "Start with a blank board, or load the demo replay and see how a round comes together.",
+    "footerTitle": "ValoMapper — What's New",
+    "home": "Home",
+    "replays": "Replays"
   },
   "billingPages": {
     "successMeta": "Subscription confirmed",

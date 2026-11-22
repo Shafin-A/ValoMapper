@@ -421,7 +421,113 @@
       "boards": "Bảng",
       "mobile": "Điện thoại di động",
       "more": "Hơn"
-    }
+    },
+    "replay": {
+      "title": "Xem mỗi vòng phát lại trên bản đồ",
+      "description": "Tải lên tệp phát lại và xem vòng đấu diễn ra đồng bộ với bảng điểm, dòng thời gian và các kỹ năng.",
+      "bullets": [
+        "Tải lên tệp phát lại và xem trận đấu diễn ra trực tiếp trên bản đồ.",
+        "Tải bản phát lại demo để thử mà không cần tệp.",
+        "Sao chép thẳng vòng chơi lại vào bảng chiến lược để tiếp tục xây dựng từ đó."
+      ],
+      "openPlayer": "Mở trình phát lại",
+      "imageAlt": "Phát lại đầy đủ với bản đồ, dòng thời gian vòng và bảng điểm của người chơi",
+      "imageLabel": "Bản đồ, dòng thời gian, bảng điểm và khả năng"
+    },
+    "notes": {
+      "title": "Thêm ngữ cảnh vào bất cứ điều gì trên bảng",
+      "description": "Để lại chú thích, thời gian hoặc lời nhắc trực tiếp trên phần tử chứa nó. Mọi người trong sảnh đều có thể nhìn thấy nó.",
+      "bullets": [
+        "Thêm ghi chú vào bất kỳ tác nhân, khả năng, biểu tượng, văn bản hoặc hình ảnh nào để giải thích kế hoạch hoặc chú thích.",
+        "Huy hiệu bong bóng lời thoại nhỏ đánh dấu các mục có ghi chú.",
+        "Di chuột qua một mục để xem trước ghi chú của nó mà không cần mở bất cứ thứ gì.",
+        "Nhấp vào huy hiệu, sử dụng menu nhấp chuột phải hoặc nhấn và giữ hoặc nhấn N để thêm hoặc chỉnh sửa ghi chú."
+      ],
+      "image1Alt": "Cận cảnh các thành phần bảng có huy hiệu ghi chú bong bóng lời thoại",
+      "image1Label": "Huy hiệu ghi chú",
+      "image2Alt": "Cận cảnh bản xem trước ghi chú xuất hiện phía trên một nhân viên trên bảng",
+      "image2Label": "Di chuột để xem trước"
+    },
+    "multiSelect": {
+      "title": "Di chuyển toàn bộ kế hoạch cùng một lúc",
+      "description": "Giữ chuột phải và kéo hộp xung quanh một số mục, sau đó di chuyển hoặc sao chép nhóm lại với nhau.",
+      "bullets": [
+        "Kéo hộp lựa chọn và nhấp chuột phải để lấy nhiều mục trên bảng cùng một lúc.",
+        "Di chuyển cả nhóm cùng nhau.",
+        "Nhân đôi nhóm trong một hành động.",
+        "Hoạt động với các tác nhân, khả năng, biểu tượng công cụ, văn bản và hình ảnh."
+      ],
+      "image1Alt": "Nhấp chuột phải vào hộp chọn được kéo xung quanh các mục trên bảng",
+      "image1Label": "Kéo để chọn",
+      "image2Alt": "Nhiều mục trên bảng được đánh dấu bằng các đường viền lựa chọn",
+      "image2Label": "Đã chọn và sẵn sàng di chuyển"
+    },
+    "boards": {
+      "title": "Làm cho mọi bảng dễ đọc hơn",
+      "description": "Văn bản phong phú, các giai đoạn rõ ràng hơn và hình nền phù hợp với cách bạn lập kế hoạch.",
+      "richTextTitle": "Văn bản có định dạng trên bảng",
+      "richTextBullets": [
+        "In đậm, in nghiêng và gạch chân.",
+        "Danh sách dấu đầu dòng và đánh số.",
+        "Màu văn bản và kích thước phông chữ tùy chỉnh."
+      ],
+      "backgroundsTitle": "Hình nền bảng",
+      "backgroundsDescription": "Chọn nền trơn, chấm hoặc lưới cho mỗi bảng. Lựa chọn nền của bạn được ghi nhớ cho bảng đó.",
+      "imageAlt": "Bảng chiến lược với văn bản, đặc vụ, khả năng và ghi chú phong phú",
+      "imageLabel": "Văn bản, ghi chú và giai đoạn phong phú ở một nơi",
+      "gridAlt": "Bảng cài đặt bản đồ với nền bảng được đặt thành Lưới",
+      "gridLabel": "Đã chọn lưới",
+      "optionsAlt": "Menu nền bảng mở với các tùy chọn Không có, Dấu chấm và Lưới",
+      "optionsLabel": "Không có, Dấu chấm hoặc Lưới"
+    },
+    "mobile": {
+      "title": "Thay đổi di động",
+      "description": "Bảng mạch hiện vừa khít với màn hình, với các nút điều khiển bạn cần trong tầm tay.",
+      "bullets": [
+        "Bố cục di động mới có thanh tác vụ phía dưới để hoàn tác, làm lại, vẽ, xóa và xóa.",
+        "Điều khiển thu phóng nổi và bản đồ phù hợp với màn hình.",
+        "Nhấn và giữ bất kỳ mục nào trên bảng để mở thao tác nhấp chuột phải vào mục đó.",
+        "Trình chỉnh sửa văn bản toàn màn hình trên điện thoại, với bảng công cụ tự động đóng sau khi thêm văn bản."
+      ],
+      "imageAlt": "Bố cục di động ValoMapper với bảng, điều khiển thu phóng nổi và thanh tác vụ phía dưới"
+    },
+    "more": {
+      "label": "Cũng được cải thiện",
+      "title": "Cập nhật nhỏ hơn, tốt hơn ở mọi nơi",
+      "description": "Một số thay đổi về chất lượng cuộc sống giúp toàn bộ ứng dụng mượt mà hơn.",
+      "items": [
+        {
+          "title": "Một cái nhìn mới mẻ trên toàn bộ trang web",
+          "bullets": [
+            "Trang đích được thiết kế lại và logo được cập nhật.",
+            "Nút Discord ở tiêu đề.",
+            "Điều hướng trở lại nhất quán trên các trang."
+          ]
+        },
+        {
+          "title": "Cải tiến bảng",
+          "bullets": [
+            "Xóa tất cả các mục hoặc chỉ giai đoạn hiện tại trong một hành động.",
+            "Kiểu pha được làm mới, bao gồm trạng thái pha trống rõ ràng hơn.",
+            "Cải thiện hiệu suất bảng cơ bản."
+          ]
+        },
+        {
+          "title": "Công cụ bản đồ thông minh hơn",
+          "bullets": [
+            "Nón tầm nhìn bây giờ dừng lại ở các bức tường thay vì đi xuyên qua chúng.",
+            "Các hình nón tầm nhìn có thể được gắn vào các biểu tượng và xóa khỏi menu chuột phải.",
+            "Các biểu tượng công cụ, mũi nhọn và vũ khí có thể được gắn vào đặc vụ bằng cách kéo chúng vào.",
+            "Đặc vụ có thể được đánh dấu là đã chết hoặc được hồi sinh từ menu chuột phải."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Sẵn sàng để đặt nó lên bảng?",
+    "ctaDescription": "Bắt đầu với một bảng trống hoặc tải bản phát lại demo và xem các vòng kết hợp với nhau như thế nào.",
+    "footerTitle": "ValoMapper — Có gì mới",
+    "home": "Trang chủ",
+    "replays": "Phát lại"
   },
   "billingPages": {
     "successMeta": "Đã xác nhận đăng ký",

@@ -421,7 +421,113 @@
       "boards": "Quadros",
       "mobile": "Móvel",
       "more": "Mais"
-    }
+    },
+    "replay": {
+      "title": "Assista a cada rodada reproduzida no mapa",
+      "description": "Carregue um arquivo de replay e veja o desenrolar da rodada com o placar, a linha do tempo e as habilidades sincronizadas.",
+      "bullets": [
+        "Carregue um arquivo de replay e assista à partida diretamente no mapa.",
+        "Carregue um replay de demonstração para experimentá-lo sem um arquivo.",
+        "Copie uma rodada de replay diretamente em um quadro de estratégia para continuar construindo a partir dela."
+      ],
+      "openPlayer": "Abra o reprodutor de repetição",
+      "imageAlt": "Reprodução completa do replay com o mapa, linha do tempo da rodada e placar do jogador",
+      "imageLabel": "Mapa, linha do tempo, placar e habilidades"
+    },
+    "notes": {
+      "title": "Adicione contexto a qualquer coisa no quadro",
+      "description": "Deixe a frase de destaque, o tempo ou o lembrete diretamente no elemento ao qual pertence. Todos no lobby podem ver isso.",
+      "bullets": [
+        "Adicione uma nota a qualquer agente, habilidade, ícone, texto ou imagem para explicar o plano ou frase de destaque.",
+        "Um pequeno distintivo de balão marca os itens que possuem uma nota.",
+        "Passe o mouse sobre um item para visualizar sua nota sem abrir nada.",
+        "Clique no emblema, use o menu do botão direito ou pressione longamente ou pressione N para adicionar ou editar uma nota."
+      ],
+      "image1Alt": "Close de elementos do quadro com emblemas de balões de fala",
+      "image1Label": "Selo de nota",
+      "image2Alt": "Close da visualização de uma nota acima de um agente no quadro",
+      "image2Label": "Passe o mouse para visualizar"
+    },
+    "multiSelect": {
+      "title": "Mova um plano inteiro de uma vez",
+      "description": "Segure o botão direito e arraste uma caixa ao redor de vários itens e, em seguida, mova ou duplique o grupo junto.",
+      "bullets": [
+        "Arraste uma caixa de seleção segurando o botão direito para pegar vários itens no quadro ao mesmo tempo.",
+        "Mova todo o grupo junto.",
+        "Duplique o grupo em uma ação.",
+        "Funciona com agentes, habilidades, ícones de ferramentas, texto e imagens."
+      ],
+      "image1Alt": "Caixa de seleção do botão direito sendo arrastada pelos itens no quadro",
+      "image1Label": "Arraste para selecionar",
+      "image2Alt": "Vários itens no quadro destacados com contornos de seleção",
+      "image2Label": "Selecionado e pronto para mover"
+    },
+    "boards": {
+      "title": "Torne cada quadro mais fácil de ler",
+      "description": "Rich text, fases mais limpas e planos de fundo que se ajustam ao seu planejamento.",
+      "richTextTitle": "Rich text no quadro",
+      "richTextBullets": [
+        "Negrito, itálico e sublinhado.",
+        "Listas com marcadores e numeradas.",
+        "Cores de texto e tamanhos de fonte personalizados."
+      ],
+      "backgroundsTitle": "Fundos do tabuleiro",
+      "backgroundsDescription": "Escolha um plano de fundo simples, com pontos ou grade para cada quadro. Sua escolha de plano de fundo é lembrada para esse quadro.",
+      "imageAlt": "Quadro de estratégia com rich text, agentes, habilidades e notas",
+      "imageLabel": "Rich text, notas e fases em um só lugar",
+      "gridAlt": "Painel de configurações do mapa com o plano de fundo do quadro definido como Grade",
+      "gridLabel": "Grade selecionada",
+      "optionsAlt": "Menu de plano de fundo do quadro aberto com opções Nenhum, Pontos e Grade",
+      "optionsLabel": "Nenhum, pontos ou grade"
+    },
+    "mobile": {
+      "title": "Uma reforma móvel",
+      "description": "O quadro agora se ajusta corretamente à tela, com os controles necessários ao seu alcance.",
+      "bullets": [
+        "Um novo layout móvel com uma barra de ação inferior para desfazer, refazer, desenhar, apagar e excluir.",
+        "Controles de zoom flutuantes e um mapa que se ajusta corretamente à tela.",
+        "Pressione longamente qualquer item no quadro para abrir suas ações de clique com o botão direito.",
+        "Um editor de texto em tela cheia em telefones, com o painel de ferramentas fechando automaticamente após adicionar texto."
+      ],
+      "imageAlt": "Layout móvel do ValoMapper com quadro, controles de zoom flutuantes e barra de ação inferior"
+    },
+    "more": {
+      "label": "Também melhorou",
+      "title": "Atualizações menores, melhores em qualquer lugar",
+      "description": "Algumas mudanças na qualidade de vida que tornam todo o aplicativo mais suave.",
+      "items": [
+        {
+          "title": "Uma nova visão do site",
+          "bullets": [
+            "Landing page redesenhada e logotipo atualizado.",
+            "Um botão Discord no cabeçalho.",
+            "Navegação de retorno consistente pelas páginas."
+          ]
+        },
+        {
+          "title": "Melhorias no tabuleiro",
+          "bullets": [
+            "Exclua todos os itens ou apenas a fase atual em uma ação.",
+            "Estilo de fase atualizado, incluindo um estado de fase vazia mais claro.",
+            "Melhor desempenho subjacente do conselho."
+          ]
+        },
+        {
+          "title": "Ferramentas de mapas mais inteligentes",
+          "bullets": [
+            "Os cones de visão agora param nas paredes em vez de passar por elas.",
+            "Os cones de visão podem ser anexados aos ícones e removidos no menu do botão direito.",
+            "Ícones de ferramentas, espinhos e armas podem ser anexados aos agentes arrastando-os.",
+            "Os agentes podem ser marcados como mortos ou revividos no menu do botão direito."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Pronto para colocá-lo no quadro?",
+    "ctaDescription": "Comece com um tabuleiro em branco ou carregue o replay da demonstração e veja como uma rodada acontece.",
+    "footerTitle": "ValoMapper — O que há de novo",
+    "home": "Lar",
+    "replays": "Repetições"
   },
   "billingPages": {
     "successMeta": "Assinatura confirmada",

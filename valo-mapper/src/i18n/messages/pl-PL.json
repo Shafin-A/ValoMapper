@@ -421,7 +421,113 @@
       "boards": "Deski",
       "mobile": "Przenośny",
       "more": "Więcej"
-    }
+    },
+    "replay": {
+      "title": "Oglądaj każdą rundę odtwarzaną na mapie",
+      "description": "Prześlij plik powtórki i zobacz przebieg rundy z zsynchronizowaną tablicą wyników, osią czasu i umiejętnościami.",
+      "bullets": [
+        "Prześlij plik powtórki i obejrzyj przebieg meczu bezpośrednio na mapie.",
+        "Załaduj powtórkę demonstracyjną, aby wypróbować grę bez pliku.",
+        "Skopiuj rundę powtórki bezpośrednio na planszę strategii, aby dalej na niej budować."
+      ],
+      "openPlayer": "Otwórz odtwarzacz powtórek",
+      "imageAlt": "Pełne odtwarzanie powtórek z mapą, osią czasu rundy i tablicą wyników gracza",
+      "imageLabel": "Mapa, oś czasu, tablica wyników i umiejętności"
+    },
+    "notes": {
+      "title": "Dodaj kontekst do czegokolwiek na tablicy",
+      "description": "Pozostaw objaśnienie, termin lub przypomnienie bezpośrednio w elemencie, do którego należy. Każdy w lobby może to zobaczyć.",
+      "bullets": [
+        "Dodaj notatkę do dowolnego agenta, zdolności, ikony, tekstu lub obrazu, aby wyjaśnić plan lub objaśnienie.",
+        "Mała plakietka z dymkiem oznacza przedmioty posiadające notatkę.",
+        "Najedź kursorem na element, aby wyświetlić podgląd notatki bez otwierania czegokolwiek.",
+        "Kliknij plakietkę, użyj menu dostępnego po kliknięciu prawym przyciskiem myszy lub naciśnij je długo, albo naciśnij N, aby dodać lub edytować notatkę."
+      ],
+      "image1Alt": "Zbliżenie elementów tablicy z plakietkami z dymkami",
+      "image1Label": "Odznaka Uwaga",
+      "image2Alt": "Zbliżenie podglądu notatki wyświetlanego nad agentem na tablicy",
+      "image2Label": "Najedź kursorem, aby wyświetlić podgląd"
+    },
+    "multiSelect": {
+      "title": "Przenieś cały plan na raz",
+      "description": "Przytrzymaj kliknięcie prawym przyciskiem myszy i przeciągnij ramkę wokół kilku elementów, a następnie przenieś lub zduplikuj grupę razem.",
+      "bullets": [
+        "Przeciągnij pole wyboru, przytrzymując kliknięcie prawym przyciskiem myszy, aby jednocześnie chwycić kilka elementów na tablicy.",
+        "Przesuńcie całą grupę razem.",
+        "Duplikuj grupę w jednej akcji.",
+        "Współpracuje z agentami, umiejętnościami, ikonami narzędzi, tekstem i obrazami."
+      ],
+      "image1Alt": "Kliknij prawym przyciskiem myszy pole wyboru przeciągane wokół elementów na tablicy",
+      "image1Label": "Przeciągnij, aby wybrać",
+      "image2Alt": "Wiele elementów na tablicy wyróżnionych konturami wyboru",
+      "image2Label": "Wybrane i gotowe do przeniesienia"
+    },
+    "boards": {
+      "title": "Spraw, aby każda tablica była bardziej czytelna",
+      "description": "Bogaty tekst, czystsze fazy i tła pasujące do Twojego planu.",
+      "richTextTitle": "Bogaty tekst na tablicy",
+      "richTextBullets": [
+        "Pogrubienie, kursywa i podkreślenie.",
+        "Listy punktowane i numerowane.",
+        "Niestandardowe kolory tekstu i rozmiary czcionek."
+      ],
+      "backgroundsTitle": "Tła planszowe",
+      "backgroundsDescription": "Dla każdej planszy wybierz tło gładkie, w kropki lub w siatkę. Twój wybór tła zostanie zapamiętany dla tej tablicy.",
+      "imageAlt": "Tablica strategiczna z bogatym tekstem, agentami, umiejętnościami i notatkami",
+      "imageLabel": "Bogaty tekst, notatki i fazy w jednym miejscu",
+      "gridAlt": "Panel ustawień mapy z tłem planszy ustawionym na Siatka",
+      "gridLabel": "Wybrano siatkę",
+      "optionsAlt": "Menu tła tablicy otwarte z opcjami Brak, Kropki i Siatka",
+      "optionsLabel": "Brak, Kropki lub Siatka"
+    },
+    "mobile": {
+      "title": "Mobilna metamorfoza",
+      "description": "Tablica teraz prawidłowo dopasowuje się do ekranu, a potrzebne elementy sterujące są w zasięgu ręki.",
+      "bullets": [
+        "Nowy układ mobilny z dolnym paskiem akcji umożliwiającym cofanie, powtarzanie, rysowanie, wymazywanie i usuwanie.",
+        "Pływające elementy sterujące zoomem i mapa odpowiednio dopasowana do ekranu.",
+        "Naciśnij i przytrzymaj dowolny element na tablicy, aby otworzyć jego działania po kliknięciu prawym przyciskiem myszy.",
+        "Pełnoekranowy edytor tekstu na telefonach, z panelem narzędzi zamykającym się automatycznie po dodaniu tekstu."
+      ],
+      "imageAlt": "Mobilny układ ValoMapper z tablicą, ruchomymi elementami sterującymi zoomem i dolnym paskiem akcji"
+    },
+    "more": {
+      "label": "Również ulepszone",
+      "title": "Mniejsze aktualizacje, wszędzie lepiej",
+      "description": "Kilka zmian poprawiających jakość życia, dzięki którym cała aplikacja działa płynniej.",
+      "items": [
+        {
+          "title": "Świeży wygląd całej witryny",
+          "bullets": [
+            "Przeprojektowana strona docelowa i zaktualizowane logo.",
+            "Przycisk Discord w nagłówku.",
+            "Spójna nawigacja wsteczna pomiędzy stronami."
+          ]
+        },
+        {
+          "title": "Ulepszenia tablicy",
+          "bullets": [
+            "Usuń wszystkie elementy lub tylko bieżącą fazę w jednej akcji.",
+            "Odświeżona stylizacja faz, w tym wyraźniejszy stan pustej fazy.",
+            "Poprawiona wydajność płyty bazowej."
+          ]
+        },
+        {
+          "title": "Inteligentniejsze narzędzia mapowe",
+          "bullets": [
+            "Stożki widzenia zatrzymują się teraz na ścianach, zamiast przez nie przechodzić.",
+            "Stożki wizyjne można dołączać do ikon i usuwać z menu wyświetlanego prawym przyciskiem myszy.",
+            "Ikony narzędzi, kolec i broń można dołączać do agentów, przeciągając je.",
+            "Agentów można oznaczyć jako martwych lub wskrzeszonych, korzystając z menu wyświetlanego po kliknięciu prawym przyciskiem myszy."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Gotowy, aby umieścić to na tablicy?",
+    "ctaDescription": "Zacznij od pustej planszy lub załaduj powtórkę demonstracyjną i zobacz, jak układa się runda.",
+    "footerTitle": "ValoMapper — Co nowego",
+    "home": "Dom",
+    "replays": "Powtórki"
   },
   "billingPages": {
     "successMeta": "Subskrypcja potwierdzona",

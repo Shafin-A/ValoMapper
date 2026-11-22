@@ -421,7 +421,113 @@
       "boards": "Planches",
       "mobile": "Mobile",
       "more": "Plus"
-    }
+    },
+    "replay": {
+      "title": "Regardez chaque tour jouer sur la carte",
+      "description": "Téléchargez un fichier de rediffusion et voyez le tour se dérouler avec le tableau de bord, la chronologie et les capacités synchronisés.",
+      "bullets": [
+        "Téléchargez un fichier de replay et regardez le match se dérouler directement sur la carte.",
+        "Chargez une rediffusion de la démo pour l'essayer sans fichier.",
+        "Copiez un tour de rediffusion directement dans un tableau de stratégie pour continuer à construire à partir de celui-ci."
+      ],
+      "openPlayer": "Ouvrir le lecteur de replay",
+      "imageAlt": "Replay complet avec la carte, la chronologie des parties et le tableau de bord des joueurs",
+      "imageLabel": "Carte, chronologie, tableau de bord et capacités"
+    },
+    "notes": {
+      "title": "Ajoutez du contexte à tout ce qui se trouve sur le tableau",
+      "description": "Laissez la légende, le timing ou le rappel directement sur l'élément auquel il appartient. Tout le monde dans le hall peut le voir.",
+      "bullets": [
+        "Ajoutez une note à n’importe quel agent, capacité, icône, texte ou image pour expliquer le plan ou la légende.",
+        "Un petit badge à bulle marque les éléments comportant une note.",
+        "Passez la souris sur un élément pour prévisualiser sa note sans rien ouvrir.",
+        "Cliquez sur le badge, utilisez le menu contextuel ou appuyez longuement, ou appuyez sur N pour ajouter ou modifier une note."
+      ],
+      "image1Alt": "Gros plan des éléments du tableau avec des badges de notes à bulles",
+      "image1Label": "Insigne de remarque",
+      "image2Alt": "Gros plan d'un aperçu d'une note apparaissant au-dessus d'un agent sur le tableau",
+      "image2Label": "Passez la souris pour prévisualiser"
+    },
+    "multiSelect": {
+      "title": "Déplacer tout un plan à la fois",
+      "description": "Maintenez le clic droit et faites glisser un cadre autour de plusieurs éléments, puis déplacez ou dupliquez le groupe ensemble.",
+      "bullets": [
+        "Faites glisser une zone de sélection en maintenant le clic droit pour saisir plusieurs éléments du tableau en même temps.",
+        "Rassemblez tout le groupe.",
+        "Dupliquez le groupe en une seule action.",
+        "Fonctionne avec des agents, des capacités, des icônes d'outils, du texte et des images."
+      ],
+      "image1Alt": "Cliquez avec le bouton droit sur la zone de sélection déplacée autour des éléments du tableau",
+      "image1Label": "Faites glisser pour sélectionner",
+      "image2Alt": "Plusieurs éléments du tableau mis en évidence avec des contours de sélection",
+      "image2Label": "Sélectionné et prêt à déménager"
+    },
+    "boards": {
+      "title": "Rendre chaque tableau plus facile à lire",
+      "description": "Texte riche, phases plus claires et arrière-plans adaptés à votre planification.",
+      "richTextTitle": "Texte enrichi au tableau",
+      "richTextBullets": [
+        "Gras, italique et souligné.",
+        "Listes à puces et numérotées.",
+        "Couleurs de texte et tailles de police personnalisées."
+      ],
+      "backgroundsTitle": "Arrière-plans du conseil d'administration",
+      "backgroundsDescription": "Choisissez un fond uni, à pois ou en grille pour chaque tableau. Votre choix d’arrière-plan est mémorisé pour ce tableau.",
+      "imageAlt": "Tableau de stratégie avec texte enrichi, agents, capacités et notes",
+      "imageLabel": "Texte enrichi, notes et phases en un seul endroit",
+      "gridAlt": "Panneau des paramètres de la carte avec l'arrière-plan du tableau défini sur Grille",
+      "gridLabel": "Grille sélectionnée",
+      "optionsAlt": "Menu d'arrière-plan du tableau ouvert avec les options Aucun, Points et Grille",
+      "optionsLabel": "Aucun, points ou grille"
+    },
+    "mobile": {
+      "title": "Un relooking mobile",
+      "description": "Le tableau s'adapte désormais correctement à l'écran, avec les commandes dont vous avez besoin à portée de main.",
+      "bullets": [
+        "Une nouvelle mise en page mobile avec une barre d'action inférieure pour annuler, refaire, dessiner, effacer et supprimer.",
+        "Commandes de zoom flottantes et une carte qui s'adapte correctement à l'écran.",
+        "Appuyez longuement sur n'importe quel élément du tableau pour ouvrir ses actions par clic droit.",
+        "Un éditeur de texte plein écran sur les téléphones, avec le panneau d'outils se fermant automatiquement après l'ajout de texte."
+      ],
+      "imageAlt": "Disposition mobile ValoMapper avec tableau, commandes de zoom flottantes et barre d'action inférieure"
+    },
+    "more": {
+      "label": "Également amélioré",
+      "title": "Des mises à jour plus petites, meilleures partout",
+      "description": "Quelques changements de qualité de vie qui rendent l’ensemble de l’application plus fluide.",
+      "items": [
+        {
+          "title": "Un nouveau regard sur le site",
+          "bullets": [
+            "Page de destination repensée et logo mis à jour.",
+            "Un bouton Discord dans l’en-tête.",
+            "Navigation arrière cohérente à travers les pages."
+          ]
+        },
+        {
+          "title": "Améliorations du tableau",
+          "bullets": [
+            "Supprimez tous les éléments ou uniquement la phase en cours en une seule action.",
+            "Style de phase rafraîchi, y compris un état de phase vide plus clair.",
+            "Amélioration des performances sous-jacentes du conseil d’administration."
+          ]
+        },
+        {
+          "title": "Des outils cartographiques plus intelligents",
+          "bullets": [
+            "Les cônes de vision s'arrêtent désormais au niveau des murs au lieu de les traverser.",
+            "Les cônes de vision peuvent être attachés aux icônes et supprimés du menu contextuel.",
+            "Les icônes d'outils, la pointe et les armes peuvent être attachées aux agents en les faisant glisser.",
+            "Les agents peuvent être marqués comme morts ou réanimés à partir du menu contextuel."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Prêt à le mettre au tableau ?",
+    "ctaDescription": "Commencez avec un tableau vierge ou chargez la rediffusion de la démo et voyez comment un tour se déroule.",
+    "footerTitle": "ValoMapper — Quoi de neuf",
+    "home": "Maison",
+    "replays": "Rediffusions"
   },
   "billingPages": {
     "successMeta": "Abonnement confirmé",

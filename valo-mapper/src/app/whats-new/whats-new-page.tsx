@@ -33,63 +33,7 @@ const SECTION_LINKS = [
   { id: "more", key: "more" },
 ] as const;
 
-const NOTES_BULLETS = [
-  "Add a note to any agent, ability, icon, text, or image to explain the plan or callout.",
-  "A small speech-bubble badge marks items that have a note.",
-  "Hover over an item to preview its note without opening anything.",
-  "Click the badge, use the right-click or long-press menu, or press N to add or edit a note.",
-];
-
-const MULTI_SELECT_BULLETS = [
-  "Drag a selection box holding right-click to grab several items on the board at the same time.",
-  "Move the whole group together.",
-  "Duplicate the group in one action.",
-  "Works with agents, abilities, tool icons, text, and images.",
-];
-
-const RICH_TEXT_BULLETS = [
-  "Bold, italic, and underline.",
-  "Bullet and numbered lists.",
-  "Custom text colors and font sizes.",
-];
-
-const MOBILE_BULLETS = [
-  "A new mobile layout with a bottom action bar for undo, redo, draw, erase, and delete.",
-  "Floating zoom controls, and a map that fits the screen properly.",
-  "Long-press any item on the board to open its right-click actions.",
-  "A full-screen text editor on phones, with the tools panel closing automatically after adding text.",
-];
-
-const ALSO_IMPROVED = [
-  {
-    title: "A fresh look across the site",
-    icon: Palette,
-    items: [
-      "Redesigned landing page and updated logo.",
-      "A Discord button in the header.",
-      "Consistent back navigation across pages.",
-    ],
-  },
-  {
-    title: "Board improvements",
-    icon: Layers,
-    items: [
-      "Delete all items or just the current phase in one action.",
-      "Refreshed phase styling, including a clearer empty-phase state.",
-      "Improved underlying board performance.",
-    ],
-  },
-  {
-    title: "Smarter map tools",
-    icon: Eye,
-    items: [
-      "Vision cones now stop at walls instead of passing through them.",
-      "Vision cones can be attached to icons and removed from the right-click menu.",
-      "Tool icons, the spike, and weapons can be attached to agents by dragging them on.",
-      "Agents can be marked dead or revived from the right-click menu.",
-    ],
-  },
-];
+const ALSO_IMPROVED_ICONS = [Palette, Layers, Eye];
 
 const SectionIntro = ({
   label,
@@ -177,6 +121,14 @@ const Shot = ({
 
 export const WhatsNewPage = () => {
   const t = useTranslations("whatsNew");
+  const notesBullets = t.raw("notes.bullets") as string[];
+  const multiSelectBullets = t.raw("multiSelect.bullets") as string[];
+  const richTextBullets = t.raw("boards.richTextBullets") as string[];
+  const mobileBullets = t.raw("mobile.bullets") as string[];
+  const alsoImproved = t.raw("more.items") as {
+    title: string;
+    bullets: string[];
+  }[];
   const sidebarState = useSidebarState();
   const createLobbyMutation = useCreateLobby();
   const isStarting = createLobbyMutation.isPending;
@@ -279,24 +231,17 @@ export const WhatsNewPage = () => {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8 lg:py-24">
             <div>
               <SectionIntro
-                label="Replay"
-                title="Watch every round play back on the map"
+                label={t("sections.replay")}
+                title={t("replay.title")}
               >
-                Upload a replay file and see the round unfold with the
-                scoreboard, timeline, and abilities in sync.
+                {t("replay.description")}
               </SectionIntro>
 
-              <BulletList
-                items={[
-                  "Upload a replay file and watch the match play out directly on the map.",
-                  "Load a demo replay to try it without a file.",
-                  "Copy a replay round straight into a strategy board to keep building from it.",
-                ]}
-              />
+              <BulletList items={t.raw("replay.bullets") as string[]} />
 
               <Button asChild variant="link" className="mt-4 px-0">
                 <Link href="/replay">
-                  Open the replay player
+                  {t("replay.openPlayer")}
                   <ArrowRight aria-hidden />
                 </Link>
               </Button>
@@ -304,11 +249,11 @@ export const WhatsNewPage = () => {
 
             <Shot
               src="/whats-new/replay.webp"
-              alt="Full replay playback with the map, round timeline, and player scoreboard"
+              alt={t("replay.imageAlt")}
               width={2400}
               height={1350}
               sizes="(min-width: 1024px) 55vw, 100vw"
-              label="Map, timeline, scoreboard, and abilities"
+              label={t("replay.imageLabel")}
               priority
             />
           </div>
@@ -320,31 +265,30 @@ export const WhatsNewPage = () => {
         >
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <SectionIntro
-              label="Notes"
-              title="Add context to anything on the board"
+              label={t("sections.notes")}
+              title={t("notes.title")}
             >
-              Leave the callout, timing, or reminder directly on the element
-              it belongs to. Everyone in the lobby can see it.
+              {t("notes.description")}
             </SectionIntro>
 
-            <BulletList items={NOTES_BULLETS} />
+            <BulletList items={notesBullets} />
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               <Shot
                 src="/whats-new/notes.webp"
-                alt="Close-up of board elements with speech-bubble note badges"
+                alt={t("notes.image1Alt")}
                 width={1000}
                 height={600}
                 sizes="(min-width: 640px) 50vw, 100vw"
-                label="Note badge"
+                label={t("notes.image1Label")}
               />
               <Shot
                 src="/whats-new/notes-hover.webp"
-                alt="Close-up of a note preview appearing above an agent on the board"
+                alt={t("notes.image2Alt")}
                 width={1000}
                 height={600}
                 sizes="(min-width: 640px) 50vw, 100vw"
-                label="Hover to preview"
+                label={t("notes.image2Label")}
               />
             </div>
           </div>
@@ -356,31 +300,30 @@ export const WhatsNewPage = () => {
         >
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <SectionIntro
-              label="Multi-select"
-              title="Move a whole plan at once"
+              label={t("sections.multiSelect")}
+              title={t("multiSelect.title")}
             >
-              Hold right-click and drag a box around several items, then move
-              or duplicate the group together.
+              {t("multiSelect.description")}
             </SectionIntro>
 
-            <BulletList items={MULTI_SELECT_BULLETS} />
+            <BulletList items={multiSelectBullets} />
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               <Shot
                 src="/whats-new/multi-select.webp"
-                alt="Right-click selection box being dragged around items on the board"
+                alt={t("multiSelect.image1Alt")}
                 width={1300}
                 height={1120}
                 sizes="(min-width: 640px) 50vw, 100vw"
-                label="Drag to select"
+                label={t("multiSelect.image1Label")}
               />
               <Shot
                 src="/whats-new/multi-select-selected.webp"
-                alt="Multiple items on the board highlighted with selection outlines"
+                alt={t("multiSelect.image2Alt")}
                 width={1300}
                 height={1120}
                 sizes="(min-width: 640px) 50vw, 100vw"
-                label="Selected and ready to move"
+                label={t("multiSelect.image2Label")}
               />
             </div>
           </div>
@@ -392,37 +335,40 @@ export const WhatsNewPage = () => {
         >
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <SectionIntro
-              label="Boards"
-              title="Make every board easier to read"
+              label={t("sections.boards")}
+              title={t("boards.title")}
             >
-              Rich text, cleaner phases, and backgrounds that fit the way you
-              plan.
+              {t("boards.description")}
             </SectionIntro>
 
             <div className="mt-10 grid gap-6 lg:grid-cols-[1.4fr_0.9fr] lg:items-start">
               <Shot
                 src="/whats-new/board.webp"
-                alt="Strategy board with rich text, agents, abilities, and notes"
+                alt={t("boards.imageAlt")}
                 width={2400}
                 height={1350}
                 sizes="(min-width: 1024px) 60vw, 100vw"
-                label="Rich text, notes, and phases in one place"
+                label={t("boards.imageLabel")}
               />
 
               <div className="flex flex-col gap-5">
                 <div className="rounded-2xl border border-border/70 bg-card/60 p-5">
                   <h3 className="flex items-center gap-2 font-semibold text-foreground">
                     <Type className="size-4 text-primary" aria-hidden />
-                    Rich text on the board
+                    {t("boards.richTextTitle")}
                   </h3>
-                  <BulletList items={RICH_TEXT_BULLETS} className="mt-4 sm:grid-cols-1" />
+                  <BulletList
+                    items={richTextBullets}
+                    className="mt-4 sm:grid-cols-1"
+                  />
                 </div>
 
                 <div className="rounded-2xl border border-border/70 bg-card/60 p-5">
-                  <h3 className="font-semibold text-foreground">Board backgrounds</h3>
+                  <h3 className="font-semibold text-foreground">
+                    {t("boards.backgroundsTitle")}
+                  </h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Choose a plain, dots, or grid background for each board. Your
-                    background choice is remembered for that board.
+                    {t("boards.backgroundsDescription")}
                   </p>
                 </div>
               </div>
@@ -431,19 +377,19 @@ export const WhatsNewPage = () => {
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <Shot
                 src="/whats-new/background.webp"
-                alt="Map settings panel with the board background set to Grid"
+                alt={t("boards.gridAlt")}
                 width={1100}
                 height={800}
                 sizes="(min-width: 640px) 50vw, 100vw"
-                label="Grid selected"
+                label={t("boards.gridLabel")}
               />
               <Shot
                 src="/whats-new/background-options.webp"
-                alt="Board background menu open with None, Dots, and Grid options"
+                alt={t("boards.optionsAlt")}
                 width={1100}
                 height={800}
                 sizes="(min-width: 640px) 50vw, 100vw"
-                label="None, Dots, or Grid"
+                label={t("boards.optionsLabel")}
               />
             </div>
           </div>
@@ -456,14 +402,13 @@ export const WhatsNewPage = () => {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8 lg:py-24">
             <div>
               <SectionIntro
-                label="Mobile"
-                title="A mobile makeover"
+                label={t("sections.mobile")}
+                title={t("mobile.title")}
               >
-                The board now fits the screen properly, with the controls you
-                need within reach.
+                {t("mobile.description")}
               </SectionIntro>
 
-              <BulletList items={MOBILE_BULLETS} />
+              <BulletList items={mobileBullets} />
             </div>
 
             <div className="relative mx-auto w-full max-w-[300px]">
@@ -475,7 +420,7 @@ export const WhatsNewPage = () => {
                 <div className="overflow-hidden rounded-[1.9rem] border border-white/5">
                   <Image
                     src="/whats-new/mobile.webp"
-                    alt="ValoMapper mobile layout with the board, floating zoom controls, and bottom action bar"
+                    alt={t("mobile.imageAlt")}
                     width={780}
                     height={1688}
                     sizes="300px"
@@ -490,15 +435,16 @@ export const WhatsNewPage = () => {
         <section id="more" className="scroll-mt-24">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <SectionIntro
-              label="Also improved"
-              title="Smaller updates, better everywhere"
+              label={t("more.label")}
+              title={t("more.title")}
             >
-              A few quality-of-life changes that make the whole app feel
-              smoother.
+              {t("more.description")}
             </SectionIntro>
 
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {ALSO_IMPROVED.map(({ title, icon: Icon, items }) => (
+              {alsoImproved.map(({ title, bullets }, index) => {
+                const Icon = ALSO_IMPROVED_ICONS[index] ?? Palette;
+                return (
                 <div
                   key={title}
                   className="rounded-2xl border border-border/70 bg-card/50 p-5"
@@ -506,7 +452,7 @@ export const WhatsNewPage = () => {
                   <Icon className="size-5 text-primary" aria-hidden />
                   <h3 className="mt-4 font-semibold text-foreground">{title}</h3>
                   <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                    {items.map((item) => (
+                    {bullets.map((item) => (
                       <li key={item} className="flex gap-2.5">
                         <Check
                           className="mt-0.5 size-3.5 shrink-0 text-primary"
@@ -517,7 +463,8 @@ export const WhatsNewPage = () => {
                     ))}
                   </ul>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
@@ -529,18 +476,17 @@ export const WhatsNewPage = () => {
           />
           <div className="relative mx-auto max-w-3xl px-4 py-16 text-center sm:px-6 lg:py-20">
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Ready to put it on the board?
+              {t("ctaTitle")}
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-muted-foreground">
-              Start with a blank board, or load the demo replay and see how a
-              round comes together.
+              {t("ctaDescription")}
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               {startBoardButton()}
               <Button asChild size="lg" variant="outline">
                 <Link href="/replay">
                   <Play aria-hidden />
-                  Try Replays
+                  {t("tryReplays")}
                 </Link>
               </Button>
             </div>
@@ -550,16 +496,16 @@ export const WhatsNewPage = () => {
 
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
-          <span>ValoMapper — What&apos;s New</span>
+          <span>{t("footerTitle")}</span>
           <div className="flex items-center gap-4">
             <Link href="/" className="transition-colors hover:text-foreground">
-              Home
+              {t("home")}
             </Link>
             <Link
               href="/replay"
               className="transition-colors hover:text-foreground"
             >
-              Replays
+              {t("replays")}
             </Link>
           </div>
         </div>

@@ -421,7 +421,113 @@
       "boards": "Tavole",
       "mobile": "Mobile",
       "more": "Di più"
-    }
+    },
+    "replay": {
+      "title": "Guarda ogni round riprodotto sulla mappa",
+      "description": "Carica un file di replay e guarda lo svolgersi del round con il tabellone dei punteggi, la sequenza temporale e le abilità sincronizzate.",
+      "bullets": [
+        "Carica un file di replay e guarda la partita svolgersi direttamente sulla mappa.",
+        "Carica un replay demo per provarlo senza file.",
+        "Copia un round di replay direttamente in un tabellone strategico per continuare a costruire da esso."
+      ],
+      "openPlayer": "Apri il riproduttore",
+      "imageAlt": "Riproduzione completa del replay con mappa, sequenza temporale dei round e tabellone segnapunti del giocatore",
+      "imageLabel": "Mappa, sequenza temporale, tabellone segnapunti e abilità"
+    },
+    "notes": {
+      "title": "Aggiungi contesto a qualsiasi cosa sulla lavagna",
+      "description": "Lascia il callout, la tempistica o il promemoria direttamente sull'elemento a cui appartiene. Tutti nella lobby possono vederlo.",
+      "bullets": [
+        "Aggiungi una nota a qualsiasi agente, abilità, icona, testo o immagine per spiegare il piano o il callout.",
+        "Un piccolo badge a fumetto contrassegna gli elementi che contengono una nota.",
+        "Passa il mouse sopra un elemento per visualizzare l'anteprima della nota senza aprire nulla.",
+        "Fare clic sul badge, utilizzare il menu di scelta rapida o premere a lungo oppure premere N per aggiungere o modificare una nota."
+      ],
+      "image1Alt": "Primo piano degli elementi della scheda con badge per note a fumetto",
+      "image1Label": "Nota distintivo",
+      "image2Alt": "Primo piano dell'anteprima di una nota visualizzata sopra un agente sulla bacheca",
+      "image2Label": "Passa il mouse per visualizzare l'anteprima"
+    },
+    "multiSelect": {
+      "title": "Sposta un intero piano in una volta",
+      "description": "Tieni premuto il tasto destro del mouse e trascina una casella attorno a diversi elementi, quindi sposta o duplica il gruppo insieme.",
+      "bullets": [
+        "Trascina una casella di selezione tenendo premuto il tasto destro per afferrare più elementi sul tabellone contemporaneamente.",
+        "Muovi l'intero gruppo insieme.",
+        "Duplica il gruppo in un'unica azione.",
+        "Funziona con agenti, abilità, icone degli strumenti, testo e immagini."
+      ],
+      "image1Alt": "Fare clic con il pulsante destro del mouse sulla casella di selezione trascinata attorno agli elementi sulla scheda",
+      "image1Label": "Trascina per selezionare",
+      "image2Alt": "Più elementi sulla lavagna evidenziati con contorni di selezione",
+      "image2Label": "Selezionato e pronto a muoversi"
+    },
+    "boards": {
+      "title": "Rendi ogni bacheca più facile da leggere",
+      "description": "Testo ricco, fasi più chiare e sfondi che si adattano al modo in cui pianifichi.",
+      "richTextTitle": "Testo ricco alla lavagna",
+      "richTextBullets": [
+        "Grassetto, corsivo e sottolineato.",
+        "Elenchi puntati e numerati.",
+        "Colori del testo e dimensioni dei caratteri personalizzati."
+      ],
+      "backgroundsTitle": "Sfondi della scheda",
+      "backgroundsDescription": "Scegli uno sfondo semplice, a punti o a griglia per ciascuna scheda. La tua scelta dello sfondo viene ricordata per quella bacheca.",
+      "imageAlt": "Tabellone strategico con testo ricco, agenti, abilità e note",
+      "imageLabel": "Rich text, note e fasi in un unico posto",
+      "gridAlt": "Pannello delle impostazioni della mappa con lo sfondo della scheda impostato su Griglia",
+      "gridLabel": "Griglia selezionata",
+      "optionsAlt": "Il menu di sfondo della scheda si apre con le opzioni Nessuno, Punti e Griglia",
+      "optionsLabel": "Nessuno, Punti o Griglia"
+    },
+    "mobile": {
+      "title": "Un restyling mobile",
+      "description": "La scheda ora si adatta perfettamente allo schermo, con i controlli necessari a portata di mano.",
+      "bullets": [
+        "Un nuovo layout mobile con una barra delle azioni inferiore per annullare, ripetere, disegnare, cancellare ed eliminare.",
+        "Controlli di zoom mobili e una mappa che si adatta correttamente allo schermo.",
+        "Premi a lungo qualsiasi elemento sul tabellone per aprire le relative azioni del tasto destro.",
+        "Un editor di testo a schermo intero sui telefoni, con il pannello degli strumenti che si chiude automaticamente dopo l'aggiunta del testo."
+      ],
+      "imageAlt": "Layout mobile ValoMapper con scheda, controlli zoom mobili e barra delle azioni inferiore"
+    },
+    "more": {
+      "label": "Anche migliorato",
+      "title": "Aggiornamenti più piccoli, migliori ovunque",
+      "description": "Alcuni cambiamenti alla qualità della vita che rendono l'intera app più fluida.",
+      "items": [
+        {
+          "title": "Uno sguardo nuovo al sito",
+          "bullets": [
+            "Pagina di destinazione ridisegnata e logo aggiornato.",
+            "Un pulsante Discord nell'intestazione.",
+            "Navigazione indietro coerente tra le pagine."
+          ]
+        },
+        {
+          "title": "Miglioramenti della scheda",
+          "bullets": [
+            "Elimina tutti gli elementi o solo la fase corrente in un'unica azione.",
+            "Stile della fase rinnovato, incluso uno stato di fase vuota più chiaro.",
+            "Miglioramento delle prestazioni della scheda sottostante."
+          ]
+        },
+        {
+          "title": "Strumenti cartografici più intelligenti",
+          "bullets": [
+            "I coni visivi ora si fermano sui muri invece di attraversarli.",
+            "I coni visivi possono essere attaccati alle icone e rimossi dal menu contestuale.",
+            "Le icone degli strumenti, la punta e le armi possono essere attaccate agli agenti trascinandole.",
+            "Gli agenti possono essere contrassegnati come morti o rianimati dal menu di scelta rapida."
+          ]
+        }
+      ]
+    },
+    "ctaTitle": "Pronti a metterlo sulla lavagna?",
+    "ctaDescription": "Inizia con un tabellone vuoto oppure carica il replay demo e guarda come si svolge un round.",
+    "footerTitle": "ValoMapper: novità",
+    "home": "Casa",
+    "replays": "Replay"
   },
   "billingPages": {
     "successMeta": "Abbonamento confermato",
