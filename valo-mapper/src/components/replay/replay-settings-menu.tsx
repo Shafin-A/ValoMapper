@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Settings } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export const ReplaySettingsMenu = ({
@@ -38,6 +39,7 @@ export const ReplaySettingsMenu = ({
   startAtBarrierDrop: boolean;
   onStartAtBarrierDropChange: (startAtBarrierDrop: boolean) => void;
 }) => {
+  const t = useTranslations("replay.settings");
   const [open, setOpen] = useState(false);
 
   return (
@@ -47,7 +49,7 @@ export const ReplaySettingsMenu = ({
           variant="ghost"
           size="icon"
           className="h-10 w-10 shrink-0 sm:h-8 sm:w-8"
-          aria-label="Replay settings"
+          aria-label={t("label")}
         >
           <Settings
             className={`h-4 w-4 transition-transform duration-300 ${
@@ -60,7 +62,7 @@ export const ReplaySettingsMenu = ({
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="hide-agent-vision" className="text-sm">
-              Hide agent vision
+              {t("hideAgentVision")}
             </Label>
             <Switch
               id="hide-agent-vision"
@@ -70,7 +72,7 @@ export const ReplaySettingsMenu = ({
           </div>
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="hide-replay-abilities" className="text-sm">
-              Hide abilities
+              {t("hideAbilities")}
             </Label>
             <Switch
               id="hide-replay-abilities"
@@ -80,7 +82,7 @@ export const ReplaySettingsMenu = ({
           </div>
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="hide-agent-weapons" className="text-sm">
-              Hide agent weapons
+              {t("hideAgentWeapons")}
             </Label>
             <Switch
               id="hide-agent-weapons"
@@ -90,7 +92,7 @@ export const ReplaySettingsMenu = ({
           </div>
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="hide-weapon-hits" className="text-sm">
-              Hide weapon hits
+              {t("hideWeaponHits")}
             </Label>
             <Switch
               id="hide-weapon-hits"
@@ -100,7 +102,7 @@ export const ReplaySettingsMenu = ({
           </div>
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="hide-dead-agents" className="text-sm">
-              Hide dead agents
+              {t("hideDeadAgents")}
             </Label>
             <Switch
               id="hide-dead-agents"
@@ -110,7 +112,7 @@ export const ReplaySettingsMenu = ({
           </div>
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="start-at-barrier-drop" className="text-sm">
-              Start at barrier drop
+              {t("startAtBarrierDrop")}
             </Label>
             <Switch
               id="start-at-barrier-drop"

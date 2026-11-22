@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { ReplayLoadProgress } from "@/lib/replay/types";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 export const ReplayLoadingOverlay = ({
@@ -17,6 +18,7 @@ export const ReplayLoadingOverlay = ({
   onRetry?: () => void;
   onBack?: () => void;
 }) => {
+  const t = useTranslations("replay.loading");
   const isIndeterminate = progress?.indeterminate === true;
   const percent = Math.round(progress?.percent ?? 0);
   const [estimatedPercent, setEstimatedPercent] = useState(percent);
@@ -43,16 +45,16 @@ export const ReplayLoadingOverlay = ({
           <div className="space-y-4">
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Could not open replay</AlertTitle>
+              <AlertTitle>{t("errorTitle")}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
             <div className="flex justify-end gap-2">
               {onBack && (
                 <Button variant="outline" onClick={onBack}>
-                  Back
+                  {t("back")}
                 </Button>
               )}
-              {onRetry && <Button onClick={onRetry}>Try again</Button>}
+              {onRetry && <Button onClick={onRetry}>{t("tryAgain")}</Button>}
             </div>
           </div>
         ) : (
@@ -61,17 +63,15 @@ export const ReplayLoadingOverlay = ({
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
               <div>
                 <p className="text-base font-semibold text-white">
-                  {progress?.label ?? "Reading replay…"}
+                  {progress?.label ?? t("reading")}
                 </p>
-                <p className="text-xs text-white/60">
-                  Larger replays can take a moment. Keep this tab open.
-                </p>
+                <p className="text-xs text-white/60">{t("wait")}</p>
               </div>
             </div>
 
             <div
               role="progressbar"
-              aria-label={progress?.label ?? "Loading replay"}
+              aria-label={progress?.label ?? t("label")}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={isIndeterminate ? undefined : displayedPercent}
@@ -97,7 +97,7 @@ export const ReplayLoadingOverlay = ({
                 )}
               </div>
               <div className="flex justify-between text-[11px] text-white/70">
-                <span>Loading replay</span>
+                <span>{t("label")}</span>
                 <span>{displayedPercent}%</span>
               </div>
             </div>

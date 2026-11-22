@@ -36,6 +36,7 @@ import { getReplayFrameAtTime } from "@/lib/replay/frames";
 import type { ReplayMatch } from "@/lib/replay/types";
 import type { UndoableState } from "@/lib/types";
 import { AlertCircle, ArrowUpRight, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   useCallback,
   useEffect,
@@ -63,6 +64,7 @@ export const ReplayPlayer = ({
   match: ReplayMatch;
   replayId: string;
 }) => {
+  const t = useTranslations("replay.player");
   const sidebarState = useSidebarState();
   const stageContainerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<MapStageHandle | null>(null);
@@ -279,10 +281,8 @@ export const ReplayPlayer = ({
         <div className="max-w-md w-full space-y-4">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Replay has no rounds</AlertTitle>
-            <AlertDescription>
-              This replay did not contain any round data to play back.
-            </AlertDescription>
+            <AlertTitle>{t("noRoundsTitle")}</AlertTitle>
+            <AlertDescription>{t("noRoundsDescription")}</AlertDescription>
           </Alert>
         </div>
       </div>
@@ -306,10 +306,10 @@ export const ReplayPlayer = ({
         stageRef={stageRef}
         saveAction={{
           icon: ArrowUpRight,
-          label: "Copy to new lobby",
+          label: t("copyToLobby"),
           tooltip: createLobbyMutation.isPending
-            ? "Creating a new lobby from the current replay frame..."
-            : `Copy Round ${round.roundNumber} at this moment into a new editable lobby`,
+            ? t("creatingLobby")
+            : t("copyRoundTooltip", { round: round.roundNumber }),
           onClick: () => setIsSaveDialogOpen(true),
           isPending: createLobbyMutation.isPending,
         }}
@@ -398,24 +398,23 @@ export const ReplayPlayer = ({
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Copy this replay frame to a new lobby?</DialogTitle>
-            <DialogDescription>
-              Creates an editable lobby from the replay at the current moment,
-              including any drawings you have added. The replay file stays
-              untouched.
-            </DialogDescription>
+            <DialogTitle>{t("copyDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("copyDialogDescription")}</DialogDescription>
           </DialogHeader>
 
           <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">What gets copied</p>
+            <p className="font-medium text-foreground">
+              {t("whatGetsCopied")}
+            </p>
             <p>
-              Map: {match.mapName} · Round {round.roundNumber} ·{" "}
+              {t("copiedSummary", {
+                map: match.mapName,
+                round: round.roundNumber,
+                time: "",
+              })}
               <ReplayMomentLabel clock={clock} />
             </p>
-            <p>
-              Current agent positions, vision cones, spike, and the latest kill
-              line, plus your drawings and annotations.
-            </p>
+            <p>{t("copiedDetails")}</p>
           </div>
 
           <DialogFooter>
@@ -424,13 +423,15 @@ export const ReplayPlayer = ({
               onClick={() => setIsSaveDialogOpen(false)}
               disabled={createLobbyMutation.isPending}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               onClick={handleSaveToLobby}
               disabled={createLobbyMutation.isPending || !canSaveReplay}
             >
-              {createLobbyMutation.isPending ? "Creating..." : "Copy to Lobby"}
+              {createLobbyMutation.isPending
+                ? t("creating")
+                : t("copyToLobbyButton")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -452,11 +453,15 @@ const ReplayMomentLabel = ({ clock }: { clock: ReplayClock }) => {
   return <>{formatSnapshotTime(timeMs)}</>;
 };
 
-const ReplayPlayerLoadingSkeleton = () => (
-  <div className="flex h-full w-full items-center justify-center">
-    <div className="space-y-4 text-center">
-      <Loader2 className="mx-auto h-16 w-16 animate-spin text-primary" />
-      <p className="font-medium text-muted-foreground">Preparing replay...</p>
+const ReplayPlayerLoadingSkeleton = () => {
+  const t = useTranslations("replay.player");
+
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <div className="space-y-4 text-center">
+        <Loader2 className="mx-auto h-16 w-16 animate-spin text-primary" />
+        <p className="font-medium text-muted-foreground">{t("preparing")}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};

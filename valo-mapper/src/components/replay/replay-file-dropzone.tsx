@@ -18,6 +18,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 const REPLAY_FILE_EXTENSION = ".vrf";
@@ -30,6 +31,7 @@ export const ReplayFileDropzone = ({
   onFileSelected: (file: File) => void;
   disabled?: boolean;
 }) => {
+  const t = useTranslations("replay.dropzone");
   const inputRef = useRef<HTMLInputElement>(null);
   const copyResetTimeoutRef = useRef<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -51,7 +53,7 @@ export const ReplayFileDropzone = ({
       await navigator.clipboard.writeText(REPLAY_FOLDER);
 
       setHasCopied(true);
-      toast.success("Replay folder location copied");
+      toast.success(t("copyToast"));
 
       if (copyResetTimeoutRef.current !== null) {
         window.clearTimeout(copyResetTimeoutRef.current);
@@ -61,21 +63,21 @@ export const ReplayFileDropzone = ({
         setHasCopied(false);
       }, 2000);
     } catch {
-      toast.error("Couldn't copy the location. Select it manually instead.");
+      toast.error(t("copyError"));
     }
-  }, []);
+  }, [t]);
 
   const handleFile = useCallback(
     (file: File) => {
       if (!file.name.toLowerCase().endsWith(REPLAY_FILE_EXTENSION)) {
-        setError("Choose a .vrf replay file exported by VALORANT.");
+        setError(t("invalidFile"));
         return;
       }
 
       setError(null);
       onFileSelected(file);
     },
-    [onFileSelected],
+    [onFileSelected, t],
   );
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -128,7 +130,7 @@ export const ReplayFileDropzone = ({
         <div
           role="button"
           tabIndex={0}
-          aria-label="Upload a VALORANT replay file"
+          aria-label={t("uploadAria")}
           onClick={() => !disabled && inputRef.current?.click()}
           onKeyDown={(event) => {
             if ((event.key === "Enter" || event.key === " ") && !disabled) {
@@ -144,11 +146,9 @@ export const ReplayFileDropzone = ({
 
           <div className="space-y-1">
             <p className="text-base font-semibold text-white">
-              Drop a .vrf replay here
+              {t("dropHere")}
             </p>
-            <p className="text-sm text-white/70">
-              or click to choose a file from your computer
-            </p>
+            <p className="text-sm text-white/70">{t("orClick")}</p>
           </div>
         </div>
 
@@ -164,18 +164,14 @@ export const ReplayFileDropzone = ({
               size="sm"
               onClick={handleCopyLocation}
               className="h-7 shrink-0 px-2 text-[11px]"
-              aria-label={
-                hasCopied
-                  ? "Replay folder location copied"
-                  : "Copy replay folder location"
-              }
+              aria-label={hasCopied ? t("copiedAria") : t("copyAria")}
             >
               {hasCopied ? (
                 <Check className="size-3.5 text-primary" />
               ) : (
                 <Copy className="size-3.5" />
               )}
-              {hasCopied ? "Copied" : "Copy"}
+              {hasCopied ? t("copied") : t("copy")}
             </Button>
           </div>
 
@@ -186,7 +182,7 @@ export const ReplayFileDropzone = ({
             onClick={() => !disabled && inputRef.current?.click()}
             disabled={disabled}
           >
-            Choose .vrf file
+            {t("choose")}
           </Button>
         </div>
 
@@ -198,7 +194,7 @@ export const ReplayFileDropzone = ({
             className="mx-auto flex items-center justify-center gap-1.5 text-xs font-medium text-white/70 transition-colors hover:text-white"
           >
             <HelpCircle className="size-3.5" />
-            Where do I find my replay files?
+            {t("where")}
             <ChevronDown
               className={cn(
                 "size-3.5 transition-transform",
@@ -210,21 +206,17 @@ export const ReplayFileDropzone = ({
           {isHelpOpen && (
             <div className="mt-3 space-y-2 rounded-md border border-slate-800 bg-slate-950/60 p-3 text-left text-xs leading-relaxed text-white/60">
               <p>
-                Click <span className="font-medium text-white/80">Copy</span>{" "}
-                above. The location will be copied to your clipboard.
+                {t("helpCopyPrefix")}{" "}
+                <span className="font-medium text-white/80">{t("copy")}</span>{" "}
+                {t("helpCopySuffix")}
               </p>
+              <p>{t("helpPaste")}</p>
               <p>
-                Paste the location into the address bar at the top of a Windows
-                file explorer and press Enter. Your{" "}
-                <code className="font-mono text-white/80">.vrf</code> replay
-                files will be there.
-              </p>
-              <p>
-                Drag one into this box, or click{" "}
+                {t("helpDragPrefix")}{" "}
                 <span className="font-medium text-white/80">
-                  Choose .vrf file
+                  {t("choose")}
                 </span>
-                .
+                {t("helpDragSuffix")}
               </p>
             </div>
           )}
@@ -235,7 +227,7 @@ export const ReplayFileDropzone = ({
         ref={inputRef}
         type="file"
         accept={REPLAY_FILE_EXTENSION}
-        aria-label="Upload a VALORANT replay file"
+        aria-label={t("uploadAria")}
         className="hidden"
         onChange={handleInputChange}
         disabled={disabled}

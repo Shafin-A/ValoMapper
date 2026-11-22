@@ -13,6 +13,7 @@ import type { ReplayClock } from "@/lib/replay/clock";
 import { getActiveEventIndex } from "@/lib/replay/frames";
 import type { ReplayRound } from "@/lib/replay/types";
 import type { MatchPlayers } from "@/lib/matches";
+import { useTranslations } from "next-intl";
 import { memo, useMemo } from "react";
 import { ReplayScoreHeader, ReplayScoreboard } from "./replay-scoreboard";
 import { ReplayWarningsBanner } from "./replay-warnings-banner";
@@ -72,6 +73,8 @@ export const ReplayRoundSidebar = ({
   warnings?: string[];
   replayId: string;
 }) => {
+  const t = useTranslations("replay.roundSidebar");
+
   return (
     <SidebarProvider
       open={sidebarOpen}
@@ -89,7 +92,7 @@ export const ReplayRoundSidebar = ({
         <SidebarHeader>
           <div className="space-y-2 p-3 pb-2">
             <div className="flex items-center justify-between">
-              <span className="text-base font-semibold">Replay</span>
+              <span className="text-base font-semibold">{t("title")}</span>
             </div>
             <ReplayScoreHeader round={round} clock={clock} />
           </div>

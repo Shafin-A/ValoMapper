@@ -3,6 +3,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/cn";
 import { AlertTriangle, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 export const REPLAY_WARNINGS_DEBUG_KEY = "valomapper-debug-replay-warnings";
@@ -16,6 +17,7 @@ export const ReplayWarningsBanner = ({
   replayId: string;
   className?: string;
 }) => {
+  const t = useTranslations("replay.warnings");
   const [dismissedReplayIds, setDismissedReplayIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -37,7 +39,10 @@ export const ReplayWarningsBanner = ({
     return null;
   }
 
-  const countLabel = `${messages.length} warning${messages.length === 1 ? "" : "s"}`;
+  const countLabel =
+    messages.length === 1
+      ? t("countOne")
+      : t("countMany", { count: messages.length });
 
   return (
     <Alert
@@ -47,7 +52,7 @@ export const ReplayWarningsBanner = ({
       )}
     >
       <AlertTriangle className="text-amber-300" />
-      <AlertTitle>Replay loaded with {countLabel}</AlertTitle>
+      <AlertTitle>{t("title", { count: countLabel })}</AlertTitle>
       <AlertDescription className="text-amber-100/80">
         <button
           type="button"
@@ -55,7 +60,7 @@ export const ReplayWarningsBanner = ({
           onClick={() => setIsExpanded((expanded) => !expanded)}
           aria-expanded={isExpanded}
         >
-          {isExpanded ? "Hide details" : "Show details"}
+          {isExpanded ? t("hideDetails") : t("showDetails")}
         </button>
         {isExpanded && (
           <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
@@ -67,7 +72,7 @@ export const ReplayWarningsBanner = ({
       </AlertDescription>
       <button
         type="button"
-        aria-label="Dismiss replay warnings"
+        aria-label={t("dismiss")}
         className="absolute right-2 top-2 rounded-sm p-1 text-amber-200/80 transition-colors hover:bg-amber-300/10 hover:text-amber-50"
         onClick={() =>
           setDismissedReplayIds((dismissed) => {

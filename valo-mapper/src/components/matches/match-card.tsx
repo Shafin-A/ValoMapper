@@ -1,11 +1,13 @@
-import { MATCH_PAGE_CLASSES, MATCH_RESULT_CLASSES } from "@/lib/consts";
-import {
-  getAgentImageSrc,
-  getMapImageSrc,
-  getResultLabel,
-} from "@/lib/matches";
+import { MATCH_PAGE_CLASSES, MATCH_RESULT_CLASSES, MAP_OPTIONS } from "@/lib/consts";
+import { getAgentImageSrc, getMapImageSrc } from "@/lib/matches";
 import { MatchPreview } from "@/lib/types";
+import { useValorantTerms } from "@/contexts/valorant-terms-context";
+import {
+  getLocalizedAgentName,
+  getLocalizedMapName,
+} from "@/lib/i18n/valorant-terms";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { forwardRef, type ComponentPropsWithoutRef } from "react";
 
 interface MatchCardProps extends ComponentPropsWithoutRef<"button"> {
@@ -14,8 +16,22 @@ interface MatchCardProps extends ComponentPropsWithoutRef<"button"> {
 
 export const MatchCard = forwardRef<HTMLButtonElement, MatchCardProps>(
   ({ match, className, ...props }, ref) => {
+    const t = useTranslations("matches");
+    const valorantTerms = useValorantTerms();
     const resultTone = match.result === "Win" ? "Win" : "Loss";
     const resultClasses = MATCH_RESULT_CLASSES[resultTone];
+    const mapOption = MAP_OPTIONS.find(
+      (option) => option.text.toLowerCase() === match.mapName.toLowerCase(),
+    );
+    const mapName = getLocalizedMapName(
+      valorantTerms,
+      mapOption?.id ?? "",
+      match.mapName,
+    );
+    const agentName = getLocalizedAgentName(
+      valorantTerms,
+      match.agentName,
+    );
 
     return (
       <button
@@ -39,7 +55,7 @@ export const MatchCard = forwardRef<HTMLButtonElement, MatchCardProps>(
         >
           <Image
             src={getMapImageSrc(match.mapName)}
-            alt={match.mapName}
+            alt={mapName}
             fill
             sizes="(max-width: 640px) 85vw, (max-width: 1024px) 50vw, 46vw"
             loading="eager"
@@ -55,7 +71,7 @@ export const MatchCard = forwardRef<HTMLButtonElement, MatchCardProps>(
           <div className="relative aspect-square h-full shrink-0">
             <Image
               src={getAgentImageSrc(match.agentName)}
-              alt={match.agentName || "Agent"}
+              alt={agentName || t("agentFallback")}
               fill
               sizes="(min-width: 640px) 96px, 84px"
               className="object-contain"
@@ -66,13 +82,13 @@ export const MatchCard = forwardRef<HTMLButtonElement, MatchCardProps>(
             <div className="min-w-0">
               <div className="grid grid-cols-[auto_auto] items-baseline gap-x-1.5 gap-y-1.5 sm:grid-cols-[auto_1fr] sm:gap-x-2">
                 <span className="whitespace-nowrap text-[13px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[18px] lg:text-[28px]">
-                  KDA
+                  {t("kda")}
                 </span>
                 <span className="whitespace-nowrap text-[13px] font-semibold uppercase leading-none tracking-[0.04em] text-white sm:text-[18px] lg:text-[28px]">
                   {match.kills} / {match.deaths} / {match.assists}
                 </span>
                 <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.05em] text-white/70 sm:text-[12px] lg:text-[16px]">
-                  SCORE
+                  {t("score")}
                 </span>
                 <span className="whitespace-nowrap text-[11px] font-semibold uppercase leading-none tracking-[0.05em] text-white sm:text-[12px] lg:text-[16px]">
                   {match.personalScore}
@@ -85,7 +101,7 @@ export const MatchCard = forwardRef<HTMLButtonElement, MatchCardProps>(
             <p
               className={`text-[18px] font-semibold uppercase leading-none tracking-[0.04em] sm:text-[24px] lg:text-[36px] ${resultClasses.accentText}`}
             >
-              {getResultLabel(match.result)}
+              {match.result === "Win" ? t("victory") : t("defeat")}
             </p>
             <p className="mt-0.5 text-[22px] font-semibold leading-none tracking-[0.03em] text-white sm:mt-1 sm:text-[24px] lg:mt-2 lg:text-[32px]">
               <span

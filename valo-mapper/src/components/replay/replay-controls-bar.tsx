@@ -16,6 +16,7 @@ import { formatReplayTime } from "@/lib/replay/display";
 import type { ReplayRound } from "@/lib/replay/types";
 import { REPLAY_SPEEDS, type ReplaySpeed } from "@/hooks/use-replay-playback";
 import { Pause, Play } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { ReplaySettingsMenu } from "./replay-settings-menu";
 import { ReplayTimeline } from "./replay-timeline";
@@ -107,6 +108,8 @@ export const ReplayControlsBar = ({
   startAtBarrierDrop: boolean;
   onStartAtBarrierDropChange: (startAtBarrierDrop: boolean) => void;
 }) => {
+  const t = useTranslations("replay.controls");
+
   return (
     <div className="border-t border-sidebar-border bg-sidebar pb-[env(safe-area-inset-bottom)]">
       <div className="px-2 pt-1">
@@ -125,7 +128,7 @@ export const ReplayControlsBar = ({
           size="icon"
           className="h-10 w-10 shrink-0 rounded-full sm:h-8 sm:w-8"
           onClick={onTogglePlay}
-          aria-label={isPlaying ? "Pause replay" : "Play replay"}
+          aria-label={isPlaying ? t("pause") : t("play")}
         >
           {isPlaying ? (
             <Pause className="h-4 w-4" />
@@ -172,21 +175,21 @@ export const ReplayControlsBar = ({
       <div className="hidden items-center gap-3 px-2 pb-2 text-[10px] text-white/60 md:flex">
         <span>
           <kbd className="rounded border border-sidebar-border px-1">Space</kbd>{" "}
-          play / pause
+          {t("spacePlayPause")}
         </span>
         <span>
           <kbd className="rounded border border-sidebar-border px-1">←</kbd>
           <kbd className="ml-1 rounded border border-sidebar-border px-1">
             →
           </kbd>{" "}
-          seek
+          {t("seek")}
         </span>
         <span>
           <kbd className="rounded border border-sidebar-border px-1">,</kbd>
           <kbd className="ml-1 rounded border border-sidebar-border px-1">
             .
           </kbd>{" "}
-          speed
+          {t("speed")}
         </span>
       </div>
     </div>

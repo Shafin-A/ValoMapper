@@ -133,9 +133,103 @@
     "rsoRequiredDescription": "Matches are only available for Riot Sign-On accounts. Sign in with Riot to view your matches.",
     "rsoEmailDescription": "You're signed in with email, but matches are only available for Riot Sign-On accounts. Sign in with Riot to view your matches. This switches your current session to your Riot account.",
     "noMatchesTitle": "No matches found",
-    "noMatchesDescription": "No competitive or unrated matches were found for your account yet."
+    "noMatchesDescription": "No competitive or unrated matches were found for your account yet.",
+    "victory": "Victory",
+    "defeat": "Defeat",
+    "kda": "KDA",
+    "score": "SCORE",
+    "agentFallback": "Agent"
+  },
+  "matchReview": {
+    "loading": "Loading match review...",
+    "failedTitle": "Failed to load match review",
+    "failedDescription": "Something went wrong while loading review telemetry for this match.",
+    "tryAgain": "Try Again",
+    "backToMatches": "Back to Matches",
+    "copyToLobby": "Copy to new lobby",
+    "creatingLobby": "Creating a new lobby from the current review state...",
+    "copyRoundTooltip": "Copy Round {round} into a new editable lobby",
+    "copyDialogTitle": "Copy Round {round} to a new lobby?",
+    "copyDialogDescription": "Creates an editable lobby from this round's canvas state. Refine and save it there. The original match stays untouched.",
+    "whatGetsCopied": "What gets copied",
+    "copiedSummary": "Map: {map} · Round {round}",
+    "copiedDetails": "All phases from this round, plus any drawings, icons, text, images, and other canvas edits currently applied to it.",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "copyToLobbyButton": "Copy to Lobby",
+    "preparing": "Preparing review..."
   },
   "replay": {
+    "controls": {
+      "pause": "Pause replay",
+      "play": "Play replay",
+      "spacePlayPause": "play / pause",
+      "seek": "seek",
+      "speed": "speed"
+    },
+    "settings": {
+      "label": "Replay settings",
+      "hideAgentVision": "Hide agent vision",
+      "hideAbilities": "Hide abilities",
+      "hideAgentWeapons": "Hide agent weapons",
+      "hideWeaponHits": "Hide weapon hits",
+      "hideDeadAgents": "Hide dead agents",
+      "startAtBarrierDrop": "Start at barrier drop"
+    },
+    "warnings": {
+      "countOne": "1 warning",
+      "countMany": "{count} warnings",
+      "title": "Replay loaded with {count}",
+      "hideDetails": "Hide details",
+      "showDetails": "Show details",
+      "dismiss": "Dismiss replay warnings"
+    },
+    "loading": {
+      "errorTitle": "Could not open replay",
+      "back": "Back",
+      "tryAgain": "Try again",
+      "reading": "Reading replay…",
+      "wait": "Larger replays can take a moment. Keep this tab open.",
+      "label": "Loading replay"
+    },
+    "dropzone": {
+      "uploadAria": "Upload a VALORANT replay file",
+      "dropHere": "Drop a .vrf replay here",
+      "orClick": "or click to choose a file from your computer",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyAria": "Copy replay folder location",
+      "copiedAria": "Replay folder location copied",
+      "copyToast": "Replay folder location copied",
+      "copyError": "Couldn't copy the location. Select it manually instead.",
+      "choose": "Choose .vrf file",
+      "invalidFile": "Choose a .vrf replay file exported by VALORANT.",
+      "where": "Where do I find my replay files?",
+      "helpCopyPrefix": "Click",
+      "helpCopySuffix": "above. The location will be copied to your clipboard.",
+      "helpPaste": "Paste the location into the address bar at the top of a Windows file explorer and press Enter. Your .vrf replay files will be there.",
+      "helpDragPrefix": "Drag one into this box, or click",
+      "helpDragSuffix": "."
+    },
+    "roundSidebar": {
+      "title": "Replay"
+    },
+    "player": {
+      "copyToLobby": "Copy to new lobby",
+      "creatingLobby": "Creating a new lobby from the current replay frame...",
+      "copyRoundTooltip": "Copy Round {round} at this moment into a new editable lobby",
+      "noRoundsTitle": "Replay has no rounds",
+      "noRoundsDescription": "This replay did not contain any round data to play back.",
+      "copyDialogTitle": "Copy this replay frame to a new lobby?",
+      "copyDialogDescription": "Creates an editable lobby from the replay at the current moment, including any drawings you have added. The replay file stays untouched.",
+      "whatGetsCopied": "What gets copied",
+      "copiedSummary": "Map: {map} · Round {round} · {time}",
+      "copiedDetails": "Current agent positions, vision cones, spike, and the latest kill line, plus your drawings and annotations.",
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "copyToLobbyButton": "Copy to Lobby",
+      "preparing": "Preparing replay..."
+    },
     "entry": {
       "back": "Back",
       "badge": "Replay",

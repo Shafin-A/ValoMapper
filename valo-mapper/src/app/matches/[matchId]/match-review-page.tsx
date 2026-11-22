@@ -35,6 +35,7 @@ import { getPlayerSummary } from "@/lib/matches";
 import { UndoableState } from "@/lib/types";
 import { AlertCircle, ArrowUpRight, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   useParams,
   usePathname,
@@ -52,6 +53,7 @@ import {
 } from "react";
 
 const MatchReviewPage = () => {
+  const t = useTranslations("matchReview");
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -494,7 +496,7 @@ const MatchReviewPage = () => {
         <div className="text-center space-y-4">
           <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
           <p className="text-muted-foreground font-medium">
-            Loading match review...
+            {t("loading")}
           </p>
         </div>
       </div>
@@ -507,16 +509,15 @@ const MatchReviewPage = () => {
         <div className="max-w-md w-full space-y-4">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Failed to load match review</AlertTitle>
+            <AlertTitle>{t("failedTitle")}</AlertTitle>
             <AlertDescription>
-              {error?.message ||
-                "Something went wrong while loading review telemetry for this match."}
+              {error?.message || t("failedDescription")}
             </AlertDescription>
           </Alert>
           <div className="flex gap-2">
-            <Button onClick={() => void refetch()}>Try Again</Button>
+            <Button onClick={() => void refetch()}>{t("tryAgain")}</Button>
             <Button variant="outline" asChild>
-              <Link href="/matches">Back to Matches</Link>
+              <Link href="/matches">{t("backToMatches")}</Link>
             </Button>
           </div>
         </div>
@@ -535,10 +536,10 @@ const MatchReviewPage = () => {
         stageRef={stageRef}
         saveAction={{
           icon: ArrowUpRight,
-          label: "Copy to new lobby",
+          label: t("copyToLobby"),
           tooltip: createLobbyMutation.isPending
-            ? "Creating a new lobby from the current review state..."
-            : `Copy Round ${selectedRound.roundNumber} into a new editable lobby`,
+            ? t("creatingLobby")
+            : t("copyRoundTooltip", { round: selectedRound.roundNumber }),
           onClick: handleOpenCopyDialog,
           isPending: createLobbyMutation.isPending,
         }}
@@ -597,23 +598,22 @@ const MatchReviewPage = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Copy Round {selectedRound.roundNumber} to a new lobby?
+              {t("copyDialogTitle", { round: selectedRound.roundNumber })}
             </DialogTitle>
-            <DialogDescription>
-              Creates an editable lobby from this round&apos;s canvas state.
-              Refine and save it there. The original match stays untouched.
-            </DialogDescription>
+            <DialogDescription>{t("copyDialogDescription")}</DialogDescription>
           </DialogHeader>
 
           <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">What gets copied</p>
-            <p>
-              Map: {matchSummary.mapName} · Round {selectedRound.roundNumber}
+            <p className="font-medium text-foreground">
+              {t("whatGetsCopied")}
             </p>
             <p>
-              All phases from this round, plus any drawings, icons, text,
-              images, and other canvas edits currently applied to it.
+              {t("copiedSummary", {
+                map: matchSummary.mapName,
+                round: selectedRound.roundNumber,
+              })}
             </p>
+            <p>{t("copiedDetails")}</p>
           </div>
 
           <DialogFooter>
@@ -622,13 +622,15 @@ const MatchReviewPage = () => {
               onClick={() => setIsCopyDialogOpen(false)}
               disabled={createLobbyMutation.isPending}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               onClick={handleCopyToLobby}
               disabled={createLobbyMutation.isPending}
             >
-              {createLobbyMutation.isPending ? "Creating..." : "Copy to Lobby"}
+              {createLobbyMutation.isPending
+                ? t("creating")
+                : t("copyToLobbyButton")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -638,11 +640,13 @@ const MatchReviewPage = () => {
 };
 
 const MatchReviewLoadingSkeleton = () => {
+  const t = useTranslations("matchReview");
+
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div className="text-center space-y-4">
         <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
-        <p className="text-muted-foreground font-medium">Preparing review...</p>
+        <p className="text-muted-foreground font-medium">{t("preparing")}</p>
       </div>
     </div>
   );
