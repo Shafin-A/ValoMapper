@@ -53,7 +53,7 @@ export const LineupFullscreenViewer = ({
                 >
                   <Image
                     src={image}
-                    alt={`Lineup ${index + 1}`}
+                    alt={t("imageAlt", { index: index + 1 })}
                     width={1920}
                     height={1080}
                     className="max-w-[95vw] max-h-[95vh] w-auto h-auto object-contain"

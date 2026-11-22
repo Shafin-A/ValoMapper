@@ -3,10 +3,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 export const useAcceptStackInvite = () => {
   const queryClient = useQueryClient();
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   return useMutation({
     mutationFn: (inviteId: number) =>
@@ -18,13 +20,13 @@ export const useAcceptStackInvite = () => {
         },
       ),
     onSuccess: () => {
-      toast.success("Stack invite accepted");
+      toast.success(t("inviteAccepted"));
       queryClient.invalidateQueries({ queryKey: queryKeys.user });
       queryClient.invalidateQueries({ queryKey: queryKeys.stackMembers });
       queryClient.invalidateQueries({ queryKey: queryKeys.stackPendingInvites });
     },
     onError: (error) => {
-      toast.error(`Failed to accept stack invite: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 };

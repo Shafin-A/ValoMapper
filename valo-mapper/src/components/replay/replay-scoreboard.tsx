@@ -176,7 +176,11 @@ const AbilityCell = ({
 
   return (
     <span
-      title={`${ability.name} (${ability.key}) — ${status}`}
+      title={t("abilityTitle", {
+        name: ability.name,
+        key: ability.key,
+        status,
+      })}
       className="flex min-w-0 flex-1 flex-col items-center gap-0.5"
     >
       <span
@@ -234,6 +238,7 @@ const PlayerRow = ({
   currentTimeMs: number;
   tone: "blue" | "red";
 }) => {
+  const t = useTranslations("replay.scoreboard");
   const state = getReplayPlayerState(framePlayer, {
     credits: stats?.economy.remaining ?? 0,
     weaponId: stats?.weaponId,
@@ -313,7 +318,7 @@ const PlayerRow = ({
 
         <div
           className="flex shrink-0 items-center gap-1 text-xs font-semibold tabular-nums"
-          title={armor ? `${armor.label} + health` : "Health"}
+          title={armor ? t("armorHealth", { armor: armor.label }) : t("health")}
         >
           {armor ? (
             <Image
@@ -357,7 +362,7 @@ const PlayerRow = ({
             {weaponSrc ? (
               <Image
                 src={weaponSrc}
-                alt="Weapon"
+                alt={t("weapon")}
                 width={40}
                 height={14}
                 className="h-3.5 w-10 object-contain object-right"
@@ -368,7 +373,7 @@ const PlayerRow = ({
           </div>
           <span
             className="flex shrink-0 items-center gap-1 text-xs font-semibold tabular-nums text-amber-200/90"
-            aria-label={`${state.credits} credits`}
+            aria-label={t("credits", { count: state.credits })}
           >
             <Image
               src="/credits.webp"
@@ -463,6 +468,7 @@ export const ReplayScoreboard = ({
   viewerPuuid?: string;
 }) => {
   const currentTimeMs = useReplayClockStep(clock, 250);
+  const t = useTranslations("replay.scoreboard");
   const states = useMemo(() => {
     const next = new Map<string, ReplayFramePlayer | null>();
     for (const player of players) {
@@ -484,7 +490,7 @@ export const ReplayScoreboard = ({
   return (
     <div className="space-y-2">
       <TeamBlock
-        title={`${allyTeamId} Team`}
+        title={allyTeamId === "Blue" ? t("blueTeam") : t("redTeam")}
         players={allies}
         round={round}
         states={states}
@@ -492,7 +498,7 @@ export const ReplayScoreboard = ({
         tone={allyTeamId === "Blue" ? "blue" : "red"}
       />
       <TeamBlock
-        title={`${enemyTeamId} Team`}
+        title={enemyTeamId === "Blue" ? t("blueTeam") : t("redTeam")}
         players={enemies}
         round={round}
         states={states}
@@ -511,13 +517,14 @@ export const ReplayScoreHeader = ({
   clock: ReplayClock;
 }) => {
   const currentTimeMs = useReplayClockStep(clock, 1000);
+  const t = useTranslations("replay.scoreboard");
 
   return (
     <div className="flex items-center justify-between gap-2">
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">
-          Round {round.roundNumber} ·{" "}
-          {round.attackTeamId === "Blue" ? "Blue attack" : "Red attack"}
+          {t("round", { round: round.roundNumber })} ·{" "}
+          {round.attackTeamId === "Blue" ? t("blueAttack") : t("redAttack")}
         </p>
         <p className="text-sm font-semibold text-white">
           {round.scoreAfterRound.red} – {round.scoreAfterRound.blue}
@@ -525,7 +532,7 @@ export const ReplayScoreHeader = ({
       </div>
       <div className="text-right">
         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">
-          Time
+          {t("time")}
         </p>
         <p className="text-sm font-semibold tabular-nums text-white">
           {formatReplayTime(currentTimeMs)}

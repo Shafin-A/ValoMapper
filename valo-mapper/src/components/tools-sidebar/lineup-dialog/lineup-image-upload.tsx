@@ -31,6 +31,7 @@ export const LineupImageUpload = ({
   onImageExpand,
 }: LineupImageUploadProps) => {
   const t = useTranslations("canvas.lineup");
+  const tImageUpload = useTranslations("canvas.imageUpload");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -52,9 +53,7 @@ export const LineupImageUpload = ({
     );
 
     if (validFiles.length !== fileArray.length) {
-      toast.error(
-        "Some files were skipped. Allowed types: JPEG, PNG, GIF, WEBP.",
-      );
+      toast.error(tImageUpload("skippedFiles"));
     }
 
     if (validFiles.length === 0) {
@@ -83,7 +82,7 @@ export const LineupImageUpload = ({
       onImagesAdd(urls);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to upload images",
+        err instanceof Error ? err.message : tImageUpload("failed"),
       );
     } finally {
       setIsUploading(false);
@@ -113,7 +112,7 @@ export const LineupImageUpload = ({
                     <div className="relative w-full aspect-video rounded-md border overflow-hidden bg-muted">
                       <Image
                         src={image}
-                        alt={`Lineup ${index + 1}`}
+                        alt={t("imageAlt", { index: index + 1 })}
                         fill
                         className="object-contain"
                       />
@@ -121,7 +120,9 @@ export const LineupImageUpload = ({
                         variant="secondary"
                         size="icon"
                         className="absolute top-2 left-2 h-6 w-6"
-                        aria-label={`View lineup image ${index + 1} fullscreen`}
+                        aria-label={t("viewImageFullscreen", {
+                          index: index + 1,
+                        })}
                         onClick={() => onImageExpand(index)}
                       >
                         <Expand className="h-4 w-4" />
@@ -130,7 +131,7 @@ export const LineupImageUpload = ({
                         variant="destructive"
                         size="icon"
                         className="absolute top-2 right-2 h-6 w-6"
-                        aria-label={`Remove lineup image ${index + 1}`}
+                        aria-label={t("removeImage", { index: index + 1 })}
                         onClick={() => onImageRemove(index)}
                       >
                         <X className="h-4 w-4" />

@@ -3,10 +3,13 @@ import { Group } from "konva/lib/Group";
 import { toast } from "sonner";
 import { VIRTUAL_WIDTH, VIRTUAL_HEIGHT } from "@/lib/consts/misc/consts";
 import { MapStageHandle } from "@/components/canvas";
+import { useTranslations } from "next-intl";
 
 export const useScreenshot = (
   stageRef?: React.RefObject<MapStageHandle | null>,
 ): (() => void) => {
+  const t = useTranslations("toasts");
+
   return useCallback(() => {
     const stageHandle = stageRef?.current;
     if (!stageHandle) return;
@@ -74,14 +77,14 @@ export const useScreenshot = (
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Screenshot saved successfully!", {
+      toast.success(t("screenshotSaved"), {
         description: filename,
       });
     } catch (error) {
       console.error("Failed to save screenshot:", error);
-      toast.error("Failed to save screenshot", {
-        description: "Please try again.",
+      toast.error(t("screenshotFailed"), {
+        description: t("tryAgain"),
       });
     }
-  }, [stageRef]);
+  }, [stageRef, t]);
 };

@@ -3,10 +3,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 export const useRemoveStackMember = () => {
   const queryClient = useQueryClient();
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   return useMutation({
     mutationFn: (stackMemberId: number) =>
@@ -16,11 +18,11 @@ export const useRemoveStackMember = () => {
         { method: "DELETE" },
       ),
     onSuccess: () => {
-      toast.success("Stack member removed");
+      toast.success(t("memberRemoved"));
       queryClient.invalidateQueries({ queryKey: queryKeys.stackMembers });
     },
     onError: (error) => {
-      toast.error(`Failed to remove stack member: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 };

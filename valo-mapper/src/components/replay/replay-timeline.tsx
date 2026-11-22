@@ -55,27 +55,30 @@ const getMarkerPlacementClassName = (
 const getMarkerAriaLabel = (
   event: ReplayRound["eventLog"][number],
   players: MatchPlayers,
+  t: ReturnType<typeof useTranslations<"replay.controls">>,
 ) => {
   const time = formatReplayTime(event.timeSinceRoundStartMillis);
 
   if (event.eventType === "spike_planted") {
-    return `${time} — Spike planted`;
+    return t("spikePlanted", { time });
   }
 
   if (event.eventType === "spike_defused") {
-    return `${time} — Spike defused`;
+    return t("spikeDefused", { time });
   }
 
   if (event.eventType === "spike_exploded") {
-    return `${time} — Spike detonated`;
+    return t("spikeDetonated", { time });
   }
 
   const killer = players.find((player) => player.puuid === event.killerPuuid);
   const victim = players.find((player) => player.puuid === event.victimPuuid);
 
-  return `${time} — ${killer?.characterName ?? "Unknown"} killed ${
-    victim?.characterName ?? "Unknown"
-  }`;
+  return t("killEvent", {
+    time,
+    killer: killer?.characterName ?? t("unknownPlayer"),
+    victim: victim?.characterName ?? t("unknownPlayer"),
+  });
 };
 
 const ReplayTimelineSlider = ({
@@ -114,6 +117,7 @@ export const ReplayTimeline = ({
   clock: ReplayClock;
   onSeek: (timeMs: number) => void;
 }) => {
+  const t = useTranslations("replay.controls");
   const barrierDropTimeMs = round.buyEndTimeMs;
 
   return (
@@ -126,7 +130,9 @@ export const ReplayTimeline = ({
             <TooltipTrigger asChild>
               <button
                 type="button"
-                aria-label={`${formatReplayTime(barrierDropTimeMs)} — Barrier drop`}
+                aria-label={t("barrierDrop", {
+                  time: formatReplayTime(barrierDropTimeMs),
+                })}
                 onClick={() => onSeek(barrierDropTimeMs)}
                 className="absolute top-1/2 z-1 h-6 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white/70"
                 style={{
@@ -158,7 +164,7 @@ export const ReplayTimeline = ({
             <TooltipTrigger asChild>
               <button
                 type="button"
-                aria-label={getMarkerAriaLabel(event, players)}
+                aria-label={getMarkerAriaLabel(event, players, t)}
                 onClick={() => onSeek(event.timeSinceRoundStartMillis)}
                 className={cn(
                   "absolute z-1 -translate-x-1/2",

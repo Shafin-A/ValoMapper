@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { setPendingLobbyToast, PendingLobbyToast } from "@/lib/lobby-creation";
 import { CanvasState, Lobby } from "@/lib/types";
+import { useTranslations } from "next-intl";
 
 export interface CreateLobbyOptions {
   initialCanvasState?: CanvasState;
@@ -14,6 +15,7 @@ export interface CreateLobbyOptions {
 
 export const useCreateLobby = () => {
   const router = useRouter();
+  const t = useTranslations("toasts");
 
   return useMutation({
     mutationFn: async (options?: CreateLobbyOptions) => {
@@ -33,7 +35,7 @@ export const useCreateLobby = () => {
       router.push(`/${data.lobbyCode}`);
     },
     onError: (error) => {
-      toast.error(`Failed to create lobby: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 };

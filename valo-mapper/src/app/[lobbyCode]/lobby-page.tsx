@@ -276,7 +276,7 @@ const LobbyEditPage = () => {
               <div className="text-center space-y-4">
                 <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin" />
                 <p className="text-muted-foreground font-medium">
-                  Loading lobby...
+                  {t("loading")}
                 </p>
               </div>
             </div>

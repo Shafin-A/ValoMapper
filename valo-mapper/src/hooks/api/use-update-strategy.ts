@@ -3,6 +3,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 import { Strategy } from "@/lib/types";
 
 interface UpdateStrategyParams {
@@ -15,6 +16,7 @@ interface UpdateStrategyParams {
 export const useUpdateStrategy = () => {
   const queryClient = useQueryClient();
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   const { mutate, isPending, isError } = useMutation({
     mutationFn: ({
@@ -43,11 +45,11 @@ export const useUpdateStrategy = () => {
       );
     },
     onSuccess: (data) => {
-      toast.success(`Strategy "${data.name}" updated successfully!`);
+      toast.success(t("strategyUpdated", { name: data.name }));
       queryClient.invalidateQueries({ queryKey: queryKeys.folders });
     },
     onError: (error) => {
-      toast.error(`Failed to update strategy: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 

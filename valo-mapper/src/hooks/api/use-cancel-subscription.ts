@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 interface CancelSubscriptionResponse {
   subscriptionId: string;
@@ -12,6 +13,7 @@ interface CancelSubscriptionResponse {
 
 export const useCancelSubscription = () => {
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   return useMutation({
     mutationFn: () =>
@@ -21,12 +23,10 @@ export const useCancelSubscription = () => {
         { method: "POST" },
       ),
     onSuccess: () => {
-      toast.success(
-        "Subscription will cancel at the end of your billing period",
-      );
+      toast.success(t("subscriptionCanceled"));
     },
     onError: (error) => {
-      toast.error(`Failed to cancel subscription: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 };

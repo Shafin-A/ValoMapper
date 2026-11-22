@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 interface ResumeSubscriptionResponse {
   subscriptionId: string;
@@ -13,6 +14,7 @@ interface ResumeSubscriptionResponse {
 
 export const useResumeSubscription = () => {
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   return useMutation({
     mutationFn: () =>
@@ -22,12 +24,10 @@ export const useResumeSubscription = () => {
         { method: "POST" },
       ),
     onSuccess: () => {
-      toast.success(
-        "Cancellation removed. Your subscription will renew normally.",
-      );
+      toast.success(t("subscriptionResumed"));
     },
     onError: (error) => {
-      toast.error(`Failed to resume subscription: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 };

@@ -49,7 +49,7 @@ export const LineupViewContent = ({
                     <div className="relative w-full aspect-video rounded-md border overflow-hidden bg-muted">
                       <Image
                         src={image}
-                        alt={`Lineup ${index + 1}`}
+                        alt={t("imageAlt", { index: index + 1 })}
                         fill
                         className="object-contain"
                       />

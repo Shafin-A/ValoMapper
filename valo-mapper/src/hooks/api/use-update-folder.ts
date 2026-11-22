@@ -3,6 +3,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 import { Folder } from "@/lib/types";
 
 interface UpdateFolderParams {
@@ -13,6 +14,7 @@ interface UpdateFolderParams {
 export const useUpdateFolder = () => {
   const queryClient = useQueryClient();
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   const { mutate, isPending, isError } = useMutation({
     mutationFn: ({ folderId, name }: UpdateFolderParams) =>
@@ -21,11 +23,11 @@ export const useUpdateFolder = () => {
         body: JSON.stringify({ name }),
       }),
     onSuccess: (data) => {
-      toast.success(`Folder "${data.name}" updated successfully!`);
+      toast.success(t("folderUpdated", { name: data.name }));
       queryClient.invalidateQueries({ queryKey: queryKeys.folders });
     },
     onError: (error) => {
-      toast.error(`Failed to update folder: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 

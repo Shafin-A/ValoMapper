@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
 import { type CheckoutPlan } from "@/lib/consts";
+import { useTranslations } from "next-intl";
 
 interface CheckoutSessionResponse {
   sessionId: string;
@@ -19,6 +20,7 @@ interface CreateCheckoutSessionRequest {
 
 export const useCreateCheckoutSession = () => {
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   return useMutation({
     mutationFn: (request: CreateCheckoutSessionRequest = {}) => {
@@ -49,7 +51,7 @@ export const useCreateCheckoutSession = () => {
       window.location.href = data.url;
     },
     onError: (error) => {
-      toast.error(`Failed to start checkout: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 };

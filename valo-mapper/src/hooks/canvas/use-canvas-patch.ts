@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ApiError, apiFetch } from "@/lib/api";
 import { CanvasPatchEntry } from "@/lib/types";
+import { useTranslations } from "next-intl";
 
 const PATCH_BATCH_SIZE = 20;
 const PATCH_DEBOUNCE_MS = 500;
@@ -67,6 +68,7 @@ export const useCanvasPatch = (
   lobbyCode: string,
   onBeforeUnload?: RefObject<(() => void) | null>,
 ) => {
+  const t = useTranslations("toasts");
   const queueRef = useRef<CanvasPatchEntry[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Overlapping POSTs could commit out of order.
@@ -104,7 +106,7 @@ export const useCanvasPatch = (
           // Keep retries and later edits ordered behind the failed batch.
           queueRef.current = [...entries, ...queueRef.current];
           console.error("Canvas patch failed after retries, re-queueing", error);
-          toast.error("Canvas patch update failed.");
+          toast.error(t("canvasPatchFailed"));
 
           const backoff = Math.min(
             PATCH_DEBOUNCE_MS * 2 ** failedDrainsRef.current,
@@ -118,7 +120,7 @@ export const useCanvasPatch = (
     } finally {
       drainingRef.current = false;
     }
-  }, []);
+  }, [t]);
 
   const flushCanvasPatch = useCallback(async () => {
     if (timerRef.current) {

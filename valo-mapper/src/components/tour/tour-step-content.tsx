@@ -2,6 +2,7 @@
 
 import { useTour } from "@/contexts/tour-context";
 import { useTour as useReactour } from "@reactour/tour";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +23,7 @@ export const TourStepContent = ({
 }) => {
   const { closeTour, markTourAsCompleted, autoAdvanceState } = useTour();
   const { setIsOpen, currentStep, steps, setCurrentStep } = useReactour();
+  const t = useTranslations("tour");
 
   const shouldShowNextButton =
     !isAutoAdvanceStep ||
@@ -61,7 +63,7 @@ export const TourStepContent = ({
       </CardHeader>
       <CardFooter className="p-0 flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={handleSkip}>
-          Skip
+          {t("skip")}
         </Button>
         <div className="flex items-center gap-2">
           <Button
@@ -70,13 +72,16 @@ export const TourStepContent = ({
             onClick={handlePrevious}
             disabled={currentStep === 0}
           >
-            Previous
+            {t("previous")}
           </Button>
           {shouldShowNextButton && (
             <Button variant="default" size="sm" onClick={handleNext}>
               {currentStep === steps.length - 1
-                ? "Finish"
-                : `Next (${currentStep + 1} / ${steps.length})`}
+                ? t("finish")
+                : t("nextStep", {
+                    current: currentStep + 1,
+                    total: steps.length,
+                  })}
             </Button>
           )}
         </div>

@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useFirebaseAuth } from "../use-firebase-auth";
 import { toast } from "sonner";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 import { User } from "@/lib/types";
 
 interface UpdateUserData {
@@ -13,6 +14,7 @@ interface UpdateUserData {
 
 export const useUpdateUser = () => {
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   const mutation = useMutation({
     mutationFn: (data: UpdateUserData) =>
@@ -21,10 +23,10 @@ export const useUpdateUser = () => {
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
-      toast.success("Profile updated successfully");
+      toast.success(t("profileUpdated"));
     },
     onError: (error) => {
-      toast.error(`Failed to update profile: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 

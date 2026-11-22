@@ -19,6 +19,7 @@ import { RichText } from "@/components/canvas/rich-text";
 import { NoteBadge } from "@/components/canvas/note-badge";
 import Konva from "konva";
 import { RefObject, memo, useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
 import {
   TEXT_MIN_HEIGHT,
@@ -37,8 +38,6 @@ interface CanvasTextProps {
   selectionDrag: SelectionDragController;
 }
 
-const EMPTY_PLACEHOLDER = "Click to add text...";
-
 export const CanvasTexts = memo(function CanvasTexts({
   stageRef,
   transformerRefs,
@@ -46,6 +45,7 @@ export const CanvasTexts = memo(function CanvasTexts({
   selectionDrag,
 }: CanvasTextProps) {
   useCommitCount("CanvasTexts");
+  const t = useTranslations("canvas.textEditor");
 
   const { textsOnCanvas, setTextsOnCanvas } = useCanvasTexts();
   const { isDrawMode, editingTextId, selectedCanvasIcon } = useCanvasUi();
@@ -104,7 +104,7 @@ export const CanvasTexts = memo(function CanvasTexts({
     const hasText = spans.some((span) => span.text.length > 0);
     const layoutSpans: TextSpan[] = hasText
       ? spans
-      : [{ text: EMPTY_PLACEHOLDER, color: TEXT_PLACEHOLDER_COLOR }];
+      : [{ text: t("clickToAdd"), color: TEXT_PLACEHOLDER_COLOR }];
     const boxWidth = liveWidths[textItem.id] ?? textItem.width;
     const layout = layoutRichText(layoutSpans, {
       width: boxWidth,

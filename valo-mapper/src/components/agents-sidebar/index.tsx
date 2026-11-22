@@ -617,7 +617,7 @@ export const AgentsSidebar = ({
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 backdrop-blur-sm">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">
-                Loading agents...
+                {t("loading")}
               </span>
             </div>
           )}
@@ -627,10 +627,10 @@ export const AgentsSidebar = ({
               <AlertCircle className="h-12 w-12 text-destructive" />
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium">
-                  Failed to load lobby
+                  {t("loadLobbyFailed")}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  Please try again later
+                  {t("tryAgainLater")}
                 </span>
               </div>
             </div>

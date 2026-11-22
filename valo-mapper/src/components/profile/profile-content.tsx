@@ -40,6 +40,7 @@ import { useFormatter, useTranslations } from "next-intl";
 export const ProfileContent = () => {
   const t = useTranslations("profile");
   const ts = useTranslations("profile.subscription");
+  const tToast = useTranslations("toasts");
   const format = useFormatter();
   const formatDate = (date: Date) =>
     format.dateTime(date, {
@@ -267,12 +268,12 @@ export const ProfileContent = () => {
 
   const handleSave = async () => {
     if (!user) {
-      toast.error("User data not available");
+      toast.error(tToast("profileDataUnavailable"));
       return;
     }
 
     if (!name.trim()) {
-      toast.error("Name cannot be empty");
+      toast.error(tToast("nameRequired"));
       return;
     }
 
@@ -328,7 +329,7 @@ export const ProfileContent = () => {
   const handleInviteStackMember = () => {
     const trimmedUid = inviteFirebaseUid.trim();
     if (!trimmedUid) {
-      toast.error("Enter a UID to invite");
+      toast.error(tToast("uidRequired"));
       return;
     }
 

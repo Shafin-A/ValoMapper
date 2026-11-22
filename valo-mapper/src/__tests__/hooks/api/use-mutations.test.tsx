@@ -103,9 +103,9 @@ const successCases: SuccessCase[] = [
         body: JSON.stringify({ name: "Lineups", parentFolderId: 2 }),
       },
     },
-    successToast: 'Folder "Lineups" created successfully!',
+    successToast: 'Folder "Lineups" created',
     invalidates: [queryKeys.folders],
-    errorToast: "Failed to create folder: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "updates a folder",
@@ -121,9 +121,9 @@ const successCases: SuccessCase[] = [
         body: JSON.stringify({ name: "Retakes" }),
       },
     },
-    successToast: 'Folder "Retakes" updated successfully!',
+    successToast: 'Folder "Retakes" updated',
     invalidates: [queryKeys.folders],
-    errorToast: "Failed to update folder: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "deletes a folder",
@@ -135,9 +135,9 @@ const successCases: SuccessCase[] = [
       url: "/api/folders/3",
       options: { method: "DELETE" },
     },
-    successToast: "Folder deleted successfully!",
+    successToast: "Folder deleted",
     invalidates: [queryKeys.folders],
-    errorToast: "Failed to delete folder: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "creates a strategy",
@@ -161,9 +161,9 @@ const successCases: SuccessCase[] = [
         }),
       },
     },
-    successToast: 'Strategy "B Rush" created successfully!',
+    successToast: 'Strategy "B Rush" created',
     invalidates: [queryKeys.folders],
-    errorToast: "Failed to create strategy: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "updates a strategy name",
@@ -179,9 +179,9 @@ const successCases: SuccessCase[] = [
         body: JSON.stringify({ name: "Retake" }),
       },
     },
-    successToast: 'Strategy "Retake" updated successfully!',
+    successToast: 'Strategy "Retake" updated',
     invalidates: [queryKeys.folders],
-    errorToast: "Failed to update strategy: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "deletes a strategy",
@@ -193,9 +193,9 @@ const successCases: SuccessCase[] = [
       url: "/api/strategies/8",
       options: { method: "DELETE" },
     },
-    successToast: "Strategy deleted successfully!",
+    successToast: "Strategy deleted",
     invalidates: [queryKeys.folders],
-    errorToast: "Failed to delete strategy: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "creates a user",
@@ -233,8 +233,8 @@ const successCases: SuccessCase[] = [
       url: "/api/users/me",
       options: { method: "PUT", body: JSON.stringify({ name: "New Name" }) },
     },
-    successToast: "Profile updated successfully",
-    errorToast: "Failed to update profile: boom",
+    successToast: "Profile updated",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "deletes the current user",
@@ -246,9 +246,9 @@ const successCases: SuccessCase[] = [
       url: "/api/users/me",
       options: { method: "DELETE" },
     },
-    successToast: "User deleted successfully!",
+    successToast: "User deleted",
     invalidates: [queryKeys.user],
-    errorToast: "Failed to delete user: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "cancels a subscription",
@@ -260,9 +260,8 @@ const successCases: SuccessCase[] = [
       url: "/api/billing/cancel-subscription",
       options: { method: "POST" },
     },
-    successToast:
-      "Subscription will cancel at the end of your billing period",
-    errorToast: "Failed to cancel subscription: boom",
+    successToast: "Subscription will cancel at the end of the billing period",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "resumes a subscription",
@@ -278,9 +277,8 @@ const successCases: SuccessCase[] = [
       url: "/api/billing/resume-subscription",
       options: { method: "POST" },
     },
-    successToast:
-      "Cancellation removed. Your subscription will renew normally.",
-    errorToast: "Failed to resume subscription: boom",
+    successToast: "Subscription will renew normally",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "invites a stack member",
@@ -295,9 +293,9 @@ const successCases: SuccessCase[] = [
         body: JSON.stringify({ firebaseUid: "uid-1" }),
       },
     },
-    successToast: "Stack invite sent",
+    successToast: "Invite sent",
     invalidates: [queryKeys.stackMembers],
-    errorToast: "Failed to invite stack member: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "removes a stack member",
@@ -309,9 +307,9 @@ const successCases: SuccessCase[] = [
       url: "/api/billing/stack/members/4",
       options: { method: "DELETE" },
     },
-    successToast: "Stack member removed",
+    successToast: "Member removed",
     invalidates: [queryKeys.stackMembers],
-    errorToast: "Failed to remove stack member: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "accepts a stack invite",
@@ -323,13 +321,13 @@ const successCases: SuccessCase[] = [
       url: "/api/billing/stack/accept/5",
       options: { method: "POST" },
     },
-    successToast: "Stack invite accepted",
+    successToast: "Invite accepted",
     invalidates: [
       queryKeys.user,
       queryKeys.stackMembers,
       queryKeys.stackPendingInvites,
     ],
-    errorToast: "Failed to accept stack invite: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "declines a stack invite",
@@ -341,13 +339,13 @@ const successCases: SuccessCase[] = [
       url: "/api/billing/stack/decline/6",
       options: { method: "POST" },
     },
-    successToast: "Stack invite declined",
+    successToast: "Invite declined",
     invalidates: [
       queryKeys.user,
       queryKeys.stackMembers,
       queryKeys.stackPendingInvites,
     ],
-    errorToast: "Failed to decline stack invite: boom",
+    errorToast: "Something went wrong: boom",
   },
   {
     name: "leaves a stack",
@@ -359,13 +357,13 @@ const successCases: SuccessCase[] = [
       url: "/api/billing/stack/leave",
       options: { method: "DELETE" },
     },
-    successToast: "Left stack",
+    successToast: "Left Stack",
     invalidates: [
       queryKeys.user,
       queryKeys.stackMembers,
       queryKeys.stackPendingInvites,
     ],
-    errorToast: "Failed to leave stack: boom",
+    errorToast: "Something went wrong: boom",
   },
 ];
 
@@ -569,7 +567,7 @@ describe("useCreateCheckoutSession", () => {
 
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith(
-        "Failed to start checkout: boom",
+        "Something went wrong: boom",
       );
     });
   });

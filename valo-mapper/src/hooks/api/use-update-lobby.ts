@@ -3,9 +3,11 @@ import { CanvasState, Lobby } from "@/lib/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 export const useUpdateLobby = (lobbyCode: string) => {
   const queryClient = useQueryClient();
+  const t = useTranslations("toasts");
 
   const { mutateAsync, isPending, isError } = useMutation({
     mutationFn: (canvasState: CanvasState) =>
@@ -23,7 +25,7 @@ export const useUpdateLobby = (lobbyCode: string) => {
       }
     },
     onError: (error) => {
-      toast.error(`Failed to sync canvas: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 

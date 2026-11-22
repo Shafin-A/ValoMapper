@@ -3,10 +3,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 export const useDeclineStackInvite = () => {
   const queryClient = useQueryClient();
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   return useMutation({
     mutationFn: (inviteId: number) =>
@@ -18,13 +20,13 @@ export const useDeclineStackInvite = () => {
         },
       ),
     onSuccess: () => {
-      toast.success("Stack invite declined");
+      toast.success(t("inviteDeclined"));
       queryClient.invalidateQueries({ queryKey: queryKeys.user });
       queryClient.invalidateQueries({ queryKey: queryKeys.stackMembers });
       queryClient.invalidateQueries({ queryKey: queryKeys.stackPendingInvites });
     },
     onError: (error) => {
-      toast.error(`Failed to decline stack invite: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 };

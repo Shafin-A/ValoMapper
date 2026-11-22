@@ -14,6 +14,7 @@ import { useImageTransform } from "@/hooks/canvas";
 import { handleDragEnd, handleDragMove } from "@/lib/konva-drag";
 import Konva from "konva";
 import { RefObject, memo } from "react";
+import { useTranslations } from "next-intl";
 import { Group, Image, Rect, Text, Transformer } from "react-konva";
 
 interface CanvasImageProps {
@@ -32,6 +33,7 @@ export const CanvasImages = memo(function CanvasImages({
   selectionDrag,
 }: CanvasImageProps) {
   useCommitCount("CanvasImages");
+  const t = useTranslations("common");
 
   const { imagesOnCanvas, setImagesOnCanvas } = useCanvasImages();
   const { isDrawMode, editingTextId, selectedCanvasIcon } = useCanvasUi();
@@ -137,7 +139,7 @@ export const CanvasImages = memo(function CanvasImages({
         onDblClick={() => handleImageDoubleClick(imageItem.id)}
       >
         <Image
-          alt="image"
+          alt={t("image")}
           ref={(node) => {
             if (node) {
               imageNodeRefs.current.set(imageItem.id, node);

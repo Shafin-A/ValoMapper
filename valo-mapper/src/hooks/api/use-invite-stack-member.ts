@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 import { StackMember } from "@/lib/types";
 
 interface InviteStackMemberRequest {
@@ -12,6 +13,7 @@ interface InviteStackMemberRequest {
 export const useInviteStackMember = () => {
   const queryClient = useQueryClient();
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   return useMutation({
     mutationFn: (firebaseUid: string) => {
@@ -29,11 +31,11 @@ export const useInviteStackMember = () => {
       );
     },
     onSuccess: () => {
-      toast.success("Stack invite sent");
+      toast.success(t("inviteSent"));
       queryClient.invalidateQueries({ queryKey: queryKeys.stackMembers });
     },
     onError: (error) => {
-      toast.error(`Failed to invite stack member: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 };

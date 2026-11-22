@@ -15,6 +15,7 @@ import type {
 import { getAttachedVisionConeIds } from "@/lib/vision-cone-utils";
 import { Dispatch, RefObject, SetStateAction, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface UseKeyboardShortcutsProps {
   undo: () => void;
@@ -322,6 +323,7 @@ export const useKeyboardShortcuts = (
   props: UseKeyboardShortcutsProps,
 ): void => {
   const { enabled = true } = props;
+  const t = useTranslations("toasts");
   const {
     drawSettings,
     eraserSettings,
@@ -389,7 +391,7 @@ export const useKeyboardShortcuts = (
         if (handleDrawToolToggle(ctx, key, e)) return;
       } catch (err) {
         console.error("Keyboard shortcut error:", err);
-        toast.error("An unexpected error occurred with keyboard shortcuts");
+        toast.error(t("shortcutError"));
       }
     };
 
@@ -397,5 +399,5 @@ export const useKeyboardShortcuts = (
     window.addEventListener("keydown", onKeyDown, listenerOptions);
     return () =>
       window.removeEventListener("keydown", onKeyDown, listenerOptions);
-  }, [enabled]);
+  }, [enabled, t]);
 };

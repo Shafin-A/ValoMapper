@@ -642,7 +642,7 @@ export const TextEditor = ({
               lineHeight: TEXT_LINE_HEIGHT,
             }}
           >
-            Click to add text...
+            {t("clickToAdd")}
           </span>
         )}
 

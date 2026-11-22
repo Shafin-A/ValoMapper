@@ -174,7 +174,9 @@ export const ReplayControlsBar = ({
 
       <div className="hidden items-center gap-3 px-2 pb-2 text-[10px] text-white/60 md:flex">
         <span>
-          <kbd className="rounded border border-sidebar-border px-1">Space</kbd>{" "}
+          <kbd className="rounded border border-sidebar-border px-1">
+            {t("spaceKey")}
+          </kbd>{" "}
           {t("spacePlayPause")}
         </span>
         <span>

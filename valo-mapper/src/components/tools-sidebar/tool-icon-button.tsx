@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import Image from "next/image";
@@ -18,7 +19,10 @@ export const ToolIconButton = forwardRef<
   (
     { name, onClick, onPointerDown, fileEnding = "webp", selected, ...props },
     ref,
-  ) => (
+  ) => {
+    const t = useTranslations("common");
+
+    return (
     <Button
       ref={ref}
       size="icon"
@@ -40,7 +44,7 @@ export const ToolIconButton = forwardRef<
     >
       <Image
         src={`/tools/${name}.${fileEnding}`}
-        alt={`${name} icon`}
+        alt={t("iconAlt", { name })}
         fill
         className="object-contain"
         sizes="w-full"
@@ -48,7 +52,8 @@ export const ToolIconButton = forwardRef<
         onDragStart={(event) => event.preventDefault()}
       />
     </Button>
-  ),
+    );
+  },
 );
 
 ToolIconButton.displayName = "ToolIconButton";

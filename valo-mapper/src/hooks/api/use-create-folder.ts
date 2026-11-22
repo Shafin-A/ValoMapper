@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
 import { apiFetchWithAuth } from "@/lib/api";
+import { useTranslations } from "next-intl";
 import { Folder } from "@/lib/types";
 
 interface CreateFolderParams {
@@ -15,6 +16,7 @@ interface CreateFolderParams {
 export const useCreateFolder = () => {
   const queryClient = useQueryClient();
   const { getIdToken } = useFirebaseAuth();
+  const t = useTranslations("toasts");
 
   return useMutation({
     mutationFn: ({ name, parentFolderId }: CreateFolderParams) =>
@@ -23,13 +25,13 @@ export const useCreateFolder = () => {
         body: JSON.stringify({ name, parentFolderId }),
       }),
     onSuccess: (data) => {
-      toast.success(`Folder "${data.name}" created successfully!`);
+      toast.success(t("folderCreated", { name: data.name }));
       queryClient.invalidateQueries({
         queryKey: queryKeys.folders,
       });
     },
     onError: (error) => {
-      toast.error(`Failed to create folder: ${error.message}`);
+      toast.error(t("failed", { error: error.message }));
     },
   });
 };

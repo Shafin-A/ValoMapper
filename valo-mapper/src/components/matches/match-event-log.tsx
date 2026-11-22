@@ -256,10 +256,12 @@ export const MatchEventLog = ({
   scrollAreaClassName,
   selectedEventIndex,
 }: MatchEventLogProps) => {
+  const t = useTranslations("matchReview");
+
   return (
     <div className={cn("md:h-[652px]", containerClassName)}>
       <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/70">
-        Event Log
+        {t("eventLog")}
       </p>
       <ScrollArea
         className={cn("h-[360px] w-full md:h-[620px]", scrollAreaClassName)}

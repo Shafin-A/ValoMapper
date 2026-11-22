@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,8 @@ export const LineupViewDialog = ({
   isOpen,
   onClose,
 }: LineupViewDialogProps) => {
+  const t = useTranslations("canvas.lineup");
+  const tCommon = useTranslations("common");
   const { setConnectingLines } = useCanvasEntityActions();
   const { notifyConnLineUpdated } = useCollaborativeCanvas();
 
@@ -132,19 +135,19 @@ export const LineupViewDialog = ({
           <DialogHeader>
             <div className="flex items-center justify-between pr-8">
               <DialogTitle>
-                {isEditMode ? "Edit Lineup" : "Lineup Details"}
+                {isEditMode ? t("editTitle") : t("detailsTitle")}
               </DialogTitle>
               {!isEditMode && (
                 <Button variant="outline" size="sm" onClick={handleEditClick}>
                   <Pencil className="h-4 w-4 mr-2" />
-                  Edit
+                  {tCommon("actions.edit")}
                 </Button>
               )}
             </div>
             <DialogDescription className="sr-only">
               {isEditMode
-                ? "Edit lineup images, video, and notes"
-                : "View lineup images, video, and notes"}
+                ? t("editDescription")
+                : t("viewDescription")}
             </DialogDescription>
           </DialogHeader>
 
@@ -176,10 +179,10 @@ export const LineupViewDialog = ({
           {isEditMode && (
             <DialogFooter>
               <Button variant="outline" onClick={handleCancelEdit}>
-                Cancel
+                {tCommon("actions.cancel")}
               </Button>
               <Button onClick={handleSaveEdit} disabled={isEditEmpty}>
-                Save
+                {tCommon("actions.save")}
               </Button>
             </DialogFooter>
           )}
