@@ -318,7 +318,7 @@
     "settings": {
       "label": "Ustawienia powtórki",
       "hideAgentVision": "Ukryj widzenie agenta",
-      "hideAbilities": "Ukryj zdolności",
+      "hideAbilities": "Ukryj umiejętności",
       "hideAgentWeapons": "Ukryj broń agentów",
       "hideWeaponHits": "Ukryj trafienia broni",
       "hideDeadAgents": "Ukryj martwych agentów",
@@ -760,10 +760,10 @@
         "text": "Tekst"
       },
       "items": {
-        "agent": "agent",
+        "agent": "agenta",
         "ability": "umiejętność",
         "image": "obraz",
-        "icon": "ikona",
+        "icon": "ikonę",
         "text": "tekst"
       },
       "chooseAction": "Wybierz akcję",
