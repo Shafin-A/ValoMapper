@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, ZoomIn, ZoomOut, RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface FullscreenImageModalProps {
   imageSrc: string | null;
@@ -17,6 +18,7 @@ export const FullscreenImageModal = ({
   imageSrc,
   onClose,
 }: FullscreenImageModalProps) => {
+  const t = useTranslations("canvas.fullscreen");
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(
@@ -138,7 +140,7 @@ export const FullscreenImageModal = ({
 
   return (
     <Dialog open={!!imageSrc} onOpenChange={(open) => !open && onClose()}>
-      <DialogTitle className="sr-only">Fullscreen view</DialogTitle>
+      <DialogTitle className="sr-only">{t("view")}</DialogTitle>
       <DialogContent
         className="max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-[95vw] xl:max-w-[95vw] max-h-[95vh] w-auto h-auto border-0 p-0 bg-transparent rounded-none"
         showCloseButton={false}
@@ -159,7 +161,7 @@ export const FullscreenImageModal = ({
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={handleZoomOut}
                   disabled={!canZoomOut}
-                  aria-label="Zoom out"
+                  aria-label={t("zoomOut")}
                   data-testid="zoom-out"
                 >
                   <ZoomOut className="size-4" />
@@ -169,7 +171,7 @@ export const FullscreenImageModal = ({
                   size="icon"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={handleZoomReset}
-                  aria-label="Reset zoom"
+                  aria-label={t("zoomReset")}
                   data-testid="zoom-reset"
                 >
                   <RefreshCw className="size-4" />
@@ -180,7 +182,7 @@ export const FullscreenImageModal = ({
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={handleZoomIn}
                   disabled={!canZoomIn}
-                  aria-label="Zoom in"
+                  aria-label={t("zoomIn")}
                   data-testid="zoom-in"
                 >
                   <ZoomIn className="size-4" />
@@ -192,7 +194,7 @@ export const FullscreenImageModal = ({
                   size="icon"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={onClose}
-                  aria-label="Close fullscreen"
+                  aria-label={t("close")}
                   data-testid="close-fullscreen"
                 >
                   <X className="size-5" />
@@ -217,7 +219,7 @@ export const FullscreenImageModal = ({
                 >
                   <Image
                     src={imageSrc}
-                    alt="Fullscreen view"
+                    alt={t("view")}
                     width={1920}
                     height={1080}
                     className="max-w-[95vw] max-h-[95vh] w-auto h-auto object-contain"

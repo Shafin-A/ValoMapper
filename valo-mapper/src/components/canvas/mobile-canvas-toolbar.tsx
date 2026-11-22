@@ -25,6 +25,7 @@ import {
   useCanvasUi,
 } from "@/contexts/canvas-context";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslations } from "next-intl";
 
 interface MobileCanvasToolbarProps {
   onOpenTools: () => void;
@@ -35,6 +36,7 @@ export const MobileCanvasToolbar = ({
   onOpenTools,
   onOpenAgents,
 }: MobileCanvasToolbarProps) => {
+  const t = useTranslations("canvas.mobileToolbar");
   const { undo, redo, canUndo, canRedo } = useCanvasHistory();
   const {
     isDrawMode,
@@ -82,7 +84,7 @@ export const MobileCanvasToolbar = ({
           variant="ghost"
           size="icon"
           className="h-11 min-w-0 flex-1"
-          aria-label="Open tools"
+          aria-label={t("openTools")}
           onClick={onOpenTools}
         >
           <SidebarIcon />
@@ -91,7 +93,7 @@ export const MobileCanvasToolbar = ({
           variant="ghost"
           size="icon"
           className="h-11 min-w-0 flex-1"
-          aria-label="Undo"
+          aria-label={t("undo")}
           disabled={!canUndo}
           onClick={undo}
         >
@@ -101,7 +103,7 @@ export const MobileCanvasToolbar = ({
           variant="ghost"
           size="icon"
           className="h-11 min-w-0 flex-1"
-          aria-label="Redo"
+          aria-label={t("redo")}
           disabled={!canRedo}
           onClick={redo}
         >
@@ -110,7 +112,7 @@ export const MobileCanvasToolbar = ({
         <Toggle
           size="lg"
           className="h-11 min-w-0 flex-1"
-          aria-label="Draw"
+          aria-label={t("draw")}
           pressed={isDrawMode && tool === "pencil"}
           onPressedChange={setDrawMode}
         >
@@ -119,7 +121,7 @@ export const MobileCanvasToolbar = ({
         <Toggle
           size="lg"
           className="h-11 min-w-0 flex-1"
-          aria-label="Erase"
+          aria-label={t("erase")}
           pressed={isDrawMode && tool === "eraser"}
           onPressedChange={setEraseMode}
         >
@@ -129,7 +131,7 @@ export const MobileCanvasToolbar = ({
           variant="ghost"
           size="icon"
           className="h-11 min-w-0 flex-1"
-          aria-label="Delete options"
+          aria-label={t("deleteOptions")}
           onClick={openDeleteSheet}
         >
           <Trash2 />
@@ -138,7 +140,7 @@ export const MobileCanvasToolbar = ({
           variant="ghost"
           size="icon"
           className="h-11 min-w-0 flex-1"
-          aria-label="Open agents"
+          aria-label={t("openAgents")}
           onClick={onOpenAgents}
         >
           <SidebarIcon className="rotate-180" />
@@ -151,10 +153,8 @@ export const MobileCanvasToolbar = ({
           className="max-h-[80dvh] gap-0 rounded-t-xl pb-[env(safe-area-inset-bottom)]"
         >
           <SheetHeader className="border-b px-4 pb-3 text-left">
-            <SheetTitle>Delete</SheetTitle>
-            <SheetDescription>
-              Remove elements from the current phase or the whole strategy.
-            </SheetDescription>
+            <SheetTitle>{t("deleteTitle")}</SheetTitle>
+            <SheetDescription>{t("deleteDescription")}</SheetDescription>
           </SheetHeader>
           <div className="overflow-y-auto px-4 pb-4">
             <DeleteSettings />

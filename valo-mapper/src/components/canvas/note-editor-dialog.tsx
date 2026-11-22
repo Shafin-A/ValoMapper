@@ -21,6 +21,7 @@ import { getCanvasItemInstance } from "@/lib/canvas-selection";
 import { NOTE_MAX_LENGTH } from "@/lib/consts";
 import type { CanvasSelectionItem } from "@/lib/types";
 import { MessageSquare, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { memo, useCallback, useState } from "react";
 import type { KeyboardEvent } from "react";
 
@@ -37,6 +38,7 @@ const NoteEditorContent = ({
   initialNote,
   onClose,
 }: NoteEditorContentProps) => {
+  const t = useTranslations("canvas.noteEditor");
   const { updateNote } = useNoteEditor();
   const [value, setValue] = useState(initialNote);
 
@@ -82,22 +84,21 @@ const NoteEditorContent = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="size-4" />
-            {hasExistingNote ? "Edit note" : "Add note"}
+            {hasExistingNote ? t("editTitle") : t("addTitle")}
           </DialogTitle>
           <DialogDescription className="break-words">
-            Add context to {label}. Everyone in this lobby sees it when hovering
-            over the element.
+            {t("description", { label })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="min-w-0 space-y-2">
-          <Label htmlFor="canvas-note">Note</Label>
+          <Label htmlFor="canvas-note">{t("label")}</Label>
           <Textarea
             id="canvas-note"
             value={value}
             rows={5}
             maxLength={NOTE_MAX_LENGTH}
-            placeholder="Add a note for this element..."
+            placeholder={t("placeholder")}
             autoFocus
             className="max-h-[40dvh] min-h-24 min-w-0 resize-none overflow-y-auto [overflow-wrap:anywhere]"
             onChange={(event) => setValue(event.target.value)}
@@ -116,13 +117,13 @@ const NoteEditorContent = ({
             disabled={!hasExistingNote}
           >
             <Trash2 />
-            Remove
+            {t("remove")}
           </Button>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button onClick={handleSave} disabled={trimmedValue.length === 0}>
-            Save note
+            {t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

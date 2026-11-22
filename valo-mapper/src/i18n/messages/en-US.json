@@ -251,6 +251,96 @@
       "removeVisionCone": "Remove vision cone",
       "detachVisionCones": "Detach vision cones",
       "detachVisionCone": "Detach vision cone"
+    },
+    "noteEditor": {
+      "addTitle": "Add note",
+      "editTitle": "Edit note",
+      "description": "Add context to {label}. Everyone in this lobby sees it when hovering over the element.",
+      "label": "Note",
+      "placeholder": "Add a note for this element...",
+      "remove": "Remove",
+      "cancel": "Cancel",
+      "save": "Save note"
+    },
+    "mobileToolbar": {
+      "openTools": "Open tools",
+      "openAgents": "Open agents",
+      "undo": "Undo",
+      "redo": "Redo",
+      "draw": "Draw",
+      "erase": "Erase",
+      "deleteOptions": "Delete options",
+      "deleteTitle": "Delete",
+      "deleteDescription": "Remove elements from the current phase or the whole strategy."
+    },
+    "fullscreen": {
+      "view": "Fullscreen view",
+      "zoomOut": "Zoom out",
+      "zoomReset": "Reset zoom",
+      "zoomIn": "Zoom in",
+      "close": "Close fullscreen"
+    },
+    "lineup": {
+      "title": "Add Lineup",
+      "description": "Add a new Lineup",
+      "agent": "Agent",
+      "selectAgent": "Select an agent",
+      "ability": "Ability",
+      "selectAbility": "Select an ability",
+      "link": "Link",
+      "notes": "Notes",
+      "notesPlaceholder": "Add any notes about this lineup...",
+      "lineColor": "Line Color",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "icons": {
+      "title": "Icons",
+      "aboutIcons": "About icons",
+      "mobileHelpSelect": "Tap an icon to select it, then tap the map to place it.",
+      "mobileHelpDrag": "Or drag an icon onto the map. Drag it to the trash zone to delete it.",
+      "desktopHelpDelete": "Press E while hovering an icon on the map to delete it",
+      "desktopHelpPlace": "Click or drag an icon onto the map to place it",
+      "spike": "Spike",
+      "guns": "Guns",
+      "shields": "Shields"
+    },
+    "imageUpload": {
+      "unsupportedType": "Unsupported image type. Use JPEG, PNG, GIF, or WEBP.",
+      "invalidFile": "Invalid image file",
+      "failed": "Failed to upload image",
+      "uploadImage": "Upload image",
+      "uploadingImage": "Uploading image"
+    },
+    "textEditor": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "bulletList": "Bullet list",
+      "numberedList": "Numbered list",
+      "textColor": "Text color {color}",
+      "customColor": "Custom text color",
+      "fontSize": "Font size"
+    }
+  },
+  "help": {
+    "shortcuts": {
+      "general": "General",
+      "drawTool": "Draw Tool",
+      "eraserTool": "Eraser Tool",
+      "phaseNavigation": "Phase Navigation",
+      "undo": "Undo",
+      "redo": "Redo",
+      "deleteHovered": "Delete Hovered Element",
+      "addEditNote": "Add or Edit Note on Hovered Element",
+      "recenter": "Recenter Canvas",
+      "toggleDraw": "Toggle Draw Tool On/Off",
+      "toggleDashed": "Toggle Dashed/Solid Lines",
+      "toggleArrow": "Toggle Arrow Head",
+      "toggleEraser": "Toggle Eraser Tool On/Off",
+      "toggleEntireLine": "Toggle Erase Entire Line On/Off",
+      "previousPhase": "Previous Phase (if not at first phase)",
+      "nextPhase": "Next Phase (if not at last phase)"
     }
   },
   "agents": {
@@ -336,6 +426,7 @@
     "delete": "Delete",
     "deleteOptions": "Delete options",
     "addText": "Add Text",
+    "addTextLower": "Add text",
     "addImage": "Add Image",
     "visionCones": "Vision Cones",
     "screenshot": "Screenshot",

@@ -11,6 +11,7 @@ import { Vector2d } from "konva/lib/types";
 import { toast } from "sonner";
 import React, { useCallback, useRef, useState } from "react";
 import type { ImageCanvas } from "@/lib/types";
+import { useTranslations } from "next-intl";
 
 interface ImageUploadButtonProps extends React.ComponentPropsWithoutRef<
   typeof Button
@@ -23,6 +24,7 @@ export const ImageUploadButton = React.forwardRef<
   HTMLButtonElement,
   ImageUploadButtonProps
 >(({ mapPosition, onImageAdded, onClick, ...props }, ref) => {
+  const t = useTranslations("canvas.imageUpload");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { setImagesOnCanvas } = useCanvasEntityActions();
   const [isUploading, setIsUploading] = useState(false);
@@ -42,7 +44,7 @@ export const ImageUploadButton = React.forwardRef<
           file.type as (typeof ALLOWED_IMAGE_UPLOAD_MIME_TYPES)[number],
         )
       ) {
-        toast.error("Unsupported image type. Use JPEG, PNG, GIF, or WEBP.");
+        toast.error(t("unsupportedType"));
         event.target.value = "";
         return;
       }
@@ -70,7 +72,7 @@ export const ImageUploadButton = React.forwardRef<
           );
         } catch (err) {
           toast.error(
-            err instanceof Error ? err.message : "Invalid image file",
+            err instanceof Error ? err.message : t("invalidFile"),
           );
           return;
         }
@@ -95,7 +97,7 @@ export const ImageUploadButton = React.forwardRef<
           url = data.url as string;
         } catch (err) {
           toast.error(
-            err instanceof Error ? err.message : "Failed to upload image",
+            err instanceof Error ? err.message : t("failed"),
           );
           return;
         }
@@ -128,7 +130,7 @@ export const ImageUploadButton = React.forwardRef<
         event.target.value = "";
       }
     },
-    [mapPosition, onImageAdded, setImagesOnCanvas],
+    [mapPosition, onImageAdded, setImagesOnCanvas, t],
   );
 
   const handleClick = useCallback(
@@ -148,7 +150,7 @@ export const ImageUploadButton = React.forwardRef<
         ref={fileInputRef}
         type="file"
         accept={IMAGE_UPLOAD_ACCEPT_ATTR}
-        aria-label="Upload image"
+        aria-label={t("uploadImage")}
         onChange={handleFileChange}
         style={{ display: "none" }}
       />
@@ -156,7 +158,7 @@ export const ImageUploadButton = React.forwardRef<
         ref={ref}
         variant="ghost"
         size="lg"
-        aria-label={isUploading ? "Uploading image" : "Upload image"}
+        aria-label={isUploading ? t("uploadingImage") : t("uploadImage")}
         onClick={handleClick}
         disabled={isUploading || props.disabled}
         {...props}

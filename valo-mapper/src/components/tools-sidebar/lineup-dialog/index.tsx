@@ -21,6 +21,7 @@ import { MAP_SIZE } from "@/lib/consts";
 import { LineupFormFields } from "./lineup-form-fields";
 import { LineupFullscreenViewer } from "./lineup-fullscreen-viewer";
 import { useLineupForm } from "@/hooks/use-lineup-form";
+import { useTranslations } from "next-intl";
 
 interface LineupDialogProps {
   onConfirm?: (agentName: string, abilityName: string) => void;
@@ -33,6 +34,7 @@ export const LineupDialog = ({
   onCancel,
   mapPosition,
 }: LineupDialogProps) => {
+  const t = useTranslations("canvas.lineup");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
 
@@ -143,9 +145,9 @@ export const LineupDialog = ({
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Add Lineup</DialogTitle>
+        <DialogTitle>{t("title")}</DialogTitle>
         <DialogDescription className="sr-only">
-          Add a new Lineup
+          {t("description")}
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-4 py-4">
@@ -168,10 +170,10 @@ export const LineupDialog = ({
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={handleCancel}>
-          Cancel
+          {t("cancel")}
         </Button>
         <Button onClick={handleConfirm} disabled={!isFormValid()}>
-          Confirm
+          {t("confirm")}
         </Button>
       </DialogFooter>
 

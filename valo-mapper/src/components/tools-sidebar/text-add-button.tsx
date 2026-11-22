@@ -9,6 +9,7 @@ import { MAP_SIZE } from "@/lib/consts";
 import { getNextId } from "@/lib/ids";
 import { Vector2d } from "konva/lib/types";
 import type { TextCanvas } from "@/lib/types";
+import { useTranslations } from "next-intl";
 import React, { useCallback } from "react";
 
 interface TextAddButtonProps extends React.ComponentPropsWithoutRef<
@@ -23,6 +24,7 @@ export const TextAddButton = React.forwardRef<
   HTMLButtonElement,
   TextAddButtonProps
 >(({ mapPosition, onTextAdded, onBeforeAdd, onClick, ...props }, ref) => {
+  const t = useTranslations("tools");
   const { setTextsOnCanvas } = useCanvasEntityActions();
   const { setEditingTextId, setIsDrawMode } = useCanvasUi();
   const { notifyTextAdded } = useCollaborativeCanvas();
@@ -69,7 +71,7 @@ export const TextAddButton = React.forwardRef<
       ref={ref}
       variant="ghost"
       size="lg"
-      aria-label="Add text"
+      aria-label={t("addTextLower")}
       onClick={handleClick}
       {...props}
     >

@@ -13,6 +13,12 @@ import { getAbilityVariants } from "@/lib/consts/configs/agent-icon/consts";
 import { getAgentImgSrc } from "@/lib/assets";
 import Image from "next/image";
 import { LineupImageUpload } from "./lineup-image-upload";
+import { useValorantTerms } from "@/contexts/valorant-terms-context";
+import {
+  getLocalizedAbilityName,
+  getLocalizedAgentName,
+} from "@/lib/i18n/valorant-terms";
+import { useTranslations } from "next-intl";
 
 interface LineupFormFieldsProps {
   selectedAgent: string;
@@ -47,6 +53,8 @@ export const LineupFormFields = ({
   onImageRemove,
   onImageExpand,
 }: LineupFormFieldsProps) => {
+  const t = useTranslations("canvas.lineup");
+  const valorantTerms = useValorantTerms();
   const availableAbilities = selectedAgent
     ? (AGENT_ICON_CONFIGS[selectedAgent] || []).flatMap(getAbilityVariants)
     : [];
@@ -54,54 +62,68 @@ export const LineupFormFields = ({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="agent-select">Agent</Label>
+        <Label htmlFor="agent-select">{t("agent")}</Label>
         <Select value={selectedAgent} onValueChange={onAgentChange}>
           <SelectTrigger id="agent-select" className="w-full">
-            <SelectValue placeholder="Select an agent" />
+            <SelectValue placeholder={t("selectAgent")} />
           </SelectTrigger>
           <SelectContent className="w-full">
-            {AGENTS.map((agent) => (
-              <SelectItem key={agent.name} value={agent.name}>
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={getAgentImgSrc(agent.name)}
-                    alt={agent.name}
-                    width={24}
-                    height={24}
-                    className="rounded"
-                  />
-                  <span>{agent.name}</span>
-                </div>
-              </SelectItem>
-            ))}
+            {AGENTS.map((agent) => {
+              const displayName = getLocalizedAgentName(
+                valorantTerms,
+                agent.name,
+              );
+              return (
+                <SelectItem key={agent.name} value={agent.name}>
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={getAgentImgSrc(agent.name)}
+                      alt={displayName}
+                      width={24}
+                      height={24}
+                      className="rounded"
+                    />
+                    <span>{displayName}</span>
+                  </div>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="ability-select">Ability</Label>
+        <Label htmlFor="ability-select">{t("ability")}</Label>
         <Select
           value={selectedAbility}
           onValueChange={onAbilityChange}
           disabled={!selectedAgent}
         >
           <SelectTrigger id="ability-select" className="w-full">
-            <SelectValue placeholder="Select an ability" />
+            <SelectValue placeholder={t("selectAbility")} />
           </SelectTrigger>
           <SelectContent className="w-full">
-            {availableAbilities.map((ability) => (
-              <SelectItem key={ability.id} value={ability.name}>
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={ability.src}
-                    alt={ability.name}
-                    width={24}
-                    height={24}
-                    className="rounded"
-                  />
-                  <span>{ability.name}</span>
-                </div>
-              </SelectItem>
-            ))}
+            {availableAbilities.map((ability) => {
+              const displayName = getLocalizedAbilityName(
+                valorantTerms,
+                selectedAgent,
+                ability.slot,
+                ability.name,
+              );
+              return (
+                <SelectItem key={ability.id} value={ability.name}>
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={ability.src}
+                      alt={displayName}
+                      width={24}
+                      height={24}
+                      className="rounded"
+                    />
+                    <span>{displayName}</span>
+                  </div>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
@@ -112,7 +134,7 @@ export const LineupFormFields = ({
         onImageExpand={onImageExpand}
       />
       <div className="space-y-2">
-        <Label htmlFor="link">Link</Label>
+        <Label htmlFor="link">{t("link")}</Label>
         <Input
           id="link"
           type="url"
@@ -122,16 +144,16 @@ export const LineupFormFields = ({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
+        <Label htmlFor="notes">{t("notes")}</Label>
         <Textarea
           id="notes"
-          placeholder="Add any notes about this lineup..."
+          placeholder={t("notesPlaceholder")}
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="line-color">Line Color</Label>
+        <Label htmlFor="line-color">{t("lineColor")}</Label>
         <div className="flex items-center gap-3">
           <input
             id="line-color"

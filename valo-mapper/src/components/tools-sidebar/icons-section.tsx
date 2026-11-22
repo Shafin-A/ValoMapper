@@ -30,6 +30,7 @@ import {
 } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InfoHint } from "@/components/shared/info-hint";
+import { useTranslations } from "next-intl";
 
 interface IconsSectionProps {
   setSidebarOpen?: Dispatch<SetStateAction<boolean>>;
@@ -45,6 +46,7 @@ type PendingSidebarDrag = {
 };
 
 export const IconsSection = ({ setSidebarOpen }: IconsSectionProps) => {
+  const t = useTranslations("canvas.icons");
   const isMobile = useIsMobile();
   const {
     setEditingTextId,
@@ -258,21 +260,18 @@ export const IconsSection = ({ setSidebarOpen }: IconsSectionProps) => {
   return (
     <div className="mt-4" data-tour="icons-section">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-base font-semibold">Icons</span>
-        <InfoHint label="About icons">
+        <span className="text-base font-semibold">{t("title")}</span>
+        <InfoHint label={t("aboutIcons")}>
           <div className="space-y-2">
             {isMobile ? (
               <>
-                <p>Tap an icon to select it, then tap the map to place it.</p>
-                <p>
-                  Or drag an icon onto the map. Drag it to the trash zone to
-                  delete it.
-                </p>
+                <p>{t("mobileHelpSelect")}</p>
+                <p>{t("mobileHelpDrag")}</p>
               </>
             ) : (
               <>
-                <p>Press E while hovering an icon on the map to delete it</p>
-                <p>Click or drag an icon onto the map to place it</p>
+                <p>{t("desktopHelpDelete")}</p>
+                <p>{t("desktopHelpPlace")}</p>
               </>
             )}
           </div>
@@ -281,7 +280,7 @@ export const IconsSection = ({ setSidebarOpen }: IconsSectionProps) => {
 
       <Accordion type="multiple" className="w-full">
         <AccordionItem value="utilities">
-          <AccordionTrigger className="text-sm">Spike</AccordionTrigger>
+          <AccordionTrigger className="text-sm">{t("spike")}</AccordionTrigger>
           <AccordionContent>
             <div className="grid grid-cols-5 gap-2 pt-2">
               <ToolIconButton
@@ -297,7 +296,7 @@ export const IconsSection = ({ setSidebarOpen }: IconsSectionProps) => {
         </AccordionItem>
 
         <AccordionItem value="weapons">
-          <AccordionTrigger className="text-sm">Guns</AccordionTrigger>
+          <AccordionTrigger className="text-sm">{t("guns")}</AccordionTrigger>
           <AccordionContent>
             <div className="flex gap-4 pt-2">
               <WeaponColumn
@@ -329,7 +328,7 @@ export const IconsSection = ({ setSidebarOpen }: IconsSectionProps) => {
         </AccordionItem>
 
         <AccordionItem value="shields">
-          <AccordionTrigger className="text-sm">Shields</AccordionTrigger>
+          <AccordionTrigger className="text-sm">{t("shields")}</AccordionTrigger>
           <AccordionContent>
             <div className="grid grid-cols-5 gap-2 pt-2">
               <ToolIconButton

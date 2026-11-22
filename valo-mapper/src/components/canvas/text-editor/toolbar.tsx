@@ -2,6 +2,7 @@ import { Bold, Italic, List, ListOrdered, Underline } from "lucide-react";
 import type { CSSProperties, MouseEvent as ReactMouseEvent, RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { useTranslations } from "next-intl";
 import { TEXT_COLORS, type ActiveFormats } from "./formatting";
 
 interface TextEditorToolbarProps {
@@ -38,6 +39,7 @@ export const TextEditorToolbar = ({
   onMouseDown,
   mobile = false,
 }: TextEditorToolbarProps) => {
+  const t = useTranslations("canvas.textEditor");
   const formatButtonProps = (command: string, label: string) => ({
     type: "button" as const,
     variant: "ghost" as const,
@@ -53,21 +55,21 @@ export const TextEditorToolbar = ({
   return (
     <div ref={toolbarRef} style={style} onMouseDown={onMouseDown}>
       <Button
-        {...formatButtonProps("bold", "Bold")}
+        {...formatButtonProps("bold", t("bold"))}
         aria-pressed={activeFormats.bold}
         className={formatButtonClass(activeFormats.bold, mobile)}
       >
         <Bold />
       </Button>
       <Button
-        {...formatButtonProps("italic", "Italic")}
+        {...formatButtonProps("italic", t("italic"))}
         aria-pressed={activeFormats.italic}
         className={formatButtonClass(activeFormats.italic, mobile)}
       >
         <Italic />
       </Button>
       <Button
-        {...formatButtonProps("underline", "Underline")}
+        {...formatButtonProps("underline", t("underline"))}
         aria-pressed={activeFormats.underline}
         className={formatButtonClass(activeFormats.underline, mobile)}
       >
@@ -83,7 +85,7 @@ export const TextEditorToolbar = ({
         type="button"
         variant="ghost"
         size="icon"
-        aria-label="Bullet list"
+        aria-label={t("bulletList")}
         aria-pressed={activeFormats.bullet}
         className={formatButtonClass(activeFormats.bullet, mobile)}
         onMouseDown={(event) => {
@@ -98,7 +100,7 @@ export const TextEditorToolbar = ({
         type="button"
         variant="ghost"
         size="icon"
-        aria-label="Numbered list"
+        aria-label={t("numberedList")}
         aria-pressed={activeFormats.numbered}
         className={formatButtonClass(activeFormats.numbered, mobile)}
         onMouseDown={(event) => {
@@ -119,7 +121,7 @@ export const TextEditorToolbar = ({
         <button
           key={color}
           type="button"
-          aria-label={`Text color ${color}`}
+          aria-label={t("textColor", { color })}
           aria-pressed={activeFormats.color === color}
           className={cn(
             "shrink-0 rounded-full border",
@@ -139,7 +141,7 @@ export const TextEditorToolbar = ({
 
       <input
         type="color"
-        aria-label="Custom text color"
+        aria-label={t("customColor")}
         value={activeFormats.color}
         className={cn(
           "shrink-0 cursor-pointer rounded border-0 bg-transparent p-0",
@@ -156,7 +158,7 @@ export const TextEditorToolbar = ({
       />
 
       <select
-        aria-label="Font size"
+        aria-label={t("fontSize")}
         value={fontSize}
         className={cn(
           "shrink-0 rounded bg-zinc-800 px-1 text-white outline-none",

@@ -1,84 +1,86 @@
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { useTranslations } from "next-intl";
 
 export const Shortcuts = () => {
+  const t = useTranslations("help.shortcuts");
   const shortcuts = [
     {
-      category: "General",
+      category: t("general"),
       items: [
         {
           keys: [
             ["Ctrl", "Z"],
             ["Cmd", "Z"],
           ],
-          description: "Undo",
+          description: t("undo"),
         },
         {
           keys: [
             ["Ctrl", "Shift", "Z"],
             ["Cmd", "Shift", "Z"],
           ],
-          description: "Redo",
+          description: t("redo"),
         },
         {
           keys: [["E"]],
-          description: "Delete Hovered Element",
+          description: t("deleteHovered"),
         },
         {
           keys: [["N"]],
-          description: "Add or Edit Note on Hovered Element",
+          description: t("addEditNote"),
         },
         {
           keys: [["R"]],
-          description: "Recenter Canvas",
+          description: t("recenter"),
         },
       ],
     },
     {
-      category: "Draw Tool",
+      category: t("drawTool"),
       items: [
         {
           keys: [["Q"]],
-          description: "Toggle Draw Tool On/Off",
+          description: t("toggleDraw"),
         },
         {
           keys: [
             ["Ctrl", "Q"],
             ["Cmd", "Q"],
           ],
-          description: "Toggle Dashed/Solid Lines",
+          description: t("toggleDashed"),
         },
         {
           keys: [
             ["Ctrl", "Shift", "Q"],
             ["Cmd", "Shift", "Q"],
           ],
-          description: "Toggle Arrow Head",
+          description: t("toggleArrow"),
         },
       ],
     },
     {
-      category: "Eraser Tool",
+      category: t("eraserTool"),
       items: [
         {
           keys: [["W"]],
-          description: "Toggle Eraser Tool On/Off",
+          description: t("toggleEraser"),
         },
         {
           keys: [["Shift", "W"]],
-          description: "Toggle Erase Entire Line On/Off",
+          description: t("toggleEntireLine"),
         },
       ],
     },
     {
-      category: "Phase Navigation",
+      category: t("phaseNavigation"),
       items: [
         {
           keys: [["A"]],
-          description: "Previous Phase (if not at first phase)",
+          description: t("previousPhase"),
         },
         {
           keys: [["D"]],
-          description: "Next Phase (if not at last phase)",
+          description: t("nextPhase"),
         },
       ],
     },
