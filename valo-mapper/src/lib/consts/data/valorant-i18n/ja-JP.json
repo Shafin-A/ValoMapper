@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "source": "valorant-api.com",
+    "generatedAt": "2026-11-22T06:39:16.225Z",
+    "riotClientVersion": "release-13.10-shipping-18-5893614",
+    "locales": [
+      "ar-AE",
+      "de-DE",
+      "en-US",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "id-ID",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "vi-VN",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "agents": {
+    "Gekko": {
+      "name": "ゲッコー",
+      "role": "イニシエーター"
+    },
+    "Fade": {
+      "name": "フェイド",
+      "role": "イニシエーター"
+    },
+    "Breach": {
+      "name": "ブリーチ",
+      "role": "イニシエーター"
+    },
+    "Deadlock": {
+      "name": "デッドロック",
+      "role": "センチネル"
+    },
+    "Tejo": {
+      "name": "テホ",
+      "role": "イニシエーター"
+    },
+    "Raze": {
+      "name": "レイズ",
+      "role": "デュエリスト"
+    },
+    "Chamber": {
+      "name": "チェンバー",
+      "role": "センチネル"
+    },
+    "KAY/O": {
+      "name": "KAY/O",
+      "role": "イニシエーター"
+    },
+    "Skye": {
+      "name": "スカイ",
+      "role": "イニシエーター"
+    },
+    "Cypher": {
+      "name": "サイファー",
+      "role": "センチネル"
+    },
+    "Sova": {
+      "name": "ソーヴァ",
+      "role": "イニシエーター"
+    },
+    "Miks": {
+      "name": "ミクス",
+      "role": "コントローラー"
+    },
+    "Killjoy": {
+      "name": "キルジョイ",
+      "role": "センチネル"
+    },
+    "Harbor": {
+      "name": "ハーバー",
+      "role": "コントローラー"
+    },
+    "Vyse": {
+      "name": "ヴァイス",
+      "role": "センチネル"
+    },
+    "Viper": {
+      "name": "ヴァイパー",
+      "role": "コントローラー"
+    },
+    "Hush": {
+      "name": "ハッシュ",
+      "role": "デュエリスト"
+    },
+    "Phoenix": {
+      "name": "フェニックス",
+      "role": "デュエリスト"
+    },
+    "Veto": {
+      "name": "ヴィトー",
+      "role": "センチネル"
+    },
+    "Astra": {
+      "name": "アストラ",
+      "role": "コントローラー"
+    },
+    "Brimstone": {
+      "name": "ブリムストーン",
+      "role": "コントローラー"
+    },
+    "Iso": {
+      "name": "アイソ",
+      "role": "デュエリスト"
+    },
+    "Clove": {
+      "name": "クローヴ",
+      "role": "コントローラー"
+    },
+    "Neon": {
+      "name": "ネオン",
+      "role": "デュエリスト"
+    },
+    "Yoru": {
+      "name": "ヨル",
+      "role": "デュエリスト"
+    },
+    "Waylay": {
+      "name": "ウェイレイ",
+      "role": "デュエリスト"
+    },
+    "Sage": {
+      "name": "セージ",
+      "role": "センチネル"
+    },
+    "Reyna": {
+      "name": "レイナ",
+      "role": "デュエリスト"
+    },
+    "Omen": {
+      "name": "オーメン",
+      "role": "コントローラー"
+    },
+    "Jett": {
+      "name": "ジェット",
+      "role": "デュエリスト"
+    }
+  },
+  "roles": {
+    "Initiator": "イニシエーター",
+    "Sentinel": "センチネル",
+    "Duelist": "デュエリスト",
+    "Controller": "コントローラー"
+  },
+  "abilities": {
+    "Gekko": {
+      "Ability1": "ウィングマン",
+      "Ability2": "ディジー",
+      "Grenade": "モッシュピット",
+      "Ultimate": "スラッシュ",
+      "Passive": "球体"
+    },
+    "Fade": {
+      "Ability1": "シーズ",
+      "Ability2": "ホウント",
+      "Grenade": "プラウラー",
+      "Ultimate": "ナイトフォール",
+      "Passive": "テラートレイル"
+    },
+    "Breach": {
+      "Ability1": "フラッシュポイント",
+      "Ability2": "フォールトライン",
+      "Grenade": "アフターショック",
+      "Ultimate": "ローリングサンダー"
+    },
+    "Deadlock": {
+      "Ability1": "ソニックセンサー",
+      "Grenade": "バリアメッシュ",
+      "Ability2": "グラヴィネット",
+      "Ultimate": "アナイアレーション"
+    },
+    "Tejo": {
+      "Ability2": "誘導サルヴォ",
+      "Ability1": "スペシャルデリバリー",
+      "Ultimate": "アルマゲドン",
+      "Grenade": "ステルスドローン"
+    },
+    "Raze": {
+      "Ability1": "ブラストパック",
+      "Ability2": "ペイント弾",
+      "Grenade": "ブームボット",
+      "Ultimate": "ショーストッパー"
+    },
+    "Chamber": {
+      "Ability2": "ランデヴー",
+      "Grenade": "トレードマーク",
+      "Ability1": "ヘッドハンター",
+      "Ultimate": "ツール・ド・フォース"
+    },
+    "KAY/O": {
+      "Grenade": "フラグ/メント",
+      "Ability1": "フラッシュ/ドライブ",
+      "Ability2": "ゼロ/ポイント",
+      "Ultimate": "ヌル/コマンド"
+    },
+    "Skye": {
+      "Ability1": "トレイルブレイザー",
+      "Ability2": "ガイディングライト",
+      "Grenade": "リグロウス",
+      "Ultimate": "シーカー"
+    },
+    "Cypher": {
+      "Ability1": "サイバーケージ",
+      "Ability2": "スパイカメラ",
+      "Grenade": "トラップワイヤー",
+      "Ultimate": "ニューラルセフト"
+    },
+    "Sova": {
+      "Ability1": "ショックボルト",
+      "Ability2": "リコンボルト",
+      "Grenade": "オウルドローン",
+      "Ultimate": "ハンターズフューリー"
+    },
+    "Miks": {
+      "Grenade": "M-パルス",
+      "Ability2": "ウェーブフォーム",
+      "Ability1": "ハーモナイズ",
+      "Ultimate": "ベースクエイク"
+    },
+    "Killjoy": {
+      "Grenade": "ナノスワーム",
+      "Ability1": "アラームボット",
+      "Ability2": "タレット",
+      "Ultimate": "ロックダウン"
+    },
+    "Harbor": {
+      "Ability1": "ハイタイド",
+      "Grenade": "ストームサージ",
+      "Ability2": "コーヴ",
+      "Ultimate": "レコニング"
+    },
+    "Vyse": {
+      "Ability1": "シアー",
+      "Ability2": "アークローズ",
+      "Grenade": "レーザーヴァイン",
+      "Ultimate": "スチールガーデン"
+    },
+    "Viper": {
+      "Ability1": "ポイズンクラウド",
+      "Ability2": "トキシックスクリーン",
+      "Grenade": "スネークバイト",
+      "Ultimate": "ヴァイパーズピット",
+      "Passive": "トキシン"
+    },
+    "Hush": {
+      "Ability1": "フラッシュバルブ",
+      "Ability2": "ディスプレイスメント",
+      "Grenade": "フロー",
+      "Ultimate": "サスペンション",
+      "Passive": "テレキネシス"
+    },
+    "Phoenix": {
+      "Grenade": "ブレイズ",
+      "Ability1": "ホットハンド",
+      "Ability2": "カーブボール",
+      "Ultimate": "ラン・イット・バック",
+      "Passive": "インナーファイア"
+    },
+    "Veto": {
+      "Ability2": "インタセプター",
+      "Grenade": "クロスカット",
+      "Ultimate": "エヴォリューション",
+      "Ability1": "チョークホールド"
+    },
+    "Astra": {
+      "Ability1": "ノヴァパルス",
+      "Ability2": "ネビュラ",
+      "Grenade": "グラビティウェル",
+      "Ultimate": "コズミックディバイド",
+      "Passive": "アストラルフォーム"
+    },
+    "Brimstone": {
+      "Grenade": "スティムビーコン",
+      "Ability1": "インセンディアリー",
+      "Ability2": "スカイスモーク",
+      "Ultimate": "オービタルストライク"
+    },
+    "Iso": {
+      "Ability1": "アンダーカット",
+      "Ultimate": "キルコントラクト",
+      "Ability2": "ダブルタップ",
+      "Grenade": "コンティンジェンシー",
+      "Passive": "フォーカス"
+    },
+    "Clove": {
+      "Grenade": "ピック・ミー・アップ",
+      "Ability2": "ルース",
+      "Ultimate": "ノット・デッド・イェット",
+      "Ability1": "メドル"
+    },
+    "Neon": {
+      "Ability2": "ハイギア",
+      "Ability1": "リレーボルト",
+      "Grenade": "ファストレーン",
+      "Ultimate": "オーバードライブ",
+      "Passive": "バッテリー"
+    },
+    "Yoru": {
+      "Grenade": "フェイクアウト",
+      "Ability1": "ブラインドサイド",
+      "Ability2": "ゲートクラッシュ",
+      "Ultimate": "ディメンショナル\nドリフト"
+    },
+    "Waylay": {
+      "Ability2": "リフラクト",
+      "Grenade": "サチュレート",
+      "Ability1": "ライトスピード",
+      "Ultimate": "コンバージェントパス"
+    },
+    "Sage": {
+      "Ability1": "スロウオーブ",
+      "Ability2": "ヒーリングオーブ",
+      "Grenade": "バリアオーブ",
+      "Ultimate": "リザレクション"
+    },
+    "Reyna": {
+      "Ability1": "デバウアー",
+      "Ability2": "ディスミス",
+      "Grenade": "リーア",
+      "Ultimate": "エンプレス",
+      "Passive": "バイタリティ"
+    },
+    "Omen": {
+      "Ability1": "パラノイア",
+      "Ability2": "ダークカヴァー",
+      "Grenade": "シュラウドステップ",
+      "Ultimate": "フロム・ザ・シャドウズ"
+    },
+    "Jett": {
+      "Ability1": "アップドラフト",
+      "Ability2": "テイルウィンド",
+      "Grenade": "クラウドバースト",
+      "Ultimate": "ブレードストーム",
+      "Passive": "ドリフト"
+    }
+  },
+  "maps": {
+    "abyss": "アビス",
+    "ascent": "アセント",
+    "bind": "バインド",
+    "breeze": "ブリーズ",
+    "corrode": "カロード",
+    "fracture": "フラクチャー",
+    "haven": "ヘイヴン",
+    "icebox": "アイスボックス",
+    "lotus": "ロータス",
+    "pearl": "パール",
+    "split": "スプリット",
+    "sunset": "サンセット",
+    "summit": "サミット"
+  },
+  "weapons": {
+    "classic": "クラシック",
+    "shorty": "ショーティー",
+    "frenzy": "フレンジー",
+    "ghost": "ゴースト",
+    "bandit": "バンディット",
+    "sheriff": "シェリフ",
+    "knife": "近接武器",
+    "stinger": "スティンガー",
+    "spectre": "スペクター",
+    "bucky": "バッキー",
+    "judge": "ジャッジ",
+    "bulldog": "ブルドッグ",
+    "guardian": "ガーディアン",
+    "phantom": "ファントム",
+    "vandal": "ヴァンダル",
+    "warden": "ウォーデン",
+    "marshal": "マーシャル",
+    "outlaw": "アウトロー",
+    "operator": "オペレーター",
+    "ares": "アレス",
+    "odin": "オーディン"
+  }
+}

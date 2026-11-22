@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "source": "valorant-api.com",
+    "generatedAt": "2026-11-22T06:39:16.225Z",
+    "riotClientVersion": "release-13.10-shipping-18-5893614",
+    "locales": [
+      "ar-AE",
+      "de-DE",
+      "en-US",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "id-ID",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "vi-VN",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "agents": {
+    "Gekko": {
+      "name": "Gekko",
+      "role": "Iniciador"
+    },
+    "Fade": {
+      "name": "Fade",
+      "role": "Iniciador"
+    },
+    "Breach": {
+      "name": "Breach",
+      "role": "Iniciador"
+    },
+    "Deadlock": {
+      "name": "Deadlock",
+      "role": "Centinela"
+    },
+    "Tejo": {
+      "name": "Tejo",
+      "role": "Iniciador"
+    },
+    "Raze": {
+      "name": "Raze",
+      "role": "Duelista"
+    },
+    "Chamber": {
+      "name": "Chamber",
+      "role": "Centinela"
+    },
+    "KAY/O": {
+      "name": "KAY/O",
+      "role": "Iniciador"
+    },
+    "Skye": {
+      "name": "Skye",
+      "role": "Iniciador"
+    },
+    "Cypher": {
+      "name": "Cypher",
+      "role": "Centinela"
+    },
+    "Sova": {
+      "name": "Sova",
+      "role": "Iniciador"
+    },
+    "Miks": {
+      "name": "Miks",
+      "role": "Controlador"
+    },
+    "Killjoy": {
+      "name": "Killjoy",
+      "role": "Centinela"
+    },
+    "Harbor": {
+      "name": "Harbor",
+      "role": "Controlador"
+    },
+    "Vyse": {
+      "name": "Vyse",
+      "role": "Centinela"
+    },
+    "Viper": {
+      "name": "Viper",
+      "role": "Controlador"
+    },
+    "Hush": {
+      "name": "Hush",
+      "role": "Duelista"
+    },
+    "Phoenix": {
+      "name": "Phoenix",
+      "role": "Duelista"
+    },
+    "Veto": {
+      "name": "Veto",
+      "role": "Centinela"
+    },
+    "Astra": {
+      "name": "Astra",
+      "role": "Controlador"
+    },
+    "Brimstone": {
+      "name": "Brimstone",
+      "role": "Controlador"
+    },
+    "Iso": {
+      "name": "Iso",
+      "role": "Duelista"
+    },
+    "Clove": {
+      "name": "Clove",
+      "role": "Controlador"
+    },
+    "Neon": {
+      "name": "Neon",
+      "role": "Duelista"
+    },
+    "Yoru": {
+      "name": "Yoru",
+      "role": "Duelista"
+    },
+    "Waylay": {
+      "name": "Waylay",
+      "role": "Duelista"
+    },
+    "Sage": {
+      "name": "Sage",
+      "role": "Centinela"
+    },
+    "Reyna": {
+      "name": "Reyna",
+      "role": "Duelista"
+    },
+    "Omen": {
+      "name": "Omen",
+      "role": "Controlador"
+    },
+    "Jett": {
+      "name": "Jett",
+      "role": "Duelista"
+    }
+  },
+  "roles": {
+    "Initiator": "Iniciador",
+    "Sentinel": "Centinela",
+    "Duelist": "Duelista",
+    "Controller": "Controlador"
+  },
+  "abilities": {
+    "Gekko": {
+      "Ability1": "Wingman",
+      "Ability2": "Dizzy",
+      "Grenade": "Mosh",
+      "Ultimate": "Thrash",
+      "Passive": "Glóbulo"
+    },
+    "Fade": {
+      "Ability1": "Apresar",
+      "Ability2": "Tormento",
+      "Grenade": "Acechador",
+      "Ultimate": "Ocaso",
+      "Passive": "Rastros de terror"
+    },
+    "Breach": {
+      "Ability1": "Explosión cegadora",
+      "Ability2": "Falla",
+      "Grenade": "Réplica",
+      "Ultimate": "Fragor imparable"
+    },
+    "Deadlock": {
+      "Ability1": "Sensor sónico",
+      "Grenade": "Malla barrera",
+      "Ability2": "Red de gravedad",
+      "Ultimate": "Aniquilación"
+    },
+    "Tejo": {
+      "Ability2": "Descarga guiada",
+      "Ability1": "Entrega especial",
+      "Ultimate": "Armagedón",
+      "Grenade": "Dron de sigilo"
+    },
+    "Raze": {
+      "Ability1": "Fardo explosivo",
+      "Ability2": "Balas de pintura",
+      "Grenade": "Bot explosivo",
+      "Ultimate": "Cierratelones"
+    },
+    "Chamber": {
+      "Ability2": "Rendez-vous",
+      "Grenade": "Marca registrada",
+      "Ability1": "Cazador de cabezas",
+      "Ultimate": "Tour de force"
+    },
+    "KAY/O": {
+      "Grenade": "FRAG/mento",
+      "Ability1": "Unidad/FLASH",
+      "Ability2": "Punto/CERO",
+      "Ultimate": "Cmd/ANULAR"
+    },
+    "Skye": {
+      "Ability1": "Precursor",
+      "Ability2": "Luz guía",
+      "Grenade": "Reforestación",
+      "Ultimate": "Buscadores"
+    },
+    "Cypher": {
+      "Ability1": "Prisión cibernética",
+      "Ability2": "Cámara espía",
+      "Grenade": "Cable trampa",
+      "Ultimate": "Hurto neuronal"
+    },
+    "Sova": {
+      "Ability1": "Flecha explosiva",
+      "Ability2": "Proyectil de reconocimiento",
+      "Grenade": "Dron de reconocimiento",
+      "Ultimate": "Furia del cazador"
+    },
+    "Miks": {
+      "Grenade": "Pulso disonante",
+      "Ability2": "Onda sonora",
+      "Ability1": "Armonizar",
+      "Ultimate": "Seísmo de graves"
+    },
+    "Killjoy": {
+      "Grenade": "Nanoenjambre",
+      "Ability1": "Bot de alarma",
+      "Ability2": "Torreta",
+      "Ultimate": "Bloqueo"
+    },
+    "Harbor": {
+      "Ability1": "Marea alta",
+      "Grenade": "Descarga tormentosa",
+      "Ability2": "Cala",
+      "Ultimate": "Ajuste de cuentas"
+    },
+    "Vyse": {
+      "Ability1": "Cizallas",
+      "Ability2": "Rosa metálica",
+      "Grenade": "Zarzal lacerante",
+      "Ultimate": "Jardín de acero"
+    },
+    "Viper": {
+      "Ability1": "Nube venenosa",
+      "Ability2": "Pantalla tóxica",
+      "Grenade": "Veneno de serpiente",
+      "Ultimate": "Pozo de la víbora",
+      "Passive": "Toxina"
+    },
+    "Hush": {
+      "Ability1": "Fogonazo",
+      "Ability2": "Traslado",
+      "Grenade": "Corriente",
+      "Ultimate": "Suspensión",
+      "Passive": "Telequinesis"
+    },
+    "Phoenix": {
+      "Grenade": "Llamarada",
+      "Ability1": "Combustión",
+      "Ability2": "Bola curva",
+      "Ultimate": "Cenizas",
+      "Passive": "Fuego interior"
+    },
+    "Veto": {
+      "Ability2": "Interceptor",
+      "Grenade": "Corte transversal",
+      "Ultimate": "Evolución",
+      "Ability1": "Asfixia"
+    },
+    "Astra": {
+      "Ability1": "Pulso nova",
+      "Ability2": "Nebulosa",
+      "Grenade": "Pozo gravitatorio",
+      "Ultimate": "Separación cósmica",
+      "Passive": "Forma astral"
+    },
+    "Brimstone": {
+      "Grenade": "Baliza estimulante",
+      "Ability1": "Incendiario",
+      "Ability2": "Cortina de humo",
+      "Ultimate": "Golpe orbital"
+    },
+    "Iso": {
+      "Ability1": "Socavar",
+      "Ultimate": "Contrato de asesinato",
+      "Ability2": "Disparo doble",
+      "Grenade": "Contingencia",
+      "Passive": "Concentración"
+    },
+    "Clove": {
+      "Grenade": "Chute de energía",
+      "Ability2": "Treta",
+      "Ultimate": "No me voy",
+      "Ability1": "Tejemaneje"
+    },
+    "Neon": {
+      "Ability2": "Cambio de marcha",
+      "Ability1": "Proyectil electrizante",
+      "Grenade": "Vía rápida",
+      "Ultimate": "Sobrecarga",
+      "Passive": "Batería"
+    },
+    "Yoru": {
+      "Grenade": "Engaño",
+      "Ability1": "Punto ciego",
+      "Ability2": "Infiltración",
+      "Ultimate": "Viaje interdimensional"
+    },
+    "Waylay": {
+      "Ability2": "Refracción",
+      "Grenade": "Saturación",
+      "Ability1": "Velocidad de la luz",
+      "Ultimate": "Trayectorias convergentes"
+    },
+    "Sage": {
+      "Ability1": "Orbe de ralentización",
+      "Ability2": "Orbe de sanación",
+      "Grenade": "Orbe barrera",
+      "Ultimate": "Resurrección"
+    },
+    "Reyna": {
+      "Ability1": "Devorar",
+      "Ability2": "Despreciar",
+      "Grenade": "Mirada lasciva",
+      "Ultimate": "Emperatriz",
+      "Passive": "Vitalidad"
+    },
+    "Omen": {
+      "Ability1": "Paranoia",
+      "Ability2": "Velo tenebroso",
+      "Grenade": "Aparición tenebrosa",
+      "Ultimate": "Desde las sombras"
+    },
+    "Jett": {
+      "Ability1": "Vendaval",
+      "Ability2": "Viento de cola",
+      "Grenade": "Borrasca",
+      "Ultimate": "Tormenta de cuchillas",
+      "Passive": "Planeo"
+    }
+  },
+  "maps": {
+    "abyss": "Abyss",
+    "ascent": "Ascent",
+    "bind": "Bind",
+    "breeze": "Breeze",
+    "corrode": "Corrode",
+    "fracture": "Fracture",
+    "haven": "Haven",
+    "icebox": "Icebox",
+    "lotus": "Lotus",
+    "pearl": "Pearl",
+    "split": "Split",
+    "sunset": "Sunset",
+    "summit": "Summit"
+  },
+  "weapons": {
+    "classic": "Classic",
+    "shorty": "Shorty",
+    "frenzy": "Frenzy",
+    "ghost": "Ghost",
+    "bandit": "Bandit",
+    "sheriff": "Sheriff",
+    "knife": "Cuerpo a cuerpo",
+    "stinger": "Stinger",
+    "spectre": "Spectre",
+    "bucky": "Bucky",
+    "judge": "Judge",
+    "bulldog": "Bulldog",
+    "guardian": "Guardian",
+    "phantom": "Phantom",
+    "vandal": "Vandal",
+    "warden": "Warden",
+    "marshal": "Marshal",
+    "outlaw": "Outlaw",
+    "operator": "Operator",
+    "ares": "Ares",
+    "odin": "Odin"
+  }
+}

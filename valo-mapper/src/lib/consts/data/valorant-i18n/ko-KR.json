@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "source": "valorant-api.com",
+    "generatedAt": "2026-11-22T06:39:16.225Z",
+    "riotClientVersion": "release-13.10-shipping-18-5893614",
+    "locales": [
+      "ar-AE",
+      "de-DE",
+      "en-US",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "id-ID",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "vi-VN",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "agents": {
+    "Gekko": {
+      "name": "게코",
+      "role": "척후대"
+    },
+    "Fade": {
+      "name": "페이드",
+      "role": "척후대"
+    },
+    "Breach": {
+      "name": "브리치",
+      "role": "척후대"
+    },
+    "Deadlock": {
+      "name": "데드록",
+      "role": "감시자"
+    },
+    "Tejo": {
+      "name": "테호",
+      "role": "척후대"
+    },
+    "Raze": {
+      "name": "레이즈",
+      "role": "타격대"
+    },
+    "Chamber": {
+      "name": "체임버",
+      "role": "감시자"
+    },
+    "KAY/O": {
+      "name": "케이/오",
+      "role": "척후대"
+    },
+    "Skye": {
+      "name": "스카이",
+      "role": "척후대"
+    },
+    "Cypher": {
+      "name": "사이퍼",
+      "role": "감시자"
+    },
+    "Sova": {
+      "name": "소바",
+      "role": "척후대"
+    },
+    "Miks": {
+      "name": "믹스",
+      "role": "전략가"
+    },
+    "Killjoy": {
+      "name": "킬조이",
+      "role": "감시자"
+    },
+    "Harbor": {
+      "name": "하버",
+      "role": "전략가"
+    },
+    "Vyse": {
+      "name": "바이스",
+      "role": "감시자"
+    },
+    "Viper": {
+      "name": "바이퍼",
+      "role": "전략가"
+    },
+    "Hush": {
+      "name": "허시",
+      "role": "타격대"
+    },
+    "Phoenix": {
+      "name": "피닉스",
+      "role": "타격대"
+    },
+    "Veto": {
+      "name": "비토",
+      "role": "감시자"
+    },
+    "Astra": {
+      "name": "아스트라",
+      "role": "전략가"
+    },
+    "Brimstone": {
+      "name": "브림스톤",
+      "role": "전략가"
+    },
+    "Iso": {
+      "name": "아이소",
+      "role": "타격대"
+    },
+    "Clove": {
+      "name": "클로브",
+      "role": "전략가"
+    },
+    "Neon": {
+      "name": "네온",
+      "role": "타격대"
+    },
+    "Yoru": {
+      "name": "요루",
+      "role": "타격대"
+    },
+    "Waylay": {
+      "name": "웨이레이",
+      "role": "타격대"
+    },
+    "Sage": {
+      "name": "세이지",
+      "role": "감시자"
+    },
+    "Reyna": {
+      "name": "레이나",
+      "role": "타격대"
+    },
+    "Omen": {
+      "name": "오멘",
+      "role": "전략가"
+    },
+    "Jett": {
+      "name": "제트",
+      "role": "타격대"
+    }
+  },
+  "roles": {
+    "Initiator": "척후대",
+    "Sentinel": "감시자",
+    "Duelist": "타격대",
+    "Controller": "전략가"
+  },
+  "abilities": {
+    "Gekko": {
+      "Ability1": "지원봇",
+      "Ability2": "기절봇",
+      "Grenade": "폭파봇 지옥",
+      "Ultimate": "요동봇",
+      "Passive": "작은 구체"
+    },
+    "Fade": {
+      "Ability1": "포박",
+      "Ability2": "귀체",
+      "Grenade": "추적귀",
+      "Ultimate": "황혼",
+      "Passive": "공포의 흔적"
+    },
+    "Breach": {
+      "Ability1": "섬광 폭발",
+      "Ability2": "균열",
+      "Grenade": "여진",
+      "Ultimate": "지진 강타"
+    },
+    "Deadlock": {
+      "Ability1": "음향 센서",
+      "Grenade": "장벽망",
+      "Ability2": "중력그물",
+      "Ultimate": "소멸"
+    },
+    "Tejo": {
+      "Ability2": "유도 일제 사격",
+      "Ability1": "특별 배송",
+      "Ultimate": "아마겟돈",
+      "Grenade": "잠입 드론"
+    },
+    "Raze": {
+      "Ability1": "폭발 팩",
+      "Ability2": "페인트탄",
+      "Grenade": "폭발 봇",
+      "Ultimate": "대미 장식"
+    },
+    "Chamber": {
+      "Ability2": "랑데부",
+      "Grenade": "트레이드마크",
+      "Ability1": "헤드헌터",
+      "Ultimate": "역작"
+    },
+    "KAY/O": {
+      "Grenade": "파편/탄",
+      "Ability1": "플래시/드라이브",
+      "Ability2": "제로/포인트",
+      "Ultimate": "무력화/명령"
+    },
+    "Skye": {
+      "Ability1": "정찰자",
+      "Ability2": "인도하는 빛",
+      "Grenade": "재생",
+      "Ultimate": "추적자"
+    },
+    "Cypher": {
+      "Ability1": "사이버 감옥",
+      "Ability2": "스파이캠",
+      "Grenade": "함정",
+      "Ultimate": "신경 절도"
+    },
+    "Sova": {
+      "Ability1": "충격 화살",
+      "Ability2": "정찰용 화살",
+      "Grenade": "올빼미 드론",
+      "Ultimate": "사냥꾼의 분노"
+    },
+    "Miks": {
+      "Grenade": "M-파동",
+      "Ability2": "웨이브폼",
+      "Ability1": "화음",
+      "Ultimate": "요동치는 베이스"
+    },
+    "Killjoy": {
+      "Grenade": "나노스웜",
+      "Ability1": "알람봇",
+      "Ability2": "포탑",
+      "Ultimate": "봉쇄"
+    },
+    "Harbor": {
+      "Ability1": "만조",
+      "Grenade": "폭풍 쇄도",
+      "Ability2": "해만",
+      "Ultimate": "심판"
+    },
+    "Vyse": {
+      "Ability1": "가지치기",
+      "Ability2": "아크 장미",
+      "Grenade": "면도날 덩굴",
+      "Ultimate": "강철 정원"
+    },
+    "Viper": {
+      "Ability1": "독성 연기",
+      "Ability2": "독성 장막",
+      "Grenade": "뱀 이빨",
+      "Ultimate": "독사의 구덩이",
+      "Passive": "독"
+    },
+    "Hush": {
+      "Ability1": "섬광등",
+      "Ability2": "진형 붕괴",
+      "Grenade": "격류",
+      "Ultimate": "일체 정지",
+      "Passive": "염력"
+    },
+    "Phoenix": {
+      "Grenade": "불길",
+      "Ability1": "뜨거운 손",
+      "Ability2": "커브볼",
+      "Ultimate": "역습",
+      "Passive": "내면의 불꽃"
+    },
+    "Veto": {
+      "Ability2": "요격기",
+      "Grenade": "지름길",
+      "Ultimate": "진화",
+      "Ability1": "목조르기"
+    },
+    "Astra": {
+      "Ability1": "신성 파동",
+      "Ability2": "성운",
+      "Grenade": "중력의 샘",
+      "Ultimate": "우주 장벽",
+      "Passive": "천상계 형상"
+    },
+    "Brimstone": {
+      "Grenade": "자극제 신호기",
+      "Ability1": "소이탄",
+      "Ability2": "공중 연막",
+      "Ultimate": "궤도 일격"
+    },
+    "Iso": {
+      "Ability1": "약화",
+      "Ultimate": "청부 계약",
+      "Ability2": "구슬 보호막",
+      "Grenade": "대비책",
+      "Passive": "집중"
+    },
+    "Clove": {
+      "Grenade": "활력 회복",
+      "Ability2": "계략",
+      "Ultimate": "아직 안 죽었어",
+      "Ability1": "간섭"
+    },
+    "Neon": {
+      "Ability2": "고속 기어",
+      "Ability1": "릴레이 볼트",
+      "Grenade": "추월 차선",
+      "Ultimate": "오버드라이브",
+      "Passive": "배터리"
+    },
+    "Yoru": {
+      "Grenade": "기만",
+      "Ability1": "기습",
+      "Ability2": "관문 충돌",
+      "Ultimate": "차원 표류"
+    },
+    "Waylay": {
+      "Ability2": "굴절",
+      "Grenade": "포화",
+      "Ability1": "광속",
+      "Ultimate": "초점 교차"
+    },
+    "Sage": {
+      "Ability1": "둔화 구슬",
+      "Ability2": "회복 구슬",
+      "Grenade": "장벽 구슬",
+      "Ultimate": "부활"
+    },
+    "Reyna": {
+      "Ability1": "포식",
+      "Ability2": "무시",
+      "Grenade": "눈총",
+      "Ultimate": "여제",
+      "Passive": "활력"
+    },
+    "Omen": {
+      "Ability1": "피해망상",
+      "Ability2": "어둠의 장막",
+      "Grenade": "어둠의 발자국",
+      "Ultimate": "그림자 습격"
+    },
+    "Jett": {
+      "Ability1": "상승 기류",
+      "Ability2": "순풍",
+      "Grenade": "연막 폭발",
+      "Ultimate": "칼날 폭풍",
+      "Passive": "표류"
+    }
+  },
+  "maps": {
+    "abyss": "어비스",
+    "ascent": "어센트",
+    "bind": "바인드",
+    "breeze": "브리즈",
+    "corrode": "코로드",
+    "fracture": "프랙처",
+    "haven": "헤이븐",
+    "icebox": "아이스박스",
+    "lotus": "로터스",
+    "pearl": "펄",
+    "split": "스플릿",
+    "sunset": "선셋",
+    "summit": "서밋"
+  },
+  "weapons": {
+    "classic": "클래식",
+    "shorty": "쇼티",
+    "frenzy": "프렌지",
+    "ghost": "고스트",
+    "bandit": "밴딧",
+    "sheriff": "셰리프",
+    "knife": "근접 무기",
+    "stinger": "스팅어",
+    "spectre": "스펙터",
+    "bucky": "버키",
+    "judge": "저지",
+    "bulldog": "불독",
+    "guardian": "가디언",
+    "phantom": "팬텀",
+    "vandal": "밴달",
+    "warden": "워든",
+    "marshal": "마샬",
+    "outlaw": "아웃로",
+    "operator": "오퍼레이터",
+    "ares": "아레스",
+    "odin": "오딘"
+  }
+}

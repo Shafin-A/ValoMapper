@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "source": "valorant-api.com",
+    "generatedAt": "2026-11-22T06:39:16.225Z",
+    "riotClientVersion": "release-13.10-shipping-18-5893614",
+    "locales": [
+      "ar-AE",
+      "de-DE",
+      "en-US",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "id-ID",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "vi-VN",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "agents": {
+    "Gekko": {
+      "name": "蓋克",
+      "role": "先鋒"
+    },
+    "Fade": {
+      "name": "菲德",
+      "role": "先鋒"
+    },
+    "Breach": {
+      "name": "叛奇",
+      "role": "先鋒"
+    },
+    "Deadlock": {
+      "name": "蒂羅",
+      "role": "守衛"
+    },
+    "Tejo": {
+      "name": "戴侯",
+      "role": "先鋒"
+    },
+    "Raze": {
+      "name": "芮茲",
+      "role": "決鬥者"
+    },
+    "Chamber": {
+      "name": "錢博爾",
+      "role": "守衛"
+    },
+    "KAY/O": {
+      "name": "KAY/O",
+      "role": "先鋒"
+    },
+    "Skye": {
+      "name": "絲凱",
+      "role": "先鋒"
+    },
+    "Cypher": {
+      "name": "瑟符",
+      "role": "守衛"
+    },
+    "Sova": {
+      "name": "蘇法",
+      "role": "先鋒"
+    },
+    "Miks": {
+      "name": "米克什",
+      "role": "控場者"
+    },
+    "Killjoy": {
+      "name": "愷宙",
+      "role": "守衛"
+    },
+    "Harbor": {
+      "name": "哈泊",
+      "role": "控場者"
+    },
+    "Vyse": {
+      "name": "薇絲",
+      "role": "守衛"
+    },
+    "Viper": {
+      "name": "薇蝮",
+      "role": "控場者"
+    },
+    "Hush": {
+      "name": "靜",
+      "role": "決鬥者"
+    },
+    "Phoenix": {
+      "name": "菲尼克斯",
+      "role": "決鬥者"
+    },
+    "Veto": {
+      "name": "維托",
+      "role": "守衛"
+    },
+    "Astra": {
+      "name": "亞星卓",
+      "role": "控場者"
+    },
+    "Brimstone": {
+      "name": "布史東",
+      "role": "控場者"
+    },
+    "Iso": {
+      "name": "離索",
+      "role": "決鬥者"
+    },
+    "Clove": {
+      "name": "珂樂芙",
+      "role": "控場者"
+    },
+    "Neon": {
+      "name": "妮虹",
+      "role": "決鬥者"
+    },
+    "Yoru": {
+      "name": "夜戮",
+      "role": "決鬥者"
+    },
+    "Waylay": {
+      "name": "維蕾",
+      "role": "決鬥者"
+    },
+    "Sage": {
+      "name": "聖祈",
+      "role": "守衛"
+    },
+    "Reyna": {
+      "name": "蕾娜",
+      "role": "決鬥者"
+    },
+    "Omen": {
+      "name": "歐門",
+      "role": "控場者"
+    },
+    "Jett": {
+      "name": "婕提",
+      "role": "決鬥者"
+    }
+  },
+  "roles": {
+    "Initiator": "先鋒",
+    "Sentinel": "守衛",
+    "Duelist": "決鬥者",
+    "Controller": "控場者"
+  },
+  "abilities": {
+    "Gekko": {
+      "Ability1": "震翼鳥人",
+      "Ability2": "頭暈目眩",
+      "Grenade": "爆爆領域",
+      "Ultimate": "鯊無赦",
+      "Passive": "球體"
+    },
+    "Fade": {
+      "Ability1": "咒縛夢魘",
+      "Ability2": "惡夢幽魂",
+      "Grenade": "潛行夢魔",
+      "Ultimate": "夜幕降臨",
+      "Passive": "恐懼軌跡"
+    },
+    "Breach": {
+      "Ability1": "致盲閃光",
+      "Ability2": "震動斷層",
+      "Grenade": "餘震打擊",
+      "Ultimate": "撼地轟雷"
+    },
+    "Deadlock": {
+      "Ability1": "聲波感測器",
+      "Grenade": "天羅地網",
+      "Ability2": "重力網",
+      "Ultimate": "在繭難逃"
+    },
+    "Tejo": {
+      "Ability2": "導引轟炸",
+      "Ability1": "限時快遞",
+      "Ultimate": "末日審判",
+      "Grenade": "匿蹤無人機"
+    },
+    "Raze": {
+      "Ability1": "爆破包",
+      "Ability2": "漆彩榴彈",
+      "Grenade": "爆破機器人",
+      "Ultimate": "掃興火炮"
+    },
+    "Chamber": {
+      "Ability2": "法式轉移",
+      "Grenade": "慢行特區",
+      "Ability1": "獵頭手槍",
+      "Ultimate": "浪漫狙殺"
+    },
+    "KAY/O": {
+      "Grenade": "碎片/絕殺",
+      "Ability1": "閃光/驅動",
+      "Ability2": "歸零/零點",
+      "Ultimate": "無效/指令"
+    },
+    "Skye": {
+      "Ability1": "開路狼鋒",
+      "Ability2": "引導之鷹",
+      "Grenade": "萌芽重生",
+      "Ultimate": "追獵精靈"
+    },
+    "Cypher": {
+      "Ability1": "網戰牢籠",
+      "Ability2": "監控攝影機",
+      "Grenade": "陷阱絆索",
+      "Ultimate": "神經駭客"
+    },
+    "Sova": {
+      "Ability1": "震波箭",
+      "Ability2": "偵察箭",
+      "Grenade": "夜梟無人機",
+      "Ultimate": "獵者之怒"
+    },
+    "Miks": {
+      "Grenade": "M脈衝",
+      "Ability2": "波形屏障",
+      "Ability1": "調和",
+      "Ultimate": "低音震盪"
+    },
+    "Killjoy": {
+      "Grenade": "奈米機器蟲",
+      "Ability1": "電偵追擊號",
+      "Ability2": "重火力砲塔",
+      "Ultimate": "全面封鎖"
+    },
+    "Harbor": {
+      "Ability1": "上古水牆",
+      "Grenade": "驚濤湧浪",
+      "Ability2": "防彈海灣",
+      "Ultimate": "湧泉審判"
+    },
+    "Vyse": {
+      "Ability1": "斷路鐵牆",
+      "Ability2": "弧光薔薇",
+      "Grenade": "荊棘鐵網",
+      "Ultimate": "叢棘盛開"
+    },
+    "Viper": {
+      "Ability1": "腐蝕毒霧",
+      "Ability2": "毒雲瘴壁",
+      "Grenade": "蛇咬毒液",
+      "Ultimate": "蝮蛇領域",
+      "Passive": "劇毒"
+    },
+    "Hush": {
+      "Ability1": "閃光彈",
+      "Ability2": "位移",
+      "Grenade": "流動",
+      "Ultimate": "懸浮",
+      "Passive": "念動力"
+    },
+    "Phoenix": {
+      "Grenade": "燃焰之牆",
+      "Ability1": "赤手烈焰",
+      "Ability2": "閃光曲球",
+      "Ultimate": "再來一局",
+      "Passive": "烈火治療"
+    },
+    "Veto": {
+      "Ability2": "攔截器",
+      "Grenade": "穿越之徑",
+      "Ultimate": "終極突變",
+      "Ability1": "鎖喉"
+    },
+    "Astra": {
+      "Ability1": "新星震盪",
+      "Ability2": "迷濛星雲",
+      "Grenade": "引力黑洞",
+      "Ultimate": "無垠星幕",
+      "Passive": "星體型態"
+    },
+    "Brimstone": {
+      "Grenade": "激勵信號",
+      "Ability1": "灼人燃彈",
+      "Ability2": "垂天煙幕",
+      "Ultimate": "衛星空襲"
+    },
+    "Iso": {
+      "Ability1": "削減",
+      "Ultimate": "決滅",
+      "Ability2": "雙源",
+      "Grenade": "應變",
+      "Passive": "專注"
+    },
+    "Clove": {
+      "Grenade": "精魂再生",
+      "Ability2": "瑰詭煙雲",
+      "Ultimate": "續命開關",
+      "Ability1": "驚奇干涉"
+    },
+    "Neon": {
+      "Ability2": "極速快檔",
+      "Ability1": "閃電傳導",
+      "Grenade": "加速電牆",
+      "Ultimate": "電能超載",
+      "Passive": "電量"
+    },
+    "Yoru": {
+      "Grenade": "聲東擊西",
+      "Ability1": "攻其不備",
+      "Ability2": "不請自來",
+      "Ultimate": "次元飄移"
+    },
+    "Waylay": {
+      "Ability2": "折射",
+      "Grenade": "浸染",
+      "Ability1": "光速",
+      "Ultimate": "聚合之道"
+    },
+    "Sage": {
+      "Ability1": "緩速靈球",
+      "Ability2": "治癒靈球",
+      "Grenade": "屏障靈球",
+      "Ultimate": "起死回生"
+    },
+    "Reyna": {
+      "Ability1": "生靈吞噬",
+      "Ability2": "銷魂解形",
+      "Grenade": "邪媚凝視",
+      "Ultimate": "無上女皇",
+      "Passive": "回魂生機"
+    },
+    "Omen": {
+      "Ability1": "夢魘侵襲",
+      "Ability2": "黑影籠罩",
+      "Grenade": "瞬步鬼影",
+      "Ultimate": "闇夜襲擊"
+    },
+    "Jett": {
+      "Ability1": "乘風飛躍",
+      "Ability2": "順風式",
+      "Grenade": "穿雲衝刺",
+      "Ultimate": "暴風旋刃",
+      "Passive": "飄風身法"
+    }
+  },
+  "maps": {
+    "abyss": "深窟幽境",
+    "ascent": "義境空島",
+    "bind": "劫境之地",
+    "breeze": "熱帶樂園",
+    "corrode": "晶蝕之地",
+    "fracture": "天漠之峽",
+    "haven": "遺落境地",
+    "icebox": "極地寒港",
+    "lotus": "蓮華古城",
+    "pearl": "深海遺珠",
+    "split": "雙塔迷城",
+    "sunset": "日落之城",
+    "summit": "頂峰亭閣"
+  },
+  "weapons": {
+    "classic": "制式手槍",
+    "shorty": "短管",
+    "frenzy": "狂弒",
+    "ghost": "鬼魅",
+    "bandit": "盜賊",
+    "sheriff": "神射",
+    "knife": "近戰武器",
+    "stinger": "刺針",
+    "spectre": "惡靈",
+    "bucky": "重砲",
+    "judge": "判官",
+    "bulldog": "鬥牛犬",
+    "guardian": "捍衛者",
+    "phantom": "幻象",
+    "vandal": "暴徒",
+    "warden": "守望者",
+    "marshal": "警長",
+    "outlaw": "逃犯",
+    "operator": "間諜",
+    "ares": "戰神",
+    "odin": "奧丁"
+  }
+}

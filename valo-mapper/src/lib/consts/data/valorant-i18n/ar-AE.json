@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "source": "valorant-api.com",
+    "generatedAt": "2026-11-22T06:39:16.225Z",
+    "riotClientVersion": "release-13.10-shipping-18-5893614",
+    "locales": [
+      "ar-AE",
+      "de-DE",
+      "en-US",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "id-ID",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "vi-VN",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "agents": {
+    "Gekko": {
+      "name": "غيكو",
+      "role": "مبادر"
+    },
+    "Fade": {
+      "name": "فايد",
+      "role": "مبادر"
+    },
+    "Breach": {
+      "name": "بريتش",
+      "role": "مبادر"
+    },
+    "Deadlock": {
+      "name": "ديدلوك",
+      "role": "حارس"
+    },
+    "Tejo": {
+      "name": "تيهو",
+      "role": "مبادر"
+    },
+    "Raze": {
+      "name": "رايز",
+      "role": "مبارز"
+    },
+    "Chamber": {
+      "name": "تشامبر",
+      "role": "حارس"
+    },
+    "KAY/O": {
+      "name": "كاي/أو",
+      "role": "مبادر"
+    },
+    "Skye": {
+      "name": "سكاي",
+      "role": "مبادر"
+    },
+    "Cypher": {
+      "name": "سايفر",
+      "role": "حارس"
+    },
+    "Sova": {
+      "name": "سوفا",
+      "role": "مبادر"
+    },
+    "Miks": {
+      "name": "ميكس",
+      "role": "متحكم"
+    },
+    "Killjoy": {
+      "name": "كيلجوي",
+      "role": "حارس"
+    },
+    "Harbor": {
+      "name": "هاربور",
+      "role": "متحكم"
+    },
+    "Vyse": {
+      "name": "فايس",
+      "role": "حارس"
+    },
+    "Viper": {
+      "name": "فايبر",
+      "role": "متحكم"
+    },
+    "Hush": {
+      "name": "هاش",
+      "role": "مبارز"
+    },
+    "Phoenix": {
+      "name": "فينيكس",
+      "role": "مبارز"
+    },
+    "Veto": {
+      "name": "فيتو",
+      "role": "حارس"
+    },
+    "Astra": {
+      "name": "أسترا",
+      "role": "متحكم"
+    },
+    "Brimstone": {
+      "name": "بريمستون",
+      "role": "متحكم"
+    },
+    "Iso": {
+      "name": "آيسو",
+      "role": "مبارز"
+    },
+    "Clove": {
+      "name": "كلوف",
+      "role": "متحكم"
+    },
+    "Neon": {
+      "name": "نيون",
+      "role": "مبارز"
+    },
+    "Yoru": {
+      "name": "يورو",
+      "role": "مبارز"
+    },
+    "Waylay": {
+      "name": "وايلاي",
+      "role": "مبارز"
+    },
+    "Sage": {
+      "name": "سايج",
+      "role": "حارس"
+    },
+    "Reyna": {
+      "name": "ريينا",
+      "role": "مبارز"
+    },
+    "Omen": {
+      "name": "أومن",
+      "role": "متحكم"
+    },
+    "Jett": {
+      "name": "جيت",
+      "role": "مبارز"
+    }
+  },
+  "roles": {
+    "Initiator": "مبادر",
+    "Sentinel": "حارس",
+    "Duelist": "مبارز",
+    "Controller": "متحكم"
+  },
+  "abilities": {
+    "Gekko": {
+      "Ability1": "وينغمان",
+      "Ability2": "ديزي",
+      "Grenade": "جحيم موش",
+      "Ultimate": "ثراش",
+      "Passive": "كريّة"
+    },
+    "Fade": {
+      "Ability1": "تقييد",
+      "Ability2": "الشبح",
+      "Grenade": "المتصيّد",
+      "Ultimate": "حلول الليل",
+      "Passive": "آثار الرعب"
+    },
+    "Breach": {
+      "Ability1": "نقطة الوميض",
+      "Ability2": "الصدع المزلزل",
+      "Grenade": "الصدمة الارتدادية",
+      "Ultimate": "الرعد الهادر"
+    },
+    "Deadlock": {
+      "Ability1": "لاقط الصوت",
+      "Grenade": "شبكة الحاجز",
+      "Ability2": "شبكة الجاذبية",
+      "Ultimate": "الإبادة"
+    },
+    "Tejo": {
+      "Ability2": "الوابل الموجّه",
+      "Ability1": "طرد خاص",
+      "Ultimate": "المعركة الفاصلة",
+      "Grenade": "الدرون الشبحية"
+    },
+    "Raze": {
+      "Ability1": "العبوة الناسفة",
+      "Ability2": "القنابل اللونية",
+      "Grenade": "الروبوت المتفجر",
+      "Ultimate": "قاذفة الصواريخ"
+    },
+    "Chamber": {
+      "Ability2": "الموعد",
+      "Grenade": "السمة المميزة",
+      "Ability1": "صياد الرؤوس",
+      "Ultimate": "ضربة معلم"
+    },
+    "KAY/O": {
+      "Grenade": "الشظـ/ـية",
+      "Ability1": "فلاش/درايف",
+      "Ability2": "نقطة/الصفر",
+      "Ultimate": "أمر/الإلغاء"
+    },
+    "Skye": {
+      "Ability1": "فاتح الطريق",
+      "Ability2": "الضوء المرشد",
+      "Grenade": "تجدد النمو",
+      "Ultimate": "الملاحقون"
+    },
+    "Cypher": {
+      "Ability1": "المصيدة الإلكترونية",
+      "Ability2": "كاميرا التجسس",
+      "Grenade": "سلك التفجير",
+      "Ultimate": "السرقة العصبية"
+    },
+    "Sova": {
+      "Ability1": "السهم الصاعق",
+      "Ability2": "سهم الاستطلاع",
+      "Grenade": "درون البومة",
+      "Ultimate": "غضب الصياد"
+    },
+    "Miks": {
+      "Grenade": "النبضة المدوّية",
+      "Ability2": "هيئة الموجة",
+      "Ability1": "التناغم",
+      "Ultimate": "زلزال البيس"
+    },
+    "Killjoy": {
+      "Grenade": "سرب نانو",
+      "Ability1": "روبوت الإنذار",
+      "Ability2": "المدفع",
+      "Ultimate": "أداة التثبيت"
+    },
+    "Harbor": {
+      "Ability1": "المد العالي",
+      "Grenade": "الموجة العاصفة",
+      "Ability2": "الخليج",
+      "Ultimate": "تصفية الحساب"
+    },
+    "Vyse": {
+      "Ability1": "المقص",
+      "Ability2": "الوردة الكهربائية",
+      "Grenade": "الأشواك الحادة",
+      "Ultimate": "الحديقة الفولاذية"
+    },
+    "Viper": {
+      "Ability1": "السحابة السامة",
+      "Ability2": "الجدار السام",
+      "Grenade": "لدغة الأفعى",
+      "Ultimate": "جحر الأفعى",
+      "Passive": "السم"
+    },
+    "Hush": {
+      "Ability1": "المصباح الضوئي",
+      "Ability2": "الإزاحة",
+      "Grenade": "التدفق",
+      "Ultimate": "التعليق",
+      "Passive": "التحريك الذهني"
+    },
+    "Phoenix": {
+      "Grenade": "اللهيب",
+      "Ability1": "اليد الساخنة",
+      "Ability2": "الكرة المقوسة",
+      "Ultimate": "العودة إلى الخلف",
+      "Passive": "النار الكامنة"
+    },
+    "Veto": {
+      "Ability2": "جهاز الاعتراض",
+      "Grenade": "الصدع العرضي",
+      "Ultimate": "التطور",
+      "Ability1": "القبضة المحكمة"
+    },
+    "Astra": {
+      "Ability1": "النبضة النجمية",
+      "Ability2": "السديم",
+      "Grenade": "بئر الجاذبية",
+      "Ultimate": "الفجوة الكونية",
+      "Passive": "الهيئة الفضائية"
+    },
+    "Brimstone": {
+      "Grenade": "المحفز اللاسلكي",
+      "Ability1": "القنبلة الحارقة",
+      "Ability2": "دخان السماء",
+      "Ultimate": "الضربة المدارية"
+    },
+    "Iso": {
+      "Ability1": "التقويض",
+      "Ultimate": "مبارزة العالم الموازي",
+      "Ability2": "الإطلاق المزدوج",
+      "Grenade": "إجراء احتياطي",
+      "Passive": "التركيز"
+    },
+    "Clove": {
+      "Grenade": "جرعة منعشة",
+      "Ability2": "الحيلة",
+      "Ultimate": "مراوغة الموت",
+      "Ability1": "تطفّل"
+    },
+    "Neon": {
+      "Ability2": "معدات السرعة",
+      "Ability1": "صاعقة المرحّل",
+      "Grenade": "المسلك السريع",
+      "Ultimate": "السرعة المفرطة",
+      "Passive": "البطارية"
+    },
+    "Yoru": {
+      "Grenade": "النسخة المزيفة",
+      "Ability1": "النقطة العمياء",
+      "Ability2": "الاقتحام",
+      "Ultimate": "الصدع البُعدي"
+    },
+    "Waylay": {
+      "Ability2": "انكسار الضوء",
+      "Grenade": "الإشباع البصري",
+      "Ability1": "سرعة الضوء",
+      "Ultimate": "تلاقي الدروب"
+    },
+    "Sage": {
+      "Ability1": "بلورة الإبطاء",
+      "Ability2": "البلورة الشافية",
+      "Grenade": "بلورة الحاجز",
+      "Ultimate": "الإحياء"
+    },
+    "Reyna": {
+      "Ability1": "الافتراس",
+      "Ability2": "الانعزال",
+      "Grenade": "النظرة الماكرة",
+      "Ultimate": "الإمبراطورة",
+      "Passive": "الحيوية"
+    },
+    "Omen": {
+      "Ability1": "بارانويا",
+      "Ability2": "الغطاء المظلم",
+      "Grenade": "السير عبر الظلال",
+      "Ultimate": "من طيات الظلام"
+    },
+    "Jett": {
+      "Ability1": "التيار الصاعد",
+      "Ability2": "الرياح الدافعة",
+      "Grenade": "الانفجار السحابي",
+      "Ultimate": "عاصفة النصال",
+      "Passive": "تحليق"
+    }
+  },
+  "maps": {
+    "abyss": "آبيس",
+    "ascent": "أسينت",
+    "bind": "بايند",
+    "breeze": "بريز",
+    "corrode": "كورود",
+    "fracture": "فراكتشر",
+    "haven": "هايفن",
+    "icebox": "آيس بوكس",
+    "lotus": "لوتس",
+    "pearl": "بيرل",
+    "split": "سبليت",
+    "sunset": "سَنسِت",
+    "summit": "ساميت"
+  },
+  "weapons": {
+    "classic": "كلاسيك",
+    "shorty": "شورتي",
+    "frenzy": "فرينزي",
+    "ghost": "غوست",
+    "bandit": "بانديت",
+    "sheriff": "شيريف",
+    "knife": "سلاح يدوي",
+    "stinger": "ستينغر",
+    "spectre": "سبيكتر",
+    "bucky": "باكي",
+    "judge": "جادج",
+    "bulldog": "بولدوغ",
+    "guardian": "غارديان",
+    "phantom": "فانتوم",
+    "vandal": "فاندال",
+    "warden": "واردن",
+    "marshal": "مارشال",
+    "outlaw": "آوت لاو",
+    "operator": "أوبيريتور",
+    "ares": "آريز",
+    "odin": "أودين"
+  }
+}

@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "source": "valorant-api.com",
+    "generatedAt": "2026-11-22T06:39:16.225Z",
+    "riotClientVersion": "release-13.10-shipping-18-5893614",
+    "locales": [
+      "ar-AE",
+      "de-DE",
+      "en-US",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "id-ID",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "vi-VN",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "agents": {
+    "Gekko": {
+      "name": "Gekko",
+      "role": "Khởi tranh"
+    },
+    "Fade": {
+      "name": "Fade",
+      "role": "Khởi tranh"
+    },
+    "Breach": {
+      "name": "Breach",
+      "role": "Khởi tranh"
+    },
+    "Deadlock": {
+      "name": "Deadlock",
+      "role": "Hộ vệ"
+    },
+    "Tejo": {
+      "name": "Tejo",
+      "role": "Khởi tranh"
+    },
+    "Raze": {
+      "name": "Raze",
+      "role": "Đối đầu"
+    },
+    "Chamber": {
+      "name": "Chamber",
+      "role": "Hộ vệ"
+    },
+    "KAY/O": {
+      "name": "KAY/O",
+      "role": "Khởi tranh"
+    },
+    "Skye": {
+      "name": "Skye",
+      "role": "Khởi tranh"
+    },
+    "Cypher": {
+      "name": "Cypher",
+      "role": "Hộ vệ"
+    },
+    "Sova": {
+      "name": "Sova",
+      "role": "Khởi tranh"
+    },
+    "Miks": {
+      "name": "Miks",
+      "role": "Kiểm soát"
+    },
+    "Killjoy": {
+      "name": "Killjoy",
+      "role": "Hộ vệ"
+    },
+    "Harbor": {
+      "name": "Harbor",
+      "role": "Kiểm soát"
+    },
+    "Vyse": {
+      "name": "Vyse",
+      "role": "Hộ vệ"
+    },
+    "Viper": {
+      "name": "Viper",
+      "role": "Kiểm soát"
+    },
+    "Hush": {
+      "name": "Hush",
+      "role": "Đối đầu"
+    },
+    "Phoenix": {
+      "name": "Phoenix",
+      "role": "Đối đầu"
+    },
+    "Veto": {
+      "name": "Veto",
+      "role": "Hộ vệ"
+    },
+    "Astra": {
+      "name": "Astra",
+      "role": "Kiểm soát"
+    },
+    "Brimstone": {
+      "name": "Brimstone",
+      "role": "Kiểm soát"
+    },
+    "Iso": {
+      "name": "Iso",
+      "role": "Đối đầu"
+    },
+    "Clove": {
+      "name": "Clove",
+      "role": "Kiểm soát"
+    },
+    "Neon": {
+      "name": "Neon",
+      "role": "Đối đầu"
+    },
+    "Yoru": {
+      "name": "Yoru",
+      "role": "Đối đầu"
+    },
+    "Waylay": {
+      "name": "Waylay",
+      "role": "Đối đầu"
+    },
+    "Sage": {
+      "name": "Sage",
+      "role": "Hộ vệ"
+    },
+    "Reyna": {
+      "name": "Reyna",
+      "role": "Đối đầu"
+    },
+    "Omen": {
+      "name": "Omen",
+      "role": "Kiểm soát"
+    },
+    "Jett": {
+      "name": "Jett",
+      "role": "Đối đầu"
+    }
+  },
+  "roles": {
+    "Initiator": "Khởi tranh",
+    "Sentinel": "Hộ vệ",
+    "Duelist": "Đối đầu",
+    "Controller": "Kiểm soát"
+  },
+  "abilities": {
+    "Gekko": {
+      "Ability1": "Wingman",
+      "Ability2": "Dizzy",
+      "Grenade": "Bãi Mìn Của Mosh",
+      "Ultimate": "Thrash",
+      "Passive": "Tiểu Thể"
+    },
+    "Fade": {
+      "Ability1": "Bẫy Ác Mộng",
+      "Ability2": "Mắt Quỷ",
+      "Grenade": "Dạ Quỷ",
+      "Ultimate": "Bóng Đêm Bao Trùm",
+      "Passive": "Dấu Vết Kinh Hoàng"
+    },
+    "Breach": {
+      "Ability1": "Điểm Sáng",
+      "Ability2": "Địa Chấn",
+      "Grenade": "Dư Chấn",
+      "Ultimate": "Đại Địa Chấn"
+    },
+    "Deadlock": {
+      "Ability1": "Cảm Biến Siêu Thanh",
+      "Grenade": "Lưới Chướng Ngại",
+      "Ability2": "Lưới Trọng Lực",
+      "Ultimate": "Tuyệt Diệt"
+    },
+    "Tejo": {
+      "Ability2": "Tên Lửa Tìm Đường",
+      "Ability1": "Gói Hàng Đặc Biệt",
+      "Ultimate": "Đòn Quyết Định",
+      "Grenade": "Drone Tàng Hình"
+    },
+    "Raze": {
+      "Ability1": "Gói Chất Nổ",
+      "Ability2": "Lựu Đạn Liên Hoàn",
+      "Grenade": "Robot Bộc Phá",
+      "Ultimate": "Tên Lửa Hạ Màn"
+    },
+    "Chamber": {
+      "Ability2": "Điểm Dịch Chuyển",
+      "Grenade": "Điểm Đánh Dấu",
+      "Ability1": "Kẻ Săn Đầu Người",
+      "Ultimate": "Tour De Force"
+    },
+    "KAY/O": {
+      "Grenade": "LỰU ĐẠN/nổ",
+      "Ability1": "LỰU ĐẠN/mù",
+      "Ability2": "VÔ/hiệu",
+      "Ultimate": "NULL/cmd"
+    },
+    "Skye": {
+      "Ability1": "Theo Dấu",
+      "Ability2": "Ánh Sáng Dẫn Đường",
+      "Grenade": "Bừng Sức Sống",
+      "Ultimate": "Tinh Linh Dò Đường"
+    },
+    "Cypher": {
+      "Ability1": "Lồng Công Nghệ",
+      "Ability2": "Máy Quay Mật Thám",
+      "Grenade": "Bẫy Công Nghệ",
+      "Ultimate": "Truy Lùng Ký Ức"
+    },
+    "Sova": {
+      "Ability1": "Sốc Điện",
+      "Ability2": "Tên Do Thám",
+      "Grenade": "Drone Do Thám",
+      "Ultimate": "Thợ Săn Cuồng Nộ"
+    },
+    "Miks": {
+      "Grenade": "Xung Lực",
+      "Ability2": "Dạng Sóng",
+      "Ability1": "Hòa Âm",
+      "Ultimate": "Âm Chấn"
+    },
+    "Killjoy": {
+      "Grenade": "Bom Nano",
+      "Ability1": "Robot Báo Động",
+      "Ability2": "Trụ Súng",
+      "Ultimate": "Cầm Chân"
+    },
+    "Harbor": {
+      "Ability1": "Thủy Triều Dâng Trào",
+      "Grenade": "Bão Tố Nổi Dậy",
+      "Ability2": "Thủy Khiên",
+      "Ultimate": "Thủy Nộ"
+    },
+    "Vyse": {
+      "Ability1": "Tường Thép",
+      "Ability2": "Hoa Thép",
+      "Grenade": "Bẫy Thép",
+      "Ultimate": "Vườn Thép Gai"
+    },
+    "Viper": {
+      "Ability1": "Cầu Hóa Chất",
+      "Ability2": "Tường Hóa Chất",
+      "Grenade": "Bẫy Hóa Chất",
+      "Ultimate": "Hang Xà",
+      "Passive": "Độc Tố"
+    },
+    "Hush": {
+      "Ability1": "Đèn Nháy",
+      "Ability2": "Chuyển Dời",
+      "Grenade": "Lưu Chuyển",
+      "Ultimate": "Không Trọng Lực",
+      "Passive": "Siêu Năng Ngoại Cảm"
+    },
+    "Phoenix": {
+      "Grenade": "Tường Lửa",
+      "Ability1": "Cầu Lửa",
+      "Ability2": "Cầu Choáng",
+      "Ultimate": "Tái Sinh",
+      "Passive": "Nội Hỏa"
+    },
+    "Veto": {
+      "Ability2": "Đánh Chặn",
+      "Grenade": "Lối Tắt",
+      "Ultimate": "Tiến Hóa",
+      "Ability1": "Khóa Cứng"
+    },
+    "Astra": {
+      "Ability1": "Xung Nhịp Tân Tinh",
+      "Ability2": "Tinh Vân",
+      "Grenade": "Cầu Trọng Lực",
+      "Ultimate": "Phân Chia Vũ Trụ",
+      "Passive": "Thể Tinh Vân"
+    },
+    "Brimstone": {
+      "Grenade": "Cường Hóa Hỏa Lực",
+      "Ability1": "Lựu Đạn Lửa",
+      "Ability2": "Bom Hỏa Mù",
+      "Ultimate": "Bão Laser Không Kích"
+    },
+    "Iso": {
+      "Ability1": "Xuyên Tâm",
+      "Ultimate": "Giao Kèo Chết Chóc",
+      "Ability2": "Truy Kích",
+      "Grenade": "Ứng Biến",
+      "Passive": "Tập Trung"
+    },
+    "Clove": {
+      "Grenade": "Hấp Thụ Sinh Lực",
+      "Ability2": "Bịp Bợm",
+      "Ultimate": "Bất Diệt",
+      "Ability1": "Nhúng Chàm"
+    },
+    "Neon": {
+      "Ability2": "Gài Số Tiến",
+      "Ability1": "Tia Chớp Nảy",
+      "Grenade": "Năng Lượng Cao Thế",
+      "Ultimate": "Quá Tải",
+      "Passive": "Pin"
+    },
+    "Yoru": {
+      "Grenade": "Đánh Lạc Hướng",
+      "Ability1": "Điểm Mù",
+      "Ability2": "Cổng Không Gian",
+      "Ultimate": "Dịch Chuyển Không Gian"
+    },
+    "Waylay": {
+      "Ability2": "Khúc Xạ",
+      "Grenade": "Bão Hòa",
+      "Ability1": "Tốc Độ Ánh Sáng",
+      "Ultimate": "Đích Đến Cuối Cùng"
+    },
+    "Sage": {
+      "Ability1": "Băng Cầu Rạn Vỡ",
+      "Ability2": "Cầu Hồi Phục",
+      "Grenade": "Tường Băng Bảo Hộ",
+      "Ultimate": "Hồi Sinh"
+    },
+    "Reyna": {
+      "Ability1": "Nuốt chửng",
+      "Ability2": "Vô ảnh",
+      "Grenade": "Ánh Nhìn Hư Không",
+      "Ultimate": "Nữ Hoàng",
+      "Passive": "Sinh Lực"
+    },
+    "Omen": {
+      "Ability1": "Hoang Tưởng",
+      "Ability2": "Bóng Tối Bao Trùm",
+      "Grenade": "Biến Ảnh",
+      "Ultimate": "Tan Vào Hư Vô"
+    },
+    "Jett": {
+      "Ability1": "Tùy Phong",
+      "Ability2": "Thuận Phong",
+      "Grenade": "Vân Nộ",
+      "Ultimate": "Bạo Vũ Cuồng Phong",
+      "Passive": "Lướt"
+    }
+  },
+  "maps": {
+    "abyss": "Abyss",
+    "ascent": "Ascent",
+    "bind": "Bind",
+    "breeze": "Breeze",
+    "corrode": "Corrode",
+    "fracture": "Fracture",
+    "haven": "Haven",
+    "icebox": "Icebox",
+    "lotus": "Lotus",
+    "pearl": "Pearl",
+    "split": "Split",
+    "sunset": "Sunset",
+    "summit": "Summit"
+  },
+  "weapons": {
+    "classic": "Classic",
+    "shorty": "Shorty",
+    "frenzy": "Frenzy",
+    "ghost": "Ghost",
+    "bandit": "Bandit",
+    "sheriff": "Sheriff",
+    "knife": "Cận Chiến",
+    "stinger": "Stinger",
+    "spectre": "Spectre",
+    "bucky": "Bucky",
+    "judge": "Judge",
+    "bulldog": "Bulldog",
+    "guardian": "Guardian",
+    "phantom": "Phantom",
+    "vandal": "Vandal",
+    "warden": "Warden",
+    "marshal": "Marshal",
+    "outlaw": "Outlaw",
+    "operator": "Operator",
+    "ares": "Ares",
+    "odin": "Odin"
+  }
+}

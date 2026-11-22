@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "source": "valorant-api.com",
+    "generatedAt": "2026-11-22T06:39:16.225Z",
+    "riotClientVersion": "release-13.10-shipping-18-5893614",
+    "locales": [
+      "ar-AE",
+      "de-DE",
+      "en-US",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "id-ID",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "vi-VN",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "agents": {
+    "Gekko": {
+      "name": "GEKKO",
+      "role": "Öncü"
+    },
+    "Fade": {
+      "name": "FADE",
+      "role": "Öncü"
+    },
+    "Breach": {
+      "name": "BREACH",
+      "role": "Öncü"
+    },
+    "Deadlock": {
+      "name": "DEADLOCK",
+      "role": "Gözcü"
+    },
+    "Tejo": {
+      "name": "TEJO",
+      "role": "Öncü"
+    },
+    "Raze": {
+      "name": "RAZE",
+      "role": "Düellocu"
+    },
+    "Chamber": {
+      "name": "CHAMBER",
+      "role": "Gözcü"
+    },
+    "KAY/O": {
+      "name": "KAY/O",
+      "role": "Öncü"
+    },
+    "Skye": {
+      "name": "SKYE",
+      "role": "Öncü"
+    },
+    "Cypher": {
+      "name": "CYPHER",
+      "role": "Gözcü"
+    },
+    "Sova": {
+      "name": "SOVA",
+      "role": "Öncü"
+    },
+    "Miks": {
+      "name": "MIKS",
+      "role": "Kontrol Uzmanı"
+    },
+    "Killjoy": {
+      "name": "KILLJOY",
+      "role": "Gözcü"
+    },
+    "Harbor": {
+      "name": "HARBOR",
+      "role": "Kontrol Uzmanı"
+    },
+    "Vyse": {
+      "name": "VYSE",
+      "role": "Gözcü"
+    },
+    "Viper": {
+      "name": "VIPER",
+      "role": "Kontrol Uzmanı"
+    },
+    "Hush": {
+      "name": "HUSH",
+      "role": "Düellocu"
+    },
+    "Phoenix": {
+      "name": "PHOENIX",
+      "role": "Düellocu"
+    },
+    "Veto": {
+      "name": "VETO",
+      "role": "Gözcü"
+    },
+    "Astra": {
+      "name": "ASTRA",
+      "role": "Kontrol Uzmanı"
+    },
+    "Brimstone": {
+      "name": "BRIMSTONE",
+      "role": "Kontrol Uzmanı"
+    },
+    "Iso": {
+      "name": "ISO",
+      "role": "Düellocu"
+    },
+    "Clove": {
+      "name": "CLOVE",
+      "role": "Kontrol Uzmanı"
+    },
+    "Neon": {
+      "name": "NEON",
+      "role": "Düellocu"
+    },
+    "Yoru": {
+      "name": "YORU",
+      "role": "Düellocu"
+    },
+    "Waylay": {
+      "name": "WAYLAY",
+      "role": "Düellocu"
+    },
+    "Sage": {
+      "name": "SAGE",
+      "role": "Gözcü"
+    },
+    "Reyna": {
+      "name": "REYNA",
+      "role": "Düellocu"
+    },
+    "Omen": {
+      "name": "OMEN",
+      "role": "Kontrol Uzmanı"
+    },
+    "Jett": {
+      "name": "JETT",
+      "role": "Düellocu"
+    }
+  },
+  "roles": {
+    "Initiator": "Öncü",
+    "Sentinel": "Gözcü",
+    "Duelist": "Düellocu",
+    "Controller": "Kontrol Uzmanı"
+  },
+  "abilities": {
+    "Gekko": {
+      "Ability1": "KANKUŞ",
+      "Ability2": "ŞAŞKIN",
+      "Grenade": "POFUDUK TARLASI",
+      "Ultimate": "ZORBA",
+      "Passive": "KÜRE"
+    },
+    "Fade": {
+      "Ability1": "MIHLA",
+      "Ability2": "MUSALLAT",
+      "Grenade": "ECEL",
+      "Ultimate": "GECE KARANLIĞI",
+      "Passive": "DEHŞET İZLERİ"
+    },
+    "Breach": {
+      "Ability1": "GÖZ KAMAŞTIRAN",
+      "Ability2": "FAY HATTI",
+      "Grenade": "ARTÇI SARSINTI",
+      "Ultimate": "ZELZELE"
+    },
+    "Deadlock": {
+      "Ability1": "SONİK SENSÖR",
+      "Grenade": "BARİYER AĞI",
+      "Ability2": "NANOÇEKİM",
+      "Ultimate": "KISKIVRAK"
+    },
+    "Tejo": {
+      "Ability2": "GÜDÜMLÜ SALVO",
+      "Ability1": "ÖZEL TESLİMAT",
+      "Ultimate": "KIYAMET",
+      "Grenade": "GİZLİ DRON"
+    },
+    "Raze": {
+      "Ability1": "PATLAYICI ÇANTA",
+      "Ability2": "RENK TESİRLİ BOMBA",
+      "Grenade": "BOMBOT",
+      "Ultimate": "NEFES KESEN"
+    },
+    "Chamber": {
+      "Ability2": "BULUŞMA",
+      "Grenade": "KARTVİZİT",
+      "Ability1": "KELLE AVCISI",
+      "Ultimate": "KESKİN TARZ"
+    },
+    "KAY/O": {
+      "Grenade": "PARÇA/Tesirli",
+      "Ability1": "FLAŞ/Bellek",
+      "Ability2": "SIFIR/Noktası",
+      "Ultimate": "İPTAL/Komut"
+    },
+    "Skye": {
+      "Ability1": "AV PEŞİNDE",
+      "Ability2": "KILAVUZ IŞIK",
+      "Grenade": "DOĞANIN ŞİFASI",
+      "Ultimate": "İZSÜRENLER"
+    },
+    "Cypher": {
+      "Ability1": "SİBER KAFES",
+      "Ability2": "GİZLİ KAMERA",
+      "Grenade": "BUBİ TUZAĞI",
+      "Ultimate": "NÖRON HIRSIZI"
+    },
+    "Sova": {
+      "Ability1": "ŞOK OKU",
+      "Ability2": "KEŞİF OKU",
+      "Grenade": "BAYKUŞ DRON",
+      "Ultimate": "AVCININ HİDDETİ"
+    },
+    "Miks": {
+      "Grenade": "M PATLAMASI",
+      "Ability2": "DALGA FORMU",
+      "Ability1": "ARMONİ",
+      "Ultimate": "BAS DEPREMİ"
+    },
+    "Killjoy": {
+      "Grenade": "NANOSÜRÜ",
+      "Ability1": "ALARM BOTU",
+      "Ability2": "TARET",
+      "Ultimate": "TECRİT"
+    },
+    "Harbor": {
+      "Ability1": "TAŞKIN",
+      "Grenade": "FIRTINA AKINI",
+      "Ability2": "DALGAKIRAN",
+      "Ultimate": "KAYNAMA NOKTASI"
+    },
+    "Vyse": {
+      "Ability1": "DİKENLİ ÇİT",
+      "Ability2": "ARK GÜLÜ",
+      "Grenade": "KESKİN SARMAŞIK",
+      "Ultimate": "ÇELİK BAHÇESİ"
+    },
+    "Viper": {
+      "Ability1": "ZEHİR BULUTU",
+      "Ability2": "ZEHİR PERDESİ",
+      "Grenade": "ASİT HAVUZU",
+      "Ultimate": "VIPER'IN İNİ",
+      "Passive": "Zehir"
+    },
+    "Hush": {
+      "Ability1": "FLAŞ PARILTISI",
+      "Ability2": "YERİNDEN ET",
+      "Grenade": "UÇUŞ",
+      "Ultimate": "ASILI KAL",
+      "Passive": "Telekinezi"
+    },
+    "Phoenix": {
+      "Grenade": "ATEŞTEN DUVAR",
+      "Ability1": "YAKAR TOP",
+      "Ability2": "FALSO",
+      "Ultimate": "YAKARDÖNER",
+      "Passive": "İçsel Ateş"
+    },
+    "Veto": {
+      "Ability2": "TEHDİTSAVAR",
+      "Grenade": "GERİ SAR",
+      "Ultimate": "EVRİM",
+      "Ability1": "DARBOĞAZ"
+    },
+    "Astra": {
+      "Ability1": "NOVA DARBESİ",
+      "Ability2": "YILDIZ BULUTU",
+      "Grenade": "ÇEKİM ALANI",
+      "Ultimate": "KOZMİK AYRIM",
+      "Passive": "ASTRAL YOLCU"
+    },
+    "Brimstone": {
+      "Grenade": "KUVVET İŞARETİ",
+      "Ability1": "YAKICI",
+      "Ability2": "DUMANLI HAVA SAHASI",
+      "Ultimate": "UYDU SALDIRISI"
+    },
+    "Iso": {
+      "Ability1": "GAREZ",
+      "Ultimate": "KİRALIK KATİL",
+      "Ability2": "ÇELİK İRADE",
+      "Grenade": "B PLANI",
+      "Passive": "ODAKLANMA"
+    },
+    "Clove": {
+      "Grenade": "DİNÇLEŞTİRİCİ ÖZÜT",
+      "Ability2": "KATAKULLİ",
+      "Ultimate": "DAHA ÖLMEDİK",
+      "Ability1": "İŞGÜZAR"
+    },
+    "Neon": {
+      "Ability2": "YÜKSEK DEVİR",
+      "Ability1": "ELEKTRO OK",
+      "Grenade": "HIZ ŞERİDİ",
+      "Ultimate": "ENERJİ PATLAMASI",
+      "Passive": "PİL"
+    },
+    "Yoru": {
+      "Grenade": "FAKE AT",
+      "Ability1": "KÖR NOKTA",
+      "Ability2": "ÇATKAPI",
+      "Ultimate": "BOYUTLARARASI GEÇİŞ"
+    },
+    "Waylay": {
+      "Ability2": "KIRILMA",
+      "Grenade": "TUTULMA",
+      "Ability1": "IŞIK HIZI",
+      "Ultimate": "YAKINSAYAN IŞINLAR"
+    },
+    "Sage": {
+      "Ability1": "YAVAŞLATAN KÜRE",
+      "Ability2": "CAN KÜRESİ",
+      "Grenade": "BARİYER KÜRESİ",
+      "Ultimate": "DİRİLİŞ"
+    },
+    "Reyna": {
+      "Ability1": "SÖMÜR",
+      "Ability2": "AZLET",
+      "Grenade": "KEM GÖZ",
+      "Ultimate": "İMPARATORİÇE",
+      "Passive": "Canlılık"
+    },
+    "Omen": {
+      "Ability1": "PARANOYA",
+      "Ability2": "KARANLIK ÖRTÜ",
+      "Grenade": "GİZLİ ADIM",
+      "Ultimate": "GÖLGELERİN İÇİNDEN"
+    },
+    "Jett": {
+      "Ability1": "HAFİFLE",
+      "Ability2": "RÜZGÂR GİBİ",
+      "Grenade": "DUMAN BULUTU",
+      "Ultimate": "KESKİN FIRTINA",
+      "Passive": "SÜZÜL"
+    }
+  },
+  "maps": {
+    "abyss": "ABYSS",
+    "ascent": "ASCENT",
+    "bind": "BIND",
+    "breeze": "BREEZE",
+    "corrode": "CORRODE",
+    "fracture": "FRACTURE",
+    "haven": "HAVEN",
+    "icebox": "ICEBOX",
+    "lotus": "LOTUS",
+    "pearl": "PEARL",
+    "split": "SPLIT",
+    "sunset": "SUNSET",
+    "summit": "SUMMIT"
+  },
+  "weapons": {
+    "classic": "CLASSIC",
+    "shorty": "SHORTY",
+    "frenzy": "FRENZY",
+    "ghost": "GHOST",
+    "bandit": "BANDIT",
+    "sheriff": "SHERIFF",
+    "knife": "YAKIN DÖVÜŞ SİLAHI",
+    "stinger": "STINGER",
+    "spectre": "SPECTRE",
+    "bucky": "BUCKY",
+    "judge": "JUDGE",
+    "bulldog": "BULLDOG",
+    "guardian": "GUARDIAN",
+    "phantom": "PHANTOM",
+    "vandal": "VANDAL",
+    "warden": "WARDEN",
+    "marshal": "MARSHAL",
+    "outlaw": "OUTLAW",
+    "operator": "OPERATOR",
+    "ares": "ARES",
+    "odin": "ODIN"
+  }
+}

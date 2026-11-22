@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "source": "valorant-api.com",
+    "generatedAt": "2026-11-22T06:39:16.225Z",
+    "riotClientVersion": "release-13.10-shipping-18-5893614",
+    "locales": [
+      "ar-AE",
+      "de-DE",
+      "en-US",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "id-ID",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "vi-VN",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "agents": {
+    "Gekko": {
+      "name": "Gekko",
+      "role": "Зачинщик"
+    },
+    "Fade": {
+      "name": "Fade",
+      "role": "Зачинщик"
+    },
+    "Breach": {
+      "name": "Breach",
+      "role": "Зачинщик"
+    },
+    "Deadlock": {
+      "name": "Deadlock",
+      "role": "Страж"
+    },
+    "Tejo": {
+      "name": "Tejo",
+      "role": "Зачинщик"
+    },
+    "Raze": {
+      "name": "Raze",
+      "role": "Дуэлянт"
+    },
+    "Chamber": {
+      "name": "Chamber",
+      "role": "Страж"
+    },
+    "KAY/O": {
+      "name": "KAY/O",
+      "role": "Зачинщик"
+    },
+    "Skye": {
+      "name": "Skye",
+      "role": "Зачинщик"
+    },
+    "Cypher": {
+      "name": "Cypher",
+      "role": "Страж"
+    },
+    "Sova": {
+      "name": "Sova",
+      "role": "Зачинщик"
+    },
+    "Miks": {
+      "name": "Miks",
+      "role": "Специалист"
+    },
+    "Killjoy": {
+      "name": "Killjoy",
+      "role": "Страж"
+    },
+    "Harbor": {
+      "name": "Harbor",
+      "role": "Специалист"
+    },
+    "Vyse": {
+      "name": "Vyse",
+      "role": "Страж"
+    },
+    "Viper": {
+      "name": "Viper",
+      "role": "Специалист"
+    },
+    "Hush": {
+      "name": "Hush",
+      "role": "Дуэлянт"
+    },
+    "Phoenix": {
+      "name": "Phoenix",
+      "role": "Дуэлянт"
+    },
+    "Veto": {
+      "name": "Veto",
+      "role": "Страж"
+    },
+    "Astra": {
+      "name": "Astra",
+      "role": "Специалист"
+    },
+    "Brimstone": {
+      "name": "Brimstone",
+      "role": "Специалист"
+    },
+    "Iso": {
+      "name": "Iso",
+      "role": "Дуэлянт"
+    },
+    "Clove": {
+      "name": "Clove",
+      "role": "Специалист"
+    },
+    "Neon": {
+      "name": "Neon",
+      "role": "Дуэлянт"
+    },
+    "Yoru": {
+      "name": "Yoru",
+      "role": "Дуэлянт"
+    },
+    "Waylay": {
+      "name": "Waylay",
+      "role": "Дуэлянт"
+    },
+    "Sage": {
+      "name": "Sage",
+      "role": "Страж"
+    },
+    "Reyna": {
+      "name": "Reyna",
+      "role": "Дуэлянт"
+    },
+    "Omen": {
+      "name": "Omen",
+      "role": "Специалист"
+    },
+    "Jett": {
+      "name": "Jett",
+      "role": "Дуэлянт"
+    }
+  },
+  "roles": {
+    "Initiator": "Зачинщик",
+    "Sentinel": "Страж",
+    "Duelist": "Дуэлянт",
+    "Controller": "Специалист"
+  },
+  "abilities": {
+    "Gekko": {
+      "Ability1": "Бегун",
+      "Ability2": "Клякса",
+      "Grenade": "Тыдыщ",
+      "Ultimate": "Бабах",
+      "Passive": "Протосфера"
+    },
+    "Fade": {
+      "Ability1": "Захват",
+      "Ability2": "Призрак",
+      "Grenade": "Хищник",
+      "Ultimate": "Тьма",
+      "Passive": "Следы ужаса"
+    },
+    "Breach": {
+      "Ability1": "Ослепляющий заряд",
+      "Ability2": "Трещина",
+      "Grenade": "Пробивной удар",
+      "Ultimate": "Раскат грома"
+    },
+    "Deadlock": {
+      "Ability1": "Звуковой сенсор",
+      "Grenade": "Барьерная сеть",
+      "Ability2": "Гравинет",
+      "Ultimate": "Аннигиляция"
+    },
+    "Tejo": {
+      "Ability2": "Управляемый залп",
+      "Ability1": "Спецпоставка",
+      "Ultimate": "Армагеддон",
+      "Grenade": "Стелс-дрон"
+    },
+    "Raze": {
+      "Ability1": "Взрывной ранец",
+      "Ability2": "Кассетная граната",
+      "Grenade": "Бомботрон",
+      "Ultimate": "Гасим свечи!"
+    },
+    "Chamber": {
+      "Ability2": "Рандеву",
+      "Grenade": "Коронный прием",
+      "Ability1": "Охотник за головами",
+      "Ultimate": "Демонстрация силы"
+    },
+    "KAY/O": {
+      "Grenade": "ФРАГ/мент",
+      "Ability1": "СВЕТ/овая граната",
+      "Ability2": "ЭПИ/центр",
+      "Ultimate": "NULL/cmd"
+    },
+    "Skye": {
+      "Ability1": "Следопыт",
+      "Ability2": "Путеводный свет",
+      "Grenade": "Новая поросль",
+      "Ultimate": "Ищейки"
+    },
+    "Cypher": {
+      "Ability1": "Киберклетка",
+      "Ability2": "Камера",
+      "Grenade": "Растяжка",
+      "Ultimate": "Нейрокража"
+    },
+    "Sova": {
+      "Ability1": "Шоковая стрела",
+      "Ability2": "Разведстрела",
+      "Grenade": "Дрон-сова",
+      "Ultimate": "Гнев охотника"
+    },
+    "Miks": {
+      "Grenade": "М-пульс",
+      "Ability2": "Дым-машина",
+      "Ability1": "Созвучие",
+      "Ultimate": "Басовый удар"
+    },
+    "Killjoy": {
+      "Grenade": "Нанорой",
+      "Ability1": "Тревогобот",
+      "Ability2": "ТУРЕЛЬ",
+      "Ultimate": "Блокировка"
+    },
+    "Harbor": {
+      "Ability1": "Гребень волны",
+      "Grenade": "Водоворот",
+      "Ability2": "Залив",
+      "Ultimate": "Расчет курса"
+    },
+    "Vyse": {
+      "Ability1": "Замуровка",
+      "Ability2": "Дуговая роза",
+      "Grenade": "Острая лоза",
+      "Ultimate": "Стальной сад"
+    },
+    "Viper": {
+      "Ability1": "Ядовитое облако",
+      "Ability2": "Токсичная завеса",
+      "Grenade": "Змеиный укус",
+      "Ultimate": "Гнездо гадюки",
+      "Passive": "Токсин"
+    },
+    "Hush": {
+      "Ability1": "Ослепляющая колба",
+      "Ability2": "Движущая сила",
+      "Grenade": "Парение",
+      "Ultimate": "Подвешивание",
+      "Passive": "Телекинез"
+    },
+    "Phoenix": {
+      "Grenade": "Пекло",
+      "Ability1": "Горячие руки",
+      "Ability2": "Крученая подача",
+      "Ultimate": "Возврат",
+      "Passive": "Внутренний огонь"
+    },
+    "Veto": {
+      "Ability2": "Перехватчик",
+      "Grenade": "Связка",
+      "Ultimate": "Эволюция",
+      "Ability1": "Удушение"
+    },
+    "Astra": {
+      "Ability1": "Взрыв сверхновой",
+      "Ability2": "Туманность",
+      "Grenade": "Гравитационный колодец",
+      "Ultimate": "Пространственный разлом",
+      "Passive": "Астральная форма"
+    },
+    "Brimstone": {
+      "Grenade": "Маячок-стимулятор",
+      "Ability1": "Зажигательная граната",
+      "Ability2": "Небесный дым",
+      "Ultimate": "Орбитальный удар"
+    },
+    "Iso": {
+      "Ability1": "Дестабилизация",
+      "Ultimate": "Контракт на убийство",
+      "Ability2": "Контрольный выстрел",
+      "Grenade": "Особая ситуация",
+      "Passive": "Фокус"
+    },
+    "Clove": {
+      "Grenade": "Подпитка",
+      "Ability2": "Уловка",
+      "Ultimate": "Рано помирать",
+      "Ability1": "Вмешательство"
+    },
+    "Neon": {
+      "Ability2": "Повышенная скорость",
+      "Ability1": "Прыгающий снаряд",
+      "Grenade": "Защитный туннель",
+      "Ultimate": "На полную мощь",
+      "Passive": "Аккумулятор"
+    },
+    "Yoru": {
+      "Grenade": "Приманка",
+      "Ability1": "Ошеломление",
+      "Ability2": "Незваный гость",
+      "Ultimate": "Пространственный\nдрифт"
+    },
+    "Waylay": {
+      "Ability2": "Рефракция",
+      "Grenade": "Световое загрязнение",
+      "Ability1": "Скорость света",
+      "Ultimate": "Схождение"
+    },
+    "Sage": {
+      "Ability1": "Сфера замедления",
+      "Ability2": "Сфера лечения",
+      "Grenade": "Сфера барьера",
+      "Ultimate": "Воскрешение"
+    },
+    "Reyna": {
+      "Ability1": "Поглощение",
+      "Ability2": "Изгнание",
+      "Grenade": "Злобный взгляд",
+      "Ultimate": "Императрица",
+      "Passive": "Живучесть"
+    },
+    "Omen": {
+      "Ability1": "Паранойя",
+      "Ability2": "Темный покров",
+      "Grenade": "Скрытый шаг",
+      "Ultimate": "Из тени"
+    },
+    "Jett": {
+      "Ability1": "Подъем",
+      "Ability2": "Попутный ветер",
+      "Grenade": "Вихрь",
+      "Ultimate": "Буря клинков",
+      "Passive": "Смещение"
+    }
+  },
+  "maps": {
+    "abyss": "Abyss",
+    "ascent": "Ascent",
+    "bind": "Bind",
+    "breeze": "Breeze",
+    "corrode": "Corrode",
+    "fracture": "Fracture",
+    "haven": "Haven",
+    "icebox": "Icebox",
+    "lotus": "Lotus",
+    "pearl": "Pearl",
+    "split": "Split",
+    "sunset": "Sunset",
+    "summit": "Summit"
+  },
+  "weapons": {
+    "classic": "Classic",
+    "shorty": "Shorty",
+    "frenzy": "Frenzy",
+    "ghost": "Ghost",
+    "bandit": "Bandit",
+    "sheriff": "Sheriff",
+    "knife": "Холодное оружие",
+    "stinger": "Stinger",
+    "spectre": "Spectre",
+    "bucky": "Bucky",
+    "judge": "Judge",
+    "bulldog": "Bulldog",
+    "guardian": "Guardian",
+    "phantom": "Phantom",
+    "vandal": "Vandal",
+    "warden": "Warden",
+    "marshal": "Marshal",
+    "outlaw": "Outlaw",
+    "operator": "Operator",
+    "ares": "Ares",
+    "odin": "Odin"
+  }
+}

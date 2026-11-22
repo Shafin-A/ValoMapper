@@ -1,0 +1,385 @@
+{
+  "_meta": {
+    "source": "valorant-api.com",
+    "generatedAt": "2026-11-22T06:39:16.225Z",
+    "riotClientVersion": "release-13.10-shipping-18-5893614",
+    "locales": [
+      "ar-AE",
+      "de-DE",
+      "en-US",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "id-ID",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "vi-VN",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "agents": {
+    "Gekko": {
+      "name": "盖可",
+      "role": "先锋"
+    },
+    "Fade": {
+      "name": "黑梦",
+      "role": "先锋"
+    },
+    "Breach": {
+      "name": "铁臂",
+      "role": "先锋"
+    },
+    "Deadlock": {
+      "name": "钢锁",
+      "role": "哨卫"
+    },
+    "Tejo": {
+      "name": "钛狐",
+      "role": "先锋"
+    },
+    "Raze": {
+      "name": "雷兹",
+      "role": "决斗"
+    },
+    "Chamber": {
+      "name": "尚勃勒",
+      "role": "哨卫"
+    },
+    "KAY/O": {
+      "name": "K/O",
+      "role": "先锋"
+    },
+    "Skye": {
+      "name": "斯凯",
+      "role": "先锋"
+    },
+    "Cypher": {
+      "name": "零",
+      "role": "哨卫"
+    },
+    "Sova": {
+      "name": "猎枭",
+      "role": "先锋"
+    },
+    "Miks": {
+      "name": "迷核",
+      "role": "控场"
+    },
+    "Killjoy": {
+      "name": "奇乐",
+      "role": "哨卫"
+    },
+    "Harbor": {
+      "name": "海神",
+      "role": "控场"
+    },
+    "Vyse": {
+      "name": "维斯",
+      "role": "哨卫"
+    },
+    "Viper": {
+      "name": "蝰蛇",
+      "role": "控场"
+    },
+    "Hush": {
+      "name": "遐思",
+      "role": "决斗"
+    },
+    "Phoenix": {
+      "name": "不死鸟",
+      "role": "决斗"
+    },
+    "Veto": {
+      "name": "禁灭",
+      "role": "哨卫"
+    },
+    "Astra": {
+      "name": "星礈",
+      "role": "控场"
+    },
+    "Brimstone": {
+      "name": "炼狱",
+      "role": "控场"
+    },
+    "Iso": {
+      "name": "壹决",
+      "role": "决斗"
+    },
+    "Clove": {
+      "name": "暮蝶",
+      "role": "控场"
+    },
+    "Neon": {
+      "name": "霓虹",
+      "role": "决斗"
+    },
+    "Yoru": {
+      "name": "夜露",
+      "role": "决斗"
+    },
+    "Waylay": {
+      "name": "幻棱",
+      "role": "决斗"
+    },
+    "Sage": {
+      "name": "贤者",
+      "role": "哨卫"
+    },
+    "Reyna": {
+      "name": "芮娜",
+      "role": "决斗"
+    },
+    "Omen": {
+      "name": "幽影",
+      "role": "控场"
+    },
+    "Jett": {
+      "name": "捷风",
+      "role": "决斗"
+    }
+  },
+  "roles": {
+    "Initiator": "先锋",
+    "Sentinel": "哨卫",
+    "Duelist": "决斗",
+    "Controller": "控场"
+  },
+  "abilities": {
+    "Gekko": {
+      "Ability1": "顽皮搭档",
+      "Ability2": "炫晕光波",
+      "Grenade": "嗨爆全场",
+      "Ultimate": "无敌超鲨",
+      "Passive": "球体回收"
+    },
+    "Fade": {
+      "Ability1": "幽爪",
+      "Ability2": "诡眼",
+      "Grenade": "黯兽",
+      "Ultimate": "夜临",
+      "Passive": "魇迹"
+    },
+    "Breach": {
+      "Ability1": "闪点爆破",
+      "Ability2": "山崩地陷",
+      "Grenade": "剧震余波",
+      "Ultimate": "惊雷卷地"
+    },
+    "Deadlock": {
+      "Ability1": "声感陷阱",
+      "Grenade": "阻域屏障",
+      "Ability2": "重力捕网",
+      "Ultimate": "断魂索道"
+    },
+    "Tejo": {
+      "Ability2": "精准投放",
+      "Ability1": "特快专递",
+      "Ultimate": "末日审判",
+      "Grenade": "潜袭爬虫"
+    },
+    "Raze": {
+      "Ability1": "惊喜翻腾",
+      "Ability2": "彩雷飞溅",
+      "Grenade": "花车巡游",
+      "Ultimate": "晚安焰火"
+    },
+    "Chamber": {
+      "Ability2": "闪转自如",
+      "Grenade": "贵宾限行",
+      "Ability1": "金牌猎头",
+      "Ultimate": "孤高火力"
+    },
+    "KAY/O": {
+      "Grenade": "碎片溢出",
+      "Ability1": "闪存过载",
+      "Ability2": "零点嗅探",
+      "Ultimate": "无效命令"
+    },
+    "Skye": {
+      "Ability1": "辟林之虎",
+      "Ability2": "引路之隼",
+      "Grenade": "愈生之息",
+      "Ultimate": "追猎之灵"
+    },
+    "Cypher": {
+      "Ability1": "赛博囚笼",
+      "Ability2": "战术监控",
+      "Grenade": "震慑绊线",
+      "Ultimate": "神经取析"
+    },
+    "Sova": {
+      "Ability1": "雷击箭",
+      "Ability2": "寻敌箭",
+      "Grenade": "枭型无人机",
+      "Ultimate": "狂猎之怒"
+    },
+    "Miks": {
+      "Grenade": "电音脉冲",
+      "Ability2": "声波帷幕",
+      "Ability1": "共振谐律",
+      "Ultimate": "音脉强袭"
+    },
+    "Killjoy": {
+      "Grenade": "纳米蜂群",
+      "Ability1": "自动哨兵",
+      "Ability2": "哨戒炮台",
+      "Ultimate": "全面封锁"
+    },
+    "Harbor": {
+      "Ability1": "狂潮",
+      "Grenade": "乱涌",
+      "Ability2": "海盾",
+      "Ultimate": "怒涛"
+    },
+    "Vyse": {
+      "Ability1": "裁断",
+      "Ability2": "弧光玫瑰",
+      "Grenade": "剃刀藤蔓",
+      "Ultimate": "铁棘禁园"
+    },
+    "Viper": {
+      "Ability1": "瘴云",
+      "Ability2": "毒幕",
+      "Grenade": "蛇吻",
+      "Ultimate": "蝰腹",
+      "Passive": "虺毒"
+    },
+    "Hush": {
+      "Ability1": "灵光一念",
+      "Ability2": "念落星移",
+      "Grenade": "身随念动",
+      "Ultimate": "万念皆空",
+      "Passive": "念力"
+    },
+    "Phoenix": {
+      "Grenade": "火冒三丈",
+      "Ability1": "火热手感",
+      "Ability2": "闪光曲球",
+      "Ultimate": "再火一回",
+      "Passive": "心火不熄"
+    },
+    "Veto": {
+      "Ability2": "噬源体",
+      "Grenade": "涡流折跃",
+      "Ultimate": "完全进化",
+      "Ability1": "裂变残片"
+    },
+    "Astra": {
+      "Ability1": "新星脉冲",
+      "Ability2": "星云",
+      "Grenade": "重力之阱",
+      "Ultimate": "宇宙分裂",
+      "Passive": "星界形态"
+    },
+    "Brimstone": {
+      "Grenade": "振奋信标",
+      "Ability1": "燃烧榴弹",
+      "Ability2": "空投烟幕",
+      "Ultimate": "天基光束"
+    },
+    "Iso": {
+      "Ability1": "稳态剥离",
+      "Ultimate": "决斗通牒",
+      "Ability2": "战斗心流",
+      "Grenade": "绝对屏障",
+      "Passive": "战斗心流"
+    },
+    "Clove": {
+      "Grenade": "虹吸",
+      "Ability2": "霞染",
+      "Ultimate": "化蝶",
+      "Ability1": "整蛊"
+    },
+    "Neon": {
+      "Ability2": "充能疾驰",
+      "Ability1": "闪电弹球",
+      "Grenade": "高速通道",
+      "Ultimate": "超限暴走",
+      "Passive": "蓄能电芯"
+    },
+    "Yoru": {
+      "Grenade": "出其不意",
+      "Ability1": "攻其不备",
+      "Ability2": "不请自来",
+      "Ultimate": "神鬼不觉"
+    },
+    "Waylay": {
+      "Ability2": "溯流回光",
+      "Grenade": "光棱闪爆",
+      "Ability1": "光速飞跃",
+      "Ultimate": "时光修罗场"
+    },
+    "Sage": {
+      "Ability1": "薄冰",
+      "Ability2": "逢春",
+      "Grenade": "玉城",
+      "Ultimate": "再起"
+    },
+    "Reyna": {
+      "Ability1": "噬尽",
+      "Ability2": "逐散",
+      "Grenade": "睥睨",
+      "Ultimate": "女皇旨令",
+      "Passive": "魂息"
+    },
+    "Omen": {
+      "Ability1": "暗魇",
+      "Ability2": "黑瘴",
+      "Grenade": "践影",
+      "Ultimate": "离魂"
+    },
+    "Jett": {
+      "Ability1": "凌空",
+      "Ability2": "逐风",
+      "Grenade": "瞬云",
+      "Ultimate": "飓刃",
+      "Passive": "飘移"
+    }
+  },
+  "maps": {
+    "abyss": "幽邃地窟",
+    "ascent": "亚海悬城",
+    "bind": "源工重镇",
+    "breeze": "微风岛屿",
+    "corrode": "盐海矿镇",
+    "fracture": "裂变峡谷",
+    "haven": "隐世修所",
+    "icebox": "森寒冬港",
+    "lotus": "莲华古城",
+    "pearl": "深海明珠",
+    "split": "霓虹町",
+    "sunset": "日落之城",
+    "summit": "天枢云阙"
+  },
+  "weapons": {
+    "classic": "标配",
+    "shorty": "短炮",
+    "frenzy": "狂怒",
+    "ghost": "鬼魅",
+    "bandit": "追猎",
+    "sheriff": "正义",
+    "knife": "近战武器",
+    "stinger": "蜂刺",
+    "spectre": "骇灵",
+    "bucky": "雄鹿",
+    "judge": "判官",
+    "bulldog": "獠犬",
+    "guardian": "戍卫",
+    "phantom": "幻影",
+    "vandal": "狂徒",
+    "warden": "悍狼",
+    "marshal": "飞将",
+    "outlaw": "莽侠",
+    "operator": "冥驹",
+    "ares": "战神",
+    "odin": "奥丁"
+  }
+}

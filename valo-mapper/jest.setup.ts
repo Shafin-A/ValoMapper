@@ -7,6 +7,9 @@ import {
   TransformStream,
 } from "node:stream/web";
 import { TextDecoder, TextEncoder } from "node:util";
+import enUSMessages from "./src/i18n/messages/en-US.json";
+
+const mockEnUSMessages = enUSMessages;
 
 // jsdom lacks the stream/encoding globals the demo loader uses.
 if (typeof globalThis.ReadableStream === "undefined") {
@@ -195,6 +198,7 @@ jest.mock("next/navigation", () => ({
     push: jest.fn(),
     replace: jest.fn(),
     prefetch: jest.fn(),
+    refresh: jest.fn(),
     back: jest.fn(),
     pathname: "/",
     query: {},
@@ -204,6 +208,100 @@ jest.mock("next/navigation", () => ({
   usePathname: jest.fn(() => "/"),
   useSearchParams: jest.fn(() => new URLSearchParams()),
 }));
+
+// Resolve namespaces from en-US so existing tests keep asserting English copy.
+jest.mock("next-intl", () => {
+  const messages = mockEnUSMessages;
+
+  const resolvePath = (source: unknown, path: string): unknown =>
+    path.split(".").reduce<unknown>((value, part) => {
+      if (value && typeof value === "object") {
+        return (value as Record<string, unknown>)[part];
+      }
+      return undefined;
+    }, source);
+
+  const interpolate = (value: string, values?: Record<string, unknown>) =>
+    value.replace(/\{(\w+)\}/g, (match, name: string) => {
+      const replacement = values?.[name];
+      return replacement === undefined ? match : String(replacement);
+    });
+
+  // Production formatting is handled by next-intl; this only covers test forms.
+  const formatMessage = (
+    value: string,
+    values?: Record<string, unknown>,
+  ): string => {
+    const withPlurals = value.replace(
+      /\{(\w+),\s*plural,\s*([\s\S]*?)\}/g,
+      (match, key: string, body: string) => {
+        const count = Number(values?.[key] ?? 0);
+        const options = new Map<string, string>();
+        for (const option of body.matchAll(
+          /(zero|one|two|few|many|other)\s*\{([^{}]*)\}/g,
+        )) {
+          options.set(option[1], option[2]);
+        }
+
+        const branch =
+          count === 0 && options.has("zero")
+            ? options.get("zero")
+            : count === 1
+              ? options.get("one")
+              : options.get("other");
+        return (branch ?? match).replace(/#/g, String(count));
+      },
+    );
+
+    return interpolate(withPlurals, values);
+  };
+
+  type Translator = ((key: string, values?: Record<string, unknown>) => string) & {
+    raw: (key: string) => unknown;
+    has: (key: string) => boolean;
+    rich: Translator;
+    markup: Translator;
+  };
+
+  const translate = (namespace?: string): Translator => {
+    const translator = ((
+      key: string,
+      values?: Record<string, unknown>,
+    ): string => {
+      const fullKey = namespace ? `${namespace}.${key}` : key;
+      const value = resolvePath(messages, fullKey);
+      return typeof value === "string" ? formatMessage(value, values) : fullKey;
+    }) as Translator;
+
+    translator.raw = (key: string): unknown => {
+      const fullKey = namespace ? `${namespace}.${key}` : key;
+      return resolvePath(messages, fullKey);
+    };
+    translator.has = (key: string): boolean => {
+      const fullKey = namespace ? `${namespace}.${key}` : key;
+      return resolvePath(messages, fullKey) !== undefined;
+    };
+    translator.rich = translator;
+    translator.markup = translator;
+
+    return translator;
+  };
+
+  return {
+    NextIntlClientProvider: ({ children }: { children: React.ReactNode }) =>
+      children,
+    useTranslations: (namespace?: string) => translate(namespace),
+    useLocale: () => "en-US",
+    useFormatter: () => ({
+      dateTime: (value: Date | number, options?: Intl.DateTimeFormatOptions) =>
+        new Intl.DateTimeFormat("en-US", options).format(value),
+      number: (value: number, options?: Intl.NumberFormatOptions) =>
+        new Intl.NumberFormat("en-US", options).format(value),
+      relativeTime: (value: number, unit: Intl.RelativeTimeFormatUnit) =>
+        new Intl.RelativeTimeFormat("en-US").format(value, unit),
+    }),
+  };
+});
 
 // Mock Firebase
 jest.mock("firebase/auth", () => ({

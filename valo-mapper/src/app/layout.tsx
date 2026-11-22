@@ -8,6 +8,11 @@ import { SettingsProvider } from "@/contexts/settings-context";
 import { PenTapToClick } from "@/components/providers/pen-tap-to-click";
 import { ServiceWorkerRegistration } from "@/components/providers/service-worker-registration";
 import { FirebaseAuthProvider } from "@/hooks/use-firebase-auth";
+import { ValorantTermsProvider } from "@/contexts/valorant-terms-context";
+import { getValorantTerms } from "@/lib/i18n/valorant-terms-server";
+import { LOCALE_META, type Locale } from "@/i18n/config";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -65,13 +70,18 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const RootLayout = ({
+const RootLayout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
+  const locale = (await getLocale()) as Locale;
+  const messages = await getMessages();
+  const valorantTerms = await getValorantTerms(locale);
+  const localeMeta = LOCALE_META[locale] ?? LOCALE_META["en-US"];
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} dir={localeMeta.dir} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -81,30 +91,34 @@ const RootLayout = ({
         >
           Skip to main content
         </a>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          forcedTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <TooltipProvider>
-            <QueryProvider>
-              <FirebaseAuthProvider>
-                <SettingsProvider>
-                  <TourProviderWrapper>
-                    <NavigationHistoryProvider>
-                      <PenTapToClick />
-                      <ServiceWorkerRegistration />
-                      {children}
-                    </NavigationHistoryProvider>
-                    <Toaster richColors closeButton />
-                  </TourProviderWrapper>
-                </SettingsProvider>
-              </FirebaseAuthProvider>
-            </QueryProvider>
-          </TooltipProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ValorantTermsProvider terms={valorantTerms}>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              forcedTheme="dark"
+              enableSystem={false}
+              disableTransitionOnChange
+            >
+              <TooltipProvider>
+                <QueryProvider>
+                  <FirebaseAuthProvider>
+                    <SettingsProvider>
+                      <TourProviderWrapper>
+                        <NavigationHistoryProvider>
+                          <PenTapToClick />
+                          <ServiceWorkerRegistration />
+                          {children}
+                        </NavigationHistoryProvider>
+                        <Toaster richColors closeButton />
+                      </TourProviderWrapper>
+                    </SettingsProvider>
+                  </FirebaseAuthProvider>
+                </QueryProvider>
+              </TooltipProvider>
+            </ThemeProvider>
+          </ValorantTermsProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
