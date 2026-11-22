@@ -1,7 +1,11 @@
 import manifest from "@/app/manifest";
 
 describe("web app manifest", () => {
-  const appManifest = manifest();
+  let appManifest: Awaited<ReturnType<typeof manifest>>;
+
+  beforeAll(async () => {
+    appManifest = await manifest();
+  });
 
   it("is installable as a standalone app", () => {
     expect(appManifest.name).toBe("ValoMapper");
@@ -9,6 +13,7 @@ describe("web app manifest", () => {
     expect(appManifest.scope).toBe("/");
     expect(appManifest.display).toBe("standalone");
     expect(appManifest.theme_color).toBe("#0c0a09");
+    expect(appManifest.lang).toBe("en-US");
   });
 
   it("provides regular and maskable icons", () => {

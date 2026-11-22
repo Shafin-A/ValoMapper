@@ -1,18 +1,22 @@
 import type { MetadataRoute } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const locale = await getLocale();
+  const t = await getTranslations("metadata");
+
   return {
     id: "/",
     name: "ValoMapper",
     short_name: "ValoMapper",
-    description: "Create strategies and executes for VALORANT",
+    description: t("description"),
     start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "any",
     background_color: "#0c0a09",
     theme_color: "#0c0a09",
-    lang: "en",
+    lang: locale,
     categories: ["productivity", "games"],
     icons: [
       {

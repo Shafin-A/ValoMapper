@@ -49,6 +49,19 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/manifest.webmanifest",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store",
+          },
+          {
+            key: "Vary",
+            value: "Cookie, Accept-Language",
+          },
+        ],
+      },
     ];
   },
 };
