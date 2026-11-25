@@ -1,6 +1,7 @@
 package replay
 
 import (
+	"math"
 	"sort"
 )
 
@@ -143,4 +144,108 @@ func damageSubject(
 		}
 	}
 	return "", false
+}
+
+func buildHealthTimelineEvents(
+	scan *stateScan,
+	raw *fieldStateRows,
+	paths map[uint32]string,
+	outer map[uint32]uint32,
+	actors *stateActorView,
+	index *playerIndex,
+	builders map[string]*timelineBuilder,
+	itemSubjects map[uint32]string,
+) {
+	// Damage/heal elements are applied in (time, packet, index) order.
+	elements := make([]damageRow, 0, len(raw.Damage))
+	for key, element := range raw.Damage {
+		if !element.complete() {
+			scan.DamageIncomplete++
+			continue
+		}
+		elements = append(elements, damageRow{Key: key, Element: *element})
+	}
+	sort.Slice(elements, func(i, j int) bool {
+		a, b := &elements[i].Key, &elements[j].Key
+		if a.TimeMS != b.TimeMS {
+			return a.TimeMS < b.TimeMS
+		}
+		if a.PacketID != b.PacketID {
+			return a.PacketID < b.PacketID
+		}
+		return a.Index < b.Index
+	})
+
+	for i := range elements {
+		row := &elements[i]
+		kind := resolveSectionKind(paths[uint32(row.Element.Changed)])
+		switch kind {
+		case sectionUnknown:
+			scan.HPUnresolvedSection++
+			continue
+		case sectionIgnored:
+			continue
+		case sectionHealth:
+			subject, ok := index.subjectForPawn(row.Key.Actor)
+			if !ok {
+				scan.HPNonPlayer++
+				continue
+			}
+			builder := builders[subject]
+			if builder == nil {
+				scan.HPNonPlayer++
+				continue
+			}
+			scan.HPWrites++
+			if row.Element.Delta < 0 {
+				scan.Incoming = append(scan.Incoming, incomingWrite{
+					Subject: subject,
+					TimeMS:  row.Key.TimeMS,
+					Damage:  -row.Element.Delta,
+				})
+			}
+			hp := int(math.Round(row.Element.Result))
+			if hp < 0 {
+				hp = 0
+			}
+			if !row.Element.Alive {
+				scan.Deaths++
+			}
+			builder.add(stateEvent{
+				TimeMS:   row.Key.TimeMS,
+				PacketID: row.Key.PacketID,
+				Index:    row.Key.Index,
+				Kind:     eventHealth,
+				HP:       hp,
+				Alive:    row.Element.Alive,
+			})
+		case sectionArmour:
+			item, spec, ok := armourItemForSection(uint32(row.Element.Changed), outer, actors.ClassByActor)
+			if !ok {
+				scan.ArmorUnattributed++
+				continue
+			}
+			subject, owned := itemSubjects[item]
+			builder := builders[subject]
+			if !owned || builder == nil {
+				scan.ArmorUnattributed++
+				continue
+			}
+			points := int(math.Round(row.Element.Result))
+			if points < 0 {
+				points = 0
+			}
+			if points > spec.Points {
+				points = spec.Points
+			}
+			builder.add(stateEvent{
+				TimeMS:      row.Key.TimeMS,
+				PacketID:    row.Key.PacketID,
+				Index:       row.Key.Index,
+				Kind:        eventArmourDamage,
+				ArmorItem:   item,
+				ArmorPoints: points,
+			})
+		}
+	}
 }
