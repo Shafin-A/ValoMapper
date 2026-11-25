@@ -1,0 +1,9 @@
+export const DEFAULT_TEXT_COLOR = "#ffffff";
+export const TEXT_PLACEHOLDER_COLOR = "#52525b";
+export const TEXT_FONT_SIZE = 18;
+export const TEXT_FONT_FAMILY = "Arial";
+export const TEXT_LINE_HEIGHT = 1;
+export const TEXT_PADDING = 10;
+export const TEXT_MIN_HEIGHT = 60;
+export const TEXT_MIN_WIDTH = 100;
+export const TEXT_FONT_SIZE_OPTIONS = [12, 14, 16, 18, 20, 24, 28, 32, 40];
