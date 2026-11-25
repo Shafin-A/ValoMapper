@@ -25,8 +25,10 @@ import {
   PhaseState,
 } from "@/lib/types";
 import { debounce } from "@/lib/utils";
-import { enqueueCanvasPhaseSnapshot } from "@/lib/canvas-patches";
-import { MAX_DRAWLINE_POINTS } from "@/lib/consts/misc/consts";
+import {
+  enqueueCanvasPhaseSnapshot,
+  splitDrawLineIntoChunks,
+} from "@/lib/canvas-patches";
 
 const useCollaborativeCanvasActions = () => {
   const {
@@ -144,111 +146,125 @@ const useCollaborativeCanvasActions = () => {
     [isConnected, currentPhaseIndex, enqueueCanvasPatchEntry],
   );
 
-  const notifyAgentAdded = useCallback(
-    (agent: AgentCanvas) => {
-      notifyChange({
-        entity: "agent",
-        action: "add",
-        id: agent.id,
-        payload: agent,
-        broadcast: () => broadcastAgentAdded(agent, currentPhaseIndex),
-      });
-    },
-    [broadcastAgentAdded, currentPhaseIndex, notifyChange],
-  );
+  const entityNotifiers = useMemo(() => {
+    const notifyEntity = (
+      entity: string,
+      action: "add" | "update",
+      id: string,
+      payload: Record<string, unknown> | undefined,
+      broadcast: () => void,
+    ) => {
+      notifyChange({ entity, action, id, payload, broadcast });
+    };
+    const notifyRemoved = (
+      entity: string,
+      id: string,
+      broadcast: () => void,
+    ) => {
+      notifyChange({ entity, action: "remove", id, broadcast });
+    };
 
-  const notifyAgentMoved = useCallback(
-    (agent: AgentCanvas) => {
-      notifyChange({
-        entity: "agent",
-        action: "update",
-        id: agent.id,
-        payload: agent,
-        broadcast: () => broadcastAgentMoved(agent, currentPhaseIndex),
-      });
-    },
-    [broadcastAgentMoved, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyAgentRemoved = useCallback(
-    (id: string) => {
-      notifyChange({
-        entity: "agent",
-        action: "remove",
-        id,
-        broadcast: () => broadcastAgentRemoved(id, currentPhaseIndex),
-      });
-    },
-    [broadcastAgentRemoved, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyAbilityAdded = useCallback(
-    (ability: AbilityCanvas) => {
-      notifyChange({
-        entity: "ability",
-        action: "add",
-        id: ability.id,
-        payload: ability,
-        broadcast: () => broadcastAbilityAdded(ability, currentPhaseIndex),
-      });
-    },
-    [broadcastAbilityAdded, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyAbilityMoved = useCallback(
-    (ability: AbilityCanvas) => {
-      notifyChange({
-        entity: "ability",
-        action: "update",
-        id: ability.id,
-        payload: ability,
-        broadcast: () => broadcastAbilityMoved(ability, currentPhaseIndex),
-      });
-    },
-    [broadcastAbilityMoved, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyAbilityRemoved = useCallback(
-    (id: string) => {
-      notifyChange({
-        entity: "ability",
-        action: "remove",
-        id,
-        broadcast: () => broadcastAbilityRemoved(id, currentPhaseIndex),
-      });
-    },
-    [broadcastAbilityRemoved, currentPhaseIndex, notifyChange],
-  );
-
-  const splitDrawLineIntoChunks = (line: DrawLine): DrawLine[] => {
-    if (line.points.length <= MAX_DRAWLINE_POINTS) {
-      return [line];
-    }
-
-    const chunks: DrawLine[] = [];
-    const totalChunks = Math.ceil(line.points.length / MAX_DRAWLINE_POINTS);
-
-    for (let i = 0; i < totalChunks; i += 1) {
-      const start = i * MAX_DRAWLINE_POINTS;
-      const end = Math.min(start + MAX_DRAWLINE_POINTS, line.points.length);
-      const segmentPoints = [...line.points.slice(start, end)];
-
-      if (i > 0) {
-        segmentPoints.unshift(line.points[start - 1]);
-      }
-
-      chunks.push({
-        ...line,
-        id: `${line.id}-chunk-${i}`,
-        points: segmentPoints,
-        parentId: line.id,
-        chunkIndex: i,
-        totalChunks,
-      });
-    }
-
-    return chunks;
-  };
+    return {
+      notifyAgentAdded: (agent: AgentCanvas) =>
+        notifyEntity("agent", "add", agent.id, agent, () =>
+          broadcastAgentAdded(agent, currentPhaseIndex),
+        ),
+      notifyAgentMoved: (agent: AgentCanvas) =>
+        notifyEntity("agent", "update", agent.id, agent, () =>
+          broadcastAgentMoved(agent, currentPhaseIndex),
+        ),
+      notifyAgentRemoved: (id: string) =>
+        notifyRemoved("agent", id, () =>
+          broadcastAgentRemoved(id, currentPhaseIndex),
+        ),
+      notifyAbilityAdded: (ability: AbilityCanvas) =>
+        notifyEntity("ability", "add", ability.id, ability, () =>
+          broadcastAbilityAdded(ability, currentPhaseIndex),
+        ),
+      notifyAbilityMoved: (ability: AbilityCanvas) =>
+        notifyEntity("ability", "update", ability.id, ability, () =>
+          broadcastAbilityMoved(ability, currentPhaseIndex),
+        ),
+      notifyAbilityRemoved: (id: string) =>
+        notifyRemoved("ability", id, () =>
+          broadcastAbilityRemoved(id, currentPhaseIndex),
+        ),
+      notifyConnLineAdded: (line: ConnectingLine) =>
+        notifyEntity("connectingline", "add", line.id, line, () =>
+          broadcastConnLineAdded(line, currentPhaseIndex),
+        ),
+      notifyConnLineUpdated: (line: ConnectingLine) =>
+        notifyEntity("connectingline", "update", line.id, line, () =>
+          broadcastConnLineUpdated(line, currentPhaseIndex),
+        ),
+      notifyConnLineRemoved: (id: string) =>
+        notifyRemoved("connectingline", id, () =>
+          broadcastConnLineRemoved(id, currentPhaseIndex),
+        ),
+      notifyTextAdded: (text: TextCanvas) =>
+        notifyEntity("text", "add", text.id, text, () =>
+          broadcastTextAdded(text, currentPhaseIndex),
+        ),
+      notifyTextUpdated: (text: TextCanvas) =>
+        notifyEntity("text", "update", text.id, text, () =>
+          broadcastTextUpdated(text, currentPhaseIndex),
+        ),
+      notifyTextRemoved: (id: string) =>
+        notifyRemoved("text", id, () =>
+          broadcastTextRemoved(id, currentPhaseIndex),
+        ),
+      notifyImageAdded: (image: ImageCanvas) =>
+        notifyEntity("image", "add", image.id, image, () =>
+          broadcastImageAdded(image, currentPhaseIndex),
+        ),
+      notifyImageMoved: (image: ImageCanvas) =>
+        notifyEntity("image", "update", image.id, image, () =>
+          broadcastImageMoved(image, currentPhaseIndex),
+        ),
+      notifyImageUpdated: (image: ImageCanvas) =>
+        notifyEntity("image", "update", image.id, image, () =>
+          broadcastImageUpdated(image, currentPhaseIndex),
+        ),
+      notifyImageRemoved: (id: string) =>
+        notifyRemoved("image", id, () =>
+          broadcastImageRemoved(id, currentPhaseIndex),
+        ),
+      notifyToolIconAdded: (toolIcon: ToolIconCanvas) =>
+        notifyEntity("toolicon", "add", toolIcon.id, toolIcon, () =>
+          broadcastToolIconAdded(toolIcon, currentPhaseIndex),
+        ),
+      notifyToolIconMoved: (toolIcon: ToolIconCanvas) =>
+        notifyEntity("toolicon", "update", toolIcon.id, toolIcon, () =>
+          broadcastToolIconMoved(toolIcon, currentPhaseIndex),
+        ),
+      notifyToolIconRemoved: (id: string) =>
+        notifyRemoved("toolicon", id, () =>
+          broadcastToolIconRemoved(id, currentPhaseIndex),
+        ),
+    };
+  }, [
+    notifyChange,
+    currentPhaseIndex,
+    broadcastAgentAdded,
+    broadcastAgentMoved,
+    broadcastAgentRemoved,
+    broadcastAbilityAdded,
+    broadcastAbilityMoved,
+    broadcastAbilityRemoved,
+    broadcastConnLineAdded,
+    broadcastConnLineUpdated,
+    broadcastConnLineRemoved,
+    broadcastTextAdded,
+    broadcastTextUpdated,
+    broadcastTextRemoved,
+    broadcastImageAdded,
+    broadcastImageMoved,
+    broadcastImageUpdated,
+    broadcastImageRemoved,
+    broadcastToolIconAdded,
+    broadcastToolIconMoved,
+    broadcastToolIconRemoved,
+  ]);
 
   const notifyLineDrawn = useCallback(
     (line: DrawLine) => {
@@ -308,95 +324,6 @@ const useCollaborativeCanvasActions = () => {
     ],
   );
 
-  const notifyConnLineAdded = useCallback(
-    (line: ConnectingLine) => {
-      notifyChange({
-        entity: "connectingline",
-        action: "add",
-        id: line.id,
-        payload: line,
-        broadcast: () => broadcastConnLineAdded(line, currentPhaseIndex),
-      });
-    },
-    [broadcastConnLineAdded, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyConnLineUpdated = useCallback(
-    (line: ConnectingLine) => {
-      notifyChange({
-        entity: "connectingline",
-        action: "update",
-        id: line.id,
-        payload: line,
-        broadcast: () => broadcastConnLineUpdated(line, currentPhaseIndex),
-      });
-    },
-    [broadcastConnLineUpdated, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyConnLineRemoved = useCallback(
-    (id: string) => {
-      notifyChange({
-        entity: "connectingline",
-        action: "remove",
-        id,
-        broadcast: () => broadcastConnLineRemoved(id, currentPhaseIndex),
-      });
-    },
-    [broadcastConnLineRemoved, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyTextAdded = useCallback(
-    (text: TextCanvas) => {
-      notifyChange({
-        entity: "text",
-        action: "add",
-        id: text.id,
-        payload: text,
-        broadcast: () => broadcastTextAdded(text, currentPhaseIndex),
-      });
-    },
-    [broadcastTextAdded, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyTextUpdated = useCallback(
-    (text: TextCanvas) => {
-      notifyChange({
-        entity: "text",
-        action: "update",
-        id: text.id,
-        payload: text,
-        broadcast: () => broadcastTextUpdated(text, currentPhaseIndex),
-      });
-    },
-    [broadcastTextUpdated, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyTextRemoved = useCallback(
-    (id: string) => {
-      notifyChange({
-        entity: "text",
-        action: "remove",
-        id,
-        broadcast: () => broadcastTextRemoved(id, currentPhaseIndex),
-      });
-    },
-    [broadcastTextRemoved, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyImageAdded = useCallback(
-    (image: ImageCanvas) => {
-      notifyChange({
-        entity: "image",
-        action: "add",
-        id: image.id,
-        payload: image,
-        broadcast: () => broadcastImageAdded(image, currentPhaseIndex),
-      });
-    },
-    [broadcastImageAdded, currentPhaseIndex, notifyChange],
-  );
-
   const notifyFullSync = useCallback(() => {
     void flushCanvasPatch();
 
@@ -404,82 +331,6 @@ const useCollaborativeCanvasActions = () => {
       broadcastStateSync();
     }
   }, [isConnected, broadcastStateSync, flushCanvasPatch]);
-
-  const notifyImageMoved = useCallback(
-    (image: ImageCanvas) => {
-      notifyChange({
-        entity: "image",
-        action: "update",
-        id: image.id,
-        payload: image,
-        broadcast: () => broadcastImageMoved(image, currentPhaseIndex),
-      });
-    },
-    [broadcastImageMoved, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyImageUpdated = useCallback(
-    (image: ImageCanvas) => {
-      notifyChange({
-        entity: "image",
-        action: "update",
-        id: image.id,
-        payload: image,
-        broadcast: () => broadcastImageUpdated(image, currentPhaseIndex),
-      });
-    },
-    [broadcastImageUpdated, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyImageRemoved = useCallback(
-    (id: string) => {
-      notifyChange({
-        entity: "image",
-        action: "remove",
-        id,
-        broadcast: () => broadcastImageRemoved(id, currentPhaseIndex),
-      });
-    },
-    [broadcastImageRemoved, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyToolIconAdded = useCallback(
-    (toolIcon: ToolIconCanvas) => {
-      notifyChange({
-        entity: "toolicon",
-        action: "add",
-        id: toolIcon.id,
-        payload: toolIcon,
-        broadcast: () => broadcastToolIconAdded(toolIcon, currentPhaseIndex),
-      });
-    },
-    [broadcastToolIconAdded, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyToolIconMoved = useCallback(
-    (toolIcon: ToolIconCanvas) => {
-      notifyChange({
-        entity: "toolicon",
-        action: "update",
-        id: toolIcon.id,
-        payload: toolIcon,
-        broadcast: () => broadcastToolIconMoved(toolIcon, currentPhaseIndex),
-      });
-    },
-    [broadcastToolIconMoved, currentPhaseIndex, notifyChange],
-  );
-
-  const notifyToolIconRemoved = useCallback(
-    (id: string) => {
-      notifyChange({
-        entity: "toolicon",
-        action: "remove",
-        id,
-        broadcast: () => broadcastToolIconRemoved(id, currentPhaseIndex),
-      });
-    },
-    [broadcastToolIconRemoved, currentPhaseIndex, notifyChange],
-  );
 
   const sendAgentsSettingsUpdate = useMemo(
     () =>
@@ -701,27 +552,9 @@ const useCollaborativeCanvasActions = () => {
   return useMemo(
     () => ({
       isConnected,
-      notifyAgentAdded,
-      notifyAgentMoved,
-      notifyAgentRemoved,
-      notifyAbilityAdded,
-      notifyAbilityMoved,
-      notifyAbilityRemoved,
+      ...entityNotifiers,
       notifyLineDrawn,
       notifyLineRemoved,
-      notifyConnLineAdded,
-      notifyConnLineUpdated,
-      notifyConnLineRemoved,
-      notifyTextAdded,
-      notifyTextUpdated,
-      notifyTextRemoved,
-      notifyImageAdded,
-      notifyImageMoved,
-      notifyImageUpdated,
-      notifyImageRemoved,
-      notifyToolIconAdded,
-      notifyToolIconMoved,
-      notifyToolIconRemoved,
       notifyMapChanged,
       notifySideChanged,
       notifyPhaseChanged,
@@ -733,27 +566,9 @@ const useCollaborativeCanvasActions = () => {
     }),
     [
       isConnected,
-      notifyAgentAdded,
-      notifyAgentMoved,
-      notifyAgentRemoved,
-      notifyAbilityAdded,
-      notifyAbilityMoved,
-      notifyAbilityRemoved,
+      entityNotifiers,
       notifyLineDrawn,
       notifyLineRemoved,
-      notifyConnLineAdded,
-      notifyConnLineUpdated,
-      notifyConnLineRemoved,
-      notifyTextAdded,
-      notifyTextUpdated,
-      notifyTextRemoved,
-      notifyImageAdded,
-      notifyImageMoved,
-      notifyImageUpdated,
-      notifyImageRemoved,
-      notifyToolIconAdded,
-      notifyToolIconMoved,
-      notifyToolIconRemoved,
       notifyMapChanged,
       notifySideChanged,
       notifyPhaseChanged,

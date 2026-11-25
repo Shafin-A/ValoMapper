@@ -1,6 +1,37 @@
-import type { CanvasPatchEntry, PhaseState } from "@/lib/types";
+import type { CanvasPatchEntry, DrawLine, PhaseState } from "@/lib/types";
+import { MAX_DRAWLINE_POINTS } from "@/lib/consts/misc/consts";
 
 type EnqueueCanvasPatchEntry = (entry: CanvasPatchEntry) => void;
+
+export const splitDrawLineIntoChunks = (line: DrawLine): DrawLine[] => {
+  if (line.points.length <= MAX_DRAWLINE_POINTS) {
+    return [line];
+  }
+
+  const chunks: DrawLine[] = [];
+  const totalChunks = Math.ceil(line.points.length / MAX_DRAWLINE_POINTS);
+
+  for (let i = 0; i < totalChunks; i += 1) {
+    const start = i * MAX_DRAWLINE_POINTS;
+    const end = Math.min(start + MAX_DRAWLINE_POINTS, line.points.length);
+    const segmentPoints = [...line.points.slice(start, end)];
+
+    if (i > 0) {
+      segmentPoints.unshift(line.points[start - 1]);
+    }
+
+    chunks.push({
+      ...line,
+      id: `${line.id}-chunk-${i}`,
+      points: segmentPoints,
+      parentId: line.id,
+      chunkIndex: i,
+      totalChunks,
+    });
+  }
+
+  return chunks;
+};
 
 export const enqueueCanvasPhaseSnapshot = ({
   phase,
