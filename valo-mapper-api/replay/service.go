@@ -249,215 +249,64 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 	}
 	exportDuration := time.Since(exportStarted)
 
-	manifest, err := readManifest(exportDir)
-	if err != nil {
-		return nil, nil, 0, NewError(CodeCorrupt,
-			"The replay's manifest could not be read.", err)
+	sources, sourceErr := scanReplaySources(exportDir, s.config.FrameHz)
+	if sourceErr != nil {
+		return nil, nil, 0, sourceErr
 	}
-
-	warnings := newWarnings()
-	quality := manifest.Quality
-
-	if quality.ContentBlocksLost > 0 {
-		return nil, nil, 0, NewError(CodeCorrupt,
-			"The replay is missing decoded content blocks and cannot be trusted.", nil)
-	}
-	if len(manifest.Players) == 0 {
-		return nil, nil, 0, NewError(CodeTransformCheck,
-			"The replay did not identify any players.", nil)
-	}
-
-	mapInfo, ok := valorant.ResolveMap(manifest.levelPath())
-	if !ok {
-		return nil, nil, 0, NewError(CodeUnsupportedMap, "", nil)
-	}
-
-	if quality.EventLayoutMismatches > 0 {
-		warnings.add("Some game events had an unexpected layout and were skipped.")
-	}
-	if quality.EventPayloadUnknown > 0 {
-		warnings.add("Some game events used an unknown payload and were skipped.")
-	}
-
-	agents, agentWarnings := loadoutAgents(manifest.GameSpecificData)
-	warnings.addAll(agentWarnings)
-
-	index := newPlayerIndex(manifest)
-
-	fieldsStarted := time.Now()
-	fields, err := scanFields(exportDir)
-	if err != nil {
-		return nil, nil, 0, NewError(CodeCorrupt,
-			"The replay's field data could not be read.", err)
-	}
-	fieldsDuration := time.Since(fieldsStarted)
-	warnings.addAll(fields.TeamWarnings)
-
-	eventsStarted := time.Now()
-	events, err := scanEvents(exportDir)
-	if err != nil {
-		return nil, nil, 0, NewError(CodeCorrupt,
-			"The replay's event timeline could not be read.", err)
-	}
-	eventsDuration := time.Since(eventsStarted)
-	if events.Rows == 0 {
-		return nil, nil, 0, NewError(CodeTransformCheck,
-			"The replay contained no game events.", nil)
-	}
-	if len(events.Starts) == 0 {
-		return nil, nil, 0, NewError(CodeTransformCheck,
-			"The replay contained no round starts.", nil)
-	}
-	if events.KnownGroups == 0 {
-		return nil, nil, 0, NewError(CodeTransformCheck,
-			"The replay contained no events ValoMapper understands.", nil)
-	}
-
-	players, puuidBySubject, playerWarnings, playerErr := resolvePlayers(index, fields.Teams, agents)
-	if playerErr != nil {
-		return nil, nil, 0, playerErr
-	}
-	warnings.addAll(playerWarnings)
-
-	stateStarted := time.Now()
-	state, err := scanState(exportDir, index, &fields.State)
-	if err != nil {
-		return nil, nil, 0, NewError(CodeCorrupt,
-			"The replay's player state could not be read.", err)
-	}
-	stateDuration := time.Since(stateStarted)
-	warnings.addAll(state.Warnings)
-
-	windows, windowWarnings := buildRoundWindows(fields, events.Starts, manifest.DurationMS)
-	warnings.addAll(windowWarnings)
-	if len(windows) == 0 {
-		return nil, nil, 0, NewError(CodeTransformCheck,
-			"The replay contained no played rounds.", nil)
-	}
-	hasResult := false
-	for i := range windows {
-		if windows[i].HasResult {
-			hasResult = true
-			break
-		}
-	}
-	if !hasResult {
-		return nil, nil, 0, NewError(CodeTransformCheck,
-			"The replay's round results could not be decoded.", nil)
-	}
-
-	movementStarted := time.Now()
-	movement, err := scanMovement(exportDir, windows, index, s.config.FrameHz, state.Actors)
-	if err != nil {
-		return nil, nil, 0, NewError(CodeCorrupt,
-			"The replay's movement data could not be read.", err)
-	}
-	movementDuration := time.Since(movementStarted)
-	if transformErr := movement.transformCheckError(); transformErr != nil {
-		return nil, nil, 0, transformErr
-	}
+	manifest := sources.manifest
+	quality := sources.quality
+	warnings := sources.warnings
+	agents := sources.agents
+	index := sources.index
+	fields := sources.fields
+	events := sources.events
+	players := sources.players
+	puuidBySubject := sources.puuidBySubject
+	state := sources.state
+	windows := sources.windows
+	movement := sources.movement
+	mapInfo := sources.mapInfo
+	fieldsDuration := sources.fieldsDuration
+	eventsDuration := sources.eventsDuration
+	stateDuration := sources.stateDuration
+	movementDuration := sources.movementDuration
 
 	logs := buildRoundLogs(windows, players, index, events, fields, state, warnings)
 	applyRoundStats(windows, players, index, puuidBySubject, state, &fields.State, logs, warnings)
 	spike := buildSpikeTimeline(fields, state, index, windows, events, warnings)
-	utilitiesStarted := time.Now()
-	utilities, utilityWarnings, err := scanUtilities(
+	utilities, utilityWarnings, utilityCount, utilitiesDuration, utilityErr := scanReplayUtilities(
 		exportDir,
 		build,
 		manifest.DurationMS,
 		windows,
 		index,
 		puuidBySubject,
-		state.Outer,
-		fields.UtilityOwners,
-		fields.UtilityPaths,
-		fields.UtilityFuel,
-		fields.UtilityDestroy,
-		fields.UtilityActivation,
-	)
-	if err != nil {
-		return nil, nil, 0, NewError(CodeCorrupt,
-			"The replay's utility actor data could not be read.", err)
-	}
-	addSyntheticSovaUltimates(
-		utilities,
-		windows,
-		index,
-		puuidBySubject,
+		state,
+		fields,
 		agents,
 		movement,
-		fields,
-		state.Paths,
 	)
-	utilitiesDuration := time.Since(utilitiesStarted)
-	utilityCount := countUtilityIntervals(utilities)
+	if utilityErr != nil {
+		return nil, nil, 0, utilityErr
+	}
 
 	framesStarted := time.Now()
 	framesByRound, timeline := buildTimelineFrames(
 		players, puuidBySubject, windows, movement, state, logs, spike, warnings,
 	)
 
-	rounds := make([]Round, 0, len(windows))
-	for i := range windows {
-		window := &windows[i]
-		round := Round{
-			RoundNumber:     window.RoundNumber,
-			WinningTeam:     window.WinningTeam,
-			RoundResultCode: window.RoundResultCode,
-			ScoreAfterRound: window.Score,
-			AttackTeamID:    window.AttackTeamID,
-			DurationMS:      int(window.EndMS - window.StartMS),
-			Frames:          framesByRound[i],
-			Utilities:       utilities[i],
-		}
-
-		if window.BuyEndMS != nil && *window.BuyEndMS >= window.StartMS {
-			relative := int(*window.BuyEndMS - window.StartMS)
-			round.BuyEndTimeMS = &relative
-		}
-
-		if log := logs[window.RoundNumber]; log != nil {
-			round.EventLog = log.Events
-			round.Hits = log.Hits
-			round.PlayerStats = make([]PlayerStats, 0, len(players))
-			for _, player := range players {
-				stats := log.Stats[player.Puuid]
-				if stats == nil {
-					stats = &PlayerStats{Puuid: player.Puuid, AbilityCasts: map[string]int{}}
-				}
-				round.PlayerStats = append(round.PlayerStats, *stats)
-			}
-		} else {
-			round.PlayerStats = make([]PlayerStats, 0, len(players))
-			for _, player := range players {
-				round.PlayerStats = append(round.PlayerStats, PlayerStats{
-					Puuid:        player.Puuid,
-					AbilityCasts: map[string]int{},
-				})
-			}
-		}
-
-		rounds = append(rounds, round)
-	}
+	rounds := buildReplayRounds(windows, framesByRound, utilities, logs, players)
 	framesDuration := time.Since(framesStarted)
 
-	match := &Match{
-		MatchID:     matchID(manifest.GUID),
-		MapID:       mapInfo.ID,
-		MapName:     mapInfo.Name,
-		QueueLabel:  "Replay",
-		GameStartAt: gameStartAt(manifest.TimestampTicks),
-		Viewer:      nil,
-		TotalRounds: len(rounds),
-		Players:     players,
-		Rounds:      rounds,
-		Build:       build,
-		DurationMS:  manifest.DurationMS,
-		Warnings:    warnings.all(),
-	}
-	if utilityWarnings != (UtilityWarnings{}) {
-		match.UtilityWarnings = &utilityWarnings
-	}
+	match := buildReplayMatch(
+		manifest,
+		mapInfo,
+		build,
+		players,
+		rounds,
+		warnings,
+		utilityWarnings,
+	)
 
 	envelope = &Envelope{
 		ReplayID: hash,
@@ -476,94 +325,33 @@ func (s *Service) parseOnce(ctx context.Context, filePath, hash string) (envelop
 	}
 	gzipDuration := time.Since(gzipStarted)
 
-	slog.Info("replay parsed",
-		"replay_hash_prefix", hashPrefix(hash),
-		"bytes", inputBytes,
-		"build", build,
-		"parser_version", ParserVersion,
-		"frame_hz", s.config.FrameHz,
-		"cache_hit", false,
-		"inspect_ms", inspectDuration.Milliseconds(),
-		"export_ms", exportDuration.Milliseconds(),
-		"fields_ms", fieldsDuration.Milliseconds(),
-		"events_ms", eventsDuration.Milliseconds(),
-		"state_ms", stateDuration.Milliseconds(),
-		"movement_ms", movementDuration.Milliseconds(),
-		"utilities_ms", utilitiesDuration.Milliseconds(),
-		"frames_ms", framesDuration.Milliseconds(),
-		"gzip_ms", gzipDuration.Milliseconds(),
-		"total_ms", time.Since(started).Milliseconds(),
-		"rounds", len(rounds),
-		"frames", timeline.Frames,
-		"players", len(players),
-		"samples", timeline.Samples,
-		"teleport_cuts", timeline.TeleportCuts,
-		"movement_rows", movement.Rows,
-		"unmatched_pawns", movement.UnmatchedRows,
-		"pawn_overlaps", movement.PawnOverlaps,
-		"pawn_inactive_rows", movement.PawnInactiveRows,
-		"missing_player_rounds", timeline.Missing,
-		"hp_writes", state.HPWrites,
-		"hp_unresolved_section", state.HPUnresolvedSection,
-		"hp_non_player", state.HPNonPlayer,
-		"deaths", state.Deaths,
-		"money_writes", state.MoneyWrites,
-		"plant_credit_bonuses", state.PlantCreditBonuses,
-		"weapon_changes", state.WeaponChanges,
-		"weapon_unresolved", state.WeaponUnresolved,
-		"weapon_zero", state.WeaponZero,
-		"armor_items", state.ArmorItems,
-		"armor_unowned", state.ArmorUnowned,
-		"armor_unplaced", state.ArmorUnplaced,
-		"armor_unattributed", state.ArmorUnattributed,
-		"state_elements_incomplete", state.DamageIncomplete,
-		"casts_unique", state.CastsUnique,
-		"casts_skipped", state.CastsSkipped,
-		"casts_unknown_slot", state.CastsUnknownSlot,
-		"casts_unresolved", state.CastsUnresolved,
-		"casts_without_buy_end", state.CastsWithoutBuyEnd,
-		"casts_before_buy_end", state.CastsBeforeBuyEnd,
-		"ability_charge_writes", state.AbilityChargeWrites,
-		"ability_charge_unresolved", state.AbilityChargeUnresolved,
-		"ability_charge_unknown_slot", state.AbilityChargeUnknownSlot,
-		"ability_charge_unmapped", state.AbilityChargeUnmapped,
-		"signature_charge_writes", state.SignatureChargeWrites,
-		"ultimate_point_writes", state.UltimatePointWrites,
-		"ultimate_active_writes", state.UltimateActiveWrites,
-		"ultimate_unresolved", state.UltimateUnresolved,
-		"cooldown_writes", state.CooldownWrites,
-		"cooldown_windows", state.CooldownWindows,
-		"cooldown_unresolved", state.CooldownUnresolved,
-		"cooldown_unknown_slot", state.CooldownUnknownSlot,
-		"cooldown_unmapped", state.CooldownUnmapped,
-		"recharge_windows", state.RechargeWindows,
-		"spike_actors", spike.Actors,
-		"spike_owner_writes", spike.OwnerWrites,
-		"spike_loose_spans", spike.LooseSpans,
-		"spike_loose_unplaced", spike.LooseUnplaced,
-		"spike_ties", spike.Ties,
-		"spike_unresolved", spike.Unresolved,
-		"spike_plants", spike.Plants,
-		"spike_site_warnings", spike.SiteWarnings,
-		"spike_missing_positions", spike.MissingSpots,
-		"spike_out_of_round", spike.OutOfRound,
-		"utility_intervals", utilityCount,
-		"utility_unknown_actors", utilityWarnings.UnknownActors,
-		"utility_invalid_actors", utilityWarnings.InvalidActors,
-		"utility_missing_positions", utilityWarnings.MissingPositions,
-		"utility_missing_closes", utilityWarnings.MissingCloses,
-		"utility_unresolved_owners", utilityWarnings.UnresolvedOwners,
-		"utility_missing_movement", utilityWarnings.MissingMovement,
-		"utility_truncated_utilities", utilityWarnings.TruncatedUtilities,
-		"utility_truncated_samples", utilityWarnings.TruncatedSamples,
-		"utility_truncated_paths", utilityWarnings.TruncatedPaths,
-		"utility_unsupported_build", utilityWarnings.UnsupportedBuild,
-		"response_bytes", len(encoded),
-		"gzip_bytes", len(gz),
-		"content_blocks_lost", quality.ContentBlocksLost,
-		"event_layout_mismatches", quality.EventLayoutMismatches,
-		"event_payload_unknown_groups", quality.EventPayloadUnknown,
-	)
+	parseReport{
+		hash:              hash,
+		inputBytes:        inputBytes,
+		build:             build,
+		frameHz:           s.config.FrameHz,
+		playerCount:       len(players),
+		started:           started,
+		inspectDuration:   inspectDuration,
+		exportDuration:    exportDuration,
+		fieldsDuration:    fieldsDuration,
+		eventsDuration:    eventsDuration,
+		stateDuration:     stateDuration,
+		movementDuration:  movementDuration,
+		utilitiesDuration: utilitiesDuration,
+		framesDuration:    framesDuration,
+		gzipDuration:      gzipDuration,
+		rounds:            len(rounds),
+		timeline:          timeline,
+		movement:          movement,
+		state:             state,
+		spike:             spike,
+		utilityCount:      utilityCount,
+		utilityWarnings:   utilityWarnings,
+		encoded:           encoded,
+		gz:                gz,
+		quality:           quality,
+	}.log()
 
 	s.metrics.finishParse(len(encoded), len(gz), time.Since(started))
 	return envelope, gz, len(encoded), nil
