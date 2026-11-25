@@ -172,6 +172,17 @@ func buildRoundLogs(
 	state *stateScan,
 	warnings *warningList,
 ) map[int]*roundLog {
+	logs := newRoundLogs(windows, players)
+	appendKillLogs(logs, windows, index, state, events.Kills, warnings)
+	appendHitLogs(logs, windows, state.Hits)
+	appendPlantLogs(logs, windows, index, fields, events.Plants, warnings)
+	appendDefuseLogs(logs, windows, index, fields, events.Defuses, warnings)
+	appendExplodeLogs(logs, windows, events.Explodes)
+	sortRoundLogEvents(logs)
+	return logs
+}
+
+func newRoundLogs(windows []roundWindow, players []Player) map[int]*roundLog {
 	logs := make(map[int]*roundLog, len(windows))
 	for i := range windows {
 		stats := make(map[string]*PlayerStats, len(players))
@@ -183,8 +194,18 @@ func buildRoundLogs(
 		}
 		logs[windows[i].RoundNumber] = &roundLog{Stats: stats}
 	}
+	return logs
+}
 
-	for _, kill := range events.Kills {
+func appendKillLogs(
+	logs map[int]*roundLog,
+	windows []roundWindow,
+	index *playerIndex,
+	state *stateScan,
+	kills []rawKill,
+	warnings *warningList,
+) {
+	for _, kill := range kills {
 		windowIndex, ok := roundIndexAt(windows, kill.TimeMS)
 		if !ok {
 			continue
@@ -239,8 +260,14 @@ func buildRoundLogs(
 			}
 		}
 	}
+}
 
-	for _, hit := range state.Hits {
+func appendHitLogs(
+	logs map[int]*roundLog,
+	windows []roundWindow,
+	hits []hitSample,
+) {
+	for _, hit := range hits {
 		windowIndex, ok := roundIndexAt(windows, hit.TimeMS)
 		if !ok {
 			continue
@@ -256,8 +283,17 @@ func buildRoundLogs(
 			VictimPuuid:  pseudonymousID(hit.VictimSubject),
 		})
 	}
+}
 
-	for _, plant := range events.Plants {
+func appendPlantLogs(
+	logs map[int]*roundLog,
+	windows []roundWindow,
+	index *playerIndex,
+	fields *fieldScan,
+	plants []rawSpike,
+	warnings *warningList,
+) {
+	for _, plant := range plants {
 		windowIndex, ok := roundIndexAt(windows, plant.TimeMS)
 		if !ok {
 			continue
@@ -294,8 +330,17 @@ func buildRoundLogs(
 			log.Events = append(log.Events, event)
 		}
 	}
+}
 
-	for _, defuse := range events.Defuses {
+func appendDefuseLogs(
+	logs map[int]*roundLog,
+	windows []roundWindow,
+	index *playerIndex,
+	fields *fieldScan,
+	defuses []rawSpike,
+	warnings *warningList,
+) {
+	for _, defuse := range defuses {
 		windowIndex, ok := roundIndexAt(windows, defuse.TimeMS)
 		if !ok {
 			continue
@@ -324,8 +369,14 @@ func buildRoundLogs(
 			log.Events = append(log.Events, event)
 		}
 	}
+}
 
-	for _, explode := range events.Explodes {
+func appendExplodeLogs(
+	logs map[int]*roundLog,
+	windows []roundWindow,
+	explodes []rawSpike,
+) {
+	for _, explode := range explodes {
 		windowIndex, ok := roundIndexAt(windows, explode.TimeMS)
 		if !ok {
 			continue
@@ -339,7 +390,9 @@ func buildRoundLogs(
 			log.Events = append(log.Events, event)
 		}
 	}
+}
 
+func sortRoundLogEvents(logs map[int]*roundLog) {
 	for _, log := range logs {
 		if len(log.Events) < 2 {
 			continue
@@ -348,8 +401,6 @@ func buildRoundLogs(
 			return log.Events[i].TimeSinceRoundStartMillis < log.Events[j].TimeSinceRoundStartMillis
 		})
 	}
-
-	return logs
 }
 
 // roundIndexAt returns the window containing a global timestamp; windows are
