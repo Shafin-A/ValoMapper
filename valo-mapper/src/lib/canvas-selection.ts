@@ -282,6 +282,12 @@ const isVisionConeHost = (entry: CanvasItemInstance): boolean =>
   entry.type === "tool" ||
   (entry.type === "ability" && !isVisionConeAction(entry.item.action));
 
+export const isAllyItem = (
+  item: CanvasItemInstance["item"],
+  itemType: ItemType,
+): item is AgentCanvas | AbilityCanvas =>
+  itemType === "agent" || itemType === "ability";
+
 export const getContextMenuCapabilities = (
   targets: CanvasItemInstance[],
   collections: CanvasItemCollections,
