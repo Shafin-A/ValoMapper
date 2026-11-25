@@ -33,22 +33,74 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		_ = tx.Rollback(ctx) // no-op after commit; harmless on read-only tx
 	}()
 
-	rows, err := tx.Query(ctx, `
+	if err := loadCanvasAgents(ctx, tx, lobbyCode, phases); err != nil {
+		return nil, err
+	}
+	if err := loadCanvasAbilities(ctx, tx, lobbyCode, phases); err != nil {
+		return nil, err
+	}
+	if err := loadCanvasDrawLines(ctx, tx, lobbyCode, phases); err != nil {
+		return nil, err
+	}
+	if err := loadCanvasTexts(ctx, tx, lobbyCode, phases); err != nil {
+		return nil, err
+	}
+	if err := loadCanvasImages(ctx, tx, lobbyCode, phases); err != nil {
+		return nil, err
+	}
+	if err := loadCanvasToolIcons(ctx, tx, lobbyCode, phases); err != nil {
+		return nil, err
+	}
+	if err := loadCanvasConnectingLines(ctx, tx, lobbyCode, phases); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	return phases, nil
+}
+
+func readCanvasRows(
+	ctx context.Context,
+	tx pgx.Tx,
+	query string,
+	lobbyCode string,
+	scan func(pgx.Rows) error,
+) error {
+	rows, err := tx.Query(ctx, query, lobbyCode)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := scan(rows); err != nil {
+			return err
+		}
+	}
+
+	return rows.Err()
+}
+
+func loadCanvasAgents(
+	ctx context.Context,
+	tx pgx.Tx,
+	lobbyCode string,
+	phases []PhaseState,
+) error {
+	return readCanvasRows(ctx, tx, `
 		SELECT id, name, is_ally, is_gray, x, y, note, phase_index
 		FROM canvas_agents 
 		WHERE lobby_code = $1 
-		ORDER BY phase_index`, lobbyCode)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
+		ORDER BY phase_index`, lobbyCode, func(rows pgx.Rows) error {
 		var agent CanvasAgent
 		var phaseIndex int
 		var agentName sql.NullString
 		var agentNote sql.NullString
 		if err := rows.Scan(&agent.ID, &agentName, &agent.IsAlly, &agent.IsGray, &agent.X, &agent.Y, &agentNote, &phaseIndex); err != nil {
-			rows.Close()
-			return nil, err
+			return err
 		}
 		agent.AgentName = ""
 		if agentName.Valid {
@@ -64,21 +116,21 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		} else {
 			slog.Warn("agent has invalid phase index", "agent_id", agent.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
-	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+		return nil
+	})
+}
 
-	rows, err = tx.Query(ctx, `
+func loadCanvasAbilities(
+	ctx context.Context,
+	tx pgx.Tx,
+	lobbyCode string,
+	phases []PhaseState,
+) error {
+	return readCanvasRows(ctx, tx, `
 		SELECT id, name, action, x, y, attached_to_id, current_path, current_rotation, current_length, is_ally, icon_only, show_outer_circle, note, phase_index
 		FROM canvas_abilities 
 		WHERE lobby_code = $1 
-		ORDER BY phase_index, sort_order`, lobbyCode)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
+		ORDER BY phase_index, sort_order`, lobbyCode, func(rows pgx.Rows) error {
 		var ability CanvasAbility
 		var phaseIndex int
 		var abilityName sql.NullString
@@ -87,8 +139,7 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		var pathArray []float64
 		if err := rows.Scan(&ability.ID, &abilityName, &ability.Action, &ability.X, &ability.Y,
 			&attachedToID, &pathArray, &ability.CurrentRotation, &ability.CurrentLength, &ability.IsAlly, &ability.IconOnly, &ability.ShowOuterCircle, &abilityNote, &phaseIndex); err != nil {
-			rows.Close()
-			return nil, err
+			return err
 		}
 		ability.CurrentPath = make([]Position, 0, len(pathArray)/2)
 		for i := 0; i+1 < len(pathArray); i += 2 {
@@ -111,27 +162,26 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		} else {
 			slog.Warn("ability has invalid phase index", "ability_id", ability.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
-	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+		return nil
+	})
+}
 
-	rows, err = tx.Query(ctx, `
+func loadCanvasDrawLines(
+	ctx context.Context,
+	tx pgx.Tx,
+	lobbyCode string,
+	phases []PhaseState,
+) error {
+	return readCanvasRows(ctx, tx, `
 		SELECT id, tool, points, color, size, is_dashed, is_arrow_head, shape, opacity, traversal_time, phase_index 
 		FROM canvas_draw_lines 
 		WHERE lobby_code = $1 
-		ORDER BY phase_index, sort_order`, lobbyCode)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
+		ORDER BY phase_index, sort_order`, lobbyCode, func(rows pgx.Rows) error {
 		var line CanvasDrawLine
 		var phaseIndex int
 		var pointsArray []float64
 		if err := rows.Scan(&line.ID, &line.Tool, &pointsArray, &line.Color, &line.Size, &line.IsDashed, &line.IsArrowHead, &line.Shape, &line.Opacity, &line.TraversalTime, &phaseIndex); err != nil {
-			rows.Close()
-			return nil, err
+			return err
 		}
 		line.Points = make([]Position, 0, len(pointsArray)/2)
 		for i := 0; i+1 < len(pointsArray); i += 2 {
@@ -142,34 +192,32 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		} else {
 			slog.Warn("draw line has invalid phase index", "line_id", line.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
-	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+		return nil
+	})
+}
 
-	rows, err = tx.Query(ctx, `
+func loadCanvasTexts(
+	ctx context.Context,
+	tx pgx.Tx,
+	lobbyCode string,
+	phases []PhaseState,
+) error {
+	return readCanvasRows(ctx, tx, `
 		SELECT id, text, spans, font_size, x, y, width, height, note, phase_index
 		FROM canvas_texts
 		WHERE lobby_code = $1
-		ORDER BY phase_index`, lobbyCode)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
+		ORDER BY phase_index`, lobbyCode, func(rows pgx.Rows) error {
 		var text CanvasText
 		var spansJSON []byte
 		var fontSize sql.NullFloat64
 		var textNote sql.NullString
 		var phaseIndex int
 		if err := rows.Scan(&text.ID, &text.Text, &spansJSON, &fontSize, &text.X, &text.Y, &text.Width, &text.Height, &textNote, &phaseIndex); err != nil {
-			rows.Close()
-			return nil, err
+			return err
 		}
 		if len(spansJSON) > 0 {
 			if err := json.Unmarshal(spansJSON, &text.Spans); err != nil {
-				rows.Close()
-				return nil, err
+				return err
 			}
 		}
 		if fontSize.Valid {
@@ -184,27 +232,26 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		} else {
 			slog.Warn("text has invalid phase index", "text_id", text.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
-	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+		return nil
+	})
+}
 
-	rows, err = tx.Query(ctx, `
+func loadCanvasImages(
+	ctx context.Context,
+	tx pgx.Tx,
+	lobbyCode string,
+	phases []PhaseState,
+) error {
+	return readCanvasRows(ctx, tx, `
 		SELECT id, src, x, y, width, height, note, phase_index
 		FROM canvas_images 
 		WHERE lobby_code = $1 
-		ORDER BY phase_index`, lobbyCode)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
+		ORDER BY phase_index`, lobbyCode, func(rows pgx.Rows) error {
 		var image CanvasImage
 		var imageNote sql.NullString
 		var phaseIndex int
 		if err := rows.Scan(&image.ID, &image.Src, &image.X, &image.Y, &image.Width, &image.Height, &imageNote, &phaseIndex); err != nil {
-			rows.Close()
-			return nil, err
+			return err
 		}
 		image.Note = ""
 		if imageNote.Valid {
@@ -215,29 +262,28 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		} else {
 			slog.Warn("image has invalid phase index", "image_id", image.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
-	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+		return nil
+	})
+}
 
-	rows, err = tx.Query(ctx, `
+func loadCanvasToolIcons(
+	ctx context.Context,
+	tx pgx.Tx,
+	lobbyCode string,
+	phases []PhaseState,
+) error {
+	return readCanvasRows(ctx, tx, `
 		SELECT id, name, x, y, width, height, attached_to_id, note, phase_index
 		FROM canvas_tool_icons 
 		WHERE lobby_code = $1 
-		ORDER BY phase_index`, lobbyCode)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
+		ORDER BY phase_index`, lobbyCode, func(rows pgx.Rows) error {
 		var icon CanvasToolIcon
 		var phaseIndex int
 		var iconName sql.NullString
 		var attachedToID sql.NullString
 		var iconNote sql.NullString
 		if err := rows.Scan(&icon.ID, &iconName, &icon.X, &icon.Y, &icon.Width, &icon.Height, &attachedToID, &iconNote, &phaseIndex); err != nil {
-			rows.Close()
-			return nil, err
+			return err
 		}
 		icon.Name = ""
 		if iconName.Valid {
@@ -254,42 +300,32 @@ func GetAllCanvasPhases(lobbyCode string) ([]PhaseState, error) {
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].ToolIconsOnCanvas = append(phases[phaseIndex].ToolIconsOnCanvas, icon)
 		}
-	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+		return nil
+	})
+}
 
-	rows, err = tx.Query(ctx, `
+func loadCanvasConnectingLines(
+	ctx context.Context,
+	tx pgx.Tx,
+	lobbyCode string,
+	phases []PhaseState,
+) error {
+	return readCanvasRows(ctx, tx, `
 		SELECT id, from_id, to_id, stroke_color, stroke_width, uploaded_images, youtube_link, notes, phase_index 
 		FROM canvas_connecting_lines 
 		WHERE lobby_code = $1 
-		ORDER BY phase_index`, lobbyCode)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
+		ORDER BY phase_index`, lobbyCode, func(rows pgx.Rows) error {
 		var line CanvasConnectingLine
 		var phaseIndex int
 		if err := rows.Scan(&line.ID, &line.FromID, &line.ToID, &line.StrokeColor, &line.StrokeWidth,
 			&line.UploadedImages, &line.YoutubeLink, &line.Notes, &phaseIndex); err != nil {
-			rows.Close()
-			return nil, err
+			return err
 		}
 		if phaseIndex >= 0 && phaseIndex < len(phases) {
 			phases[phaseIndex].ConnectingLines = append(phases[phaseIndex].ConnectingLines, line)
 		} else {
 			slog.Warn("connecting line has invalid phase index", "line_id", line.ID, "phase_index", phaseIndex, "max_index", len(phases)-1, "lobby_code", lobbyCode)
 		}
-	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return nil, err
-	}
-
-	return phases, nil
+		return nil
+	})
 }
