@@ -350,6 +350,31 @@ func applyRoundStats(
 	applyPlantCreditBonuses(windows, players, puuidBySubject, state, logs)
 
 	casts := resolveCasts(windows, index, raw)
+	castTimesBySlot, castTimesBySubjectSlot := applyCastResolution(state, casts, warnings)
+	abilitySlots := buildAbilitySlotMappings(state, castTimesBySubjectSlot)
+	applyRechargeWindows(state, windows, abilitySlots)
+	chargeFoldersBySubject := buildChargeFoldersBySubject(state)
+	damage := buildRoundDamage(state, windows)
+	subjectByPuuid := invertPuuidBySubject(puuidBySubject)
+
+	applyRoundPlayerStats(
+		windows,
+		players,
+		logs,
+		state,
+		subjectByPuuid,
+		castTimesBySlot,
+		abilitySlots,
+		chargeFoldersBySubject,
+		damage,
+	)
+}
+
+func applyCastResolution(
+	state *stateScan,
+	casts castResolution,
+	warnings *warningList,
+) (map[castSlotKey][]uint32, map[string]map[int64][]uint32) {
 	state.CastsUnique = len(casts.Casts)
 	state.CastsSkipped = casts.Skipped
 	state.CastsUnknownSlot = casts.UnknownSlot
@@ -384,6 +409,13 @@ func applyRoundStats(
 	}
 	sortCastTimes(castTimesBySubjectSlot)
 
+	return castTimesBySlot, castTimesBySubjectSlot
+}
+
+func buildAbilitySlotMappings(
+	state *stateScan,
+	castTimesBySubjectSlot map[string]map[int64][]uint32,
+) map[string]map[string]string {
 	// The folder letter is not always the input slot, so learn the real mapping
 	// from this player's casts before it is used for charges or cooldowns.
 	abilitySlots := learnAbilitySlots(
@@ -432,12 +464,22 @@ func applyRoundStats(
 		}
 	}
 
+	return abilitySlots
+}
+
+func applyRechargeWindows(
+	state *stateScan,
+	windows []roundWindow,
+	abilitySlots map[string]map[string]string,
+) {
 	recharges := buildRechargeWindows(
 		state.AbilityCharges, windows, abilitySlots, state.Cooldowns,
 	)
 	state.RechargeWindows = len(recharges)
 	state.Cooldowns = append(state.Cooldowns, recharges...)
+}
 
+func buildChargeFoldersBySubject(state *stateScan) map[string]map[string]bool {
 	chargeFoldersBySubject := make(map[string]map[string]bool)
 	for subject, folders := range state.ChargeFolders {
 		chargeFoldersBySubject[subject] = make(map[string]bool, len(folders))
@@ -454,7 +496,13 @@ func applyRoundStats(
 			state.SignatureChargeWrites++
 		}
 	}
+	return chargeFoldersBySubject
+}
 
+func buildRoundDamage(
+	state *stateScan,
+	windows []roundWindow,
+) map[int]map[string]float64 {
 	damage := make(map[int]map[string]float64, len(windows))
 	for _, write := range state.Incoming {
 		roundIndex, ok := roundIndexAt(windows, write.TimeMS)
@@ -468,12 +516,28 @@ func applyRoundStats(
 		}
 		bucket[write.Subject] += write.Damage
 	}
+	return damage
+}
 
+func invertPuuidBySubject(puuidBySubject map[string]string) map[string]string {
 	subjectByPuuid := make(map[string]string, len(puuidBySubject))
 	for subject, puuid := range puuidBySubject {
 		subjectByPuuid[puuid] = subject
 	}
+	return subjectByPuuid
+}
 
+func applyRoundPlayerStats(
+	windows []roundWindow,
+	players []Player,
+	logs map[int]*roundLog,
+	state *stateScan,
+	subjectByPuuid map[string]string,
+	castTimesBySlot map[castSlotKey][]uint32,
+	abilitySlots map[string]map[string]string,
+	chargeFoldersBySubject map[string]map[string]bool,
+	damage map[int]map[string]float64,
+) {
 	for i := range windows {
 		window := &windows[i]
 		log := logs[window.RoundNumber]
@@ -501,76 +565,102 @@ func applyRoundStats(
 				continue
 			}
 
-			sample := state.stateFor(subject, statsTime, window.StartMS)
-			stats.Economy.Remaining = sample.Credits
-			stats.WeaponID = sample.WeaponID
-			stats.ArmorID = sample.ArmorID
-			stats.IncomingDamage = int(math.Round(damage[roundIndex][subject]))
+			applyPlayerRoundStats(
+				stats,
+				subject,
+				window,
+				roundIndex,
+				statsTime,
+				state,
+				castTimesBySlot,
+				abilitySlots,
+				chargeFoldersBySubject,
+				damage,
+			)
+		}
+	}
+}
 
-			if stats.AbilityCasts == nil {
-				stats.AbilityCasts = make(map[string]int, len(castSlotOrder))
-			}
-			if stats.AbilityCastTimes == nil {
-				stats.AbilityCastTimes = make(map[string][]int, len(castSlotOrder))
-			}
-			for _, slot := range castSlotOrder {
-				absTimes := castTimesBySlot[castSlotKey{
-					Subject: subject,
-					Round:   roundIndex,
-					Slot:    slot,
-				}]
-				if len(absTimes) == 0 {
-					continue
-				}
+func applyPlayerRoundStats(
+	stats *PlayerStats,
+	subject string,
+	window *roundWindow,
+	roundIndex int,
+	statsTime uint32,
+	state *stateScan,
+	castTimesBySlot map[castSlotKey][]uint32,
+	abilitySlots map[string]map[string]string,
+	chargeFoldersBySubject map[string]map[string]bool,
+	damage map[int]map[string]float64,
+) {
+	sample := state.stateFor(subject, statsTime, window.StartMS)
+	stats.Economy.Remaining = sample.Credits
+	stats.WeaponID = sample.WeaponID
+	stats.ArmorID = sample.ArmorID
+	stats.IncomingDamage = int(math.Round(damage[roundIndex][subject]))
 
-				times := make([]int, 0, len(absTimes))
-				seen := make(map[int]struct{}, len(absTimes))
-				for _, abs := range absTimes {
-					relative := roundRelative(abs, window)
-					if _, exists := seen[relative]; exists {
-						continue
-					}
-					seen[relative] = struct{}{}
-					times = append(times, relative)
-				}
-				if len(times) == 0 {
-					continue
-				}
-				stats.AbilityCasts[castSlotNames[slot]] = times[0]
-				stats.AbilityCastTimes[castSlotNames[slot]] = times
-			}
+	if stats.AbilityCasts == nil {
+		stats.AbilityCasts = make(map[string]int, len(castSlotOrder))
+	}
+	if stats.AbilityCastTimes == nil {
+		stats.AbilityCastTimes = make(map[string][]int, len(castSlotOrder))
+	}
+	for _, slot := range castSlotOrder {
+		absTimes := castTimesBySlot[castSlotKey{
+			Subject: subject,
+			Round:   roundIndex,
+			Slot:    slot,
+		}]
+		if len(absTimes) == 0 {
+			continue
+		}
 
-			if len(state.AbilityCharges) > 0 {
-				chargeFolders := chargeFoldersBySubject[subject]
-				if chargeFolders == nil {
-					chargeFolders = map[string]bool{}
-				}
-				chargePoints := abilityChargePointsForRound(
-					state.AbilityCharges, subject, window,
-					abilitySlots[subject], chargeFolders,
-				)
-				if len(chargePoints) > 0 {
-					stats.AbilityCharges = chargePoints
-				}
+		times := make([]int, 0, len(absTimes))
+		seen := make(map[int]struct{}, len(absTimes))
+		for _, abs := range absTimes {
+			relative := roundRelative(abs, window)
+			if _, exists := seen[relative]; exists {
+				continue
 			}
+			seen[relative] = struct{}{}
+			times = append(times, relative)
+		}
+		if len(times) == 0 {
+			continue
+		}
+		stats.AbilityCasts[castSlotNames[slot]] = times[0]
+		stats.AbilityCastTimes[castSlotNames[slot]] = times
+	}
 
-			if len(state.UltimateSamples) > 0 {
-				ultimatePoints := ultimatePointsForRound(
-					state.UltimateSamples, subject, window,
-				)
-				if len(ultimatePoints) > 0 {
-					stats.UltimatePoints = ultimatePoints
-				}
-			}
+	if len(state.AbilityCharges) > 0 {
+		chargeFolders := chargeFoldersBySubject[subject]
+		if chargeFolders == nil {
+			chargeFolders = map[string]bool{}
+		}
+		chargePoints := abilityChargePointsForRound(
+			state.AbilityCharges, subject, window,
+			abilitySlots[subject], chargeFolders,
+		)
+		if len(chargePoints) > 0 {
+			stats.AbilityCharges = chargePoints
+		}
+	}
 
-			if len(state.Cooldowns) > 0 {
-				cooldowns := cooldownWindowsForRound(
-					state.Cooldowns, subject, window, abilitySlots[subject],
-				)
-				if len(cooldowns) > 0 {
-					stats.Cooldowns = cooldowns
-				}
-			}
+	if len(state.UltimateSamples) > 0 {
+		ultimatePoints := ultimatePointsForRound(
+			state.UltimateSamples, subject, window,
+		)
+		if len(ultimatePoints) > 0 {
+			stats.UltimatePoints = ultimatePoints
+		}
+	}
+
+	if len(state.Cooldowns) > 0 {
+		cooldowns := cooldownWindowsForRound(
+			state.Cooldowns, subject, window, abilitySlots[subject],
+		)
+		if len(cooldowns) > 0 {
+			stats.Cooldowns = cooldowns
 		}
 	}
 }
