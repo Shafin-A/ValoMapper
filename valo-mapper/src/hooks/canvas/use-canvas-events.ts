@@ -7,43 +7,25 @@ import {
 import { useSetCurrentStroke } from "@/contexts/drawing-preview-context";
 import { useSettings } from "@/contexts/settings-context";
 import {
-  applyVisionConeAttachment,
-  canAttachVisionCone,
-  createDefaultAttachedVisionCone,
-  findVisionConeAttachmentTarget,
-} from "@/lib/vision-cone-utils";
-import {
-  canAttachToolIcon,
-  findToolIconAttachmentTarget,
-  getToolIconAttachmentPosition,
-} from "@/lib/tool-icon";
-import { TEMP_DRAG_ID } from "@/lib/consts";
-import { getNextId } from "@/lib/ids";
-import { isAgent } from "@/lib/utils";
-import {
-  clearCanvasItemTapSuppression,
-  markCanvasItemTapSuppressed,
-} from "@/lib/canvas-long-press";
-import {
   type CanvasItemCollections,
   resolveCanvasItemTarget,
 } from "@/lib/canvas-selection";
+import type { CanvasEntitiesSnapshot } from "@/contexts/canvas-entity-contexts";
 import { Stage } from "konva/lib/Stage";
 import type Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import { Vector2d } from "konva/lib/types";
 import { useCallback, useRef, useEffect } from "react";
+import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 import { useCanvasContextMenu } from "./use-canvas-context-menu";
 import { useCanvasDrawing } from "./use-canvas-drawing";
+import { useCanvasIconPlacement } from "./use-canvas-icon-placement";
 import { useCanvasSelection } from "./use-canvas-selection";
 import { useCanvasSelectionDrag } from "./use-canvas-selection-drag";
+import { useCanvasTouchGestures } from "./use-canvas-touch-gestures";
 import { useCanvasZoom } from "./use-canvas-zoom";
-import { useCollaborativeCanvas } from "@/hooks/use-collaborative-canvas";
 
 const PENCIL_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E") 5 18, crosshair`;
 const ERASER_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23ffffff' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3C/svg%3E") 12 12, crosshair`;
-const TAP_MOVE_THRESHOLD_PX = 10;
-const LONG_PRESS_MS = 500;
 
 const setContainerCursor = (stage: Stage, cursor: string) => {
   const container = stage.container();
@@ -82,7 +64,7 @@ export const useCanvasEvents = (
   } = useCanvasEntityActions();
   const { setCurrentStageScale, getLatestEntities } = useCanvasActions();
 
-  const entities = getLatestEntities();
+  const entities: CanvasEntitiesSnapshot = getLatestEntities();
 
   const setCurrentStroke = useSetCurrentStroke();
 
@@ -95,17 +77,6 @@ export const useCanvasEvents = (
     notifyAbilityRemoved,
     notifyToolIconAdded,
   } = useCollaborativeCanvas();
-
-  const frameRef = useRef<number | null>(null);
-  const touchGestureRef = useRef({
-    active: false,
-    moved: false,
-    multiTouch: false,
-    longPress: false,
-    startX: 0,
-    startY: 0,
-  });
-  const longPressTimerRef = useRef<number | null>(null);
 
   const setCursorForCurrentTool = useCallback(() => {
     const stage = stageRef.current;
@@ -137,34 +108,6 @@ export const useCanvasEvents = (
       y: (pos.y - stagePos.y) / totalScale,
     };
   }, [stageRef]);
-
-  const removeTempDragIcon = useCallback(() => {
-    if (!selectedCanvasIcon) return;
-
-    if (isAgent(selectedCanvasIcon)) {
-      setAgentsOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
-      );
-    } else if ("action" in selectedCanvasIcon) {
-      setAbilitiesOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
-      );
-    } else {
-      setToolIconsOnCanvas((prev) =>
-        prev.filter((icon) => icon.id !== TEMP_DRAG_ID),
-      );
-    }
-
-    setSelectedCanvasIcon(null);
-    setIsSidebarDragActive(false);
-  }, [
-    selectedCanvasIcon,
-    setAbilitiesOnCanvas,
-    setAgentsOnCanvas,
-    setToolIconsOnCanvas,
-    setSelectedCanvasIcon,
-    setIsSidebarDragActive,
-  ]);
 
   const {
     deleteGroupRef,
@@ -300,152 +243,28 @@ export const useCanvasEvents = (
     deleteGroupRef,
   });
 
-  const handleIconPlacement = useCallback(
-    (position?: Vector2d) => {
-      const stage = stageRef.current;
-      if (!stage || !selectedCanvasIcon) return;
-
-      const { agentsOnCanvas, abilitiesOnCanvas, toolIconsOnCanvas } =
-        getLatestEntities();
-
-      let pos: Vector2d;
-      if (position) {
-        pos = position;
-      } else {
-        const tempDragIcon = stage.findOne(`#${TEMP_DRAG_ID}`);
-        if (!tempDragIcon) return;
-        pos = tempDragIcon.position();
-      }
-
-      const isAbilityIcon = "action" in selectedCanvasIcon;
-      const newId = getNextId(
-        isAgent(selectedCanvasIcon)
-          ? "agent"
-          : isAbilityIcon
-            ? "ability"
-            : "tool",
-      );
-
-      if (isAgent(selectedCanvasIcon)) {
-        const newAgent = {
-          ...selectedCanvasIcon,
-          id: newId,
-          x: pos.x,
-          y: pos.y,
-          isAlly:
-            agentsOnCanvas.find((a) => a.id === TEMP_DRAG_ID)?.isAlly ?? true,
-        };
-        setAgentsOnCanvas((prev) =>
-          prev.map((agent) => (agent.id === TEMP_DRAG_ID ? newAgent : agent)),
-        );
-        notifyAgentAdded(newAgent);
-      } else if (isAbilityIcon) {
-        const tempAbility = abilitiesOnCanvas.find(
-          (a) => a.id === TEMP_DRAG_ID,
-        );
-        const attachmentTarget =
-          tempAbility && canAttachVisionCone(tempAbility)
-            ? findVisionConeAttachmentTarget({
-                point: pos,
-                agentsOnCanvas,
-                abilitiesOnCanvas,
-                toolIconsOnCanvas,
-                agentsSettings,
-                abilitiesSettings,
-                excludeId: TEMP_DRAG_ID,
-              })
-            : null;
-        const newAbility = {
-          ...selectedCanvasIcon,
-          id: newId,
-          x: attachmentTarget?.x ?? pos.x,
-          y: attachmentTarget?.y ?? pos.y,
-          isAlly: tempAbility?.isAlly ?? true,
-          iconOnly: tempAbility?.iconOnly ?? false,
-          showOuterCircle: tempAbility?.showOuterCircle ?? true,
-          attachedToId: attachmentTarget?.id,
-        };
-
-        const { nextAbilitiesOnCanvas, removedAbilityIds } =
-          applyVisionConeAttachment({
-            abilitiesOnCanvas,
-            previousAbilityId: TEMP_DRAG_ID,
-            nextAbility: newAbility,
-          });
-
-        const defaultAttachedCone = createDefaultAttachedVisionCone(
-          newAbility,
-          getNextId("ability"),
-        );
-        if (defaultAttachedCone) {
-          nextAbilitiesOnCanvas.push(defaultAttachedCone);
-        }
-
-        setAbilitiesOnCanvas(nextAbilitiesOnCanvas);
-        removedAbilityIds.forEach((abilityId) =>
-          notifyAbilityRemoved(abilityId),
-        );
-        notifyAbilityAdded(newAbility);
-        if (defaultAttachedCone) {
-          notifyAbilityAdded(defaultAttachedCone);
-        }
-      } else {
-        const tempToolIcon = toolIconsOnCanvas.find(
-          (toolIcon) => toolIcon.id === TEMP_DRAG_ID,
-        );
-
-        const attachmentHost =
-          tempToolIcon && canAttachToolIcon(tempToolIcon)
-            ? findToolIconAttachmentTarget({
-                point: pos,
-                agentsOnCanvas,
-                agentsSettings,
-                excludeId: TEMP_DRAG_ID,
-              })
-            : null;
-
-        const toolIconPosition = attachmentHost
-          ? getToolIconAttachmentPosition(
-              tempToolIcon ?? selectedCanvasIcon,
-              attachmentHost.x,
-              attachmentHost.y,
-              agentsSettings,
-            )
-          : { x: pos.x, y: pos.y };
-
-        const newToolIcon = {
-          ...selectedCanvasIcon,
-          id: newId,
-          x: toolIconPosition.x,
-          y: toolIconPosition.y,
-          attachedToId: attachmentHost?.id,
-        };
-        setToolIconsOnCanvas((prev) =>
-          prev.map((toolIcon) =>
-            toolIcon.id === TEMP_DRAG_ID ? newToolIcon : toolIcon,
-          ),
-        );
-        notifyToolIconAdded(newToolIcon);
-      }
-
-      setSelectedCanvasIcon(null);
-    },
-    [
-      selectedCanvasIcon,
-      agentsSettings,
-      abilitiesSettings,
-      getLatestEntities,
-      setAbilitiesOnCanvas,
-      setAgentsOnCanvas,
-      setToolIconsOnCanvas,
-      setSelectedCanvasIcon,
-      stageRef,
-      notifyAgentAdded,
-      notifyAbilityAdded,
-      notifyAbilityRemoved,
-      notifyToolIconAdded,
-    ],
-  );
+  const {
+    handleIconPlacement,
+    removeTempDragIcon,
+    updateTempDragPreview,
+  } = useCanvasIconPlacement({
+    stageRef,
+    selectedCanvasIcon,
+    setSelectedCanvasIcon,
+    isSidebarDragActive,
+    setIsSidebarDragActive,
+    getLatestEntities,
+    getWorldPointerPosition,
+    setAgentsOnCanvas,
+    setAbilitiesOnCanvas,
+    setToolIconsOnCanvas,
+    agentsSettings,
+    abilitiesSettings,
+    notifyAgentAdded,
+    notifyAbilityAdded,
+    notifyAbilityRemoved,
+    notifyToolIconAdded,
+  });
 
   const handleStageClick = useCallback(
     (event?: KonvaEventObject<MouseEvent>) => {
@@ -526,24 +345,6 @@ export const useCanvasEvents = (
     handleMouseUp();
   }, [handleMouseUp]);
 
-  const updateTempDragPreview = useCallback(
-    (worldPos: Vector2d) => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
-
-      frameRef.current = requestAnimationFrame(() => {
-        const stage = stageRef.current;
-        const tempDragIcon = stage?.findOne(`#${TEMP_DRAG_ID}`);
-        if (tempDragIcon) {
-          tempDragIcon.position(worldPos);
-          tempDragIcon.getLayer()?.batchDraw();
-        }
-      });
-    },
-    [stageRef],
-  );
-
   const handleStageMouseMove = useCallback(() => {
     const worldPos = getWorldPointerPosition();
     if (!worldPos) return;
@@ -565,258 +366,32 @@ export const useCanvasEvents = (
     updateTempDragPreview,
   ]);
 
-  const resetTouchGesture = useCallback(() => {
-    touchGestureRef.current.active = false;
-    touchGestureRef.current.moved = false;
-    touchGestureRef.current.multiTouch = false;
-    touchGestureRef.current.longPress = false;
-    touchGestureRef.current.startX = 0;
-    touchGestureRef.current.startY = 0;
-  }, []);
-
-  const clearLongPressTimer = useCallback(() => {
-    if (longPressTimerRef.current !== null) {
-      window.clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  }, []);
-
-  const startLongPressTimer = useCallback(() => {
-    clearLongPressTimer();
-    const collections = getCollections();
-
-    if (
-      isDrawMode ||
-      selectedCanvasIcon ||
-      isSidebarDragActive ||
-      editingTextId
-    ) {
-      return;
-    }
-
-    longPressTimerRef.current = window.setTimeout(() => {
-      longPressTimerRef.current = null;
-
-      const stage = stageRef.current;
-      const pointer = stage?.getPointerPosition();
-      if (!stage || !pointer) return;
-
-      const target = stage.getIntersection(pointer);
-      if (
-        !target ||
-        !resolveCanvasItemTarget(
-          target as unknown as import("konva/lib/Node").Node,
-          collections,
-        )
-      ) {
-        return;
-      }
-
-      touchGestureRef.current.longPress = true;
-      markCanvasItemTapSuppressed();
-      openContextMenu(target, pointer);
-
-      // Fallback in case the sheet captures the eventual touchend.
-      window.setTimeout(() => {
-        resetTouchGesture();
-        clearCanvasItemTapSuppression();
-      }, 1500);
-    }, LONG_PRESS_MS);
-  }, [
-    clearLongPressTimer,
-    getCollections,
-    editingTextId,
-    isDrawMode,
-    isSidebarDragActive,
-    openContextMenu,
-    resetTouchGesture,
-    selectedCanvasIcon,
+  const {
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    handleTouchCancel,
+  } = useCanvasTouchGestures({
     stageRef,
-  ]);
-
-  const handleTouchStart = useCallback(
-    (e: Parameters<typeof handleZoomTouchStart>[0]) => {
-      const touches = e.evt.touches;
-      const gesture = touchGestureRef.current;
-
-      if (touches.length > 1) {
-        gesture.multiTouch = true;
-        clearLongPressTimer();
-        if (isDrawing.current) {
-          cancelDrawing();
-        }
-      } else if (touches.length === 1 && !gesture.active) {
-        const touch = touches[0];
-        gesture.active = true;
-        gesture.moved = false;
-        gesture.multiTouch = false;
-        gesture.startX = touch.clientX;
-        gesture.startY = touch.clientY;
-        startLongPressTimer();
-      }
-
-      handleZoomTouchStart(e);
-      syncCurrentStageScale();
-
-      if (isDrawMode && touches.length === 1 && !gesture.multiTouch) {
-        handleDrawing();
-      }
-    },
-    [
-      cancelDrawing,
-      clearLongPressTimer,
-      handleDrawing,
-      handleZoomTouchStart,
-      isDrawMode,
-      isDrawing,
-      startLongPressTimer,
-      syncCurrentStageScale,
-    ],
-  );
-
-  const handleTouchMove = useCallback(
-    (e: Parameters<typeof handleZoomTouchMove>[0]) => {
-      const touches = e.evt.touches;
-      const gesture = touchGestureRef.current;
-
-      if (touches.length > 1) {
-        gesture.multiTouch = true;
-        clearLongPressTimer();
-        if (isDrawing.current) {
-          cancelDrawing();
-        }
-      } else if (touches.length === 1 && gesture.active) {
-        const touch = touches[0];
-        const distance = Math.hypot(
-          touch.clientX - gesture.startX,
-          touch.clientY - gesture.startY,
-        );
-
-        if (distance > TAP_MOVE_THRESHOLD_PX) {
-          gesture.moved = true;
-          clearLongPressTimer();
-        }
-      }
-
-      handleZoomTouchMove(e);
-      syncCurrentStageScale();
-
-      if (isDrawMode && !gesture.multiTouch) {
-        handleStageMouseMove();
-      }
-    },
-    [
-      cancelDrawing,
-      clearLongPressTimer,
-      handleStageMouseMove,
-      handleZoomTouchMove,
-      isDrawMode,
-      isDrawing,
-      syncCurrentStageScale,
-    ],
-  );
-
-  const handleTouchEnd = useCallback(
-    (e: Parameters<typeof handleZoomTouchEnd>[0]) => {
-      const collections = getCollections();
-      const gesture = touchGestureRef.current;
-      const remainingTouches = e.evt.touches.length;
-      const isCleanTap =
-        gesture.active &&
-        !gesture.moved &&
-        !gesture.multiTouch &&
-        !gesture.longPress;
-
-      clearLongPressTimer();
-      handleZoomTouchEnd(e);
-      syncCurrentStageScale();
-
-      if (isDrawMode) {
-        if (isDrawing.current) {
-          handleStagePointerUp();
-        }
-      } else if (isCleanTap && remainingTouches === 0) {
-        // Konva updates pointer positions on touchend; make sure the lifted
-        // touch is the position used for placement.
-        const stage = stageRef.current;
-        stage?.setPointersPositions(e.evt);
-
-        const pointer = stage?.getPointerPosition();
-        const intersection =
-          stage && pointer ? stage.getIntersection(pointer) : null;
-        const tappedItem = intersection
-          ? resolveCanvasItemTarget(
-              intersection as unknown as import("konva/lib/Node").Node,
-              collections,
-            )
-          : null;
-        const tappedItemIsSelected =
-          tappedItem !== null &&
-          selectedCanvasItems.some(
-            (item) =>
-              item.id === tappedItem.id && item.type === tappedItem.type,
-          );
-
-        if (!tappedItemIsSelected) {
-          setSelectedCanvasItems([]);
-        }
-
-        handleStageClick();
-      }
-
-      if (remainingTouches === 0) {
-        resetTouchGesture();
-        // Let the item's own tap handler see the suppression flag during this
-        // event, then re-enable normal taps.
-        window.setTimeout(clearCanvasItemTapSuppression, 0);
-      }
-    },
-    [
-      clearLongPressTimer,
-      getCollections,
-      handleStageClick,
-      handleStagePointerUp,
-      handleZoomTouchEnd,
-      isDrawMode,
-      isDrawing,
-      resetTouchGesture,
-      selectedCanvasItems,
-      setSelectedCanvasItems,
-      stageRef,
-      syncCurrentStageScale,
-    ],
-  );
-
-  const handleTouchCancel = useCallback(
-    (e: Parameters<typeof handleZoomTouchEnd>[0]) => {
-      clearLongPressTimer();
-
-      if (isDrawing.current) {
-        cancelDrawing();
-      }
-
-      handleZoomTouchEnd(e);
-      syncCurrentStageScale();
-      resetTouchGesture();
-      window.setTimeout(clearCanvasItemTapSuppression, 0);
-    },
-    [
-      cancelDrawing,
-      clearLongPressTimer,
-      handleZoomTouchEnd,
-      isDrawing,
-      resetTouchGesture,
-      syncCurrentStageScale,
-    ],
-  );
-
-  useEffect(
-    () => () => {
-      clearLongPressTimer();
-      clearCanvasItemTapSuppression();
-    },
-    [clearLongPressTimer],
-  );
+    isDrawMode,
+    isDrawing,
+    selectedCanvasIcon,
+    isSidebarDragActive,
+    editingTextId,
+    getCollections,
+    openContextMenu,
+    handleDrawing,
+    handleStageClick,
+    handleStagePointerUp,
+    handleStageMouseMove,
+    cancelDrawing,
+    syncCurrentStageScale,
+    selectedCanvasItems,
+    setSelectedCanvasItems,
+    handleZoomTouchStart,
+    handleZoomTouchMove,
+    handleZoomTouchEnd,
+  });
 
   const handleStageMouseLeave = useCallback(() => {
     handleMouseUp();
@@ -841,89 +416,6 @@ export const useCanvasEvents = (
   useEffect(() => {
     syncCurrentStageScale();
   }, [syncCurrentStageScale, baseScale]);
-
-  useEffect(() => {
-    if (!isSidebarDragActive) {
-      return;
-    }
-
-    const handleWindowPointerMove = (event: PointerEvent) => {
-      const stage = stageRef.current;
-      if (!stage || !selectedCanvasIcon) {
-        return;
-      }
-
-      stage.setPointersPositions(event as unknown as MouseEvent);
-      const worldPos = getWorldPointerPosition();
-      if (!worldPos) {
-        return;
-      }
-
-      updateTempDragPreview(worldPos);
-    };
-
-    const handleWindowPointerUp = (event: PointerEvent) => {
-      const stage = stageRef.current;
-      if (!stage) {
-        setIsSidebarDragActive(false);
-        return;
-      }
-
-      if (event.type === "pointercancel") {
-        removeTempDragIcon();
-        setIsSidebarDragActive(false);
-        return;
-      }
-
-      const stageContainer = stage.container();
-      const target = event.target;
-      const releasedWithinStageBounds = (() => {
-        const rect = stageContainer.getBoundingClientRect();
-        return (
-          event.clientX >= rect.left &&
-          event.clientX <= rect.right &&
-          event.clientY >= rect.top &&
-          event.clientY <= rect.bottom
-        );
-      })();
-      const isReleasedOverStage =
-        releasedWithinStageBounds ||
-        (target instanceof Node && stageContainer.contains(target));
-
-      if (isReleasedOverStage && selectedCanvasIcon) {
-        stage.setPointersPositions(event as unknown as MouseEvent);
-        const worldPos = getWorldPointerPosition();
-        if (worldPos) {
-          handleIconPlacement(worldPos);
-        } else {
-          handleIconPlacement();
-        }
-      } else {
-        removeTempDragIcon();
-      }
-
-      setIsSidebarDragActive(false);
-    };
-
-    window.addEventListener("pointermove", handleWindowPointerMove);
-    window.addEventListener("pointerup", handleWindowPointerUp);
-    window.addEventListener("pointercancel", handleWindowPointerUp);
-
-    return () => {
-      window.removeEventListener("pointermove", handleWindowPointerMove);
-      window.removeEventListener("pointerup", handleWindowPointerUp);
-      window.removeEventListener("pointercancel", handleWindowPointerUp);
-    };
-  }, [
-    isSidebarDragActive,
-    stageRef,
-    selectedCanvasIcon,
-    getWorldPointerPosition,
-    updateTempDragPreview,
-    handleIconPlacement,
-    removeTempDragIcon,
-    setIsSidebarDragActive,
-  ]);
 
   return {
     handleWheel,
