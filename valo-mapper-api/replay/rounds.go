@@ -77,7 +77,32 @@ type teamPair struct {
 // scanFields reads fields.parquet once and collects the values the normaliser
 // needs: phase writes, RoundResults, combat-report teams and plant/defuse RPCs.
 func scanFields(exportDir string) (*fieldScan, error) {
-	scan := &fieldScan{
+	scan := newFieldScan()
+
+	// The combat report writes ParticipantSubject and ParticipantTeamName as
+	// separate rows in the same interaction. Pair them by the interaction field
+	// prefix (for example "Rounds[3].Reports[1].Interactions[0]") *and* the
+	// actor that wrote it: the same prefix is reused by every participant's own
+	// combat-report actor, so prefix alone would join one player's subject to a
+	// different player's team. Never assume the two rows are adjacent.
+	pairs := make(map[teamPairKey]*teamPair)
+
+	_, err := readParquetRows(exportDir+"/fields.parquet", func(rows []fieldRow) error {
+		for i := range rows {
+			collectFieldRow(scan, &rows[i], pairs)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	sortFieldScanWrites(scan)
+	return scan, nil
+}
+
+func newFieldScan() *fieldScan {
+	return &fieldScan{
 		Results:           make(map[int]*resultWrite),
 		Teams:             make(map[string]string),
 		Planters:          nil,
@@ -92,201 +117,222 @@ func scanFields(exportDir string) (*fieldScan, error) {
 		UtilityActivation: make(map[uint32][]utilityActivationWrite),
 		AbilityStates:     make(map[uint32][]abilityStateWrite),
 	}
+}
 
-	// The combat report writes ParticipantSubject and ParticipantTeamName as
-	// separate rows in the same interaction. Pair them by the interaction field
-	// prefix (for example "Rounds[3].Reports[1].Interactions[0]") *and* the
-	// actor that wrote it: the same prefix is reused by every participant's own
-	// combat-report actor, so prefix alone would join one player's subject to a
-	// different player's team. Never assume the two rows are adjacent.
-	pairs := make(map[teamPairKey]*teamPair)
-
-	_, err := readParquetRows(exportDir+"/fields.parquet", func(rows []fieldRow) error {
-		for i := range rows {
-			row := &rows[i]
-			if row.FieldName == nil {
-				continue
-			}
-			name := *row.FieldName
-			group := row.GroupPath
-			timeMS := row.TimeMS
-			if name == "MulticastAddSmokeScreenPoint.Translation" && row.ValueStr != nil {
-				if position, ok := parseWorldPosition(*row.ValueStr); ok &&
-					validUtilityPosition(position) {
-					scan.UtilityPaths[row.ActorNetGUID] = append(
-						scan.UtilityPaths[row.ActorNetGUID],
-						utilityPathWrite{
-							TimeMS: row.TimeMS, PacketID: row.PacketID,
-							FieldName: name, Position: position,
-						},
-					)
-				}
-			}
-			if row.ObjectNetGUID == nil &&
-				(name == "MulticastInitializeWall.WallStartLocation" ||
-					name == "MulticastInitializeWall.WallEndLocation" ||
-					name == "MulticastInitializeTrapAnchors.WallStartPoint" ||
-					name == "MulticastInitializeTrapAnchors.WallEndPoint" ||
-					name == "MulticastInitialize.RootLocation" ||
-					name == "MulticastInitialize.Destination" ||
-					name == "MulticastAddTunnelPoint.Translation" ||
-					name == "MulticastAddAnchor.Translation" ||
-					strings.HasPrefix(name, "Multicast Initialize Segment.SegmentLocation_") ||
-					strings.HasPrefix(name, "Multicast Initialize Segment.SegmentEndLocation_") ||
-					name == "Multicast Initialize End Segment.248") {
-				var position Position
-				var ok bool
-				if name == "Multicast Initialize End Segment.248" && row.ValueStr != nil {
-					position, ok = parseWorldPosition(*row.ValueStr)
-				} else {
-					position, ok = parseUtilityRawVector(row.RawBits, row.BitCount)
-				}
-				if ok {
-					scan.UtilityPaths[row.ActorNetGUID] = append(
-						scan.UtilityPaths[row.ActorNetGUID],
-						utilityPathWrite{
-							TimeMS: row.TimeMS, PacketID: row.PacketID,
-							FieldName: name, Position: position,
-						},
-					)
-				}
-			}
-			if row.ValueI64 != nil && *row.ValueI64 >= 0 &&
-				uint64(*row.ValueI64) <= math.MaxUint32 {
-				target := uint32(*row.ValueI64)
-				switch utilityOwnerField(name) {
-				case "owner":
-					scan.UtilityOwners[row.ActorNetGUID] = append(
-						scan.UtilityOwners[row.ActorNetGUID],
-						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Owner: &target},
-					)
-				case "instigator":
-					scan.UtilityOwners[row.ActorNetGUID] = append(
-						scan.UtilityOwners[row.ActorNetGUID],
-						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Instigator: &target},
-					)
-				case "controller":
-					scan.UtilityOwners[row.ActorNetGUID] = append(
-						scan.UtilityOwners[row.ActorNetGUID],
-						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Controller: &target},
-					)
-				case "attachparent":
-					scan.UtilityOwners[row.ActorNetGUID] = append(
-						scan.UtilityOwners[row.ActorNetGUID],
-						utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, AttachParent: &target},
-					)
-				}
-			}
-
-			switch {
-			case name == "MulticastSetPhase.NewPhase":
-				if row.ValueI64 != nil {
-					scan.Phases = append(scan.Phases, phaseWrite{
-						TimeMS:   timeMS,
-						PacketID: row.PacketID,
-						Phase:    int(*row.ValueI64),
-					})
-				}
-			case strings.HasPrefix(name, "RoundResults["):
-				scan.collectRoundResult(name, row)
-			case isCombatReportTeamField(name, group):
-				prefix, member, ok := splitParticipantName(name)
-				if !ok {
-					continue
-				}
-				key := teamPairKey{Actor: row.ActorNetGUID, Prefix: prefix}
-				pair := pairs[key]
-				if pair == nil {
-					pair = &teamPair{}
-					pairs[key] = pair
-				}
-				if row.ValueStr == nil {
-					continue
-				}
-				switch member {
-				case "subject":
-					pair.Subject = normaliseUUID(*row.ValueStr)
-				case "team":
-					pair.Team = normaliseTeam(*row.ValueStr)
-				}
-				if pair.Subject != "" && pair.Team != "" {
-					scan.collectTeamPair(pair.Subject, pair.Team)
-				}
-			case strings.HasSuffix(name, "BombPlantedRPC.BombPlanter"):
-				if row.ValueI64 != nil {
-					scan.Planters = append(scan.Planters, rpcWrite{timeMS, strconv.FormatInt(*row.ValueI64, 10)})
-				}
-			case strings.HasSuffix(name, "BombPlantedRPC.PlantSite"):
-				if row.ValueI64 != nil {
-					scan.PlantSitesRPC = append(scan.PlantSitesRPC, rpcWrite{timeMS, strconv.FormatInt(*row.ValueI64, 10)})
-				}
-			case strings.HasSuffix(name, "BombPlantedRPC.PlantLocation"):
-				if row.ValueStr != nil {
-					scan.PlantLocations = append(scan.PlantLocations, rpcWrite{timeMS, *row.ValueStr})
-				}
-			case strings.HasSuffix(name, "BombDefusedRPC.DefusingCharacter"):
-				if row.ValueI64 != nil {
-					scan.Defusers = append(scan.Defusers, rpcWrite{timeMS, strconv.FormatInt(*row.ValueI64, 10)})
-				}
-			case name == "Multicast Destroy Smoke" ||
-				name == "Multicast Try Release Cage" ||
-				name == "Multicast Stop Collider" ||
-				name == "Multicast Stop Collider.Is Pulling":
-				scan.UtilityDestroy[row.ActorNetGUID] = append(
-					scan.UtilityDestroy[row.ActorNetGUID],
-					utilityDestroyWrite{TimeMS: timeMS, PacketID: row.PacketID, Name: name},
-				)
-			case (name == "WallActivated" || name == "IsActivated") && row.ValueBool != nil:
-				value := *row.ValueBool
-				scan.UtilityActivation[row.ActorNetGUID] = append(
-					scan.UtilityActivation[row.ActorNetGUID],
-					utilityActivationWrite{TimeMS: timeMS, PacketID: row.PacketID, Active: &value},
-				)
-			case strings.Contains(group, "Comp_AbilityFuelSystem") &&
-				(name == "CurrentFuel" || name == "IsFuelDraining"):
-				write := utilityFuelWrite{TimeMS: timeMS, PacketID: row.PacketID}
-				if name == "CurrentFuel" && row.ValueF64 != nil {
-					value := *row.ValueF64
-					write.Fuel = &value
-				}
-				if name == "IsFuelDraining" && row.ValueBool != nil {
-					value := *row.ValueBool
-					write.Draining = &value
-				}
-				if write.Fuel != nil || write.Draining != nil {
-					scan.UtilityFuel[row.ActorNetGUID] = append(
-						scan.UtilityFuel[row.ActorNetGUID], write,
-					)
-				}
-			case name == "CurrentState" && row.ValueI64 != nil &&
-				row.ObjectNetGUID != nil && *row.ValueI64 >= 0 &&
-				uint64(*row.ValueI64) <= math.MaxUint32:
-				object := *row.ObjectNetGUID
-				scan.AbilityStates[row.ActorNetGUID] = append(
-					scan.AbilityStates[row.ActorNetGUID],
-					abilityStateWrite{
-						TimeMS:        row.TimeMS,
-						PacketID:      row.PacketID,
-						ObjectNetGUID: &object,
-						StateGUID:     uint32(*row.ValueI64),
-					},
-				)
-			case stateFieldCandidate(name):
-				scan.collectStateField(row, name)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
+func collectFieldRow(scan *fieldScan, row *fieldRow, pairs map[teamPairKey]*teamPair) {
+	if row.FieldName == nil {
+		return
 	}
+	name := *row.FieldName
+	collectUtilityPathField(scan, row, name)
+	collectUtilityOwnerField(scan, row, name)
+	collectFieldValue(scan, row, name, pairs)
+}
+
+func collectUtilityPathField(scan *fieldScan, row *fieldRow, name string) {
+	if name == "MulticastAddSmokeScreenPoint.Translation" && row.ValueStr != nil {
+		if position, ok := parseWorldPosition(*row.ValueStr); ok &&
+			validUtilityPosition(position) {
+			scan.UtilityPaths[row.ActorNetGUID] = append(
+				scan.UtilityPaths[row.ActorNetGUID],
+				utilityPathWrite{
+					TimeMS: row.TimeMS, PacketID: row.PacketID,
+					FieldName: name, Position: position,
+				},
+			)
+		}
+	}
+	if row.ObjectNetGUID == nil &&
+		(name == "MulticastInitializeWall.WallStartLocation" ||
+			name == "MulticastInitializeWall.WallEndLocation" ||
+			name == "MulticastInitializeTrapAnchors.WallStartPoint" ||
+			name == "MulticastInitializeTrapAnchors.WallEndPoint" ||
+			name == "MulticastInitialize.RootLocation" ||
+			name == "MulticastInitialize.Destination" ||
+			name == "MulticastAddTunnelPoint.Translation" ||
+			name == "MulticastAddAnchor.Translation" ||
+			strings.HasPrefix(name, "Multicast Initialize Segment.SegmentLocation_") ||
+			strings.HasPrefix(name, "Multicast Initialize Segment.SegmentEndLocation_") ||
+			name == "Multicast Initialize End Segment.248") {
+		var position Position
+		var ok bool
+		if name == "Multicast Initialize End Segment.248" && row.ValueStr != nil {
+			position, ok = parseWorldPosition(*row.ValueStr)
+		} else {
+			position, ok = parseUtilityRawVector(row.RawBits, row.BitCount)
+		}
+		if ok {
+			scan.UtilityPaths[row.ActorNetGUID] = append(
+				scan.UtilityPaths[row.ActorNetGUID],
+				utilityPathWrite{
+					TimeMS: row.TimeMS, PacketID: row.PacketID,
+					FieldName: name, Position: position,
+				},
+			)
+		}
+	}
+}
+
+func collectUtilityOwnerField(scan *fieldScan, row *fieldRow, name string) {
+	if row.ValueI64 == nil || *row.ValueI64 < 0 ||
+		uint64(*row.ValueI64) > math.MaxUint32 {
+		return
+	}
+	target := uint32(*row.ValueI64)
+	switch utilityOwnerField(name) {
+	case "owner":
+		scan.UtilityOwners[row.ActorNetGUID] = append(
+			scan.UtilityOwners[row.ActorNetGUID],
+			utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Owner: &target},
+		)
+	case "instigator":
+		scan.UtilityOwners[row.ActorNetGUID] = append(
+			scan.UtilityOwners[row.ActorNetGUID],
+			utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Instigator: &target},
+		)
+	case "controller":
+		scan.UtilityOwners[row.ActorNetGUID] = append(
+			scan.UtilityOwners[row.ActorNetGUID],
+			utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, Controller: &target},
+		)
+	case "attachparent":
+		scan.UtilityOwners[row.ActorNetGUID] = append(
+			scan.UtilityOwners[row.ActorNetGUID],
+			utilityOwnerWrite{TimeMS: row.TimeMS, PacketID: row.PacketID, AttachParent: &target},
+		)
+	}
+}
+
+func collectFieldValue(
+	scan *fieldScan,
+	row *fieldRow,
+	name string,
+	pairs map[teamPairKey]*teamPair,
+) {
+	group := row.GroupPath
+	timeMS := row.TimeMS
+	switch {
+	case name == "MulticastSetPhase.NewPhase":
+		if row.ValueI64 != nil {
+			scan.Phases = append(scan.Phases, phaseWrite{
+				TimeMS:   timeMS,
+				PacketID: row.PacketID,
+				Phase:    int(*row.ValueI64),
+			})
+		}
+	case strings.HasPrefix(name, "RoundResults["):
+		scan.collectRoundResult(name, row)
+	case isCombatReportTeamField(name, group):
+		collectCombatTeamField(scan, row, name, pairs)
+	case strings.HasSuffix(name, "BombPlantedRPC.BombPlanter"):
+		if row.ValueI64 != nil {
+			scan.Planters = append(scan.Planters, rpcWrite{timeMS, strconv.FormatInt(*row.ValueI64, 10)})
+		}
+	case strings.HasSuffix(name, "BombPlantedRPC.PlantSite"):
+		if row.ValueI64 != nil {
+			scan.PlantSitesRPC = append(scan.PlantSitesRPC, rpcWrite{timeMS, strconv.FormatInt(*row.ValueI64, 10)})
+		}
+	case strings.HasSuffix(name, "BombPlantedRPC.PlantLocation"):
+		if row.ValueStr != nil {
+			scan.PlantLocations = append(scan.PlantLocations, rpcWrite{timeMS, *row.ValueStr})
+		}
+	case strings.HasSuffix(name, "BombDefusedRPC.DefusingCharacter"):
+		if row.ValueI64 != nil {
+			scan.Defusers = append(scan.Defusers, rpcWrite{timeMS, strconv.FormatInt(*row.ValueI64, 10)})
+		}
+	case name == "Multicast Destroy Smoke" ||
+		name == "Multicast Try Release Cage" ||
+		name == "Multicast Stop Collider" ||
+		name == "Multicast Stop Collider.Is Pulling":
+		scan.UtilityDestroy[row.ActorNetGUID] = append(
+			scan.UtilityDestroy[row.ActorNetGUID],
+			utilityDestroyWrite{TimeMS: timeMS, PacketID: row.PacketID, Name: name},
+		)
+	case (name == "WallActivated" || name == "IsActivated") && row.ValueBool != nil:
+		value := *row.ValueBool
+		scan.UtilityActivation[row.ActorNetGUID] = append(
+			scan.UtilityActivation[row.ActorNetGUID],
+			utilityActivationWrite{TimeMS: timeMS, PacketID: row.PacketID, Active: &value},
+		)
+	case strings.Contains(group, "Comp_AbilityFuelSystem") &&
+		(name == "CurrentFuel" || name == "IsFuelDraining"):
+		collectUtilityFuelField(scan, row, name, timeMS)
+	case name == "CurrentState" && row.ValueI64 != nil &&
+		row.ObjectNetGUID != nil && *row.ValueI64 >= 0 &&
+		uint64(*row.ValueI64) <= math.MaxUint32:
+		object := *row.ObjectNetGUID
+		scan.AbilityStates[row.ActorNetGUID] = append(
+			scan.AbilityStates[row.ActorNetGUID],
+			abilityStateWrite{
+				TimeMS:        row.TimeMS,
+				PacketID:      row.PacketID,
+				ObjectNetGUID: &object,
+				StateGUID:     uint32(*row.ValueI64),
+			},
+		)
+	case stateFieldCandidate(name):
+		scan.collectStateField(row, name)
+	}
+}
+
+func collectCombatTeamField(
+	scan *fieldScan,
+	row *fieldRow,
+	name string,
+	pairs map[teamPairKey]*teamPair,
+) {
+	prefix, member, ok := splitParticipantName(name)
+	if !ok {
+		return
+	}
+	key := teamPairKey{Actor: row.ActorNetGUID, Prefix: prefix}
+	pair := pairs[key]
+	if pair == nil {
+		pair = &teamPair{}
+		pairs[key] = pair
+	}
+	if row.ValueStr == nil {
+		return
+	}
+	switch member {
+	case "subject":
+		pair.Subject = normaliseUUID(*row.ValueStr)
+	case "team":
+		pair.Team = normaliseTeam(*row.ValueStr)
+	}
+	if pair.Subject != "" && pair.Team != "" {
+		scan.collectTeamPair(pair.Subject, pair.Team)
+	}
+}
+
+func collectUtilityFuelField(
+	scan *fieldScan,
+	row *fieldRow,
+	name string,
+	timeMS uint32,
+) {
+	write := utilityFuelWrite{TimeMS: timeMS, PacketID: row.PacketID}
+	if name == "CurrentFuel" && row.ValueF64 != nil {
+		value := *row.ValueF64
+		write.Fuel = &value
+	}
+	if name == "IsFuelDraining" && row.ValueBool != nil {
+		value := *row.ValueBool
+		write.Draining = &value
+	}
+	if write.Fuel != nil || write.Draining != nil {
+		scan.UtilityFuel[row.ActorNetGUID] = append(
+			scan.UtilityFuel[row.ActorNetGUID], write,
+		)
+	}
+}
+
+func sortFieldScanWrites(scan *fieldScan) {
 	sortUtilityOwnerWrites(scan.UtilityOwners)
 	sortUtilityFuelWrites(scan.UtilityFuel)
 	sortUtilityDestroyWrites(scan.UtilityDestroy)
 	sortUtilityActivationWrites(scan.UtilityActivation)
 	sortAbilityStateWrites(scan.AbilityStates)
-
-	return scan, nil
 }
 
 func (s *fieldScan) collectRoundResult(name string, row *fieldRow) {
@@ -416,18 +462,39 @@ type roundStartEvent struct {
 // and accumulates the score. It intentionally never creates a round from a
 // surrender's awarded RoundResults entry.
 func buildRoundWindows(scan *fieldScan, starts []roundStartEvent, manifestDuration uint32) ([]roundWindow, []string) {
+	raw, warnings := buildRoundPhases(scan.Phases)
+	if len(raw) == 0 {
+		return nil, append(warnings, "No played rounds were found.")
+	}
+
+	resultsByNumber, resultWarnings := indexRoundResults(scan.Results)
+	warnings = append(warnings, resultWarnings...)
+
+	windows, windowWarnings := buildRoundWindowsFromPhases(
+		raw, resultsByNumber, starts, manifestDuration,
+	)
+	warnings = append(warnings, windowWarnings...)
+
+	if len(resultsByNumber) > 0 && !anyResultJoined(windows, resultsByNumber) {
+		warnings = append(warnings, "No RoundResults entry joined to a played round.")
+	}
+
+	return windows, warnings
+}
+
+func buildRoundPhases(phases []phaseWrite) ([]roundPhase, []string) {
 	var warnings []string
 
-	phases := append([]phaseWrite(nil), scan.Phases...)
-	sort.SliceStable(phases, func(i, j int) bool {
-		if phases[i].TimeMS == phases[j].TimeMS {
-			return phases[i].PacketID < phases[j].PacketID
+	ordered := append([]phaseWrite(nil), phases...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		if ordered[i].TimeMS == ordered[j].TimeMS {
+			return ordered[i].PacketID < ordered[j].PacketID
 		}
-		return phases[i].TimeMS < phases[j].TimeMS
+		return ordered[i].TimeMS < ordered[j].TimeMS
 	})
 
 	var raw []roundPhase
-	for _, write := range phases {
+	for _, write := range ordered {
 		timeMS := write.TimeMS
 		switch write.Phase {
 		case phaseReset:
@@ -489,12 +556,14 @@ func buildRoundWindows(scan *fieldScan, starts []roundStartEvent, manifestDurati
 	for len(raw) > 0 && raw[len(raw)-1].StartMS == nil {
 		raw = raw[:len(raw)-1]
 	}
-	if len(raw) == 0 {
-		return nil, append(warnings, "No played rounds were found.")
-	}
 
+	return raw, warnings
+}
+
+func indexRoundResults(results map[int]*resultWrite) (map[int]*resultWrite, []string) {
+	var warnings []string
 	resultsByNumber := make(map[int]*resultWrite)
-	for _, entry := range scan.Results {
+	for _, entry := range results {
 		if !entry.HasNumber {
 			continue
 		}
@@ -503,7 +572,16 @@ func buildRoundWindows(scan *fieldScan, starts []roundStartEvent, manifestDurati
 		}
 		resultsByNumber[entry.Number] = entry
 	}
+	return resultsByNumber, warnings
+}
 
+func buildRoundWindowsFromPhases(
+	raw []roundPhase,
+	resultsByNumber map[int]*resultWrite,
+	starts []roundStartEvent,
+	manifestDuration uint32,
+) ([]roundWindow, []string) {
+	var warnings []string
 	usedNumbers := make(map[int]bool)
 	windows := make([]roundWindow, 0, len(raw))
 	var redScore, blueScore int
@@ -572,19 +650,16 @@ func buildRoundWindows(scan *fieldScan, starts []roundStartEvent, manifestDurati
 		windows = append(windows, window)
 	}
 
-	if len(resultsByNumber) > 0 {
-		joined := 0
-		for _, window := range windows {
-			if resultsByNumber[window.RoundNumber-1] != nil {
-				joined++
-			}
-		}
-		if joined == 0 {
-			warnings = append(warnings, "No RoundResults entry joined to a played round.")
+	return windows, warnings
+}
+
+func anyResultJoined(windows []roundWindow, resultsByNumber map[int]*resultWrite) bool {
+	for _, window := range windows {
+		if resultsByNumber[window.RoundNumber-1] != nil {
+			return true
 		}
 	}
-
-	return windows, warnings
+	return false
 }
 
 func nearestRoundNumber(starts []roundStartEvent, startMS uint32) int {
