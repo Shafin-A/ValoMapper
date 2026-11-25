@@ -81,90 +81,25 @@ func NewReplayHandler(parser ReplayParser, options ...ReplayHandlerOption) *Repl
 // Post streams the single "file" part to a temp file while hashing; VRFKit never sees the client filename.
 func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 	requestID := middleware.GetRequestID(r)
+	maxBytes := h.maxUploadBytes()
+	h.configureReplayDeadlines(w)
 
-	maxBytes := int64(250 << 20)
-	if h.parser != nil {
-		if configured := h.parser.MaxUploadBytes(); configured > 0 {
-			maxBytes = configured
-		}
-	}
-
-	controller := http.NewResponseController(w)
-	_ = controller.SetReadDeadline(time.Now().Add(replayUploadReadDeadline))
-	_ = controller.SetWriteDeadline(time.Now().Add(replayUploadWriteDeadline))
 	// Early failures (parser unavailable, rate limited, bad multipart) still have a
 	// body in flight; drain it so the browser sees the JSON error, not a reset upload.
 	defer drainReplayBody(r, maxBytes)
 
-	if h.parser == nil || !h.parser.Available() {
-		h.sendError(w, requestID, replay.NewError(replay.CodeParserUnavailable, "", nil))
+	if !h.ensureParserAvailable(w, requestID) {
+		return
+	}
+	if !h.allowReplayParse(w, r, requestID) {
 		return
 	}
 
-	if h.limiter != nil && !h.limiter.GetLimiter(middleware.GetIP(r)).Allow() {
-		if recorder, ok := h.parser.(replayRateLimitRecorder); ok {
-			recorder.RecordRateLimited()
-		}
-		h.sendError(w, requestID, &replay.Error{
-			Code:       replay.CodeRateLimited,
-			Message:    replay.DefaultMessage(replay.CodeRateLimited),
-			RetryAfter: 60 * time.Second,
-		})
-		return
-	}
-
-	r.Body = http.MaxBytesReader(w, r.Body, maxBytes+replayMultipartSlack)
-	reader, err := r.MultipartReader()
-	if err != nil {
-		h.sendError(w, requestID, replay.NewError(replay.CodeInvalidRequest, "", err))
-		return
-	}
-
-	tempDir, err := os.MkdirTemp("", "valomapper-replay-*")
-	if err != nil {
-		h.sendError(w, requestID, replay.NewError(replay.CodeInternal, "", err))
+	filePath, hash, tempDir, ok := h.readReplayUpload(w, r, requestID, maxBytes)
+	if !ok {
 		return
 	}
 	defer func() { _ = os.RemoveAll(tempDir) }()
-
-	var filePath, hash string
-	fileSeen := false
-
-	for {
-		part, err := reader.NextPart()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			h.sendError(w, requestID, mapMultipartReadError(err, maxBytes))
-			return
-		}
-
-		if part.FileName() == "" {
-			_ = part.Close()
-			continue
-		}
-		if fileSeen {
-			_ = part.Close()
-			h.sendError(w, requestID, replay.NewError(replay.CodeInvalidRequest,
-				"Upload exactly one replay file.", nil))
-			return
-		}
-		fileSeen = true
-
-		filePath, hash, err = saveReplayUpload(part, tempDir, maxBytes)
-		_ = part.Close()
-		if err != nil {
-			h.sendError(w, requestID, err)
-			return
-		}
-	}
-
-	if !fileSeen {
-		h.sendError(w, requestID, replay.NewError(replay.CodeInvalidRequest,
-			"The request did not contain a replay file.", nil))
-		return
-	}
 
 	started := time.Now()
 	envelope, err := h.parser.Parse(r.Context(), filePath, hash)
@@ -179,6 +114,116 @@ func (h *ReplayHandler) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeReplayEnvelope(w, r, requestID, envelope, nil, time.Since(started).Milliseconds())
+}
+
+func (h *ReplayHandler) maxUploadBytes() int64 {
+	maxBytes := int64(250 << 20)
+	if h.parser != nil {
+		if configured := h.parser.MaxUploadBytes(); configured > 0 {
+			maxBytes = configured
+		}
+	}
+	return maxBytes
+}
+
+func (h *ReplayHandler) configureReplayDeadlines(w http.ResponseWriter) {
+	controller := http.NewResponseController(w)
+	_ = controller.SetReadDeadline(time.Now().Add(replayUploadReadDeadline))
+	_ = controller.SetWriteDeadline(time.Now().Add(replayUploadWriteDeadline))
+}
+
+func (h *ReplayHandler) ensureParserAvailable(
+	w http.ResponseWriter,
+	requestID string,
+) bool {
+	if h.parser != nil && h.parser.Available() {
+		return true
+	}
+	h.sendError(w, requestID, replay.NewError(replay.CodeParserUnavailable, "", nil))
+	return false
+}
+
+func (h *ReplayHandler) allowReplayParse(
+	w http.ResponseWriter,
+	r *http.Request,
+	requestID string,
+) bool {
+	if h.limiter == nil || h.limiter.GetLimiter(middleware.GetIP(r)).Allow() {
+		return true
+	}
+
+	if recorder, ok := h.parser.(replayRateLimitRecorder); ok {
+		recorder.RecordRateLimited()
+	}
+	h.sendError(w, requestID, &replay.Error{
+		Code:       replay.CodeRateLimited,
+		Message:    replay.DefaultMessage(replay.CodeRateLimited),
+		RetryAfter: 60 * time.Second,
+	})
+	return false
+}
+
+func (h *ReplayHandler) readReplayUpload(
+	w http.ResponseWriter,
+	r *http.Request,
+	requestID string,
+	maxBytes int64,
+) (filePath, hash, tempDir string, ok bool) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBytes+replayMultipartSlack)
+	reader, err := r.MultipartReader()
+	if err != nil {
+		h.sendError(w, requestID, replay.NewError(replay.CodeInvalidRequest, "", err))
+		return "", "", "", false
+	}
+
+	tempDir, err = os.MkdirTemp("", "valomapper-replay-*")
+	if err != nil {
+		h.sendError(w, requestID, replay.NewError(replay.CodeInternal, "", err))
+		return "", "", "", false
+	}
+
+	fileSeen := false
+	for {
+		part, err := reader.NextPart()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			_ = os.RemoveAll(tempDir)
+			h.sendError(w, requestID, mapMultipartReadError(err, maxBytes))
+			return "", "", "", false
+		}
+
+		if part.FileName() == "" {
+			_ = part.Close()
+			continue
+		}
+		if fileSeen {
+			_ = part.Close()
+			_ = os.RemoveAll(tempDir)
+			h.sendError(w, requestID, replay.NewError(replay.CodeInvalidRequest,
+				"Upload exactly one replay file.", nil))
+			return "", "", "", false
+		}
+		fileSeen = true
+
+		filePath, hash, err = saveReplayUpload(part, tempDir, maxBytes)
+		_ = part.Close()
+		if err != nil {
+			_ = os.RemoveAll(tempDir)
+			h.sendError(w, requestID, err)
+			return "", "", "", false
+		}
+	}
+
+	if !fileSeen {
+		_ = os.RemoveAll(tempDir)
+		h.sendError(w, requestID, replay.NewError(replay.CodeInvalidRequest,
+			"The request did not contain a replay file.", nil))
+		return "", "", "", false
+	}
+
+	return filePath, hash, tempDir, true
 }
 
 // Get only reads the short-TTL LRU cache; it never re-parses or touches disk.
