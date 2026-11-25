@@ -9,6 +9,17 @@ import {
   getRoundPlanterPuuid,
 } from "./players";
 
+export const createReplaySpikeToolIcon = (
+  roundNumber: number,
+): ToolIconCanvas => ({
+  id: `${REPLAY_PREFIX}spike-${roundNumber}`,
+  name: "spike",
+  x: 0,
+  y: 0,
+  width: REPLAY_SPIKE_SIZE,
+  height: REPLAY_SPIKE_SIZE,
+});
+
 export const buildReplaySpike = ({
   match,
   round,
@@ -27,14 +38,7 @@ export const buildReplaySpike = ({
     return null;
   }
 
-  const toolIcon: ToolIconCanvas = {
-    id: `${REPLAY_PREFIX}spike-${round.roundNumber}`,
-    name: "spike",
-    x: 0,
-    y: 0,
-    width: REPLAY_SPIKE_SIZE,
-    height: REPLAY_SPIKE_SIZE,
-  };
+  const toolIcon = createReplaySpikeToolIcon(round.roundNumber);
 
   if (spike.state === "carried") {
     const carrierPuuid = spike.carrierPuuid ?? getRoundPlanterPuuid(round);

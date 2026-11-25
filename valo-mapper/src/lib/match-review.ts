@@ -1,16 +1,18 @@
+import { DEFAULT_MAP_OPTIONS, MAP_OPTIONS } from "@/lib/consts";
+import { createEmptyPhaseState } from "@/lib/canvas-phase";
 import {
-  AGENTS,
-  DEFAULT_MAP_OPTIONS,
-  getMapCallouts,
-  MAP_OPTIONS,
-  MAP_SIZE,
-  VIRTUAL_HEIGHT,
-  VIRTUAL_WIDTH,
-} from "@/lib/consts";
-import { transformRiotWorldToCanvasPoint } from "@/lib/map-positioning";
+  createReplayAgent,
+  createReplayVisionCone,
+} from "@/lib/replay/snapshot/agents";
+import { REPLAY_PREFIX } from "@/lib/replay/snapshot/constants";
+import {
+  toReplayCanvasPoint,
+  toReplayCanvasRotation,
+} from "@/lib/replay/snapshot/geometry";
+import { getReplayAgentId } from "@/lib/replay/snapshot/players";
+import { createReplaySpikeToolIcon } from "@/lib/replay/snapshot/spike";
 import type {
   AgentCanvas,
-  AgentRole,
   AbilityCanvas,
   ConnectingLine,
   IconSettings,
@@ -30,20 +32,6 @@ const FALLBACK_REPLAY_KILL_COLORS = {
   ally: "#34d399",
   enemy: "#fb7185",
 } as const;
-
-const REPLAY_SPIKE_SIZE = 32;
-const REPLAY_VIEW_VECTOR_LENGTH = 100;
-const REPLAY_VISION_CONE_NAME = "Vision Cone 103";
-
-const createEmptyPhaseState = (): PhaseState => ({
-  agentsOnCanvas: [],
-  abilitiesOnCanvas: [],
-  drawLines: [],
-  connectingLines: [],
-  textsOnCanvas: [],
-  imagesOnCanvas: [],
-  toolIconsOnCanvas: [],
-});
 
 const normalizeMapKey = (value?: string) =>
   (value ?? "")
@@ -98,10 +86,6 @@ export const resolveMatchMapOption = (match: MatchSummaryResponse): MapOption =>
   );
 };
 
-const getAgentRole = (agentName: string): AgentRole => {
-  return AGENTS.find((agent) => agent.name === agentName)?.role ?? "Duelist";
-};
-
 const getEventPlayerLocations = (event: RoundEventLogEntry) => {
   switch (event.eventType) {
     case "kill":
@@ -115,97 +99,17 @@ const getEventPlayerLocations = (event: RoundEventLogEntry) => {
   }
 };
 
-const getReplayMapPosition = () => ({
-  x: (VIRTUAL_WIDTH - MAP_SIZE) / 2,
-  y: (VIRTUAL_HEIGHT - MAP_SIZE) / 2,
-});
-
 const buildReplayAgentIdsByPuuid = (players: MatchPlayerSummary[]) =>
   new Map(
-    players.map((player, index) => [player.puuid, `replay-agent-${index}`]),
+    players.map((player, index) => [player.puuid, getReplayAgentId(index)]),
   );
 
-const getReplayAgentId = (
+const resolveReplayAgentId = (
   replayAgentIdsByPuuid: Map<string, string>,
   puuid: string,
-) => replayAgentIdsByPuuid.get(puuid) ?? "replay-agent-unknown";
-
-const toCanvasPoint = ({
-  mapId,
-  mapSide,
-  position,
-}: {
-  mapId: string;
-  mapSide: MapSide;
-  position?: { x: number; y: number };
-}) => {
-  if (!position) {
-    return null;
-  }
-
-  const transform = getMapCallouts(mapId);
-  if (!transform) {
-    return null;
-  }
-
-  return transformRiotWorldToCanvasPoint({
-    position,
-    transform,
-    mapPosition: getReplayMapPosition(),
-    mapSide,
-  });
-};
-
-const toCanvasRotation = ({
-  mapId,
-  mapSide,
-  location,
-  viewRadians,
-}: {
-  mapId: string;
-  mapSide: MapSide;
-  location?: MatchPlayerLocation["location"];
-  viewRadians?: number;
-}) => {
-  if (
-    !location ||
-    typeof viewRadians !== "number" ||
-    !Number.isFinite(viewRadians)
-  ) {
-    return 0;
-  }
-
-  const transform = getMapCallouts(mapId);
-  if (!transform) {
-    return 0;
-  }
-
-  const mapPosition = getReplayMapPosition();
-  const origin = transformRiotWorldToCanvasPoint({
-    position: location,
-    transform,
-    mapPosition,
-    mapSide,
-  });
-  const facingPoint = transformRiotWorldToCanvasPoint({
-    position: {
-      x: location.x + Math.cos(viewRadians) * REPLAY_VIEW_VECTOR_LENGTH,
-      y: location.y + Math.sin(viewRadians) * REPLAY_VIEW_VECTOR_LENGTH,
-    },
-    transform,
-    mapPosition,
-    mapSide,
-  });
-
-  if (!origin || !facingPoint) {
-    return 0;
-  }
-
-  return (
-    (Math.atan2(facingPoint.y - origin.y, facingPoint.x - origin.x) * 180) /
-    Math.PI
-  );
-};
+) =>
+  replayAgentIdsByPuuid.get(puuid) ??
+  `${REPLAY_PREFIX}agent-unknown`;
 
 const buildAgentsFromLocations = ({
   latestLocations,
@@ -224,7 +128,7 @@ const buildAgentsFromLocations = ({
 }): AgentCanvas[] => {
   return players.flatMap((player) => {
     const playerLocation = latestLocations.get(player.puuid);
-    const canvasPoint = toCanvasPoint({
+    const canvasPoint = toReplayCanvasPoint({
       mapId,
       mapSide,
       position: playerLocation?.location,
@@ -235,15 +139,14 @@ const buildAgentsFromLocations = ({
     }
 
     return [
-      {
-        id: getReplayAgentId(replayAgentIdsByPuuid, player.puuid),
-        name: player.characterName,
-        role: getAgentRole(player.characterName),
-        isAlly: player.teamId === "Blue",
+      createReplayAgent({
+        id: resolveReplayAgentId(replayAgentIdsByPuuid, player.puuid),
+        characterName: player.characterName,
+        teamId: player.teamId,
         isGray: grayPlayerIds?.has(player.puuid),
         x: canvasPoint.x,
         y: canvasPoint.y,
-      },
+      }),
     ];
   });
 };
@@ -263,7 +166,7 @@ const buildVisionConesFromLocations = ({
 }): AbilityCanvas[] => {
   return players.flatMap((player) => {
     const playerLocation = latestLocations.get(player.puuid);
-    const canvasPoint = toCanvasPoint({
+    const canvasPoint = toReplayCanvasPoint({
       mapId,
       mapSide,
       position: playerLocation?.location,
@@ -273,26 +176,25 @@ const buildVisionConesFromLocations = ({
       return [];
     }
 
-    const agentId = getReplayAgentId(replayAgentIdsByPuuid, player.puuid);
+    const agentId = resolveReplayAgentId(
+      replayAgentIdsByPuuid,
+      player.puuid,
+    );
 
     return [
-      {
+      createReplayVisionCone({
         id: `${agentId}-cone`,
-        name: REPLAY_VISION_CONE_NAME,
-        action: "vision_cone_103",
         attachedToId: agentId,
         isAlly: player.teamId === "Blue",
         x: canvasPoint.x,
         y: canvasPoint.y,
-        currentRotation: toCanvasRotation({
+        currentRotation: toReplayCanvasRotation({
           mapId,
           mapSide,
           location: playerLocation.location,
           viewRadians: playerLocation.viewRadians,
         }),
-        iconOnly: false,
-        showOuterCircle: true,
-      },
+      }),
     ];
   });
 };
@@ -322,8 +224,12 @@ const buildKillLine = ({
   };
 }): ConnectingLine | null => {
   const killerLocation = latestLocations.get(event.killerPuuid)?.location;
-  const start = toCanvasPoint({ mapId, mapSide, position: killerLocation });
-  const end = toCanvasPoint({
+  const start = toReplayCanvasPoint({
+    mapId,
+    mapSide,
+    position: killerLocation,
+  });
+  const end = toReplayCanvasPoint({
     mapId,
     mapSide,
     position: event.victimLocation,
@@ -336,9 +242,9 @@ const buildKillLine = ({
   const isAllyKill = playersByPuuid.get(event.killerPuuid)?.teamId === "Blue";
 
   return {
-    id: `replay-kill-${roundNumber}-${eventIndex}`,
-    fromId: getReplayAgentId(replayAgentIdsByPuuid, event.killerPuuid),
-    toId: getReplayAgentId(replayAgentIdsByPuuid, event.victimPuuid),
+    id: `${REPLAY_PREFIX}kill-${roundNumber}-${eventIndex}`,
+    fromId: resolveReplayAgentId(replayAgentIdsByPuuid, event.killerPuuid),
+    toId: resolveReplayAgentId(replayAgentIdsByPuuid, event.victimPuuid),
     strokeColor: isAllyKill ? killColors.ally : killColors.enemy,
     strokeWidth: 3,
     isInteractive: false,
@@ -356,19 +262,20 @@ const buildSpikeToolIcon = ({
   mapSide: MapSide;
   roundNumber: number;
 }): ToolIconCanvas | null => {
-  const canvasPoint = toCanvasPoint({ mapId, mapSide, position: location });
+  const canvasPoint = toReplayCanvasPoint({
+    mapId,
+    mapSide,
+    position: location,
+  });
 
   if (!canvasPoint) {
     return null;
   }
 
   return {
-    id: `replay-spike-${roundNumber}`,
-    name: "spike",
+    ...createReplaySpikeToolIcon(roundNumber),
     x: canvasPoint.x,
     y: canvasPoint.y,
-    width: REPLAY_SPIKE_SIZE,
-    height: REPLAY_SPIKE_SIZE,
   };
 };
 

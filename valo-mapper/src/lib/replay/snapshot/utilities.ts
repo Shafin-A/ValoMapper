@@ -1,6 +1,7 @@
 import { mToPixels } from "@/lib/utils";
 import { VISION_CONE_MAX_LENGTH } from "@/lib/vision-cone-utils";
 import type { AbilityCanvas, MapSide } from "@/lib/types";
+import { createReplayVisionCone } from "./agents";
 import {
   getReplayAbilityYawOffset,
   getReplayUtilityAbilityIcon,
@@ -12,7 +13,7 @@ import {
   getReplayUtilityPositionAtTime,
   getReplayUtilityVisionYawAtTime,
 } from "../utilities";
-import { REPLAY_PREFIX, REPLAY_VISION_CONE_NAME } from "./constants";
+import { REPLAY_PREFIX } from "./constants";
 import {
   isReplayPointOnMap,
   toReplayCanvasPoint,
@@ -113,24 +114,22 @@ export const buildReplayUtilities = ({
         ? getReplayUtilityVisionYawAtTime(utility.vision, frame.timeMs)
         : null;
     if (visionYaw !== null) {
-      abilities.push({
-        id: `${id}-vision`,
-        name: REPLAY_VISION_CONE_NAME,
-        action: "vision_cone_103",
-        attachedToId: id,
-        isAlly,
-        x: point.x,
-        y: point.y,
-        currentRotation: toReplayCanvasRotation({
-          mapId: match.mapId,
-          mapSide,
-          location: utility.position,
-          viewRadians: (visionYaw * Math.PI) / 180,
+      abilities.push(
+        createReplayVisionCone({
+          id: `${id}-vision`,
+          attachedToId: id,
+          isAlly,
+          x: point.x,
+          y: point.y,
+          currentRotation: toReplayCanvasRotation({
+            mapId: match.mapId,
+            mapSide,
+            location: utility.position,
+            viewRadians: (visionYaw * Math.PI) / 180,
+          }),
+          currentLength: VISION_CONE_MAX_LENGTH,
         }),
-        currentLength: VISION_CONE_MAX_LENGTH,
-        iconOnly: false,
-        showOuterCircle: true,
-      });
+      );
     }
 
     return abilities;

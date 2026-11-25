@@ -1,4 +1,5 @@
 import { defaultIconSettings } from "@/contexts/settings-context";
+import { createEmptyPhaseState } from "@/lib/canvas-phase";
 import { resolveMatchMapOption } from "@/lib/match-review";
 import type { MapOption, MapSide, PhaseState, UndoableState } from "@/lib/types";
 import type { ReplayFrame, ReplayMatch, ReplayRound } from "../types";
@@ -8,16 +9,6 @@ import { buildLatestKillLine } from "./kill-line";
 import { buildReplaySpike } from "./spike";
 import { buildReplayUtilities } from "./utilities";
 import { buildReplayWeapons } from "./weapons";
-
-const createEmptyPhaseState = (): PhaseState => ({
-  agentsOnCanvas: [],
-  abilitiesOnCanvas: [],
-  drawLines: [],
-  connectingLines: [],
-  textsOnCanvas: [],
-  imagesOnCanvas: [],
-  toolIconsOnCanvas: [],
-});
 
 /**
  * A clean canvas for the replay route: fixed map/side, one empty phase.
