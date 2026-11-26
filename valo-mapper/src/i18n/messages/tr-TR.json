@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "Farklı bir arama yapmayı deneyin veya bazı filtreleri temizleyin.",
     "showingCount": "{total} içinden {shown} gösteriliyor",
     "loadMore": "Daha fazlasını yükle",
-    "done": "Bitti"
+    "done": "Bitti",
+    "tagSearchPlaceholder": "Etiket ara...",
+    "clearTagSearch": "Etiket aramasını temizle",
+    "noMatchingTags": "Aramanızla eşleşen etiket yok."
   },
   "canvas": {
     "contextMenu": {

@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "ลองค้นหาอื่นหรือล้างตัวกรองบางส่วน",
     "showingCount": "กำลังแสดง {shown} จาก {total}",
     "loadMore": "โหลดเพิ่ม",
-    "done": "เสร็จสิ้น"
+    "done": "เสร็จสิ้น",
+    "tagSearchPlaceholder": "ค้นหาแท็ก...",
+    "clearTagSearch": "ล้างการค้นหาแท็ก",
+    "noMatchingTags": "ไม่มีแท็กที่ตรงกับการค้นหาของคุณ"
   },
   "canvas": {
     "contextMenu": {

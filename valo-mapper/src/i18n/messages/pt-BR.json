@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "Tente uma pesquisa diferente ou limpe alguns filtros.",
     "showingCount": "Mostrando {shown} de {total}",
     "loadMore": "Carregar mais",
-    "done": "Concluído"
+    "done": "Concluído",
+    "tagSearchPlaceholder": "Pesquisar tags...",
+    "clearTagSearch": "Limpar pesquisa de tags",
+    "noMatchingTags": "Nenhuma tag corresponde à sua pesquisa."
   },
   "canvas": {
     "contextMenu": {

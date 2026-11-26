@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "嘗試其他搜尋或清除一些篩選條件。",
     "showingCount": "顯示 {shown}，共 {total}",
     "loadMore": "載入更多",
-    "done": "完成"
+    "done": "完成",
+    "tagSearchPlaceholder": "搜尋標籤...",
+    "clearTagSearch": "清除標籤搜尋",
+    "noMatchingTags": "沒有符合的標籤。"
   },
   "canvas": {
     "contextMenu": {

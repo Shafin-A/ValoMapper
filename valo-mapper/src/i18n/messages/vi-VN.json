@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "Hãy thử tìm kiếm khác hoặc xóa một số bộ lọc.",
     "showingCount": "Hiển thị {shown} trên {total}",
     "loadMore": "Tải thêm",
-    "done": "Xong"
+    "done": "Xong",
+    "tagSearchPlaceholder": "Tìm kiếm thẻ...",
+    "clearTagSearch": "Xóa tìm kiếm thẻ",
+    "noMatchingTags": "Không có thẻ nào phù hợp với tìm kiếm của bạn."
   },
   "canvas": {
     "contextMenu": {

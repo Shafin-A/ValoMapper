@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "Spróbuj innego wyszukiwania lub wyczyść niektóre filtry.",
     "showingCount": "Wyświetlanie {shown} z {total}",
     "loadMore": "Załaduj więcej",
-    "done": "Gotowe"
+    "done": "Gotowe",
+    "tagSearchPlaceholder": "Szukaj tagów...",
+    "clearTagSearch": "Wyczyść wyszukiwanie tagów",
+    "noMatchingTags": "Żadne tagi nie pasują do wyszukiwania."
   },
   "canvas": {
     "contextMenu": {

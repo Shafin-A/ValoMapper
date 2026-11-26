@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "Prova una ricerca diversa o cancella alcuni filtri.",
     "showingCount": "Mostra {shown} di {total}",
     "loadMore": "Carica altri",
-    "done": "Fatto"
+    "done": "Fatto",
+    "tagSearchPlaceholder": "Cerca tag...",
+    "clearTagSearch": "Cancella ricerca tag",
+    "noMatchingTags": "Nessun tag corrisponde alla tua ricerca."
   },
   "canvas": {
     "contextMenu": {

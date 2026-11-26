@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "다른 검색을 시도하거나 일부 필터를 삭제하세요.",
     "showingCount": "{total}개 중 {shown}개 표시",
     "loadMore": "더 불러오기",
-    "done": "완료"
+    "done": "완료",
+    "tagSearchPlaceholder": "태그 검색...",
+    "clearTagSearch": "태그 검색 지우기",
+    "noMatchingTags": "검색과 일치하는 태그가 없습니다."
   },
   "canvas": {
     "contextMenu": {

@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "尝试其他搜索或清除一些筛选条件。",
     "showingCount": "显示 {shown}，共 {total}",
     "loadMore": "加载更多",
-    "done": "完成"
+    "done": "完成",
+    "tagSearchPlaceholder": "搜索标签...",
+    "clearTagSearch": "清除标签搜索",
+    "noMatchingTags": "没有匹配的标签。"
   },
   "canvas": {
     "contextMenu": {

@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "Coba penelusuran lain atau hapus beberapa filter.",
     "showingCount": "Menampilkan {shown} dari {total}",
     "loadMore": "Muat lebih banyak",
-    "done": "Selesai"
+    "done": "Selesai",
+    "tagSearchPlaceholder": "Cari tag...",
+    "clearTagSearch": "Hapus pencarian tag",
+    "noMatchingTags": "Tidak ada tag yang cocok dengan pencarian Anda."
   },
   "canvas": {
     "contextMenu": {

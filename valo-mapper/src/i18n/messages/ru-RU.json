@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "Попробуйте другой поиск или очистите некоторые фильтры.",
     "showingCount": "Показаны {shown} из {total}",
     "loadMore": "Загрузить ещё",
-    "done": "Готово"
+    "done": "Готово",
+    "tagSearchPlaceholder": "Поиск тегов...",
+    "clearTagSearch": "Очистить поиск тегов",
+    "noMatchingTags": "Нет тегов, соответствующих поиску."
   },
   "canvas": {
     "contextMenu": {

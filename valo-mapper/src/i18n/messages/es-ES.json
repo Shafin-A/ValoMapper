@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "Prueba otra búsqueda o limpia algunos filtros.",
     "showingCount": "Mostrando {shown} de {total}",
     "loadMore": "Cargar más",
-    "done": "Listo"
+    "done": "Listo",
+    "tagSearchPlaceholder": "Buscar etiquetas...",
+    "clearTagSearch": "Limpiar búsqueda de etiquetas",
+    "noMatchingTags": "Ninguna etiqueta coincide con tu búsqueda."
   },
   "canvas": {
     "contextMenu": {

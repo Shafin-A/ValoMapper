@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "جرّب بحثًا مختلفًا أو امسح بعض عوامل التصفية.",
     "showingCount": "يتم عرض {shown} من {total}",
     "loadMore": "تحميل المزيد",
-    "done": "تم"
+    "done": "تم",
+    "tagSearchPlaceholder": "ابحث في الوسوم...",
+    "clearTagSearch": "مسح بحث الوسوم",
+    "noMatchingTags": "لا توجد وسوم تطابق بحثك."
   },
   "canvas": {
     "contextMenu": {

@@ -862,7 +862,10 @@
     "libraryEmptyDescription": "別の検索を試すか、フィルターをいくつかクリアしてください。",
     "showingCount": "{total} 件中 {shown} 件を表示",
     "loadMore": "さらに読み込む",
-    "done": "完了"
+    "done": "完了",
+    "tagSearchPlaceholder": "タグを検索...",
+    "clearTagSearch": "タグ検索をクリア",
+    "noMatchingTags": "検索に一致するタグはありません。"
   },
   "canvas": {
     "contextMenu": {
