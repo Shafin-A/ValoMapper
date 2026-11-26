@@ -279,7 +279,7 @@ export const AgentsSidebar = ({
                 )}
               </div>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Switch
                   aria-label={isAlly ? t("ally") : t("enemy")}
@@ -299,33 +299,35 @@ export const AgentsSidebar = ({
                   {isAlly ? t("ally") : t("enemy")}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={onMap}
-                  onCheckedChange={(checked) => {
-                    clearSelection();
-                    setOnMap(!!checked);
-                  }}
-                  disabled={isLoadingLobby || isErrorLobby}
-                />
-                <span className="text-sm">{t("onMap")}</span>
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={onMap}
+                    onCheckedChange={(checked) => {
+                      clearSelection();
+                      setOnMap(!!checked);
+                    }}
+                    disabled={isLoadingLobby || isErrorLobby}
+                  />
+                  <span className="text-sm">{t("onMap")}</span>
+                </div>
+                {lobbyCode && (
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={favoritesOnly}
+                      onCheckedChange={(checked) => {
+                        setFavoritesOnly(!!checked);
+                      }}
+                      disabled={
+                        isLoadingLobby || isErrorLobby || !areFavoritesReady
+                      }
+                      aria-label={t("favorites")}
+                    />
+                    <span className="text-sm">{t("favorites")}</span>
+                  </div>
+                )}
               </div>
             </div>
-            {lobbyCode && (
-              <div className="flex items-center justify-end gap-2">
-                <Checkbox
-                  checked={favoritesOnly}
-                  onCheckedChange={(checked) => {
-                    setFavoritesOnly(!!checked);
-                  }}
-                  disabled={
-                    isLoadingLobby || isErrorLobby || !areFavoritesReady
-                  }
-                  aria-label={t("favorites")}
-                />
-                <span className="text-sm">{t("favorites")}</span>
-              </div>
-            )}
           </div>
         </SidebarHeader>
         <SidebarContent className="relative">
