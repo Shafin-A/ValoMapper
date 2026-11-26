@@ -312,7 +312,10 @@ export const LibraryToolbar = ({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-80">
+            <PopoverContent
+              align="start"
+              className="max-h-[70vh] w-80 overflow-y-auto"
+            >
               {tagFilter()}
             </PopoverContent>
           </Popover>
