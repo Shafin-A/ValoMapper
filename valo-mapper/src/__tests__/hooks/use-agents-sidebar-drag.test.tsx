@@ -15,9 +15,9 @@ const createPointerMove = (x: number, y: number) => {
   return event;
 };
 
-const createPointerDown = () =>
+const createPointerDown = (pointerType: "mouse" | "pen" | "touch" = "mouse") =>
   ({
-    pointerType: "mouse",
+    pointerType,
     button: 0,
     pointerId: 1,
     clientX: 0,
@@ -56,6 +56,44 @@ describe("useAgentsSidebarDrag", () => {
       window.dispatchEvent(createPointerMove(12, 12));
     });
 
+    expect(setSelectedAgentAbilities).toHaveBeenCalledWith(agent);
+  });
+
+  it("starts a drag from a pen pointer", () => {
+    const setIsSidebarDragActive = jest.fn();
+    const setSelectedAgentAbilities = jest.fn();
+
+    const { result } = renderHook(() =>
+      useAgentsSidebarDrag({
+        selectedCanvasIcon: null,
+        setSelectedCanvasIcon: jest.fn(),
+        isSidebarDragActive: false,
+        setIsSidebarDragActive,
+        isAlly: true,
+        agentsOnCanvas: [],
+        abilitiesOnCanvas: [],
+        setAgentsOnCanvas: jest.fn(),
+        setAbilitiesOnCanvas: jest.fn(),
+        setToolIconsOnCanvas: jest.fn(),
+        setSelectedAgentAbilities,
+        setIsDrawMode: jest.fn(),
+        setEditingTextId: jest.fn(),
+      }),
+    );
+
+    act(() => {
+      result.current.handleIconPointerDown(
+        createPointerDown("pen"),
+        agent,
+        "agent",
+      );
+    });
+
+    act(() => {
+      window.dispatchEvent(createPointerMove(12, 12));
+    });
+
+    expect(setIsSidebarDragActive).toHaveBeenCalledWith(true);
     expect(setSelectedAgentAbilities).toHaveBeenCalledWith(agent);
   });
 });

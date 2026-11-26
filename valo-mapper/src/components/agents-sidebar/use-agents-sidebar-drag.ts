@@ -21,6 +21,7 @@ type PendingSidebarDrag = {
   pointerId: number;
   startX: number;
   startY: number;
+  pointerType: string;
   icon: Agent | AbilityIconItem;
   kind: "agent" | "ability";
 };
@@ -218,7 +219,6 @@ export const useAgentsSidebarDrag = ({
     ignoreNextSidebarClickRef.current = false;
     suppressClickUntilRef.current = 0;
 
-    if (event.pointerType === "pen") return;
     event.preventDefault();
 
     if (typeof event.currentTarget.setPointerCapture === "function") {
@@ -240,6 +240,7 @@ export const useAgentsSidebarDrag = ({
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
+      pointerType: event.pointerType,
       icon,
       kind,
     };
@@ -248,6 +249,7 @@ export const useAgentsSidebarDrag = ({
 
   useEffect(() => {
     const DRAG_START_DISTANCE_PX = 4;
+    const PEN_DRAG_START_DISTANCE_PX = 10;
 
     const handleWindowPointerMove = (event: PointerEvent) => {
       const pendingDrag = pendingSidebarDragRef.current;
@@ -258,8 +260,12 @@ export const useAgentsSidebarDrag = ({
       const dx = event.clientX - pendingDrag.startX;
       const dy = event.clientY - pendingDrag.startY;
       const dragDistance = Math.hypot(dx, dy);
+      const dragStartDistance =
+        pendingDrag.pointerType === "pen"
+          ? PEN_DRAG_START_DISTANCE_PX
+          : DRAG_START_DISTANCE_PX;
 
-      if (dragDistance < DRAG_START_DISTANCE_PX) {
+      if (dragDistance < dragStartDistance) {
         return;
       }
 
