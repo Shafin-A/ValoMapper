@@ -461,6 +461,7 @@
       "replay": "Tekrar",
       "notes": "Notlar",
       "multiSelect": "Çoklu seçim",
+      "favorites": "Favoriler",
       "boards": "Panolar",
       "mobile": "Mobil",
       "more": "Daha"
@@ -504,6 +505,18 @@
       "image1Label": "Seçmek için sürükle",
       "image2Alt": "Seçim çerçeveleriyle vurgulanmış panodaki birden fazla öğe",
       "image2Label": "Seçildi ve taşınmaya hazır"
+    },
+    "favorites": {
+      "title": "Sık kullandığın ajanları elinin altında tut",
+      "description": "En çok seçtiğin ajanlara yıldız ekle, sonra kenar çubuğunu yalnızca kadronu gösterecek şekilde filtrele.",
+      "bullets": [
+        "Pano kenar çubuğundan herhangi bir ajana yıldız ekle.",
+        "Yalnızca yıldızlı ajanlarını göstermek için Haritada seçeneğinin yanındaki Favoriler'i aç.",
+        "Her lobi kendi favorilerini hatırlar ve bu cihazda saklar.",
+        "Her yeni lobide kullanılmak üzere profilinde varsayılan favorileri ayarla."
+      ],
+      "imageAlt": "Yıldızlı favoriler ve Favoriler filtresi açıkken ajan kenar çubuğu",
+      "imageLabel": "Yıldızlı ajanlar ve Favoriler filtresi"
     },
     "boards": {
       "title": "Her panoyu daha okunaklı hale getir",
@@ -562,6 +575,14 @@
             "Görüş konileri simgelere eklenebilir ve sağ tıklama menüsünden kaldırılabilir.",
             "Araç simgeleri, Spike ve silahlar sürüklenerek ajanlara eklenebilir.",
             "Ajanlar sağ tıklama menüsünden ölü olarak işaretlenebilir veya canlandırılabilir."
+          ]
+        },
+        {
+          "title": "Kendi dilinde oyna",
+          "bullets": [
+            "ValoMapper artık 18 dilde kullanıma sunuldu.",
+            "Dili istediğin zaman başlıktan değiştir.",
+            "Ajan, harita ve yetenek adları seçilen dili takip eder."
           ]
         }
       ]

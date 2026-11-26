@@ -461,6 +461,7 @@
       "replay": "Powtórka",
       "notes": "Notatki",
       "multiSelect": "Wybór wielokrotny",
+      "favorites": "Ulubione",
       "boards": "Plansze",
       "mobile": "Mobilny",
       "more": "Więcej"
@@ -504,6 +505,18 @@
       "image1Label": "Przeciągnij, aby wybrać",
       "image2Alt": "Kilka elementów na planszy wyróżnionych konturami zaznaczenia",
       "image2Label": "Zaznaczone i gotowe do przeniesienia"
+    },
+    "favorites": {
+      "title": "Miej swoich ulubionych agentów pod ręką",
+      "description": "Oznacz gwiazdką agentów, których wybierasz najczęściej, a następnie przefiltruj pasek boczny, aby pokazać tylko swój skład.",
+      "bullets": [
+        "Oznacz gwiazdką dowolnego agenta na pasku bocznym planszy.",
+        "Włącz opcję Ulubione obok opcji Na mapie, aby wyświetlać tylko agentów oznaczonych gwiazdką.",
+        "Każde lobby pamięta własne ulubione, zapisane na tym urządzeniu.",
+        "Ustaw domyślne ulubione w profilu, aby stosować je w każdym nowym lobby."
+      ],
+      "imageAlt": "Pasek boczny agentów z ulubionymi oznaczonymi gwiazdką i włączonym filtrem Ulubione",
+      "imageLabel": "Agenci oznaczeni gwiazdką i filtr Ulubione"
     },
     "boards": {
       "title": "Uczyń każdą planszę bardziej czytelną",
@@ -562,6 +575,14 @@
             "Stożki widzenia można dołączać do ikon i usuwać z menu kontekstowego.",
             "Ikony narzędzi, Spike i broń można dołączać do agentów, przeciągając je.",
             "Agentów można oznaczyć jako martwych lub wskrzeszonych, korzystając z menu wyświetlanego po kliknięciu prawym przyciskiem myszy."
+          ]
+        },
+        {
+          "title": "Graj w swoim języku",
+          "bullets": [
+            "ValoMapper jest teraz dostępny w 18 językach.",
+            "Zmień język w nagłówku w dowolnym momencie.",
+            "Nazwy agentów, map i umiejętności są zgodne z wybranym językiem."
           ]
         }
       ]

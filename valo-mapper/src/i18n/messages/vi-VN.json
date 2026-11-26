@@ -461,6 +461,7 @@
       "replay": "Phát lại",
       "notes": "Ghi chú",
       "multiSelect": "Chọn nhiều mục",
+      "favorites": "Yêu thích",
       "boards": "Bảng",
       "mobile": "Di động",
       "more": "Khác"
@@ -504,6 +505,18 @@
       "image1Label": "Kéo để chọn",
       "image2Alt": "Nhiều mục trên bảng được đánh dấu bằng các đường viền lựa chọn",
       "image2Label": "Đã chọn và sẵn sàng di chuyển"
+    },
+    "favorites": {
+      "title": "Giữ các đặc vụ quen thuộc của bạn trong tầm tay",
+      "description": "Gắn dấu sao cho những đặc vụ bạn chọn nhiều nhất, sau đó lọc thanh bên để chỉ hiển thị đội hình của bạn.",
+      "bullets": [
+        "Gắn dấu sao cho bất kỳ đặc vụ nào từ thanh bên của bảng.",
+        "Bật Yêu thích bên cạnh Trên bản đồ để chỉ hiển thị các đặc vụ được gắn dấu sao của bạn.",
+        "Mỗi sảnh ghi nhớ các mục yêu thích riêng, được lưu trên thiết bị này.",
+        "Đặt mục yêu thích mặc định trong hồ sơ của bạn để áp dụng cho mọi sảnh mới."
+      ],
+      "imageAlt": "Thanh bên đặc vụ với các mục yêu thích được gắn dấu sao và bộ lọc Yêu thích đang bật",
+      "imageLabel": "Đặc vụ được gắn dấu sao và bộ lọc Yêu thích"
     },
     "boards": {
       "title": "Làm cho mọi bảng dễ đọc hơn",
@@ -562,6 +575,14 @@
             "Nón tầm nhìn có thể được gắn vào biểu tượng và xóa khỏi menu chuột phải.",
             "Biểu tượng công cụ, Spike và vũ khí có thể được gắn vào đặc vụ bằng cách kéo thả.",
             "Đặc vụ có thể được đánh dấu là đã chết hoặc được hồi sinh từ menu chuột phải."
+          ]
+        },
+        {
+          "title": "Chơi bằng ngôn ngữ của bạn",
+          "bullets": [
+            "ValoMapper hiện có sẵn trong 18 ngôn ngữ.",
+            "Chuyển ngôn ngữ từ thanh đầu trang bất cứ lúc nào.",
+            "Tên đặc vụ, bản đồ và kỹ năng tuân theo ngôn ngữ đã chọn."
           ]
         }
       ]

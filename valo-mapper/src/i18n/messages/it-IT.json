@@ -461,6 +461,7 @@
       "replay": "Replay",
       "notes": "Note",
       "multiSelect": "Selezione multipla",
+      "favorites": "Preferiti",
       "boards": "Lavagne",
       "mobile": "Mobile",
       "more": "Altro"
@@ -504,6 +505,18 @@
       "image1Label": "Trascina per selezionare",
       "image2Alt": "Più elementi sulla lavagna evidenziati con contorni di selezione",
       "image2Label": "Selezionati e pronti da spostare"
+    },
+    "favorites": {
+      "title": "Tieni a portata di mano i tuoi agenti preferiti",
+      "description": "Aggiungi una stella agli agenti che scegli più spesso, poi filtra la barra laterale per mostrare solo la tua formazione.",
+      "bullets": [
+        "Aggiungi una stella a qualsiasi agente dalla barra laterale della lavagna.",
+        "Attiva Preferiti accanto a Sulla mappa per mostrare solo i tuoi agenti preferiti.",
+        "Ogni lobby ricorda i propri preferiti, salvati su questo dispositivo.",
+        "Imposta i preferiti predefiniti sul tuo profilo per applicarli a ogni nuova lobby."
+      ],
+      "imageAlt": "Barra laterale degli agenti con i preferiti stellati e il filtro Preferiti attivo",
+      "imageLabel": "Agenti preferiti e filtro Preferiti"
     },
     "boards": {
       "title": "Rendi ogni lavagna più facile da leggere",
@@ -562,6 +575,14 @@
             "I coni visivi possono essere attaccati alle icone e rimossi dal menu contestuale.",
             "Le icone degli strumenti, lo Spike e le armi possono essere attaccati agli agenti trascinandoli.",
             "Gli agenti possono essere contrassegnati come morti o rianimati dal menu di scelta rapida."
+          ]
+        },
+        {
+          "title": "Gioca nella tua lingua",
+          "bullets": [
+            "ValoMapper è ora disponibile in 18 lingue.",
+            "Cambia lingua dall'intestazione in qualsiasi momento.",
+            "I nomi di agenti, mappe e abilità seguono la lingua selezionata."
           ]
         }
       ]

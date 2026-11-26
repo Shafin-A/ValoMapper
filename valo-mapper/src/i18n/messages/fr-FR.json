@@ -461,6 +461,7 @@
       "replay": "Replay",
       "notes": "Notes",
       "multiSelect": "Sélection multiple",
+      "favorites": "Favoris",
       "boards": "Tableaux",
       "mobile": "Mobile",
       "more": "Plus"
@@ -504,6 +505,18 @@
       "image1Label": "Faites glisser pour sélectionner",
       "image2Alt": "Plusieurs éléments du tableau mis en évidence avec des contours de sélection",
       "image2Label": "Sélectionné et prêt à être déplacé"
+    },
+    "favorites": {
+      "title": "Gardez vos agents favoris à portée de main",
+      "description": "Ajoutez une étoile aux agents que vous choisissez le plus, puis filtrez la barre latérale pour n'afficher que votre composition.",
+      "bullets": [
+        "Ajoutez une étoile à n'importe quel agent depuis la barre latérale du tableau.",
+        "Activez Favoris à côté de Sur la carte pour n'afficher que vos agents favoris.",
+        "Chaque lobby mémorise ses propres favoris, enregistrés sur cet appareil.",
+        "Définissez des favoris par défaut sur votre profil pour les appliquer à chaque nouveau lobby."
+      ],
+      "imageAlt": "Barre latérale des agents avec favoris étoilés et filtre Favoris activé",
+      "imageLabel": "Agents favoris et filtre Favoris"
     },
     "boards": {
       "title": "Rendre chaque tableau plus facile à lire",
@@ -562,6 +575,14 @@
             "Les cônes de vision peuvent être attachés aux icônes et supprimés du menu contextuel.",
             "Les icônes d'outils, le Spike et les armes peuvent être attachés aux agents en les faisant glisser.",
             "Les agents peuvent être marqués comme morts ou réanimés à partir du menu contextuel."
+          ]
+        },
+        {
+          "title": "Jouez dans votre langue",
+          "bullets": [
+            "ValoMapper est désormais disponible en 18 langues.",
+            "Changez de langue depuis l'en-tête à tout moment.",
+            "Les noms des agents, des cartes et des compétences suivent la langue sélectionnée."
           ]
         }
       ]

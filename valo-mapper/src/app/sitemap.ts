@@ -8,7 +8,7 @@ const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
   const staticPages = [
     { path: "", lastModified: new Date() },
     { path: "replay", lastModified: new Date() },
-    { path: "whats-new", lastModified: new Date("2026-11-14") },
+    { path: "whats-new", lastModified: new Date("2026-11-26") },
     { path: "privacy-policy", lastModified: new Date("2026-11-06") },
     { path: "terms-of-service", lastModified: new Date("2026-11-06") },
   ];

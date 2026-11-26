@@ -461,6 +461,7 @@
       "replay": "Tayangan ulang",
       "notes": "Catatan",
       "multiSelect": "Multi-pilih",
+      "favorites": "Favorit",
       "boards": "Papan",
       "mobile": "Seluler",
       "more": "Lagi"
@@ -504,6 +505,18 @@
       "image1Label": "Seret untuk memilih",
       "image2Alt": "Beberapa item di papan disorot dengan garis pilihan",
       "image2Label": "Terpilih dan siap dipindahkan"
+    },
+    "favorites": {
+      "title": "Akses agen andalanmu dengan cepat",
+      "description": "Beri bintang pada agen yang paling sering kamu pilih, lalu filter sidebar agar hanya menampilkan formasimu.",
+      "bullets": [
+        "Beri bintang pada agen mana pun dari sidebar papan.",
+        "Aktifkan Favorit di samping Di peta untuk hanya menampilkan agen berbintangmu.",
+        "Setiap lobi mengingat favoritnya sendiri, yang disimpan di perangkat ini.",
+        "Tetapkan favorit default di profilmu agar otomatis dipakai di setiap lobi baru."
+      ],
+      "imageAlt": "Bilah samping agen dengan favorit berbintang dan filter Favorit yang aktif",
+      "imageLabel": "Agen berbintang dan filter Favorit"
     },
     "boards": {
       "title": "Jadikan setiap papan lebih mudah dibaca",
@@ -562,6 +575,14 @@
             "Kerucut penglihatan dapat dilampirkan ke ikon dan dihapus dari menu klik kanan.",
             "Ikon alat, Spike, dan senjata dapat ditempelkan ke agen dengan menyeretnya.",
             "Agen dapat ditandai mati atau dihidupkan kembali dari menu klik kanan."
+          ]
+        },
+        {
+          "title": "Mainkan dalam bahasamu",
+          "bullets": [
+            "ValoMapper kini tersedia dalam 18 bahasa.",
+            "Ganti bahasa dari header kapan saja.",
+            "Nama agen, peta, dan kemampuan mengikuti bahasa yang dipilih."
           ]
         }
       ]

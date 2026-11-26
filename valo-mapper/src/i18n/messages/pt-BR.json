@@ -461,6 +461,7 @@
       "replay": "Replay",
       "notes": "Notas",
       "multiSelect": "Seleção múltipla",
+      "favorites": "Favoritos",
       "boards": "Quadros",
       "mobile": "Celular",
       "more": "Mais"
@@ -504,6 +505,18 @@
       "image1Label": "Arraste para selecionar",
       "image2Alt": "Vários itens no quadro destacados com contornos de seleção",
       "image2Label": "Selecionados e prontos para mover"
+    },
+    "favorites": {
+      "title": "Mantenha seus agentes favoritos sempre à mão",
+      "description": "Marque com estrela os agentes que você mais escolhe e filtre a barra lateral para mostrar apenas sua escalação.",
+      "bullets": [
+        "Marque com estrela qualquer agente na barra lateral do quadro.",
+        "Ative Favoritos ao lado de No mapa para mostrar apenas os agentes marcados com estrela.",
+        "Cada lobby lembra seus próprios favoritos, salvos neste dispositivo.",
+        "Defina favoritos padrão no seu perfil para aplicar em cada novo lobby."
+      ],
+      "imageAlt": "Barra lateral de agentes com favoritos marcados com estrela e o filtro Favoritos ativado",
+      "imageLabel": "Agentes marcados com estrela e o filtro Favoritos"
     },
     "boards": {
       "title": "Torne cada quadro mais fácil de ler",
@@ -562,6 +575,14 @@
             "Os cones de visão podem ser anexados aos ícones e removidos no menu do botão direito.",
             "Ícones de ferramentas, o Spike e armas podem ser anexados aos agentes arrastando-os.",
             "Os agentes podem ser marcados como mortos ou revividos no menu do botão direito."
+          ]
+        },
+        {
+          "title": "Jogue no seu idioma",
+          "bullets": [
+            "O ValoMapper agora está disponível em 18 idiomas.",
+            "Mude o idioma no cabeçalho a qualquer momento.",
+            "Os nomes de agentes, mapas e habilidades seguem o idioma selecionado."
           ]
         }
       ]

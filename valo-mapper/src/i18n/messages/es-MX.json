@@ -461,6 +461,7 @@
       "replay": "Repetición",
       "notes": "Notas",
       "multiSelect": "Selección múltiple",
+      "favorites": "Favoritos",
       "boards": "Tableros",
       "mobile": "Celular",
       "more": "Más"
@@ -504,6 +505,18 @@
       "image1Label": "Arrastra para seleccionar",
       "image2Alt": "Varios elementos del tablero resaltados con contornos de selección",
       "image2Label": "Seleccionados y listos para mover"
+    },
+    "favorites": {
+      "title": "Ten siempre a mano tus agentes favoritos",
+      "description": "Marca con una estrella los agentes que más elijas y filtra la barra lateral para mostrar solo tu alineación.",
+      "bullets": [
+        "Marca con una estrella cualquier agente desde la barra lateral del tablero.",
+        "Activa Favoritos junto a En el mapa para mostrar solo los agentes que hayas marcado.",
+        "Cada lobby recuerda sus propios favoritos, guardados en este dispositivo.",
+        "Define favoritos predeterminados en tu perfil para usarlos en cada lobby nuevo."
+      ],
+      "imageAlt": "Barra lateral de agentes con favoritos marcados con estrella y el filtro Favoritos activado",
+      "imageLabel": "Agentes marcados con estrella y el filtro Favoritos"
     },
     "boards": {
       "title": "Haz que cada tablero sea más fácil de leer",
@@ -562,6 +575,14 @@
             "Los conos de visión se pueden adjuntar a iconos y quitar desde el menú contextual.",
             "Los iconos de herramientas, el Spike y las armas se pueden adjuntar a los agentes arrastrándolos.",
             "Los agentes se pueden marcar como muertos o revividos desde el menú contextual."
+          ]
+        },
+        {
+          "title": "Juega en tu idioma",
+          "bullets": [
+            "ValoMapper ya está disponible en 18 idiomas.",
+            "Cambia el idioma desde el encabezado cuando quieras.",
+            "Los nombres de agentes, mapas y habilidades siguen el idioma seleccionado."
           ]
         }
       ]

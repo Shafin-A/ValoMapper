@@ -461,6 +461,7 @@
       "replay": "Replay",
       "notes": "Notizen",
       "multiSelect": "Mehrfachauswahl",
+      "favorites": "Favoriten",
       "boards": "Boards",
       "mobile": "Mobile",
       "more": "Mehr"
@@ -504,6 +505,18 @@
       "image1Label": "Zum Auswählen ziehen",
       "image2Alt": "Mehrere Elemente auf dem Board sind mit Auswahlrahmen hervorgehoben",
       "image2Label": "Ausgewählt und bereit zum Verschieben"
+    },
+    "favorites": {
+      "title": "Behalte deine Lieblingsagenten immer griffbereit",
+      "description": "Markiere die Agenten, die du am häufigsten wählst, und filtere die Seitenleiste dann auf deine Aufstellung.",
+      "bullets": [
+        "Markiere jeden Agenten in der Seitenleiste des Boards mit einem Stern.",
+        "Aktiviere „Favoriten“ neben „Auf der Karte“, um nur deine markierten Agenten anzuzeigen.",
+        "Jede Lobby merkt sich ihre eigenen Favoriten und speichert sie auf diesem Gerät.",
+        "Lege in deinem Profil Standardfavoriten fest, die für jede neue Lobby übernommen werden."
+      ],
+      "imageAlt": "Agenten-Seitenleiste mit markierten Favoriten und aktiviertem Favoritenfilter",
+      "imageLabel": "Markierte Agenten und der Favoritenfilter"
     },
     "boards": {
       "title": "Mach jedes Board leichter lesbar",
@@ -562,6 +575,14 @@
             "Sichtkegel können an Symbole angehängt und über das Rechtsklick-Menü entfernt werden.",
             "Werkzeugsymbole, der Spike und Waffen können durch Ziehen an Agenten angebracht werden.",
             "Agenten können über das Rechtsklick-Menü als tot oder wiederbelebt markiert werden."
+          ]
+        },
+        {
+          "title": "Spiele in deiner Sprache",
+          "bullets": [
+            "ValoMapper ist jetzt in 18 Sprachen verfügbar.",
+            "Wechsle die Sprache jederzeit über die Kopfzeile.",
+            "Agenten-, Karten- und Fähigkeitsnamen folgen der ausgewählten Sprache."
           ]
         }
       ]

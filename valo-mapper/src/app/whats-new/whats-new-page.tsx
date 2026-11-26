@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Check,
   Eye,
+  Languages,
   Layers,
   Loader2,
   Palette,
@@ -28,12 +29,13 @@ const SECTION_LINKS = [
   { id: "replay", key: "replay" },
   { id: "notes", key: "notes" },
   { id: "multi-select", key: "multiSelect" },
+  { id: "favorites", key: "favorites" },
   { id: "boards", key: "boards" },
   { id: "mobile", key: "mobile" },
   { id: "more", key: "more" },
 ] as const;
 
-const ALSO_IMPROVED_ICONS = [Palette, Layers, Eye];
+const ALSO_IMPROVED_ICONS = [Palette, Layers, Eye, Languages];
 
 const SectionIntro = ({
   label,
@@ -123,6 +125,7 @@ export const WhatsNewPage = () => {
   const t = useTranslations("whatsNew");
   const notesBullets = t.raw("notes.bullets") as string[];
   const multiSelectBullets = t.raw("multiSelect.bullets") as string[];
+  const favoritesBullets = t.raw("favorites.bullets") as string[];
   const richTextBullets = t.raw("boards.richTextBullets") as string[];
   const mobileBullets = t.raw("mobile.bullets") as string[];
   const alsoImproved = t.raw("more.items") as {
@@ -330,6 +333,34 @@ export const WhatsNewPage = () => {
         </section>
 
         <section
+          id="favorites"
+          className="scroll-mt-24 border-b border-border/60"
+        >
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8 lg:py-24">
+            <div>
+              <SectionIntro
+                label={t("sections.favorites")}
+                title={t("favorites.title")}
+              >
+                {t("favorites.description")}
+              </SectionIntro>
+
+              <BulletList items={favoritesBullets} />
+            </div>
+
+            <Shot
+              src="/whats-new/favorites.webp"
+              alt={t("favorites.imageAlt")}
+              width={480}
+              height={846}
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              label={t("favorites.imageLabel")}
+              className="mx-auto w-full max-w-[320px]"
+            />
+          </div>
+        </section>
+
+        <section
           id="boards"
           className="scroll-mt-24 border-b border-border/60"
         >
@@ -441,7 +472,7 @@ export const WhatsNewPage = () => {
               {t("more.description")}
             </SectionIntro>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
               {alsoImproved.map(({ title, bullets }, index) => {
                 const Icon = ALSO_IMPROVED_ICONS[index] ?? Palette;
                 return (

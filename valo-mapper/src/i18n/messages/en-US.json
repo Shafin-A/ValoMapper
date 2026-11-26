@@ -461,6 +461,7 @@
       "replay": "Replay",
       "notes": "Notes",
       "multiSelect": "Multi-select",
+      "favorites": "Favorites",
       "boards": "Boards",
       "mobile": "Mobile",
       "more": "More"
@@ -504,6 +505,18 @@
       "image1Label": "Drag to select",
       "image2Alt": "Multiple items on the board highlighted with selection outlines",
       "image2Label": "Selected and ready to move"
+    },
+    "favorites": {
+      "title": "Keep your go-to agents within reach",
+      "description": "Star the agents you pick most, then filter the sidebar down to just your lineup.",
+      "bullets": [
+        "Star any agent from the board sidebar.",
+        "Turn on Favorites next to On map to show only your starred agents.",
+        "Each lobby remembers its own favorites, saved on this device.",
+        "Set default favorites on your profile to prefill every new lobby."
+      ],
+      "imageAlt": "Agents sidebar with starred favorites and the Favorites filter enabled",
+      "imageLabel": "Starred agents and the Favorites filter"
     },
     "boards": {
       "title": "Make every board easier to read",
@@ -562,6 +575,14 @@
             "Vision cones can be attached to icons and removed from the right-click menu.",
             "Tool icons, the spike, and weapons can be attached to agents by dragging them on.",
             "Agents can be marked dead or revived from the right-click menu."
+          ]
+        },
+        {
+          "title": "Play in your language",
+          "bullets": [
+            "ValoMapper now ships in 18 languages.",
+            "Switch languages from the header at any time.",
+            "Agent, map, and ability names follow the selected language."
           ]
         }
       ]
