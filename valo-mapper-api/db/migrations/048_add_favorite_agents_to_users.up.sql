@@ -1,0 +1,2 @@
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS favorite_agents TEXT[] NOT NULL DEFAULT '{}';

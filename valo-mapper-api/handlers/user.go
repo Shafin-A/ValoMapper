@@ -17,8 +17,9 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Name          *string `json:"name,omitempty"`
-	TourCompleted *bool   `json:"tourCompleted,omitempty"`
+	Name           *string   `json:"name,omitempty"`
+	TourCompleted  *bool     `json:"tourCompleted,omitempty"`
+	FavoriteAgents *[]string `json:"favoriteAgents,omitempty"`
 }
 
 type UpdateUserSubscriptionRequest struct {
@@ -135,8 +136,9 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = r.Body.Close() }()
 	if err := userService.UpdateUser(user, services.UpdateUserRequest{
-		Name:          req.Name,
-		TourCompleted: req.TourCompleted,
+		Name:           req.Name,
+		TourCompleted:  req.TourCompleted,
+		FavoriteAgents: req.FavoriteAgents,
 	}); err != nil {
 		sendServiceError(w, r, err, "Unable to update user")
 		return

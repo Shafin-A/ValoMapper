@@ -41,6 +41,7 @@ var errorMappings = []errorMapping{
 	{services.ErrUserFirebaseUIDMissing, http.StatusInternalServerError, "User is missing a Firebase UID"},
 	{services.ErrUserIdentifierRequired, http.StatusBadRequest, "Provide exactly one identifier: userId or firebaseUid"},
 	{services.ErrUserNotFound, http.StatusNotFound, "User not found"},
+	{services.ErrUserFavoriteAgentInvalid, http.StatusBadRequest, "Favorite agents contain an unknown agent"},
 	{models.ErrLobbyNotFound, http.StatusNotFound, "Lobby not found"},
 	{models.ErrInvalidPatch, http.StatusBadRequest, "Invalid canvas data"},
 }

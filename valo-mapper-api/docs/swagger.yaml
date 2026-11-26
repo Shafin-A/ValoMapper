@@ -278,6 +278,10 @@ definitions:
     type: object
   handlers.UpdateUserRequest:
     properties:
+      favoriteAgents:
+        items:
+          type: string
+        type: array
       name:
         type: string
       tourCompleted:
@@ -711,6 +715,10 @@ definitions:
         type: string
       emailVerified:
         type: boolean
+      favoriteAgents:
+        items:
+          type: string
+        type: array
       firebaseUid:
         type: string
       id:

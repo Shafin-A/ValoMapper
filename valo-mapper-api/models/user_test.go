@@ -111,6 +111,7 @@ func TestUserUpdate(t *testing.T) {
 		user.Name = strPtr("New Name")
 		user.EmailVerified = true
 		user.TourCompleted = true
+		user.FavoriteAgents = []string{"Jett", "Sage"}
 
 		err = user.Update()
 		require.NoError(t, err)
@@ -123,6 +124,7 @@ func TestUserUpdate(t *testing.T) {
 		assert.Equal(t, strPtr("New Name"), loaded.Name)
 		assert.True(t, loaded.EmailVerified)
 		assert.True(t, loaded.TourCompleted)
+		assert.Equal(t, []string{"Jett", "Sage"}, loaded.FavoriteAgents)
 	})
 
 	t.Run("returns error for non-existent user", func(t *testing.T) {

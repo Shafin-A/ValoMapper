@@ -9,6 +9,74 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type mockUserRepo struct {
+	updateFn func(u *models.User) error
+}
+
+func (m *mockUserRepo) GetUserByFirebaseUID(string) (*models.User, error) { return nil, nil }
+func (m *mockUserRepo) GetUserByID(int) (*models.User, error)             { return nil, nil }
+func (m *mockUserRepo) SaveUser(*models.User) error                       { return nil }
+func (m *mockUserRepo) UpdateUser(u *models.User) error {
+	if m.updateFn != nil {
+		return m.updateFn(u)
+	}
+	return nil
+}
+func (m *mockUserRepo) DeleteUser(*models.User) error { return nil }
+func (m *mockUserRepo) UpdateSubscriptionStatus(*models.User, bool, *time.Time) error {
+	return nil
+}
+
+func TestUserService_UpdateUserFavoriteAgents(t *testing.T) {
+	t.Run("trims, deduplicates, and sorts known agents", func(t *testing.T) {
+		updated := false
+		service := NewUserService(UserServiceDependencies{
+			Repo: &mockUserRepo{updateFn: func(u *models.User) error {
+				updated = true
+				return nil
+			}},
+		})
+		user := &models.User{ID: 1}
+
+		err := service.UpdateUser(user, UpdateUserRequest{
+			FavoriteAgents: &[]string{" Sage ", "Jett", "Sage", ""},
+		})
+
+		require.NoError(t, err)
+		assert.True(t, updated)
+		assert.Equal(t, []string{"Jett", "Sage"}, user.FavoriteAgents)
+	})
+
+	t.Run("allows clearing favorites", func(t *testing.T) {
+		service := NewUserService(UserServiceDependencies{Repo: &mockUserRepo{}})
+		user := &models.User{ID: 1, FavoriteAgents: []string{"Jett"}}
+
+		err := service.UpdateUser(user, UpdateUserRequest{
+			FavoriteAgents: &[]string{},
+		})
+
+		require.NoError(t, err)
+		assert.Empty(t, user.FavoriteAgents)
+	})
+
+	t.Run("rejects unknown agents", func(t *testing.T) {
+		updated := false
+		service := NewUserService(UserServiceDependencies{
+			Repo: &mockUserRepo{updateFn: func(u *models.User) error {
+				updated = true
+				return nil
+			}},
+		})
+
+		err := service.UpdateUser(&models.User{ID: 1}, UpdateUserRequest{
+			FavoriteAgents: &[]string{"Jett", "Not An Agent"},
+		})
+
+		assert.ErrorIs(t, err, ErrUserFavoriteAgentInvalid)
+		assert.False(t, updated)
+	})
+}
+
 func TestUserService_EnrichUserBillingState(t *testing.T) {
 	us := NewUserService(UserServiceDependencies{})
 

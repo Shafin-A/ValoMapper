@@ -179,6 +179,41 @@ func TestUpdateUser(t *testing.T) {
 		assert.True(t, response.TourCompleted)
 	})
 
+	t.Run("updates favorite agents", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{
+			updateFn: func(updated *models.User) error {
+				updated.UpdatedAt = user.CreatedAt
+				return nil
+			},
+		})
+		favoriteAgents := []string{"Sage", "Jett", "Sage"}
+
+		req := requestWithUser(testutils.MakeRequest(t, http.MethodPut, "/api/users/me", UpdateUserRequest{
+			FavoriteAgents: &favoriteAgents,
+		}, "valid-token"), user)
+		w := httptest.NewRecorder()
+		UpdateUser(w, req)
+
+		require.Equal(t, http.StatusOK, w.Code)
+
+		var response models.User
+		testutils.ParseJSONResponse(t, w, &response)
+		assert.Equal(t, []string{"Jett", "Sage"}, response.FavoriteAgents)
+	})
+
+	t.Run("rejects unknown favorite agents", func(t *testing.T) {
+		useUserRepo(t, &mockUserHandlerRepo{})
+		favoriteAgents := []string{"Not An Agent"}
+
+		req := requestWithUser(testutils.MakeRequest(t, http.MethodPut, "/api/users/me", UpdateUserRequest{
+			FavoriteAgents: &favoriteAgents,
+		}, "valid-token"), user)
+		w := httptest.NewRecorder()
+		UpdateUser(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
 	t.Run("rejects invalid body", func(t *testing.T) {
 		useUserRepo(t, &mockUserHandlerRepo{})
 

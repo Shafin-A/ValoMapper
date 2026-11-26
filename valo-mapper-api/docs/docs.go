@@ -2736,6 +2736,12 @@ const docTemplate = `{
         "handlers.UpdateUserRequest": {
             "type": "object",
             "properties": {
+                "favoriteAgents": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "name": {
                     "type": "string"
                 },
@@ -3398,6 +3404,12 @@ const docTemplate = `{
                 },
                 "emailVerified": {
                     "type": "boolean"
+                },
+                "favoriteAgents": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "firebaseUid": {
                     "type": "string"

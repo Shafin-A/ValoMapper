@@ -4,22 +4,26 @@ import (
 	"context"
 	"errors"
 	"math"
+	"sort"
+	"strings"
 	"time"
 
 	"valo-mapper-api/models"
+	"valo-mapper-api/valorant"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
 var (
-	ErrUserFirebaseUIDRequired = errors.New("firebase UID is required")
-	ErrUserNameRequired        = errors.New("name is required")
-	ErrUserEmailRequired       = errors.New("email is required")
-	ErrUserAlreadyExists       = errors.New("user already exists")
-	ErrUserFirebaseUIDMissing  = errors.New("user firebase UID is missing")
-	ErrUserIdentifierRequired  = errors.New("either userId or firebaseUid must be provided")
-	ErrUserNotFound            = errors.New("user not found")
+	ErrUserFirebaseUIDRequired  = errors.New("firebase UID is required")
+	ErrUserNameRequired         = errors.New("name is required")
+	ErrUserEmailRequired        = errors.New("email is required")
+	ErrUserAlreadyExists        = errors.New("user already exists")
+	ErrUserFirebaseUIDMissing   = errors.New("user firebase UID is missing")
+	ErrUserIdentifierRequired   = errors.New("either userId or firebaseUid must be provided")
+	ErrUserNotFound             = errors.New("user not found")
+	ErrUserFavoriteAgentInvalid = errors.New("favorite agents contain an unknown agent")
 )
 
 type UserRepository interface {
@@ -99,8 +103,9 @@ func (us *UserService) CreateUser(req CreateUserRequest) (*models.User, error) {
 }
 
 type UpdateUserRequest struct {
-	Name          *string
-	TourCompleted *bool
+	Name           *string
+	TourCompleted  *bool
+	FavoriteAgents *[]string
 }
 
 func (us *UserService) UpdateUser(user *models.User, req UpdateUserRequest) error {
@@ -112,7 +117,38 @@ func (us *UserService) UpdateUser(user *models.User, req UpdateUserRequest) erro
 		user.TourCompleted = *req.TourCompleted
 	}
 
+	if req.FavoriteAgents != nil {
+		agents, err := normalizeFavoriteAgents(*req.FavoriteAgents)
+		if err != nil {
+			return err
+		}
+		user.FavoriteAgents = agents
+	}
+
 	return us.repo.UpdateUser(user)
+}
+
+func normalizeFavoriteAgents(agents []string) ([]string, error) {
+	seen := make(map[string]struct{}, len(agents))
+	normalized := make([]string, 0, len(agents))
+
+	for _, raw := range agents {
+		name := strings.TrimSpace(raw)
+		if name == "" {
+			continue
+		}
+		if valorant.AgentRoleByName(name) == "" {
+			return nil, ErrUserFavoriteAgentInvalid
+		}
+		if _, ok := seen[name]; ok {
+			continue
+		}
+		seen[name] = struct{}{}
+		normalized = append(normalized, name)
+	}
+
+	sort.Strings(normalized)
+	return normalized, nil
 }
 
 // EnrichUserBillingState sets PremiumTrialDaysLeft and trial eligibility.

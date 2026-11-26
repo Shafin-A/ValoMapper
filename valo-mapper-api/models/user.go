@@ -22,6 +22,7 @@ type User struct {
 	CreatedAt                       time.Time  `json:"createdAt"`
 	UpdatedAt                       time.Time  `json:"updatedAt"`
 	TourCompleted                   bool       `json:"tourCompleted"`
+	FavoriteAgents                  []string   `json:"favoriteAgents"`
 	IsSubscribed                    bool       `json:"isSubscribed"`
 	HasEverPersonalSubscription     bool       `json:"-"`
 	SubscriptionEndedAt             *time.Time `json:"subscriptionEndedAt,omitempty"`
@@ -132,12 +133,20 @@ func (u *User) Update() error {
 
 	err = conn.QueryRow(context.Background(), `
 		UPDATE users
-		SET email = $1, email_verified = $2, name = $3, tour_completed = $4, updated_at = NOW()
-		WHERE firebase_uid = $5
+		SET email = $1, email_verified = $2, name = $3, tour_completed = $4,
+		    favorite_agents = $5, updated_at = NOW()
+		WHERE firebase_uid = $6
 		RETURNING updated_at
-	`, u.Email, u.EmailVerified, u.Name, u.TourCompleted, u.FirebaseUID).Scan(&u.UpdatedAt)
+	`, u.Email, u.EmailVerified, u.Name, u.TourCompleted, favoriteAgentsOrEmpty(u.FavoriteAgents), u.FirebaseUID).Scan(&u.UpdatedAt)
 
 	return err
+}
+
+func favoriteAgentsOrEmpty(agents []string) []string {
+	if agents == nil {
+		return []string{}
+	}
+	return agents
 }
 
 func (u *User) Save() error {
@@ -176,7 +185,8 @@ func (u *User) Delete() error {
 	return err
 }
 
-const userSelectColumns = `u.id, u.firebase_uid, u.email, u.email_verified, u.name, u.tour_completed, u.is_subscribed,
+const userSelectColumns = `u.id, u.firebase_uid, u.email, u.email_verified, u.name, u.tour_completed,
+	u.favorite_agents, u.is_subscribed,
 	u.has_ever_personal_subscription, u.subscription_ended_at, u.subscription_trial_ends_at,
 	u.stripe_customer_id, u.stripe_subscription_id, u.subscription_plan, u.premium_trial_claimed_at,
 	u.created_at, u.updated_at, u.rso_subject_id, u.rso_linked_at,
@@ -204,6 +214,7 @@ func scanUser(row pgx.Row) (*User, error) {
 		&user.EmailVerified,
 		&user.Name,
 		&user.TourCompleted,
+		&user.FavoriteAgents,
 		&user.IsSubscribed,
 		&user.HasEverPersonalSubscription,
 		&user.SubscriptionEndedAt,
