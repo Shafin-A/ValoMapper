@@ -26,12 +26,17 @@ import {
 import { Agent, AgentRole } from "@/lib/types";
 import { useTranslations } from "next-intl";
 import { getAgentImgSrc } from "@/lib/assets";
-import { EllipsisVertical, Users } from "lucide-react";
+import { EllipsisVertical, Star, Users } from "lucide-react";
 import Image from "next/image";
 
 interface AgentsGridProps {
   selectedRole: AgentRole | "All";
   onMap: boolean;
+  favoritesOnly?: boolean;
+  favoriteAgents?: Set<string>;
+  favoritesReady?: boolean;
+  showFavorites?: boolean;
+  onToggleFavorite?: (agentName: string) => void;
   onAgentClick: (agent: Agent | null) => void;
   onAgentPointerDown: (event: React.PointerEvent, agent: Agent | null) => void;
   selectedAgentAbilities: Agent | null;
@@ -41,6 +46,11 @@ interface AgentsGridProps {
 export const AgentsGrid: React.FC<AgentsGridProps> = ({
   selectedRole,
   onMap,
+  favoritesOnly = false,
+  favoriteAgents = new Set<string>(),
+  favoritesReady = false,
+  showFavorites = false,
+  onToggleFavorite,
   onAgentClick,
   onAgentPointerDown,
   selectedAgentAbilities,
@@ -62,14 +72,36 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
       ? AGENTS
       : AGENTS.filter((agent) => agent.role === selectedRole);
 
-  const filteredAgents = onMap
-    ? agentsByRole.filter((agent) =>
-        agentsOnCanvas.some(
-          (canvasAgent) =>
-            canvasAgent.name === agent.name && canvasAgent.id !== TEMP_DRAG_ID,
-        ),
+  const filteredAgents = agentsByRole.filter((agent) => {
+    if (
+      onMap &&
+      !agentsOnCanvas.some(
+        (canvasAgent) =>
+          canvasAgent.name === agent.name && canvasAgent.id !== TEMP_DRAG_ID,
       )
-    : agentsByRole;
+    ) {
+      return false;
+    }
+
+    if (favoritesOnly && !favoriteAgents.has(agent.name)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const emptyTitle = favoritesOnly
+    ? onMap
+      ? t("emptyFavoritesOnMap")
+      : t("emptyFavorites")
+    : selectedRole === "All"
+      ? t("empty")
+      : t("emptyByRole", { role: localizedRole });
+  const emptyDescription = favoritesOnly
+    ? t("favoriteAgentsHint")
+    : selectedRole === "All"
+      ? t("addToMap")
+      : t("addRoleToMap", { role: localizedRole });
 
   return (
     <ScrollArea className="h-full w-full">
@@ -81,22 +113,15 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                 <Users />
               </EmptyMedia>
             </EmptyHeader>
-            <EmptyTitle>
-              {selectedRole === "All"
-                ? t("empty")
-                : t("emptyByRole", { role: localizedRole })}
-            </EmptyTitle>
-            <EmptyDescription>
-              {selectedRole === "All"
-                ? t("addToMap")
-                : t("addRoleToMap", { role: localizedRole })}
-            </EmptyDescription>
+            <EmptyTitle>{emptyTitle}</EmptyTitle>
+            <EmptyDescription>{emptyDescription}</EmptyDescription>
           </Empty>
         </div>
       ) : (
         <div className="grid grid-cols-4 gap-4 p-2">
           {filteredAgents.map((agent) => {
             const isSelected = selectedCanvasIcon?.name === agent.name;
+            const isFavorite = favoriteAgents.has(agent.name);
             const borderColor = isAlly ? allyColor : enemyColor;
             const displayName = getLocalizedAgentName(
               valorantTerms,
@@ -136,6 +161,40 @@ export const AgentsGrid: React.FC<AgentsGridProps> = ({
                   </TooltipTrigger>
                   <TooltipContent>{displayName}</TooltipContent>
                 </Tooltip>
+
+                {showFavorites && (
+                  <Tooltip delayDuration={700}>
+                    <TooltipTrigger asChild>
+                      <Toggle
+                        size="icon"
+                        aria-label={
+                          isFavorite
+                            ? t("removeFavorite", { name: displayName })
+                            : t("addFavorite", { name: displayName })
+                        }
+                        pressed={isFavorite}
+                        disabled={!favoritesReady}
+                        onPressedChange={() => onToggleFavorite?.(agent.name)}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onClick={(event) => event.stopPropagation()}
+                        className="absolute -top-2 -left-2 rounded-full text-muted-foreground hover:text-amber-500 disabled:opacity-40"
+                      >
+                        <Star
+                          className={
+                            isFavorite
+                              ? "fill-amber-400 text-amber-500"
+                              : undefined
+                          }
+                        />
+                      </Toggle>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isFavorite
+                        ? t("removeFavorite", { name: displayName })
+                        : t("addFavorite", { name: displayName })}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
                 <Tooltip delayDuration={700}>
                   <TooltipTrigger asChild>

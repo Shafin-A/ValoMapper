@@ -35,6 +35,7 @@ import { ProfileStackMembersSection } from "./profile-stack-members-section";
 import { ProfileActionsRow } from "./profile-actions-row";
 import { ProfileDeleteAccountSection } from "./profile-delete-account-section";
 import { ProfileLanguageSection } from "@/components/i18n/profile-language-section";
+import { ProfileFavoriteAgentsSection } from "./profile-favorite-agents-section";
 import { useFormatter, useTranslations } from "next-intl";
 
 export const ProfileContent = () => {
@@ -295,6 +296,19 @@ export const ProfileContent = () => {
     setIsEditing(false);
   };
 
+  const handleSaveFavoriteAgents = (agents: string[]) => {
+    updateUser(
+      {
+        favoriteAgents: agents,
+      },
+      {
+        onSuccess: () => {
+          refetch();
+        },
+      },
+    );
+  };
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
     await logout();
@@ -397,6 +411,12 @@ export const ProfileContent = () => {
             />
 
             <ProfileLanguageSection />
+
+            <ProfileFavoriteAgentsSection
+              favoriteAgents={user.favoriteAgents ?? []}
+              isSaving={isUpdatingUser}
+              onSave={handleSaveFavoriteAgents}
+            />
 
             {!isStackPlan && (
               <ProfilePendingStackInvitesAlert

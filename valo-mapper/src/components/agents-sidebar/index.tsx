@@ -50,6 +50,7 @@ import {
   resolveAbilityVariant,
 } from "@/lib/consts/configs/agent-icon/consts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useFavoriteAgents } from "@/hooks/use-favorite-agents";
 import { InfoHint } from "@/components/shared/info-hint";
 import { useTranslations } from "next-intl";
 import { AgentsDragPreview } from "./agents-drag-preview";
@@ -58,11 +59,13 @@ import { useAgentsSidebarDrag } from "./use-agents-sidebar-drag";
 interface AgentsSidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen?: Dispatch<SetStateAction<boolean>>;
+  lobbyCode?: string;
 }
 
 export const AgentsSidebar = ({
   sidebarOpen,
   setSidebarOpen,
+  lobbyCode,
 }: AgentsSidebarProps) => {
   const t = useTranslations("agents");
   const isMobile = useIsMobile();
@@ -94,8 +97,15 @@ export const AgentsSidebar = ({
 
   const [selectedRole, setSelectedRole] = useState<"All" | AgentRole>("All");
   const [onMap, setOnMap] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selectedAgentAbilities, setSelectedAgentAbilities] =
     useState<Agent | null>(null);
+
+  const {
+    favoriteAgents,
+    isReady: areFavoritesReady,
+    toggleFavorite,
+  } = useFavoriteAgents(lobbyCode);
   const [selectedAbilityVariants, setSelectedAbilityVariants] = useState<
     Record<string, number>
   >({});
@@ -300,6 +310,21 @@ export const AgentsSidebar = ({
                 <span className="text-sm">{t("onMap")}</span>
               </div>
             </div>
+            {lobbyCode && (
+              <div className="flex items-center justify-end gap-2">
+                <Checkbox
+                  checked={favoritesOnly}
+                  onCheckedChange={(checked) => {
+                    setFavoritesOnly(!!checked);
+                  }}
+                  disabled={
+                    isLoadingLobby || isErrorLobby || !areFavoritesReady
+                  }
+                  aria-label={t("favorites")}
+                />
+                <span className="text-sm">{t("favorites")}</span>
+              </div>
+            )}
           </div>
         </SidebarHeader>
         <SidebarContent className="relative">
@@ -322,6 +347,11 @@ export const AgentsSidebar = ({
                 <AgentsGrid
                   selectedRole={selectedRole}
                   onMap={onMap}
+                  favoritesOnly={Boolean(lobbyCode) && favoritesOnly}
+                  favoriteAgents={favoriteAgents}
+                  favoritesReady={areFavoritesReady}
+                  showFavorites={Boolean(lobbyCode)}
+                  onToggleFavorite={toggleFavorite}
                   onAgentClick={handleAgentClick}
                   onAgentPointerDown={handleAgentPointerDown}
                   selectedAgentAbilities={selectedAgentAbilities}

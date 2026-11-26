@@ -44,6 +44,7 @@ export type User = {
   createdAt: Date;
   updatedAt: Date;
   tourCompleted?: boolean;
+  favoriteAgents?: string[];
   isSubscribed?: boolean;
   personalIsSubscribed?: boolean;
   subscriptionStartedAt?: Date | string | null;

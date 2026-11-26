@@ -213,6 +213,8 @@ const LobbyEditPage = () => {
   }, [isMobile]);
 
   const params = useParams();
+  const lobbyCode =
+    typeof params.lobbyCode === "string" ? params.lobbyCode : undefined;
 
   useEffect(() => {
     const pendingToast = readPendingLobbyToast();
@@ -342,6 +344,7 @@ const LobbyEditPage = () => {
       <AgentsSidebar
         sidebarOpen={sidebarState.rightSidebarOpen}
         setSidebarOpen={sidebarState.setRightSidebarOpen}
+        lobbyCode={lobbyCode}
       />
 
       <MobileOnboarding

@@ -708,7 +708,12 @@
       "invited": "Invited {date}",
       "accept": "Accept Invite",
       "decline": "Decline"
-    }
+    },
+    "favoriteAgentsTitle": "Favorite agents",
+    "favoriteAgentsDescription": "Choose the agents you want starred by default in every lobby. You can still change favorites per lobby.",
+    "favoriteAgentsSearch": "Search agents...",
+    "favoriteAgentsEmpty": "No agents match your search.",
+    "saveFavoriteAgents": "Save favorites"
   },
   "strategies": {
     "rootName": "My Strategies",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "Abilities Settings",
     "loading": "Loading agents...",
     "loadLobbyFailed": "Failed to load lobby",
-    "tryAgainLater": "Please try again later"
+    "tryAgainLater": "Please try again later",
+    "favorites": "Favorites",
+    "addFavorite": "Add {name} to favorites",
+    "removeFavorite": "Remove {name} from favorites",
+    "emptyFavorites": "No favorite agents",
+    "emptyFavoritesOnMap": "No favorite agents on map",
+    "favoriteAgentsHint": "Star agents to add them to your favorites."
   },
   "tools": {
     "maps": "Maps",

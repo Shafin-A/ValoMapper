@@ -10,6 +10,7 @@ import { User } from "@/lib/types";
 interface UpdateUserData {
   name?: string;
   tourCompleted?: boolean;
+  favoriteAgents?: string[];
 }
 
 export const useUpdateUser = () => {

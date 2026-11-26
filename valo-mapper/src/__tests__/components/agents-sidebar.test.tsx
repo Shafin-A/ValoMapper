@@ -159,6 +159,79 @@ describe("AgentsGrid", () => {
 
     expect(screen.getByText("No Duelist agents on map")).toBeInTheDocument();
   });
+
+  it("should show only favorite agents when the favorites filter is active", () => {
+    render(
+      <AgentsGrid
+        {...defaultProps}
+        favoritesOnly
+        favoriteAgents={new Set(["Jett", "Sage"])}
+      />,
+    );
+
+    expect(screen.getByRole("img", { name: "Jett" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Sage" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Brimstone" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("should combine on-map and favorites filters", () => {
+    mockAgentsContext([
+      { id: "1", name: "Jett", role: "Duelist", isAlly: true, x: 0, y: 0 },
+    ]);
+
+    render(
+      <AgentsGrid
+        {...defaultProps}
+        onMap
+        favoritesOnly
+        favoriteAgents={new Set(["Jett", "Sage"])}
+      />,
+    );
+
+    expect(screen.getByRole("img", { name: "Jett" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("img", { name: "Sage" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("should show a favorites empty state", () => {
+    render(
+      <AgentsGrid
+        {...defaultProps}
+        favoritesOnly
+        favoriteAgents={new Set()}
+      />,
+    );
+
+    expect(screen.getByText("No favorite agents")).toBeInTheDocument();
+  });
+
+  it("should toggle a favorite without selecting or dragging the agent", async () => {
+    const user = userEvent.setup();
+    const onToggleFavorite = jest.fn();
+    const onAgentPointerDown = jest.fn();
+
+    render(
+      <AgentsGrid
+        {...defaultProps}
+        onAgentPointerDown={onAgentPointerDown}
+        showFavorites
+        favoritesReady
+        favoriteAgents={new Set()}
+        onToggleFavorite={onToggleFavorite}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Add Jett to favorites" }),
+    );
+
+    expect(onToggleFavorite).toHaveBeenCalledWith("Jett");
+    expect(mockOnAgentClick).not.toHaveBeenCalled();
+    expect(onAgentPointerDown).not.toHaveBeenCalled();
+  });
 });
 
 describe("AgentAbilities", () => {
