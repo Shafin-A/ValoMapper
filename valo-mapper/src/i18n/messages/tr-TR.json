@@ -708,7 +708,12 @@
       "invited": "{date} tarihinde davet edildi",
       "accept": "Daveti Kabul Et",
       "decline": "Reddet"
-    }
+    },
+    "favoriteAgentsTitle": "Favori ajanlar",
+    "favoriteAgentsDescription": "Her lobide varsayılan olarak yıldızlanacak ajanları seç. Favorileri lobi bazında değiştirmeye devam edebilirsin.",
+    "favoriteAgentsSearch": "Ajan ara...",
+    "favoriteAgentsEmpty": "Aramanla eşleşen ajan yok.",
+    "saveFavoriteAgents": "Favorileri kaydet"
   },
   "strategies": {
     "rootName": "Stratejilerim",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "Yetenek ayarları",
     "loading": "Ajanlar yükleniyor...",
     "loadLobbyFailed": "Lobi yüklenemedi",
-    "tryAgainLater": "Lütfen daha sonra tekrar dene."
+    "tryAgainLater": "Lütfen daha sonra tekrar dene.",
+    "favorites": "Favoriler",
+    "addFavorite": "{name} favorilere ekle",
+    "removeFavorite": "{name} favorilerden çıkar",
+    "emptyFavorites": "Favori ajan yok",
+    "emptyFavoritesOnMap": "Haritada favori ajan yok",
+    "favoriteAgentsHint": "Ajanları favorilere eklemek için yıldıza tıkla."
   },
   "tools": {
     "maps": "Haritalar",

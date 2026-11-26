@@ -708,7 +708,12 @@
       "invited": "邀请于 {date}",
       "accept": "接受邀请",
       "decline": "拒绝"
-    }
+    },
+    "favoriteAgentsTitle": "收藏的特工",
+    "favoriteAgentsDescription": "选择在每个大厅中默认收藏的特工。你仍然可以按大厅更改收藏。",
+    "favoriteAgentsSearch": "搜索特工...",
+    "favoriteAgentsEmpty": "没有匹配的特工。",
+    "saveFavoriteAgents": "保存收藏"
   },
   "strategies": {
     "rootName": "我的策略",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "技能设置",
     "loading": "正在加载特工...",
     "loadLobbyFailed": "加载大厅失败",
-    "tryAgainLater": "请稍后重试"
+    "tryAgainLater": "请稍后重试",
+    "favorites": "收藏",
+    "addFavorite": "将 {name} 添加到收藏",
+    "removeFavorite": "从收藏中移除 {name}",
+    "emptyFavorites": "没有收藏的特工",
+    "emptyFavoritesOnMap": "地图上没有收藏的特工",
+    "favoriteAgentsHint": "点击特工上的星标即可加入收藏。"
   },
   "tools": {
     "maps": "地图",

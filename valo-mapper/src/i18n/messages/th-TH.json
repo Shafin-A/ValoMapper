@@ -708,7 +708,12 @@
       "invited": "เชิญเมื่อ {date}",
       "accept": "ยอมรับคำเชิญ",
       "decline": "ปฏิเสธ"
-    }
+    },
+    "favoriteAgentsTitle": "เอเจนต์ที่ชื่นชอบ",
+    "favoriteAgentsDescription": "เลือกเอเจนต์ที่ต้องการให้ติดดาวเป็นค่าเริ่มต้นในทุกห้อง คุณยังเปลี่ยนรายการโปรดแยกตามห้องได้",
+    "favoriteAgentsSearch": "ค้นหาเอเจนต์...",
+    "favoriteAgentsEmpty": "ไม่มีเอเจนต์ที่ตรงกับการค้นหาของคุณ",
+    "saveFavoriteAgents": "บันทึกรายการโปรด"
   },
   "strategies": {
     "rootName": "กลยุทธ์ของฉัน",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "การตั้งค่าความสามารถ",
     "loading": "กำลังโหลดเอเจนต์...",
     "loadLobbyFailed": "โหลดล็อบบี้ไม่สำเร็จ",
-    "tryAgainLater": "โปรดลองอีกครั้งในภายหลัง"
+    "tryAgainLater": "โปรดลองอีกครั้งในภายหลัง",
+    "favorites": "รายการโปรด",
+    "addFavorite": "เพิ่ม {name} ในรายการโปรด",
+    "removeFavorite": "ลบ {name} ออกจากรายการโปรด",
+    "emptyFavorites": "ไม่มีเอเจนต์ที่ชื่นชอบ",
+    "emptyFavoritesOnMap": "ไม่มีเอเจนต์ที่ชื่นชอบบนแผนที่",
+    "favoriteAgentsHint": "กดดาวที่เอเจนต์เพื่อเพิ่มในรายการโปรด"
   },
   "tools": {
     "maps": "แผนที่",

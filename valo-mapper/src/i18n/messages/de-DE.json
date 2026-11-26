@@ -708,7 +708,12 @@
       "invited": "Eingeladen am {date}",
       "accept": "Einladung annehmen",
       "decline": "Ablehnen"
-    }
+    },
+    "favoriteAgentsTitle": "Favorisierte Agenten",
+    "favoriteAgentsDescription": "Wähle die Agenten, die in jeder Lobby standardmäßig markiert sein sollen. Pro Lobby kannst du die Favoriten weiterhin ändern.",
+    "favoriteAgentsSearch": "Agenten suchen...",
+    "favoriteAgentsEmpty": "Keine Agenten entsprechen deiner Suche.",
+    "saveFavoriteAgents": "Favoriten speichern"
   },
   "strategies": {
     "rootName": "Meine Strategien",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "Fähigkeiten-Einstellungen",
     "loading": "Agenten werden geladen...",
     "loadLobbyFailed": "Lobby konnte nicht geladen werden",
-    "tryAgainLater": "Bitte versuche es später erneut."
+    "tryAgainLater": "Bitte versuche es später erneut.",
+    "favorites": "Favoriten",
+    "addFavorite": "{name} zu Favoriten hinzufügen",
+    "removeFavorite": "{name} aus Favoriten entfernen",
+    "emptyFavorites": "Keine favorisierten Agenten",
+    "emptyFavoritesOnMap": "Keine favorisierten Agenten auf der Karte",
+    "favoriteAgentsHint": "Markiere Agenten mit einem Stern, um sie zu favorisieren."
   },
   "tools": {
     "maps": "Karten",

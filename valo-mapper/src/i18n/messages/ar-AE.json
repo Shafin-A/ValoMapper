@@ -708,7 +708,12 @@
       "invited": "تمت دعوة {date}",
       "accept": "قبول الدعوة",
       "decline": "رفض"
-    }
+    },
+    "favoriteAgentsTitle": "الوكلاء المفضلون",
+    "favoriteAgentsDescription": "اختر الوكلاء الذين تريد تمييزهم بنجمة افتراضيًا في كل ردهة. يمكنك تغيير المفضلة لكل ردهة على حدة.",
+    "favoriteAgentsSearch": "ابحث عن الوكلاء...",
+    "favoriteAgentsEmpty": "لا يوجد وكلاء يطابقون بحثك.",
+    "saveFavoriteAgents": "حفظ المفضلة"
   },
   "strategies": {
     "rootName": "استراتيجياتي",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "إعدادات القدرات",
     "loading": "جارٍ تحميل الوكلاء...",
     "loadLobbyFailed": "فشل تحميل الردهة",
-    "tryAgainLater": "يرجى المحاولة مرة أخرى في وقت لاحق"
+    "tryAgainLater": "يرجى المحاولة مرة أخرى في وقت لاحق",
+    "favorites": "المفضلة",
+    "addFavorite": "أضف {name} إلى المفضلة",
+    "removeFavorite": "إزالة {name} من المفضلة",
+    "emptyFavorites": "لا يوجد وكلاء مفضلون",
+    "emptyFavoritesOnMap": "لا يوجد وكلاء مفضلون على الخريطة",
+    "favoriteAgentsHint": "أضف نجمة إلى الوكيل لإضافته إلى المفضلة."
   },
   "tools": {
     "maps": "الخرائط",

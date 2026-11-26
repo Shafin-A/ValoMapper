@@ -708,7 +708,12 @@
       "invited": "{date} に招待されました",
       "accept": "招待を承諾",
       "decline": "辞退"
-    }
+    },
+    "favoriteAgentsTitle": "お気に入りのエージェント",
+    "favoriteAgentsDescription": "すべてのロビーで最初からお気に入りにするエージェントを選択します。ロビーごとにお気に入りを変更できます。",
+    "favoriteAgentsSearch": "エージェントを検索...",
+    "favoriteAgentsEmpty": "検索に一致するエージェントはいません。",
+    "saveFavoriteAgents": "お気に入りを保存"
   },
   "strategies": {
     "rootName": "マイ戦略",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "アビリティ設定",
     "loading": "エージェントを読み込み中...",
     "loadLobbyFailed": "ロビーの読み込みに失敗しました",
-    "tryAgainLater": "後でもう一度試してください"
+    "tryAgainLater": "後でもう一度試してください",
+    "favorites": "お気に入り",
+    "addFavorite": "{name}をお気に入りに追加",
+    "removeFavorite": "{name}をお気に入りから削除",
+    "emptyFavorites": "お気に入りのエージェントはいません",
+    "emptyFavoritesOnMap": "マップ上にお気に入りのエージェントはいません",
+    "favoriteAgentsHint": "エージェントに星を付けるとお気に入りに追加できます。"
   },
   "tools": {
     "maps": "マップ",

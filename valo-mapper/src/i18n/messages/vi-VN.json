@@ -708,7 +708,12 @@
       "invited": "Đã mời {date}",
       "accept": "Chấp nhận lời mời",
       "decline": "Từ chối"
-    }
+    },
+    "favoriteAgentsTitle": "Đặc vụ yêu thích",
+    "favoriteAgentsDescription": "Chọn các đặc vụ bạn muốn gắn dấu sao mặc định trong mọi sảnh. Bạn vẫn có thể thay đổi yêu thích theo từng sảnh.",
+    "favoriteAgentsSearch": "Tìm kiếm đặc vụ...",
+    "favoriteAgentsEmpty": "Không có đặc vụ nào phù hợp với tìm kiếm của bạn.",
+    "saveFavoriteAgents": "Lưu yêu thích"
   },
   "strategies": {
     "rootName": "Chiến lược của tôi",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "Cài đặt kỹ năng",
     "loading": "Đang tải đặc vụ...",
     "loadLobbyFailed": "Không tải được sảnh",
-    "tryAgainLater": "Vui lòng thử lại sau"
+    "tryAgainLater": "Vui lòng thử lại sau",
+    "favorites": "Yêu thích",
+    "addFavorite": "Thêm {name} vào yêu thích",
+    "removeFavorite": "Xóa {name} khỏi yêu thích",
+    "emptyFavorites": "Không có đặc vụ yêu thích",
+    "emptyFavoritesOnMap": "Không có đặc vụ yêu thích trên bản đồ",
+    "favoriteAgentsHint": "Gắn dấu sao cho đặc vụ để thêm vào yêu thích."
   },
   "tools": {
     "maps": "Bản đồ",

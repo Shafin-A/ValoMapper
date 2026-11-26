@@ -708,7 +708,12 @@
       "invited": "Diundang {date}",
       "accept": "Terima Undangan",
       "decline": "Menolak"
-    }
+    },
+    "favoriteAgentsTitle": "Agen favorit",
+    "favoriteAgentsDescription": "Pilih agen yang ingin ditandai secara default di setiap lobi. Anda tetap bisa mengubah favorit di tiap lobi.",
+    "favoriteAgentsSearch": "Cari agen...",
+    "favoriteAgentsEmpty": "Tidak ada agen yang cocok dengan pencarian Anda.",
+    "saveFavoriteAgents": "Simpan favorit"
   },
   "strategies": {
     "rootName": "Strategi Saya",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "Pengaturan kemampuan",
     "loading": "Memuat agen...",
     "loadLobbyFailed": "Gagal memuat lobi",
-    "tryAgainLater": "Silakan coba lagi nanti"
+    "tryAgainLater": "Silakan coba lagi nanti",
+    "favorites": "Favorit",
+    "addFavorite": "Tambahkan {name} ke favorit",
+    "removeFavorite": "Hapus {name} dari favorit",
+    "emptyFavorites": "Tidak ada agen favorit",
+    "emptyFavoritesOnMap": "Tidak ada agen favorit di peta",
+    "favoriteAgentsHint": "Beri bintang pada agen untuk menambahkannya ke favorit."
   },
   "tools": {
     "maps": "Peta",

@@ -708,7 +708,12 @@
       "invited": "Invité {date}",
       "accept": "Accepter l'invitation",
       "decline": "Déclin"
-    }
+    },
+    "favoriteAgentsTitle": "Agents favoris",
+    "favoriteAgentsDescription": "Choisissez les agents à mettre en favori par défaut dans chaque lobby. Vous pouvez toujours modifier les favoris par lobby.",
+    "favoriteAgentsSearch": "Rechercher des agents...",
+    "favoriteAgentsEmpty": "Aucun agent ne correspond à votre recherche.",
+    "saveFavoriteAgents": "Enregistrer les favoris"
   },
   "strategies": {
     "rootName": "Mes stratégies",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "Paramètres des compétences",
     "loading": "Chargement des agents...",
     "loadLobbyFailed": "Échec du chargement du lobby",
-    "tryAgainLater": "Veuillez réessayer plus tard"
+    "tryAgainLater": "Veuillez réessayer plus tard",
+    "favorites": "Favoris",
+    "addFavorite": "Ajouter {name} aux favoris",
+    "removeFavorite": "Retirer {name} des favoris",
+    "emptyFavorites": "Aucun agent favori",
+    "emptyFavoritesOnMap": "Aucun agent favori sur la carte",
+    "favoriteAgentsHint": "Ajoutez une étoile aux agents pour les mettre en favoris."
   },
   "tools": {
     "maps": "Cartes",

@@ -708,7 +708,12 @@
       "invited": "Приглашение получено: {date}",
       "accept": "Принять приглашение",
       "decline": "Отклонить"
-    }
+    },
+    "favoriteAgentsTitle": "Избранные агенты",
+    "favoriteAgentsDescription": "Выберите агентов, которые будут отмечены по умолчанию в каждом лобби. Избранное можно по-прежнему менять в каждом лобби.",
+    "favoriteAgentsSearch": "Поиск агентов...",
+    "favoriteAgentsEmpty": "Нет агентов, соответствующих поиску.",
+    "saveFavoriteAgents": "Сохранить избранное"
   },
   "strategies": {
     "rootName": "Мои стратегии",
@@ -1074,7 +1079,13 @@
     "abilitiesSettings": "Настройки способностей",
     "loading": "Загрузка агентов...",
     "loadLobbyFailed": "Не удалось загрузить лобби",
-    "tryAgainLater": "Пожалуйста, повторите попытку позже"
+    "tryAgainLater": "Пожалуйста, повторите попытку позже",
+    "favorites": "Избранное",
+    "addFavorite": "Добавить {name} в избранное",
+    "removeFavorite": "Убрать {name} из избранного",
+    "emptyFavorites": "Нет избранных агентов",
+    "emptyFavoritesOnMap": "На карте нет избранных агентов",
+    "favoriteAgentsHint": "Отметьте агентов звездой, чтобы добавить их в избранное."
   },
   "tools": {
     "maps": "Карты",
