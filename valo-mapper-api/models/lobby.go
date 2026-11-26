@@ -116,6 +116,7 @@ type LobbyMeta struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	SelectedMapID string
+	MapSide       string
 }
 
 func GetLobbyMetaByCode(code string) (*LobbyMeta, error) {
@@ -126,10 +127,11 @@ func GetLobbyMetaByCode(code string) (*LobbyMeta, error) {
 
 	meta := &LobbyMeta{}
 	err = conn.QueryRow(context.Background(), `
-		SELECT code, created_at, updated_at, COALESCE(selected_map_id, '')
+		SELECT code, created_at, updated_at, COALESCE(selected_map_id, ''),
+		       CASE WHEN map_side = 'defend' THEN 'defense' ELSE COALESCE(map_side, '') END
 		FROM lobbies
 		WHERE code = $1`,
-		code).Scan(&meta.Code, &meta.CreatedAt, &meta.UpdatedAt, &meta.SelectedMapID)
+		code).Scan(&meta.Code, &meta.CreatedAt, &meta.UpdatedAt, &meta.SelectedMapID, &meta.MapSide)
 
 	if err == pgx.ErrNoRows {
 		return nil, nil

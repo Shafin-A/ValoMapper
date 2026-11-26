@@ -84,8 +84,33 @@ type StrategyResponse struct {
 	FolderID      *int
 	Name          string
 	SelectedMapID string
+	MapSide       string
+	Tags          []string
+	IsFavorite    bool
 	LobbyCode     string
 	UpdatedAt     time.Time
+}
+
+func responseTags(tags []string) []string {
+	if tags == nil {
+		return []string{}
+	}
+	return tags
+}
+
+func newStrategyResponseFromSummary(summary models.StrategySummary) *StrategyResponse {
+	return &StrategyResponse{
+		ID:            summary.ID,
+		UserID:        summary.UserID,
+		FolderID:      summary.FolderID,
+		Name:          summary.Name,
+		SelectedMapID: summary.SelectedMapID,
+		MapSide:       summary.MapSide,
+		Tags:          responseTags(summary.Tags),
+		IsFavorite:    summary.IsFavorite,
+		LobbyCode:     summary.LobbyCode,
+		UpdatedAt:     summary.UpdatedAt,
+	}
 }
 
 func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyRequest) (*StrategyResponse, error) {
@@ -143,6 +168,9 @@ func (ss *StrategyService) CreateStrategy(user *models.User, req CreateStrategyR
 		FolderID:      strategy.FolderID,
 		Name:          strategy.Name,
 		SelectedMapID: lobby.SelectedMapID,
+		MapSide:       lobby.MapSide,
+		Tags:          responseTags(strategy.Tags),
+		IsFavorite:    strategy.IsFavorite,
 		LobbyCode:     lobby.Code,
 		UpdatedAt:     lobby.UpdatedAt,
 	}, nil
@@ -156,15 +184,7 @@ func (ss *StrategyService) GetStrategies(userID int, folderID *int) ([]*Strategy
 
 	responses := make([]*StrategyResponse, 0, len(summaries))
 	for _, summary := range summaries {
-		responses = append(responses, &StrategyResponse{
-			ID:            summary.ID,
-			UserID:        summary.UserID,
-			FolderID:      summary.FolderID,
-			Name:          summary.Name,
-			SelectedMapID: summary.SelectedMapID,
-			LobbyCode:     summary.LobbyCode,
-			UpdatedAt:     summary.UpdatedAt,
-		})
+		responses = append(responses, newStrategyResponseFromSummary(summary))
 	}
 
 	return responses, nil
@@ -174,6 +194,9 @@ type UpdateStrategyRequest struct {
 	FolderID    *int
 	HasFolderID bool
 	Name        *string
+	Tags        *[]string
+	HasTags     bool
+	IsFavorite  *bool
 }
 
 func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req UpdateStrategyRequest) (*StrategyResponse, error) {
@@ -195,6 +218,20 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 	if req.HasFolderID {
 		strategy.FolderID = req.FolderID
 	}
+	if req.HasTags {
+		tags := []string{}
+		if req.Tags != nil {
+			tags = *req.Tags
+		}
+		normalizedTags, err := NormalizeStrategyTags(tags)
+		if err != nil {
+			return nil, err
+		}
+		strategy.Tags = normalizedTags
+	}
+	if req.IsFavorite != nil {
+		strategy.IsFavorite = *req.IsFavorite
+	}
 
 	if err := ss.repo.UpdateStrategy(strategy); err != nil {
 		return nil, err
@@ -214,6 +251,9 @@ func (ss *StrategyService) UpdateStrategy(user *models.User, strategyID int, req
 		FolderID:      strategy.FolderID,
 		Name:          strategy.Name,
 		SelectedMapID: lobby.SelectedMapID,
+		MapSide:       lobby.MapSide,
+		Tags:          responseTags(strategy.Tags),
+		IsFavorite:    strategy.IsFavorite,
 		LobbyCode:     lobby.Code,
 		UpdatedAt:     lobby.UpdatedAt,
 	}, nil

@@ -20,9 +20,12 @@ type CreateStrategyRequest struct {
 }
 
 type UpdateStrategyRequest struct {
-	FolderID    *int    `json:"folderId,omitempty"`
-	HasFolderID bool    `json:"-"`
-	Name        *string `json:"name,omitempty"`
+	FolderID    *int      `json:"folderId,omitempty"`
+	HasFolderID bool      `json:"-"`
+	Name        *string   `json:"name,omitempty"`
+	Tags        *[]string `json:"tags,omitempty"`
+	HasTags     bool      `json:"-"`
+	IsFavorite  *bool     `json:"isFavorite,omitempty"`
 }
 
 type StrategyResponse struct {
@@ -31,17 +34,28 @@ type StrategyResponse struct {
 	FolderID      *int      `json:"folderId"`
 	Name          string    `json:"name"`
 	SelectedMapID string    `json:"selectedMapId"`
+	MapSide       string    `json:"mapSide"`
+	Tags          []string  `json:"tags"`
+	IsFavorite    bool      `json:"isFavorite"`
 	LobbyCode     string    `json:"lobbyCode"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 func newStrategyResponseFromService(strategy *services.StrategyResponse) *StrategyResponse {
+	tags := strategy.Tags
+	if tags == nil {
+		tags = []string{}
+	}
+
 	return &StrategyResponse{
 		ID:            strategy.ID,
 		UserID:        strategy.UserID,
 		FolderID:      strategy.FolderID,
 		Name:          strategy.Name,
 		SelectedMapID: strategy.SelectedMapID,
+		MapSide:       strategy.MapSide,
+		Tags:          tags,
+		IsFavorite:    strategy.IsFavorite,
 		LobbyCode:     strategy.LobbyCode,
 		UpdatedAt:     strategy.UpdatedAt,
 	}
@@ -188,10 +202,33 @@ func UpdateStrategy(w http.ResponseWriter, r *http.Request) {
 		}
 		req.FolderID = folderID
 	}
+
+	if rawTags, ok := rawReq["tags"]; ok {
+		req.HasTags = true
+		var tags []string
+		if err := json.Unmarshal(rawTags, &tags); err != nil {
+			utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
+			return
+		}
+		req.Tags = &tags
+	}
+
+	if rawFavorite, ok := rawReq["isFavorite"]; ok {
+		var isFavorite bool
+		if err := json.Unmarshal(rawFavorite, &isFavorite); err != nil {
+			utils.SendJSONError(w, utils.NewBadRequest("Invalid request body"), middleware.GetRequestID(r))
+			return
+		}
+		req.IsFavorite = &isFavorite
+	}
+
 	response, err := strategyService.UpdateStrategy(user, id, services.UpdateStrategyRequest{
 		FolderID:    req.FolderID,
 		HasFolderID: req.HasFolderID,
 		Name:        req.Name,
+		Tags:        req.Tags,
+		HasTags:     req.HasTags,
+		IsFavorite:  req.IsFavorite,
 	})
 	if err != nil {
 		sendServiceError(w, r, err, "Unable to update strategy")

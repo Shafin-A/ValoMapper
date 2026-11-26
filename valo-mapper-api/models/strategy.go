@@ -9,13 +9,15 @@ import (
 )
 
 type Strategy struct {
-	ID        int       `json:"id"`
-	UserID    int       `json:"userId"`
-	FolderID  *int      `json:"folderId,omitempty"`
-	LobbyCode string    `json:"lobbyCode"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID         int       `json:"id"`
+	UserID     int       `json:"userId"`
+	FolderID   *int      `json:"folderId,omitempty"`
+	LobbyCode  string    `json:"lobbyCode"`
+	Name       string    `json:"name"`
+	Tags       []string  `json:"tags"`
+	IsFavorite bool      `json:"isFavorite"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 type StrategySummary struct {
@@ -25,7 +27,17 @@ type StrategySummary struct {
 	Name          string
 	LobbyCode     string
 	SelectedMapID string
+	MapSide       string
+	Tags          []string
+	IsFavorite    bool
 	UpdatedAt     time.Time
+}
+
+func strategyTagsOrEmpty(tags []string) []string {
+	if tags == nil {
+		return []string{}
+	}
+	return tags
 }
 
 func (s *Strategy) Save() error {
@@ -35,10 +47,10 @@ func (s *Strategy) Save() error {
 	}
 
 	return conn.QueryRow(context.Background(),
-		`INSERT INTO strategies (user_id, folder_id, lobby_code, name, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, NOW(), NOW())
+		`INSERT INTO strategies (user_id, folder_id, lobby_code, name, tags, is_favorite, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
 		RETURNING id, created_at, updated_at`,
-		s.UserID, s.FolderID, s.LobbyCode, s.Name).Scan(
+		s.UserID, s.FolderID, s.LobbyCode, s.Name, strategyTagsOrEmpty(s.Tags), s.IsFavorite).Scan(
 		&s.ID,
 		&s.CreatedAt,
 		&s.UpdatedAt,
@@ -53,10 +65,10 @@ func (s *Strategy) Update() error {
 
 	return conn.QueryRow(context.Background(),
 		`UPDATE strategies
-		SET name = $1, folder_id = $2, updated_at = NOW()
-		WHERE id = $3
+		SET name = $1, folder_id = $2, tags = $3, is_favorite = $4, updated_at = NOW()
+		WHERE id = $5
 		RETURNING updated_at`,
-		s.Name, s.FolderID, s.ID).Scan(&s.UpdatedAt)
+		s.Name, s.FolderID, strategyTagsOrEmpty(s.Tags), s.IsFavorite, s.ID).Scan(&s.UpdatedAt)
 }
 
 func (s *Strategy) Delete() error {
@@ -78,7 +90,7 @@ func GetStrategyByID(id int) (*Strategy, error) {
 	strategy := &Strategy{}
 
 	err = conn.QueryRow(context.Background(),
-		`SELECT id, user_id, folder_id, lobby_code, name, created_at, updated_at
+		`SELECT id, user_id, folder_id, lobby_code, name, tags, is_favorite, created_at, updated_at
 		FROM strategies
 		WHERE id = $1`, id).Scan(
 		&strategy.ID,
@@ -86,6 +98,8 @@ func GetStrategyByID(id int) (*Strategy, error) {
 		&strategy.FolderID,
 		&strategy.LobbyCode,
 		&strategy.Name,
+		&strategy.Tags,
+		&strategy.IsFavorite,
 		&strategy.CreatedAt,
 		&strategy.UpdatedAt,
 	)
@@ -109,7 +123,9 @@ func GetStrategySummariesByUserID(userID int, folderID *int) ([]StrategySummary,
 
 	query := `
 		SELECT s.id, s.user_id, s.folder_id, s.name, s.lobby_code,
-		       COALESCE(l.selected_map_id, ''), l.updated_at
+		       COALESCE(l.selected_map_id, ''),
+		       CASE WHEN l.map_side = 'defend' THEN 'defense' ELSE COALESCE(l.map_side, '') END,
+		       s.tags, s.is_favorite, l.updated_at
 		FROM strategies s
 		JOIN lobbies l ON l.code = s.lobby_code
 		WHERE s.user_id = $1`
@@ -138,6 +154,9 @@ func GetStrategySummariesByUserID(userID int, folderID *int) ([]StrategySummary,
 			&summary.Name,
 			&summary.LobbyCode,
 			&summary.SelectedMapID,
+			&summary.MapSide,
+			&summary.Tags,
+			&summary.IsFavorite,
 			&summary.UpdatedAt,
 		); err != nil {
 			return nil, err

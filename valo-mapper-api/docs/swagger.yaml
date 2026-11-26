@@ -26,6 +26,42 @@ definitions:
       yearly:
         $ref: '#/definitions/handlers.BillingPlanPriceResponse'
     type: object
+  handlers.BulkDeleteStrategiesRequest:
+    properties:
+      ids:
+        items:
+          type: integer
+        type: array
+    type: object
+  handlers.BulkDeleteStrategiesResponse:
+    properties:
+      deleted:
+        type: integer
+    type: object
+  handlers.BulkUpdateStrategiesRequest:
+    properties:
+      addTags:
+        items:
+          type: string
+        type: array
+      folderId:
+        type: integer
+      ids:
+        items:
+          type: integer
+        type: array
+      isFavorite:
+        type: boolean
+      removeTags:
+        items:
+          type: string
+        type: array
+    type: object
+  handlers.BulkUpdateStrategiesResponse:
+    properties:
+      updated:
+        type: integer
+    type: object
   handlers.CancelSubscriptionResponse:
     properties:
       cancelAtPeriodEnd:
@@ -159,22 +195,50 @@ definitions:
       userId:
         type: integer
     type: object
+  handlers.StrategyLibraryResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handlers.StrategyResponse'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
   handlers.StrategyResponse:
     properties:
       folderId:
         type: integer
       id:
         type: integer
+      isFavorite:
+        type: boolean
       lobbyCode:
+        type: string
+      mapSide:
         type: string
       name:
         type: string
       selectedMapId:
         type: string
+      tags:
+        items:
+          type: string
+        type: array
       updatedAt:
         type: string
       userId:
         type: integer
+    type: object
+  handlers.StrategyTagsResponse:
+    properties:
+      tags:
+        items:
+          type: string
+        type: array
     type: object
   handlers.StripeWebhookResponse:
     properties:
@@ -203,8 +267,14 @@ definitions:
     properties:
       folderId:
         type: integer
+      isFavorite:
+        type: boolean
       name:
         type: string
+      tags:
+        items:
+          type: string
+        type: array
     type: object
   handlers.UpdateUserRequest:
     properties:
@@ -1959,6 +2029,220 @@ paths:
       security:
       - BearerAuth: []
       summary: Update strategy
+      tags:
+      - strategies
+  /api/strategies/{id}/duplicate:
+    post:
+      description: Deep-copies a strategy and its lobby canvas into a new strategy.
+      parameters:
+      - description: Strategy ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.StrategyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Duplicate strategy
+      tags:
+      - strategies
+  /api/strategies/bulk:
+    patch:
+      consumes:
+      - application/json
+      description: Moves, favorites, and/or changes tags for up to 100 strategies
+        owned by the authenticated user.
+      parameters:
+      - description: Bulk update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.BulkUpdateStrategiesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.BulkUpdateStrategiesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Bulk update strategies
+      tags:
+      - strategies
+  /api/strategies/bulk-delete:
+    post:
+      consumes:
+      - application/json
+      description: Deletes up to 100 strategies owned by the authenticated user.
+      parameters:
+      - description: Bulk delete request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.BulkDeleteStrategiesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.BulkDeleteStrategiesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Bulk delete strategies
+      tags:
+      - strategies
+  /api/strategies/library:
+    get:
+      description: Returns the authenticated user's strategies with server-side search,
+        tag, favorite, map, and side filters.
+      parameters:
+      - description: Case-insensitive strategy name search
+        in: query
+        name: q
+        type: string
+      - description: Comma-separated tag filter
+        in: query
+        name: tags
+        type: string
+      - description: 'Tag match mode: all or any (default all)'
+        in: query
+        name: tagMode
+        type: string
+      - description: Only favorites when true
+        in: query
+        name: favorite
+        type: boolean
+      - description: Map ID filter
+        in: query
+        name: mapId
+        type: string
+      - description: 'Side filter: attack or defense'
+        in: query
+        name: side
+        type: string
+      - description: 'Sort: updated, created, or name (default updated)'
+        in: query
+        name: sort
+        type: string
+      - description: Page size (default 50, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.StrategyLibraryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Search and filter strategies
+      tags:
+      - strategies
+  /api/strategies/tags:
+    get:
+      description: Returns the distinct tags used by the authenticated user's strategies.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.StrategyTagsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List strategy tags
       tags:
       - strategies
   /api/users:
