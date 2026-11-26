@@ -38,6 +38,7 @@ interface UseAgentsSidebarDragOptions {
   setAgentsOnCanvas: Dispatch<SetStateAction<AgentCanvas[]>>;
   setAbilitiesOnCanvas: Dispatch<SetStateAction<AbilityCanvas[]>>;
   setToolIconsOnCanvas: Dispatch<SetStateAction<ToolIconCanvas[]>>;
+  setSelectedAgentAbilities: Dispatch<SetStateAction<Agent | null>>;
   setIsDrawMode: Dispatch<SetStateAction<boolean>>;
   setEditingTextId: Dispatch<SetStateAction<string | null>>;
 }
@@ -53,6 +54,7 @@ export const useAgentsSidebarDrag = ({
   setAgentsOnCanvas,
   setAbilitiesOnCanvas,
   setToolIconsOnCanvas,
+  setSelectedAgentAbilities,
   setIsDrawMode,
   setEditingTextId,
 }: UseAgentsSidebarDragOptions) => {
@@ -117,6 +119,9 @@ export const useAgentsSidebarDrag = ({
       setIconsOnCanvas: Dispatch<SetStateAction<T[]>>,
     ) => {
       setSelectedCanvasIcon(icon);
+      if (isAgent(icon)) {
+        setSelectedAgentAbilities(icon);
+      }
 
       // Clear any stale TEMP_DRAG_ID from the other lists before adding to this one
       setAgentsOnCanvas((prev) => prev.filter((c) => c.id !== TEMP_DRAG_ID));
@@ -144,6 +149,7 @@ export const useAgentsSidebarDrag = ({
       isAlly,
       setAgentsOnCanvas,
       setAbilitiesOnCanvas,
+      setSelectedAgentAbilities,
       setSelectedCanvasIcon,
       setToolIconsOnCanvas,
     ],

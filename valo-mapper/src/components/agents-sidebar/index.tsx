@@ -129,6 +129,7 @@ export const AgentsSidebar = ({
     setAgentsOnCanvas,
     setAbilitiesOnCanvas,
     setToolIconsOnCanvas,
+    setSelectedAgentAbilities,
     setIsDrawMode,
     setEditingTextId,
   });
