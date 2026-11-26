@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { StrategyTagMode } from "@/lib/strategy-library";
 
@@ -103,7 +104,7 @@ export const TagFilterContent = ({
       ) : visibleTags.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noMatchingTags")}</p>
       ) : (
-        <div className="max-h-56 min-h-0 overflow-y-auto overscroll-contain pe-2">
+        <ScrollArea className="h-56 min-h-0 pe-2" type="auto">
           <div className="space-y-1">
             {visibleTags.map((tag) => {
               const checked = selectedTags.includes(tag);
@@ -122,7 +123,7 @@ export const TagFilterContent = ({
               );
             })}
           </div>
-        </div>
+        </ScrollArea>
       )}
     </div>
   );
