@@ -24,6 +24,8 @@ const createStrategy = (overrides: Partial<Strategy>): Strategy => ({
   userId: 1,
   name: "Strategy",
   selectedMapId: "ascent",
+  tags: [],
+  isFavorite: false,
   lobbyCode: "AAAA",
   updatedAt: now,
   ...overrides,
@@ -66,10 +68,15 @@ describe("buildTree", () => {
 
     expect(rootStrategy).toEqual({
       id: "strategy-10",
+      strategyId: 10,
       name: "Root strategy",
       type: "strategy",
       lobbyCode: "AAAA",
       selectedMapId: "ascent",
+      mapSide: undefined,
+      tags: [],
+      isFavorite: false,
+      folderId: null,
       updatedAt: now,
     });
   });

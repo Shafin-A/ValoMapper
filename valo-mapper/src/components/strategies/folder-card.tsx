@@ -45,7 +45,7 @@ export const FolderCard = ({
   return (
     <div
       className={cn(
-        "relative w-56 h-56 cursor-pointer select-none transition-transform duration-200",
+        "relative w-full max-w-56 aspect-square cursor-pointer select-none transition-transform duration-200 sm:h-56 sm:w-56",
         className,
       )}
     >

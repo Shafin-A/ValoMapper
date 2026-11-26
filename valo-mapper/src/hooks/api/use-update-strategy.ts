@@ -11,6 +11,9 @@ interface UpdateStrategyParams {
   name?: string;
   folderId?: number | null;
   includeFolderId?: boolean;
+  tags?: string[];
+  isFavorite?: boolean;
+  silent?: boolean;
 }
 
 export const useUpdateStrategy = () => {
@@ -24,8 +27,15 @@ export const useUpdateStrategy = () => {
       name,
       folderId,
       includeFolderId = false,
+      tags,
+      isFavorite,
     }: UpdateStrategyParams) => {
-      const payload: { name?: string; folderId?: number | null } = {};
+      const payload: {
+        name?: string;
+        folderId?: number | null;
+        tags?: string[];
+        isFavorite?: boolean;
+      } = {};
 
       if (typeof name === "string") {
         payload.name = name;
@@ -33,6 +43,14 @@ export const useUpdateStrategy = () => {
 
       if (includeFolderId) {
         payload.folderId = folderId ?? null;
+      }
+
+      if (Array.isArray(tags)) {
+        payload.tags = tags;
+      }
+
+      if (typeof isFavorite === "boolean") {
+        payload.isFavorite = isFavorite;
       }
 
       return apiFetchWithAuth<Strategy>(
@@ -44,9 +62,17 @@ export const useUpdateStrategy = () => {
         },
       );
     },
-    onSuccess: (data) => {
-      toast.success(t("strategyUpdated", { name: data.name }));
+    onSuccess: (data, variables) => {
+      if (!variables.silent) {
+        toast.success(t("strategyUpdated", { name: data.name }));
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.folders });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.strategyLibraryRoot,
+      });
+      if (Array.isArray(variables.tags)) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.strategyTags });
+      }
     },
     onError: (error) => {
       toast.error(t("failed", { error: error.message }));

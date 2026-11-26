@@ -22,6 +22,10 @@ export const useDeleteStrategy = () => {
     onSuccess: () => {
       toast.success(t("strategyDeleted"));
       queryClient.invalidateQueries({ queryKey: queryKeys.folders });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.strategyLibraryRoot,
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.strategyTags });
     },
     onError: (error) => {
       toast.error(t("failed", { error: error.message }));

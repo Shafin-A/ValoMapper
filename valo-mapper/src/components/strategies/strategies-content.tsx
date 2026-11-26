@@ -21,6 +21,12 @@ interface StrategiesContentProps {
   currentLocationId: string;
   navigateToFolder: (folderId: string, folderName: string) => void;
   canManageFolders: boolean;
+  selectionMode?: boolean;
+  selectedIds?: Set<number>;
+  onToggleSelect?: (strategyId: number) => void;
+  onDuplicate?: (item: StrategyData) => void;
+  onEditTags?: (item: StrategyData) => void;
+  onToggleFavorite?: (item: StrategyData) => void;
 }
 
 export const StrategiesContent = ({
@@ -28,6 +34,12 @@ export const StrategiesContent = ({
   currentLocationId,
   navigateToFolder,
   canManageFolders,
+  selectionMode = false,
+  selectedIds,
+  onToggleSelect,
+  onDuplicate,
+  onEditTags,
+  onToggleFavorite,
 }: StrategiesContentProps) => {
   const t = useTranslations("strategies");
   const { mutate: updateFolder } = useUpdateFolder();
@@ -49,38 +61,58 @@ export const StrategiesContent = ({
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="flex flex-wrap gap-6">
-          {currentItems.map((item) =>
-            item.type === "folder" ? (
-              <FolderCard
-                key={item.id}
-                name={item.name}
-                onClick={() => navigateToFolder(item.id, item.name)}
-                actionsDisabled={!canManageFolders}
-                actionsDisabledTooltip={t("folderActionsDisabled")}
-                onRename={(newName) =>
-                  updateFolder({
-                    folderId: convertFolderOrStrategyId(item.id, "folder"),
-                    name: newName,
-                  })
-                }
-                onDelete={() =>
-                  deleteFolder({
-                    folderId: convertFolderOrStrategyId(item.id, "folder"),
-                  })
-                }
-              />
-            ) : (
+        <div className="flex flex-wrap justify-center gap-4 sm:justify-start sm:gap-6">
+          {currentItems.map((item) => {
+            if (item.type === "folder") {
+              return (
+                <FolderCard
+                  key={item.id}
+                  name={item.name}
+                  onClick={() => navigateToFolder(item.id, item.name)}
+                  actionsDisabled={!canManageFolders}
+                  actionsDisabledTooltip={t("folderActionsDisabled")}
+                  onRename={(newName) =>
+                    updateFolder({
+                      folderId: convertFolderOrStrategyId(item.id, "folder"),
+                      name: newName,
+                    })
+                  }
+                  onDelete={() =>
+                    deleteFolder({
+                      folderId: convertFolderOrStrategyId(item.id, "folder"),
+                    })
+                  }
+                />
+              );
+            }
+
+            const strategyId =
+              item.strategyId ?? convertFolderOrStrategyId(item.id, "strategy");
+
+            return (
               <StrategyItem
                 key={item.id}
                 href={`/${item.lobbyCode}`}
                 strategyId={item.id}
                 name={item.name}
                 selectedMapId={item.selectedMapId ?? ""}
+                mapSide={item.mapSide}
+                tags={item.tags ?? []}
+                isFavorite={item.isFavorite ?? false}
                 updatedAt={
                   item.updatedAt ? new Date(item.updatedAt) : new Date()
                 }
                 currentLocationId={currentLocationId}
+                selectable={selectionMode}
+                selected={selectedIds?.has(strategyId) ?? false}
+                onToggleSelect={() => onToggleSelect?.(strategyId)}
+                onDuplicate={
+                  onDuplicate ? () => onDuplicate(item) : undefined
+                }
+                onEditTags={onEditTags ? () => onEditTags(item) : undefined}
+                onToggleFavorite={
+                  onToggleFavorite ? () => onToggleFavorite(item) : undefined
+                }
                 onRename={(newName) =>
                   updateStrategy({
                     strategyId: convertFolderOrStrategyId(item.id, "strategy"),
@@ -93,8 +125,8 @@ export const StrategiesContent = ({
                   })
                 }
               />
-            ),
-          )}
+            );
+          })}
         </div>
       )}
     </>

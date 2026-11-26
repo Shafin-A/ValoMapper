@@ -30,6 +30,9 @@ export const useCreateStrategy = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.folders,
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.strategyLibraryRoot,
+      });
     },
     onError: (error) => {
       toast.error(t("failed", { error: error.message }));

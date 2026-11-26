@@ -77,6 +77,8 @@ const strategies: Strategy[] = [
     folderId: 1,
     name: "B Rush",
     selectedMapId: "ascent",
+    tags: [],
+    isFavorite: false,
     lobbyCode: "ABCD",
     updatedAt: new Date("2026-01-02T00:00:00Z"),
   },

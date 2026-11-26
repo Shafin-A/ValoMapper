@@ -2,25 +2,46 @@
 
 import { StrategiesContent } from "@/components/strategies/strategies-content";
 import { StrategiesHeader } from "@/components/strategies/strategies-header";
+import { LibraryToolbar, type StrategyLibraryView } from "@/components/strategies/library-toolbar";
+import { LibraryView } from "@/components/strategies/library-view";
+import { BulkActionBar } from "@/components/strategies/bulk-action-bar";
+import { BulkTagDialog } from "@/components/strategies/bulk-tag-dialog";
+import { BulkMoveDialogContent } from "@/components/strategies/bulk-move-dialog-content";
+import { BulkDeleteDialog } from "@/components/strategies/bulk-delete-dialog";
+import { TagEditorDialog } from "@/components/strategies/tag-editor-dialog";
 import { BackToHomeButton } from "@/components/shared/back-to-home-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useBulkDeleteStrategies } from "@/hooks/api/use-bulk-delete-strategies";
+import { useBulkUpdateStrategies } from "@/hooks/api/use-bulk-update-strategies";
+import { useDeleteStrategy } from "@/hooks/api/use-delete-strategy";
+import { useDuplicateStrategy } from "@/hooks/api/use-duplicate-strategy";
 import { useFolders } from "@/hooks/api/use-folder";
+import { useStrategyLibrary } from "@/hooks/api/use-strategy-library";
+import { useStrategyTags } from "@/hooks/api/use-strategy-tags";
+import { useUpdateStrategy } from "@/hooks/api/use-update-strategy";
 import { useUser } from "@/hooks/api/use-user";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useFirebaseAuth } from "@/hooks/use-firebase-auth";
+import { cn } from "@/lib/cn";
 import { FREE_STRATEGY_LIMIT } from "@/lib/consts";
+import {
+  DEFAULT_STRATEGY_LIBRARY_FILTERS,
+  type StrategyLibraryFilters,
+} from "@/lib/strategy-library";
 import {
   getStrategyCleanupGracePeriod,
   getStrategyRetentionPreview,
   summarizeStrategyNames,
 } from "@/lib/strategy-cleanup";
-import { StrategyData } from "@/lib/types";
+import { convertFolderOrStrategyId } from "@/lib/strategy-tree";
+import type { Strategy, StrategyData } from "@/lib/types";
 import { AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
-import { Suspense, useEffect, useState } from "react";
-import { convertFolderOrStrategyId } from "@/lib/strategy-tree";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 const countStrategies = (items: StrategyData[]): number => {
   return items.reduce((total, item) => {
@@ -36,6 +57,24 @@ const countStrategies = (items: StrategyData[]): number => {
   }, 0);
 };
 
+const walkTree = (
+  items: StrategyData[],
+  visit: (item: StrategyData) => void,
+) => {
+  for (const item of items) {
+    visit(item);
+    if (item.children?.length) {
+      walkTree(item.children, visit);
+    }
+  }
+};
+
+type TagTarget = {
+  id: number;
+  name: string;
+  tags: string[];
+};
+
 const MyStrategiesPage = () => {
   const t = useTranslations("strategies");
   const format = useFormatter();
@@ -47,6 +86,29 @@ const MyStrategiesPage = () => {
   const [navigationPath, setNavigationPath] = useState<
     { id: string; name: string }[]
   >([{ id: "root", name: rootName }]);
+  const [view, setView] = useState<StrategyLibraryView>("folders");
+  const [filters, setFilters] = useState<StrategyLibraryFilters>({
+    ...DEFAULT_STRATEGY_LIBRARY_FILTERS,
+  });
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [tagTarget, setTagTarget] = useState<TagTarget | null>(null);
+  const [bulkTagOpen, setBulkTagOpen] = useState(false);
+  const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
+  const debouncedQuery = useDebouncedValue(filters.query, 300);
+  const libraryFilters = useMemo(
+    () => ({ ...filters, query: debouncedQuery }),
+    [debouncedQuery, filters],
+  );
+  const library = useStrategyLibrary(libraryFilters, view === "library");
+  const { tags: availableTags } = useStrategyTags();
+  const duplicateStrategy = useDuplicateStrategy();
+  const updateStrategy = useUpdateStrategy();
+  const deleteStrategy = useDeleteStrategy();
+  const bulkUpdate = useBulkUpdateStrategies();
+  const bulkDelete = useBulkDeleteStrategies();
 
   useEffect(() => {
     setNavigationPath((previous) => {
@@ -57,7 +119,7 @@ const MyStrategiesPage = () => {
     });
   }, [rootName]);
 
-  const treeData = data || [];
+  const treeData = useMemo(() => data || [], [data]);
   const strategyCount = countStrategies(treeData);
   const hasValoMapperPremium = Boolean(userProfile?.isSubscribed);
   const canManageFolders = !isUserProfileLoading && hasValoMapperPremium;
@@ -111,10 +173,14 @@ const MyStrategiesPage = () => {
 
   const navigateToFolder = (folderId: string, folderName: string) => {
     setNavigationPath([...navigationPath, { id: folderId, name: folderName }]);
+    setView("folders");
+    setSelectedIds(new Set());
   };
 
   const navigateToBreadcrumb = (index: number) => {
     setNavigationPath(navigationPath.slice(0, index + 1));
+    setView("folders");
+    setSelectedIds(new Set());
   };
 
   const currentItems = getCurrentItems();
@@ -125,6 +191,231 @@ const MyStrategiesPage = () => {
           navigationPath[navigationPath.length - 1].id,
           "folder",
         );
+
+  const folderLabels = useMemo(() => {
+    const labels: Record<number, string> = {};
+    walkTree(treeData, (item) => {
+      if (item.type === "folder") {
+        labels[convertFolderOrStrategyId(item.id, "folder")] = item.name;
+      }
+    });
+    return labels;
+  }, [treeData]);
+
+  const treeStrategyById = useMemo(() => {
+    const strategies = new Map<number, StrategyData>();
+    walkTree(treeData, (item) => {
+      if (item.type === "strategy" && item.strategyId) {
+        strategies.set(item.strategyId, item);
+      }
+    });
+    return strategies;
+  }, [treeData]);
+
+  const libraryById = useMemo(() => {
+    const strategies = new Map<number, Strategy>();
+    library.items.forEach((strategy) => strategies.set(strategy.id, strategy));
+    return strategies;
+  }, [library.items]);
+
+  const selectedStrategies = useMemo(
+    () =>
+      Array.from(selectedIds)
+        .map((id) => libraryById.get(id) ?? treeStrategyById.get(id))
+        .filter((strategy): strategy is Strategy | StrategyData =>
+          Boolean(strategy),
+        ),
+    [libraryById, selectedIds, treeStrategyById],
+  );
+
+  const allSelectedFavorite =
+    selectedStrategies.length > 0 &&
+    selectedStrategies.every((strategy) => strategy.isFavorite);
+
+  const handleFiltersChange = (patch: Partial<StrategyLibraryFilters>) => {
+    setFilters((previous) => ({ ...previous, ...patch }));
+    const opensLibrary = [
+      "query",
+      "tags",
+      "favoriteOnly",
+      "mapId",
+      "side",
+      "sort",
+    ].some((key) => key in patch);
+    if (opensLibrary) {
+      setView("library");
+    }
+    setSelectedIds(new Set());
+  };
+
+  const handleClearFilters = () => {
+    setFilters({ ...DEFAULT_STRATEGY_LIBRARY_FILTERS });
+    setView("folders");
+    setSelectedIds(new Set());
+  };
+
+  const handleViewChange = (nextView: StrategyLibraryView) => {
+    setView(nextView);
+    if (nextView === "folders") {
+      setFilters({ ...DEFAULT_STRATEGY_LIBRARY_FILTERS });
+    }
+    setSelectedIds(new Set());
+  };
+
+  const handleToggleSelectionMode = () => {
+    setSelectionMode((previous) => !previous);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect = (strategyId: number) => {
+    setSelectedIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(strategyId)) {
+        next.delete(strategyId);
+      } else {
+        next.add(strategyId);
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const visibleStrategyIds = useMemo(() => {
+    if (view === "library") {
+      return library.items.map((strategy) => strategy.id);
+    }
+    return currentItems.flatMap((item) =>
+      item.type === "strategy" && item.strategyId ? [item.strategyId] : [],
+    );
+  }, [currentItems, library.items, view]);
+
+  const handleSelectAll = () => {
+    setSelectedIds(new Set(visibleStrategyIds));
+  };
+
+  const openTagEditor = (strategy: {
+    id: number;
+    name: string;
+    tags?: string[];
+  }) => {
+    setTagTarget({
+      id: strategy.id,
+      name: strategy.name,
+      tags: strategy.tags ?? [],
+    });
+  };
+
+  const handleTagEditorSave = (tags: string[]) => {
+    if (!tagTarget) return;
+    updateStrategy.mutate(
+      { strategyId: tagTarget.id, tags },
+      { onSuccess: () => setTagTarget(null) },
+    );
+  };
+
+  const handleDuplicate = (strategy: Strategy) => {
+    duplicateStrategy.mutate({ strategyId: strategy.id });
+  };
+
+  const handleDuplicateTreeItem = (item: StrategyData) => {
+    const strategyId =
+      item.strategyId ?? convertFolderOrStrategyId(item.id, "strategy");
+    duplicateStrategy.mutate({ strategyId });
+  };
+
+  const handleToggleFavorite = (strategy: Strategy) => {
+    updateStrategy.mutate({
+      strategyId: strategy.id,
+      isFavorite: !strategy.isFavorite,
+      silent: true,
+    });
+  };
+
+  const handleToggleFavoriteTreeItem = (item: StrategyData) => {
+    const strategyId =
+      item.strategyId ?? convertFolderOrStrategyId(item.id, "strategy");
+    updateStrategy.mutate({
+      strategyId,
+      isFavorite: !item.isFavorite,
+      silent: true,
+    });
+  };
+
+  const handleEditTagsTreeItem = (item: StrategyData) => {
+    const strategyId =
+      item.strategyId ?? convertFolderOrStrategyId(item.id, "strategy");
+    openTagEditor({
+      id: strategyId,
+      name: item.name,
+      tags: item.tags,
+    });
+  };
+
+  const handleDelete = (strategy: Strategy) => {
+    deleteStrategy.mutate(
+      { strategyId: strategy.id },
+      {
+        onSuccess: () => {
+          setSelectedIds((previous) => {
+            const next = new Set(previous);
+            next.delete(strategy.id);
+            return next;
+          });
+        },
+      },
+    );
+  };
+
+  const handleRename = (strategy: Strategy, name: string) => {
+    updateStrategy.mutate({ strategyId: strategy.id, name });
+  };
+
+  const handleBulkFavorite = () => {
+    if (selectedIds.size === 0) return;
+    bulkUpdate.mutate(
+      {
+        ids: Array.from(selectedIds),
+        isFavorite: !allSelectedFavorite,
+      },
+      { onSuccess: clearSelection },
+    );
+  };
+
+  const handleBulkTagsSubmit = ({
+    addTags,
+    removeTags,
+  }: {
+    addTags: string[];
+    removeTags: string[];
+  }) => {
+    if (selectedIds.size === 0) return;
+    bulkUpdate.mutate(
+      {
+        ids: Array.from(selectedIds),
+        addTags,
+        removeTags,
+      },
+      {
+        onSuccess: () => {
+          setBulkTagOpen(false);
+          clearSelection();
+        },
+      },
+    );
+  };
+
+  const handleBulkDeleteConfirm = () => {
+    if (selectedIds.size === 0) return;
+    bulkDelete.mutate(Array.from(selectedIds), {
+      onSuccess: () => {
+        setBulkDeleteOpen(false);
+        clearSelection();
+      },
+    });
+  };
 
   if (authLoading) {
     return (
@@ -215,7 +506,10 @@ const MyStrategiesPage = () => {
         id="main-content"
         role="main"
         tabIndex={-1}
-        className="max-w-[1600px] mx-auto px-8 py-8"
+        className={cn(
+          "mx-auto max-w-[1600px] px-4 py-6 sm:px-8 sm:py-8",
+          selectionMode && selectedIds.size > 0 && "pb-32 sm:pb-8",
+        )}
       >
         <Suspense fallback={<StrategiesSkeleton />}>
           <StrategiesHeader
@@ -232,6 +526,19 @@ const MyStrategiesPage = () => {
             strategyCount={strategyCount}
             freeStrategyLimit={FREE_STRATEGY_LIMIT}
             upgradeReturnToPath="/strategies"
+          />
+
+          <LibraryToolbar
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onClearFilters={handleClearFilters}
+            availableTags={availableTags}
+            view={view}
+            onViewChange={handleViewChange}
+            selectionMode={selectionMode}
+            onToggleSelectionMode={handleToggleSelectionMode}
+            isFetching={view === "library" && library.isFetching}
+            resultCount={view === "library" ? library.total : undefined}
           />
 
           {strategyCleanupGracePeriod && (
@@ -280,11 +587,95 @@ const MyStrategiesPage = () => {
             </Alert>
           )}
 
-          <StrategiesContent
-            currentItems={currentItems}
-            currentLocationId={navigationPath[navigationPath.length - 1].id}
-            navigateToFolder={navigateToFolder}
-            canManageFolders={canManageFolders}
+          {view === "library" ? (
+            <LibraryView
+              items={library.items}
+              total={library.total}
+              isLoading={library.isLoading}
+              isError={library.isError}
+              error={library.error}
+              hasNextPage={library.hasNextPage}
+              isFetchingNextPage={library.isFetchingNextPage}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              folderLabels={folderLabels}
+              onToggleSelect={toggleSelect}
+              onSelectAll={handleSelectAll}
+              onClearSelection={clearSelection}
+              onClearFilters={handleClearFilters}
+              onRetry={() => void library.refetch()}
+              onLoadMore={() => void library.fetchNextPage()}
+              onRename={handleRename}
+              onDelete={handleDelete}
+              onDuplicate={handleDuplicate}
+              onEditTags={openTagEditor}
+              onToggleFavorite={handleToggleFavorite}
+            />
+          ) : (
+            <StrategiesContent
+              currentItems={currentItems}
+              currentLocationId={navigationPath[navigationPath.length - 1].id}
+              navigateToFolder={navigateToFolder}
+              canManageFolders={canManageFolders}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onDuplicate={handleDuplicateTreeItem}
+              onEditTags={handleEditTagsTreeItem}
+              onToggleFavorite={handleToggleFavoriteTreeItem}
+            />
+          )}
+
+          {selectionMode && selectedIds.size > 0 && (
+            <BulkActionBar
+              selectedCount={selectedIds.size}
+              allSelectedFavorite={allSelectedFavorite}
+              isPending={
+                bulkUpdate.isPending || bulkDelete.isPending
+              }
+              onMove={() => setBulkMoveOpen(true)}
+              onTags={() => setBulkTagOpen(true)}
+              onToggleFavorite={handleBulkFavorite}
+              onDelete={() => setBulkDeleteOpen(true)}
+              onClear={clearSelection}
+            />
+          )}
+
+          <Dialog open={bulkMoveOpen} onOpenChange={setBulkMoveOpen}>
+            <BulkMoveDialogContent
+              strategyIds={Array.from(selectedIds)}
+              setOpen={setBulkMoveOpen}
+              onDone={clearSelection}
+            />
+          </Dialog>
+
+          <TagEditorDialog
+            open={tagTarget !== null}
+            onOpenChange={(open) => {
+              if (!open) setTagTarget(null);
+            }}
+            strategyName={tagTarget?.name ?? ""}
+            initialTags={tagTarget?.tags ?? []}
+            availableTags={availableTags}
+            isPending={updateStrategy.isPending}
+            onSave={handleTagEditorSave}
+          />
+
+          <BulkTagDialog
+            open={bulkTagOpen}
+            onOpenChange={setBulkTagOpen}
+            selectedCount={selectedIds.size}
+            availableTags={availableTags}
+            isPending={bulkUpdate.isPending}
+            onSubmit={handleBulkTagsSubmit}
+          />
+
+          <BulkDeleteDialog
+            open={bulkDeleteOpen}
+            onOpenChange={setBulkDeleteOpen}
+            count={selectedIds.size}
+            isPending={bulkDelete.isPending}
+            onConfirm={handleBulkDeleteConfirm}
           />
         </Suspense>
       </div>

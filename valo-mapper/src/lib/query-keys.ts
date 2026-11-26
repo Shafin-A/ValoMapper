@@ -1,6 +1,10 @@
 export const queryKeys = {
   user: ["user"] as const,
   folders: ["folders-and-strategies"] as const,
+  strategyLibraryRoot: ["strategy-library"] as const,
+  strategyLibrary: (queryString: string) =>
+    ["strategy-library", queryString] as const,
+  strategyTags: ["strategy-tags"] as const,
   billingPlans: ["billing-plans"] as const,
   stackMembers: ["stack-members"] as const,
   stackPendingInvites: ["stack-pending-invites"] as const,

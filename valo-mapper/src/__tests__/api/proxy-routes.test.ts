@@ -14,7 +14,12 @@ import { DELETE as deleteFolder, PATCH as updateFolder } from "@/app/api/folders
 import { GET as getLobby, PATCH as updateLobby } from "@/app/api/lobbies/[lobbyCode]/route";
 import { GET as getMatches } from "@/app/api/matches/route";
 import { GET as getMatchSummary } from "@/app/api/matches/[matchId]/summary/route";
+import { POST as duplicateStrategy } from "@/app/api/strategies/[strategyId]/duplicate/route";
 import { DELETE as deleteStrategy, PATCH as updateStrategy } from "@/app/api/strategies/[strategyId]/route";
+import { PATCH as bulkUpdateStrategies } from "@/app/api/strategies/bulk/route";
+import { POST as bulkDeleteStrategies } from "@/app/api/strategies/bulk-delete/route";
+import { GET as searchStrategies } from "@/app/api/strategies/library/route";
+import { GET as getStrategyTags } from "@/app/api/strategies/tags/route";
 import { DELETE as deleteUser, GET as getUser, PUT as updateUser } from "@/app/api/users/me/route";
 
 const API_URL = process.env.API_URL;
@@ -288,6 +293,65 @@ describe("routes with dynamic ids", () => {
       method: "PATCH",
       body: JSON.stringify({ name: "Retake", folderId: 2 }),
     });
+  });
+
+  it("forwards strategy library search and tag requests", async () => {
+    await searchStrategies(
+      createRequest(
+        "http://localhost/api/strategies/library?q=b%20site&tags=a-site&limit=50",
+      ),
+    );
+
+    expect(backendUrl()).toBe(
+      `${API_URL}/strategies/library?q=b%20site&tags=a-site&limit=50`,
+    );
+    expect(backendOptions().method).toBe("GET");
+
+    mockFetch.mockClear();
+    await getStrategyTags(createRequest("http://localhost/api/strategies/tags"));
+
+    expect(backendUrl()).toBe(`${API_URL}/strategies/tags`);
+    expect(backendOptions().method).toBe("GET");
+  });
+
+  it("forwards bulk strategy updates and deletes", async () => {
+    const updateBody = { ids: [1, 2], isFavorite: true, addTags: ["a-site"] };
+    await bulkUpdateStrategies(
+      createRequest("http://localhost/api/strategies/bulk", {
+        method: "PATCH",
+        body: JSON.stringify(updateBody),
+      }),
+    );
+
+    expect(backendUrl()).toBe(`${API_URL}/strategies/bulk`);
+    expect(backendOptions()).toMatchObject({
+      method: "PATCH",
+      body: JSON.stringify(updateBody),
+    });
+
+    mockFetch.mockClear();
+    const deleteBody = { ids: [1, 2] };
+    await bulkDeleteStrategies(
+      createRequest("http://localhost/api/strategies/bulk-delete", {
+        method: "POST",
+        body: JSON.stringify(deleteBody),
+      }),
+    );
+
+    expect(backendUrl()).toBe(`${API_URL}/strategies/bulk-delete`);
+    expect(backendOptions()).toMatchObject({
+      method: "POST",
+      body: JSON.stringify(deleteBody),
+    });
+  });
+
+  it("forwards strategy duplicate ids", async () => {
+    await duplicateStrategy(createRequest(), {
+      params: Promise.resolve({ strategyId: "31" }),
+    });
+
+    expect(backendUrl()).toBe(`${API_URL}/strategies/31/duplicate`);
+    expect(backendOptions().method).toBe("POST");
   });
 
   it("rejects strategy patches without a body", async () => {

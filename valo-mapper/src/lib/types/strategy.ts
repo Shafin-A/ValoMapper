@@ -1,9 +1,14 @@
 export type StrategyData = {
   id: string;
+  strategyId?: number;
   name: string;
   type: "folder" | "strategy";
   lobbyCode?: string;
   selectedMapId?: string;
+  mapSide?: string;
+  tags?: string[];
+  isFavorite?: boolean;
+  folderId?: number | null;
   updatedAt?: Date;
   children?: StrategyData[];
 };
@@ -20,9 +25,12 @@ export type Folder = {
 export type Strategy = {
   id: number;
   userId: number;
-  folderId?: number;
+  folderId?: number | null;
   name: string;
   selectedMapId: string;
+  mapSide?: string;
+  tags: string[];
+  isFavorite: boolean;
   lobbyCode: string;
   updatedAt: Date;
 };

@@ -31,10 +31,15 @@ export const buildTree = (
   strategies.forEach((strategy) => {
     const strategyNode: StrategyData = {
       id: `strategy-${strategy.id}`,
+      strategyId: strategy.id,
       name: strategy.name,
       type: "strategy",
       lobbyCode: strategy.lobbyCode,
       selectedMapId: strategy.selectedMapId,
+      mapSide: strategy.mapSide,
+      tags: strategy.tags ?? [],
+      isFavorite: strategy.isFavorite ?? false,
+      folderId: strategy.folderId ?? null,
       updatedAt: strategy.updatedAt,
     };
 
