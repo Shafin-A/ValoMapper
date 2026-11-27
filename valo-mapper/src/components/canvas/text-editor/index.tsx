@@ -27,6 +27,7 @@ import {
   findLineIndex,
   getLineInfos,
   getSelectionTextOffsets,
+  redirectSelectionToContentStart,
 } from "./editor-dom";
 import {
   EMPTY_FORMATS,
@@ -314,10 +315,47 @@ export const TextEditor = ({
     onCloseRef.current();
   }, []);
 
+  const handleBeforeInput = useCallback((event: Event) => {
+    const inputType = (event as InputEvent).inputType;
+    if (!inputType || !inputType.startsWith("insert")) return;
+    if (
+      inputType === "insertParagraph" ||
+      inputType === "insertOrderedList" ||
+      inputType === "insertUnorderedList"
+    ) {
+      return;
+    }
+
+    const editor = editorRef.current;
+    if (editor) redirectSelectionToContentStart(editor);
+  }, []);
+
+  const handleCompositionStart = useCallback(() => {
+    const editor = editorRef.current;
+    if (editor) redirectSelectionToContentStart(editor);
+  }, []);
+
   const attachEditor = useCallback(
     (node: HTMLDivElement | null) => {
+      const previous = editorRef.current;
+      if (previous && previous !== node) {
+        previous.removeEventListener(
+          "beforeinput",
+          handleBeforeInput,
+        );
+        previous.removeEventListener(
+          "compositionstart",
+          handleCompositionStart,
+        );
+      }
+
       editorRef.current = node;
       if (!node) return;
+
+      if (previous !== node) {
+        node.addEventListener("beforeinput", handleBeforeInput);
+        node.addEventListener("compositionstart", handleCompositionStart);
+      }
 
       if (!didInitRef.current) {
         node.innerHTML = spansToEditorHtml(initialSpansRef.current, {
@@ -334,7 +372,7 @@ export const TextEditor = ({
         );
       }
     },
-    [measureEditorHeight],
+    [handleBeforeInput, handleCompositionStart, measureEditorHeight],
   );
 
   const focusEditor = useCallback(() => {

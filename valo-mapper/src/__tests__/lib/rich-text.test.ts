@@ -227,6 +227,7 @@ describe("list markers", () => {
     );
 
     expect(html).toContain('data-text-content-line="0"');
+    expect(html).toContain('data-text-marker-line="0"');
     expect(html).toContain("display:inline-block");
     expect(html).toContain("calc(100% -");
     expect(html).toContain("<br>");

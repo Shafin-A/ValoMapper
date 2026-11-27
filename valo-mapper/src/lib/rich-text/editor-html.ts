@@ -44,7 +44,7 @@ export const spansToEditorHtml = (
           fontSize > 0 ? markerWidth / fontSize : markerWidth;
 
         html =
-          `<span style="display:inline-block;width:${markerWidthEm}em;vertical-align:top;white-space:pre;">${markerHtml}</span>` +
+          `<span data-text-marker-line="${index}" style="display:inline-block;width:${markerWidthEm}em;vertical-align:top;white-space:pre;">${markerHtml}</span>` +
           `<span data-text-content-line="${index}" style="display:inline-block;width:calc(100% - ${markerWidthEm}em);vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;">${contentHtml}</span>`;
       } else {
         html = spansToHtml(lineSpans);

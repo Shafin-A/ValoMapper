@@ -153,8 +153,7 @@ export const setCaretInContentSpan = (
   editor: HTMLDivElement,
   lineIndex: number,
   offset = 0,
-): boolean => {
-  const content = editor.querySelector<HTMLElement>(
+): boolean => {  const content = editor.querySelector<HTMLElement>(
     `[data-text-content-line="${lineIndex}"]`,
   );
   if (!content) return false;
@@ -201,5 +200,91 @@ export const setCaretInContentSpan = (
   const selection = window.getSelection();
   selection?.removeAllRanges();
   selection?.addRange(range);
+  return true;
+};
+
+const measureContentOffset = (
+  content: HTMLElement,
+  node: Node,
+  offset: number,
+): number => {
+  const range = document.createRange();
+  range.selectNodeContents(content);
+  range.setEnd(node, offset);
+
+  const fragment = range.cloneContents();
+  const container = document.createElement("div");
+  container.appendChild(fragment);
+
+  return spansToPlainText(
+    readSpansFromDom(container, { trimTrailingNewlines: false }),
+  ).length;
+};
+
+// Keep typing out of the fixed-width list marker.
+export const redirectSelectionToContentStart = (
+  editor: HTMLDivElement,
+): boolean => {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || !selection.isCollapsed) {
+    return false;
+  }
+
+  const range = selection.getRangeAt(0);
+  if (!editor.contains(range.startContainer)) {
+    return false;
+  }
+
+  const node = range.startContainer;
+  const element =
+    node.nodeType === Node.TEXT_NODE
+      ? node.parentElement
+      : node instanceof HTMLElement
+        ? node
+        : null;
+  if (!element) return false;
+
+  const marker = element.closest<HTMLElement>("[data-text-marker-line]");
+  let lineIndex = marker
+    ? Number(marker.dataset.textMarkerLine)
+    : Number.NaN;
+
+  if (!Number.isFinite(lineIndex)) {
+    const content = element.closest<HTMLElement>("[data-text-content-line]");
+    if (
+      content &&
+      measureContentOffset(content, node, range.startOffset) === 0
+    ) {
+      lineIndex = Number(content.dataset.textContentLine);
+    }
+  }
+
+  if (!Number.isFinite(lineIndex)) return false;
+
+  const content = editor.querySelector<HTMLElement>(
+    `[data-text-content-line="${lineIndex}"]`,
+  );
+  if (!content) return false;
+
+  let first = content.firstChild;
+  if (
+    !(
+      first &&
+      first.nodeType === Node.TEXT_NODE &&
+      (first.nodeValue ?? "").startsWith("\u200b")
+    )
+  ) {
+    first = document.createTextNode("\u200b");
+    content.insertBefore(first, content.firstChild);
+  }
+
+  editor.focus();
+
+  const nextRange = document.createRange();
+  nextRange.setStart(first, 1);
+  nextRange.collapse(true);
+
+  selection.removeAllRanges();
+  selection.addRange(nextRange);
   return true;
 };

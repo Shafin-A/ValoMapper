@@ -121,6 +121,38 @@ describe("TextEditor", () => {
     expect(editor.innerHTML).toContain("color:#ff4655");
   });
 
+  it("routes typing at a list marker into the item content", () => {
+    const { editor } = renderEditor({ spans: [{ text: "• item" }] });
+    const marker = editor.querySelector<HTMLElement>(
+      '[data-text-marker-line="0"]',
+    );
+    const content = editor.querySelector<HTMLElement>(
+      '[data-text-content-line="0"]',
+    );
+    if (!marker || !content || !marker.firstChild) {
+      throw new Error("list markup missing");
+    }
+
+    const range = document.createRange();
+    range.setStart(marker.firstChild, 2);
+    range.collapse(true);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    const event = new Event("beforeinput", {
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.assign(event, { inputType: "insertText" });
+    editor.dispatchEvent(event);
+
+    expect(content.firstChild?.nodeValue).toBe("\u200b");
+    expect(content.textContent).toBe("\u200bitem");
+    expect(window.getSelection()?.anchorNode).toBe(content.firstChild);
+    expect(window.getSelection()?.anchorOffset).toBe(1);
+  });
+
   it("focuses the editor as soon as it mounts", () => {
     const { editor } = renderEditor();
 

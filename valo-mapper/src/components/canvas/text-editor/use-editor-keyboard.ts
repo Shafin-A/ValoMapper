@@ -19,6 +19,7 @@ import {
   findLineIndex,
   getLineInfos,
   getSelectionTextOffsets,
+  redirectSelectionToContentStart,
   setCaretInContentSpan,
   setSelectionByOffsets,
 } from "./editor-dom";
@@ -174,6 +175,11 @@ export const useEditorKeyboard = ({
     if (!text) return;
 
     event.preventDefault();
+
+    const editor = editorRef.current;
+    if (editor) {
+      redirectSelectionToContentStart(editor);
+    }
 
     try {
       document.execCommand("insertText", false, text);
